@@ -68,3 +68,7 @@ from cord.client import CordClient
 client = CordClient.initialise()
 project = client.get_project()
 ```
+
+## 🐛 Troubleshooting
+
+Please report bugs to [GitHub Issues](https://github.com/cord-team/cord-client-python/issues). Just make sure you read the [Cord documentation](https://docs.cord.tech) and search for related issues first.
