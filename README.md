@@ -24,7 +24,7 @@ For full documentation, visit [Cord Python API Client](https://docs.cord.tech/do
 First, install Cord Python API Client using the [pip](https://pip.pypa.io/en/stable/installing) package manager:
 
 ```bash
-pip install cord-python-client
+pip install cord-client-python
 ```
 
 Then, create an API key for authentication via the [Cord web app](https://app.cord.tech). Pass the project ID and API key as environment variables or pass them explicitly when you initialise the CordClient object.
