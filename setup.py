@@ -21,6 +21,6 @@ setuptools.setup(
     python_requires='>=3.6',
     keywords=["cord"],
     install_requires=[
-        '<requests>',
+        "requests",
     ],
 )
