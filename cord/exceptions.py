@@ -70,5 +70,21 @@ class AnswerDictionaryError(CordException):
 
 
 class CorruptedLabelError(CordException):
-    """ Exception thrown when a label is corrupted (e.g. the frame labels have more frames than the video. """
+    """ Exception thrown when a label is corrupted (e.g. the frame labels have more frames than the video.) """
+    pass
+
+
+class FileTypeNotSupportedError(CordException):
+    """ Exception thrown when a file type is not supported
+    Supported file types are: image/jpeg, image/png, video/webm, video/mp4. """
+    pass
+
+
+class MustSetDetectionRangeError(CordException):
+    """ Exception thrown when a detection range is not set for video """
+    pass
+
+
+class DetectionRangeInvalidError(CordException):
+    """ Exception thrown when a detection range is invalid (e.g. negative or higher than num frames in video) """
     pass

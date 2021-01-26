@@ -14,7 +14,7 @@
 # under the License.
 
 """ ``cord.client`` provides a simple Python client that allows you
-to query project resources through the Cord API.
+to query project resources through the Cord REST API.
 
 Here is a simple example for instantiating the client and obtaining project info:
 
@@ -32,11 +32,14 @@ Here is a simple example for instantiating the client and obtaining project info
 
 import sys
 import logging
+import json
+import base64
 
 from cord.configs import CordConfig
 from cord.http.querier import Querier
 from cord.orm.project import Project
 from cord.orm.label_blurb import Label
+from cord.orm.model import Model, ModelInferenceParams
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -146,5 +149,49 @@ class CordClient(object):
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
         """
         label = Label(label)
-        return self._querier.basic_setter(Label, uid, label)
+        return self._querier.basic_setter(Label, uid, payload=label)
 
+    def model_inference(self,
+                        uid,
+                        file_path,
+                        conf_thresh=0.6,
+                        iou_thresh=0.3,
+                        device="cuda",
+                        detection_frame_range=None,
+                        ):
+        """
+        Run inference with model trained on the platform.
+
+        Args:
+            uid: A model_iteration_hash (uid) string.
+            file_path: Local file path to image or video
+            conf_thresh: Confidence threshold (default 0.6)
+            iou_thresh: Intersection over union threshold (default 0.3)
+            device: Device (CPU or CUDA, default is CUDA)
+            detection_frame_range: Detection frame range (optional, if video)
+
+        Returns:
+            Inference results: A dict of inference results.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no model exists by the specified model_iteration_hash (uid).
+            UnknownError: If an error occurs while running inference.
+            FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
+            MustSetDetectionRangeError: If a detection range is not set for video inference
+        """
+        if detection_frame_range is None:
+            detection_frame_range = []
+
+        file = open(file_path, 'rb').read()
+
+        params = ModelInferenceParams({
+            'file': base64.b64encode(file).decode('utf-8'),
+            'conf_thresh': conf_thresh,
+            'iou_thresh': iou_thresh,
+            'device': device,
+            'detection_frame_range': detection_frame_range,
+        })
+
+        return self._querier.basic_setter(Model, uid, payload=params)

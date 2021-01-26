@@ -68,7 +68,7 @@ class Querier:
         res = self.execute(request)
 
         if res:
-            return True
+            return res
         else:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 

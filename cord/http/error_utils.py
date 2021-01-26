@@ -8,6 +8,9 @@ UNKNOWN_ERROR = ['UNKNOWN_ERROR']
 OPERATION_NOT_ALLOWED_ERROR = ['OPERATION_NOT_ALLOWED']
 ANSWER_DICTIONARY_ERROR = ['ANSWER_DICTIONARY_ERROR']
 CORRUPTED_LABEL_ERROR = ['CORRUPTED_LABEL_ERROR']
+FILE_TYPE_NOT_SUPPORTED_ERROR = ['FILE_TYPE_NOT_SUPPORTED_ERROR']
+MUST_SET_DETECTION_RANGE_ERROR = ['MUST_SET_DETECTION_RANGE_ERROR']
+DETECTION_RANGE_INVALID_ERROR = ['DETECTION_RANGE_INVALID_ERROR']
 
 
 def check_error_response(response):
@@ -35,5 +38,15 @@ def check_error_response(response):
     if response == CORRUPTED_LABEL_ERROR:
         raise CorruptedLabelError("The label blurb is corrupted. This could be due to the number of "
                                   "frame labels exceeding the number of frames in the labelled video.")
+
+    if response == FILE_TYPE_NOT_SUPPORTED_ERROR:
+        raise FileTypeNotSupportedError("Supported file types are: image/jpeg, image/png, video/webm, video/mp4.")
+
+    if response == MUST_SET_DETECTION_RANGE_ERROR:
+        raise MustSetDetectionRangeError("You must set a detection range for video inference")
+
+    if response == DETECTION_RANGE_INVALID_ERROR:
+        raise DetectionRangeInvalidError("The detection range is invalid (e.g. less than 0, or"
+                                         " higher than num frames in the video)")
 
     pass
