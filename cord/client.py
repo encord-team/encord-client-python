@@ -32,7 +32,6 @@ Here is a simple example for instantiating the client and obtaining project info
 
 import sys
 import logging
-import json
 import base64
 
 from cord.configs import CordConfig

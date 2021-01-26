@@ -19,12 +19,12 @@ import logging
 from abc import ABCMeta
 import cord.exceptions
 
-CORD_ENDPOINT = 'http://127.0.0.1:8000/public'
+CORD_ENDPOINT = 'https://api.cord.tech/public'
 _CORD_PROJECT_ID = 'CORD_PROJECT_ID'
 _CORD_API_KEY = 'CORD_API_KEY'
 
-READ_TIMEOUT = 120  # In seconds
-WRITE_TIMEOUT = 120  # In seconds
+READ_TIMEOUT = 15  # In seconds
+WRITE_TIMEOUT = 30  # In seconds
 CONNECT_TIMEOUT = 15  # In seconds
 
 log = logging.getLogger(__name__)
