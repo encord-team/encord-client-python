@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from cord.orm.label_blurb import Label
+from cord.orm.label_row import LabelRow
 from cord.utils.str_constants import *
 
 
@@ -26,9 +26,9 @@ def construct_answer_dictionaries(label):
         label: A label blurb.
 
     Returns:
-        Label: A label blurb instance with updated answer dictionaries
+        LabelRow: A label blurb instance with updated answer dictionaries
     """
-    label = Label(label)  # Cast to Label ORM
+    label = LabelRow(label)  # Cast to Label ORM
     labels = label.labels
 
     if OBJECT_ANSWERS in label:

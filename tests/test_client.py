@@ -5,7 +5,7 @@ import cord.exceptions
 from cord.client import CordClient
 from cord.configs import CordConfig
 from cord.orm.project import Project
-from cord.orm.label_blurb import Label
+from cord.orm.label_row import LabelRow
 
 from tests.test_data.test_blurb import TEST_BLURB
 
@@ -70,32 +70,32 @@ def test_get_project(client):
 
 
 def test_get_label_blurb(keys, client):
-    assert isinstance(client.get_label_blurb(keys[2]), Label)
+    assert isinstance(client.get_label_row(keys[2]), LabelRow)
 
 
 def test_get_label_with_invalid_id_throws_authorisation_exception(client):
     with pytest.raises(expected_exception=cord.exceptions.AuthorisationError):
-        client.get_label_blurb('test')
+        client.get_label_row('test')
 
 
 def test_get_label_with_write_key_throws_operation_not_allowed_exception(keys):
     client = CordClient.initialise(keys[0], LABEL_WRITE_KEY)
 
     with pytest.raises(expected_exception=cord.exceptions.OperationNotAllowed):
-        client.get_label_blurb(keys[2])
+        client.get_label_row(keys[2])
 
 
 def test_save_label_blurb(keys, client):
-    client.save_label_blurb(keys[2], TEST_BLURB)
+    client.save_label_row(keys[2], TEST_BLURB)
 
 
 def test_save_label_with_invalid_id_throws_authorisation_exception(keys, client):
     with pytest.raises(expected_exception=cord.exceptions.AuthorisationError):
-        client.save_label_blurb('test', TEST_BLURB)
+        client.save_label_row('test', TEST_BLURB)
 
 
 def test_save_label_with_read_key_throws_operation_not_allowed_exception(keys):
     client = CordClient.initialise(keys[0], LABEL_READ_KEY)
 
     with pytest.raises(expected_exception=cord.exceptions.OperationNotAllowed):
-        client.save_label_blurb(keys[2], TEST_BLURB)
+        client.save_label_row(keys[2], TEST_BLURB)

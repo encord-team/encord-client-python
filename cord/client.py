@@ -37,7 +37,7 @@ import base64
 from cord.configs import CordConfig
 from cord.http.querier import Querier
 from cord.orm.project import Project
-from cord.orm.label_blurb import Label
+from cord.orm.label_row import LabelRow
 from cord.orm.model import Model, ModelInferenceParams
 
 # Logging configuration
@@ -51,7 +51,7 @@ logging.basicConfig(stream=sys.stdout,
 class CordClient(object):
     """
     Cord client. Allows you to query db items associated
-    with a project (e.g. labels, datasets).
+    with a project (e.g. label rows, datasets).
     """
 
     def __init__(self, querier, config):
@@ -104,15 +104,15 @@ class CordClient(object):
         """
         return self._querier.basic_getter(Project)
 
-    def get_label_blurb(self, uid):
+    def get_label_row(self, uid):
         """
-        Retrieves Label blurb
+        Retrieves label row
 
         Args:
             uid: A label_hash (uid) string.
 
         Returns:
-            Label: A label blurb instance.
+            LabelRow: A label row instance.
 
         Raises:
             AuthenticationError: If the project API key is invalid.
@@ -121,11 +121,11 @@ class CordClient(object):
             UnknownError: If an error occurs while retrieving the label.
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
-        return self._querier.basic_getter(Label, uid)
+        return self._querier.basic_getter(LabelRow, uid)
 
-    def save_label_blurb(self, uid, label):
+    def save_label_row(self, uid, label):
         """
-        Save existing Label blurb
+        Save existing label Row
 
         If you have a series of frame labels and have not updated answer
         dictionaries, call the construct_answer_dictionaries utils function
@@ -133,7 +133,7 @@ class CordClient(object):
 
         Args:
             uid: A label_hash (uid) string.
-            label: A label blurb instance.
+            label: A label row instance.
 
         Returns:
             Bool.
@@ -147,8 +147,8 @@ class CordClient(object):
             AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
         """
-        label = Label(label)
-        return self._querier.basic_setter(Label, uid, payload=label)
+        label = LabelRow(label)
+        return self._querier.basic_setter(LabelRow, uid, payload=label)
 
     def model_inference(self,
                         uid,

@@ -20,7 +20,7 @@ from cord.orm import base_orm
 
 class Project(base_orm.BaseORM):
     """
-    A project defines a label ontology and is a collection of datasets and labels.
+    A project defines a label ontology and is a collection of datasets and label rows.
 
     ORM:
 
@@ -35,11 +35,12 @@ class Project(base_orm.BaseORM):
        },
        ...
     ],
-    labels: [
+    label_rows: [
         {
         label_hash (uid),
         data_hash (uid),
         data_title,
+        data_type,
         label_status
         },
         ...
@@ -52,7 +53,7 @@ class Project(base_orm.BaseORM):
         ("description", str),
         ("editor_ontology", (dict, str)),
         ("datasets", (list, str)),
-        ("labels", (list, str)),
+        ("label_rows", (list, str)),
     ])
 
     NON_UPDATABLE_FIELDS = {
@@ -63,9 +64,9 @@ class Project(base_orm.BaseORM):
 
     def get_labels_list(self):
         """
-        Returns a list of all label IDs (label_hash uid) in a project.
+        Returns a list of all label row IDs (label_hash uid) in a project.
         """
-        labels = self.to_dic().get('labels')
+        labels = self.to_dic().get('label_rows')
         res = []
         for label in labels:
             res.append(label.get('label_hash'))

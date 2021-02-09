@@ -18,21 +18,46 @@ from collections import OrderedDict
 from cord.orm import base_orm
 
 
-class Label(base_orm.BaseORM):
+class LabelRow(base_orm.BaseORM):
     """
-    A label contains a frame labels blurb, object answers, and classification answers.
+    A label row contains a data unit or a collection of data units and associated labels,
+    and is specific to a data asset with type video or img_group:
 
-    The label DB object is specific to a data asset, and can contain thousands of frames with bounding boxes,
-    polygons, and classifications.
+        - A label row with a data asset of type video contains a single data unit.
+        - A label row with a data asset of type img_group contains any number of data units.
 
-    The data link consist of a signed URL expiring after 7 days.
+    Label row ORM:
+
+    label_hash (uid),
+    data_title,
+    data_type,
+    data_units,
+    label_status
+
+    A data unit, contained in data_unit_list, is a dictionary in the form:
+
+        data_hash: A data_hash (uid) string
+        data_title: A data title string
+        data_link: Signed URL expiring after 7 days,
+        data_type: Data unit type (video/mp4, image/jpeg, etc.)
+        labels: {
+            ...
+        },
+        object_answers: {
+            ...
+        },
+        classification_answers: {
+            ...
+        }
+
+    A data unit can have any number of vector labels (e.g. bounding box, polygon, keypoint) and classifications.
 
     Each frame-level object and classification has unique identifiers 'objectHash' and 'classificationHash'.
     Each frame-level entity has a unique feature identifier 'featureHash', defined in the editor ontology.
 
     The objects and classifications answer dictionaries contain classification 'answers' (i.e. attributes
     that describe the object or classification). This is to avoid storing the information at every frame
-    in the blurb.
+    in the blurb, of particular importance for videos.
 
     An object can be either a bounding box, or a polygon object.
 
@@ -66,37 +91,16 @@ class Label(base_orm.BaseORM):
         ...
     }
 
-    ORM:
-
-    label_hash (uid),
-    data_hash (uid),
-    data_title,
-    data_link,
-    label_status,
-    labels: {
-        ...
-    },
-    object_answers: {
-        ...
-    },
-    classification_answers: {
-        ...
-    }
-
     """
 
     DB_FIELDS = OrderedDict([
         ("label_hash", str),
-        ("data_hash", str),
         ("data_title", str),
-        ("data_link", str),
+        ("data_type", str),
+        ("data_units", list),
         ("label_status", str),
-        ("labels", (dict, str)),
-        ("object_answers", (dict, str)),
-        ("classification_answers", (dict, str)),
     ])
 
     NON_UPDATABLE_FIELDS = {
         "label_hash",
-        "data_hash",
     }
