@@ -17,50 +17,65 @@ from cord.orm.label_row import LabelRow
 from cord.utils.str_constants import *
 
 
-def construct_answer_dictionaries(label):
+def construct_answer_dictionaries(label_row):
     """
-    Adds answer object and classification answer dictionaries from a blurb if they do not exist.
+    Adds answer object and classification answer dictionaries from a label row if they do not exist.
     Integrity checks are conducted upon saving of labels.
 
     Args:
-        label: A label blurb.
+        label_row: A label row.
 
     Returns:
         LabelRow: A label blurb instance with updated answer dictionaries
     """
-    label = LabelRow(label)  # Cast to Label ORM
-    labels = label.labels
+    label_row = LabelRow(label_row)  # Cast to Label ORM
+    data_type = label_row.data_type
+    data_units = label_row.data_units
 
-    if OBJECT_ANSWERS in label:
-        object_answers = label.object_answers
-    else:
-        object_answers = {}
+    object_answers = data_units.get(OBJECT_ANSWERS, {})
+    classification_answers = data_units.get(CLASSIFICATION_ANSWERS, {})
 
-    if CLASSIFICATION_ANSWERS in label:
-        classification_answers = label.classification_answers
-    else:
-        classification_answers = {}
+    for du in data_units:  # Iterate over data units in label row
+        data_unit = data_units[du]
 
-    for frame in labels:
-        items = labels[frame].get(OBJECTS) + labels[frame].get(CLASSIFICATIONS)
+        if LABELS in data_unit:
+            labels = data_unit.get(LABELS)
 
-        for item in items:
-            if OBJECT_HASH in item:
-                object_hash = item.get(OBJECT_HASH)
-                if object_hash not in object_answers:
-                    object_answers[object_hash] = {
-                        OBJECT_HASH: object_hash,
-                        CLASSIFICATIONS: [],
-                    }
+            if data_type == IMG_GROUP:  # Go through images
+                items = labels.get(OBJECTS) + labels.get(CLASSIFICATIONS)
+                add_answers_to_items(items, classification_answers, object_answers)
 
-            if CLASSIFICATION_HASH in item:
-                classification_hash = item.get(CLASSIFICATION_HASH)
-                if classification_hash not in classification_answers:
-                    classification_answers[classification_hash] = {
-                        CLASSIFICATION_HASH: classification_hash,
-                        CLASSIFICATIONS: [],
-                    }
+            elif data_type == VIDEO:
+                for frame in labels:  # Go through frames
+                    items = labels[frame].get(OBJECTS) + labels[frame].get(CLASSIFICATIONS)
+                    add_answers_to_items(items, classification_answers, object_answers)
 
-    label[OBJECT_ANSWERS] = object_answers
-    label[CLASSIFICATION_ANSWERS] = classification_answers
-    return label
+    label_row.data_units[OBJECT_ANSWERS] = object_answers
+    label_row.data_units[CLASSIFICATION_ANSWERS] = classification_answers
+    return label_row
+
+
+# -------------------------------------------------
+#                       HELPER FUNCTIONS
+# -------------------------------------------------
+def add_answers_to_items(items, classification_answers, object_answers):
+    """
+    If object_hash (uid) or classification_hash (uid) are not in answer dictionaries,
+    add key entry with empty classification list.
+    """
+    for item in items:
+        if OBJECT_HASH in item:
+            object_hash = item.get(OBJECT_HASH)
+            if object_hash not in object_answers:
+                object_answers[object_hash] = {
+                    OBJECT_HASH: object_hash,
+                    CLASSIFICATIONS: [],
+                }
+
+        if CLASSIFICATION_HASH in item:
+            classification_hash = item.get(CLASSIFICATION_HASH)
+            if classification_hash not in classification_answers:
+                classification_answers[classification_hash] = {
+                    CLASSIFICATION_HASH: classification_hash,
+                    CLASSIFICATIONS: [],
+                }
