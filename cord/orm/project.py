@@ -38,7 +38,6 @@ class Project(base_orm.BaseORM):
     label_rows: [
         {
         label_hash (uid),
-        data_hash (uid),
         data_title,
         data_type,
         label_status
