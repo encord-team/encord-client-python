@@ -44,7 +44,7 @@ class ModelInferenceParams(base_orm.BaseORM):
     """
 
     DB_FIELDS = OrderedDict([
-        ("file", str),
+        ("files", list),
         ("conf_thresh", float),  # Confidence threshold
         ("iou_thresh", float),  # Intersection over union threshold
         ("device", str),
