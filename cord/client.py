@@ -33,6 +33,7 @@ Here is a simple example for instantiating the client and obtaining project info
 import sys
 import logging
 import base64
+import uuid
 
 from cord.configs import CordConfig
 from cord.http.querier import Querier
@@ -152,7 +153,8 @@ class CordClient(object):
 
     def model_inference(self,
                         uid,
-                        file_path,
+                        file_paths=None,
+                        base64_strings=None,
                         conf_thresh=0.6,
                         iou_thresh=0.3,
                         device="cuda",
@@ -163,11 +165,12 @@ class CordClient(object):
 
         Args:
             uid: A model_iteration_hash (uid) string.
-            file_path: Local file path to image or video
+            file_paths: List of local file paths to image(s) or video(s) - if running inference on files
+            base64_strings: List of base 64 strings of image(s) or video(s) - if running inference on base64 strings
             conf_thresh: Confidence threshold (default 0.6)
             iou_thresh: Intersection over union threshold (default 0.3)
             device: Device (CPU or CUDA, default is CUDA)
-            detection_frame_range: Detection frame range (optional, if video)
+            detection_frame_range: Detection frame range (for videos)
 
         Returns:
             Inference results: A dict of inference results.
@@ -180,13 +183,30 @@ class CordClient(object):
             FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
             MustSetDetectionRangeError: If a detection range is not set for video inference
         """
+        if file_paths and base64_strings is None or len(file_paths) > 0 and len(base64_strings) > 0:
+            raise Exception("To run model inference, you must pass either a list of files or base64 strings")
+
         if detection_frame_range is None:
             detection_frame_range = []
 
-        file = open(file_path, 'rb').read()
+        files = []
+        if file_paths is not None:
+            for file_path in file_paths:
+                file = open(file_path, 'rb').read()
+                files.append({
+                    "uid": file_path,  # Add file path as inference identifier
+                    "base64_str": base64.b64encode(file).decode('utf-8')  # File to base64 string
+                })
+
+        elif base64_strings is not None:
+            for base64_string in base64_strings:
+                files.append({
+                    "uid": str(uuid.uuid4()),  # Add uuid as inference identifier
+                    "base64_str": base64_string.decode('utf-8')  # base64 string to utf-8
+                })
 
         params = ModelInferenceParams({
-            'file': base64.b64encode(file).decode('utf-8'),
+            'files': files,
             'conf_thresh': conf_thresh,
             'iou_thresh': iou_thresh,
             'device': device,
