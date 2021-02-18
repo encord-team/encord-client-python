@@ -8,6 +8,7 @@ from cord.orm.project import Project
 from cord.orm.label_row import LabelRow
 
 from tests.test_data.test_blurb import TEST_BLURB
+from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
 
 # Dummy keys, can be used and abused
 LABEL_READ_WRITE_KEY = 'Igr3RTx7B4gJbHZM0eyjOXaPr7jg22Fw22AQbYT0nQM'
@@ -19,8 +20,9 @@ LABEL_WRITE_KEY = 'cWNtJAzzlw3eBWDTMrDPJy9iAXn9eJ0sP8yRj3EVi1U'
 def keys():
     project_id = 'dd00ab81-0834-481b-9ef5-49e35f9f7b63'  # Dummy project ID
     key = LABEL_READ_WRITE_KEY  # Dummy API key with label read/write access
-    label_id = '6786fa5a-3b48-4d34-a7c5-ed2ff82bd3ba'  # Dummy label ID
-    return project_id, key, label_id
+    label_id = '6786fa5a-3b48-4d34-a7c5-ed2ff82bd3ba'  # Dummy video label row ID
+    img_group_label_id = '5fbba385-4918-4eee-85a8-8b7a2e71dd16'
+    return project_id, key, label_id, img_group_label_id
 
 
 @pytest.fixture
@@ -85,8 +87,12 @@ def test_get_label_with_write_key_throws_operation_not_allowed_exception(keys):
         client.get_label_row(keys[2])
 
 
-def test_save_label_blurb(keys, client):
+def test_save_video_label_row(keys, client):
     client.save_label_row(keys[2], TEST_BLURB)
+
+
+def test_save_img_group_label_row(keys, client):
+    client.save_label_row(keys[3], IMG_GROUP_TEST_BLURB)
 
 
 def test_save_label_with_invalid_id_throws_authorisation_exception(keys, client):
