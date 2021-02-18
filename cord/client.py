@@ -40,6 +40,7 @@ from cord.http.querier import Querier
 from cord.orm.project import Project
 from cord.orm.label_row import LabelRow
 from cord.orm.model import Model, ModelInferenceParams
+from cord.orm.labeling_algorithm import LabelingAlgorithm, LabelingAlgorithmParamGetter
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -214,3 +215,34 @@ class CordClient(object):
         })
 
         return self._querier.basic_setter(Model, uid, payload=params)
+
+
+
+    def labeling_algorithm(self,
+                        uid,
+                        algorithm_name,
+                        algorithm_params,
+                        ):
+        """
+        Run labeling algorithm on the platform.
+
+        Args:
+            uid: A job id (uid) string.
+            algorithm_name: Name of labeling algorithm to use
+            algorithm_params: Algorithm specific parameters
+
+        Returns:
+            Algorithm results: Results specific to each algorithm.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no model exists by the specified model_iteration_hash (uid).
+            UnknownError: If an error occurs while running inference.
+            FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
+            MustSetDetectionRangeError: If a detection range is not set for video inference
+        """
+
+        params = LabelingAlgorithmParamGetter(algorithm_name,algorithm_params)
+
+        return self._querier.basic_setter(LabelingAlgorithm, uid, payload=params)
