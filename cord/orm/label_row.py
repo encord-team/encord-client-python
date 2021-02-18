@@ -38,11 +38,11 @@ class LabelRow(base_orm.BaseORM):
 
         "data_units": {
             "data_hash": {
-                data_hash: A data_hash (uid) string
-                data_title: A data title string
-                data_link: Signed URL expiring after 7 days,
-                data_type: Data unit type (video/mp4, image/jpeg, etc.)
-                labels: {
+                "data_hash": A data_hash (uid) string
+                "data_title": A data title string
+                "data_link": Signed URL expiring after 7 days,
+                "data_type": Data unit type (video/mp4, image/jpeg, etc.)
+                "labels": {
                     ...
                 }
             }
