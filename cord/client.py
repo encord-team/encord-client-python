@@ -181,7 +181,7 @@ class CordClient(object):
             ResourceNotFoundError: If no model exists by the specified model_iteration_hash (uid).
             UnknownError: If an error occurs while running inference.
             FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
-            MustSetDetectionRangeError: If a detection range is not set for video inference
+            DetectionRangeInvalidError: If a detection range is invalid for video inference
         """
         if (file_paths is None and base64_strings is None) or (file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(base64_strings) > 0):
             raise Exception("To run model inference, you must pass either a list of files or base64 strings")

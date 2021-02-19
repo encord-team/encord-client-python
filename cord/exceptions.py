@@ -80,11 +80,6 @@ class FileTypeNotSupportedError(CordException):
     pass
 
 
-class MustSetDetectionRangeError(CordException):
-    """ Exception thrown when a detection range is not set for video """
-    pass
-
-
 class DetectionRangeInvalidError(CordException):
     """ Exception thrown when a detection range is invalid (e.g. negative or higher than num frames in video) """
     pass
