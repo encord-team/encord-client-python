@@ -23,7 +23,7 @@ class LabelingAlgorithm(base_orm.BaseORM):
     Labeling algorithm base ORM.
     ORM:
     algorithm_name,
-    algorithm_params,
+    algorithm_params
     """
 
     DB_FIELDS = OrderedDict([
@@ -36,11 +36,9 @@ class ObjectInterpolationParams(base_orm.BaseORM):
     """
     Labeling algorithm parameters for interpolation algorithm
     ORM:
-    labels,
     project_hash,
-    objects_to_track,
-    tracking_Frame_range,
-    user_hash
+    key_frames,
+    objects_to_interpolate
     """
 
     DB_FIELDS = OrderedDict([
