@@ -40,7 +40,8 @@ from cord.http.querier import Querier
 from cord.orm.project import Project
 from cord.orm.label_row import LabelRow
 from cord.orm.model import Model, ModelInferenceParams
-from cord.orm.labeling_algorithm import LabelingAlgorithm, LabelingAlgorithmParamGetter
+from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams
+from cord.utils.str_constants import *
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -217,22 +218,21 @@ class CordClient(object):
         return self._querier.basic_setter(Model, uid, payload=params)
 
 
-
-    def labeling_algorithm(self,
+    def object_interpolation(self,
                         uid,
-                        algorithm_name,
-                        algorithm_params,
+                        key_frames,
+                        objects_to_interpolate,
                         ):
         """
         Run labeling algorithm on the platform.
 
         Args:
             uid: A job id (uid) string.
-            algorithm_name: Name of labeling algorithm to use
-            algorithm_params: Algorithm specific parameters
+            key_frames: Labels for frames to be interpolated
+            objects_to_interpolate: List of object hashes of objects to interpolate
 
         Returns:
-            Algorithm results: Results specific to each algorithm.
+            Interpolation results: Full set of filled frames including interpolated objects
 
         Raises:
             AuthenticationError: If the project API key is invalid.
@@ -243,6 +243,16 @@ class CordClient(object):
             MustSetDetectionRangeError: If a detection range is not set for video inference
         """
 
-        params = LabelingAlgorithmParamGetter(algorithm_name,algorithm_params)
+        project_hash = self._config.project_id
+        interpolation_params = ObjectInterpolationParams({
+            'project_hash': project_hash,
+            'key_frames': key_frames,
+            'objects_to_interpolate': objects_to_interpolate,
+        })
+
+        params = LabelingAlgorithm({
+            'algorithm_name': INTERPOLATION,
+            'algorithm_parameters': interpolation_params,
+        })
 
         return self._querier.basic_setter(LabelingAlgorithm, uid, payload=params)

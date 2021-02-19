@@ -19,7 +19,8 @@ import logging
 from abc import ABCMeta
 import cord.exceptions
 
-CORD_ENDPOINT = 'https://api.cord.tech/public'
+# CORD_ENDPOINT = 'https://api.cord.tech/public'
+CORD_ENDPOINT = 'http://localhost:8000/public'
 _CORD_PROJECT_ID = 'CORD_PROJECT_ID'
 _CORD_API_KEY = 'CORD_API_KEY'
 
