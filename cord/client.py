@@ -40,6 +40,8 @@ from cord.http.querier import Querier
 from cord.orm.project import Project
 from cord.orm.label_row import LabelRow
 from cord.orm.model import Model, ModelInferenceParams
+from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams
+from cord.utils.str_constants import *
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -181,9 +183,11 @@ class CordClient(object):
             ResourceNotFoundError: If no model exists by the specified model_iteration_hash (uid).
             UnknownError: If an error occurs while running inference.
             FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
-            MustSetDetectionRangeError: If a detection range is not set for video inference
+            DetectionRangeInvalidError: If a detection range is invalid for video inference
         """
-        if (file_paths is None and base64_strings is None) or (file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(base64_strings) > 0):
+        if (file_paths is None and base64_strings is None) or (
+                file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(
+                base64_strings) > 0):
             raise Exception("To run model inference, you must pass either a list of files or base64 strings")
 
         if detection_frame_range is None:
@@ -214,3 +218,37 @@ class CordClient(object):
         })
 
         return self._querier.basic_setter(Model, uid, payload=params)
+
+    def object_interpolation(self,
+                             key_frames,
+                             objects_to_interpolate,
+                             ):
+        """
+        Run object interpolation algorithm with a platform defined project.
+
+        Args:
+            key_frames: Labels for frames to be interpolated
+            objects_to_interpolate: List of object hashes of objects to interpolate
+
+        Returns:
+            Interpolation results: Full set of filled frames including interpolated objects
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            UnknownError: If an error occurs while running interpolation.
+        """
+        if len(key_frames) == 0 or len(objects_to_interpolate) == 0:
+            raise Exception("To run object interpolation, you must pass key frames and objects to interpolate")
+
+        interpolation_params = ObjectInterpolationParams({
+            'key_frames': key_frames,
+            'objects_to_interpolate': objects_to_interpolate,
+        })
+
+        params = LabelingAlgorithm({
+            'algorithm_name': INTERPOLATION,
+            'algorithm_parameters': interpolation_params,
+        })
+
+        return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=params)

@@ -10,3 +10,6 @@ CLASSIFICATION_ANSWERS = "classification_answers"
 # Data types
 VIDEO = "video"
 IMG_GROUP = "img_group"
+
+# Labeling algorithm names
+INTERPOLATION = "interpolation"
