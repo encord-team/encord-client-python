@@ -185,7 +185,9 @@ class CordClient(object):
             FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
             DetectionRangeInvalidError: If a detection range is invalid for video inference
         """
-        if (file_paths is None and base64_strings is None) or (file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(base64_strings) > 0):
+        if (file_paths is None and base64_strings is None) or (
+                file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(
+                base64_strings) > 0):
             raise Exception("To run model inference, you must pass either a list of files or base64 strings")
 
         if detection_frame_range is None:
@@ -217,17 +219,14 @@ class CordClient(object):
 
         return self._querier.basic_setter(Model, uid, payload=params)
 
-
     def object_interpolation(self,
-                        uid,
-                        key_frames,
-                        objects_to_interpolate,
-                        ):
+                             key_frames,
+                             objects_to_interpolate,
+                             ):
         """
-        Run labeling algorithm on the platform.
+        Run object interpolation algorithm with a platform defined project.
 
         Args:
-            uid: A job id (uid) string.
             key_frames: Labels for frames to be interpolated
             objects_to_interpolate: List of object hashes of objects to interpolate
 
@@ -237,15 +236,12 @@ class CordClient(object):
         Raises:
             AuthenticationError: If the project API key is invalid.
             AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no model exists by the specified model_iteration_hash (uid).
-            UnknownError: If an error occurs while running inference.
-            FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
-            MustSetDetectionRangeError: If a detection range is not set for video inference
+            UnknownError: If an error occurs while running interpolation.
         """
+        if len(key_frames) == 0 or len(objects_to_interpolate) == 0:
+            raise Exception("To run object interpolation, you must pass key frames and objects to interpolate")
 
-        project_hash = self._config.project_id
         interpolation_params = ObjectInterpolationParams({
-            'project_hash': project_hash,
             'key_frames': key_frames,
             'objects_to_interpolate': objects_to_interpolate,
         })
@@ -255,4 +251,4 @@ class CordClient(object):
             'algorithm_parameters': interpolation_params,
         })
 
-        return self._querier.basic_setter(LabelingAlgorithm, uid, payload=params)
+        return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=params)

@@ -21,9 +21,12 @@ from cord.orm import base_orm
 class LabelingAlgorithm(base_orm.BaseORM):
     """
     Labeling algorithm base ORM.
+
     ORM:
+
     algorithm_name,
     algorithm_params
+
     """
 
     DB_FIELDS = OrderedDict([
@@ -35,15 +38,15 @@ class LabelingAlgorithm(base_orm.BaseORM):
 class ObjectInterpolationParams(base_orm.BaseORM):
     """
     Labeling algorithm parameters for interpolation algorithm
+
     ORM:
-    project_hash,
+
     key_frames,
     objects_to_interpolate
+
     """
 
     DB_FIELDS = OrderedDict([
-        ("project_hash", str),
         ("key_frames", dict),
         ("objects_to_interpolate", list),
     ])
-
