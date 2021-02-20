@@ -42,9 +42,6 @@ def check_error_response(response):
     if response == FILE_TYPE_NOT_SUPPORTED_ERROR:
         raise FileTypeNotSupportedError("Supported file types are: image/jpeg, image/png, video/webm, video/mp4.")
 
-    if response == MUST_SET_DETECTION_RANGE_ERROR:
-        raise MustSetDetectionRangeError("You must set a detection range for video inference")
-
     if response == DETECTION_RANGE_INVALID_ERROR:
         raise DetectionRangeInvalidError("The detection range is invalid (e.g. less than 0, or"
                                          " higher than num frames in the video)")
