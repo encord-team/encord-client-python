@@ -40,6 +40,8 @@ from cord.http.querier import Querier
 from cord.orm.project import Project
 from cord.orm.label_row import LabelRow
 from cord.orm.model import Model, ModelInferenceParams
+from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams
+from cord.utils.str_constants import *
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -214,3 +216,43 @@ class CordClient(object):
         })
 
         return self._querier.basic_setter(Model, uid, payload=params)
+
+
+    def object_interpolation(self,
+                        uid,
+                        key_frames,
+                        objects_to_interpolate,
+                        ):
+        """
+        Run labeling algorithm on the platform.
+
+        Args:
+            uid: A job id (uid) string.
+            key_frames: Labels for frames to be interpolated
+            objects_to_interpolate: List of object hashes of objects to interpolate
+
+        Returns:
+            Interpolation results: Full set of filled frames including interpolated objects
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no model exists by the specified model_iteration_hash (uid).
+            UnknownError: If an error occurs while running inference.
+            FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
+            MustSetDetectionRangeError: If a detection range is not set for video inference
+        """
+
+        project_hash = self._config.project_id
+        interpolation_params = ObjectInterpolationParams({
+            'project_hash': project_hash,
+            'key_frames': key_frames,
+            'objects_to_interpolate': objects_to_interpolate,
+        })
+
+        params = LabelingAlgorithm({
+            'algorithm_name': INTERPOLATION,
+            'algorithm_parameters': interpolation_params,
+        })
+
+        return self._querier.basic_setter(LabelingAlgorithm, uid, payload=params)

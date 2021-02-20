@@ -83,3 +83,8 @@ class FileTypeNotSupportedError(CordException):
 class DetectionRangeInvalidError(CordException):
     """ Exception thrown when a detection range is invalid (e.g. negative or higher than num frames in video) """
     pass
+
+
+class InvalidAlgorithmError(CordException):
+    """ Exception thrown when invalid labeling algorithm name is sent. """
+    pass
