@@ -6,6 +6,7 @@ from cord.client import CordClient
 from cord.configs import CordConfig
 from cord.orm.project import Project
 from cord.orm.label_row import LabelRow
+from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
 
 from tests.test_data.test_blurb import TEST_BLURB
 from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
@@ -21,7 +22,7 @@ def keys():
     project_id = 'dd00ab81-0834-481b-9ef5-49e35f9f7b63'  # Dummy project ID
     key = LABEL_READ_WRITE_KEY  # Dummy API key with label read/write access
     label_id = '6786fa5a-3b48-4d34-a7c5-ed2ff82bd3ba'  # Dummy video label row ID
-    img_group_label_id = '5fbba385-4918-4eee-85a8-8b7a2e71dd16'
+    img_group_label_id = '5fbba385-4918-4eee-85a8-8b7a2e71dd16'  # Image group label row ID
     return project_id, key, label_id, img_group_label_id
 
 
@@ -88,11 +89,13 @@ def test_get_label_with_write_key_throws_operation_not_allowed_exception(keys):
 
 
 def test_save_video_label_row(keys, client):
-    client.save_label_row(keys[2], TEST_BLURB)
+    blurb = client.save_label_row(keys[2], TEST_BLURB)
+    assert blurb is True
 
 
 def test_save_img_group_label_row(keys, client):
-    client.save_label_row(keys[3], IMG_GROUP_TEST_BLURB)
+    blurb = client.save_label_row(keys[3], IMG_GROUP_TEST_BLURB)
+    assert blurb is True
 
 
 def test_save_label_with_invalid_id_throws_authorisation_exception(keys, client):
@@ -105,3 +108,9 @@ def test_save_label_with_read_key_throws_operation_not_allowed_exception(keys):
 
     with pytest.raises(expected_exception=cord.exceptions.OperationNotAllowed):
         client.save_label_row(keys[2], TEST_BLURB)
+
+
+def test_object_interpolation_with_polygons(keys):
+    client = CordClient.initialise(keys[0], LABEL_READ_KEY)
+    objects = client.object_interpolation(INTERPOLATION_TEST_BLURB, ['60f75ddb-aa68-4654-8c85-f6959dbb62eb'])
+    assert isinstance(objects, dict)
