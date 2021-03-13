@@ -26,9 +26,9 @@ def construct_answer_dictionaries(label_row):
         label_row: A label row.
 
     Returns:
-        LabelRow: A label blurb instance with updated answer dictionaries
+        LabelRow: A label row instance with updated answer dictionaries
     """
-    label_row = LabelRow(label_row)  # Cast to Label ORM
+    label_row = LabelRow(label_row)  # Cast to label row ORM
     data_type = label_row.data_type
     data_units = label_row.data_units
 
@@ -55,9 +55,9 @@ def construct_answer_dictionaries(label_row):
     return label_row
 
 
-# -------------------------------------------------
-#                       HELPER FUNCTIONS
-# -------------------------------------------------
+# ---------------------------------------------------------
+#                   Helper functions
+# ---------------------------------------------------------
 def add_answers_to_items(items, classification_answers, object_answers):
     """
     If object_hash (uid) or classification_hash (uid) are not in answer dictionaries,

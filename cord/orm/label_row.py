@@ -32,6 +32,8 @@ class LabelRow(base_orm.BaseORM):
     data_title,
     data_type,
     data_units,
+    object_answers,
+    classification_answers,
     label_status
 
     A data unit, contained the dictionary data_units, is in the form:
@@ -42,16 +44,13 @@ class LabelRow(base_orm.BaseORM):
                 "data_title": A data title string
                 "data_link": Signed URL expiring after 7 days,
                 "data_type": Data unit type (video/mp4, image/jpeg, etc.)
+                "data_fps": For video, the frame rate
+                "data_sequence": Sequence number of data unit in label row.
                 "labels": {
                     ...
                 }
-            }
-            "object_answers": {
-                ...
             },
-            "classification_answers": {
-                ...
-            }
+            ...,
         }
 
     A data unit can have any number of vector labels (e.g. bounding box, polygon, keypoint) and classifications.
@@ -66,7 +65,7 @@ class LabelRow(base_orm.BaseORM):
     that describe the object or classification). This is to avoid storing the information at every frame
     in the blurb, of particular importance for videos.
 
-    The labels dictionary is in the form:
+    A labels dictionary for video is in the form:
     {
         "frame": {
             "objects": {
@@ -75,6 +74,16 @@ class LabelRow(base_orm.BaseORM):
             "classifications": {
                 [{classification 1}, {classification 2}, ...]
             }
+        }
+    }
+
+    A labels dictionary for an img_group data unit is in the form:
+    {
+        "objects": {
+            [{object 1}, {object 2}, ...]
+        }
+        "classifications": {
+            [{classification 1}, {classification 2}, ...]
         }
     }
 
@@ -103,6 +112,8 @@ class LabelRow(base_orm.BaseORM):
         ("data_title", str),
         ("data_type", str),
         ("data_units", dict),
+        ("object_answers", dict),
+        ("classification_answers", dict),
         ("label_status", str),
     ])
 

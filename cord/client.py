@@ -14,7 +14,7 @@
 # under the License.
 
 """ ``cord.client`` provides a simple Python client that allows you
-to query project resources through the Cord REST API.
+to query project resources through the Cord API.
 
 Here is a simple example for instantiating the client and obtaining project info:
 
@@ -25,8 +25,8 @@ Here is a simple example for instantiating the client and obtaining project info
     client = CordClient.initialize('YourProjectID', 'YourAPIKey')
     client.get_project()
 
-    :returns
-    Project info. See Project ORM for details.
+    Returns:
+        Project: A project record instance. See Project ORM for details.
 
 """
 
@@ -224,11 +224,44 @@ class CordClient(object):
                              objects_to_interpolate,
                              ):
         """
-        Run object interpolation algorithm with a platform defined project.
+        Run object interpolation algorithm on project labels (requires an editor ontology and feature uid's).
+
+        Interpolation is supported for bounding box, polygon, and keypoint.
 
         Args:
-            key_frames: Labels for frames to be interpolated
-            objects_to_interpolate: List of object hashes of objects to interpolate
+            key_frames: Labels for frames to be interpolated. Key frames are consumed in the form:
+
+                "frame": {
+                    "objects": [
+                        {
+                            "objectHash": object_uid,
+                            "featureHash": feature_uid (from editor ontology),
+                            "polygon": {
+                                "0": {
+                                    "x": x1,
+                                    "y": y1,
+                                },
+                                "1": {
+                                    "x": x2,
+                                    "y": y2,
+                                },
+                                "2" {
+                                    "x": x3,
+                                    "y": y3,
+                                },
+                                ...,
+                            }
+                        },
+                        {
+                            ...
+                        }
+                    ]
+                },
+                "frame": {
+                    ...,
+                }
+
+            objects_to_interpolate: List of object uid's (hashes) of objects to interpolate
 
         Returns:
             Interpolation results: Full set of filled frames including interpolated objects
