@@ -72,6 +72,25 @@ class Querier:
         else:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
+    def basic_put(self, db_object_type, uid, payload):
+        """
+        Single DB object put request
+        """
+        request = self.request(
+            QueryMethods.PUT,
+            db_object_type,
+            uid,
+            self._config.write_timeout,
+            payload=payload,
+        )
+
+        res = self.execute(request)
+
+        if res:
+            return res
+        else:
+            raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
+
     def request(self, method, db_object_type, uid, timeout, payload=None):
         """
         Request object constructor
@@ -120,7 +139,8 @@ class Querier:
 
         if res_json.get("status") != requests.codes.ok:
             response = res_json.get("response")
-            check_error_response(response)
+            extra_payload = res_json.get("payload")
+            check_error_response(response, extra_payload)
 
         session.close()
 

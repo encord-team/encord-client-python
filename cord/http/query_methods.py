@@ -16,3 +16,4 @@
 class QueryMethods(object):
     GET = "GET"
     POST = "POST"
+    PUT = "PUT"

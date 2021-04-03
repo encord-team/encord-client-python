@@ -39,7 +39,7 @@ class LabelRow(base_orm.BaseORM):
     A data unit, contained the dictionary data_units, is in the form:
 
         "data_units": {
-            "data_hash": {
+            data_hash: {
                 "data_hash": A data_hash (uid) string
                 "data_title": A data title string
                 "data_link": Signed URL expiring after 7 days,
@@ -115,6 +115,8 @@ class LabelRow(base_orm.BaseORM):
         ("object_answers", dict),
         ("classification_answers", dict),
         ("label_status", str),
+        ("data_hash", str),
+        ("project_hash", str),
     ])
 
     NON_UPDATABLE_FIELDS = {
