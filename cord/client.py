@@ -154,15 +154,15 @@ class CordClient(object):
         label = LabelRow(label)
         return self._querier.basic_setter(LabelRow, uid, payload=label)
 
-    def create_label_row(self, data_hash):
+    def create_label_row(self, uid):
         """
         Create a new label Row.
         (For a dataset that has not been labeled previously)
 
         Args:
-            data_hash: the data_hash of the data unit being labeled.
-                       Available in client.get_project().get('label_rows')
-                       where label_status is NOT_LABELLED.
+            uid: the data_hash of the data unit being labeled.
+                Available in client.get_project().get('label_rows')
+                where label_status is NOT_LABELLED.
 
         Returns:
             LabelRow: A label row instance.
@@ -176,11 +176,7 @@ class CordClient(object):
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
             ResourceExistsError: If label information already exists for this project and dataset. Avoids overriding existing work.
         """
-        payload = {
-            'data_hash': data_hash,
-            'project_hash': self._config.project_id
-        }
-        return self._querier.basic_put(LabelRow, uid=None, payload=payload)
+        return self._querier.basic_put(LabelRow, uid=uid, payload=None)
 
     def model_inference(self,
                         uid,

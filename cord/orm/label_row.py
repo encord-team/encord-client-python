@@ -115,8 +115,6 @@ class LabelRow(base_orm.BaseORM):
         ("object_answers", dict),
         ("classification_answers", dict),
         ("label_status", str),
-        ("data_hash", str),
-        ("project_hash", str),
     ])
 
     NON_UPDATABLE_FIELDS = {
