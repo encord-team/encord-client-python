@@ -104,7 +104,8 @@ class UnitTests(unittest.TestCase):
                 v["objectHash"] = OH
                 new_list.append(v.copy())
             test_blurb[key]["objects"] = new_list.copy()
-        objects = self.rw_c.object_interpolation(test_blurb, ['60f75ddb-aa68-4654-8c85-f6959dbb62eb'])
+        objects = self.rw_c.object_interpolation(test_blurb,
+        	['60f75ddb-aa68-4654-8c85-f6959dbb62eb'])
         assert isinstance(objects, dict)
 
 
