@@ -84,10 +84,6 @@ class UnitTests(unittest.TestCase):
         blurb = self.rw_c.save_label_row(LABEL_ID, TEST_BLURB)
         assert blurb is True
 
-    # def test_9(self):
-    #     blurb = client.save_label_row(IMG_GROUP_DATA_ID, IMG_GROUP_TEST_BLURB)
-    #     assert blurb is True
-
     def test_10(self):
         with self.assertRaises(AuthorisationError):
             self.rw_c.save_label_row('test', TEST_BLURB)
@@ -105,7 +101,7 @@ class UnitTests(unittest.TestCase):
                 new_list.append(v.copy())
             test_blurb[key]["objects"] = new_list.copy()
         objects = self.rw_c.object_interpolation(test_blurb,
-        	['60f75ddb-aa68-4654-8c85-f6959dbb62eb'])
+                                                 ['60f75ddb-aa68-4654-8c85-f6959dbb62eb'])
         assert isinstance(objects, dict)
 
 

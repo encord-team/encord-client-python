@@ -42,7 +42,6 @@ from cord.orm.label_row import LabelRow
 from cord.orm.model import Model, ModelInferenceParams
 from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams
 from cord.utils.str_constants import *
-from cord.utils.label_utils import construct_answer_dictionaries
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -110,7 +109,7 @@ class CordClient(object):
 
     def get_label_row(self, uid):
         """
-        Retrieves label row
+        Retrieves label row.
 
         Args:
             uid: A label_hash (uid) string.
@@ -129,7 +128,7 @@ class CordClient(object):
 
     def save_label_row(self, uid, label):
         """
-        Save existing label Row
+        Save existing label row.
 
         If you have a series of frame labels and have not updated answer
         dictionaries, call the construct_answer_dictionaries utils function
@@ -156,11 +155,10 @@ class CordClient(object):
 
     def create_label_row(self, uid):
         """
-        Create a new label Row.
-        (For a dataset that has not been labeled previously)
+        Create a label row (for data in a project not previously been labeled).
 
         Args:
-            uid: the data_hash of the data unit being labeled.
+            uid: the data_hash (uid) of the data unit being labeled.
                 Available in client.get_project().get('label_rows')
                 where label_status is NOT_LABELLED.
 
@@ -174,7 +172,7 @@ class CordClient(object):
             OperationNotAllowed: If the write operation is not allowed by the API key.
             AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
-            ResourceExistsError: If label information already exists for this project and dataset. Avoids overriding existing work.
+            ResourceExistsError: If a label row already exists for this project data. Avoids overriding existing work.
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload=None)
 

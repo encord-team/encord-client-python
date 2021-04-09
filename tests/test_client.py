@@ -6,8 +6,8 @@ from cord.client import CordClient
 from cord.configs import CordConfig
 from cord.orm.project import Project
 from cord.orm.label_row import LabelRow
-from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
 
+from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
 from tests.test_data.test_blurb import TEST_BLURB
 from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
 
