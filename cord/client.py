@@ -42,6 +42,7 @@ from cord.orm.label_row import LabelRow
 from cord.orm.model import Model, ModelInferenceParams
 from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams
 from cord.utils.str_constants import *
+from cord.utils.label_utils import construct_answer_dictionaries
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -152,6 +153,30 @@ class CordClient(object):
         """
         label = LabelRow(label)
         return self._querier.basic_setter(LabelRow, uid, payload=label)
+
+    def create_label_row(self, uid):
+        """
+        Create a new label Row.
+        (For a dataset that has not been labeled previously)
+
+        Args:
+            uid: the data_hash of the data unit being labeled.
+                Available in client.get_project().get('label_rows')
+                where label_status is NOT_LABELLED.
+
+        Returns:
+            LabelRow: A label row instance.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            UnknownError: If an error occurs while saving the label.
+            OperationNotAllowed: If the write operation is not allowed by the API key.
+            AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
+            CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
+            ResourceExistsError: If label information already exists for this project and dataset. Avoids overriding existing work.
+        """
+        return self._querier.basic_put(LabelRow, uid=uid, payload=None)
 
     def model_inference(self,
                         uid,

@@ -3,7 +3,7 @@ from cord.exceptions import *
 # Error messages
 AUTHENTICATION_ERROR = ['AUTHENTICATION_ERROR']
 AUTHORISATION_ERROR = ['AUTHORISATION_ERROR']
-METHOD_NOT_ALLOWED_ERROR = ['METHOD_NOW_ALLOWED_ERROR']
+METHOD_NOT_ALLOWED_ERROR = ['METHOD_NOT_ALLOWED_ERROR']
 UNKNOWN_ERROR = ['UNKNOWN_ERROR']
 OPERATION_NOT_ALLOWED_ERROR = ['OPERATION_NOT_ALLOWED']
 ANSWER_DICTIONARY_ERROR = ['ANSWER_DICTIONARY_ERROR']
@@ -11,11 +11,13 @@ CORRUPTED_LABEL_ERROR = ['CORRUPTED_LABEL_ERROR']
 FILE_TYPE_NOT_SUPPORTED_ERROR = ['FILE_TYPE_NOT_SUPPORTED_ERROR']
 MUST_SET_DETECTION_RANGE_ERROR = ['MUST_SET_DETECTION_RANGE_ERROR']
 DETECTION_RANGE_INVALID_ERROR = ['DETECTION_RANGE_INVALID_ERROR']
+RESOURCE_EXISTS_ERROR = ['RESOURCE_EXISTS_ERROR']
 
 
-def check_error_response(response):
+def check_error_response(response, payload=None):
     """
-    Checks server response, called if HTTP response status code is an error response
+    Checks server response.
+    Called if HTTP response status code is an error response.
     """
     if response == AUTHENTICATION_ERROR:
         raise AuthenticationError("Invalid API key.")
@@ -45,5 +47,11 @@ def check_error_response(response):
     if response == DETECTION_RANGE_INVALID_ERROR:
         raise DetectionRangeInvalidError("The detection range is invalid (e.g. less than 0, or"
                                          " higher than num frames in the video)")
+
+    if response == RESOURCE_EXISTS_ERROR:
+        raise ResourceExistsError(
+            "Trying to create a resource that already exists."
+            "Label hash for this data is: " + str(payload)
+        )
 
     pass

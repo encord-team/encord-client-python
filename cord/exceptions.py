@@ -13,6 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 class CordException(Exception):
     """ Base class for all exceptions. """
 
@@ -30,12 +31,18 @@ class AuthenticationError(CordException):
 
 
 class AuthorisationError(CordException):
-    """ Exception thrown when access to a data asset or method is unauthorised. """
+    """
+    Exception thrown when access is unauthorised.
+    (E.g. access to a data asset or method).
+    """
     pass
 
 
 class ResourceNotFoundError(CordException):
-    """ Exception thrown when a requested resource (e.g. label, data asset) is not found. """
+    """
+    Exception thrown when a requested resource is not found.
+    (E.g. label, data asset).
+    """
     pass
 
 
@@ -60,31 +67,53 @@ class MethodNotAllowedError(CordException):
 
 
 class OperationNotAllowed(CordException):
-    """ Exception thrown when a read/write operation is not allowed by the API key. """
+    """
+    Exception thrown when a read/write operation is not allowed.
+    The API key blocks the operation.
+    """
     pass
 
 
 class AnswerDictionaryError(CordException):
-    """ Exception thrown when object or classification is missing in answer dictionaries. """
+    """
+    Exception thrown when answer dictionaries are incomplete.
+    Occurs when an object or classification is missing.
+    """
     pass
 
 
 class CorruptedLabelError(CordException):
-    """ Exception thrown when a label is corrupted (e.g. the frame labels have more frames than the video.) """
+    """
+    Exception thrown when a label is corrupted.
+    (E.g. the frame labels have more frames than the video).
+    """
     pass
 
 
 class FileTypeNotSupportedError(CordException):
-    """ Exception thrown when a file type is not supported
-    Supported file types are: image/jpeg, image/png, video/webm, video/mp4. """
+    """
+    Exception thrown when a file type is not supported.
+    Supported file types are: image/jpeg, image/png, video/webm, video/mp4.
+    """
     pass
 
 
 class DetectionRangeInvalidError(CordException):
-    """ Exception thrown when a detection range is invalid (e.g. negative or higher than num frames in video) """
+    """
+    Exception thrown when a detection range is invalid.
+    (E.g. negative or higher than num frames in video).
+    """
     pass
 
 
 class InvalidAlgorithmError(CordException):
     """ Exception thrown when invalid labeling algorithm name is sent. """
+    pass
+
+
+class ResourceExistsError(CordException):
+    """
+    Exception thrown when trying to re-create a resource.
+    Avoids overriding existing work.
+    """
     pass
