@@ -8,6 +8,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple10.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "0",
             "labels": {
                 "objects": [
                     {
@@ -39,6 +40,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple9.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "1",
             "labels": {
                 "objects": [
                     {
@@ -70,6 +72,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple8.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "2",
             "labels": {
                 "objects": [
                     {
@@ -101,6 +104,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple7.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "3",
             "labels": {
                 "objects": [
                     {
@@ -132,6 +136,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple6.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "4",
             "labels": {
                 "objects": [
                     {
@@ -163,6 +168,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple5.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "5",
             "labels": {
                 "objects": [
                     {
@@ -194,6 +200,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple4.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "6",
             "labels": {
                 "objects": [
                     {
@@ -223,6 +230,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple3.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "7",
             "labels": {
                 "objects": [
                     {
@@ -252,6 +260,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple2.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "8",
             "labels": {
                 "objects": [
                     {
@@ -281,6 +290,7 @@ IMG_GROUP_TEST_BLURB = {
             "data_title": "apple1.jpg",
             "data_link": "",
             "data_type": "image/jpg",
+            "data_sequence": "9",
             "labels": {
                 "objects": [
                     {
@@ -305,13 +315,13 @@ IMG_GROUP_TEST_BLURB = {
                 "classifications": [],
             },
         },
-        "object_answers": {
-            "0eaa81ee-77e0-4f5d-98e5-62ad29030263": {
-                "objectHash": "0eaa81ee-77e0-4f5d-98e5-62ad29030263",
-                "classifications": [],
-            }
-        },
-        "classification_answers": {},
     },
+    "object_answers": {
+        "0eaa81ee-77e0-4f5d-98e5-62ad29030263": {
+            "objectHash": "0eaa81ee-77e0-4f5d-98e5-62ad29030263",
+            "classifications": [],
+        }
+    },
+    "classification_answers": {},
     "label_status": "LABELLED",
 }

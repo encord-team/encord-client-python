@@ -50,8 +50,8 @@ def construct_answer_dictionaries(label_row):
                     items = labels[frame].get(OBJECTS) + labels[frame].get(CLASSIFICATIONS)
                     add_answers_to_items(items, classification_answers, object_answers)
 
-    label_row.data_units[OBJECT_ANSWERS] = object_answers
-    label_row.data_units[CLASSIFICATION_ANSWERS] = classification_answers
+    label_row[OBJECT_ANSWERS] = object_answers
+    label_row[CLASSIFICATION_ANSWERS] = classification_answers
     return label_row
 
 
