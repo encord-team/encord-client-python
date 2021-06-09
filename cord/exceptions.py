@@ -25,6 +25,11 @@ class CordException(Exception):
         return self.message
 
 
+class InitialisationError(CordException):
+    """ Exception thrown when API key fails to initialise. """
+    pass
+
+
 class AuthenticationError(CordException):
     """ Exception thrown when API key fails authentication. """
     pass
