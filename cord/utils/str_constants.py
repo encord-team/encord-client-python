@@ -13,3 +13,7 @@ IMG_GROUP = "img_group"
 
 # Labeling algorithm names
 INTERPOLATION = "interpolation"
+
+# Type of Cord API key
+TYPE_PROJECT = 'project'
+TYPE_DATASET = 'dataset'
