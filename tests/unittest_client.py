@@ -24,7 +24,7 @@ DATASET_ID = '93acfbf8-77db-48d9-90a9-2a9b9065511c'
 DATASET_KEY = 'G26da4vZFI096OSnwSVZbO9TDIyYF2_OdODKNakJEQk'
 
 """
-    Dev tests for Client
+    Dev tests for Client (local)
 """
 
 

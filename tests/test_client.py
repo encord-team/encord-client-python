@@ -19,53 +19,49 @@ LABEL_WRITE_KEY = 'cWNtJAzzlw3eBWDTMrDPJy9iAXn9eJ0sP8yRj3EVi1U'
 
 @pytest.fixture
 def keys():
-    project_id = 'dd00ab81-0834-481b-9ef5-49e35f9f7b63'  # Dummy project ID
+    resource_id = 'dd00ab81-0834-481b-9ef5-49e35f9f7b63'  # Dummy project ID
     key = LABEL_READ_WRITE_KEY  # Dummy API key with label read/write access
     label_id = '6786fa5a-3b48-4d34-a7c5-ed2ff82bd3ba'  # Dummy video label row ID
     img_group_label_id = '5fbba385-4918-4eee-85a8-8b7a2e71dd16'  # Image group label row ID
-    return project_id, key, label_id, img_group_label_id
+    return resource_id, key, label_id, img_group_label_id
 
 
 @pytest.fixture
 def client(keys):
-    return CordClient.initialise(project_id=keys[0], api_key=keys[1])
+    return CordClient.initialise(resource_id=keys[0], api_key=keys[1])
 
 
 def test_initialise(keys):
-    assert isinstance(CordClient.initialise(project_id=keys[0], api_key=keys[1]), CordClient)
+    assert isinstance(CordClient.initialise(resource_id=keys[0], api_key=keys[1]), CordClient)
 
 
 def test_initialise_with_config(keys):
-    config = CordConfig(project_id=keys[0], api_key=keys[1])
+    config = CordConfig(resource_id=keys[0], api_key=keys[1])
     assert isinstance(CordClient.initialise_with_config(config), CordClient)
 
 
 def test_missing_key(keys):
     with pytest.raises(expected_exception=cord.exceptions.AuthenticationError) as excinfo:
-        CordClient.initialise(project_id=keys[0])
+        CordClient.initialise(resource_id=keys[0])
 
     assert excinfo.value.message == "API key not provided"
 
 
-def test_missing_project_id(keys):
+def test_missing_resource_id(keys):
     with pytest.raises(expected_exception=cord.exceptions.AuthenticationError) as excinfo:
         CordClient.initialise(api_key=keys[1])
 
-    assert excinfo.value.message == "Project ID not provided"
+    assert excinfo.value.message == "Project ID or dataset ID not provided"
 
 
 def test_invalid_key(keys):
-    client = CordClient.initialise(keys[0], uuid.uuid4())
-
     with pytest.raises(expected_exception=cord.exceptions.AuthenticationError):
-        client.get_project()
+        CordClient.initialise(keys[0], uuid.uuid4())
 
 
-def test_invalid_project_id(keys):
-    client = CordClient.initialise(uuid.uuid4(), keys[1])
-
+def test_invalid_resource_id(keys):
     with pytest.raises(expected_exception=cord.exceptions.AuthenticationError):
-        client.get_project()
+        CordClient.initialise(uuid.uuid4(), keys[1])
 
 
 def test_get_project(client):
