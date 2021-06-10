@@ -29,6 +29,8 @@ class LabelRow(base_orm.BaseORM):
     Label row ORM:
 
     label_hash (uid),
+    dataset_hash (uid),
+    dataset_title,
     data_title,
     data_type,
     data_units,
@@ -109,6 +111,8 @@ class LabelRow(base_orm.BaseORM):
 
     DB_FIELDS = OrderedDict([
         ("label_hash", str),
+        ("dataset_hash", str),
+        ("dataset_title", str),
         ("data_title", str),
         ("data_type", str),
         ("data_units", dict),

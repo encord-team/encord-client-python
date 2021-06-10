@@ -25,6 +25,11 @@ class CordException(Exception):
         return self.message
 
 
+class InitialisationError(CordException):
+    """ Exception thrown when API key fails to initialise. """
+    pass
+
+
 class AuthenticationError(CordException):
     """ Exception thrown when API key fails authentication. """
     pass
@@ -95,6 +100,11 @@ class FileTypeNotSupportedError(CordException):
     Exception thrown when a file type is not supported.
     Supported file types are: image/jpeg, image/png, video/webm, video/mp4.
     """
+    pass
+
+
+class UploadOperationNotSupportedError(CordException):
+    """ Exception thrown when trying to upload a video/image group to non-Cord storage dataset """
     pass
 
 

@@ -13,22 +13,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Label row constants
-LABELS = "labels"
-OBJECTS = "objects"
-CLASSIFICATIONS = "classifications"
-OBJECT_HASH = "objectHash"
-CLASSIFICATION_HASH = "classificationHash"
-OBJECT_ANSWERS = "object_answers"
-CLASSIFICATION_ANSWERS = "classification_answers"
+from collections import OrderedDict
 
-# Data types
-VIDEO = "video"
-IMG_GROUP = "img_group"
+from cord.orm import base_orm
 
-# Labeling algorithm names
-INTERPOLATION = "interpolation"
 
-# Type of Cord API key
-TYPE_PROJECT = 'project'
-TYPE_DATASET = 'dataset'
+class ApiKeyMeta(base_orm.BaseORM):
+    """
+    ApiKeyMeta contains key information.
+
+    ORM:
+
+    title,
+    resource_type
+
+    """
+
+    DB_FIELDS = OrderedDict([
+        ("title", str),
+        ("resource_type", str),
+    ])
+
+    NON_UPDATABLE_FIELDS = {
+        "resource_type",
+    }

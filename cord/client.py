@@ -16,7 +16,8 @@
 """ ``cord.client`` provides a simple Python client that allows you
 to query project resources through the Cord API.
 
-Here is a simple example for instantiating the client and obtaining project info:
+Here is a simple example for instantiating the client for a project
+and obtaining project info:
 
 .. test_blurb2.py code::
 
@@ -30,17 +31,27 @@ Here is a simple example for instantiating the client and obtaining project info
 
 """
 
-import sys
-import logging
 import base64
+import logging
+import os.path
+import sys
 import uuid
+
+import requests
+
+import cord.exceptions
 
 from cord.configs import CordConfig
 from cord.http.querier import Querier
-from cord.orm.project import Project
+from cord.http.utils import read_in_chunks
+from cord.orm.api_key import ApiKeyMeta
+from cord.orm.dataset import Dataset, SignedURL, Video
 from cord.orm.label_row import LabelRow
+from cord.orm.labeling_algorithm import (
+    LabelingAlgorithm, ObjectInterpolationParams
+)
 from cord.orm.model import Model, ModelInferenceParams
-from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams
+from cord.orm.project import Project
 from cord.utils.str_constants import *
 
 # Logging configuration
@@ -62,24 +73,29 @@ class CordClient(object):
         self._config = config
 
     @staticmethod
-    def initialise(project_id=None, api_key=None):
+    def initialise(resource_id=None, api_key=None):
         """
-        Creates and initializes a Cord client from a project ID and API key.
+        Create and initialize a Cord client from a resource ID and API key.
 
         Args:
-            project_id: A project ID string. If None, obtained from the CORD_PROJECT_ID environment variable.
-            api_key: A project API key. If None, obtained from the CORD_API_KEY environment variable.
+            resource_id: either of
+                - A project ID string.
+                  If None, uses the CORD_PROJECT_ID environment variable.
+                - A dataset ID string.
+                  If None, uses the CORD_DATASET_ID environment variable.
+            api_key: An API key.
+                     If None, uses the CORD_API_KEY environment variable.
 
         Returns:
             CordClient: A Cord client instance.
         """
-        config = CordConfig(project_id, api_key)
+        config = CordConfig(resource_id, api_key)
         return CordClient.initialise_with_config(config)
 
     @staticmethod
     def initialise_with_config(config):
         """
-        Creates and initializes a Cord client from a Cord config instance.
+        Create and initialize a Cord client from a Cord config instance.
 
         Args:
             config: A Cord config instance.
@@ -88,11 +104,102 @@ class CordClient(object):
             CordClient: A Cord client instance.
         """
         querier = Querier(config)
-        return CordClient(querier, config)
+        key_type = querier.basic_getter(ApiKeyMeta)
+        resource_type = key_type.get('resource_type', '')
 
+        if resource_type == TYPE_PROJECT:
+            logging.info("Initialising Cord client for project using key: %s",
+                         key_type.get('title', ''))
+            return CordClientProject(querier, config)
+
+        elif resource_type == TYPE_DATASET:
+            logging.info("Initialising Cord client for dataset using key: %s",
+                         key_type.get('title', ''))
+            return CordClientDataset(querier, config)
+
+        else:
+            raise cord.exceptions.InitialisationError(
+                message="API key is not associated with a project or dataset"
+            )
+
+    def __getattr__(self, name):
+        """Overriding __getattr__."""
+        value = self.__dict__.get(name)
+        if not value:
+            self_type = type(self).__name__
+            if (self_type == "CordClientDataset" and
+                    name in CordClientProject.__dict__.keys()):
+                raise cord.exceptions.CordException(
+                    message=('{} is implemented in Projects, not Datasets.'
+                             .format(name))
+                )
+            elif (self_type == "CordClientProject" and
+                    name in CordClientDataset.__dict__.keys()):
+                raise cord.exceptions.CordException(
+                    message=('{} is implemented in Datasets, not Projects.'
+                             .format(name))
+                )
+            elif name == 'items':
+                pass
+            else:
+                raise cord.exceptions.CordException(
+                    message='{} is not implemented.'.format(name)
+                )
+        return value
+
+
+class CordClientDataset(CordClient):
+    def get_dataset(self):
+        """
+        Retrieve dataset info (pointers to data, labels).
+
+        Args:
+            self: Cord client object.
+
+        Returns:
+            Dataset: A dataset record instance.
+
+        Raises:
+            AuthorisationError: If the dataset API key is invalid.
+            ResourceNotFoundError: If no dataset exists by the specified dataset ID.
+            UnknownError: If an error occurs while retrieving the dataset.
+        """
+        return self._querier.basic_getter(Dataset)
+
+    def upload_video(self, file_path):
+        """
+        Upload video to Cord storage
+        """
+        if os.path.exists(file_path):
+            short_name = os.path.basename(file_path)
+            signed_url = self._querier.basic_getter(SignedURL, uid=short_name)
+            url = signed_url.get('signed_url')
+            res = requests.put(
+                url,
+                data=read_in_chunks(file_path),
+                headers={'Content-Type': 'application/octet-stream'}
+            )
+            if res.status_code == 200:
+                data_hash = signed_url.get('data_hash')
+
+                self._querier.basic_put(Video, uid=data_hash, payload=signed_url)
+
+                logging.info("Successfully uploaded: %s",
+                             signed_url.get('title', ''))
+                logging.info("Please run client.get_dataset() to refresh.")
+            else:
+                logging.info("Error uploading video: %s",
+                             signed_url.get('title', '').get('title', ''))
+        else:
+            raise cord.exceptions.CordException(
+                message='{} does not point to a file.'.format(file_path)
+            )
+
+
+class CordClientProject(CordClient):
     def get_project(self):
         """
-        Retrieves project info (pointers to data, labels).
+        Retrieve project info (pointers to data, labels).
 
         Args:
             self: Cord client object.
@@ -109,7 +216,7 @@ class CordClient(object):
 
     def get_label_row(self, uid):
         """
-        Retrieves label row.
+        Retrieve label row.
 
         Args:
             uid: A label_hash (uid) string.

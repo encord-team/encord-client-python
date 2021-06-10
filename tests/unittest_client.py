@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+import os
 import unittest
 import uuid
 
@@ -18,12 +20,25 @@ IMG_GROUP_DATA_ID = ''
 LABEL_ID = '23813f86-b352-4c61-bde1-bf8ab00611d5'
 OH = "0b402f38-bc7b-4cae-be94-f963a6713de5"
 
+DATASET_ID = '93acfbf8-77db-48d9-90a9-2a9b9065511c'
+DATASET_KEY = 'G26da4vZFI096OSnwSVZbO9TDIyYF2_OdODKNakJEQk'
+
+"""
+    Dev tests for Client
+"""
+
 
 class UnitTests(unittest.TestCase):
     def setUp(self):
-        self.read_c = CordClient.initialise(PROJECT_ID, LABEL_READ_KEY)
-        self.write_c = CordClient.initialise(PROJECT_ID, LABEL_WRITE_KEY)
-        self.rw_c = CordClient.initialise(PROJECT_ID, LABEL_READ_WRITE_KEY)
+        pass
+
+    @classmethod
+    def setUpClass(cls):
+        super(UnitTests, cls).setUpClass()
+        cls.read_c = CordClient.initialise(PROJECT_ID, LABEL_READ_KEY)
+        cls.write_c = CordClient.initialise(PROJECT_ID, LABEL_WRITE_KEY)
+        cls.rw_c = CordClient.initialise(PROJECT_ID, LABEL_READ_WRITE_KEY)
+        cls.dt_c = CordClient.initialise(DATASET_ID, DATASET_KEY)
 
     def test_create_label_wrong_data_hash(self):
         with self.assertRaises(AuthorisationError):
@@ -40,7 +55,7 @@ class UnitTests(unittest.TestCase):
 
     def test_1(self):
         with self.assertRaises(AuthenticationError) as excinfo:
-            CordClient.initialise(project_id=PROJECT_ID)
+            CordClient.initialise(PROJECT_ID)
         self.assertEqual(
             'API key not provided',
             str(excinfo.exception)
@@ -50,19 +65,17 @@ class UnitTests(unittest.TestCase):
         with self.assertRaises(AuthenticationError) as excinfo:
             CordClient.initialise(api_key=LABEL_READ_WRITE_KEY)
         self.assertEqual(
-            'Project ID not provided',
+            'Project ID and Dataset ID not provided',
             str(excinfo.exception)
         )
 
     def test_3(self):
-        client = CordClient.initialise(PROJECT_ID, uuid.uuid4())
         with self.assertRaises(AuthenticationError):
-            client.get_project()
+            client = CordClient.initialise(PROJECT_ID, uuid.uuid4())
 
     def test_4(self):
-        client = CordClient.initialise(uuid.uuid4(), LABEL_READ_WRITE_KEY)
         with self.assertRaises(AuthenticationError):
-            client.get_project()
+            client = CordClient.initialise(uuid.uuid4(), LABEL_READ_WRITE_KEY)
 
     def test_5(self):
         assert isinstance(self.rw_c.get_label_row(LABEL_ID), LabelRow)
@@ -103,6 +116,24 @@ class UnitTests(unittest.TestCase):
         objects = self.rw_c.object_interpolation(test_blurb,
                                                  ['60f75ddb-aa68-4654-8c85-f6959dbb62eb'])
         assert isinstance(objects, dict)
+
+    def test_upload(self):
+        path = os.path.dirname(__file__)
+        video_path = os.path.join(path, 'test_data', 'video.mp4')
+        self.dt_c.upload_video(video_path)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        dataset = self.dt_c.get_dataset()
+        assert len(dataset) > 0
+        passed = False
+        for dt in dataset:
+            if dt.get('title') == 'video.mp4':
+                then_time = datetime.strptime(
+                    dt.get('created_at'), '%Y-%m-%d %H:%M:%S'
+                )
+                delta = int((now - then_time).total_seconds())
+                if delta >= 0 & delta <= 1 * 60:
+                    passed = True
+        assert passed
 
 
 if __name__ == '__main__':

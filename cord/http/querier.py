@@ -16,47 +16,38 @@
 import logging
 
 import requests
-import requests.exceptions
-
-from requests import Timeout, Session
+from requests import Session, Timeout
 from requests.adapters import HTTPAdapter
+import requests.exceptions
 from requests.packages.urllib3.util import Retry
 
-from cord.http.request import Request
-from cord.http.query_methods import QueryMethods
-from cord.http.error_utils import check_error_response
 from cord.exceptions import *
+from cord.http.error_utils import check_error_response
+from cord.http.query_methods import QueryMethods
+from cord.http.request import Request
 
 
 class Querier:
-    """
-    Querier for DB get/post requests
-    """
+    """ Querier for DB get/post requests. """
     def __init__(self, config):
         self._config = config
 
     def basic_getter(self, db_object_type, uid=None):
-        """
-        Single DB object getter
-        """
+        """ Single DB object getter. """
         request = self.request(
             QueryMethods.GET,
             db_object_type,
             uid,
             self._config.read_timeout,
         )
-
         res = self.execute(request)
-
         if res:
             return db_object_type(res)
         else:
             raise ResourceNotFoundError("Resource not found.")
 
     def basic_setter(self, db_object_type, uid, payload):
-        """
-        Single DB object setter
-        """
+        """ Single DB object setter. """
         request = self.request(
             QueryMethods.POST,
             db_object_type,
@@ -73,9 +64,7 @@ class Querier:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
     def basic_put(self, db_object_type, uid, payload):
-        """
-        Single DB object put request
-        """
+        """ Single DB object put request. """
         request = self.request(
             QueryMethods.PUT,
             db_object_type,
@@ -92,9 +81,7 @@ class Querier:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
     def request(self, method, db_object_type, uid, timeout, payload=None):
-        """
-        Request object constructor
-        """
+        """ Request object constructor. """
         return Request(
             method,
             db_object_type,
@@ -106,9 +93,7 @@ class Querier:
         )
 
     def execute(self, request):
-        """
-        Executes a request
-        """
+        """ Execute a request. """
         logging.info("Request: %s", (request.data[:100] + '..') if len(request.data) > 100 else request.data)
 
         session = Session()
@@ -145,5 +130,3 @@ class Querier:
         session.close()
 
         return res_json.get("response")
-
-

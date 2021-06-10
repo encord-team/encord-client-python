@@ -18,10 +18,11 @@ import logging
 
 from abc import ABCMeta
 import cord.exceptions
-
+ 
 CORD_ENDPOINT = 'https://api.cord.tech/public'
 
 _CORD_PROJECT_ID = 'CORD_PROJECT_ID'
+_CORD_DATASET_ID = 'CORD_DATASET_ID'
 _CORD_API_KEY = 'CORD_API_KEY'
 
 READ_TIMEOUT = 180  # In seconds
@@ -36,45 +37,66 @@ class Config(metaclass=ABCMeta):
     Config defining endpoint, project id, API key, and timeouts.
     """
     def __init__(self,
-                 project_id=None,
+                 resource_id=None,
                  api_key=None,
                  endpoint=CORD_ENDPOINT
                  ):
 
-        if project_id is None:
-            if _CORD_PROJECT_ID not in os.environ:
-                raise cord.exceptions.AuthenticationError(
-                    message="Project ID not provided"
-                )
-
-            project_id = os.environ[_CORD_PROJECT_ID]
+        if resource_id is None:
+            resource_id = get_env_resource_id()
 
         if api_key is None:
-            if _CORD_API_KEY not in os.environ:
-                raise cord.exceptions.AuthenticationError(
-                    message="API key not provided"
-                )
+            api_key = get_env_api_key()
 
-            api_key = os.environ[_CORD_API_KEY]
-
-        self.project_id = project_id
+        self.resource_id = resource_id
         self.api_key = api_key
-
         self.read_timeout = READ_TIMEOUT
         self.write_timeout = WRITE_TIMEOUT
         self.connect_timeout = CONNECT_TIMEOUT
-
         self.endpoint = endpoint
         self.headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'ProjectID': '%s' % project_id,
+            'ResourceID': '%s' % resource_id,
             'Authorization': '%s' % api_key,
         }
 
-        log.info("Initialised Cord client with endpoint: %s and project_id: %s", endpoint, project_id)
+        log.info("Initialising Cord client with endpoint: %s and resource_id: %s",
+                 endpoint, resource_id)
+
+
+def get_env_resource_id():
+    if (_CORD_PROJECT_ID in os.environ) and (_CORD_DATASET_ID in os.environ):
+        raise cord.exceptions.InitialisationError(
+            message=(
+                "Found both Project ID and Dataset ID in os.environ. "
+                "Please initialise CordClient by passing resource_id."
+            )
+        )
+
+    elif _CORD_PROJECT_ID in os.environ:
+        resource_id = os.environ[_CORD_PROJECT_ID]
+
+    elif _CORD_DATASET_ID in os.environ:
+        resource_id = os.environ[_CORD_DATASET_ID]
+
+    else:
+        raise cord.exceptions.AuthenticationError(
+            message="Project ID or dataset ID not provided"
+        )
+
+    return resource_id
+
+
+def get_env_api_key():
+    if _CORD_API_KEY not in os.environ:
+        raise cord.exceptions.AuthenticationError(
+            message="API key not provided"
+        )
+
+    return os.environ[_CORD_API_KEY]
 
 
 class CordConfig(Config):
-    def __init__(self, project_id=None, api_key=None):
-        super(CordConfig, self).__init__(project_id, api_key)
+    def __init__(self, resource_id=None, api_key=None):
+        super(CordConfig, self).__init__(resource_id, api_key)
