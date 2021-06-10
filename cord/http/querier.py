@@ -42,10 +42,7 @@ class Querier:
         )
         res = self.execute(request)
         if res:
-            if type(res) == list:
-                return [db_object_type(i) for i in res]
-            else:
-                return db_object_type(res)
+            return db_object_type(res)
         else:
             raise ResourceNotFoundError("Resource not found.")
 

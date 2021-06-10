@@ -29,18 +29,22 @@ class Project(base_orm.BaseORM):
     editor_ontology,
     datasets: [
        {
-        dataset_hash (uid),
-        title,
-        description
+            dataset_hash (uid),
+            title,
+            description,
+            dataset_type (internal vs. AWS/GCP/Azure),
        },
        ...
     ],
     label_rows: [
         {
-        label_hash (uid),
-        data_title,
-        data_type,
-        label_status
+            label_hash (uid),
+            data_hash (uid),
+            dataset_hash (uid),
+            dataset_title,
+            data_title,
+            data_type,
+            label_status
         },
         ...
     ]
@@ -58,7 +62,7 @@ class Project(base_orm.BaseORM):
     NON_UPDATABLE_FIELDS = {
         "editor_ontology",
         "datasets",
-        "labels",
+        "label_rows"
     }
 
     def get_labels_list(self):

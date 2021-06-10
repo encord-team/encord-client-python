@@ -73,13 +73,16 @@ def get_env_resource_id():
                 "Please initialise CordClient by passing resource_id."
             )
         )
+
     elif _CORD_PROJECT_ID in os.environ:
         resource_id = os.environ[_CORD_PROJECT_ID]
+
     elif _CORD_DATASET_ID in os.environ:
         resource_id = os.environ[_CORD_DATASET_ID]
+
     else:
         raise cord.exceptions.AuthenticationError(
-            message="Project ID and Dataset ID not provided"
+            message="Project ID or dataset ID not provided"
         )
 
     return resource_id

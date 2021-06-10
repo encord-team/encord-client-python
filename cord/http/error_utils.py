@@ -24,6 +24,7 @@ OPERATION_NOT_ALLOWED_ERROR = ['OPERATION_NOT_ALLOWED']
 ANSWER_DICTIONARY_ERROR = ['ANSWER_DICTIONARY_ERROR']
 CORRUPTED_LABEL_ERROR = ['CORRUPTED_LABEL_ERROR']
 FILE_TYPE_NOT_SUPPORTED_ERROR = ['FILE_TYPE_NOT_SUPPORTED_ERROR']
+UPLOAD_OPERATION_NOT_SUPPORTED_ERROR = ['UPLOAD_OPERATION_NOT_SUPPORTED_ERROR']
 MUST_SET_DETECTION_RANGE_ERROR = ['MUST_SET_DETECTION_RANGE_ERROR']
 DETECTION_RANGE_INVALID_ERROR = ['DETECTION_RANGE_INVALID_ERROR']
 RESOURCE_EXISTS_ERROR = ['RESOURCE_EXISTS_ERROR']
@@ -58,6 +59,10 @@ def check_error_response(response, payload=None):
 
     if response == FILE_TYPE_NOT_SUPPORTED_ERROR:
         raise FileTypeNotSupportedError("Supported file types are: image/jpeg, image/png, video/webm, video/mp4.")
+
+    if response == UPLOAD_OPERATION_NOT_SUPPORTED_ERROR:
+        raise UploadOperationNotSupportedError("Uploading a file to an external (e.g. S3/GCP/Azure) dataset is not "
+                                               "permitted.")
 
     if response == DETECTION_RANGE_INVALID_ERROR:
         raise DetectionRangeInvalidError("The detection range is invalid (e.g. less than 0, or"

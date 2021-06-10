@@ -39,8 +39,9 @@ import uuid
 
 import requests
 
-from cord.configs import CordConfig
 import cord.exceptions
+
+from cord.configs import CordConfig
 from cord.http.querier import Querier
 from cord.http.utils import read_in_chunks
 from cord.orm.api_key import ApiKeyMeta
@@ -74,7 +75,7 @@ class CordClient(object):
     @staticmethod
     def initialise(resource_id=None, api_key=None):
         """
-        Create and initialize a Cord client from a project ID and API key.
+        Create and initialize a Cord client from a resource ID and API key.
 
         Args:
             resource_id: either of
@@ -110,10 +111,12 @@ class CordClient(object):
             logging.info("Initialising Cord client for project using key: %s",
                          key_type.get('title', ''))
             return CordClientProject(querier, config)
+
         elif resource_type == TYPE_DATASET:
             logging.info("Initialising Cord client for dataset using key: %s",
                          key_type.get('title', ''))
             return CordClientDataset(querier, config)
+
         else:
             raise cord.exceptions.InitialisationError(
                 message="API key is not associated with a project or dataset"
@@ -164,26 +167,29 @@ class CordClientDataset(CordClient):
         return self._querier.basic_getter(Dataset)
 
     def upload_video(self, file_path):
+        """
+        Upload video to Cord storage
+        """
         if os.path.exists(file_path):
             short_name = os.path.basename(file_path)
             signed_url = self._querier.basic_getter(SignedURL, uid=short_name)
-            url = signed_url[0].get('signed_url')
+            url = signed_url.get('signed_url')
             res = requests.put(
                 url,
                 data=read_in_chunks(file_path),
                 headers={'Content-Type': 'application/octet-stream'}
             )
             if res.status_code == 200:
-                video_hash = signed_url[0].get('video_hash')
-                video_db = self._querier.basic_put(
-                    Video, uid=video_hash, payload=signed_url[0]
-                )
+                data_hash = signed_url.get('data_hash')
+
+                self._querier.basic_put(Video, uid=data_hash, payload=signed_url)
+
                 logging.info("Successfully uploaded: %s",
-                             signed_url[0].get('title', ''))
-                logging.info("Please run client.get_dataset() again to refresh.")
+                             signed_url.get('title', ''))
+                logging.info("Please run client.get_dataset() to refresh.")
             else:
                 logging.info("Error uploading video: %s",
-                             key_type.get('title', ''))
+                             signed_url.get('title', '').get('title', ''))
         else:
             raise cord.exceptions.CordException(
                 message='{} does not point to a file.'.format(file_path)

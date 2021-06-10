@@ -25,9 +25,7 @@ class ApiKeyMeta(base_orm.BaseORM):
     ORM:
 
     title,
-    resource_type,
-    reads,
-    writes
+    resource_type
 
     """
 

@@ -20,28 +20,32 @@ from cord.orm import base_orm
 
 class Dataset(base_orm.BaseORM):
     """
-    A dataset defines a set of videos or image groups.
-    ORM in primitive types.
+    A dataset is a collection of data rows.
+
+    ORM:
+
+    title,
+    description,
+    dataset_type (Cord storage vs. AWS/GCP/Azure),
+    data_rows: [
+        {
+            data_hash (uid),
+            data_title,
+            data_type,
+        }
+    ]
+
     """
 
     DB_FIELDS = OrderedDict([
-        ("video_hash", str),
         ("title", str),
-        ("frames_per_second", str),
-        ("duration", str),
-        ("file_type", str),
-        ("file_size", str),
-        ("dataset_hash", str),
-        ("dataset_title", str),
-        ("dataset_description", str),
-        ("created_at", str),
-        ("last_edited_at", str),
+        ("description", str),
+        ("dataset_type", str),
+        ("data_rows", (list, str))
     ])
 
     NON_UPDATABLE_FIELDS = {
-        "video_hash",
-        "title",
-        "frames_per_second",
+        "dataset_type",
     }
 
 
@@ -49,27 +53,21 @@ class SignedURL(base_orm.BaseORM):
     """ A signed URL object with supporting information. """
     DB_FIELDS = OrderedDict([
         ("signed_url", str),
+        ("data_hash", str),
         ("title", str),
-        ("user_hash", str),
-        ("video_hash", str),
         ("file_link", str),
-        ("cord_type", str),
-        ("storage_location", str),
     ])
 
 
 class Video(base_orm.BaseORM):
-    """ A Video object with supporting information. """
+    """ A video object with supporting information. """
     DB_FIELDS = OrderedDict([
-        ("video_hash", str),
-        ("user_hash", str),
+        ("data_hash", str),
         ("title", str),
         ("file_link", str),
-        ("cord_type", int),
-        ("storage_location", int),
     ])
 
     NON_UPDATABLE_FIELDS = {
-        "video_hash",
+        "data_hash",
         "user_hash",
     }

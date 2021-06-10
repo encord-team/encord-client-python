@@ -103,6 +103,11 @@ class FileTypeNotSupportedError(CordException):
     pass
 
 
+class UploadOperationNotSupportedError(CordException):
+    """ Exception thrown when trying to upload a video/image group to non-Cord storage dataset """
+    pass
+
+
 class DetectionRangeInvalidError(CordException):
     """
     Exception thrown when a detection range is invalid.
