@@ -169,6 +169,9 @@ class CordClientDataset(CordClient):
     def upload_video(self, file_path):
         """
         Upload video to Cord storage
+
+        Raises:
+            UploadOperationNotSupportedError: If trying to upload to an external dataset (e.g. S3/GPC/Azure)
         """
         if os.path.exists(file_path):
             short_name = os.path.basename(file_path)
