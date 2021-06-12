@@ -37,15 +37,15 @@ import os.path
 import sys
 import uuid
 
-import requests
-
 import cord.exceptions
 
 from cord.configs import CordConfig
 from cord.http.querier import Querier
-from cord.http.utils import read_in_chunks
+from cord.http.utils import upload_to_signed_url, upload_to_signed_url_list
 from cord.orm.api_key import ApiKeyMeta
-from cord.orm.dataset import Dataset, SignedURL, Video
+from cord.orm.dataset import (
+    Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video
+)
 from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams
@@ -168,34 +168,82 @@ class CordClientDataset(CordClient):
 
     def upload_video(self, file_path):
         """
-        Upload video to Cord storage
+        Upload video to Cord storage.
+
+        Args:
+            self: Cord client object.
+            file_path: path to video e.g. '/home/user/data/video.mp4'
+
+        Returns:
+            Video
 
         Raises:
-            UploadOperationNotSupportedError: If trying to upload to an external dataset (e.g. S3/GPC/Azure)
+            UploadOperationNotSupportedError: If trying to upload to external
+                                              datasets (e.g. S3/GPC/Azure)
         """
         if os.path.exists(file_path):
             short_name = os.path.basename(file_path)
-            signed_url = self._querier.basic_getter(SignedURL, uid=short_name)
-            url = signed_url.get('signed_url')
-            res = requests.put(
-                url,
-                data=read_in_chunks(file_path),
-                headers={'Content-Type': 'application/octet-stream'}
+            signed_url = self._querier.basic_getter(
+                SignedVideoURL,
+                uid=short_name
             )
-            if res.status_code == 200:
-                data_hash = signed_url.get('data_hash')
-
-                self._querier.basic_put(Video, uid=data_hash, payload=signed_url)
-
-                logging.info("Successfully uploaded: %s",
-                             signed_url.get('title', ''))
+            res = upload_to_signed_url(
+                file_path,
+                signed_url,
+                self._querier,
+                Video
+            )
+            if res:
+                logging.info("Upload complete.")
                 logging.info("Please run client.get_dataset() to refresh.")
-            else:
-                logging.info("Error uploading video: %s",
-                             signed_url.get('title', '').get('title', ''))
+
+            return res
         else:
             raise cord.exceptions.CordException(
                 message='{} does not point to a file.'.format(file_path)
+            )
+
+    def create_image_group(self, file_paths):
+        """
+        Create an image group in Cord storage.
+        Args:
+            self: Cord client object.
+            file_paths: a list of paths to images, e.g.
+                ['/home/user/data/img1.png', '/home/user/data/img2.png']
+
+        Returns:
+            Dataset: A dataset record instance.
+
+        Raises:
+            UploadOperationNotSupportedError: If trying to upload to external
+                                              datasets (e.g. S3/GPC/Azure)
+        """
+        for file_path in file_paths:
+            if not os.path.exists(file_path):
+                raise cord.exceptions.CordException(
+                    message='{} does not point to a file.'.format(file_path)
+                )
+        short_names = list(map(os.path.basename, file_paths))
+        signed_urls = self._querier.basic_getter(
+            SignedImagesURL,
+            uid=short_names
+        )
+        image_hash_list = upload_to_signed_url_list(
+            file_paths, signed_urls, self._querier, Image
+        )
+        res = self._querier.basic_setter(
+            ImageGroup,
+            uid=image_hash_list,
+            payload={}
+        )
+        if res.get('response'):
+            title = Video(res.get('response', {})).title
+            logging.info("Upload successful! {} created.".format(title))
+            logging.info("Please run client.get_dataset() to refresh.")
+            return title
+        else:
+            raise cord.exceptions.CordException(
+                message='An error has occurred during image group creation'
             )
 
 
