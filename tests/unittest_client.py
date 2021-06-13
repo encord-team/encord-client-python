@@ -65,7 +65,7 @@ class UnitTests(unittest.TestCase):
         with self.assertRaises(AuthenticationError) as excinfo:
             CordClient.initialise(api_key=LABEL_READ_WRITE_KEY)
         self.assertEqual(
-            'Project ID and Dataset ID not provided',
+            'Project ID or dataset ID not provided',
             str(excinfo.exception)
         )
 
@@ -117,16 +117,16 @@ class UnitTests(unittest.TestCase):
                                                  ['60f75ddb-aa68-4654-8c85-f6959dbb62eb'])
         assert isinstance(objects, dict)
 
-    def test_upload(self):
+    def test_upload_video(self):
         path = os.path.dirname(__file__)
-        video_path = os.path.join(path, 'test_data', 'video.mp4')
+        video_path = os.path.join(path, 'test_data', 'media', 'video.mp4')
         self.dt_c.upload_video(video_path)
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         dataset = self.dt_c.get_dataset()
         assert len(dataset) > 0
         passed = False
-        for dt in dataset:
-            if dt.get('title') == 'video.mp4':
+        for dt in dataset.get('data_rows', []):
+            if dt.get('data_title', '') == 'video.mp4':
                 then_time = datetime.strptime(
                     dt.get('created_at'), '%Y-%m-%d %H:%M:%S'
                 )
@@ -134,6 +134,14 @@ class UnitTests(unittest.TestCase):
                 if delta >= 0 & delta <= 1 * 60:
                     passed = True
         assert passed
+
+    def test_upload_image_group(self):
+        path = os.path.dirname(__file__)
+        im1 = os.path.join(path, 'test_data', 'media', 'screen1.png')
+        im2 = os.path.join(path, 'test_data', 'media', 'screen1.png')
+        image_group_name = self.dt_c.create_image_group([im1, im2])
+        assert 'image-group-' in image_group_name,\
+            'Upload did not complete successfully'
 
 
 if __name__ == '__main__':

@@ -49,14 +49,29 @@ class Dataset(base_orm.BaseORM):
     }
 
 
-class SignedURL(base_orm.BaseORM):
+class SignedVideoURL(base_orm.BaseORM):
     """ A signed URL object with supporting information. """
     DB_FIELDS = OrderedDict([
         ("signed_url", str),
         ("data_hash", str),
         ("title", str),
-        ("file_link", str),
+        ("file_link", str)
     ])
+
+
+class SignedImageURL(base_orm.BaseORM):
+    """ A signed URL object with supporting information. """
+    DB_FIELDS = OrderedDict([
+        ("signed_url", str),
+        ("data_hash", str),
+        ("title", str),
+        ("file_link", str)
+    ])
+
+
+class SignedImagesURL(base_orm.BaseListORM):
+    """ A signed URL object with supporting information. """
+    BASE_ORM_TYPE = SignedImageURL
 
 
 class Video(base_orm.BaseORM):
@@ -69,5 +84,30 @@ class Video(base_orm.BaseORM):
 
     NON_UPDATABLE_FIELDS = {
         "data_hash",
-        "user_hash",
+    }
+
+
+class ImageGroup(base_orm.BaseORM):
+    """ An image group object with supporting information. """
+    DB_FIELDS = OrderedDict([
+        ("data_hash", str),
+        ("title", str),
+        ("file_link", str),
+    ])
+
+    NON_UPDATABLE_FIELDS = {
+        "data_hash",
+    }
+
+
+class Image(base_orm.BaseORM):
+    """ An image object with supporting information. """
+    DB_FIELDS = OrderedDict([
+        ("data_hash", str),
+        ("title", str),
+        ("file_link", str),
+    ])
+
+    NON_UPDATABLE_FIELDS = {
+        "data_hash",
     }
