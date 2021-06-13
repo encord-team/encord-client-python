@@ -84,12 +84,11 @@ class Video(base_orm.BaseORM):
 
     NON_UPDATABLE_FIELDS = {
         "data_hash",
-        "user_hash",
     }
 
 
 class ImageGroup(base_orm.BaseORM):
-    """ A video object with supporting information. """
+    """ An image group object with supporting information. """
     DB_FIELDS = OrderedDict([
         ("data_hash", str),
         ("title", str),
@@ -98,12 +97,11 @@ class ImageGroup(base_orm.BaseORM):
 
     NON_UPDATABLE_FIELDS = {
         "data_hash",
-        "user_hash",
     }
 
 
 class Image(base_orm.BaseORM):
-    """ A video object with supporting information. """
+    """ An image object with supporting information. """
     DB_FIELDS = OrderedDict([
         ("data_hash", str),
         ("title", str),
@@ -112,5 +110,4 @@ class Image(base_orm.BaseORM):
 
     NON_UPDATABLE_FIELDS = {
         "data_hash",
-        "user_hash",
     }

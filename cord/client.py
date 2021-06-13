@@ -175,7 +175,7 @@ class CordClientDataset(CordClient):
             file_path: path to video e.g. '/home/user/data/video.mp4'
 
         Returns:
-            Video
+            Bool.
 
         Raises:
             UploadOperationNotSupportedError: If trying to upload to external
@@ -196,8 +196,11 @@ class CordClientDataset(CordClient):
             if res:
                 logging.info("Upload complete.")
                 logging.info("Please run client.get_dataset() to refresh.")
-
-            return res
+                return res
+            else:
+                raise cord.exceptions.CordException(
+                    message='An error has occurred during video upload.'
+                )
         else:
             raise cord.exceptions.CordException(
                 message='{} does not point to a file.'.format(file_path)
@@ -206,13 +209,14 @@ class CordClientDataset(CordClient):
     def create_image_group(self, file_paths):
         """
         Create an image group in Cord storage.
+
         Args:
             self: Cord client object.
             file_paths: a list of paths to images, e.g.
                 ['/home/user/data/img1.png', '/home/user/data/img2.png']
 
         Returns:
-            Dataset: A dataset record instance.
+            Bool.
 
         Raises:
             UploadOperationNotSupportedError: If trying to upload to external
@@ -236,14 +240,14 @@ class CordClientDataset(CordClient):
             uid=image_hash_list,
             payload={}
         )
-        if res.get('response'):
-            title = Video(res.get('response', {})).title
+        if res:
+            title = res.get('title')
             logging.info("Upload successful! {} created.".format(title))
             logging.info("Please run client.get_dataset() to refresh.")
-            return title
+            return res
         else:
             raise cord.exceptions.CordException(
-                message='An error has occurred during image group creation'
+                message='An error has occurred during image group creation.'
             )
 
 

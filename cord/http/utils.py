@@ -32,6 +32,7 @@ def upload_to_signed_url(file_path, signed_url, querier, orm_class):
         data=read_in_chunks(file_path),
         headers={'Content-Type': 'application/octet-stream'}
     )
+    res = None
     if res_upload.status_code == 200:
         data_hash = signed_url.get('data_hash')
 
@@ -40,6 +41,7 @@ def upload_to_signed_url(file_path, signed_url, querier, orm_class):
             uid=data_hash,
             payload=signed_url
         )
+
         if orm_class(res):
             logging.info("Successfully uploaded: %s",
                          signed_url.get('title', ''))
@@ -57,7 +59,7 @@ def upload_to_signed_url(file_path, signed_url, querier, orm_class):
 def upload_to_signed_url_list(file_paths, signed_urls, querier, orm_class):
     assert len(file_paths) == len(signed_urls),\
         'Error getting the correct number of signed urls'
-    data_hashes = []
+    data_uid_list = []
     mime = magic.Magic(mime=True)
     for i in range(len(file_paths)):
         file_path = file_paths[i]
@@ -80,7 +82,7 @@ def upload_to_signed_url_list(file_paths, signed_urls, querier, orm_class):
             if res:
                 logging.info("Successfully uploaded: %s",
                              url.get('title', ''))
-                data_hashes.append(url.get('data_hash'))
+                data_uid_list.append(url.get('data_hash'))
             else:
                 logging.info("Error uploading: %s",
                              url.get('title', ''))
@@ -88,6 +90,6 @@ def upload_to_signed_url_list(file_paths, signed_urls, querier, orm_class):
         else:
             raise Exception('Bad request')
 
-    return data_hashes
+    return data_uid_list
 
 
