@@ -22,5 +22,6 @@ setuptools.setup(
     keywords=["cord"],
     install_requires=[
         "requests",
+        "python-magic"
     ],
 )
