@@ -38,7 +38,6 @@ import sys
 import uuid
 
 import cord.exceptions
-
 from cord.configs import CordConfig
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url, upload_to_signed_url_list
@@ -241,8 +240,8 @@ class CordClientDataset(CordClient):
             payload={}
         )
         if res:
-            title = res.get('title')
-            logging.info("Upload successful! {} created.".format(title))
+            titles = [video_data.get('title') for video_data in res]
+            logging.info("Upload successful! {} created.".format(titles))
             logging.info("Please run client.get_dataset() to refresh.")
             return res
         else:

@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
 import os
 import unittest
 import uuid
+from datetime import datetime, timezone
 
 from cord.client import CordClient
 from cord.exceptions import (
@@ -139,9 +139,20 @@ class UnitTests(unittest.TestCase):
         path = os.path.dirname(__file__)
         im1 = os.path.join(path, 'test_data', 'media', 'screen1.png')
         im2 = os.path.join(path, 'test_data', 'media', 'screen1.png')
-        image_group_name = self.dt_c.create_image_group([im1, im2])
-        assert 'image-group-' in image_group_name,\
-            'Upload did not complete successfully'
+        image_groups = self.dt_c.create_image_group([im1, im2])
+        assert len(image_groups) == 1
+        assert 'image-group-' in image_groups[0]['title'], 'Upload did not complete successfully'
+
+    def test_upload_image_group_different_resolution(self):
+        path = os.path.dirname(__file__)
+        test_images_dir = os.path.join(path, 'test_data', 'media', 'upload_image_group_different_resolution')
+        im1 = os.path.join(test_images_dir, 'car-1280-720.jpeg')
+        im2 = os.path.join(test_images_dir, 'car-1920-1080.jpeg')
+
+        image_groups = self.dt_c.create_image_group([im1, im2])
+        assert len(image_groups) == 2
+        for image_group in image_groups:
+            assert 'image-group-' in image_group['title'], 'Upload did not complete successfully'
 
 
 if __name__ == '__main__':
