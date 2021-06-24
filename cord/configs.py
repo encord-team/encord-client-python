@@ -99,4 +99,4 @@ def get_env_api_key():
 
 class CordConfig(Config):
     def __init__(self, resource_id=None, api_key=None):
-        super().__init__(resource_id, api_key)
+        super(CordConfig, self).__init__(resource_id, api_key)

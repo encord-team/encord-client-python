@@ -32,8 +32,8 @@ def construct_answer_dictionaries(label_row):
     data_type = label_row.data_type
     data_units = label_row.data_units
 
-    object_answers = data_units.get(OBJECT_ANSWERS, {})
-    classification_answers = data_units.get(CLASSIFICATION_ANSWERS, {})
+    object_answers = label_row.object_answers
+    classification_answers = label_row.classification_answers
 
     for du in data_units:  # Iterate over data units in label row
         data_unit = data_units[du]
