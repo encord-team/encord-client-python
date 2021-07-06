@@ -47,7 +47,7 @@ If you want to avoid setting environment variables, you can initialise the Cord 
 ```python
 from cord.client import CordClient
 
-client = CordClient.initialise("<project_id>", "<project_api_key>")
+client = CordClient.initialise("<resource_id>", "<resource_api_key>")
 ```
 
 If you wish to instantiate several client objects and avoid passing parameters each time, you can instantiate a CordConfig object, pass the project ID and API key as strings, and initialise the client with the config object.
@@ -56,7 +56,7 @@ If you wish to instantiate several client objects and avoid passing parameters e
 from cord.client import CordClient
 from cord.client import CordConfig
 
-config = CordConfig("<project_id>", "<project_api_key>")
+config = CordConfig("<resource_id>", "<resource_api_key>")
 client = CordClient.initialise_with_config(config)
 ```
 
