@@ -16,8 +16,8 @@
 from collections import abc, OrderedDict
 import datetime
 import json
-import warnings
 import logging
+import warnings
 
 
 class BaseORM(dict):
@@ -25,6 +25,28 @@ class BaseORM(dict):
 
     DB_FIELDS = OrderedDict()
     NON_UPDATABLE_FIELDS = {}
+
+    def __init__(self, *args, **kwargs):
+        """
+        Construct client ORM compatible database object from dict object.
+        Ensures strict type and attribute name check.
+        The real k,v is stored in inner dict.
+        :param dic:
+        """
+        if len(args) == 1:  # backward compatibility
+            config = args[0]
+        elif kwargs.get('dic', None):
+            warnings.warn('`dic` has been deprecated use `config` instead.')
+            config = kwargs.get('dic')
+
+        if not isinstance(config, dict):
+            raise TypeError("Need dict object")
+        try:
+            value = self._setup(config)
+            super().__init__(**value)
+        except Exception as e:
+            logging.error("Error init", exc_info=True)
+            raise Exception("Convert failed {}".format(str(e)))
 
     def _setup(self, config):
         value = {}
@@ -51,28 +73,6 @@ class BaseORM(dict):
             elif dict in types:
                 value[k] = v
         return value
-
-    def __init__(self, *args, **kwargs):
-        """
-        Construct client ORM compatible database object from dict object.
-        Ensures strict type and attribute name check.
-        The real k,v is stored in inner dict.
-        :param dic:
-        """
-        if len(args) == 1:  # backward compatibility
-            config = args[0]
-        elif kwargs.get('dic', None):
-            warnings.warn('`dic` has been deprecated use `config` instead.')
-            config = kwargs.get('dic')
-
-        if not isinstance(config, dict):
-            raise TypeError("Need dict object")
-        try:
-            value = self._setup(config)
-            super().__init__(**value)
-        except Exception as e:
-            logging.error("Error init", exc_info=True)
-            raise Exception("Convert failed {}".format(str(e)))
 
     def __getattr__(self, name):
         """
