@@ -16,6 +16,7 @@
 from collections import abc, OrderedDict
 import datetime
 import json
+import warnings
 import logging
 
 
@@ -25,38 +26,49 @@ class BaseORM(dict):
     DB_FIELDS = OrderedDict()
     NON_UPDATABLE_FIELDS = {}
 
-    def __init__(self, dic):
+    def _setup(self, config):
+        value = {}
+        for k, v in config.items():
+            if k not in self.DB_FIELDS:
+                continue
+            types = self.DB_FIELDS[k]
+            # Convert all types to tuple
+            if not isinstance(types, tuple):
+                types = types,
+            # None value is allowed for some cases
+            if v is None:
+                value[k] = v
+            # Normal cases where type matches required types
+            elif isinstance(v, types):
+                value[k] = v
+            # Bool value is same as 0,1 in db
+            elif v in (0, 1) and bool in types:
+                value[k] = v
+            # Datetime type but actually a datetime str is provided
+            elif datetime.datetime in types:
+                real_v = datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+                value[k] = real_v
+            elif dict in types:
+                value[k] = v
+        return value
+
+    def __init__(self, *args, **kwargs):
         """
         Construct client ORM compatible database object from dict object.
         Ensures strict type and attribute name check.
         The real k,v is stored in inner dict.
         :param dic:
         """
+        if len(args) == 1:  # backward compatibility
+            config = args[0]
+        elif kwargs.get('dic', None):
+            warnings.warn('`dic` has been deprecated use `config` instead.')
+            config = kwargs.get('dic')
+
+        if not isinstance(config, dict):
+            raise TypeError("Need dict object")
         try:
-            if not isinstance(dic, dict):
-                raise TypeError("Need dict object")
-            value = {}
-            for k, v in dic.items():
-                if k in self.DB_FIELDS:
-                    types = self.DB_FIELDS[k]
-                    # Convert all types to tuple
-                    if not isinstance(types, tuple):
-                        types = types,
-                    # None value is allowed for some cases
-                    if v is None:
-                        value[k] = v
-                    # Normal cases where type matches required types
-                    elif isinstance(v, types):
-                        value[k] = v
-                    # Bool value is same as 0,1 in db
-                    elif v in (0, 1) and bool in types:
-                        value[k] = v
-                    # Datetime type but actually a datetime str is provided
-                    elif datetime.datetime in types:
-                        real_v = datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
-                        value[k] = real_v
-                    elif dict in types:
-                        value[k] = v
+            value = self._setup(config)
             super().__init__(**value)
         except Exception as e:
             logging.error("Error init", exc_info=True)
