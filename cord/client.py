@@ -49,7 +49,7 @@ from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams
 )
-from cord.orm.model import Model, ModelInferenceParams
+from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams
 from cord.orm.project import Project
 from cord.utils.str_constants import *
 
@@ -351,12 +351,12 @@ class CordClientProject(CordClient):
 
         Args:
             uid: A model_iteration_hash (uid) string.
-            file_paths: List of local file paths to image(s) or video(s) - if running inference on files
-            base64_strings: List of base 64 strings of image(s) or video(s) - if running inference on base64 strings
-            conf_thresh: Confidence threshold (default 0.6)
-            iou_thresh: Intersection over union threshold (default 0.3)
-            device: Device (CPU or CUDA, default is CUDA)
-            detection_frame_range: Detection frame range (for videos)
+            file_paths: List of local file paths to image(s) or video(s) - if running inference on files.
+            base64_strings: List of base 64 strings of image(s) or video(s) - if running inference on base64 strings.
+            conf_thresh: Confidence threshold (default 0.6).
+            iou_thresh: Intersection over union threshold (default 0.3).
+            device: Device (CPU or CUDA, default is CUDA).
+            detection_frame_range: Detection frame range (for videos).
 
         Returns:
             Inference results: A dict of inference results.
@@ -403,6 +403,48 @@ class CordClientProject(CordClient):
 
         return self._querier.basic_setter(Model, uid, payload=params)
 
+    def model_train(self,
+                    uid,
+                    label_rows=None,
+                    epochs=None,
+                    batch_size=24,
+                    weights=None,
+                    device="cuda"
+                    ):
+        """
+        Train a model created on the platform.
+
+        Args:
+            uid: A model_hash (uid) string.
+            label_rows: List of label row uid's (hashes) for training.
+            epochs: Number of passes through training dataset - if not set a default is used.
+            batch_size: Number of training examples utilized in one iteration.
+            weights: Model weights - if not set a default is used.
+            device: Device (CPU or CUDA, default is CUDA).
+
+        Returns:
+            A model_iteration_hash (uid) string.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no model exists by the specified model_hash (uid).
+            UnknownError: If an error occurs during training.
+        """
+
+        if label_rows is None:
+            raise Exception("To train a model, you must pass a list of label row uid's (hashes).")
+
+        params = ModelTrainingParams({
+            'label_rows': label_rows,
+            'epochs': epochs,
+            'batch_size': batch_size,
+            'weights': weights,
+            'device': device,
+        })
+
+        return self._querier.basic_setter(Model, uid, payload=params)
+
     def object_interpolation(self,
                              key_frames,
                              objects_to_interpolate,
@@ -445,10 +487,10 @@ class CordClientProject(CordClient):
                     ...,
                 }
 
-            objects_to_interpolate: List of object uid's (hashes) of objects to interpolate
+            objects_to_interpolate: List of object uid's (hashes) of objects to interpolate.
 
         Returns:
-            Interpolation results: Full set of filled frames including interpolated objects
+            Interpolation results: Full set of filled frames including interpolated objects.
 
         Raises:
             AuthenticationError: If the project API key is invalid.

@@ -50,3 +50,28 @@ class ModelInferenceParams(base_orm.BaseORM):
         ("device", str),
         ("detection_frame_range", list)
     ])
+
+
+class ModelTrainingParams(base_orm.BaseORM):
+    """
+    Model training parameters.
+
+    ORM:
+
+    model_hash,
+    label_rows,
+    epochs,
+    batch_size,
+    weights,
+    device
+
+    """
+
+    DB_FIELDS = OrderedDict([
+        ("model_hash", str),
+        ("label_rows", list),
+        ("epochs", float),
+        ("batch_size", float),
+        ("weights", str),
+        ("device", str),
+    ])
