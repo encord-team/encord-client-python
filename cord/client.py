@@ -49,7 +49,7 @@ from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams
 )
-from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams
+from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams, ModelTrainingWeightsParams
 from cord.orm.project import Project
 from cord.utils.str_constants import *
 
@@ -408,7 +408,7 @@ class CordClientProject(CordClient):
                     label_rows=None,
                     epochs=None,
                     batch_size=24,
-                    weights=None,
+                    weights=ModelTrainingWeightsParams.HEAVY,
                     device="cuda"
                     ):
         """
@@ -419,7 +419,7 @@ class CordClientProject(CordClient):
             label_rows: List of label row uid's (hashes) for training.
             epochs: Number of passes through training dataset - if not set a default is used.
             batch_size: Number of training examples utilized in one iteration.
-            weights: Model weights - if not set a default is used.
+            weights: Model weights. For training
             device: Device (CPU or CUDA, default is CUDA).
 
         Returns:

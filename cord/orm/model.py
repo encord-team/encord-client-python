@@ -14,6 +14,7 @@
 # under the License.
 
 from collections import OrderedDict
+from enum import Enum
 
 from cord.orm import base_orm
 
@@ -52,6 +53,13 @@ class ModelInferenceParams(base_orm.BaseORM):
     ])
 
 
+class ModelTrainingWeightsParams(Enum):
+    LIGHT = 0
+    MEDIUM = 1
+    HEAVY = 2
+    EXISTING = 3
+
+
 class ModelTrainingParams(base_orm.BaseORM):
     """
     Model training parameters.
@@ -72,6 +80,6 @@ class ModelTrainingParams(base_orm.BaseORM):
         ("label_rows", list),
         ("epochs", float),
         ("batch_size", float),
-        ("weights", str),
+        ("weights", ModelTrainingWeightsParams),
         ("device", str),
     ])
