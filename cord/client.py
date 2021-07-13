@@ -52,7 +52,7 @@ from cord.orm.labeling_algorithm import (
 )
 from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams, ModelTrainingWeightsParams, ModelOperations
 from cord.orm.project import Project
-from cord.utils.str_constants import *
+from cord.utilities.str_constants import *
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -293,7 +293,7 @@ class CordClientProject(CordClient):
         Save existing label row.
 
         If you have a series of frame labels and have not updated answer
-        dictionaries, call the construct_answer_dictionaries utils function
+        dictionaries, call the construct_answer_dictionaries utilities function
         to do so prior to saving labels.
 
         Args:
@@ -450,7 +450,7 @@ class CordClientProject(CordClient):
         })
 
         model = Model({
-            'model_operation': ModelOperations.TRAIN,
+            'model_operation': ModelOperations.TRAIN.value,
             'model_parameters': training_params,
         })
 

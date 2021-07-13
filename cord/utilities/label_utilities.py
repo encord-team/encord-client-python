@@ -14,7 +14,7 @@
 # under the License.
 
 from cord.orm.label_row import LabelRow
-from cord.utils.str_constants import *
+from cord.utilities.str_constants import *
 
 
 def construct_answer_dictionaries(label_row):
