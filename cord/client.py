@@ -49,9 +49,9 @@ from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams
 )
-from cord.orm.model import Model, ModelInferenceParams
+from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams, ModelOperations
 from cord.orm.project import Project
-from cord.utils.str_constants import *
+from cord.constants.string_constants import *
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -292,7 +292,7 @@ class CordClientProject(CordClient):
         Save existing label row.
 
         If you have a series of frame labels and have not updated answer
-        dictionaries, call the construct_answer_dictionaries utils function
+        dictionaries, call the construct_answer_dictionaries utilities function
         to do so prior to saving labels.
 
         Args:
@@ -351,12 +351,12 @@ class CordClientProject(CordClient):
 
         Args:
             uid: A model_iteration_hash (uid) string.
-            file_paths: List of local file paths to image(s) or video(s) - if running inference on files
-            base64_strings: List of base 64 strings of image(s) or video(s) - if running inference on base64 strings
-            conf_thresh: Confidence threshold (default 0.6)
-            iou_thresh: Intersection over union threshold (default 0.3)
-            device: Device (CPU or CUDA, default is CUDA)
-            detection_frame_range: Detection frame range (for videos)
+            file_paths: List of local file paths to image(s) or video(s) - if running inference on files.
+            base64_strings: List of base 64 strings of image(s) or video(s) - if running inference on base64 strings.
+            conf_thresh: Confidence threshold (default 0.6).
+            iou_thresh: Intersection over union threshold (default 0.3).
+            device: Device (CPU or CUDA, default is CUDA).
+            detection_frame_range: Detection frame range (for videos).
 
         Returns:
             Inference results: A dict of inference results.
@@ -393,7 +393,7 @@ class CordClientProject(CordClient):
                     "base64_str": base64_string.decode('utf-8')  # base64 string to utf-8
                 })
 
-        params = ModelInferenceParams({
+        inference_params = ModelInferenceParams({
             'files': files,
             'conf_thresh': conf_thresh,
             'iou_thresh': iou_thresh,
@@ -401,7 +401,62 @@ class CordClientProject(CordClient):
             'detection_frame_range': detection_frame_range,
         })
 
-        return self._querier.basic_setter(Model, uid, payload=params)
+        model = Model({
+            'model_operation': ModelOperations.INFERENCE.value,
+            'model_parameters': inference_params,
+        })
+
+        return self._querier.basic_setter(Model, uid, payload=model)
+
+    def model_train(self,
+                    uid,
+                    label_rows=None,
+                    epochs=None,
+                    batch_size=24,
+                    weights=None,
+                    device="cuda"
+                    ):
+        """
+        Train a model created on the platform.
+
+        Args:
+            uid: A model_hash (uid) string.
+            label_rows: List of label row uid's (hashes) for training.
+            epochs: Number of passes through training dataset - if not set a default is used.
+            batch_size: Number of training examples utilized in one iteration.
+            weights: Model weights.
+            device: Device (CPU or CUDA, default is CUDA).
+
+        Returns:
+            A model iteration object.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ModelWeightsInconsistentError: If the passed model weights are incompatible with the selected model.
+            ResourceNotFoundError: If no model exists by the specified model_hash (uid).
+            UnknownError: If an error occurs during training.
+        """
+        if label_rows is None:
+            raise Exception("You must pass a list of label row uid's (hashes) to train a model.")
+
+        if weights is None:
+            raise Exception("You must select model weights to train a model.")
+
+        training_params = ModelTrainingParams({
+            'label_rows': label_rows,
+            'epochs': epochs,
+            'batch_size': batch_size,
+            'weights': weights,
+            'device': device,
+        })
+
+        model = Model({
+            'model_operation': ModelOperations.TRAIN.value,
+            'model_parameters': training_params,
+        })
+
+        return self._querier.basic_setter(Model, uid, payload=model)
 
     def object_interpolation(self,
                              key_frames,
@@ -445,10 +500,10 @@ class CordClientProject(CordClient):
                     ...,
                 }
 
-            objects_to_interpolate: List of object uid's (hashes) of objects to interpolate
+            objects_to_interpolate: List of object uid's (hashes) of objects to interpolate.
 
         Returns:
-            Interpolation results: Full set of filled frames including interpolated objects
+            Interpolation results: Full set of filled frames including interpolated objects.
 
         Raises:
             AuthenticationError: If the project API key is invalid.
@@ -463,9 +518,9 @@ class CordClientProject(CordClient):
             'objects_to_interpolate': objects_to_interpolate,
         })
 
-        params = LabelingAlgorithm({
+        algo = LabelingAlgorithm({
             'algorithm_name': INTERPOLATION,
             'algorithm_parameters': interpolation_params,
         })
 
-        return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=params)
+        return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)

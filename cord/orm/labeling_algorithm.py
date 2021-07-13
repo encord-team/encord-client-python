@@ -31,7 +31,7 @@ class LabelingAlgorithm(base_orm.BaseORM):
 
     DB_FIELDS = OrderedDict([
         ("algorithm_name", str),
-        ("algorithm_parameters", dict),  # algorithm params
+        ("algorithm_parameters", dict),  # Algorithm params
     ])
 
 

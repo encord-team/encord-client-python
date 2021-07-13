@@ -14,8 +14,14 @@
 # under the License.
 
 from collections import OrderedDict
+from enum import Enum
 
 from cord.orm import base_orm
+
+
+class ModelOperations(Enum):
+    INFERENCE = 0
+    TRAIN = 1
 
 
 class Model(base_orm.BaseORM):
@@ -24,9 +30,14 @@ class Model(base_orm.BaseORM):
 
     ORM:
 
+    model_operation,
+
     """
 
-    DB_FIELDS = OrderedDict([])
+    DB_FIELDS = OrderedDict([
+        ("model_operation", int),
+        ("model_parameters", dict)
+    ])
 
 
 class ModelInferenceParams(base_orm.BaseORM):
@@ -49,4 +60,47 @@ class ModelInferenceParams(base_orm.BaseORM):
         ("iou_thresh", float),  # Intersection over union threshold
         ("device", str),
         ("detection_frame_range", list)
+    ])
+
+
+class ModelTrainingWeights(base_orm.BaseORM):
+    """
+    Model training weights.
+
+    ORM:
+
+    training_config_link,
+    training_weights_link,
+
+    """
+
+    DB_FIELDS = OrderedDict([
+        ("model", str),
+        ("training_config_link", str),
+        ("training_weights_link", str),
+    ])
+
+
+class ModelTrainingParams(base_orm.BaseORM):
+    """
+    Model training parameters.
+
+    ORM:
+
+    model_hash,
+    label_rows,
+    epochs,
+    batch_size,
+    weights,
+    device
+
+    """
+
+    DB_FIELDS = OrderedDict([
+        ("model_hash", str),
+        ("label_rows", list),
+        ("epochs", int),
+        ("batch_size", int),
+        ("weights", ModelTrainingWeights),
+        ("device", str),
     ])
