@@ -36,6 +36,7 @@ import logging
 import os.path
 import sys
 import uuid
+import json
 
 import cord.exceptions
 from cord.configs import CordConfig
@@ -49,7 +50,7 @@ from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams
 )
-from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams, ModelTrainingWeightsParams
+from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams, ModelTrainingWeightsParams, ModelOperations
 from cord.orm.project import Project
 from cord.utils.str_constants import *
 
@@ -393,7 +394,7 @@ class CordClientProject(CordClient):
                     "base64_str": base64_string.decode('utf-8')  # base64 string to utf-8
                 })
 
-        params = ModelInferenceParams({
+        inference_params = ModelInferenceParams({
             'files': files,
             'conf_thresh': conf_thresh,
             'iou_thresh': iou_thresh,
@@ -401,14 +402,19 @@ class CordClientProject(CordClient):
             'detection_frame_range': detection_frame_range,
         })
 
-        return self._querier.basic_setter(Model, uid, payload=params)
+        model = Model({
+            'model_operation': ModelOperations.INFERENCE.value,
+            'model_parameters': inference_params,
+        })
+
+        return self._querier.basic_setter(Model, uid, payload=model)
 
     def model_train(self,
                     uid,
                     label_rows=None,
                     epochs=None,
                     batch_size=24,
-                    weights=ModelTrainingWeightsParams.HEAVY,
+                    weights=ModelTrainingWeightsParams.HEAVY.value,
                     device="cuda"
                     ):
         """
@@ -435,7 +441,7 @@ class CordClientProject(CordClient):
         if label_rows is None:
             raise Exception("To train a model, you must pass a list of label row uid's (hashes).")
 
-        params = ModelTrainingParams({
+        training_params = ModelTrainingParams({
             'label_rows': label_rows,
             'epochs': epochs,
             'batch_size': batch_size,
@@ -443,7 +449,12 @@ class CordClientProject(CordClient):
             'device': device,
         })
 
-        return self._querier.basic_setter(Model, uid, payload=params)
+        model = Model({
+            'model_operation': ModelOperations.TRAIN,
+            'model_parameters': training_params,
+        })
+
+        return self._querier.basic_setter(Model, uid, payload=model)
 
     def object_interpolation(self,
                              key_frames,
@@ -505,9 +516,9 @@ class CordClientProject(CordClient):
             'objects_to_interpolate': objects_to_interpolate,
         })
 
-        params = LabelingAlgorithm({
+        algo = LabelingAlgorithm({
             'algorithm_name': INTERPOLATION,
             'algorithm_parameters': interpolation_params,
         })
 
-        return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=params)
+        return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)

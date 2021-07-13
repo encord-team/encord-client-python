@@ -19,15 +19,25 @@ from enum import Enum
 from cord.orm import base_orm
 
 
+class ModelOperations(Enum):
+    INFERENCE = 0
+    TRAIN = 1
+
+
 class Model(base_orm.BaseORM):
     """
     Model base ORM.
 
     ORM:
 
+    model_operation,
+
     """
 
-    DB_FIELDS = OrderedDict([])
+    DB_FIELDS = OrderedDict([
+        ("model_operation", int),
+        ("model_parameters", dict)
+    ])
 
 
 class ModelInferenceParams(base_orm.BaseORM):
@@ -78,8 +88,8 @@ class ModelTrainingParams(base_orm.BaseORM):
     DB_FIELDS = OrderedDict([
         ("model_hash", str),
         ("label_rows", list),
-        ("epochs", float),
-        ("batch_size", float),
-        ("weights", ModelTrainingWeightsParams),
+        ("epochs", int),
+        ("batch_size", int),
+        ("weights", int),
         ("device", str),
     ])
