@@ -36,7 +36,6 @@ import logging
 import os.path
 import sys
 import uuid
-import json
 
 import cord.exceptions
 from cord.configs import CordConfig
@@ -50,9 +49,9 @@ from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams
 )
-from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams, ModelTrainingWeightsParams, ModelOperations
+from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams, ModelOperations
 from cord.orm.project import Project
-from cord.utilities.str_constants import *
+from cord.constants.string_constants import *
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -414,7 +413,7 @@ class CordClientProject(CordClient):
                     label_rows=None,
                     epochs=None,
                     batch_size=24,
-                    weights=ModelTrainingWeightsParams.HEAVY.value,
+                    weights=None,
                     device="cuda"
                     ):
         """
@@ -425,7 +424,7 @@ class CordClientProject(CordClient):
             label_rows: List of label row uid's (hashes) for training.
             epochs: Number of passes through training dataset - if not set a default is used.
             batch_size: Number of training examples utilized in one iteration.
-            weights: Model weights. For training
+            weights: Model weights.
             device: Device (CPU or CUDA, default is CUDA).
 
         Returns:
@@ -437,9 +436,11 @@ class CordClientProject(CordClient):
             ResourceNotFoundError: If no model exists by the specified model_hash (uid).
             UnknownError: If an error occurs during training.
         """
-
         if label_rows is None:
-            raise Exception("To train a model, you must pass a list of label row uid's (hashes).")
+            raise Exception("You must pass a list of label row uid's (hashes) to train a model.")
+
+        if weights is None:
+            raise Exception("You must select model weights to train a model.")
 
         training_params = ModelTrainingParams({
             'label_rows': label_rows,

@@ -63,11 +63,22 @@ class ModelInferenceParams(base_orm.BaseORM):
     ])
 
 
-class ModelTrainingWeightsParams(Enum):
-    LIGHT = 0
-    MEDIUM = 1
-    HEAVY = 2
-    EXISTING = 3
+class ModelTrainingWeights(base_orm.BaseORM):
+    """
+    Model training weights.
+
+    ORM:
+
+    training_config_link,
+    training_weights_link,
+
+    """
+
+    DB_FIELDS = OrderedDict([
+        ("model", str),
+        ("training_config_link", str),
+        ("training_weights_link", str),
+    ])
 
 
 class ModelTrainingParams(base_orm.BaseORM):
@@ -90,6 +101,6 @@ class ModelTrainingParams(base_orm.BaseORM):
         ("label_rows", list),
         ("epochs", int),
         ("batch_size", int),
-        ("weights", int),
+        ("weights", ModelTrainingWeights),
         ("device", str),
     ])
