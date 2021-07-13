@@ -15,13 +15,13 @@
 
 from cord.orm.model import ModelTrainingWeights
 
-FASTAI = 'fastai'
+FAST_AI = 'fast_ai'
 YOLOV5 = 'yolov5'
 FASTER_RCNN = 'faster_rcnn'
 MASK_RCNN = 'mask_rcnn'
 
-fastai = ModelTrainingWeights({
-    "model": FASTAI,
+fast_ai = ModelTrainingWeights({
+    "model": FAST_AI,
     "training_config_link": "",
     "training_weights_link": ""
 })

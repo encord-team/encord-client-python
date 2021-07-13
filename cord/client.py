@@ -428,11 +428,12 @@ class CordClientProject(CordClient):
             device: Device (CPU or CUDA, default is CUDA).
 
         Returns:
-            A model_iteration_hash (uid) string.
+            A model iteration object.
 
         Raises:
             AuthenticationError: If the project API key is invalid.
             AuthorisationError: If access to the specified resource is restricted.
+            ModelWeightsInconsistentError: If the passed model weights are incompatible with the selected model.
             ResourceNotFoundError: If no model exists by the specified model_hash (uid).
             UnknownError: If an error occurs during training.
         """
