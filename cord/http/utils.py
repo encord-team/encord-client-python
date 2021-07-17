@@ -1,6 +1,5 @@
-
+import mimetypes
 import logging
-import magic
 import os.path
 import requests
 
@@ -60,11 +59,10 @@ def upload_to_signed_url_list(file_paths, signed_urls, querier, orm_class):
     assert len(file_paths) == len(signed_urls),\
         'Error getting the correct number of signed urls'
     data_uid_list = []
-    mime = magic.Magic(mime=True)
     for i in range(len(file_paths)):
         file_path = file_paths[i]
         file_name = os.path.basename(file_path)
-        mime_type = mime.from_file(file_path)
+        mime_type = mimetypes.guess_type(file_path)[0]
         url = signed_urls[i]
         assert url.get('title', '') == file_name, 'Ordering issue'
         res_upload = requests.put(

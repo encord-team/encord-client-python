@@ -345,6 +345,7 @@ class CordClientProject(CordClient):
                         iou_thresh=0.3,
                         device="cuda",
                         detection_frame_range=None,
+                        allocation_enabled=False,
                         ):
         """
         Run inference with model trained on the platform.
@@ -357,6 +358,7 @@ class CordClientProject(CordClient):
             iou_thresh: Intersection over union threshold (default 0.3).
             device: Device (CPU or CUDA, default is CUDA).
             detection_frame_range: Detection frame range (for videos).
+            allocation_enabled: Object UID allocation (tracking) enabled (disabled by default).
 
         Returns:
             Inference results: A dict of inference results.
@@ -399,6 +401,7 @@ class CordClientProject(CordClient):
             'iou_thresh': iou_thresh,
             'device': device,
             'detection_frame_range': detection_frame_range,
+            'allocation_enabled': allocation_enabled,
         })
 
         model = Model({
@@ -422,7 +425,7 @@ class CordClientProject(CordClient):
         Args:
             uid: A model_hash (uid) string.
             label_rows: List of label row uid's (hashes) for training.
-            epochs: Number of passes through training dataset - if not set a default is used.
+            epochs: Number of passes through training dataset.
             batch_size: Number of training examples utilized in one iteration.
             weights: Model weights.
             device: Device (CPU or CUDA, default is CUDA).
