@@ -59,7 +59,8 @@ class ModelInferenceParams(base_orm.BaseORM):
         ("conf_thresh", float),  # Confidence threshold
         ("iou_thresh", float),  # Intersection over union threshold
         ("device", str),
-        ("detection_frame_range", list)
+        ("detection_frame_range", list),
+        ("allocation_enabled", bool)
     ])
 
 
