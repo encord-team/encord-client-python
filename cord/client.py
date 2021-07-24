@@ -39,6 +39,7 @@ import uuid
 
 import cord.exceptions
 from cord.configs import CordConfig
+from cord.constants.model import *
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url, upload_to_signed_url_list
 from cord.orm.api_key import ApiKeyMeta
@@ -49,7 +50,7 @@ from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams
 )
-from cord.orm.model import Model, ModelInferenceParams, ModelTrainingParams, ModelOperations
+from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
 from cord.orm.project import Project
 from cord.constants.string_constants import *
 
@@ -337,6 +338,62 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload=None)
 
+    def create_model_row(self,
+                         title=None,
+                         description=None,
+                         features=None,
+                         model=None,
+                         ):
+        """
+        Create a model row.
+
+        Args:
+            title: Model title.
+            description: Model description.
+            features: List of feature feature uid's (hashes) to be included in the model.
+            model: Model (resnet18, resnet34, resnet50,
+                resnet101, resnet152, vgg16, vgg19, yolov5, faster_rcnn, mask_rcnn).
+
+        Returns:
+            ModelRow: A model row instance.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ModelFeaturesInconsistentError: If a feature type is different than what is supported by the model (e.g. if
+                creating a classification model using a bounding box).
+        """
+        if title is None:
+            raise cord.exceptions.CordException(
+                message='You must set a title to create a model row.'
+            )
+
+        if features is None:
+            raise cord.exceptions.CordException(
+                message="You must pass a list of feature uid's (hashes) to create a model row."
+            )
+
+        if model is None or model not in [RESNET18, RESNET34, RESNET50, RESNET101, RESNET152, VGG16, VGG19, YOLOV5,
+                                          FASTER_RCNN, MASK_RCNN]:
+            raise cord.exceptions.CordException(
+                message="You must pass a model (resnet18, resnet34, resnet50, resnet101, resnet152, vgg16, vgg19, "
+                        "yolov5, faster_rcnn, mask_rcnn) to create a model row."
+            )
+
+        model_row = ModelRow({
+            'title': title,
+            'description': description,
+            'features': features,
+            'model': model,
+        })
+
+        model = Model({
+            'model_operation': ModelOperations.CREATE.value,
+            'model_parameters': model_row,
+        })
+
+        return self._querier.basic_put(Model, None, payload=model)
+
     def model_inference(self,
                         uid,
                         file_paths=None,
@@ -374,7 +431,9 @@ class CordClientProject(CordClient):
         if (file_paths is None and base64_strings is None) or (
                 file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(
                 base64_strings) > 0):
-            raise Exception("To run model inference, you must pass either a list of files or base64 strings")
+            raise cord.exceptions.CordException(
+                message='To run model inference, you must pass either a list of files or base64 strings.'
+            )
 
         if detection_frame_range is None:
             detection_frame_range = []
@@ -441,10 +500,29 @@ class CordClientProject(CordClient):
             UnknownError: If an error occurs during training.
         """
         if label_rows is None:
-            raise Exception("You must pass a list of label row uid's (hashes) to train a model.")
+            raise cord.exceptions.CordException(
+                message="You must pass a list of label row uid's (hashes) to train a model."
+            )
+
+        if epochs is None:
+            raise cord.exceptions.CordException(
+                message="You must set number of epochs to train a model."
+            )
+
+        if batch_size is None:
+            raise cord.exceptions.CordException(
+                message="You must set a batch size to train a model."
+            )
 
         if weights is None:
-            raise Exception("You must select model weights to train a model.")
+            raise cord.exceptions.CordException(
+                message="You must select model weights to train a model."
+            )
+
+        if device is None:
+            raise cord.exceptions.CordException(
+                message="You must set a device (cuda or CPU) train a model."
+            )
 
         training_params = ModelTrainingParams({
             'label_rows': label_rows,
@@ -514,7 +592,9 @@ class CordClientProject(CordClient):
             UnknownError: If an error occurs while running interpolation.
         """
         if len(key_frames) == 0 or len(objects_to_interpolate) == 0:
-            raise Exception("To run object interpolation, you must pass key frames and objects to interpolate")
+            raise cord.exceptions.CordException(
+                message="To run object interpolation, you must pass key frames and objects to interpolate.."
+            )
 
         interpolation_params = ObjectInterpolationParams({
             'key_frames': key_frames,

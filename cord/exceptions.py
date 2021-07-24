@@ -112,6 +112,14 @@ class ModelWeightsInconsistentError(CordException):
     pass
 
 
+class ModelFeaturesInconsistentError(CordException):
+    """
+    If a feature type is different than what is supported by the model (e.g. if
+    creating a classification model using a bounding box).
+    """
+    pass
+
+
 class UploadOperationNotSupportedError(CordException):
     """ Exception thrown when trying to upload a video/image group to non-Cord storage dataset """
     pass
