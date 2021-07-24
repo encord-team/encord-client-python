@@ -21,8 +21,6 @@ RESNET101 = "resnet101"
 RESNET152 = "resnet152"
 VGG16 = "vgg16"
 VGG19 = "vgg19"
-
 YOLOV5 = 'yolov5'
 FASTER_RCNN = 'faster_rcnn'
-
 MASK_RCNN = 'mask_rcnn'

@@ -103,6 +103,13 @@ class FileTypeNotSupportedError(CordException):
     pass
 
 
+class FeatureDoesNotExistError(CordException):
+    """
+    If a feature uid does not exist in a given project ontology.
+    """
+    pass
+
+
 class ModelWeightsInconsistentError(CordException):
     """
     Exception thrown when an attempted model training iteration has a different
