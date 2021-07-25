@@ -355,7 +355,7 @@ class CordClientProject(CordClient):
                 resnet101, resnet152, vgg16, vgg19, yolov5, faster_rcnn, mask_rcnn).
 
         Returns:
-            ModelRow: A model row instance.
+            ModelRow: A model_hash (uid) string.
 
         Raises:
             AuthenticationError: If the project API key is invalid.
