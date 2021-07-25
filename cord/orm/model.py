@@ -22,6 +22,7 @@ from cord.orm import base_orm
 class ModelOperations(Enum):
     INFERENCE = 0
     TRAIN = 1
+    CREATE = 2
 
 
 class Model(base_orm.BaseORM):
@@ -31,12 +32,37 @@ class Model(base_orm.BaseORM):
     ORM:
 
     model_operation,
+    model_parameters,
 
     """
 
     DB_FIELDS = OrderedDict([
         ("model_operation", int),
         ("model_parameters", dict)
+    ])
+
+
+class ModelRow(base_orm.BaseORM):
+    """
+    A model row contains a set of features and a model (resnet18, resnet34, resnet50, resnet101, resnet152,
+    vgg16, vgg19, yolov5, faster_rcnn, mask_rcnn).
+
+    ORM:
+
+    model_hash (uid),
+    title,
+    description,
+    features,
+    model,
+
+    """
+
+    DB_FIELDS = OrderedDict([
+        ("model_hash", str),
+        ("title", str),
+        ("description", str),
+        ("features", list),
+        ("model", str),
     ])
 
 

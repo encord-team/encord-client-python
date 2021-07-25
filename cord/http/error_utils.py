@@ -24,7 +24,9 @@ OPERATION_NOT_ALLOWED_ERROR = ['OPERATION_NOT_ALLOWED']
 ANSWER_DICTIONARY_ERROR = ['ANSWER_DICTIONARY_ERROR']
 CORRUPTED_LABEL_ERROR = ['CORRUPTED_LABEL_ERROR']
 FILE_TYPE_NOT_SUPPORTED_ERROR = ['FILE_TYPE_NOT_SUPPORTED_ERROR']
+FEATURE_DOES_NOT_EXIST_ERROR = ['FEATURE_DOES_NOT_EXIST_ERROR']
 MODEL_WEIGHTS_INCONSISTENT_ERROR = ['MODEL_WEIGHTS_INCONSISTENT_ERROR']
+MODEL_FEATURES_INCONSISTENT_ERROR = ['MODEL_FEATURES_INCONSISTENT_ERROR']
 UPLOAD_OPERATION_NOT_SUPPORTED_ERROR = ['UPLOAD_OPERATION_NOT_SUPPORTED_ERROR']
 MUST_SET_DETECTION_RANGE_ERROR = ['MUST_SET_DETECTION_RANGE_ERROR']
 DETECTION_RANGE_INVALID_ERROR = ['DETECTION_RANGE_INVALID_ERROR']
@@ -61,8 +63,14 @@ def check_error_response(response, payload=None):
     if response == FILE_TYPE_NOT_SUPPORTED_ERROR:
         raise FileTypeNotSupportedError("Supported file types are: image/jpeg, image/png, video/webm, video/mp4.")
 
+    if response == FEATURE_DOES_NOT_EXIST_ERROR:
+        raise FeatureDoesNotExistError("The passed feature does not exist in the project ontology.")
+
     if response == MODEL_WEIGHTS_INCONSISTENT_ERROR:
         raise ModelWeightsInconsistentError("The passed model weights are incompatible with the selected model.")
+
+    if response == MODEL_FEATURES_INCONSISTENT_ERROR:
+        raise ModelFeaturesInconsistentError("The passed features are incompatible with the selected model.")
 
     if response == UPLOAD_OPERATION_NOT_SUPPORTED_ERROR:
         raise UploadOperationNotSupportedError("Uploading a file to an external (e.g. S3/GCP/Azure) dataset is not "

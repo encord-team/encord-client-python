@@ -103,11 +103,26 @@ class FileTypeNotSupportedError(CordException):
     pass
 
 
+class FeatureDoesNotExistError(CordException):
+    """
+    If a feature uid does not exist in a given project ontology.
+    """
+    pass
+
+
 class ModelWeightsInconsistentError(CordException):
     """
     Exception thrown when an attempted model training iteration has a different
     type of weights than what is recorded (i.e. if type of model_hash (uid) is faster_rcnn,
     but is attempted trained with yolov5 weights).
+    """
+    pass
+
+
+class ModelFeaturesInconsistentError(CordException):
+    """
+    If a feature type is different than what is supported by the model (e.g. if
+    creating a classification model using a bounding box).
     """
     pass
 

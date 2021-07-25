@@ -13,12 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from cord.constants.model import FAST_AI, YOLOV5, FASTER_RCNN, MASK_RCNN
 from cord.orm.model import ModelTrainingWeights
-
-FAST_AI = 'fast_ai'
-YOLOV5 = 'yolov5'
-FASTER_RCNN = 'faster_rcnn'
-MASK_RCNN = 'mask_rcnn'
 
 fast_ai = ModelTrainingWeights({
     "model": FAST_AI,
