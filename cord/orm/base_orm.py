@@ -13,17 +13,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from collections import abc, OrderedDict
 import datetime
 import json
 import logging
+from collections import abc, OrderedDict
 
 
 class BaseORM(dict):
     """ Base ORM for all database objects. """
 
-    DB_FIELDS = OrderedDict()
-    NON_UPDATABLE_FIELDS = {}
+    DB_FIELDS: OrderedDict = OrderedDict()
+    NON_UPDATABLE_FIELDS: set = set()
 
     def __init__(self, dic):
         """

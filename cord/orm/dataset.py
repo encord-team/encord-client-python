@@ -49,6 +49,18 @@ class Dataset(base_orm.BaseORM):
     }
 
 
+class DatasetData(base_orm.BaseORM):
+    """
+    Video base ORM.
+    """
+
+    DB_FIELDS = OrderedDict([
+        ("data_hash", str),
+        ("video", dict),
+        ("images", list),
+    ])
+
+
 class SignedVideoURL(base_orm.BaseORM):
     """ A signed URL object with supporting information. """
     DB_FIELDS = OrderedDict([
