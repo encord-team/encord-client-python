@@ -13,12 +13,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
 import logging
-
+import os
 from abc import ABCMeta
+
 import cord.exceptions
- 
+
 CORD_ENDPOINT = 'https://api.cord.tech/public'
 
 _CORD_PROJECT_ID = 'CORD_PROJECT_ID'
@@ -36,6 +36,7 @@ class Config(metaclass=ABCMeta):
     """
     Config defining endpoint, project id, API key, and timeouts.
     """
+
     def __init__(self,
                  resource_id=None,
                  api_key=None,

@@ -14,11 +14,12 @@
 # under the License.
 
 import logging
+from typing import TypeVar, Type
 
 import requests
+import requests.exceptions
 from requests import Session, Timeout
 from requests.adapters import HTTPAdapter
-import requests.exceptions
 from requests.packages.urllib3.util import Retry
 
 from cord.exceptions import *
@@ -29,10 +30,12 @@ from cord.http.request import Request
 
 class Querier:
     """ Querier for DB get/post requests. """
+    T = TypeVar('T')
+
     def __init__(self, config):
         self._config = config
 
-    def basic_getter(self, db_object_type, uid=None):
+    def basic_getter(self, db_object_type: Type[T], uid=None) -> T:
         """ Single DB object getter. """
         request = self.request(
             QueryMethods.GET,

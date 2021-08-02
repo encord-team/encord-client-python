@@ -31,20 +31,24 @@ and obtaining project info:
 
 """
 
+from __future__ import annotations
+
 import base64
 import logging
 import os.path
 import sys
 import uuid
+from typing import List, Tuple, Union
 
 import cord.exceptions
 from cord.configs import CordConfig
 from cord.constants.model import *
+from cord.constants.string_constants import *
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url, upload_to_signed_url_list
 from cord.orm.api_key import ApiKeyMeta
 from cord.orm.dataset import (
-    Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video
+    Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video, DatasetData
 )
 from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
@@ -52,7 +56,6 @@ from cord.orm.labeling_algorithm import (
 )
 from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
 from cord.orm.project import Project
-from cord.constants.string_constants import *
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -68,12 +71,12 @@ class CordClient(object):
     with a project (e.g. label rows, datasets).
     """
 
-    def __init__(self, querier, config):
+    def __init__(self, querier: Querier, config):
         self._querier = querier
         self._config = config
 
     @staticmethod
-    def initialise(resource_id=None, api_key=None):
+    def initialise(resource_id=None, api_key=None) -> Union[CordClientProject, CordClientDataset]:
         """
         Create and initialize a Cord client from a resource ID and API key.
 
@@ -134,7 +137,7 @@ class CordClient(object):
                              .format(name))
                 )
             elif (self_type == "CordClientProject" and
-                    name in CordClientDataset.__dict__.keys()):
+                  name in CordClientDataset.__dict__.keys()):
                 raise cord.exceptions.CordException(
                     message=('{} is implemented in Datasets, not Projects.'
                              .format(name))
@@ -430,7 +433,7 @@ class CordClientProject(CordClient):
         """
         if (file_paths is None and base64_strings is None) or (
                 file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(
-                base64_strings) > 0):
+            base64_strings) > 0):
             raise cord.exceptions.CordException(
                 message='To run model inference, you must pass either a list of files or base64 strings.'
             )
@@ -607,3 +610,19 @@ class CordClientProject(CordClient):
         })
 
         return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
+
+    def get_data(self, data_hash: str) -> Tuple[Union[Video, None], Union[List[Image], None]]:
+        dataset_data: DatasetData = self._querier.basic_getter(DatasetData, uid=data_hash)
+
+        video: Union[Video, None] = None
+        if dataset_data['video'] is not None:
+            video = Video(dataset_data['video'])
+
+        images: Union[List[Image], None] = None
+        if dataset_data['images'] is not None:
+            images = []
+
+            for image in dataset_data['images']:
+                images.append(Image(image))
+
+        return video, images
