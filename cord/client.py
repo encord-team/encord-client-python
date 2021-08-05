@@ -38,7 +38,7 @@ import logging
 import os.path
 import sys
 import uuid
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 
 import cord.exceptions
 from cord.configs import CordConfig
@@ -272,7 +272,7 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_getter(Project)
 
-    def get_label_row(self, uid):
+    def get_label_row(self, uid: str):
         """
         Retrieve label row.
 
@@ -611,8 +611,26 @@ class CordClientProject(CordClient):
 
         return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
 
-    def get_data(self, data_hash: str) -> Tuple[Union[Video, None], Union[List[Image], None]]:
-        dataset_data: DatasetData = self._querier.basic_getter(DatasetData, uid=data_hash)
+    def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
+        """
+                Retrieve information about a video or image group.
+
+                Params:
+                    data_hash: The uid of the data object
+                    get_signed_url: Optionally return signed URLs for timed public access to that resource (default False)
+
+                Returns:
+                    A consisting of the video (if it exists) and a list of individual images (if they exist)
+
+                Raises:
+                    AuthenticationError: If the project API key is invalid.
+                    AuthorisationError: If access to the specified resource is restricted.
+                    UnknownError: If an error occurs while retrieving the object.
+                """
+        uid = {'data_hash': data_hash,
+               'get_signed_url': get_signed_url}
+
+        dataset_data: DatasetData = self._querier.basic_getter(DatasetData, uid=uid)
 
         video: Union[Video, None] = None
         if dataset_data['video'] is not None:
