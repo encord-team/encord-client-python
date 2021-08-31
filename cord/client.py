@@ -41,7 +41,7 @@ import uuid
 from typing import List, Tuple, Union, Optional
 
 import cord.exceptions
-from cord.configs import CordConfig
+from cord.configs import CordConfig, Config
 from cord.constants.model import *
 from cord.constants.string_constants import *
 from cord.http.querier import Querier
@@ -71,9 +71,9 @@ class CordClient(object):
     with a project (e.g. label rows, datasets).
     """
 
-    def __init__(self, querier: Querier, config):
+    def __init__(self, querier: Querier, config: Config):
         self._querier = querier
-        self._config = config
+        self._config: Config = config
 
     @staticmethod
     def initialise(resource_id=None, api_key=None) -> Union[CordClientProject, CordClientDataset]:
@@ -96,7 +96,7 @@ class CordClient(object):
         return CordClient.initialise_with_config(config)
 
     @staticmethod
-    def initialise_with_config(config):
+    def initialise_with_config(config: Config) -> Union[CordClientProject, CordClientDataset]:
         """
         Create and initialize a Cord client from a Cord config instance.
 
@@ -108,7 +108,7 @@ class CordClient(object):
         """
         querier = Querier(config)
         key_type = querier.basic_getter(ApiKeyMeta)
-        resource_type = key_type.get('resource_type', '')
+        resource_type = key_type.get('resource_type', None)
 
         if resource_type == TYPE_PROJECT:
             logging.info("Initialising Cord client for project using key: %s",
@@ -122,7 +122,7 @@ class CordClient(object):
 
         else:
             raise cord.exceptions.InitialisationError(
-                message="API key is not associated with a project or dataset"
+                message=f"API key [{config.api_key}] is not associated with a project or dataset"
             )
 
     def __getattr__(self, name):
@@ -644,3 +644,9 @@ class CordClientProject(CordClient):
                 images.append(Image(image))
 
         return video, images
+
+    def get_websocket_url(self) -> str:
+        return f'{self._config.websocket_endpoint}?' \
+               f'client_type={2}&' \
+               f'project_hash={self._config.resource_id}&' \
+               f'api_key={self._config.api_key}'

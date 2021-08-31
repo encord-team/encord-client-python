@@ -20,6 +20,7 @@ from abc import ABCMeta
 import cord.exceptions
 
 CORD_ENDPOINT = 'https://api.cord.tech/public'
+WEBSOCKET_ENDPOINT = 'wss://message-api.cord.tech/websocket'
 
 _CORD_PROJECT_ID = 'CORD_PROJECT_ID'
 _CORD_DATASET_ID = 'CORD_DATASET_ID'
@@ -40,7 +41,8 @@ class Config(metaclass=ABCMeta):
     def __init__(self,
                  resource_id=None,
                  api_key=None,
-                 endpoint=CORD_ENDPOINT
+                 endpoint=CORD_ENDPOINT,
+                 websocket_endpoint=WEBSOCKET_ENDPOINT,
                  ):
 
         if resource_id is None:
@@ -55,6 +57,7 @@ class Config(metaclass=ABCMeta):
         self.write_timeout = WRITE_TIMEOUT
         self.connect_timeout = CONNECT_TIMEOUT
         self.endpoint = endpoint
+        self.websocket_endpoint = websocket_endpoint
         self.headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
