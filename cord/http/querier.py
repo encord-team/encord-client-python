@@ -49,6 +49,17 @@ class Querier:
         else:
             raise ResourceNotFoundError("Resource not found.")
 
+    def basic_delete(self, db_object_type: Type, uid=None):
+        """ Single DB object getter. """
+        request = self.request(
+            QueryMethods.DELETE,
+            db_object_type,
+            uid,
+            self._config.read_timeout,
+        )
+
+        self.execute(request)
+
     def basic_setter(self, db_object_type, uid, payload):
         """ Single DB object setter. """
         request = self.request(

@@ -253,6 +253,19 @@ class CordClientDataset(CordClient):
                 message='An error has occurred during image group creation.'
             )
 
+    def delete_image_group(self, data_hash: str):
+        """
+        Create an image group in Cord storage.
+
+        Args:
+            self: Cord client object.
+            data_hash: the hash of the image group you'd like to delete
+        """
+        self._querier.basic_delete(
+            ImageGroup,
+            uid=data_hash
+        )
+
 
 class CordClientProject(CordClient):
     def get_project(self):
