@@ -265,6 +265,19 @@ class CordClientDataset(CordClient):
             ImageGroup,
             uid=data_hash
         )
+        
+    def delete_video(self, data_hash: str):
+        """
+        Delete a video from a dataset.
+
+        Args:
+            self: Cord client object.
+            data_hash: the hash of the video you'd like to delete
+        """
+        self._querier.basic_delete(
+            Video,
+            uid=data_hash
+        )
 
 
 class CordClientProject(CordClient):
