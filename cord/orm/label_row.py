@@ -107,6 +107,15 @@ class LabelRow(base_orm.BaseORM):
         ...
     }
 
+    The object actions dictionary is in the form:
+    {
+        "objectHash": {
+            "objectHash": objectHash,
+            "actions": [{answer 1}, {answer 2}, ...]
+        },
+        ...
+    }
+
     """
 
     DB_FIELDS = OrderedDict([
@@ -118,6 +127,7 @@ class LabelRow(base_orm.BaseORM):
         ("data_units", dict),
         ("object_answers", dict),
         ("classification_answers", dict),
+        ("object_actions", dict),
         ("label_status", str),
     ])
 
