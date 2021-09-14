@@ -14,7 +14,7 @@
 # under the License.
 
 import logging
-from typing import TypeVar, Type
+from typing import TypeVar, Type, List
 
 import requests
 import requests.exceptions
@@ -49,7 +49,21 @@ class Querier:
         else:
             raise ResourceNotFoundError("Resource not found.")
 
-    def basic_delete(self, db_object_type: Type, uid=None):
+    def get_multiple(self, object_type: Type[T], uid=None) -> List[T]:
+        request = self.request(
+            QueryMethods.GET,
+            object_type,
+            uid,
+            self._config.read_timeout,
+        )
+        result = self.execute(request)
+
+        if result:
+            return [object_type(**item) for item in result]
+        else:
+            raise ResourceNotFoundError("Resource not found.")
+
+    def basic_delete(self, db_object_type: Type[T], uid=None):
         """ Single DB object getter. """
         request = self.request(
             QueryMethods.DELETE,
@@ -60,7 +74,7 @@ class Querier:
 
         self.execute(request)
 
-    def basic_setter(self, db_object_type, uid, payload):
+    def basic_setter(self, db_object_type: Type[T], uid, payload):
         """ Single DB object setter. """
         request = self.request(
             QueryMethods.POST,
@@ -94,7 +108,7 @@ class Querier:
         else:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
-    def request(self, method, db_object_type, uid, timeout, payload=None):
+    def request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
         """ Request object constructor. """
         return Request(
             method,

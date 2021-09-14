@@ -34,10 +34,13 @@ and obtaining project info:
 from __future__ import annotations
 
 import base64
+import json
 import logging
 import os.path
 import sys
+import typing
 import uuid
+from pathlib import Path
 from typing import List, Tuple, Union, Optional
 
 import cord.exceptions
@@ -47,6 +50,7 @@ from cord.constants.string_constants import *
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url, upload_to_signed_url_list
 from cord.orm.api_key import ApiKeyMeta
+from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import (
     Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video, DatasetData
 )
@@ -149,6 +153,9 @@ class CordClient(object):
                     message='{} is not implemented.'.format(name)
                 )
         return value
+
+    def get_cloud_integrations(self) -> List[CloudIntegration]:
+        return self._querier.get_multiple(CloudIntegration)
 
 
 class CordClientDataset(CordClient):
@@ -279,6 +286,36 @@ class CordClientDataset(CordClient):
             Video,
             uid=data_hashes
         )
+
+    def add_private_data_to_dataset(self,
+                                    integration_id: str,
+                                    private_files: Union[str, typing.Dict, Path, typing.TextIO],
+                                    ignore_errors: bool = False):
+        if isinstance(private_files, dict):
+            files = private_files
+        elif isinstance(private_files, str):
+            if os.path.exists(private_files):
+                text_contents = Path(private_files).read_text()
+            else:
+                text_contents = private_files
+
+            files = json.loads(text_contents)
+        elif isinstance(private_files, Path):
+            text_contents = private_files.read_text()
+            files = json.loads(text_contents)
+        elif isinstance(private_files, typing.TextIO):
+            text_contents = private_files.read()
+            files = json.loads(text_contents)
+        else:
+            raise ValueError(f'Type [{type(private_files)}] of argument private_files is not supported')
+
+        payload = {
+            'files': files,
+            'integration_id': integration_id,
+            'ignore_errors': ignore_errors
+        }
+
+        self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
 
 
 class CordClientProject(CordClient):
