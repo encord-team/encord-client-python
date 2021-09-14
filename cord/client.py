@@ -291,6 +291,17 @@ class CordClientDataset(CordClient):
                                     integration_id: str,
                                     private_files: Union[str, typing.Dict, Path, typing.TextIO],
                                     ignore_errors: bool = False):
+        """
+        Append data hosted on private clouds to existing dataset
+
+        Args:
+            integration_id: str
+                ID of the cloud integration to be used when accessing those files
+            private_files:
+                A str path to a file, Path object, json string or python dictionary of the files you wish to add
+            ignore_errors: bool, optional
+                Ignore individual errors when trying to access the specified files
+        """
         if isinstance(private_files, dict):
             files = private_files
         elif isinstance(private_files, str):
