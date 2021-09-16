@@ -52,19 +52,20 @@ class Querier:
         else:
             raise ResourceNotFoundError("Resource not found.")
 
-    def get_multiple(self, object_type: Type[T], uid=None) -> List[T]:
+    def get_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
         request = self.request(
             QueryMethods.GET,
             object_type,
             uid,
             self._config.read_timeout,
+            payload=payload
         )
         result = self.execute(request)
 
-        if result:
+        if result is not None:
             return [object_type(**item) for item in result]
         else:
-            raise ResourceNotFoundError("Resource not found.")
+            raise ResourceNotFoundError(f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]")
 
     def basic_delete(self, db_object_type: Type[T], uid=None):
         """ Single DB object getter. """
