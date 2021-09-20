@@ -12,7 +12,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import dataclasses
 import logging
 from typing import TypeVar, Type, List
 
@@ -45,7 +45,10 @@ class Querier:
         )
         res = self.execute(request)
         if res:
-            return db_object_type(res)
+            if dataclasses.is_dataclass(db_object_type):
+                return db_object_type(**res)
+            else:
+                return db_object_type(res)
         else:
             raise ResourceNotFoundError("Resource not found.")
 
