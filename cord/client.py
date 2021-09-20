@@ -52,7 +52,7 @@ from cord.http.utils import upload_to_signed_url, upload_to_signed_url_list
 from cord.orm.api_key import ApiKeyMeta
 from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import (
-    Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video, DatasetData
+    Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video, DatasetData, ReEncodeVideoTask
 )
 from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
@@ -327,6 +327,42 @@ class CordClientDataset(CordClient):
         }
 
         self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
+
+    def re_encode_data(self, data_hashes: list):
+        """
+        Lanches a async task that can re-encode a list of videos.
+
+        Args:
+            self: Cord client object.
+            data_hashes: list of hash of the videos you'd like to re_encode, all should belong to the same
+             dataset
+        Returns:
+            ID(integer) of the async task launched.
+
+        """
+        payload = {"data_hash": data_hashes}
+        return self._querier.basic_put(
+            ReEncodeVideoTask,
+            uid=None,
+            payload=payload
+        )
+
+    def re_encode_data_status(self, job_id: int):
+        """
+        Returns the status of an existing async task which is aimed at re-encoding videos.
+
+        Args:
+            self: Cord client object.
+            job_id: id of the async task that was launched to re-encode the videos
+
+        Returns:
+            ReEncodeVideoTask: Object containing the status of the task, along with info about the new encoded videos
+             in case the task has been completed
+        """
+        return self._querier.basic_getter(
+            ReEncodeVideoTask,
+            uid=job_id
+        )
 
 
 class CordClientProject(CordClient):

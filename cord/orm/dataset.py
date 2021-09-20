@@ -12,8 +12,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import dataclasses
 from collections import OrderedDict
+from typing import List
 
 from cord.orm import base_orm
 
@@ -123,3 +124,17 @@ class Image(base_orm.BaseORM):
     NON_UPDATABLE_FIELDS = {
         "data_hash",
     }
+
+
+@dataclasses.dataclass(frozen=True)
+class ReEncodeVideoTaskResult:
+    data_hash: str
+    signed_url: str
+    bucket_path: str
+
+
+@dataclasses.dataclass(frozen=True)
+class ReEncodeVideoTask:
+    """ A re encode video object with supporting information. """
+    status: str
+    result: List[ReEncodeVideoTaskResult]
