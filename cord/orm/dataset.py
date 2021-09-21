@@ -137,4 +137,4 @@ class ReEncodeVideoTaskResult:
 class ReEncodeVideoTask:
     """ A re encode video object with supporting information. """
     status: str
-    result: List[ReEncodeVideoTaskResult]
+    result: List[ReEncodeVideoTaskResult] = None
