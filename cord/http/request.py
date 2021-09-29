@@ -14,6 +14,7 @@
 # under the License.
 
 import json
+from typing import Dict
 
 from cord.http.query_methods import QueryMethods
 
@@ -27,21 +28,21 @@ class Request(object):
                  query_method,
                  db_object_type,
                  uid,
-                 headers,
                  timeout,
                  connect_timeout,
                  payload,
                  ):
         self.http_method = QueryMethods.POST
-        self.data = json.dumps({'query_type': db_object_type.__name__.lower(),
-                                'query_method': query_method,
-                                'values': {
-                                    'uid': uid,
-                                    'payload': payload,
-                                }})
-        self.headers = headers
+        self.data: str = json.dumps({'query_type': db_object_type.__name__.lower(),
+                                     'query_method': query_method,
+                                     'values': {
+                                         'uid': uid,
+                                         'payload': payload,
+                                     }})
         self.timeout = timeout
         self.connect_timeout = connect_timeout
+
+        self.headers: Dict = None
 
     def __str__(self):
         return f"Request({self.http_method}, {self.data}, {self.headers}, {self.timeout}, {self.connect_timeout})"

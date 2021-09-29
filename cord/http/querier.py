@@ -22,6 +22,7 @@ from requests import Session, Timeout
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util import Retry
 
+from cord.configs import BaseConfig
 from cord.exceptions import *
 from cord.http.error_utils import check_error_response
 from cord.http.query_methods import QueryMethods
@@ -32,7 +33,7 @@ class Querier:
     """ Querier for DB get/post requests. """
     T = TypeVar('T')
 
-    def __init__(self, config):
+    def __init__(self, config: BaseConfig):
         self._config = config
 
     def basic_getter(self, db_object_type: Type[T], uid=None) -> T:
@@ -112,16 +113,10 @@ class Querier:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
     def request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
-        """ Request object constructor. """
-        return Request(
-            method,
-            db_object_type,
-            uid,
-            self._config.headers,
-            timeout,
-            self._config.connect_timeout,
-            payload,
-        )
+        request = Request(method, db_object_type, uid, timeout, self._config.connect_timeout, payload)
+
+        request.headers = self._config.define_headers(request.data)
+        return request
 
     def execute(self, request):
         """ Execute a request. """
