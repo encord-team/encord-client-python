@@ -54,6 +54,7 @@ from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import (
     Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video, DatasetData, ReEncodeVideoTask
 )
+from cord.orm.label_log import LabelLog
 from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams
@@ -761,3 +762,14 @@ class CordClientProject(CordClient):
                f'client_type={2}&' \
                f'project_hash={self._config.resource_id}&' \
                f'api_key={self._config.api_key}'
+
+    def get_label_logs(self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None,
+                       to_unix_seconds: int = None) -> List[LabelLog]:
+
+        function_arguments = locals()
+
+        query_payload = {
+            k: v for (k, v) in function_arguments.items() if k is not 'self' and v is not None
+        }
+
+        return self._querier.get_multiple(LabelLog, payload=query_payload)
