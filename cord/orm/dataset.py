@@ -12,8 +12,11 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from __future__ import annotations
+
 import dataclasses
 from collections import OrderedDict
+from enum import IntEnum
 from typing import List
 
 from cord.orm import base_orm
@@ -48,6 +51,12 @@ class Dataset(base_orm.BaseORM):
     NON_UPDATABLE_FIELDS = {
         "dataset_type",
     }
+
+
+class DatasetType(IntEnum):
+    AWS = 1,
+    GCP = 2,
+    AZURE = 3
 
 
 class DatasetData(base_orm.BaseORM):
