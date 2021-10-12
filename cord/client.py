@@ -764,6 +764,11 @@ class CordClientProject(CordClient):
 
             video: Metadata of the video for which bounding box fitting needs to be run
 
+                {
+                    "width" : w,
+                    "height" : h,
+                }
+
         Returns:
             Fitting results: Full set of filled frames including fitted objects.
 
@@ -783,7 +788,7 @@ class CordClientProject(CordClient):
         })
 
         algo = LabelingAlgorithm({
-            'algorithm_name': INTERPOLATION,
+            'algorithm_name': FITTED_BOUNDING_BOX,
             'algorithm_parameters': fitting_params,
         })
 
