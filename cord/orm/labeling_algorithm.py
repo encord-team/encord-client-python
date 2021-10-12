@@ -50,3 +50,20 @@ class ObjectInterpolationParams(base_orm.BaseORM):
         ("key_frames", dict),
         ("objects_to_interpolate", list),
     ])
+
+
+class BoundingBoxFittingParams(base_orm.BaseORM):
+    """
+        Labeling algorithm parameters for bounding box fitting algorithm
+
+        ORM:
+
+        labels,
+        video
+
+        """
+
+    DB_FIELDS = OrderedDict([
+        ("labels", dict),
+        ("video", dict),
+    ])
