@@ -57,7 +57,7 @@ from cord.orm.dataset import (
 from cord.orm.label_log import LabelLog
 from cord.orm.label_row import LabelRow
 from cord.orm.labeling_algorithm import (
-    LabelingAlgorithm, ObjectInterpolationParams
+    LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
 )
 from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
 from cord.orm.project import Project
@@ -719,6 +719,77 @@ class CordClientProject(CordClient):
         algo = LabelingAlgorithm({
             'algorithm_name': INTERPOLATION,
             'algorithm_parameters': interpolation_params,
+        })
+
+        return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
+
+    def fitted_bounding_boxes(self,
+                              frames: dict,
+                              video: dict,
+                              ):
+        """
+
+        Args:
+            frames: Labels for frames to be fitted. Frames are consumed in the form:
+
+                "frame": {
+                    "objects": [
+                        {
+                            "objectHash": object_uid,
+                            "featureHash": feature_uid (from editor ontology),
+                            "polygon": {
+                                "0": {
+                                    "x": x1,
+                                    "y": y1,
+                                },
+                                "1": {
+                                    "x": x2,
+                                    "y": y2,
+                                },
+                                "2" {
+                                    "x": x3,
+                                    "y": y3,
+                                },
+                                ...,
+                            }
+                        },
+                        {
+                            ...
+                        }
+                    ]
+                },
+                "frame": {
+                    ...,
+                }
+
+            video: Metadata of the video for which bounding box fitting needs to be run
+
+                {
+                    "width" : w,
+                    "height" : h,
+                }
+
+        Returns:
+            Fitting results: Full set of filled frames including fitted objects.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            UnknownError: If an error occurs while running interpolation.
+        """
+        if len(frames) == 0 or len(video) == 0:
+            raise cord.exceptions.CordException(
+                message="To run fitting, you must pass frames and video to run bounding box fitting on.."
+            )
+
+        fitting_params = BoundingBoxFittingParams({
+            'labels': frames,
+            'video': video,
+        })
+
+        algo = LabelingAlgorithm({
+            'algorithm_name': FITTED_BOUNDING_BOX,
+            'algorithm_parameters': fitting_params,
         })
 
         return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
