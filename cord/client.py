@@ -384,7 +384,7 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_getter(Project)
 
-    def get_label_row(self, uid: str, sign_urls: bool = True):
+    def get_label_row(self, uid: str, get_signed_url: bool = True):
         """
         Retrieve label row.
 
@@ -404,7 +404,7 @@ class CordClientProject(CordClient):
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
         payload = {
-            'sign_urls': sign_urls
+            'get_signed_url': get_signed_url
         }
 
         return self._querier.basic_getter(LabelRow, uid, payload=payload)
