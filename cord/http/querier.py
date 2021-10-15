@@ -36,13 +36,14 @@ class Querier:
     def __init__(self, config: BaseConfig):
         self._config = config
 
-    def basic_getter(self, db_object_type: Type[T], uid=None) -> T:
+    def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
         """ Single DB object getter. """
         request = self.request(
             QueryMethods.GET,
             db_object_type,
             uid,
             self._config.read_timeout,
+            payload=payload
         )
         res = self.execute(request)
         if res:
