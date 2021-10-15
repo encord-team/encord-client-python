@@ -384,12 +384,14 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_getter(Project)
 
-    def get_label_row(self, uid: str):
+    def get_label_row(self, uid: str, sign_urls: bool = True):
         """
         Retrieve label row.
 
         Args:
             uid: A label_hash (uid) string.
+            sign_urls: By default the operation returns a signed URL for the underlying data asset. This can be
+            expensive so it can optionally be turned off
 
         Returns:
             LabelRow: A label row instance.
@@ -401,7 +403,11 @@ class CordClientProject(CordClient):
             UnknownError: If an error occurs while retrieving the label.
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
-        return self._querier.basic_getter(LabelRow, uid)
+        payload = {
+            'sign_urls': sign_urls
+        }
+
+        return self._querier.basic_getter(LabelRow, uid, payload=payload)
 
     def save_label_row(self, uid, label):
         """
