@@ -74,3 +74,7 @@ class Project(base_orm.BaseORM):
         for label in labels:
             res.append(label.get('label_hash'))
         return res
+
+
+class ProjectCopy:
+    pass
