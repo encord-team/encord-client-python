@@ -384,14 +384,14 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_getter(Project)
 
-    def copy_project(self, labels=False, models=False):
+    def copy_project(self, copy_labels=False, copy_models=False):
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
         Labels and models are optional
         Args:
-            labels: currently if labels is True, all tasks with labelling will be marked as complete,
+            copy_labels: currently if labels is True, all tasks with labelling will be marked as complete,
                     otherwise all tasks will be recreated anew
-            models: currently if True, all models with their training information will be copied into the new project
+            copy_models: currently if True, all models with their training information will be copied into the new project
 
         Returns:
             bool
@@ -403,9 +403,9 @@ class CordClientProject(CordClient):
         """
 
         payload = {"copy_project_options": []}
-        if labels:
+        if copy_labels:
             payload["copy_project_options"].append("labels")
-        if models:
+        if copy_models:
             payload["copy_project_options"].append("models")
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
 
