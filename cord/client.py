@@ -147,9 +147,7 @@ class CordClient(object):
                     message=('{} is implemented in Datasets, not Projects.'
                              .format(name))
                 )
-            elif name == 'items':
-                pass
-            else:
+            elif name != 'items':
                 raise cord.exceptions.CordException(
                     message='{} is not implemented.'.format(name)
                 )
@@ -192,29 +190,28 @@ class CordClientDataset(CordClient):
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        if os.path.exists(file_path):
-            short_name = os.path.basename(file_path)
-            signed_url = self._querier.basic_getter(
-                SignedVideoURL,
-                uid=short_name
-            )
-            res = upload_to_signed_url(
-                file_path,
-                signed_url,
-                self._querier,
-                Video
-            )
-            if res:
-                logging.info("Upload complete.")
-                logging.info("Please run client.get_dataset() to refresh.")
-                return res
-            else:
-                raise cord.exceptions.CordException(
-                    message='An error has occurred during video upload.'
-                )
-        else:
+        if not os.path.exists(file_path):
             raise cord.exceptions.CordException(
                 message='{} does not point to a file.'.format(file_path)
+            )
+        short_name = os.path.basename(file_path)
+        signed_url = self._querier.basic_getter(
+            SignedVideoURL,
+            uid=short_name
+        )
+        res = upload_to_signed_url(
+            file_path,
+            signed_url,
+            self._querier,
+            Video
+        )
+        if res:
+            logging.info("Upload complete.")
+            logging.info("Please run client.get_dataset() to refresh.")
+            return res
+        else:
+            raise cord.exceptions.CordException(
+                message='An error has occurred during video upload.'
             )
 
     def create_image_group(self, file_paths):
@@ -783,7 +780,7 @@ class CordClientProject(CordClient):
             AuthorisationError: If access to the specified resource is restricted.
             UnknownError: If an error occurs while running interpolation.
         """
-        if len(frames) == 0 or len(video) == 0:
+        if not frames or not video:
             raise cord.exceptions.CordException(
                 message="To run fitting, you must pass frames and video to run bounding box fitting on.."
             )
@@ -827,10 +824,7 @@ class CordClientProject(CordClient):
 
         images: Union[List[Image], None] = None
         if dataset_data['images'] is not None:
-            images = []
-
-            for image in dataset_data['images']:
-                images.append(Image(image))
+            images = [Image(image) for image in dataset_data['images']]
 
         return video, images
 
