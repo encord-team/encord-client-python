@@ -27,6 +27,7 @@ from cord.exceptions import *
 from cord.http.error_utils import check_error_response
 from cord.http.query_methods import QueryMethods
 from cord.http.request import Request
+from cord.orm.formatter import Formatter
 
 
 class Querier:
@@ -65,7 +66,10 @@ class Querier:
         result = self.execute(request)
 
         if result is not None:
-            return [object_type(**item) for item in result]
+            if issubclass(object_type, Formatter):
+                return [object_type.from_dict(item) for item in result]
+            else:
+                return [object_type(**item) for item in result]
         else:
             raise ResourceNotFoundError(f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]")
 
