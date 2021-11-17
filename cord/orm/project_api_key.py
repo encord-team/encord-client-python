@@ -5,6 +5,6 @@ from cord.utilities.client_utilities import APIKeyScopes
 
 @dataclass(frozen=True)
 class ProjectAPIKey:
-    api_Key: str
+    api_key: str
     title: str
     scopes: APIKeyScopes

@@ -70,3 +70,6 @@ class CordUserClient:
 
         return self.querier.basic_setter(ProjectAPIKey, uid=resource_id, payload=payload)
 
+    def get_project_api_keys(self, resource_id: str) -> List[APIKeyScopes]:
+        return self.querier.get_multiple(ProjectAPIKey, uid=resource_id)
+
