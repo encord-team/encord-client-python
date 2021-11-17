@@ -4,7 +4,11 @@ from typing import List
 
 from cord.configs import UserConfig
 from cord.http.querier import Querier
-from cord.orm.dataset import Dataset, DatasetType, DatasetScope, DatasetAPIKey
+from cord.orm.dataset import Dataset, DatasetType
+from cord.orm.dataset import DatasetScope, DatasetAPIKey
+from cord.orm.project import Project
+from cord.orm.project_api_key import ProjectAPIKey
+from cord.utilities.client_utilities import APIKeyScopes
 
 
 class CordUserClient:
@@ -49,3 +53,20 @@ class CordUserClient:
         querier = Querier(user_config)
 
         return CordUserClient(user_config, querier)
+
+    def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
+        project = {
+            'title': project_title,
+            'description': project_description,
+            'dataset_hashes': dataset_hashes
+        }
+
+        return self.querier.basic_setter(Project, uid=None, payload=project)
+
+    def create_project_api_key(self, resource_id: str, scopes: List[APIKeyScopes]):
+        payload = {
+            'scopes': list(map(lambda scope: scope.value, scopes))
+        }
+
+        return self.querier.basic_setter(ProjectAPIKey, uid=resource_id, payload=payload)
+

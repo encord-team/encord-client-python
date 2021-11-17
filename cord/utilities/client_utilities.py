@@ -14,7 +14,18 @@
 # under the License.
 
 import pprint
+from enum import Enum
 
 
 def pretty_print(data):
     return pprint.pformat(data, indent=4, width=10)
+
+
+class APIKeyScopes(Enum):
+    LABEL_READ = "label.read"
+    LABEL_WRITE = "label.write"
+    MODEL_INFERENCE = "model.inference"
+    MODEL_TRAIN = "model.train"
+    LABEL_LOGS_READ = "label_logs.read"
+    ALGO_LIBRARY = "algo.library"
+
