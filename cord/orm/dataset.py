@@ -15,11 +15,13 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 from collections import OrderedDict
-from enum import IntEnum
-from typing import List
+from enum import IntEnum, Enum
+from typing import List, Dict
 
 from cord.orm import base_orm
+from cord.orm.formatter import Formatter
 
 
 class Dataset(base_orm.BaseORM):
@@ -53,10 +55,33 @@ class Dataset(base_orm.BaseORM):
     }
 
 
+@dataclasses.dataclass(frozen=True)
+class DatasetAPIKey(Formatter):
+    dataset_hash: str
+    api_key: str
+    title: str
+    key_hash: str
+    scopes: List[DatasetScope]
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        if isinstance(json_dict['scopes'], str):
+            json_dict['scopes'] = json.loads(json_dict['scopes'])
+        scopes = [DatasetScope(scope) for scope in json_dict['scopes']]
+        return DatasetAPIKey(json_dict['resource_hash'], json_dict['api_key'], json_dict['title'],
+                             json_dict['key_hash'], scopes)
+
+
 class DatasetType(IntEnum):
+    CORD_STORAGE = 0,
     AWS = 1,
     GCP = 2,
     AZURE = 3
+
+
+class DatasetScope(Enum):
+    READ = 'dataset.read'
+    WRITE = 'dataset.write'
 
 
 class DatasetData(base_orm.BaseORM):
