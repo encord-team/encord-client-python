@@ -63,6 +63,8 @@ from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingP
 from cord.orm.project import Project, ProjectCopy, ProjectDataset
 
 # Logging configuration
+from cord.project_ontology.ontology import Ontology
+
 logging.basicConfig(stream=sys.stdout,
                     level=logging.INFO,
                     format='[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)s] [%(funcName)s()] %(message)s',
@@ -484,10 +486,30 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload=None)
 
+    def get_project_ontology(self) -> Ontology:
+        project = self.get_project()
+        ontology = project['editor_ontology']
+        return Ontology.from_dict(ontology)
+
+    def new_project_ontology(self) -> Ontology:
+        return Ontology()
+
+    def set_project_ontology(self, ontology: Ontology) -> bool:
+        """
+        Save updated project ontology
+        Args:
+            ontology: the updated project ontology
+
+        Returns:
+            bool
+        """
+        payload = {"editor": ontology.to_dict()}
+        return self._querier.basic_setter(Project, uid=None, payload=payload)
+
     def add_datasets(self, dataset_hashes: List[str]):
         """
         Add a dataset to a project
-        
+
         Args:
             dataset_hashes: List of dataset hashes of the datasets to be added
 
