@@ -78,3 +78,7 @@ class Project(base_orm.BaseORM):
 
 class ProjectCopy:
     pass
+
+
+class ProjectDataset:
+    pass

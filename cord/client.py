@@ -60,7 +60,7 @@ from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
 )
 from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
-from cord.orm.project import Project, ProjectCopy
+from cord.orm.project import Project, ProjectCopy, ProjectDataset
 
 # Logging configuration
 logging.basicConfig(stream=sys.stdout,
@@ -484,6 +484,44 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload=None)
 
+    def add_datasets(self, dataset_hashes: List[str]):
+        """
+        Add a dataset to a project
+        
+        Args:
+            dataset_hashes: List of dataset hashes of the datasets to be added
+
+        Returns:
+            Bool.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If one or more datasets don't exist by the specified dataset_hashes.
+            UnknownError: If an error occurs while adding the datasets to the project.
+            OperationNotAllowed: If the write operation is not allowed by the API key.
+        """
+        payload = {"dataset_hashes": dataset_hashes}
+        return self._querier.basic_setter(ProjectDataset, uid=None, payload=payload)
+
+    def remove_datasets(self, dataset_hashes: List[str]):
+        """
+        Remove datasets from project
+
+        Args:
+            dataset_hashes: List of dataset hashes of the datasets to be removed
+
+        Returns:
+            Bool.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no dataset exists by the specified dataset_hash (uid).
+            UnknownError: If an error occurs while removing the datasets from the project.
+            OperationNotAllowed: If the operation is not allowed by the API key.
+        """
+        return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
     def create_model_row(self,
                          title=None,
                          description=None,
