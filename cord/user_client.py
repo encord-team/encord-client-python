@@ -63,13 +63,14 @@ class CordUserClient:
 
         return self.querier.basic_setter(Project, uid=None, payload=project)
 
-    def create_project_api_key(self, resource_id: str, scopes: List[APIKeyScopes]):
+    def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
         payload = {
+            'title': api_key_title,
             'scopes': list(map(lambda scope: scope.value, scopes))
         }
 
-        return self.querier.basic_setter(ProjectAPIKey, uid=resource_id, payload=payload)
+        return self.querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
 
-    def get_project_api_keys(self, resource_id: str) -> List[APIKeyScopes]:
-        return self.querier.get_multiple(ProjectAPIKey, uid=resource_id)
+    def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
+        return self.querier.get_multiple(ProjectAPIKey, uid=project_hash)
 
