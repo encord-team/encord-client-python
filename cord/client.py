@@ -63,6 +63,8 @@ from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingP
 from cord.orm.project import Project, ProjectCopy, ProjectDataset
 
 # Logging configuration
+from cord.project_ontology.classification_type import ClassificationType
+from cord.project_ontology.object_type import ObjectShape
 from cord.project_ontology.ontology import Ontology
 
 logging.basicConfig(stream=sys.stdout,
@@ -393,7 +395,8 @@ class CordClientProject(CordClient):
         Args:
             copy_labels: currently if labels is True, all tasks with labelling will be marked as complete,
                     otherwise all tasks will be recreated anew
-            copy_models: currently if True, all models with their training information will be copied into the new project
+            copy_models: currently if True, all models with their training information will be copied into the new
+                         project
 
         Returns:
             bool
@@ -417,7 +420,7 @@ class CordClientProject(CordClient):
 
         Args:
             uid: A label_hash (uid) string.
-            sign_urls: By default the operation returns a signed URL for the underlying data asset. This can be
+            get_signed_url: By default the operation returns a signed URL for the underlying data asset. This can be
             expensive so it can optionally be turned off
 
         Returns:
@@ -486,23 +489,6 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload=None)
 
-    def get_project_ontology(self) -> Ontology:
-        project = self.get_project()
-        ontology = project['editor_ontology']
-        return Ontology.from_dict(ontology)
-
-    def set_project_ontology(self, ontology: Ontology) -> bool:
-        """
-        Save updated project ontology
-        Args:
-            ontology: the updated project ontology
-
-        Returns:
-            bool
-        """
-        payload = {"editor": ontology.to_dict()}
-        return self._querier.basic_setter(Project, uid=None, payload=payload)
-
     def add_datasets(self, dataset_hashes: List[str]):
         """
         Add a dataset to a project
@@ -541,6 +527,52 @@ class CordClientProject(CordClient):
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
+
+    def get_project_ontology(self) -> Ontology:
+        project = self.get_project()
+        ontology = project['editor_ontology']
+        return Ontology.from_dict(ontology)
+
+    def add_object(self, name: str, shape: ObjectShape) -> bool:
+        """
+        Add object to an ontology
+        Args:
+            name: the name of the object
+            shape: the shape of the object (BOUNDING_BOX, POLYGON or KEY_POINT)
+
+        Returns:
+            bool
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            UnknownError: If an error occurs while add te object to the project ontology
+            OperationNotAllowed: If the operation is not allowed by the API key.
+        """
+        ontology = self.get_project_ontology()
+        ontology.add_object(name, shape)
+        return self.__set_project_ontology(ontology)
+
+    def add_classification(self, name: str, classification_type: ClassificationType, required: bool,
+                           options: Optional[typing.Iterable[str]] = None):
+        """
+
+        Args:
+            name: the name of the classification
+            classification_type: the classification type (RADIO, TEXT or CHECKLIST)
+            required (whether this classification is required by the annotator):
+            options: the list of options for the classification (to be set to None for texts)
+
+        Returns:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            UnknownError: If an error occurs while add te classification to the project ontology
+            OperationNotAllowed: If the operation is not allowed by the API key.
+        """
+
+        ontology = self.get_project_ontology()
+        ontology.add_classification(name, classification_type, required, options)
+        return self.__set_project_ontology(ontology)
 
     def create_model_row(self,
                          title=None,
@@ -634,7 +666,7 @@ class CordClientProject(CordClient):
         """
         if (file_paths is None and base64_strings is None) or (
                 file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(
-            base64_strings) > 0):
+                base64_strings) > 0):
             raise cord.exceptions.CordException(
                 message='To run model inference, you must pass either a list of files or base64 strings.'
             )
@@ -889,7 +921,8 @@ class CordClientProject(CordClient):
 
                 Params:
                     data_hash: The uid of the data object
-                    get_signed_url: Optionally return signed URLs for timed public access to that resource (default False)
+                    get_signed_url: Optionally return signed URLs for timed public access to that resource
+                                    (default False)
 
                 Returns:
                     A consisting of the video (if it exists) and a list of individual images (if they exist)
@@ -933,3 +966,16 @@ class CordClientProject(CordClient):
         }
 
         return self._querier.get_multiple(LabelLog, payload=query_payload)
+
+    def __set_project_ontology(self, ontology: Ontology) -> bool:
+
+        """
+        Save updated project ontology
+        Args:
+            ontology: the updated project ontology
+
+        Returns:
+            bool
+        """
+        payload = {"editor": ontology.to_dict()}
+        return self._querier.basic_setter(Project, uid=None, payload=payload)
