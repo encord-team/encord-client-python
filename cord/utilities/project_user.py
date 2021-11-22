@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import Dict
+
+from cord.orm.formatter import Formatter
 
 
 class ProjectUserRole(IntEnum):
@@ -11,9 +14,11 @@ class ProjectUserRole(IntEnum):
 
 
 @dataclass(frozen=True)
-class ProjectUser:
-    user_id: int
-    user_hash: str
+class ProjectUser(Formatter):
     user_email: str
     user_role: ProjectUserRole
     project_hash: str
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        return ProjectUser(json_dict['user_email'], ProjectUserRole(json_dict["user_role"]), json_dict['project_hash'])

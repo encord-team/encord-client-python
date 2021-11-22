@@ -413,13 +413,7 @@ class CordClientProject(CordClient):
 
         users = self._querier.basic_setter(ProjectUsers, self._config.resource_id, payload=payload)
 
-        return list(map(
-            lambda user: ProjectUser(user["user_id"],
-                                     user["user_hash"],
-                                     user["user_email"],
-                                     ProjectUserRole(user["user_role"]),
-                                     user["project_hash"]),
-            users))
+        return list(map(lambda user: ProjectUser.from_dict(user), users))
 
     def copy_project(self, copy_labels=False, copy_models=False):
         """
