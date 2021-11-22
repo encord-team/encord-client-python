@@ -491,9 +491,6 @@ class CordClientProject(CordClient):
         ontology = project['editor_ontology']
         return Ontology.from_dict(ontology)
 
-    def new_project_ontology(self) -> Ontology:
-        return Ontology()
-
     def set_project_ontology(self, ontology: Ontology) -> bool:
         """
         Save updated project ontology
@@ -544,6 +541,7 @@ class CordClientProject(CordClient):
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
+
     def create_model_row(self,
                          title=None,
                          description=None,
