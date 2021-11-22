@@ -82,7 +82,7 @@ class Querier:
             self._config.read_timeout,
         )
 
-        self.execute(request)
+        return self.execute(request)
 
     def basic_setter(self, db_object_type: Type[T], uid, payload):
         """ Single DB object setter. """
