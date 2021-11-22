@@ -74,7 +74,7 @@ class Ontology:
             ontology_object = OntologyObject(ontology_object_dict['id'],
                                              ontology_object_dict['color'],
                                              ontology_object_dict['name'],
-                                             ObjectShape.fromString(ontology_object_dict['shape']),
+                                             ObjectShape(ontology_object_dict['shape']),
                                              ontology_object_dict['featureNodeHash'])
             ontology_objects.append(ontology_object)
         return ontology_objects
