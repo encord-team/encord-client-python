@@ -60,13 +60,14 @@ from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
 )
 from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
-from cord.orm.project import Project, ProjectCopy, ProjectDataset
+from cord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers
 
-# Logging configuration
 from cord.project_ontology.classification_type import ClassificationType
 from cord.project_ontology.object_type import ObjectShape
 from cord.project_ontology.ontology import Ontology
+from cord.utilities.project_user import ProjectUserRole, ProjectUser
 
+# Logging configuration
 logging.basicConfig(stream=sys.stdout,
                     level=logging.INFO,
                     format='[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)s] [%(funcName)s()] %(message)s',
@@ -388,6 +389,32 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_getter(Project)
 
+    def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
+        """
+        Add users to project
+
+        Args:
+            user_emails: list of user emails to be added
+            user_role: the user role to assign to all users
+
+        Returns:
+            ProjectUser
+
+        Raises:
+            AuthorisationError: If the project API key is invalid.
+            ResourceNotFoundError: If no project exists by the specified project ID.
+            UnknownError: If an error occurs while adding the users to the project
+        """
+
+        payload = {
+            "user_emails": user_emails,
+            "user_role": user_role
+        }
+
+        users = self._querier.basic_setter(ProjectUsers, self._config.resource_id, payload=payload)
+
+        return list(map(lambda user: ProjectUser.from_dict(user), users))
+
     def copy_project(self, copy_labels=False, copy_models=False):
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
@@ -573,6 +600,7 @@ class CordClientProject(CordClient):
         ontology = self.get_project_ontology()
         ontology.add_classification(name, classification_type, required, options)
         return self.__set_project_ontology(ontology)
+
 
     def create_model_row(self,
                          title=None,

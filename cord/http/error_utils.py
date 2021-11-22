@@ -82,8 +82,8 @@ def check_error_response(response, payload=None):
 
     if response == RESOURCE_EXISTS_ERROR:
         raise ResourceExistsError(
-            "Trying to create a resource that already exists."
-            "Label hash for this data is: " + str(payload)
+            "Trying to create a resource that already exists. "
+            "Payload for this failure is: " + str(payload)
         )
 
     pass

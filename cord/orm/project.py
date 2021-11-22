@@ -81,5 +81,9 @@ class ProjectCopy:
     pass
 
 
+class ProjectUsers:
+    pass
+
+
 class ProjectDataset:
     pass
