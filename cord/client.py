@@ -576,6 +576,9 @@ class CordClientProject(CordClient):
             UnknownError: If an error occurs while add te object to the project ontology
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
+        if len(name) == 0:
+            raise RuntimeError("Ontology object name is empty")
+
         ontology = self.get_project_ontology()
         ontology.add_object(name, shape)
         return self.__set_project_ontology(ontology)
@@ -596,6 +599,8 @@ class CordClientProject(CordClient):
             UnknownError: If an error occurs while add te classification to the project ontology
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
+        if len(name) == 0:
+            raise RuntimeError("Ontology classification name is empty")
 
         ontology = self.get_project_ontology()
         ontology.add_classification(name, classification_type, required, options)
