@@ -52,7 +52,7 @@ from cord.http.utils import upload_to_signed_url, upload_to_signed_url_list
 from cord.orm.api_key import ApiKeyMeta
 from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import (
-    Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video, DatasetData, ReEncodeVideoTask
+    Dataset, Image, ImageGroup, SignedImagesURL, SignedVideoURL, Video, DatasetData, ReEncodeVideoTask, ImageGroupOCR
 )
 from cord.orm.label_log import LabelLog
 from cord.orm.label_row import LabelRow
@@ -370,6 +370,28 @@ class CordClientDataset(CordClient):
             uid=job_id
         )
 
+    def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
+        """
+        Returns an optical character recognition result for a given image group
+        Args:
+            image_group_id: the id of the image group in this dataset to run OCR on
+
+        Returns:
+            Returns a list of ImageGroupOCR objects representing the text and corresponding coordinates
+            found in each frame of the image group
+        """
+
+        payload = {
+            "image_group_data_hash": image_group_id
+        }
+
+        response = self._querier.get_multiple(
+            ImageGroupOCR,
+            payload=payload
+        )
+
+        return response
+
 
 class CordClientProject(CordClient):
     def get_project(self):
@@ -608,7 +630,6 @@ class CordClientProject(CordClient):
         ontology.add_classification(name, classification_type, required, options)
         return self.__set_project_ontology(ontology)
 
-
     def create_model_row(self,
                          title=None,
                          description=None,
@@ -701,7 +722,7 @@ class CordClientProject(CordClient):
         """
         if (file_paths is None and base64_strings is None) or (
                 file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(
-                base64_strings) > 0):
+            base64_strings) > 0):
             raise cord.exceptions.CordException(
                 message='To run model inference, you must pass either a list of files or base64 strings.'
             )
