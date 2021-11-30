@@ -161,6 +161,11 @@ class Image(base_orm.BaseORM):
 
 
 @dataclasses.dataclass(frozen=True)
+class ImageGroupOCR:
+    processed_texts: Dict
+
+
+@dataclasses.dataclass(frozen=True)
 class ReEncodeVideoTaskResult:
     data_hash: str
     signed_url: str
