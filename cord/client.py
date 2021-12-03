@@ -60,7 +60,7 @@ from cord.orm.labeling_algorithm import (
     LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
 )
 from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
-from cord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers
+from cord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers, ProjectCopyOptions
 
 from cord.project_ontology.classification_type import ClassificationType
 from cord.project_ontology.object_type import ObjectShape
@@ -437,18 +437,20 @@ class CordClientProject(CordClient):
 
         return list(map(lambda user: ProjectUser.from_dict(user), users))
 
-    def copy_project(self, copy_labels=False, copy_models=False):
+    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False):
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
         Labels and models are optional
         Args:
-            copy_labels: currently if labels is True, all tasks with labelling will be marked as complete,
-                    otherwise all tasks will be recreated anew
+            copy_datasets: if True, the datasets of the existing project are copied over, and new
+                           tasks are created from those datasets
+            copy_collaborators: if True, all users of the existing project are copied over with their current roles.
+                                If label and/or annotator reviewer mapping is set, this will also be copied over
             copy_models: currently if True, all models with their training information will be copied into the new
                          project
 
         Returns:
-            bool
+            the ID of the newly created project
 
         Raises:
             AuthorisationError: If the project API key is invalid.
@@ -457,10 +459,13 @@ class CordClientProject(CordClient):
         """
 
         payload = {"copy_project_options": []}
-        if copy_labels:
-            payload["copy_project_options"].append("labels")
+        if copy_datasets:
+            payload["copy_project_options"].append(ProjectCopyOptions.DATASETS.value)
         if copy_models:
-            payload["copy_project_options"].append("models")
+            payload["copy_project_options"].append(ProjectCopyOptions.MODELS.value)
+        if copy_collaborators:
+            payload["copy_project_options"].append(ProjectCopyOptions.COLLABORATORS.value)
+
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
 
     def get_label_row(self, uid: str, get_signed_url: bool = True):

@@ -14,6 +14,7 @@
 # under the License.
 
 from collections import OrderedDict
+from enum import Enum
 
 from cord.orm import base_orm
 
@@ -76,7 +77,6 @@ class Project(base_orm.BaseORM):
         return res
 
 
-
 class ProjectCopy:
     pass
 
@@ -87,3 +87,9 @@ class ProjectUsers:
 
 class ProjectDataset:
     pass
+
+
+class ProjectCopyOptions(Enum):
+    COLLABORATORS = 'collaborators'
+    DATASETS = 'datasets'
+    MODELS = 'models'
