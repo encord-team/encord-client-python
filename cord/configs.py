@@ -122,8 +122,11 @@ def get_env_api_key() -> str:
 
 
 class CordConfig(Config):
-    def __init__(self, resource_id=None, api_key=None):
-        super(CordConfig, self).__init__(resource_id, api_key)
+    def __init__(self, resource_id=None, api_key=None, endpoint=None):
+        if endpoint is None:
+            super(CordConfig, self).__init__(resource_id, api_key)
+        else:
+            super(CordConfig, self).__init__(resource_id, api_key, endpoint)
 
 
 class UserConfig(BaseConfig):
