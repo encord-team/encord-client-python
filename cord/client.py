@@ -86,7 +86,7 @@ class CordClient(object):
         self._config: Config = config
 
     @staticmethod
-    def initialise(resource_id=None, api_key=None) -> Union[CordClientProject, CordClientDataset]:
+    def initialise(resource_id=None, api_key=None, endpoint=None) -> Union[CordClientProject, CordClientDataset]:
         """
         Create and initialize a Cord client from a resource ID and API key.
 
@@ -98,11 +98,13 @@ class CordClient(object):
                   If None, uses the CORD_DATASET_ID environment variable.
             api_key: An API key.
                      If None, uses the CORD_API_KEY environment variable.
+            endpoint: The cord api-server endpoint.
+                - If None, uses the CORD_ENDPOINT environmental variable
 
         Returns:
             CordClient: A Cord client instance.
         """
-        config = CordConfig(resource_id, api_key)
+        config = CordConfig(resource_id, api_key, endpoint)
         return CordClient.initialise_with_config(config)
 
     @staticmethod
