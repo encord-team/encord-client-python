@@ -4,6 +4,7 @@ from typing import List
 
 from cord.configs import UserConfig
 from cord.http.querier import Querier
+from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import Dataset, DatasetType
 from cord.orm.dataset import DatasetScope, DatasetAPIKey
 from cord.orm.project import Project
@@ -73,4 +74,7 @@ class CordUserClient:
 
     def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
         return self.querier.get_multiple(ProjectAPIKey, uid=project_hash)
+
+    def get_cloud_integrations(self) -> List[CloudIntegration]:
+        return self.querier.get_multiple(CloudIntegration)
 
