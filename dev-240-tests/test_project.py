@@ -2,19 +2,25 @@ from unittest.mock import patch
 
 import pytest
 
-from cord.client import CordClient
+from cord.client import CordClient, CordClientProject
+from cord.constants.model import FASTER_RCNN
 from cord.orm.dataset import DatasetType, DatasetScope, DatasetAPIKey
+from cord.orm.label_log import LabelLog
 from cord.project_ontology.classification_type import ClassificationType
 from cord.project_ontology.object_type import ObjectShape
 from cord.project_ontology.ontology import Ontology
 from cord.user_client import CordUserClient
+from cord.utilities import label_utilities
 from cord.utilities.client_utilities import APIKeyScopes
 from cord.utilities.project_user import ProjectUserRole, ProjectUser
 import os
 
+# create template project and use this in tests where i don't need to directly test create project funcitonality
+
+# create some cleanup where everything that was created gets removed afterwards (maybe do this on the backend)
+
 @pytest.fixture
 def keys():
-    #todo change private key to a test account's
     private_key = os.environ.get("PRIVATE_KEY")
     cord_user_endpoint = 'http://127.0.0.1:8000/public/user'
     cord_endpoint = 'http://127.0.0.1:8000/public'
@@ -35,6 +41,36 @@ def get_expected_project_ontology():
 
 def get_dummy_feature_node_hash():
     return "76db1793"
+
+
+def get_template_project_with_labels(endpoint):
+    #TODO put these as environmental variables
+    client = CordClient.initialise(
+      '1c57a760-acd9-4be4-a005-c3ef37e0968e',  # Project ID
+      'AlcEk3k8oelAZ-jZJJj1WsgbA6RaGFzAIWU6O4WjAqo',  # API key
+      endpoint=endpoint
+    )
+    return client
+
+def get_template_project_feature_hashes():
+    # TODO put this in an environmental variable or parameterise this somehow
+    return ["6b2736fc"]
+
+#TODO put this in an environmental variable
+def get_template_dataset_hash():
+    return "3da4f875-f612-4f00-8927-2cb1c3d5bda7"
+
+
+def get_label_hash(client: CordClientProject):
+    project = client.get_project()
+    label_rows = project["label_rows"][0]
+    return label_rows["label_hash"]
+
+
+def get_data_hash(client: CordClientProject):
+    project = client.get_project()
+    label_rows = project["label_rows"][0]
+    return label_rows["data_hash"]
 
 
 def test_create_project_with_no_datasets(keys):
@@ -162,10 +198,10 @@ def test_add_users_to_project(keys):
     project_api_key = user_client.create_project_api_key(project_hash, "api key", [scope for scope in APIKeyScopes])
     client = CordClient.initialise(project_hash, project_api_key, cord_client_endpoint)
 
-    users = client.add_users(["ulrik.hansen@cord.tech", "eric.landau@cord.tech"], ProjectUserRole.ANNOTATOR)
+    users = client.add_users(["testuser1@cord.tech", "testuser2@cord.tech"], ProjectUserRole.ANNOTATOR)
 
-    assert ProjectUser("ulrik.hansen@cord.tech", ProjectUserRole.ANNOTATOR, project_hash) in users
-    assert ProjectUser("eric.landau@cord.tech", ProjectUserRole.ANNOTATOR, project_hash) in users
+    assert ProjectUser("testuser1@cord.tech", ProjectUserRole.ANNOTATOR, project_hash) in users
+    assert ProjectUser("testuser2@cord.tech", ProjectUserRole.ANNOTATOR, project_hash) in users
 
 
 def test_show_empty_project_ontology(keys):
@@ -183,7 +219,7 @@ def test_show_empty_project_ontology(keys):
 
 
 @patch('cord.project_ontology.ontology.generate_feature_node_hash')
-def test_update_existing_ontology(generate_feature_node_hash,keys):
+def test_update_existing_ontology(generate_feature_node_hash, keys):
     generate_feature_node_hash.return_value = get_dummy_feature_node_hash()
     private_key = keys[0]
     cord_user_endpoint = keys[1]
@@ -203,4 +239,77 @@ def test_update_existing_ontology(generate_feature_node_hash,keys):
     expected_ontology = get_expected_project_ontology()
 
     assert ontology.to_dict() == expected_ontology.to_dict()
+
+
+def test_get_label_row(keys):
+    cord_client_endpoint = keys[2]
+    client = get_template_project_with_labels(cord_client_endpoint)
+    label_hash = get_label_hash(client)
+
+    label_row = client.get_label_row(label_hash)
+
+    assert label_row["data_units"].keys()
+
+
+def test_save_label_row(keys):
+    cord_client_endpoint = keys[2]
+    client = get_template_project_with_labels(cord_client_endpoint)
+    label_hash = get_label_hash(client)
+    label_row = client.get_label_row(label_hash)
+    label_row_dict = label_utilities.construct_answer_dictionaries(label_row)
+
+    save_result = client.save_label_row(label_hash, label_row_dict)
+
+    assert save_result
+
+
+def test_create_label_row(keys):
+    private_key = keys[0]
+    cord_user_endpoint = keys[1]
+    cord_client_endpoint = keys[2]
+    user_client = CordUserClient.create_with_ssh_private_key(private_key, endpoint=cord_user_endpoint)
+    project_hash = user_client.create_project("test project with dataset", [], "")
+    project_api_key = user_client.create_project_api_key(project_hash, "api key", [scope for scope in APIKeyScopes])
+
+    client = CordClient.initialise(project_hash, project_api_key, cord_client_endpoint)
+    client.add_datasets([get_template_dataset_hash()])
+    data_hash = get_data_hash(client)
+
+    label_row = client.create_label_row(data_hash)
+
+    assert label_row["data_units"].keys()
+
+
+def test_create_model_row(keys):
+    cord_client_endpoint = keys[2]
+    client = get_template_project_with_labels(cord_client_endpoint)
+    feature_hashes = get_template_project_feature_hashes()
+
+    result = client.create_model_row(title='Test model',
+                                     description='A test model',  # Optional
+                                     features=feature_hashes,
+                                     model=FASTER_RCNN)
+
+    assert isinstance(result, str)
+
+
+def test_get_label_logs(keys):
+    cord_client_endpoint = keys[2]
+    client = get_template_project_with_labels(cord_client_endpoint)
+    data_hash = get_data_hash(client)
+
+    label_logs = client.get_label_logs(data_hash=data_hash)
+
+    assert len(label_logs) > 0
+    assert isinstance(label_logs[0], LabelLog)
+
+
+def test_model_train(keys):
+    pass
+
+# todo - maybe just test the arguments passed to basic_setter, and same with model train
+def test_model_inference(keys):
+    pass
+
+
 
