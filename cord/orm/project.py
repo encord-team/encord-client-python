@@ -15,6 +15,7 @@
 
 from collections import OrderedDict
 from enum import Enum
+from typing import Optional
 
 from cord.orm import base_orm
 
@@ -93,3 +94,44 @@ class ProjectCopyOptions(Enum):
     COLLABORATORS = 'collaborators'
     DATASETS = 'datasets'
     MODELS = 'models'
+
+
+# copy pasted class from api-server
+class StringEnum(Enum):
+    """
+    Use this enum class if you need helpers which translate from the enum to a string.
+    """
+
+    @classmethod
+    def from_string(cls, string: str) -> Optional['StringEnum']:
+        return cls._value2member_map_.get(string)
+
+    @classmethod
+    def to_string(cls, arg: 'StringEnum') -> Optional[str]:
+        if arg._name_ not in cls._member_map_:
+            return None
+        return arg._value_
+
+
+class ReviewMode(StringEnum):
+    """
+    UNLABELLED:
+        The labels are added to the images. However, the one person must still go over
+            all of the labels before submitting them for review.
+    LABELLED:
+        The labels are added to the images and are marked as labelled. A reviewer will
+            still need to approve those.
+    REVIEWED:
+        The labels are added to the images and considered reviewed. No more action is
+            required from the labeler or reviewer.
+    """
+    UNLABELLED = 'unlabelled'
+    LABELLED = 'labelled'
+    REVIEWED = 'reviewed'
+
+
+class ProjectImporter:
+    DB_FIELDS = OrderedDict([
+        ("project_hash", Optional[str]),
+        ("errors", list),
+    ])
