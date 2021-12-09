@@ -1,11 +1,14 @@
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 
 from cord.client import CordClient, CordClientProject
 from cord.constants.model import FASTER_RCNN
+from cord.constants.model_weights import faster_rcnn_R_50_DC5_1x, faster_rcnn_R_101_FPN_3x
 from cord.orm.dataset import DatasetType, DatasetScope, DatasetAPIKey
 from cord.orm.label_log import LabelLog
+from cord.orm.model import ModelTrainingWeights
 from cord.project_ontology.classification_type import ClassificationType
 from cord.project_ontology.object_type import ObjectShape
 from cord.project_ontology.ontology import Ontology
@@ -18,6 +21,10 @@ import os
 # create template project and use this in tests where i don't need to directly test create project funcitonality
 
 # create some cleanup where everything that was created gets removed afterwards (maybe do this on the backend)
+
+TRAINING_BATCH_SIZE = 5
+TRAINING_EPOCH_SIZE = 1
+
 
 @pytest.fixture
 def keys():
@@ -44,19 +51,21 @@ def get_dummy_feature_node_hash():
 
 
 def get_template_project_with_labels(endpoint):
-    #TODO put these as environmental variables
+    # TODO put these as environmental variables
     client = CordClient.initialise(
-      '1c57a760-acd9-4be4-a005-c3ef37e0968e',  # Project ID
-      'AlcEk3k8oelAZ-jZJJj1WsgbA6RaGFzAIWU6O4WjAqo',  # API key
-      endpoint=endpoint
+        '1c57a760-acd9-4be4-a005-c3ef37e0968e',  # Project ID
+        'AlcEk3k8oelAZ-jZJJj1WsgbA6RaGFzAIWU6O4WjAqo',  # API key
+        endpoint=endpoint
     )
     return client
+
 
 def get_template_project_feature_hashes():
     # TODO put this in an environmental variable or parameterise this somehow
     return ["6b2736fc"]
 
-#TODO put this in an environmental variable
+
+# TODO put this in an environmental variable
 def get_template_dataset_hash():
     return "3da4f875-f612-4f00-8927-2cb1c3d5bda7"
 
@@ -285,12 +294,14 @@ def test_create_model_row(keys):
     client = get_template_project_with_labels(cord_client_endpoint)
     feature_hashes = get_template_project_feature_hashes()
 
-    result = client.create_model_row(title='Test model',
-                                     description='A test model',  # Optional
-                                     features=feature_hashes,
-                                     model=FASTER_RCNN)
+    model_hash = client.create_model_row(title='Test model',
+                                         description='A test model',
+                                         features=feature_hashes,
+                                         model=FASTER_RCNN)
+    delete_result = client.model_delete(model_hash)
 
-    assert isinstance(result, str)
+    assert isinstance(model_hash, str)
+    assert delete_result
 
 
 def test_get_label_logs(keys):
@@ -305,11 +316,23 @@ def test_get_label_logs(keys):
 
 
 def test_model_train(keys):
-    pass
+    cord_client_endpoint = keys[2]
+    client = get_template_project_with_labels(cord_client_endpoint)
+    feature_hashes = get_template_project_feature_hashes()
+    label_hash = get_label_hash(client)
+    model_hash = client.create_model_row(title='Test model',
+                                         description='A test model',
+                                         features=feature_hashes,
+                                         model=FASTER_RCNN)
 
-# todo - maybe just test the arguments passed to basic_setter, and same with model train
+    model_train = client.model_train(model_hash, [label_hash], TRAINING_EPOCH_SIZE, TRAINING_BATCH_SIZE,
+                                         faster_rcnn_R_101_FPN_3x, device="cpu")
+    delete_result = client.model_delete(model_hash)
+
+    assert model_train["status"]
+    assert isinstance(model_train["response"][0]["training_hash"], str)
+
+
+#todo
 def test_model_inference(keys):
     pass
-
-
-
