@@ -24,9 +24,14 @@ from cryptography.hazmat.primitives.serialization import load_ssh_private_key, E
 
 import cord.exceptions
 
-CORD_ENDPOINT = 'https://api.cord.tech/public'
-CORD_USER_ENDPOINT = 'https://api.cord.tech/public/user'
-WEBSOCKET_ENDPOINT = 'wss://message-api.cord.tech/websocket'
+CORD_DOMAIN = 'https://api.cord.tech'
+CORD_PUBLIC_PATH = '/public'
+CORD_PUBLIC_USER_PATH = '/public/user'
+CORD_ENDPOINT = CORD_DOMAIN + CORD_PUBLIC_PATH
+CORD_USER_ENDPOINT = CORD_DOMAIN + CORD_PUBLIC_USER_PATH
+WEBSOCKET_PATH = '/websocket'
+WEBSOCKET_DOMAIN = 'wss://message-api.cord.tech'
+WEBSOCKET_ENDPOINT = WEBSOCKET_DOMAIN + WEBSOCKET_PATH
 
 _CORD_PROJECT_ID = 'CORD_PROJECT_ID'
 _CORD_DATASET_ID = 'CORD_DATASET_ID'
@@ -61,9 +66,10 @@ class Config(BaseConfig):
         return self._headers
 
     def __init__(self,
-                 resource_id: str = None,
-                 api_key: str = None,
-                 endpoint: str = CORD_ENDPOINT,
+                 resource_id: Optional[str] = None,
+                 api_key: Optional[str] = None,
+                 web_file_path: Optional[str] = None,
+                 domain: Optional[str] = None,
                  websocket_endpoint: str = WEBSOCKET_ENDPOINT
                  ):
 
@@ -75,7 +81,6 @@ class Config(BaseConfig):
 
         self.resource_id = resource_id
         self.api_key = api_key
-        self.endpoint = endpoint
         self.websocket_endpoint = websocket_endpoint
         self._headers = {
             'Accept': 'application/json',
@@ -83,7 +88,13 @@ class Config(BaseConfig):
             'ResourceID': resource_id,
             'Authorization': self.api_key
         }
+        if web_file_path is None:
+            raise RuntimeError("`web_file_path` must be specified")
+        if domain is None:
+            raise RuntimeError("`domain` must be specified")
 
+        self.domain = domain
+        endpoint = domain + web_file_path
         super().__init__(endpoint)
         log.info("Initialising Cord client with endpoint: %s and resource_id: %s",
                  endpoint, resource_id)
@@ -122,19 +133,24 @@ def get_env_api_key() -> str:
 
 
 class CordConfig(Config):
-    def __init__(self, resource_id=None, api_key=None, endpoint=None):
-        if endpoint is None:
-            super(CordConfig, self).__init__(resource_id, api_key)
-        else:
-            super(CordConfig, self).__init__(resource_id, api_key, endpoint)
+    def __init__(self, resource_id=None, api_key=None, domain=None):
+        if domain is None:
+            domain = CORD_DOMAIN
+        web_file_path = CORD_PUBLIC_PATH
+        super().__init__(resource_id, api_key, web_file_path=web_file_path, domain=domain)
 
 
 class UserConfig(BaseConfig):
-    def __init__(self, private_key: Ed25519PrivateKey, endpoint: str = CORD_USER_ENDPOINT):
+    def __init__(self, private_key: Ed25519PrivateKey, domain: Optional[str] = None):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
         self._public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
 
+        if domain is None:
+            domain = CORD_DOMAIN
+        self.domain = domain
+
+        endpoint = domain + CORD_PUBLIC_USER_PATH
         super().__init__(endpoint)
 
     def define_headers(self, data: str) -> Dict:
