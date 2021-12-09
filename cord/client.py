@@ -693,6 +693,26 @@ class CordClientProject(CordClient):
 
         return self._querier.basic_put(Model, None, payload=model)
 
+    def model_delete(self, uid: str) -> bool:
+        """
+        Delete a model created on the platform.
+
+        Args:
+            uid: A model_hash (uid) string.
+
+        Returns:
+            bool
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no model exists by the specified model_hash (uid).
+            UnknownError: If an error occurs during training.
+        """
+
+        return self._querier.basic_delete(Model, uid=uid)
+
+
     def model_inference(self,
                         uid,
                         file_paths=None,
