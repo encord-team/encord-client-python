@@ -262,7 +262,7 @@ class CordClientDataset(CordClient):
 
     def delete_image_group(self, data_hash: str):
         """
-        Create an image group in Cord storage.
+        Delete an image group in Cord storage.
 
         Args:
             self: Cord client object.

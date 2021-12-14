@@ -135,45 +135,6 @@ def test_get_project_api_keys(keys):
     assert api_key_2 in all_api_keys
 
 
-def test_create_dataset(keys):
-    private_key = keys.private_key
-    cord_domain = keys.cord_domain
-    dataset_title = "test dataset"
-    user_client = CordUserClient.create_with_ssh_private_key(private_key, domain=cord_domain)
-    dataset = user_client.create_dataset(dataset_title, DatasetType.CORD_STORAGE)
-
-    assert isinstance(dataset, dict)
-    assert dataset["title"] == dataset_title
-    assert dataset["type"] == DatasetType.CORD_STORAGE
-    assert isinstance(dataset["dataset_hash"], str)
-
-
-def test_create_dataset_api_key(keys):
-    private_key = keys.private_key
-    cord_domain = keys.cord_domain
-    user_client = CordUserClient.create_with_ssh_private_key(private_key, domain=cord_domain)
-    dataset = user_client.create_dataset("test dataset", DatasetType.CORD_STORAGE)
-    dataset_hash = dataset["dataset_hash"]
-
-    api_key = user_client.create_dataset_api_key(dataset_hash, "test api key", [scope for scope in DatasetScope])
-
-    assert isinstance(api_key, DatasetAPIKey)
-    assert isinstance(api_key.api_key, str)
-
-
-def test_get_dataset_api_keys(keys):
-    private_key = keys.private_key
-    cord_domain = keys.cord_domain
-    user_client = CordUserClient.create_with_ssh_private_key(private_key, domain=cord_domain)
-    dataset = user_client.create_dataset("test dataset", DatasetType.CORD_STORAGE)
-    dataset_hash = dataset["dataset_hash"]
-    api_key_1 = user_client.create_dataset_api_key(dataset_hash, "test api key", [DatasetScope.READ])
-    api_key_2 = user_client.create_dataset_api_key(dataset_hash, "test api key", [DatasetScope.WRITE])
-
-    all_api_keys = user_client.get_dataset_api_keys(dataset_hash)
-
-    assert api_key_1 in all_api_keys
-    assert api_key_2 in all_api_keys
 
 
 def test_add_datasets_to_project(keys):
