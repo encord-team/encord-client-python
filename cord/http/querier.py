@@ -50,7 +50,9 @@ class Querier:
         )
         res = self.execute(request)
         if res:
-            if dataclasses.is_dataclass(db_object_type):
+            if issubclass(db_object_type, Formatter):
+                return db_object_type.from_dict(res)
+            elif dataclasses.is_dataclass(db_object_type):
                 return db_object_type(**res)
             else:
                 return db_object_type(res)

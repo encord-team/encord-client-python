@@ -171,19 +171,18 @@ class ReEncodeVideoTaskResult(Formatter):
     signed_url: str
     bucket_path: str
 
-    @classmethod
-    def from_dict(cls, json_dict: Dict):
-        return ReEncodeVideoTaskResult(json_dict["data_hash"], json_dict["signed_url"], json_dict["bucket_path"])
 
-
-@dataclasses.dataclass
-class ReEncodeVideoTask:
+@dataclasses.dataclass(frozen=True)
+class ReEncodeVideoTask(Formatter):
     """ A re encode video object with supporting information. """
     status: str
-    result: List[Dict] = None
-    final_result: List[ReEncodeVideoTaskResult] = dataclasses.field(default=None, init=False)
+    result: List[ReEncodeVideoTaskResult] = None
 
-    def __post_init__(self):
-        if self.result:
-            self.final_result = [ReEncodeVideoTaskResult.from_dict(result) for result in self.result]
-
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        dict_results = json_dict["result"]
+        results = [ReEncodeVideoTaskResult(result["data_hash"],
+                                           result["signed_url"],
+                                           result["bucket_path"])
+                   for result in dict_results]
+        return ReEncodeVideoTask(json_dict["status"], results)
