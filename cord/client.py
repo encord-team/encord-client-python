@@ -37,7 +37,6 @@ import base64
 import json
 import logging
 import os.path
-import sys
 import typing
 import uuid
 from pathlib import Path
@@ -61,18 +60,12 @@ from cord.orm.labeling_algorithm import (
 )
 from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
 from cord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers, ProjectCopyOptions
-
 from cord.project_ontology.classification_type import ClassificationType
 from cord.project_ontology.object_type import ObjectShape
 from cord.project_ontology.ontology import Ontology
 from cord.utilities.project_user import ProjectUserRole, ProjectUser
 
-# Logging configuration
-logging.basicConfig(stream=sys.stdout,
-                    level=logging.INFO,
-                    format='[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)s] [%(funcName)s()] %(message)s',
-                    datefmt='%m/%d/%Y %I:%M:%S %p'
-                    )
+logger = logging.getLogger(__name__)
 
 
 class CordClient(object):
@@ -89,13 +82,13 @@ class CordClient(object):
     def initialise(resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: Optional[str] = None) \
             -> Union[CordClientProject, CordClientDataset]:
         """
-        Create and initialize a Cord client from a resource ID and API key.
+        Create and initialize a Cord client from a resource EntityId and API key.
 
         Args:
             resource_id: either of
-                - A project ID string.
+                - A project EntityId string.
                   If None, uses the CORD_PROJECT_ID environment variable.
-                - A dataset ID string.
+                - A dataset EntityId string.
                   If None, uses the CORD_DATASET_ID environment variable.
             api_key: An API key.
                      If None, uses the CORD_API_KEY environment variable.
@@ -124,13 +117,11 @@ class CordClient(object):
         resource_type = key_type.get('resource_type', None)
 
         if resource_type == TYPE_PROJECT:
-            logging.info("Initialising Cord client for project using key: %s",
-                         key_type.get('title', ''))
+            logger.info("Initialising Cord client for project using key: %s", key_type.get('title', ''))
             return CordClientProject(querier, config)
 
         elif resource_type == TYPE_DATASET:
-            logging.info("Initialising Cord client for dataset using key: %s",
-                         key_type.get('title', ''))
+            logger.info("Initialising Cord client for dataset using key: %s", key_type.get('title', ''))
             return CordClientDataset(querier, config)
 
         else:
@@ -180,12 +171,12 @@ class CordClientDataset(CordClient):
 
         Raises:
             AuthorisationError: If the dataset API key is invalid.
-            ResourceNotFoundError: If no dataset exists by the specified dataset ID.
+            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
         return self._querier.basic_getter(Dataset)
 
-    def upload_video(self, file_path):
+    def upload_video(self, file_path: str):
         """
         Upload video to Cord storage.
 
@@ -213,8 +204,8 @@ class CordClientDataset(CordClient):
                 Video
             )
             if res:
-                logging.info("Upload complete.")
-                logging.info("Please run client.get_dataset() to refresh.")
+                logger.info("Upload complete.")
+                logger.info("Please run client.get_dataset() to refresh.")
                 return res
             else:
                 raise cord.exceptions.CordException(
@@ -225,7 +216,7 @@ class CordClientDataset(CordClient):
                 message='{} does not point to a file.'.format(file_path)
             )
 
-    def create_image_group(self, file_paths):
+    def create_image_group(self, file_paths: typing.Iterable[str]):
         """
         Create an image group in Cord storage.
 
@@ -261,8 +252,8 @@ class CordClientDataset(CordClient):
         )
         if res:
             titles = [video_data.get('title') for video_data in res]
-            logging.info("Upload successful! {} created.".format(titles))
-            logging.info("Please run client.get_dataset() to refresh.")
+            logger.info("Upload successful! {} created.".format(titles))
+            logger.info("Please run client.get_dataset() to refresh.")
             return res
         else:
             raise cord.exceptions.CordException(
@@ -282,7 +273,7 @@ class CordClientDataset(CordClient):
             uid=data_hash
         )
 
-    def delete_data(self, data_hashes: list):
+    def delete_data(self, data_hashes: List[str]):
         """
         Delete a video/image group from a dataset.
 
@@ -305,9 +296,9 @@ class CordClientDataset(CordClient):
 
         Args:
             integration_id: str
-                ID of the cloud integration to be used when accessing those files
+                EntityId of the cloud integration to be used when accessing those files
             private_files:
-                A str path to a file, Path object, json string or python dictionary of the files you wish to add
+                A str path or Path object to a json file, json str or python dictionary of the files you wish to add
             ignore_errors: bool, optional
                 Ignore individual errors when trying to access the specified files
         """
@@ -337,7 +328,7 @@ class CordClientDataset(CordClient):
 
         self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
 
-    def re_encode_data(self, data_hashes: list):
+    def re_encode_data(self, data_hashes: List[str]):
         """
         Lanches a async task that can re-encode a list of videos.
 
@@ -346,7 +337,7 @@ class CordClientDataset(CordClient):
             data_hashes: list of hash of the videos you'd like to re_encode, all should belong to the same
              dataset
         Returns:
-            ID(integer) of the async task launched.
+            EntityId(integer) of the async task launched.
 
         """
         payload = {"data_hash": data_hashes}
@@ -409,7 +400,7 @@ class CordClientProject(CordClient):
 
         Raises:
             AuthorisationError: If the project API key is invalid.
-            ResourceNotFoundError: If no project exists by the specified project ID.
+            ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while retrieving the project.
         """
         return self._querier.basic_getter(Project)
@@ -427,7 +418,7 @@ class CordClientProject(CordClient):
 
         Raises:
             AuthorisationError: If the project API key is invalid.
-            ResourceNotFoundError: If no project exists by the specified project ID.
+            ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while adding the users to the project
         """
 
@@ -453,11 +444,11 @@ class CordClientProject(CordClient):
                          project
 
         Returns:
-            the ID of the newly created project
+            the EntityId of the newly created project
 
         Raises:
             AuthorisationError: If the project API key is invalid.
-            ResourceNotFoundError: If no project exists by the specified project ID.
+            ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while copying the project.
         """
 
@@ -712,7 +703,6 @@ class CordClientProject(CordClient):
         """
 
         return self._querier.basic_delete(Model, uid=uid)
-
 
     def model_inference(self,
                         uid,

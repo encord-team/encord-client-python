@@ -18,6 +18,8 @@ import json
 import logging
 from collections import abc, OrderedDict
 
+logger = logging.getLogger(__name__)
+
 
 class BaseORM(dict):
     """ Base ORM for all database objects. """
@@ -59,7 +61,7 @@ class BaseORM(dict):
                         value[k] = v
             super().__init__(**value)
         except Exception as e:
-            logging.error("Error init", exc_info=True)
+            logger.error("Error init", exc_info=True)
             raise Exception("Convert failed {}".format(str(e)))
 
     def __getattr__(self, name):
@@ -148,6 +150,6 @@ class BaseListORM(list):
                 v = self.BASE_ORM_TYPE(item)
                 values.append(v)
             except Exception as e:
-                logging.error("Error init", exc_info=True)
+                logger.error("Error init", exc_info=True)
                 raise Exception("Convert failed {}".format(str(e)))
         super().__init__(values)

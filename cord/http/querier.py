@@ -29,6 +29,8 @@ from cord.http.query_methods import QueryMethods
 from cord.http.request import Request
 from cord.orm.formatter import Formatter
 
+logger = logging.getLogger(__name__)
+
 
 class Querier:
     """ Querier for DB get/post requests. """
@@ -126,7 +128,7 @@ class Querier:
 
     def execute(self, request):
         """ Execute a request. """
-        logging.info("Request: %s", (request.data[:100] + '..') if len(request.data) > 100 else request.data)
+        logger.info("Request: %s", (request.data[:100] + '..') if len(request.data) > 100 else request.data)
 
         session = Session()
         session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))

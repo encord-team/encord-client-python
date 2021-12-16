@@ -1,9 +1,11 @@
-import mimetypes
 import logging
+import mimetypes
 import os.path
-import requests
 
+import requests
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 def read_in_chunks(file_path, blocksize=1024, chunks=-1):
@@ -42,21 +44,18 @@ def upload_to_signed_url(file_path, signed_url, querier, orm_class):
         )
 
         if orm_class(res):
-            logging.info("Successfully uploaded: %s",
-                         signed_url.get('title', ''))
+            logger.info("Successfully uploaded: %s", signed_url.get('title', ''))
         else:
-            logging.info("Error uploading: %s",
-                         signed_url.get('title', ''))
+            logger.info("Error uploading: %s", signed_url.get('title', ''))
 
     else:
-        logging.info("Error generating signed url for: %s",
-                     signed_url.get('title', ''))
+        logger.info("Error generating signed url for: %s", signed_url.get('title', ''))
 
     return orm_class(res)
 
 
 def upload_to_signed_url_list(file_paths, signed_urls, querier, orm_class):
-    assert len(file_paths) == len(signed_urls),\
+    assert len(file_paths) == len(signed_urls), \
         'Error getting the correct number of signed urls'
     data_uid_list = []
     for i in range(len(file_paths)):
@@ -78,16 +77,14 @@ def upload_to_signed_url_list(file_paths, signed_urls, querier, orm_class):
                 payload=url
             )
             if res:
-                logging.info("Successfully uploaded: %s",
-                             url.get('title', ''))
+                logger.info("Successfully uploaded: %s",
+                            url.get('title', ''))
                 data_uid_list.append(url.get('data_hash'))
             else:
-                logging.info("Error uploading: %s",
-                             url.get('title', ''))
+                logger.info("Error uploading: %s",
+                            url.get('title', ''))
                 raise Exception('Could not save information into database')
         else:
             raise Exception('Bad request')
 
     return data_uid_list
-
-
