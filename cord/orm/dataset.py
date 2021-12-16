@@ -166,7 +166,7 @@ class ImageGroupOCR:
 
 
 @dataclasses.dataclass(frozen=True)
-class ReEncodeVideoTaskResult(Formatter):
+class ReEncodeVideoTaskResult:
     data_hash: str
     signed_url: str
     bucket_path: str
@@ -180,9 +180,12 @@ class ReEncodeVideoTask(Formatter):
 
     @classmethod
     def from_dict(cls, json_dict: Dict):
-        dict_results = json_dict["result"]
-        results = [ReEncodeVideoTaskResult(result["data_hash"],
-                                           result["signed_url"],
-                                           result["bucket_path"])
-                   for result in dict_results]
-        return ReEncodeVideoTask(json_dict["status"], results)
+        if "result" in json_dict:
+            dict_results = json_dict["result"]
+            results = [ReEncodeVideoTaskResult(result["data_hash"],
+                                               result["signed_url"],
+                                               result["bucket_path"])
+                       for result in dict_results]
+            return ReEncodeVideoTask(json_dict["status"], results)
+        else:
+            return ReEncodeVideoTask(json_dict["status"])
