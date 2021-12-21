@@ -12,7 +12,7 @@ from cord.orm.dataset import SignedImagesURL, Image
 from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import Dataset, DatasetType
 from cord.orm.dataset import DatasetScope, DatasetAPIKey
-from cord.orm.project import Project, ProjectImporter, ReviewMode
+from cord.orm.project import Project, ProjectImporter, ReviewMode, ProjectImporterCvatInfo, CvatExportType
 from cord.orm.project_api_key import ProjectAPIKey
 from cord.utilities.client_utilities import APIKeyScopes
 
@@ -106,27 +106,23 @@ class CordUserClient:
             ValueError:
                 If the CVAT directory has an invalid format.
         """
-
         directory_path = Path(cvat_directory_path)
-        image_path = directory_path.joinpath('images')
-        image_default_path = image_path.joinpath('default')
-
-        images = None
-        if image_path in list(directory_path.iterdir()):
-            if image_default_path in list(image_path.iterdir()):
-                images = list(image_default_path.iterdir())
-
-        if images is None:
-            raise ValueError(f"No images found in `{image_default_path}`.")
+        images_directory_path = directory_path.joinpath('images')
+        if images_directory_path not in list(directory_path.iterdir()):
+            raise ValueError("The expected directory 'images' was not found.")
 
         annotations_file_path = directory_path.joinpath("annotations.xml")
         if not annotations_file_path.is_file():
             raise ValueError(f"The file `{annotations_file_path}` does not exist.")
 
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images, dataset_name)
-
         with annotations_file_path.open('rb') as f:
             annotations_base64 = base64.b64encode(f.read()).decode('utf-8')
+
+        images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
+
+        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name)
+        print(f"dataset_hash = {dataset_hash}")
+        print(f"image_title_to_image_hash_map = {image_title_to_image_hash_map}")
 
         payload = {
             "cvat": {
@@ -140,8 +136,31 @@ class CordUserClient:
         # which gets the dataset_hash for a given project_hash.
         return self.querier.basic_setter(ProjectImporter, uid=None, payload=payload)
 
+    def __get_images_paths(self, annotations_base64: str, images_direcotry_path: Path) -> List[Path]:
+        payload = {
+            "annotations_base64": annotations_base64
+        }
+        project_info = self.querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
+        export_type = project_info["export_type"]
+        if export_type == CvatExportType.PROJECT.value:
+            default_path = images_direcotry_path.joinpath('default')
+            if default_path not in list(images_direcotry_path.iterdir()):
+                # DENIS: should this be a value error?
+                raise ValueError("The expected directory 'default' was not found.")
+
+            images = list(default_path.iterdir())
+        elif export_type == CvatExportType.TASK.value:
+            images = list(images_direcotry_path.iterdir())
+        else:
+            # DENIS: message?
+            raise RuntimeError()
+
+        if not images:
+            raise ValueError(f"No images found.")  # give path?
+        return images
+
     def __upload_cvat_images(self,
-                             images: List[Path],
+                             images_paths: List[Path],
                              dataset_name: str) -> Tuple[str, Dict[str, str]]:
         """
         This function does NOT create any image groups yet.
@@ -149,10 +168,9 @@ class CordUserClient:
             * The created dataset_hash
             * A map from an image title to the image hash which is stored in the DB.
         """
-        # TODO: once we support videos, need to make sure to import videos and images differently.
 
-        short_names = list(map(lambda x: x.name, images))
-        file_path_strings = list(map(lambda x: str(x), images))
+        short_names = list(map(lambda x: x.name, images_paths))
+        file_path_strings = list(map(lambda x: str(x), images_paths))
         dataset = self.create_dataset(dataset_name, DatasetType.CORD_STORAGE)
 
         dataset_hash = dataset["dataset_hash"]
@@ -172,6 +190,8 @@ class CordUserClient:
             SignedImagesURL,
             uid=short_names
         )
+        print(f"signed_urls = {signed_urls}")
+        # TODO: maybe it would be good to upload these in parallel.
         upload_to_signed_url_list(
             file_path_strings, signed_urls, client._querier, Image
         )
@@ -182,4 +202,3 @@ class CordUserClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
-

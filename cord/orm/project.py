@@ -14,8 +14,9 @@
 # under the License.
 
 from collections import OrderedDict
+from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, Union
 
 from cord.orm import base_orm
 
@@ -130,8 +131,19 @@ class ReviewMode(StringEnum):
     REVIEWED = 'reviewed'
 
 
-class ProjectImporter:
+class ProjectImporter(base_orm.BaseORM):
     DB_FIELDS = OrderedDict([
         ("project_hash", Optional[str]),
         ("errors", list),
+    ])
+
+
+class CvatExportType(Enum):
+    PROJECT = 'project'
+    TASK = 'task'
+
+
+class ProjectImporterCvatInfo(base_orm.BaseORM):
+    DB_FIELDS = OrderedDict([
+        ("export_type", CvatExportType),
     ])
