@@ -1,3 +1,5 @@
+import aiohttp
+import asyncio
 import mimetypes
 import logging
 import os.path
@@ -91,3 +93,56 @@ def upload_to_signed_url_list(file_paths, signed_urls, querier, orm_class):
     return data_uid_list
 
 
+async def upload_to_signed_url_list_async(file_paths, signed_urls, querier, orm_class):
+    assert len(file_paths) == len(signed_urls), \
+        'Error getting the correct number of signed urls'
+    batch_size = 20
+    seen = 0
+
+    data_uid_list = []
+    async with aiohttp.ClientSession() as session:
+
+        while seen < len(file_paths):
+            tasks = []
+
+            for i in range(seen, min(seen + batch_size, len(file_paths))):
+                file_path = file_paths[i]
+                signed_url = signed_urls[i]
+                task = asyncio.create_task(
+                    upload_single_file(file_path, signed_url, querier, orm_class, data_uid_list, session))
+                tasks.append(task)
+            seen += batch_size
+            await asyncio.gather(*tasks)
+
+    return data_uid_list
+
+
+async def upload_single_file(file_path: str, signed_url: dict, querier, orm_class, data_uid_list: list, session):
+    file_name = os.path.basename(file_path)
+    mime_type = mimetypes.guess_type(file_path)[0]
+    assert signed_url.get('title', '') == file_name, 'Ordering issue'
+
+    with open(file_path, 'rb') as file:
+        async with session.put(
+                signed_url.get('signed_url'),
+                data=file,
+                headers={'Content-Type': mime_type},
+                chunked=True) as resp:
+
+            if resp.status == 200:
+                data_hash = signed_url.get('data_hash')
+                res = querier.basic_put(
+                    orm_class,
+                    uid=data_hash,
+                    payload=signed_url
+                )
+                if res:
+                    logging.info("Successfully uploaded: %s",
+                                 signed_url.get('title', ''))
+                    data_uid_list.append(signed_url.get('data_hash'))
+                else:
+                    logging.info("Error uploading: %s",
+                                 signed_url.get('title', ''))
+                    raise Exception('Could not save information into database')
+            else:
+                raise Exception('Bad request')
