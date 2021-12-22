@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import base64
 from pathlib import Path
 from typing import List, Dict, Tuple
@@ -7,7 +8,7 @@ from typing import List, Dict, Tuple
 from cord.client import CordClient
 from cord.configs import UserConfig
 from cord.http.querier import Querier
-from cord.http.utils import upload_to_signed_url_list
+from cord.http.utils import upload_to_signed_url_list, upload_to_signed_url_list_async
 from cord.orm.dataset import SignedImagesURL, Image
 from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import Dataset, DatasetType
@@ -192,9 +193,9 @@ class CordUserClient:
         )
         print(f"signed_urls = {signed_urls}")
         # TODO: maybe it would be good to upload these in parallel.
-        upload_to_signed_url_list(
+        asyncio.run(upload_to_signed_url_list_async(
             file_path_strings, signed_urls, client._querier, Image
-        )
+        ))
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
 

@@ -124,6 +124,45 @@ class Querier:
         request.headers = self._config.define_headers(request.data)
         return request
 
+    async def execute_async(self, request):
+        """ Execute a request. """
+        logging.info("Request: %s", (request.data[:100] + '..') if len(request.data) > 100 else request.data)
+
+        session = Session()
+        session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))
+
+        req = requests.Request(
+            method=request.http_method,
+            url=self._config.endpoint,
+            headers=request.headers,
+            data=request.data,
+        ).prepare()
+
+        timeouts = (request.connect_timeout, request.timeout)
+
+        try:
+            res = session.send(req, timeout=timeouts)
+        except Timeout as e:
+            raise TimeOutError(str(e))
+        except RequestException as e:
+            raise RequestException(str(e))
+        except Exception as e:
+            raise UnknownException(str(e))
+
+        try:
+            res_json = res.json()
+        except Exception:
+            raise CordException("Error parsing JSON response: %s" % res.text)
+
+        if res_json.get("status") != requests.codes.ok:
+            response = res_json.get("response")
+            extra_payload = res_json.get("payload")
+            check_error_response(response, extra_payload)
+
+        session.close()
+
+        return res_json.get("response")
+
     def execute(self, request):
         """ Execute a request. """
         logging.info("Request: %s", (request.data[:100] + '..') if len(request.data) > 100 else request.data)
