@@ -95,8 +95,8 @@ class CordUserClient:
             your images and annotations into cord. Ensure that during you have the "Save images"
             checkbox enabled when exporting from CVAT.
         Args:
-            cvat_directory_path:
-                Path to the exported CVAT directory. This can be a relative path.
+            import_method:
+                The chosen import method. See the `ImportMethod` class for details.
             dataset_name:
                 The name of the dataset that will be created.
             review_mode:
@@ -104,8 +104,8 @@ class CordUserClient:
                     See the `ReviewMode` documentation for more details.
 
         Returns:
-            A JSON `dict` representation of the ProjectImporter object. The `errors` list is a collection
-            of warnings and errors which happened during the import of CVAT items into cord.
+            CvatImporterSuccess: If the project was successfully imported.
+            CvatImporterError: If the project could not be imported.
 
         Raises:
             ValueError:
@@ -160,7 +160,7 @@ class CordUserClient:
                 issues=Issues.from_dict(error["issues"])
             )
         else:
-            raise RuntimeError("The api server responded with an invalid payload.")
+            raise ValueError("The api server responded with an invalid payload.")
 
     def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> List[Path]:
         payload = {
@@ -177,7 +177,7 @@ class CordUserClient:
         elif export_type == CvatExportType.TASK.value:
             images = list(images_directory_path.iterdir())
         else:
-            raise RuntimeError("Received an unexpected response from the server. Project import aborted.")
+            raise ValueError("Received an unexpected response from the server. Project import aborted.")
 
         if not images:
             raise ValueError(f"No images found in the provided data folder.")
