@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from dataclasses import dataclass
+import logging
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union
 
 from cord.client import CordClient
 from cord.configs import UserConfig
@@ -16,6 +18,8 @@ from cord.orm.dataset import DatasetScope, DatasetAPIKey
 from cord.orm.project import Project, ProjectImporter, ReviewMode, ProjectImporterCvatInfo, CvatExportType
 from cord.orm.project_api_key import ProjectAPIKey
 from cord.utilities.client_utilities import APIKeyScopes
+
+log = logging.getLogger(__name__)
 
 
 class CordUserClient:
@@ -82,17 +86,17 @@ class CordUserClient:
         return self.querier.get_multiple(ProjectAPIKey, uid=project_hash)
 
     def create_project_from_cvat(self,
-                                 cvat_directory_path: str,
+                                 import_method: ImportMethod,
                                  dataset_name: str,
                                  review_mode: ReviewMode = ReviewMode.LABELLED) \
-            -> dict:
+            -> Union[CvatImporterSuccess, CvatImporterError]:
         """
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
             your images and annotations into cord. Ensure that during you have the "Save images"
             checkbox enabled when exporting from CVAT.
         Args:
             cvat_directory_path:
-                Path to the exported CVAT directory.
+                Path to the exported CVAT directory. This can be a relative path.
             dataset_name:
                 The name of the dataset that will be created.
             review_mode:
@@ -107,6 +111,11 @@ class CordUserClient:
             ValueError:
                 If the CVAT directory has an invalid format.
         """
+        if type(import_method) != LocalImport:
+            raise ValueError("Only local imports are currently supported ")
+
+        cvat_directory_path = import_method.file_path
+
         directory_path = Path(cvat_directory_path)
         images_directory_path = directory_path.joinpath('images')
         if images_directory_path not in list(directory_path.iterdir()):
@@ -121,9 +130,9 @@ class CordUserClient:
 
         images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
 
+        log.info("Starting image upload.")
         dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name)
-        print(f"dataset_hash = {dataset_hash}")
-        print(f"image_title_to_image_hash_map = {image_title_to_image_hash_map}")
+        log.info("Image upload completed.")
 
         payload = {
             "cvat": {
@@ -133,38 +142,52 @@ class CordUserClient:
             "image_title_to_image_hash_map": image_title_to_image_hash_map,
             "review_mode": ReviewMode.to_string(review_mode)
         }
-        # We are currently returning the project_hash. We might want to expose something in the SDK
-        # which gets the dataset_hash for a given project_hash.
-        return self.querier.basic_setter(ProjectImporter, uid=None, payload=payload)
 
-    def __get_images_paths(self, annotations_base64: str, images_direcotry_path: Path) -> List[Path]:
+        log.info("Starting project import. This may take a few minutes.")
+        server_ret = self.querier.basic_setter(ProjectImporter, uid=None, payload=payload)
+
+        if "success" in server_ret:
+            success = server_ret["success"]
+            return CvatImporterSuccess(
+                project_hash=success["project_hash"],
+                dataset_hash=dataset_hash,
+                issues=Issues.from_dict(success["issues"])
+            )
+        elif "error" in server_ret:
+            error = server_ret["error"]
+            return CvatImporterError(
+                dataset_hash=dataset_hash,
+                issues=Issues.from_dict(error["issues"])
+            )
+        else:
+            raise RuntimeError("The api server responded with an invalid payload.")
+
+    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> List[Path]:
         payload = {
             "annotations_base64": annotations_base64
         }
         project_info = self.querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
         export_type = project_info["export_type"]
         if export_type == CvatExportType.PROJECT.value:
-            default_path = images_direcotry_path.joinpath('default')
-            if default_path not in list(images_direcotry_path.iterdir()):
-                # DENIS: should this be a value error?
+            default_path = images_directory_path.joinpath('default')
+            if default_path not in list(images_directory_path.iterdir()):
                 raise ValueError("The expected directory 'default' was not found.")
 
             images = list(default_path.iterdir())
         elif export_type == CvatExportType.TASK.value:
-            images = list(images_direcotry_path.iterdir())
+            images = list(images_directory_path.iterdir())
         else:
-            # DENIS: message?
-            raise RuntimeError()
+            raise RuntimeError("Received an unexpected response from the server. Project import aborted.")
 
         if not images:
-            raise ValueError(f"No images found.")  # give path?
+            raise ValueError(f"No images found in the provided data folder.")
         return images
 
     def __upload_cvat_images(self,
                              images_paths: List[Path],
                              dataset_name: str) -> Tuple[str, Dict[str, str]]:
         """
-        This function does NOT create any image groups yet.
+        This function does not create any image groups yet.
         Returns:
             * The created dataset_hash
             * A map from an image title to the image hash which is stored in the DB.
@@ -178,7 +201,7 @@ class CordUserClient:
 
         dataset_api_key: DatasetAPIKey = self.create_dataset_api_key(
             dataset_hash,
-            "CVAT Full Access API Key",
+            dataset_name + " - Full Access API Key",
             [DatasetScope.READ, DatasetScope.WRITE])
 
         client = CordClient.initialise(
@@ -191,8 +214,6 @@ class CordUserClient:
             SignedImagesURL,
             uid=short_names
         )
-        print(f"signed_urls = {signed_urls}")
-        # TODO: maybe it would be good to upload these in parallel.
         asyncio.run(upload_to_signed_url_list_async(
             file_path_strings, signed_urls, client._querier, Image
         ))
@@ -203,3 +224,78 @@ class CordUserClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
+
+
+@dataclass
+class LocalImport:
+    """
+    file_path: Supply the path of the exported folder which contains the images and `annotations.xml` file. Make
+    sure to select "Save images" when exporting your CVAT Task or Project.
+    """
+    file_path: str
+
+
+ImportMethod = Union[LocalImport]
+"""Using images/videos in cloud storage as an alternative import method will be supported in the future."""
+
+
+@dataclass
+class Issue:
+    """
+    For each `issue_type` there may be multiple occurrences which are documented in the `instances`. The `instances`
+    list can provide additional information on how the issue was encountered. If there is no additional information
+    available, the `instances` list will be empty.
+    """
+    issue_type: str
+    instances: List[str]
+
+
+@dataclass
+class Issues:
+    """
+    Any issues that came up during importing a project. These usually come from incompatibilities between data saved
+    on different platforms.
+    """
+    errors: List[Issue]
+    warnings: List[Issue]
+    infos: List[Issue]
+
+    @staticmethod
+    def from_dict(d: dict) -> "Issues":
+        errors, warnings, infos = [], [], []
+        for error in d["errors"]:
+            issue = Issue(
+                issue_type=error["issue_type"],
+                instances=error["instances"]
+            )
+            errors.append(issue)
+        for warning in d["warnings"]:
+            issue = Issue(
+                issue_type=warning["issue_type"],
+                instances=warning["instances"]
+            )
+            warnings.append(issue)
+        for info in d["infos"]:
+            issue = Issue(
+                issue_type=info["issue_type"],
+                instances=info["instances"]
+            )
+            infos.append(issue)
+        return Issues(
+            errors=errors,
+            warnings=warnings,
+            infos=infos
+        )
+
+
+@dataclass
+class CvatImporterSuccess:
+    project_hash: str
+    dataset_hash: str
+    issues: Issues
+
+
+@dataclass
+class CvatImporterError:
+    dataset_hash: str
+    issues: Issues
