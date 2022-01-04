@@ -167,7 +167,11 @@ class CordUserClient:
             "annotations_base64": annotations_base64
         }
         project_info = self.querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
-        export_type = project_info["export_type"]
+        if "error" in project_info:
+            message = project_info["error"]["message"]
+            raise ValueError(message)
+
+        export_type = project_info["success"]["export_type"]
         if export_type == CvatExportType.PROJECT.value:
             default_path = images_directory_path.joinpath('default')
             if default_path not in list(images_directory_path.iterdir()):
