@@ -5,12 +5,12 @@ import base64
 from dataclasses import dataclass
 import logging
 from pathlib import Path
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Tuple, Union, Optional
 
 from cord.client import CordClient
 from cord.configs import UserConfig
 from cord.http.querier import Querier
-from cord.http.utils import upload_to_signed_url_list, upload_to_signed_url_list_async
+from cord.http.utils import upload_to_signed_url_list
 from cord.orm.dataset import SignedImagesURL, Image
 from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import Dataset, DatasetType
@@ -88,7 +88,8 @@ class CordUserClient:
     def create_project_from_cvat(self,
                                  import_method: ImportMethod,
                                  dataset_name: str,
-                                 review_mode: ReviewMode = ReviewMode.LABELLED) \
+                                 review_mode: ReviewMode = ReviewMode.LABELLED,
+                                 max_workers: Optional[int] = None) \
             -> Union[CvatImporterSuccess, CvatImporterError]:
         """
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
@@ -102,6 +103,9 @@ class CordUserClient:
             review_mode:
                 Set how much interaction is needed from the labeler and from the reviewer for the CVAT labels.
                     See the `ReviewMode` documentation for more details.
+            max_workers:
+                Number of workers for parallel image upload. If set to None, this will be the number of CPU cores
+                available on the machine.
 
         Returns:
             CvatImporterSuccess: If the project was successfully imported.
@@ -131,7 +135,7 @@ class CordUserClient:
         images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name)
+        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name, max_workers)
         log.info("Image upload completed.")
 
         payload = {
@@ -190,7 +194,8 @@ class CordUserClient:
 
     def __upload_cvat_images(self,
                              images_paths: List[Path],
-                             dataset_name: str) -> Tuple[str, Dict[str, str]]:
+                             dataset_name: str,
+                             max_workers: int) -> Tuple[str, Dict[str, str]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -219,9 +224,9 @@ class CordUserClient:
             SignedImagesURL,
             uid=short_names
         )
-        asyncio.run(upload_to_signed_url_list_async(
-            file_path_strings, signed_urls, client._querier, Image
-        ))
+        upload_to_signed_url_list(
+            file_path_strings, signed_urls, client._querier, Image, max_workers
+        )
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
 
