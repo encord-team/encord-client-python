@@ -41,7 +41,7 @@ READ_TIMEOUT = 180  # In seconds
 WRITE_TIMEOUT = 180  # In seconds
 CONNECT_TIMEOUT = 180  # In seconds
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class BaseConfig(ABC):
@@ -96,15 +96,15 @@ class Config(BaseConfig):
         self.domain = domain
         endpoint = domain + web_file_path
         super().__init__(endpoint)
-        log.info("Initialising Cord client with endpoint: %s and resource_id: %s",
-                 endpoint, resource_id)
+        logger.info("Initialising Cord client with endpoint: %s and resource_id: %s",
+                    endpoint, resource_id)
 
 
 def get_env_resource_id() -> str:
     if (_CORD_PROJECT_ID in os.environ) and (_CORD_DATASET_ID in os.environ):
         raise cord.exceptions.InitialisationError(
             message=(
-                "Found both Project ID and Dataset ID in os.environ. "
+                "Found both Project EntityId and Dataset EntityId in os.environ. "
                 "Please initialise CordClient by passing resource_id."
             )
         )
@@ -117,7 +117,7 @@ def get_env_resource_id() -> str:
 
     else:
         raise cord.exceptions.AuthenticationError(
-            message="Project ID or dataset ID not provided"
+            message="Project EntityId or dataset EntityId not provided"
         )
 
     return resource_id

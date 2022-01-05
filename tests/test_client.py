@@ -1,15 +1,15 @@
 import uuid
+
 import pytest
 
 import cord.exceptions
 from cord.client import CordClient
 from cord.configs import CordConfig
-from cord.orm.project import Project
 from cord.orm.label_row import LabelRow
-
+from cord.orm.project import Project
+from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
 from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
 from tests.test_data.test_blurb import TEST_BLURB
-from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
 
 # Dummy keys, can be used and abused
 LABEL_READ_WRITE_KEY = 'Igr3RTx7B4gJbHZM0eyjOXaPr7jg22Fw22AQbYT0nQM'
@@ -110,5 +110,3 @@ def test_object_interpolation_with_polygons(keys):
     client = CordClient.initialise(keys[0], LABEL_READ_KEY)
     objects = client.object_interpolation(INTERPOLATION_TEST_BLURB, ['60f75ddb-aa68-4654-8c85-f6959dbb62eb'])
     assert isinstance(objects, dict)
-
-

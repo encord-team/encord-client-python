@@ -15,6 +15,8 @@ from cord.orm.dataset import Image, Video
 
 PROGRESS_BAR_FILE_FACTOR = 100
 
+logger = logging.getLogger(__name__)
+
 
 def read_in_chunks(file_path, pbar, blocksize=1024, chunks=-1):
     """ Splitting the file into chunks. """
@@ -94,11 +96,11 @@ def _upload_single_file(file_path: str, signed_url: dict, querier: Querier, orm_
         )
 
         if not orm_class(res):
-            logging.info("Error uploading: %s",
+            logger.info("Error uploading: %s",
                          signed_url.get('title', ''))
 
     else:
-        logging.info("Error uploading file '%s' to signed url: %s",
+        logger.info("Error uploading file '%s' to signed url: %s",
                      signed_url.get('title', ''), signed_url.get('signed_url'))
         raise RuntimeError("Bad request.")
 

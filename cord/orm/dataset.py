@@ -173,7 +173,19 @@ class ReEncodeVideoTaskResult:
 
 
 @dataclasses.dataclass(frozen=True)
-class ReEncodeVideoTask:
+class ReEncodeVideoTask(Formatter):
     """ A re encode video object with supporting information. """
     status: str
     result: List[ReEncodeVideoTaskResult] = None
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        if "result" in json_dict:
+            dict_results = json_dict["result"]
+            results = [ReEncodeVideoTaskResult(result["data_hash"],
+                                               result["signed_url"],
+                                               result["bucket_path"])
+                       for result in dict_results]
+            return ReEncodeVideoTask(json_dict["status"], results)
+        else:
+            return ReEncodeVideoTask(json_dict["status"])
