@@ -181,7 +181,8 @@ class CordUserClient:
         elif export_type == CvatExportType.TASK.value:
             images = list(images_directory_path.iterdir())
         else:
-            raise ValueError("Received an unexpected response from the server. Project import aborted.")
+            raise ValueError(
+                f"Received an unexpected response `{project_info}` from the server. Project import aborted.")
 
         if not images:
             raise ValueError(f"No images found in the provided data folder.")
