@@ -96,12 +96,12 @@ def _upload_single_file(file_path: str, signed_url: dict, querier: Querier, orm_
         )
 
         if not orm_class(res):
-            logger.info("Error uploading: %s",
-                         signed_url.get('title', ''))
+            logger.info("Error uploading: %s", signed_url.get('title', ''))
 
     else:
-        logger.info("Error uploading file '%s' to signed url: %s",
-                     signed_url.get('title', ''), signed_url.get('signed_url'))
-        raise RuntimeError("Bad request.")
+        error_string = f"Error uploading file '{signed_url.get('title', '')}' to signed url: " \
+                       f"'{signed_url.get('signed_url')}'",
+        logger.error(error_string)
+        raise RuntimeError(error_string)
 
     return orm_class(res)

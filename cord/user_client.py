@@ -145,7 +145,7 @@ class CordUserClient:
             },
             "dataset_hash": dataset_hash,
             "image_title_to_image_hash_map": image_title_to_image_hash_map,
-            "review_mode": ReviewMode.to_string(review_mode)
+            "review_mode": review_mode.value
         }
 
         log.info("Starting project import. This may take a few minutes.")

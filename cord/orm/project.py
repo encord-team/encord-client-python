@@ -97,21 +97,14 @@ class ProjectCopyOptions(Enum):
     MODELS = 'models'
 
 
-# copy pasted class from api-server
 class StringEnum(Enum):
     """
-    Use this enum class if you need helpers which translate from the enum to a string.
+    Use this enum class if you need the helper that creates the enum instance from a string.
     """
 
     @classmethod
     def from_string(cls, string: str) -> Optional['StringEnum']:
         return cls._value2member_map_.get(string)
-
-    @classmethod
-    def to_string(cls, arg: 'StringEnum') -> Optional[str]:
-        if arg._name_ not in cls._member_map_:
-            return None
-        return arg._value_
 
 
 class ReviewMode(StringEnum):
