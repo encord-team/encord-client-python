@@ -105,7 +105,7 @@ class Querier:
         else:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
-    def basic_put(self, db_object_type, uid, payload):
+    def basic_put(self, db_object_type, uid, payload, enable_logging=True):
         """ Single DB object put request. """
         request = self.request(
             QueryMethods.PUT,
@@ -115,7 +115,7 @@ class Querier:
             payload=payload,
         )
 
-        res = self.execute(request)
+        res = self.execute(request, enable_logging)
 
         if res:
             return res
@@ -128,9 +128,10 @@ class Querier:
         request.headers = self._config.define_headers(request.data)
         return request
 
-    def execute(self, request):
+    def execute(self, request, enable_logging=True):
         """ Execute a request. """
-        logger.info("Request: %s", (request.data[:100] + '..') if len(request.data) > 100 else request.data)
+        if enable_logging:
+            logger.info("Request: %s", (request.data[:100] + '..') if len(request.data) > 100 else request.data)
 
         session = Session()
         session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))

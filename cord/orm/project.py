@@ -14,7 +14,9 @@
 # under the License.
 
 from collections import OrderedDict
+from dataclasses import dataclass
 from enum import Enum
+from typing import Optional, List, Union
 
 from cord.orm import base_orm
 
@@ -93,3 +95,48 @@ class ProjectCopyOptions(Enum):
     COLLABORATORS = 'collaborators'
     DATASETS = 'datasets'
     MODELS = 'models'
+
+
+class StringEnum(Enum):
+    """
+    Use this enum class if you need the helper that creates the enum instance from a string.
+    """
+
+    @classmethod
+    def from_string(cls, string: str) -> Optional['StringEnum']:
+        return cls._value2member_map_.get(string)
+
+
+class ReviewMode(StringEnum):
+    """
+    UNLABELLED:
+        The labels are added to the images. However, the one person must still go over
+            all of the labels before submitting them for review.
+    LABELLED:
+        The labels are added to the images and are marked as labelled. A reviewer will
+            still need to approve those.
+    REVIEWED:
+        The labels are added to the images and considered reviewed. No more action is
+            required from the labeler or reviewer.
+    """
+    UNLABELLED = 'unlabelled'
+    LABELLED = 'labelled'
+    REVIEWED = 'reviewed'
+
+
+class ProjectImporter(base_orm.BaseORM):
+    DB_FIELDS = OrderedDict([
+        ("project_hash", Optional[str]),
+        ("errors", list),
+    ])
+
+
+class CvatExportType(Enum):
+    PROJECT = 'project'
+    TASK = 'task'
+
+
+class ProjectImporterCvatInfo(base_orm.BaseORM):
+    DB_FIELDS = OrderedDict([
+        ("export_type", CvatExportType),
+    ])

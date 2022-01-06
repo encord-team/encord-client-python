@@ -47,7 +47,7 @@ from cord.configs import CordConfig, Config
 from cord.constants.model import *
 from cord.constants.string_constants import *
 from cord.http.querier import Querier
-from cord.http.utils import upload_to_signed_url, upload_to_signed_url_list
+from cord.http.utils import upload_to_signed_url_list
 from cord.orm.api_key import ApiKeyMeta
 from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import (
@@ -197,9 +197,9 @@ class CordClientDataset(CordClient):
                 SignedVideoURL,
                 uid=short_name
             )
-            res = upload_to_signed_url(
-                file_path,
-                signed_url,
+            res = upload_to_signed_url_list(
+                [file_path],
+                [signed_url],
                 self._querier,
                 Video
             )
@@ -216,7 +216,7 @@ class CordClientDataset(CordClient):
                 message='{} does not point to a file.'.format(file_path)
             )
 
-    def create_image_group(self, file_paths: typing.Iterable[str]):
+    def create_image_group(self, file_paths: typing.Iterable[str], max_workers: Optional[int] = None):
         """
         Create an image group in Cord storage.
 
@@ -224,6 +224,9 @@ class CordClientDataset(CordClient):
             self: Cord client object.
             file_paths: a list of paths to images, e.g.
                 ['/home/user/data/img1.png', '/home/user/data/img2.png']
+            max_workers:
+                Number of workers for parallel image upload. If set to None, this will be the number of CPU cores
+                available on the machine.
 
         Returns:
             Bool.
@@ -242,9 +245,10 @@ class CordClientDataset(CordClient):
             SignedImagesURL,
             uid=short_names
         )
-        image_hash_list = upload_to_signed_url_list(
-            file_paths, signed_urls, self._querier, Image
+        upload_to_signed_url_list(
+            file_paths, signed_urls, self._querier, Image, max_workers
         )
+        image_hash_list = list(map(lambda signed_url: signed_url.get("data_hash"), signed_urls))
         res = self._querier.basic_setter(
             ImageGroup,
             uid=image_hash_list,

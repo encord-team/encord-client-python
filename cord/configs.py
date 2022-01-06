@@ -133,21 +133,17 @@ def get_env_api_key() -> str:
 
 
 class CordConfig(Config):
-    def __init__(self, resource_id=None, api_key=None, domain=None):
-        if domain is None:
-            domain = CORD_DOMAIN
+    def __init__(self, resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = CORD_DOMAIN):
         web_file_path = CORD_PUBLIC_PATH
         super().__init__(resource_id, api_key, web_file_path=web_file_path, domain=domain)
 
 
 class UserConfig(BaseConfig):
-    def __init__(self, private_key: Ed25519PrivateKey, domain: Optional[str] = None):
+    def __init__(self, private_key: Ed25519PrivateKey, domain: str = CORD_DOMAIN):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
         self._public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
 
-        if domain is None:
-            domain = CORD_DOMAIN
         self.domain = domain
 
         endpoint = domain + CORD_PUBLIC_USER_PATH
