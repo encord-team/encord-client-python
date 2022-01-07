@@ -63,9 +63,7 @@ class Ontology:
     def from_dict(cls, ontology_dict: Dict):
         ontology = Ontology()
         ontology.ontology_objects = cls.__build_ontology_objects(ontology_dict["objects"])
-        ontology.ontology_classifications = cls.__build_ontology_classifications(
-            ontology_dict["classifications"]
-        )
+        ontology.ontology_classifications = cls.__build_ontology_classifications(ontology_dict["classifications"])
         ontology.color_index = len(ontology.ontology_objects) % len(cls.COLORS)
         return ontology
 
@@ -114,21 +112,14 @@ class Ontology:
         options = []
         for option_dict in options_dict:
             option = ClassificationOption(
-                option_dict["id"],
-                option_dict["label"],
-                option_dict["value"],
-                option_dict["featureNodeHash"],
+                option_dict["id"], option_dict["label"], option_dict["value"], option_dict["featureNodeHash"]
             )
             options.append(option)
         return options
 
     def add_object(self, name: str, shape: ObjectShape) -> None:
         ontology_object = OntologyObject(
-            str(self.__current_object_id()),
-            self.COLORS[self.color_index],
-            name,
-            shape,
-            generate_feature_node_hash(),
+            str(self.__current_object_id()), self.COLORS[self.color_index], name, shape, generate_feature_node_hash()
         )
         self.ontology_objects.append(ontology_object)
         self.color_index = (self.color_index + 1) % len(self.COLORS)
@@ -148,11 +139,7 @@ class Ontology:
         self.ontology_classifications.append(ontology_classification)
 
     def __create_classification_attributes(
-        self,
-        name: str,
-        classification_type: ClassificationType,
-        required: bool,
-        options: Optional[Iterable[str]],
+        self, name: str, classification_type: ClassificationType, required: bool, options: Optional[Iterable[str]]
     ) -> ClassificationAttribute:
         attribute_id = 1
         classification_attribute = ClassificationAttribute(
@@ -197,9 +184,7 @@ class Ontology:
             "featureNodeHash": ontology_object.feature_node_hash,
         }
 
-    def ontology_classification_to_dict(
-        self, ontology_classification: OntologyClassification
-    ) -> Dict:
+    def ontology_classification_to_dict(self, ontology_classification: OntologyClassification) -> Dict:
         classification = {
             "id": ontology_classification.id,
             "featureNodeHash": ontology_classification.feature_node_hash,

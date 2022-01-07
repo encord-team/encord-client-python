@@ -54,9 +54,7 @@ def check_error_response(response, payload=None):
         raise OperationNotAllowed("The read/write operation is not allowed by the API key.")
 
     if response == ANSWER_DICTIONARY_ERROR:
-        raise AnswerDictionaryError(
-            "An object or classification is missing in the answer dictionaries."
-        )
+        raise AnswerDictionaryError("An object or classification is missing in the answer dictionaries.")
 
     if response == CORRUPTED_LABEL_ERROR:
         raise CorruptedLabelError(
@@ -65,22 +63,16 @@ def check_error_response(response, payload=None):
         )
 
     if response == FILE_TYPE_NOT_SUPPORTED_ERROR:
-        raise FileTypeNotSupportedError(
-            "Supported file types are: image/jpeg, image/png, video/webm, video/mp4."
-        )
+        raise FileTypeNotSupportedError("Supported file types are: image/jpeg, image/png, video/webm, video/mp4.")
 
     if response == FEATURE_DOES_NOT_EXIST_ERROR:
         raise FeatureDoesNotExistError("The passed feature does not exist in the project ontology.")
 
     if response == MODEL_WEIGHTS_INCONSISTENT_ERROR:
-        raise ModelWeightsInconsistentError(
-            "The passed model weights are incompatible with the selected model."
-        )
+        raise ModelWeightsInconsistentError("The passed model weights are incompatible with the selected model.")
 
     if response == MODEL_FEATURES_INCONSISTENT_ERROR:
-        raise ModelFeaturesInconsistentError(
-            "The passed features are incompatible with the selected model."
-        )
+        raise ModelFeaturesInconsistentError("The passed features are incompatible with the selected model.")
 
     if response == UPLOAD_OPERATION_NOT_SUPPORTED_ERROR:
         raise UploadOperationNotSupportedError(
@@ -89,14 +81,12 @@ def check_error_response(response, payload=None):
 
     if response == DETECTION_RANGE_INVALID_ERROR:
         raise DetectionRangeInvalidError(
-            "The detection range is invalid (e.g. less than 0, or"
-            " higher than num frames in the video)"
+            "The detection range is invalid (e.g. less than 0, or" " higher than num frames in the video)"
         )
 
     if response == RESOURCE_EXISTS_ERROR:
         raise ResourceExistsError(
-            "Trying to create a resource that already exists. "
-            "Payload for this failure is: " + str(payload)
+            "Trying to create a resource that already exists. " "Payload for this failure is: " + str(payload)
         )
 
     pass

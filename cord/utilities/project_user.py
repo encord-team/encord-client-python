@@ -21,8 +21,4 @@ class ProjectUser(Formatter):
 
     @classmethod
     def from_dict(cls, json_dict: Dict):
-        return ProjectUser(
-            json_dict["user_email"],
-            ProjectUserRole(json_dict["user_role"]),
-            json_dict["project_hash"],
-        )
+        return ProjectUser(json_dict["user_email"], ProjectUserRole(json_dict["user_role"]), json_dict["project_hash"])

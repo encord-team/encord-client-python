@@ -15,13 +15,7 @@ from cord.orm.dataset import SignedImagesURL, Image
 from cord.orm.cloud_integration import CloudIntegration
 from cord.orm.dataset import Dataset, DatasetType
 from cord.orm.dataset import DatasetScope, DatasetAPIKey
-from cord.orm.project import (
-    Project,
-    ProjectImporter,
-    ReviewMode,
-    ProjectImporterCvatInfo,
-    CvatExportType,
-)
+from cord.orm.project import Project, ProjectImporter, ReviewMode, ProjectImporterCvatInfo, CvatExportType
 from cord.orm.project_api_key import ProjectAPIKey
 from cord.utilities.client_utilities import (
     APIKeyScopes,
@@ -40,14 +34,10 @@ class CordUserClient:
         self.user_config = user_config
         self.querier = querier
 
-    def create_private_dataset(
-        self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None
-    ):
+    def create_private_dataset(self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None):
         return self.create_dataset(dataset_title, dataset_type, dataset_description)
 
-    def create_dataset(
-        self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None
-    ):
+    def create_dataset(self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None):
         dataset = {
             "title": dataset_title,
             "type": dataset_type,
@@ -73,34 +63,22 @@ class CordUserClient:
         api_key_payload = {
             "dataset_hash": dataset_hash,
         }
-        api_keys: List[DatasetAPIKey] = self.querier.get_multiple(
-            DatasetAPIKey, uid=None, payload=api_key_payload
-        )
+        api_keys: List[DatasetAPIKey] = self.querier.get_multiple(DatasetAPIKey, uid=None, payload=api_key_payload)
         return api_keys
 
     @staticmethod
-    def create_with_ssh_private_key(
-        ssh_private_key: str, password: str = None, **kwargs
-    ) -> CordUserClient:
+    def create_with_ssh_private_key(ssh_private_key: str, password: str = None, **kwargs) -> CordUserClient:
         user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
         querier = Querier(user_config)
 
         return CordUserClient(user_config, querier)
 
-    def create_project(
-        self, project_title: str, dataset_hashes: List[str], project_description: str = ""
-    ) -> str:
-        project = {
-            "title": project_title,
-            "description": project_description,
-            "dataset_hashes": dataset_hashes,
-        }
+    def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
+        project = {"title": project_title, "description": project_description, "dataset_hashes": dataset_hashes}
 
         return self.querier.basic_setter(Project, uid=None, payload=project)
 
-    def create_project_api_key(
-        self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]
-    ) -> str:
+    def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
         payload = {"title": api_key_title, "scopes": list(map(lambda scope: scope.value, scopes))}
 
         return self.querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
@@ -159,9 +137,7 @@ class CordUserClient:
         images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(
-            images_paths, dataset_name, max_workers
-        )
+        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name, max_workers)
         log.info("Image upload completed.")
 
         payload = {
@@ -185,15 +161,11 @@ class CordUserClient:
             )
         elif "error" in server_ret:
             error = server_ret["error"]
-            return CvatImporterError(
-                dataset_hash=dataset_hash, issues=Issues.from_dict(error["issues"])
-            )
+            return CvatImporterError(dataset_hash=dataset_hash, issues=Issues.from_dict(error["issues"]))
         else:
             raise ValueError("The api server responded with an invalid payload.")
 
-    def __get_images_paths(
-        self, annotations_base64: str, images_directory_path: Path
-    ) -> List[Path]:
+    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> List[Path]:
         payload = {"annotations_base64": annotations_base64}
         project_info = self.querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
         if "error" in project_info:
@@ -235,9 +207,7 @@ class CordUserClient:
         dataset_hash = dataset["dataset_hash"]
 
         dataset_api_key: DatasetAPIKey = self.create_dataset_api_key(
-            dataset_hash,
-            dataset_name + " - Full Access API Key",
-            [DatasetScope.READ, DatasetScope.WRITE],
+            dataset_hash, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
         )
 
         client = CordClient.initialise(
@@ -247,9 +217,7 @@ class CordUserClient:
         )
 
         signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
-        upload_to_signed_url_list(
-            file_path_strings, signed_urls, client._querier, Image, max_workers
-        )
+        upload_to_signed_url_list(file_path_strings, signed_urls, client._querier, Image, max_workers)
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
 

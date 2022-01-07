@@ -43,9 +43,7 @@ class Dataset(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict(
-        [("title", str), ("description", str), ("dataset_type", str), ("data_rows", (list, str))]
-    )
+    DB_FIELDS = OrderedDict([("title", str), ("description", str), ("dataset_type", str), ("data_rows", (list, str))])
 
     NON_UPDATABLE_FIELDS = {
         "dataset_type",
@@ -66,11 +64,7 @@ class DatasetAPIKey(Formatter):
             json_dict["scopes"] = json.loads(json_dict["scopes"])
         scopes = [DatasetScope(scope) for scope in json_dict["scopes"]]
         return DatasetAPIKey(
-            json_dict["resource_hash"],
-            json_dict["api_key"],
-            json_dict["title"],
-            json_dict["key_hash"],
-            scopes,
+            json_dict["resource_hash"], json_dict["api_key"], json_dict["title"], json_dict["key_hash"], scopes
         )
 
 
@@ -103,17 +97,13 @@ class DatasetData(base_orm.BaseORM):
 class SignedVideoURL(base_orm.BaseORM):
     """A signed URL object with supporting information."""
 
-    DB_FIELDS = OrderedDict(
-        [("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)]
-    )
+    DB_FIELDS = OrderedDict([("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)])
 
 
 class SignedImageURL(base_orm.BaseORM):
     """A signed URL object with supporting information."""
 
-    DB_FIELDS = OrderedDict(
-        [("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)]
-    )
+    DB_FIELDS = OrderedDict([("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)])
 
 
 class SignedImagesURL(base_orm.BaseListORM):
@@ -194,9 +184,7 @@ class ReEncodeVideoTask(Formatter):
         if "result" in json_dict:
             dict_results = json_dict["result"]
             results = [
-                ReEncodeVideoTaskResult(
-                    result["data_hash"], result["signed_url"], result["bucket_path"]
-                )
+                ReEncodeVideoTaskResult(result["data_hash"], result["signed_url"], result["bucket_path"])
                 for result in dict_results
             ]
             return ReEncodeVideoTask(json_dict["status"], results)

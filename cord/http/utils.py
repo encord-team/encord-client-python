@@ -38,20 +38,14 @@ OrmT = TypeVar("OrmT")
 
 
 def upload_to_signed_url_list(
-    file_paths: List[str],
-    signed_urls,
-    querier: Querier,
-    orm_class: OrmT,
-    max_workers: Optional[int] = None,
+    file_paths: List[str], signed_urls, querier: Querier, orm_class: OrmT, max_workers: Optional[int] = None
 ) -> List[OrmT]:
     if orm_class == Image:
         is_video = False
     elif orm_class == Video:
         is_video = True
     else:
-        raise RuntimeError(
-            f"Currently only `Image` or `Video` orm_class supported. Got type `{orm_class}`"
-        )
+        raise RuntimeError(f"Currently only `Image` or `Video` orm_class supported. Got type `{orm_class}`")
 
     assert len(file_paths) == len(signed_urls), "Error getting the correct number of signed urls"
 
@@ -71,9 +65,7 @@ def upload_to_signed_url_list(
                 signed_url = signed_urls[i]
                 assert signed_url.get("title", "") == file_name, "Ordering issue"
 
-                future = executor.submit(
-                    _upload_single_file, file_path, signed_url, querier, orm_class, pbar, is_video
-                )
+                future = executor.submit(_upload_single_file, file_path, signed_url, querier, orm_class, pbar, is_video)
                 futures.append(future)
 
             for future in concurrent.futures.as_completed(futures):
@@ -88,9 +80,7 @@ def _upload_single_file(
 ) -> OrmT:
     content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
     res_upload = requests.put(
-        signed_url.get("signed_url"),
-        data=read_in_chunks(file_path, pbar),
-        headers={"Content-Type": content_type},
+        signed_url.get("signed_url"), data=read_in_chunks(file_path, pbar), headers={"Content-Type": content_type}
     )
 
     if res_upload.status_code == 200:
@@ -103,8 +93,7 @@ def _upload_single_file(
 
     else:
         error_string = (
-            f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
-            f"'{signed_url.get('signed_url')}'",
+            f"Error uploading file '{signed_url.get('title', '')}' to signed url: " f"'{signed_url.get('signed_url')}'",
         )
         logger.error(error_string)
         raise RuntimeError(error_string)
