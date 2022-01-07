@@ -20,11 +20,7 @@ from typing import Dict, Optional
 
 import cryptography
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
-from cryptography.hazmat.primitives.serialization import (
-    load_ssh_private_key,
-    Encoding,
-    PublicFormat,
-)
+from cryptography.hazmat.primitives.serialization import load_ssh_private_key, Encoding, PublicFormat
 
 import cord.exceptions
 
@@ -101,9 +97,7 @@ class Config(BaseConfig):
         self.domain = domain
         endpoint = domain + web_file_path
         super().__init__(endpoint)
-        logger.info(
-            "Initialising Cord client with endpoint: %s and resource_id: %s", endpoint, resource_id
-        )
+        logger.info("Initialising Cord client with endpoint: %s and resource_id: %s", endpoint, resource_id)
 
 
 def get_env_resource_id() -> str:
@@ -122,9 +116,7 @@ def get_env_resource_id() -> str:
         resource_id = os.environ[_CORD_DATASET_ID]
 
     else:
-        raise cord.exceptions.AuthenticationError(
-            message="Project EntityId or dataset EntityId not provided"
-        )
+        raise cord.exceptions.AuthenticationError(message="Project EntityId or dataset EntityId not provided")
 
     return resource_id
 
@@ -137,12 +129,7 @@ def get_env_api_key() -> str:
 
 
 class CordConfig(Config):
-    def __init__(
-        self,
-        resource_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-        domain: str = CORD_DOMAIN,
-    ):
+    def __init__(self, resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = CORD_DOMAIN):
         web_file_path = CORD_PUBLIC_PATH
         super().__init__(resource_id, api_key, web_file_path=web_file_path, domain=domain)
 
@@ -151,9 +138,7 @@ class UserConfig(BaseConfig):
     def __init__(self, private_key: Ed25519PrivateKey, domain: str = CORD_DOMAIN):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
-        self._public_key_hex: str = self.public_key.public_bytes(
-            Encoding.Raw, PublicFormat.Raw
-        ).hex()
+        self._public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
 
         self.domain = domain
 
@@ -177,9 +162,7 @@ class UserConfig(BaseConfig):
     def from_ssh_private_key(ssh_private_key: str, password: Optional[str], **kwargs):
         key_bytes = ssh_private_key.encode()
         password_bytes = password and password.encode()
-        private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(
-            key_bytes, password_bytes
-        )
+        private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
 
         if isinstance(private_key, Ed25519PrivateKey):
             return UserConfig(private_key, **kwargs)

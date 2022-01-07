@@ -42,9 +42,7 @@ class Querier:
 
     def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
         """Single DB object getter."""
-        request = self.request(
-            QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload
-        )
+        request = self.request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
         res = self.execute(request)
         if res:
             if issubclass(db_object_type, Formatter):
@@ -57,9 +55,7 @@ class Querier:
             raise ResourceNotFoundError("Resource not found.")
 
     def get_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
-        request = self.request(
-            QueryMethods.GET, object_type, uid, self._config.read_timeout, payload=payload
-        )
+        request = self.request(QueryMethods.GET, object_type, uid, self._config.read_timeout, payload=payload)
         result = self.execute(request)
 
         if result is not None:
@@ -68,9 +64,7 @@ class Querier:
             else:
                 return [object_type(**item) for item in result]
         else:
-            raise ResourceNotFoundError(
-                f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]"
-            )
+            raise ResourceNotFoundError(f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]")
 
     def basic_delete(self, db_object_type: Type[T], uid=None):
         """Single DB object getter."""
@@ -118,9 +112,7 @@ class Querier:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
     def request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
-        request = Request(
-            method, db_object_type, uid, timeout, self._config.connect_timeout, payload
-        )
+        request = Request(method, db_object_type, uid, timeout, self._config.connect_timeout, payload)
 
         request.headers = self._config.define_headers(request.data)
         return request
@@ -128,10 +120,7 @@ class Querier:
     def execute(self, request, enable_logging=True):
         """Execute a request."""
         if enable_logging:
-            logger.info(
-                "Request: %s",
-                (request.data[:100] + "..") if len(request.data) > 100 else request.data,
-            )
+            logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)
 
         session = Session()
         session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))

@@ -16,9 +16,7 @@
 from cord.constants.model import FAST_AI, YOLOV5, FASTER_RCNN, MASK_RCNN
 from cord.orm.model import ModelTrainingWeights
 
-fast_ai = ModelTrainingWeights(
-    {"model": FAST_AI, "training_config_link": "", "training_weights_link": ""}
-)
+fast_ai = ModelTrainingWeights({"model": FAST_AI, "training_config_link": "", "training_weights_link": ""})
 
 yolov5x = ModelTrainingWeights(
     {

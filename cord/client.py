@@ -63,18 +63,8 @@ from cord.orm.dataset import (
 )
 from cord.orm.label_log import LabelLog
 from cord.orm.label_row import LabelRow
-from cord.orm.labeling_algorithm import (
-    LabelingAlgorithm,
-    ObjectInterpolationParams,
-    BoundingBoxFittingParams,
-)
-from cord.orm.model import (
-    Model,
-    ModelRow,
-    ModelInferenceParams,
-    ModelTrainingParams,
-    ModelOperations,
-)
+from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
+from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
 from cord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers, ProjectCopyOptions
 from cord.project_ontology.classification_type import ClassificationType
 from cord.project_ontology.object_type import ObjectShape
@@ -96,9 +86,7 @@ class CordClient(object):
 
     @staticmethod
     def initialise(
-        resource_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-        domain: Optional[str] = None,
+        resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: Optional[str] = None
     ) -> Union[CordClientProject, CordClientDataset]:
         """
         Create and initialize a Cord client from a resource EntityId and API key.
@@ -136,15 +124,11 @@ class CordClient(object):
         resource_type = key_type.get("resource_type", None)
 
         if resource_type == TYPE_PROJECT:
-            logger.info(
-                "Initialising Cord client for project using key: %s", key_type.get("title", "")
-            )
+            logger.info("Initialising Cord client for project using key: %s", key_type.get("title", ""))
             return CordClientProject(querier, config)
 
         elif resource_type == TYPE_DATASET:
-            logger.info(
-                "Initialising Cord client for dataset using key: %s", key_type.get("title", "")
-            )
+            logger.info("Initialising Cord client for dataset using key: %s", key_type.get("title", ""))
             return CordClientDataset(querier, config)
 
         else:
@@ -217,17 +201,11 @@ class CordClientDataset(CordClient):
                 logger.info("Please run client.get_dataset() to refresh.")
                 return res
             else:
-                raise cord.exceptions.CordException(
-                    message="An error has occurred during video upload."
-                )
+                raise cord.exceptions.CordException(message="An error has occurred during video upload.")
         else:
-            raise cord.exceptions.CordException(
-                message="{} does not point to a file.".format(file_path)
-            )
+            raise cord.exceptions.CordException(message="{} does not point to a file.".format(file_path))
 
-    def create_image_group(
-        self, file_paths: typing.Iterable[str], max_workers: Optional[int] = None
-    ):
+    def create_image_group(self, file_paths: typing.Iterable[str], max_workers: Optional[int] = None):
         """
         Create an image group in Cord storage.
 
@@ -248,9 +226,7 @@ class CordClientDataset(CordClient):
         """
         for file_path in file_paths:
             if not os.path.exists(file_path):
-                raise cord.exceptions.CordException(
-                    message="{} does not point to a file.".format(file_path)
-                )
+                raise cord.exceptions.CordException(message="{} does not point to a file.".format(file_path))
         short_names = list(map(os.path.basename, file_paths))
         signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
         upload_to_signed_url_list(file_paths, signed_urls, self._querier, Image, max_workers)
@@ -262,9 +238,7 @@ class CordClientDataset(CordClient):
             logger.info("Please run client.get_dataset() to refresh.")
             return res
         else:
-            raise cord.exceptions.CordException(
-                message="An error has occurred during image group creation."
-            )
+            raise cord.exceptions.CordException(message="An error has occurred during image group creation.")
 
     def delete_image_group(self, data_hash: str):
         """
@@ -320,9 +294,7 @@ class CordClientDataset(CordClient):
             text_contents = private_files.read()
             files = json.loads(text_contents)
         else:
-            raise ValueError(
-                f"Type [{type(private_files)}] of argument private_files is not supported"
-            )
+            raise ValueError(f"Type [{type(private_files)}] of argument private_files is not supported")
 
         payload = {"files": files, "integration_id": integration_id, "ignore_errors": ignore_errors}
 
@@ -644,9 +616,7 @@ class CordClientProject(CordClient):
                 creating a classification model using a bounding box).
         """
         if title is None:
-            raise cord.exceptions.CordException(
-                message="You must set a title to create a model row."
-            )
+            raise cord.exceptions.CordException(message="You must set a title to create a model row.")
 
         if features is None:
             raise cord.exceptions.CordException(
@@ -743,10 +713,7 @@ class CordClientProject(CordClient):
             DetectionRangeInvalidError: If a detection range is invalid for video inference
         """
         if (file_paths is None and base64_strings is None) or (
-            file_paths is not None
-            and len(file_paths) > 0
-            and base64_strings is not None
-            and len(base64_strings) > 0
+            file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(base64_strings) > 0
         ):
             raise cord.exceptions.CordException(
                 message="To run model inference, you must pass either a list of files or base64 strings."
@@ -762,9 +729,7 @@ class CordClientProject(CordClient):
                 files.append(
                     {
                         "uid": file_path,  # Add file path as inference identifier
-                        "base64_str": base64.b64encode(file).decode(
-                            "utf-8"
-                        ),  # File to base64 string
+                        "base64_str": base64.b64encode(file).decode("utf-8"),  # File to base64 string
                     }
                 )
 
@@ -797,9 +762,7 @@ class CordClientProject(CordClient):
 
         return self._querier.basic_setter(Model, uid, payload=model)
 
-    def model_train(
-        self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"
-    ):
+    def model_train(self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"):
         """
         Train a model created on the platform.
 
@@ -827,24 +790,16 @@ class CordClientProject(CordClient):
             )
 
         if epochs is None:
-            raise cord.exceptions.CordException(
-                message="You must set number of epochs to train a model."
-            )
+            raise cord.exceptions.CordException(message="You must set number of epochs to train a model.")
 
         if batch_size is None:
-            raise cord.exceptions.CordException(
-                message="You must set a batch size to train a model."
-            )
+            raise cord.exceptions.CordException(message="You must set a batch size to train a model.")
 
         if weights is None:
-            raise cord.exceptions.CordException(
-                message="You must select model weights to train a model."
-            )
+            raise cord.exceptions.CordException(message="You must select model weights to train a model.")
 
         if device is None:
-            raise cord.exceptions.CordException(
-                message="You must set a device (cuda or CPU) train a model."
-            )
+            raise cord.exceptions.CordException(message="You must set a device (cuda or CPU) train a model.")
 
         training_params = ModelTrainingParams(
             {
@@ -1015,9 +970,7 @@ class CordClientProject(CordClient):
 
         return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
 
-    def get_data(
-        self, data_hash: str, get_signed_url: bool = False
-    ) -> Tuple[Optional[Video], Optional[List[Image]]]:
+    def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
         """
         Retrieve information about a video or image group.
 
@@ -1060,18 +1013,12 @@ class CordClientProject(CordClient):
         )
 
     def get_label_logs(
-        self,
-        user_hash: str = None,
-        data_hash: str = None,
-        from_unix_seconds: int = None,
-        to_unix_seconds: int = None,
+        self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
     ) -> List[LabelLog]:
 
         function_arguments = locals()
 
-        query_payload = {
-            k: v for (k, v) in function_arguments.items() if k is not "self" and v is not None
-        }
+        query_payload = {k: v for (k, v) in function_arguments.items() if k is not "self" and v is not None}
 
         return self._querier.get_multiple(LabelLog, payload=query_payload)
 
