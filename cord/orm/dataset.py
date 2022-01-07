@@ -15,64 +15,115 @@
 from __future__ import annotations
 
 import dataclasses
+from datetime import datetime
+from dateutil import parser
 import json
 from collections import OrderedDict
 from enum import IntEnum, Enum
-from typing import List, Dict
+from typing import List, Dict, Optional
 
+from cord.constants.enums import DataType
 from cord.orm import base_orm
 from cord.orm.formatter import Formatter
 
 
-class Dataset(base_orm.BaseORM):
-    """
-    A dataset is a collection of data rows.
+@dataclasses.dataclass(frozen=True)
+class DataRow(Formatter):
+    uid: str
+    title: str
+    type: DataType
+    created_at: datetime
 
-    ORM:
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> DataRow:
+        return DataRow(
+            uid=json_dict["data_hash"],
+            title=json_dict["data_title"],
+            type=DataType.from_string(json_dict["data_type"]),
+            created_at=parser.parse(json_dict["created_at"]),
+        )
 
-    title,
-    description,
-    dataset_type (Cord storage vs. AWS/GCP/Azure),
-    data_rows: [
-        {
-            data_hash (uid),
-            data_title,
-            data_type,
-        }
-    ]
+    @classmethod
+    def from_dict_list(cls, json_list: List) -> List[DataRow]:
+        ret: List[DataRow] = list()
+        for json_dict in json_list:
+            ret.append(cls.from_dict(json_dict))
+        return ret
 
-    """
 
-    DB_FIELDS = OrderedDict([("title", str), ("description", str), ("dataset_type", str), ("data_rows", (list, str))])
+@dataclasses.dataclass(frozen=True)
+class Dataset(Formatter):
+    title: str
+    description: Optional[str]
+    storage_location: StorageLocation
+    data_rows: List[DataRow]
 
-    NON_UPDATABLE_FIELDS = {
-        "dataset_type",
-    }
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> Dataset:
+        return Dataset(
+            title=json_dict["title"],
+            description=json_dict["description"],
+            storage_location=StorageLocation.from_str(json_dict["dataset_type"]),
+            data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])),
+        )
 
 
 @dataclasses.dataclass(frozen=True)
 class DatasetAPIKey(Formatter):
-    dataset_hash: str
+    dataset_uid: str
     api_key: str
     title: str
     key_hash: str
     scopes: List[DatasetScope]
 
     @classmethod
-    def from_dict(cls, json_dict: Dict):
+    def from_dict(cls, json_dict: Dict) -> DatasetAPIKey:
         if isinstance(json_dict["scopes"], str):
             json_dict["scopes"] = json.loads(json_dict["scopes"])
         scopes = [DatasetScope(scope) for scope in json_dict["scopes"]]
         return DatasetAPIKey(
-            json_dict["resource_hash"], json_dict["api_key"], json_dict["title"], json_dict["key_hash"], scopes
+            json_dict["resource_hash"],
+            json_dict["api_key"],
+            json_dict["title"],
+            json_dict["key_hash"],
+            scopes,
         )
 
 
-class DatasetType(IntEnum):
+@dataclasses.dataclass(frozen=True)
+class CreateDatasetResponse(Formatter):
+    title: str
+    type: StorageLocation
+    dataset_uid: str
+    user_uid: str
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> CreateDatasetResponse:
+        return CreateDatasetResponse(
+            title=json_dict["title"],
+            type=StorageLocation(json_dict["type"]),
+            dataset_uid=json_dict["dataset_hash"],
+            user_uid=json_dict["user_hash"],
+        )
+
+
+class StorageLocation(IntEnum):
     CORD_STORAGE = (0,)
     AWS = (1,)
     GCP = (2,)
     AZURE = 3
+
+    @staticmethod
+    def from_str(string_location: str) -> StorageLocation:
+        if string_location == "CORD_STORAGE":
+            return StorageLocation.CORD_STORAGE
+        if string_location == "AWS_S3":
+            return StorageLocation.AWS
+        if string_location == "GCP_STR":
+            return StorageLocation.GCP
+        if string_location == "AZURE_STR":
+            return StorageLocation.AZURE
+        raise TypeError(f"Invalid storage location string: `{string_location}`")
 
 
 class DatasetScope(Enum):

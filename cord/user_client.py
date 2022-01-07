@@ -11,11 +11,17 @@ from cord.client import CordClient
 from cord.configs import UserConfig
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url_list
-from cord.orm.dataset import SignedImagesURL, Image
+from cord.orm.dataset import SignedImagesURL, Image, CreateDatasetResponse
 from cord.orm.cloud_integration import CloudIntegration
-from cord.orm.dataset import Dataset, DatasetType
+from cord.orm.dataset import Dataset, StorageLocation
 from cord.orm.dataset import DatasetScope, DatasetAPIKey
-from cord.orm.project import Project, ProjectImporter, ReviewMode, ProjectImporterCvatInfo, CvatExportType
+from cord.orm.project import (
+    Project,
+    ProjectImporter,
+    ReviewMode,
+    ProjectImporterCvatInfo,
+    CvatExportType,
+)
 from cord.orm.project_api_key import ProjectAPIKey
 from cord.utilities.client_utilities import (
     APIKeyScopes,
@@ -34,34 +40,57 @@ class CordUserClient:
         self.user_config = user_config
         self.querier = querier
 
-    def create_private_dataset(self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None):
-        return self.create_dataset(dataset_title, dataset_type, dataset_description)
+    # TODO: deprecate this function?
+    def create_private_dataset(
+        self,
+        dataset_title: str,
+        storage_location: StorageLocation,
+        dataset_description: Optional[str] = None,
+    ) -> CreateDatasetResponse:
+        return self.create_dataset(dataset_title, storage_location, dataset_description)
 
-    def create_dataset(self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None):
+    def create_dataset(
+        self,
+        dataset_title: str,
+        storage_location: StorageLocation,
+        dataset_description: Optional[str] = None,
+    ) -> CreateDatasetResponse:
+        """
+        Args:
+            dataset_title:
+                Title of dataset.
+            storage_location:
+                StorageLocation type where data will be stored.
+            dataset_description:
+                Optional description of the dataset.
+        Returns:
+            CreateDatasetResponse
+        """
         dataset = {
             "title": dataset_title,
-            "type": dataset_type,
+            "type": storage_location,
         }
 
         if dataset_description:
             dataset["description"] = dataset_description
 
-        return self.querier.basic_setter(Dataset, uid=None, payload=dataset)
+        result = self.querier.basic_setter(Dataset, uid=None, payload=dataset)
+        return CreateDatasetResponse.from_dict(result)
 
     def create_dataset_api_key(
-        self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]
+        self, dataset_uid: str, api_key_title: str, dataset_scopes: List[DatasetScope]
     ) -> DatasetAPIKey:
         api_key_payload = {
-            "dataset_hash": dataset_hash,
+            "dataset_hash": dataset_uid,
             "title": api_key_title,
             "scopes": list(map(lambda scope: scope.value, dataset_scopes)),
         }
         response = self.querier.basic_setter(DatasetAPIKey, uid=None, payload=api_key_payload)
         return DatasetAPIKey.from_dict(response)
 
-    def get_dataset_api_keys(self, dataset_hash: str) -> List[DatasetAPIKey]:
+    def get_dataset_api_keys(self, dataset_uid: str) -> List[DatasetAPIKey]:
         api_key_payload = {
-            "dataset_hash": dataset_hash,
+            "dataset_hash": dataset_uid,
         }
         api_keys: List[DatasetAPIKey] = self.querier.get_multiple(DatasetAPIKey, uid=None, payload=api_key_payload)
         return api_keys
@@ -137,14 +166,14 @@ class CordUserClient:
         images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name, max_workers)
+        dataset_uid, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name, max_workers)
         log.info("Image upload completed.")
 
         payload = {
             "cvat": {
                 "annotations_base64": annotations_base64,
             },
-            "dataset_hash": dataset_hash,
+            "dataset_hash": dataset_uid,
             "image_title_to_image_hash_map": image_title_to_image_hash_map,
             "review_mode": review_mode.value,
         }
@@ -156,12 +185,12 @@ class CordUserClient:
             success = server_ret["success"]
             return CvatImporterSuccess(
                 project_hash=success["project_hash"],
-                dataset_hash=dataset_hash,
+                dataset_uid=dataset_uid,
                 issues=Issues.from_dict(success["issues"]),
             )
         elif "error" in server_ret:
             error = server_ret["error"]
-            return CvatImporterError(dataset_hash=dataset_hash, issues=Issues.from_dict(error["issues"]))
+            return CvatImporterError(dataset_uid=dataset_uid, issues=Issues.from_dict(error["issues"]))
         else:
             raise ValueError("The api server responded with an invalid payload.")
 
@@ -196,22 +225,22 @@ class CordUserClient:
         """
         This function does not create any image groups yet.
         Returns:
-            * The created dataset_hash
+            * The created dataset_uid
             * A map from an image title to the image hash which is stored in the DB.
         """
 
         short_names = list(map(lambda x: x.name, images_paths))
         file_path_strings = list(map(lambda x: str(x), images_paths))
-        dataset = self.create_dataset(dataset_name, DatasetType.CORD_STORAGE)
+        dataset = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
-        dataset_hash = dataset["dataset_hash"]
+        dataset_uid = dataset.dataset_uid
 
         dataset_api_key: DatasetAPIKey = self.create_dataset_api_key(
-            dataset_hash, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
+            dataset_uid, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
         )
 
         client = CordClient.initialise(
-            dataset_hash,
+            dataset_uid,
             dataset_api_key.api_key,
             domain=self.user_config.domain,
         )
@@ -221,7 +250,7 @@ class CordUserClient:
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
 
-        return dataset_hash, image_title_to_image_hash_map
+        return dataset_uid, image_title_to_image_hash_map
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)

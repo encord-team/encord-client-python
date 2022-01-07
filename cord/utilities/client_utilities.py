@@ -87,11 +87,11 @@ class Issues:
 @dataclass
 class CvatImporterSuccess:
     project_hash: str
-    dataset_hash: str
+    dataset_uid: str
     issues: Issues
 
 
 @dataclass
 class CvatImporterError:
-    dataset_hash: str
+    dataset_uid: str
     issues: Issues
