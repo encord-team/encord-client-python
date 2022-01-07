@@ -1,5 +1,4 @@
 requests>=2.25.0
-pytest>=6.1.2
 setuptools>=50.3.2
 uuid>=1.30
 tqdm==4.32.1

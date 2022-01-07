@@ -10,4 +10,3 @@ class OntologyObject:
     name: str
     shape: ObjectShape
     feature_node_hash: str
-

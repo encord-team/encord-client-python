@@ -54,28 +54,26 @@ class Project(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("title", str),
-        ("description", str),
-        ("editor_ontology", (dict, str)),
-        ("datasets", (list, str)),
-        ("label_rows", (list, str)),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("title", str),
+            ("description", str),
+            ("editor_ontology", (dict, str)),
+            ("datasets", (list, str)),
+            ("label_rows", (list, str)),
+        ]
+    )
 
-    NON_UPDATABLE_FIELDS = {
-        "editor_ontology",
-        "datasets",
-        "label_rows"
-    }
+    NON_UPDATABLE_FIELDS = {"editor_ontology", "datasets", "label_rows"}
 
     def get_labels_list(self):
         """
         Returns a list of all label row IDs (label_hash uid) in a project.
         """
-        labels = self.to_dic().get('label_rows')
+        labels = self.to_dic().get("label_rows")
         res = []
         for label in labels:
-            res.append(label.get('label_hash'))
+            res.append(label.get("label_hash"))
         return res
 
 
@@ -92,9 +90,9 @@ class ProjectDataset:
 
 
 class ProjectCopyOptions(Enum):
-    COLLABORATORS = 'collaborators'
-    DATASETS = 'datasets'
-    MODELS = 'models'
+    COLLABORATORS = "collaborators"
+    DATASETS = "datasets"
+    MODELS = "models"
 
 
 class StringEnum(Enum):
@@ -103,7 +101,7 @@ class StringEnum(Enum):
     """
 
     @classmethod
-    def from_string(cls, string: str) -> Optional['StringEnum']:
+    def from_string(cls, string: str) -> Optional["StringEnum"]:
         return cls._value2member_map_.get(string)
 
 
@@ -119,24 +117,29 @@ class ReviewMode(StringEnum):
         The labels are added to the images and considered reviewed. No more action is
             required from the labeler or reviewer.
     """
-    UNLABELLED = 'unlabelled'
-    LABELLED = 'labelled'
-    REVIEWED = 'reviewed'
+
+    UNLABELLED = "unlabelled"
+    LABELLED = "labelled"
+    REVIEWED = "reviewed"
 
 
 class ProjectImporter(base_orm.BaseORM):
-    DB_FIELDS = OrderedDict([
-        ("project_hash", Optional[str]),
-        ("errors", list),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("project_hash", Optional[str]),
+            ("errors", list),
+        ]
+    )
 
 
 class CvatExportType(Enum):
-    PROJECT = 'project'
-    TASK = 'task'
+    PROJECT = "project"
+    TASK = "task"
 
 
 class ProjectImporterCvatInfo(base_orm.BaseORM):
-    DB_FIELDS = OrderedDict([
-        ("export_type", CvatExportType),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("export_type", CvatExportType),
+        ]
+    )

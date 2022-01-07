@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseORM(dict):
-    """ Base ORM for all database objects. """
+    """Base ORM for all database objects."""
 
     DB_FIELDS: OrderedDict = OrderedDict()
     NON_UPDATABLE_FIELDS: set = set()
@@ -43,7 +43,7 @@ class BaseORM(dict):
                     types = self.DB_FIELDS[k]
                     # Convert all types to tuple
                     if not isinstance(types, tuple):
-                        types = types,
+                        types = (types,)
                     # None value is allowed for some cases
                     if v is None:
                         value[k] = v
@@ -137,7 +137,8 @@ class BaseORM(dict):
 
 
 class BaseListORM(list):
-    """ A wrapper for a list of objects of a specific ORM. """
+    """A wrapper for a list of objects of a specific ORM."""
+
     BASE_ORM_TYPE = BaseORM
 
     def __init__(self, iter_):

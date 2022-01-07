@@ -24,21 +24,26 @@ class Request(object):
     Request object. Takes query parameters and prepares them for execution.
     """
 
-    def __init__(self,
-                 query_method,
-                 db_object_type,
-                 uid,
-                 timeout,
-                 connect_timeout,
-                 payload,
-                 ):
+    def __init__(
+        self,
+        query_method,
+        db_object_type,
+        uid,
+        timeout,
+        connect_timeout,
+        payload,
+    ):
         self.http_method = QueryMethods.POST
-        self.data: str = json.dumps({'query_type': db_object_type.__name__.lower(),
-                                     'query_method': query_method,
-                                     'values': {
-                                         'uid': uid,
-                                         'payload': payload,
-                                     }})
+        self.data: str = json.dumps(
+            {
+                "query_type": db_object_type.__name__.lower(),
+                "query_method": query_method,
+                "values": {
+                    "uid": uid,
+                    "payload": payload,
+                },
+            }
+        )
         self.timeout = timeout
         self.connect_timeout = connect_timeout
 

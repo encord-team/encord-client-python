@@ -20,22 +20,26 @@ from typing import Dict, Optional
 
 import cryptography
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
-from cryptography.hazmat.primitives.serialization import load_ssh_private_key, Encoding, PublicFormat
+from cryptography.hazmat.primitives.serialization import (
+    load_ssh_private_key,
+    Encoding,
+    PublicFormat,
+)
 
 import cord.exceptions
 
-CORD_DOMAIN = 'https://api.cord.tech'
-CORD_PUBLIC_PATH = '/public'
-CORD_PUBLIC_USER_PATH = '/public/user'
+CORD_DOMAIN = "https://api.cord.tech"
+CORD_PUBLIC_PATH = "/public"
+CORD_PUBLIC_USER_PATH = "/public/user"
 CORD_ENDPOINT = CORD_DOMAIN + CORD_PUBLIC_PATH
 CORD_USER_ENDPOINT = CORD_DOMAIN + CORD_PUBLIC_USER_PATH
-WEBSOCKET_PATH = '/websocket'
-WEBSOCKET_DOMAIN = 'wss://message-api.cord.tech'
+WEBSOCKET_PATH = "/websocket"
+WEBSOCKET_DOMAIN = "wss://message-api.cord.tech"
 WEBSOCKET_ENDPOINT = WEBSOCKET_DOMAIN + WEBSOCKET_PATH
 
-_CORD_PROJECT_ID = 'CORD_PROJECT_ID'
-_CORD_DATASET_ID = 'CORD_DATASET_ID'
-_CORD_API_KEY = 'CORD_API_KEY'
+_CORD_PROJECT_ID = "CORD_PROJECT_ID"
+_CORD_DATASET_ID = "CORD_DATASET_ID"
+_CORD_API_KEY = "CORD_API_KEY"
 
 READ_TIMEOUT = 180  # In seconds
 WRITE_TIMEOUT = 180  # In seconds
@@ -65,13 +69,14 @@ class Config(BaseConfig):
     def define_headers(self, data) -> Dict:
         return self._headers
 
-    def __init__(self,
-                 resource_id: Optional[str] = None,
-                 api_key: Optional[str] = None,
-                 web_file_path: Optional[str] = None,
-                 domain: Optional[str] = None,
-                 websocket_endpoint: str = WEBSOCKET_ENDPOINT
-                 ):
+    def __init__(
+        self,
+        resource_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        web_file_path: Optional[str] = None,
+        domain: Optional[str] = None,
+        websocket_endpoint: str = WEBSOCKET_ENDPOINT,
+    ):
 
         if resource_id is None:
             resource_id = get_env_resource_id()
@@ -83,10 +88,10 @@ class Config(BaseConfig):
         self.api_key = api_key
         self.websocket_endpoint = websocket_endpoint
         self._headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'ResourceID': resource_id,
-            'Authorization': self.api_key
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "ResourceID": resource_id,
+            "Authorization": self.api_key,
         }
         if web_file_path is None:
             raise RuntimeError("`web_file_path` must be specified")
@@ -96,8 +101,9 @@ class Config(BaseConfig):
         self.domain = domain
         endpoint = domain + web_file_path
         super().__init__(endpoint)
-        logger.info("Initialising Cord client with endpoint: %s and resource_id: %s",
-                    endpoint, resource_id)
+        logger.info(
+            "Initialising Cord client with endpoint: %s and resource_id: %s", endpoint, resource_id
+        )
 
 
 def get_env_resource_id() -> str:
@@ -125,15 +131,18 @@ def get_env_resource_id() -> str:
 
 def get_env_api_key() -> str:
     if _CORD_API_KEY not in os.environ:
-        raise cord.exceptions.AuthenticationError(
-            message="API key not provided"
-        )
+        raise cord.exceptions.AuthenticationError(message="API key not provided")
 
     return os.environ[_CORD_API_KEY]
 
 
 class CordConfig(Config):
-    def __init__(self, resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = CORD_DOMAIN):
+    def __init__(
+        self,
+        resource_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        domain: str = CORD_DOMAIN,
+    ):
         web_file_path = CORD_PUBLIC_PATH
         super().__init__(resource_id, api_key, web_file_path=web_file_path, domain=domain)
 
@@ -142,7 +151,9 @@ class UserConfig(BaseConfig):
     def __init__(self, private_key: Ed25519PrivateKey, domain: str = CORD_DOMAIN):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
-        self._public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
+        self._public_key_hex: str = self.public_key.public_bytes(
+            Encoding.Raw, PublicFormat.Raw
+        ).hex()
 
         self.domain = domain
 
@@ -157,18 +168,20 @@ class UserConfig(BaseConfig):
         signature = self.private_key.sign(contents_hash)
 
         return {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': f'{self._public_key_hex}:{signature.hex()}'
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": f"{self._public_key_hex}:{signature.hex()}",
         }
 
     @staticmethod
     def from_ssh_private_key(ssh_private_key: str, password: Optional[str], **kwargs):
         key_bytes = ssh_private_key.encode()
         password_bytes = password and password.encode()
-        private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
+        private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(
+            key_bytes, password_bytes
+        )
 
         if isinstance(private_key, Ed25519PrivateKey):
             return UserConfig(private_key, **kwargs)
         else:
-            raise ValueError(f'Provided key [{ssh_private_key}] is not an Ed25519 private key')
+            raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")

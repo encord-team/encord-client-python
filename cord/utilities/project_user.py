@@ -6,10 +6,10 @@ from cord.orm.formatter import Formatter
 
 
 class ProjectUserRole(IntEnum):
-    ADMIN = 0,
-    ANNOTATOR = 1,
-    REVIEWER = 2,
-    ANNOTATOR_REVIEWER = 3,
+    ADMIN = (0,)
+    ANNOTATOR = (1,)
+    REVIEWER = (2,)
+    ANNOTATOR_REVIEWER = (3,)
     TEAM_MANAGER = 4
 
 
@@ -21,4 +21,8 @@ class ProjectUser(Formatter):
 
     @classmethod
     def from_dict(cls, json_dict: Dict):
-        return ProjectUser(json_dict['user_email'], ProjectUserRole(json_dict["user_role"]), json_dict['project_hash'])
+        return ProjectUser(
+            json_dict["user_email"],
+            ProjectUserRole(json_dict["user_role"]),
+            json_dict["project_hash"],
+        )
