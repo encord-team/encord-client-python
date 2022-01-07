@@ -36,10 +36,7 @@ class Model(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("model_operation", int),
-        ("model_parameters", dict)
-    ])
+    DB_FIELDS = OrderedDict([("model_operation", int), ("model_parameters", dict)])
 
 
 class ModelRow(base_orm.BaseORM):
@@ -57,13 +54,15 @@ class ModelRow(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("model_hash", str),
-        ("title", str),
-        ("description", str),
-        ("features", list),
-        ("model", str),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("model_hash", str),
+            ("title", str),
+            ("description", str),
+            ("features", list),
+            ("model", str),
+        ]
+    )
 
 
 class ModelInferenceParams(base_orm.BaseORM):
@@ -80,14 +79,16 @@ class ModelInferenceParams(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("files", list),
-        ("conf_thresh", float),  # Confidence threshold
-        ("iou_thresh", float),  # Intersection over union threshold
-        ("device", str),
-        ("detection_frame_range", list),
-        ("allocation_enabled", bool)
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("files", list),
+            ("conf_thresh", float),  # Confidence threshold
+            ("iou_thresh", float),  # Intersection over union threshold
+            ("device", str),
+            ("detection_frame_range", list),
+            ("allocation_enabled", bool),
+        ]
+    )
 
 
 class ModelTrainingWeights(base_orm.BaseORM):
@@ -101,11 +102,13 @@ class ModelTrainingWeights(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("model", str),
-        ("training_config_link", str),
-        ("training_weights_link", str),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("model", str),
+            ("training_config_link", str),
+            ("training_weights_link", str),
+        ]
+    )
 
 
 class ModelTrainingParams(base_orm.BaseORM):
@@ -123,11 +126,13 @@ class ModelTrainingParams(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("model_hash", str),
-        ("label_rows", list),
-        ("epochs", int),
-        ("batch_size", int),
-        ("weights", ModelTrainingWeights),
-        ("device", str),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("model_hash", str),
+            ("label_rows", list),
+            ("epochs", int),
+            ("batch_size", int),
+            ("weights", ModelTrainingWeights),
+            ("device", str),
+        ]
+    )

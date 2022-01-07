@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-FAST_AI = 'fast_ai'
+FAST_AI = "fast_ai"
 RESNET18 = "resnet18"
 RESNET34 = "resnet34"
 RESNET50 = "resnet50"
@@ -21,6 +21,6 @@ RESNET101 = "resnet101"
 RESNET152 = "resnet152"
 VGG16 = "vgg16"
 VGG19 = "vgg19"
-YOLOV5 = 'yolov5'
-FASTER_RCNN = 'faster_rcnn'
-MASK_RCNN = 'mask_rcnn'
+YOLOV5 = "yolov5"
+FASTER_RCNN = "faster_rcnn"
+MASK_RCNN = "mask_rcnn"

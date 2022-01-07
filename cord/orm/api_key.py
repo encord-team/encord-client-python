@@ -29,10 +29,12 @@ class ApiKeyMeta(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("title", str),
-        ("resource_type", str),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("title", str),
+            ("resource_type", str),
+        ]
+    )
 
     NON_UPDATABLE_FIELDS = {
         "resource_type",

@@ -14,7 +14,7 @@ class ProjectAPIKey(Formatter):
 
     @classmethod
     def from_dict(cls, json_dict: Dict):
-        if isinstance(json_dict['scopes'], str):
-            json_dict['scopes'] = json.loads(json_dict['scopes'])
-        scopes = [APIKeyScopes(scope) for scope in json_dict['scopes']]
-        return ProjectAPIKey(json_dict['api_key'], json_dict['title'], scopes)
+        if isinstance(json_dict["scopes"], str):
+            json_dict["scopes"] = json.loads(json_dict["scopes"])
+        scopes = [APIKeyScopes(scope) for scope in json_dict["scopes"]]
+        return ProjectAPIKey(json_dict["api_key"], json_dict["title"], scopes)

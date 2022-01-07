@@ -7,4 +7,3 @@ class ClassificationOption:
     label: str
     value: str
     feature_node_hash: str
-

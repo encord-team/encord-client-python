@@ -28,9 +28,9 @@ IMG_GROUP = "img_group"
 
 # Labeling algorithm names
 INTERPOLATION = "interpolation"
-FITTED_BOUNDING_BOX = 'fitted_bounding_box'
+FITTED_BOUNDING_BOX = "fitted_bounding_box"
 
 
 # Type of Cord API key
-TYPE_PROJECT = 'project'
-TYPE_DATASET = 'dataset'
+TYPE_PROJECT = "project"
+TYPE_DATASET = "dataset"

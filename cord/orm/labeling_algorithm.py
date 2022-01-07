@@ -29,10 +29,12 @@ class LabelingAlgorithm(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("algorithm_name", str),
-        ("algorithm_parameters", dict),  # Algorithm params
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("algorithm_name", str),
+            ("algorithm_parameters", dict),  # Algorithm params
+        ]
+    )
 
 
 class ObjectInterpolationParams(base_orm.BaseORM):
@@ -46,24 +48,28 @@ class ObjectInterpolationParams(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("key_frames", dict),
-        ("objects_to_interpolate", list),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("key_frames", dict),
+            ("objects_to_interpolate", list),
+        ]
+    )
 
 
 class BoundingBoxFittingParams(base_orm.BaseORM):
     """
-        Labeling algorithm parameters for bounding box fitting algorithm
+    Labeling algorithm parameters for bounding box fitting algorithm
 
-        ORM:
+    ORM:
 
-        labels,
-        video
+    labels,
+    video
 
-        """
+    """
 
-    DB_FIELDS = OrderedDict([
-        ("labels", dict),
-        ("video", dict),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("labels", dict),
+            ("video", dict),
+        ]
+    )
