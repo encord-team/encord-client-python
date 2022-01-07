@@ -43,7 +43,7 @@ from pathlib import Path
 from typing import List, Tuple, Union, Optional
 
 import cord.exceptions
-from cord.configs import CordConfig, Config
+from cord.configs import CordConfig, Config, CORD_DOMAIN
 from cord.constants.model import *
 from cord.constants.string_constants import *
 from cord.http.querier import Querier
@@ -86,7 +86,7 @@ class CordClient(object):
 
     @staticmethod
     def initialise(
-        resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: Optional[str] = None
+        resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = CORD_DOMAIN
     ) -> Union[CordClientProject, CordClientDataset]:
         """
         Create and initialize a Cord client from a resource EntityId and API key.
