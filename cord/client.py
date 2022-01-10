@@ -62,7 +62,7 @@ from cord.orm.dataset import (
     ImageGroupOCR,
 )
 from cord.orm.label_log import LabelLog
-from cord.orm.label_row import LabelRow
+from cord.orm.label_row import LabelRow, Review
 from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
 from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
 from cord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers, ProjectCopyOptions
@@ -491,6 +491,24 @@ class CordClientProject(CordClient):
             ResourceExistsError: If a label row already exists for this project data. Avoids overriding existing work.
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload=None)
+
+    def submit_label_row_for_review(self, uid):
+        """
+        Submit a label row for review.
+
+        Args:
+            uid: A label_hash (uid) string.
+
+        Returns:
+            Bool.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            UnknownError: If an error occurs while submitting for review.
+            OperationNotAllowed: If the write operation is not allowed by the API key.
+        """
+        return self._querier.basic_put(Review, uid=uid, payload=None)
 
     def add_datasets(self, dataset_hashes: List[str]):
         """
