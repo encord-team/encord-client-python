@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="cord-client-python",
-    version="0.1.22",
+    version="0.1.23",
     author="Cord Technologies Limited",
     author_email="hello@cord.tech",
     description="Cord Python API Client",
