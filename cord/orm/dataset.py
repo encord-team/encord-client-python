@@ -18,7 +18,7 @@ import dataclasses
 from datetime import datetime
 from dateutil import parser
 import json
-from collections import OrderedDict
+from collections import OrderedDict, UserDict
 from enum import IntEnum, Enum
 from typing import List, Dict, Optional
 
@@ -26,20 +26,70 @@ from cord.constants.enums import DataType
 from cord.orm import base_orm
 from cord.orm.formatter import Formatter
 
+DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-@dataclasses.dataclass(frozen=True)
-class DataRow(Formatter):
-    uid: str
-    title: str
-    type: DataType
-    created_at: datetime
+
+class DataRow(UserDict, Formatter):
+    def __init__(self, uid: str, title: str, data_type: DataType, created_at: datetime):
+        # DENIS: what to do if someone uses `data` directly?
+        """
+        The UserDict is user for backwards compatibility. Clients who are using this class for the first time are
+        encouraged to use the property accessors and setters instead of the underlying dictionary.
+        The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
+        """
+        super().__init__(
+            {
+                "data_hash": uid,
+                "data_title": title,
+                "data_type": data_type.to_upper_case_string(),
+                "created_at": created_at.strftime(DATETIME_STRING_FORMAT),
+            }
+        )
+
+    @property
+    def uid(self) -> str:
+        return self.data["data_hash"]
+
+    @uid.setter
+    def uid(self, value: str) -> None:
+        self.data["data_hash"] = value
+
+    @property
+    def title(self) -> str:
+        return self.data["data_title"]
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self.data["data_title"] = value
+
+    @property
+    def data_type(self) -> DataType:
+        return DataType.from_upper_case_string(self.data["data_type"])
+
+    @data_type.setter
+    def data_type(self, value: DataType) -> None:
+        self.data["data_type"] = value.to_upper_case_string()
+
+    @property
+    def created_at(self) -> datetime:
+        return parser.parse(self.data["created_at"])
+
+    @created_at.setter
+    def created_at(self, value: datetime) -> None:
+        """Datetime will trim milliseconds for backwards compatibility."""
+        self.data["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
+        data_type = DataType.from_upper_case_string(json_dict["data_type"])
+        if data_type is None:
+            raise TypeError(f"The DataRow constructor received an invalid data_type `{json_dict['data_type']}`")
+
         return DataRow(
             uid=json_dict["data_hash"],
             title=json_dict["data_title"],
-            type=DataType.from_string(json_dict["data_type"]),
+            # The API server currently returns upper cased DataType strings.
+            data_type=data_type,
             created_at=parser.parse(json_dict["created_at"]),
         )
 
@@ -51,12 +101,54 @@ class DataRow(Formatter):
         return ret
 
 
-@dataclasses.dataclass(frozen=True)
-class Dataset(Formatter):
-    title: str
-    description: Optional[str]
-    storage_location: StorageLocation
-    data_rows: List[DataRow]
+class Dataset(UserDict, Formatter):
+    def __init__(
+        self,
+        title: str,
+        storage_location: StorageLocation,
+        data_rows: List[DataRow],
+        description: Optional[str] = None,
+    ):
+        super().__init__(
+            {
+                "title": title,
+                "description": description,
+                "dataset_type": storage_location.name,
+                "data_rows": data_rows,
+            }
+        )
+
+    @property
+    def title(self) -> str:
+        return self.data["title"]
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self.data["title"] = value
+
+    @property
+    def description(self) -> str:
+        return self.data["description"]
+
+    @description.setter
+    def description(self, value: str) -> None:
+        self.data["description"] = value
+
+    @property
+    def storage_location(self) -> StorageLocation:
+        return StorageLocation.from_str(self.data["dataset_type"])
+
+    @storage_location.setter
+    def storage_location(self, value: StorageLocation) -> None:
+        self.data["dataset_type"] = value.name
+
+    @property
+    def data_rows(self) -> List[DataRow]:
+        return self.data["data_rows"]
+
+    @data_rows.setter
+    def data_rows(self, value: List[DataRow]) -> None:
+        self.data["data_rows"] = value
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> Dataset:

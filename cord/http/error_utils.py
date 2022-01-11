@@ -18,6 +18,7 @@ from cord.exceptions import *
 # Error messages
 AUTHENTICATION_ERROR = ["AUTHENTICATION_ERROR"]
 AUTHORISATION_ERROR = ["AUTHORISATION_ERROR"]
+RESOURCE_NOT_FOUND_ERROR = ["RESOURCE_NOT_FOUND_ERROR"]
 METHOD_NOT_ALLOWED_ERROR = ["METHOD_NOT_ALLOWED_ERROR"]
 UNKNOWN_ERROR = ["UNKNOWN_ERROR"]
 OPERATION_NOT_ALLOWED_ERROR = ["OPERATION_NOT_ALLOWED"]
@@ -43,6 +44,11 @@ def check_error_response(response, payload=None):
 
     if response == AUTHORISATION_ERROR:
         raise AuthorisationError("You are not authorised to access this asset.")
+
+    if response == RESOURCE_NOT_FOUND_ERROR:
+        if payload:
+            raise ResourceNotFoundError(payload)
+        raise ResourceNotFoundError("The requested resource was not found in the database.")
 
     if response == METHOD_NOT_ALLOWED_ERROR:
         raise MethodNotAllowedError("HTTP method is not allowed.")

@@ -40,13 +40,15 @@ class CordUserClient:
         self.user_config = user_config
         self.querier = querier
 
-    # TODO: deprecate this function?
     def create_private_dataset(
         self,
         dataset_title: str,
         storage_location: StorageLocation,
         dataset_description: Optional[str] = None,
     ) -> CreateDatasetResponse:
+        """
+        DEPRECATED - please use `create_dataset` instead.
+        """
         return self.create_dataset(dataset_title, storage_location, dataset_description)
 
     def create_dataset(
@@ -107,11 +109,17 @@ class CordUserClient:
 
         return self.querier.basic_setter(Project, uid=None, payload=project)
 
-    def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
+    # DENIS: this returns the API key.
+    def create_project_api_key(self, project_uid: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
+        """
+        Returns:
+            The created project API key.
+        """
         payload = {"title": api_key_title, "scopes": list(map(lambda scope: scope.value, scopes))}
 
-        return self.querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
+        return self.querier.basic_setter(ProjectAPIKey, uid=project_uid, payload=payload)
 
+    # DENIS: this could handle better if there are no project api keys in first place
     def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
         return self.querier.get_multiple(ProjectAPIKey, uid=project_hash)
 

@@ -133,9 +133,10 @@ class Querier:
         ).prepare()
 
         timeouts = (request.connect_timeout, request.timeout)
-
+        print(f"req = {req.url}")
         try:
             res = session.send(req, timeout=timeouts)
+            print(f"res = {res.json()}")
         except Timeout as e:
             raise TimeOutError(str(e))
         except RequestException as e:
