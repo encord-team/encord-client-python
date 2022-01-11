@@ -1,4 +1,0 @@
--r requirements.txt
-pytest>=6.1.2
-pre-commit>=2.16.0
-black>=21.12b0
