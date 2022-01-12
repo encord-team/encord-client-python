@@ -2,7 +2,7 @@
 name = "cord-client-python"
 version = "0.1.24"
 description = "Cord Python SDK Client"
-authors = ["denis-cord <denis@cord.tech>"]
+authors = ["Cord Technologies Limited <hello@cord.tech>"]
 license = "Apache Software License"
 keywords = ["cord"]
 packages = [
