@@ -160,7 +160,6 @@ class CordClient(object):
 
 
 class CordClientDataset(CordClient):
-    # DENIS: should this be something like the `Response` again which only has the Dataset?
     def get_dataset(self) -> Dataset:
         """
         Retrieve dataset info (pointers to data, labels).
@@ -328,7 +327,6 @@ class CordClientDataset(CordClient):
             ReEncodeVideoTask: Object containing the status of the task, along with info about the new encoded videos
              in case the task has been completed
         """
-        # DENIS: up next
         return self._querier.basic_getter(ReEncodeVideoTask, uid=job_id)
 
     def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
@@ -676,7 +674,6 @@ class CordClientProject(CordClient):
             ResourceNotFoundError: If no model exists by the specified model_hash (uid).
             UnknownError: If an error occurs during training.
         """
-        # DENIS: check this return type
         return self._querier.basic_delete(Model, uid=uid)
 
     def model_inference(

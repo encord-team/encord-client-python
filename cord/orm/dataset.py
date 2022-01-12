@@ -31,10 +31,10 @@ DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class DataRow(UserDict, Formatter):
     def __init__(self, uid: str, title: str, data_type: DataType, created_at: datetime):
-        # DENIS: what to do if someone uses `data` directly?
         """
-        The UserDict is user for backwards compatibility. Clients who are using this class for the first time are
-        encouraged to use the property accessors and setters instead of the underlying dictionary.
+        This class has dict-style accessors for backwards compatibility.
+        Clients who are using this class for the first time are encouraged to use the property accessors and setters
+        instead of the underlying dictionary.
         The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
         """
         super().__init__(
@@ -109,6 +109,12 @@ class Dataset(UserDict, Formatter):
         data_rows: List[DataRow],
         description: Optional[str] = None,
     ):
+        """
+        This class has dict-style accessors for backwards compatibility.
+        Clients who are using this class for the first time are encouraged to use the property accessors and setters
+        instead of the underlying dictionary.
+        The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
+        """
         super().__init__(
             {
                 "title": title,

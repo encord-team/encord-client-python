@@ -109,7 +109,6 @@ class CordUserClient:
 
         return self.querier.basic_setter(Project, uid=None, payload=project)
 
-    # DENIS: this returns the API key.
     def create_project_api_key(self, project_uid: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
         """
         Returns:
@@ -119,7 +118,6 @@ class CordUserClient:
 
         return self.querier.basic_setter(ProjectAPIKey, uid=project_uid, payload=payload)
 
-    # DENIS: this could handle better if there are no project api keys in first place
     def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
         return self.querier.get_multiple(ProjectAPIKey, uid=project_hash)
 
