@@ -33,21 +33,16 @@ logger = logging.getLogger(__name__)
 
 
 class Querier:
-    """ Querier for DB get/post requests. """
-    T = TypeVar('T')
+    """Querier for DB get/post requests."""
+
+    T = TypeVar("T")
 
     def __init__(self, config: BaseConfig):
         self._config = config
 
     def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
-        """ Single DB object getter. """
-        request = self.request(
-            QueryMethods.GET,
-            db_object_type,
-            uid,
-            self._config.read_timeout,
-            payload=payload
-        )
+        """Single DB object getter."""
+        request = self.request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
         res = self.execute(request)
         if res:
             if issubclass(db_object_type, Formatter):
@@ -60,13 +55,7 @@ class Querier:
             raise ResourceNotFoundError("Resource not found.")
 
     def get_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
-        request = self.request(
-            QueryMethods.GET,
-            object_type,
-            uid,
-            self._config.read_timeout,
-            payload=payload
-        )
+        request = self.request(QueryMethods.GET, object_type, uid, self._config.read_timeout, payload=payload)
         result = self.execute(request)
 
         if result is not None:
@@ -78,7 +67,7 @@ class Querier:
             raise ResourceNotFoundError(f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]")
 
     def basic_delete(self, db_object_type: Type[T], uid=None):
-        """ Single DB object getter. """
+        """Single DB object getter."""
         request = self.request(
             QueryMethods.DELETE,
             db_object_type,
@@ -89,7 +78,7 @@ class Querier:
         return self.execute(request)
 
     def basic_setter(self, db_object_type: Type[T], uid, payload):
-        """ Single DB object setter. """
+        """Single DB object setter."""
         request = self.request(
             QueryMethods.POST,
             db_object_type,
@@ -106,7 +95,7 @@ class Querier:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
     def basic_put(self, db_object_type, uid, payload, enable_logging=True):
-        """ Single DB object put request. """
+        """Single DB object put request."""
         request = self.request(
             QueryMethods.PUT,
             db_object_type,
@@ -129,9 +118,9 @@ class Querier:
         return request
 
     def execute(self, request, enable_logging=True):
-        """ Execute a request. """
+        """Execute a request."""
         if enable_logging:
-            logger.info("Request: %s", (request.data[:100] + '..') if len(request.data) > 100 else request.data)
+            logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)
 
         session = Session()
         session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))

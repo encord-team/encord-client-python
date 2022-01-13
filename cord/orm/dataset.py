@@ -43,12 +43,7 @@ class Dataset(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("title", str),
-        ("description", str),
-        ("dataset_type", str),
-        ("data_rows", (list, str))
-    ])
+    DB_FIELDS = OrderedDict([("title", str), ("description", str), ("dataset_type", str), ("data_rows", (list, str))])
 
     NON_UPDATABLE_FIELDS = {
         "dataset_type",
@@ -65,23 +60,24 @@ class DatasetAPIKey(Formatter):
 
     @classmethod
     def from_dict(cls, json_dict: Dict):
-        if isinstance(json_dict['scopes'], str):
-            json_dict['scopes'] = json.loads(json_dict['scopes'])
-        scopes = [DatasetScope(scope) for scope in json_dict['scopes']]
-        return DatasetAPIKey(json_dict['resource_hash'], json_dict['api_key'], json_dict['title'],
-                             json_dict['key_hash'], scopes)
+        if isinstance(json_dict["scopes"], str):
+            json_dict["scopes"] = json.loads(json_dict["scopes"])
+        scopes = [DatasetScope(scope) for scope in json_dict["scopes"]]
+        return DatasetAPIKey(
+            json_dict["resource_hash"], json_dict["api_key"], json_dict["title"], json_dict["key_hash"], scopes
+        )
 
 
 class DatasetType(IntEnum):
-    CORD_STORAGE = 0,
-    AWS = 1,
-    GCP = 2,
+    CORD_STORAGE = (0,)
+    AWS = (1,)
+    GCP = (2,)
     AZURE = 3
 
 
 class DatasetScope(Enum):
-    READ = 'dataset.read'
-    WRITE = 'dataset.write'
+    READ = "dataset.read"
+    WRITE = "dataset.write"
 
 
 class DatasetData(base_orm.BaseORM):
@@ -89,45 +85,43 @@ class DatasetData(base_orm.BaseORM):
     Video base ORM.
     """
 
-    DB_FIELDS = OrderedDict([
-        ("data_hash", str),
-        ("video", dict),
-        ("images", list),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("data_hash", str),
+            ("video", dict),
+            ("images", list),
+        ]
+    )
 
 
 class SignedVideoURL(base_orm.BaseORM):
-    """ A signed URL object with supporting information. """
-    DB_FIELDS = OrderedDict([
-        ("signed_url", str),
-        ("data_hash", str),
-        ("title", str),
-        ("file_link", str)
-    ])
+    """A signed URL object with supporting information."""
+
+    DB_FIELDS = OrderedDict([("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)])
 
 
 class SignedImageURL(base_orm.BaseORM):
-    """ A signed URL object with supporting information. """
-    DB_FIELDS = OrderedDict([
-        ("signed_url", str),
-        ("data_hash", str),
-        ("title", str),
-        ("file_link", str)
-    ])
+    """A signed URL object with supporting information."""
+
+    DB_FIELDS = OrderedDict([("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)])
 
 
 class SignedImagesURL(base_orm.BaseListORM):
-    """ A signed URL object with supporting information. """
+    """A signed URL object with supporting information."""
+
     BASE_ORM_TYPE = SignedImageURL
 
 
 class Video(base_orm.BaseORM):
-    """ A video object with supporting information. """
-    DB_FIELDS = OrderedDict([
-        ("data_hash", str),
-        ("title", str),
-        ("file_link", str),
-    ])
+    """A video object with supporting information."""
+
+    DB_FIELDS = OrderedDict(
+        [
+            ("data_hash", str),
+            ("title", str),
+            ("file_link", str),
+        ]
+    )
 
     NON_UPDATABLE_FIELDS = {
         "data_hash",
@@ -135,12 +129,15 @@ class Video(base_orm.BaseORM):
 
 
 class ImageGroup(base_orm.BaseORM):
-    """ An image group object with supporting information. """
-    DB_FIELDS = OrderedDict([
-        ("data_hash", str),
-        ("title", str),
-        ("file_link", str),
-    ])
+    """An image group object with supporting information."""
+
+    DB_FIELDS = OrderedDict(
+        [
+            ("data_hash", str),
+            ("title", str),
+            ("file_link", str),
+        ]
+    )
 
     NON_UPDATABLE_FIELDS = {
         "data_hash",
@@ -148,12 +145,15 @@ class ImageGroup(base_orm.BaseORM):
 
 
 class Image(base_orm.BaseORM):
-    """ An image object with supporting information. """
-    DB_FIELDS = OrderedDict([
-        ("data_hash", str),
-        ("title", str),
-        ("file_link", str),
-    ])
+    """An image object with supporting information."""
+
+    DB_FIELDS = OrderedDict(
+        [
+            ("data_hash", str),
+            ("title", str),
+            ("file_link", str),
+        ]
+    )
 
     NON_UPDATABLE_FIELDS = {
         "data_hash",
@@ -174,7 +174,8 @@ class ReEncodeVideoTaskResult:
 
 @dataclasses.dataclass(frozen=True)
 class ReEncodeVideoTask(Formatter):
-    """ A re encode video object with supporting information. """
+    """A re encode video object with supporting information."""
+
     status: str
     result: List[ReEncodeVideoTaskResult] = None
 
@@ -182,10 +183,10 @@ class ReEncodeVideoTask(Formatter):
     def from_dict(cls, json_dict: Dict):
         if "result" in json_dict:
             dict_results = json_dict["result"]
-            results = [ReEncodeVideoTaskResult(result["data_hash"],
-                                               result["signed_url"],
-                                               result["bucket_path"])
-                       for result in dict_results]
+            results = [
+                ReEncodeVideoTaskResult(result["data_hash"], result["signed_url"], result["bucket_path"])
+                for result in dict_results
+            ]
             return ReEncodeVideoTask(json_dict["status"], results)
         else:
             return ReEncodeVideoTask(json_dict["status"])

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import asyncio
 import base64
-from dataclasses import dataclass
 import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
@@ -17,8 +15,14 @@ from cord.orm.dataset import Dataset, DatasetType
 from cord.orm.dataset import DatasetScope, DatasetAPIKey
 from cord.orm.project import Project, ProjectImporter, ReviewMode, ProjectImporterCvatInfo, CvatExportType
 from cord.orm.project_api_key import ProjectAPIKey
-from cord.utilities.client_utilities import APIKeyScopes, CvatImporterSuccess, Issues, CvatImporterError, LocalImport, \
-    ImportMethod
+from cord.utilities.client_utilities import (
+    APIKeyScopes,
+    CvatImporterSuccess,
+    Issues,
+    CvatImporterError,
+    LocalImport,
+    ImportMethod,
+)
 
 log = logging.getLogger(__name__)
 
@@ -33,28 +37,29 @@ class CordUserClient:
 
     def create_dataset(self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None):
         dataset = {
-            'title': dataset_title,
-            'type': dataset_type,
+            "title": dataset_title,
+            "type": dataset_type,
         }
 
         if dataset_description:
-            dataset['description'] = dataset_description
+            dataset["description"] = dataset_description
 
         return self.querier.basic_setter(Dataset, uid=None, payload=dataset)
 
     def create_dataset_api_key(
-            self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]) -> DatasetAPIKey:
+        self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]
+    ) -> DatasetAPIKey:
         api_key_payload = {
-            'dataset_hash': dataset_hash,
-            'title': api_key_title,
-            'scopes': list(map(lambda scope: scope.value, dataset_scopes))
+            "dataset_hash": dataset_hash,
+            "title": api_key_title,
+            "scopes": list(map(lambda scope: scope.value, dataset_scopes)),
         }
         response = self.querier.basic_setter(DatasetAPIKey, uid=None, payload=api_key_payload)
         return DatasetAPIKey.from_dict(response)
 
     def get_dataset_api_keys(self, dataset_hash: str) -> List[DatasetAPIKey]:
         api_key_payload = {
-            'dataset_hash': dataset_hash,
+            "dataset_hash": dataset_hash,
         }
         api_keys: List[DatasetAPIKey] = self.querier.get_multiple(DatasetAPIKey, uid=None, payload=api_key_payload)
         return api_keys
@@ -67,31 +72,25 @@ class CordUserClient:
         return CordUserClient(user_config, querier)
 
     def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
-        project = {
-            'title': project_title,
-            'description': project_description,
-            'dataset_hashes': dataset_hashes
-        }
+        project = {"title": project_title, "description": project_description, "dataset_hashes": dataset_hashes}
 
         return self.querier.basic_setter(Project, uid=None, payload=project)
 
     def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
-        payload = {
-            'title': api_key_title,
-            'scopes': list(map(lambda scope: scope.value, scopes))
-        }
+        payload = {"title": api_key_title, "scopes": list(map(lambda scope: scope.value, scopes))}
 
         return self.querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
 
     def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
         return self.querier.get_multiple(ProjectAPIKey, uid=project_hash)
 
-    def create_project_from_cvat(self,
-                                 import_method: ImportMethod,
-                                 dataset_name: str,
-                                 review_mode: ReviewMode = ReviewMode.LABELLED,
-                                 max_workers: Optional[int] = None) \
-            -> Union[CvatImporterSuccess, CvatImporterError]:
+    def create_project_from_cvat(
+        self,
+        import_method: ImportMethod,
+        dataset_name: str,
+        review_mode: ReviewMode = ReviewMode.LABELLED,
+        max_workers: Optional[int] = None,
+    ) -> Union[CvatImporterSuccess, CvatImporterError]:
         """
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
             your images and annotations into cord. Ensure that during you have the "Save images"
@@ -122,7 +121,7 @@ class CordUserClient:
         cvat_directory_path = import_method.file_path
 
         directory_path = Path(cvat_directory_path)
-        images_directory_path = directory_path.joinpath('images')
+        images_directory_path = directory_path.joinpath("images")
         if images_directory_path not in list(directory_path.iterdir()):
             raise ValueError("The expected directory 'images' was not found.")
 
@@ -130,8 +129,8 @@ class CordUserClient:
         if not annotations_file_path.is_file():
             raise ValueError(f"The file `{annotations_file_path}` does not exist.")
 
-        with annotations_file_path.open('rb') as f:
-            annotations_base64 = base64.b64encode(f.read()).decode('utf-8')
+        with annotations_file_path.open("rb") as f:
+            annotations_base64 = base64.b64encode(f.read()).decode("utf-8")
 
         images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
 
@@ -145,7 +144,7 @@ class CordUserClient:
             },
             "dataset_hash": dataset_hash,
             "image_title_to_image_hash_map": image_title_to_image_hash_map,
-            "review_mode": review_mode.value
+            "review_mode": review_mode.value,
         }
 
         log.info("Starting project import. This may take a few minutes.")
@@ -156,21 +155,16 @@ class CordUserClient:
             return CvatImporterSuccess(
                 project_hash=success["project_hash"],
                 dataset_hash=dataset_hash,
-                issues=Issues.from_dict(success["issues"])
+                issues=Issues.from_dict(success["issues"]),
             )
         elif "error" in server_ret:
             error = server_ret["error"]
-            return CvatImporterError(
-                dataset_hash=dataset_hash,
-                issues=Issues.from_dict(error["issues"])
-            )
+            return CvatImporterError(dataset_hash=dataset_hash, issues=Issues.from_dict(error["issues"]))
         else:
             raise ValueError("The api server responded with an invalid payload.")
 
     def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> List[Path]:
-        payload = {
-            "annotations_base64": annotations_base64
-        }
+        payload = {"annotations_base64": annotations_base64}
         project_info = self.querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
         if "error" in project_info:
             message = project_info["error"]["message"]
@@ -178,7 +172,7 @@ class CordUserClient:
 
         export_type = project_info["success"]["export_type"]
         if export_type == CvatExportType.PROJECT.value:
-            default_path = images_directory_path.joinpath('default')
+            default_path = images_directory_path.joinpath("default")
             if default_path not in list(images_directory_path.iterdir()):
                 raise ValueError("The expected directory 'default' was not found.")
 
@@ -187,16 +181,16 @@ class CordUserClient:
             images = list(images_directory_path.iterdir())
         else:
             raise ValueError(
-                f"Received an unexpected response `{project_info}` from the server. Project import aborted.")
+                f"Received an unexpected response `{project_info}` from the server. Project import aborted."
+            )
 
         if not images:
             raise ValueError(f"No images found in the provided data folder.")
         return images
 
-    def __upload_cvat_images(self,
-                             images_paths: List[Path],
-                             dataset_name: str,
-                             max_workers: int) -> Tuple[str, Dict[str, str]]:
+    def __upload_cvat_images(
+        self, images_paths: List[Path], dataset_name: str, max_workers: int
+    ) -> Tuple[str, Dict[str, str]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -211,9 +205,8 @@ class CordUserClient:
         dataset_hash = dataset["dataset_hash"]
 
         dataset_api_key: DatasetAPIKey = self.create_dataset_api_key(
-            dataset_hash,
-            dataset_name + " - Full Access API Key",
-            [DatasetScope.READ, DatasetScope.WRITE])
+            dataset_hash, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
+        )
 
         client = CordClient.initialise(
             dataset_hash,
@@ -221,13 +214,8 @@ class CordUserClient:
             domain=self.user_config.domain,
         )
 
-        signed_urls = client._querier.basic_getter(
-            SignedImagesURL,
-            uid=short_names
-        )
-        upload_to_signed_url_list(
-            file_path_strings, signed_urls, client._querier, Image, max_workers
-        )
+        signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
+        upload_to_signed_url_list(file_path_strings, signed_urls, client._querier, Image, max_workers)
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
 
@@ -235,5 +223,3 @@ class CordUserClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
-
-

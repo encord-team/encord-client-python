@@ -118,18 +118,20 @@ class LabelRow(base_orm.BaseORM):
 
     """
 
-    DB_FIELDS = OrderedDict([
-        ("label_hash", str),
-        ("dataset_hash", str),
-        ("dataset_title", str),
-        ("data_title", str),
-        ("data_type", str),
-        ("data_units", dict),
-        ("object_answers", dict),
-        ("classification_answers", dict),
-        ("object_actions", dict),
-        ("label_status", str),
-    ])
+    DB_FIELDS = OrderedDict(
+        [
+            ("label_hash", str),
+            ("dataset_hash", str),
+            ("dataset_title", str),
+            ("data_title", str),
+            ("data_type", str),
+            ("data_units", dict),
+            ("object_answers", dict),
+            ("classification_answers", dict),
+            ("object_actions", dict),
+            ("label_status", str),
+        ]
+    )
 
     NON_UPDATABLE_FIELDS = {
         "label_hash",

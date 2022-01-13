@@ -16,21 +16,21 @@
 from cord.exceptions import *
 
 # Error messages
-AUTHENTICATION_ERROR = ['AUTHENTICATION_ERROR']
-AUTHORISATION_ERROR = ['AUTHORISATION_ERROR']
-METHOD_NOT_ALLOWED_ERROR = ['METHOD_NOT_ALLOWED_ERROR']
-UNKNOWN_ERROR = ['UNKNOWN_ERROR']
-OPERATION_NOT_ALLOWED_ERROR = ['OPERATION_NOT_ALLOWED']
-ANSWER_DICTIONARY_ERROR = ['ANSWER_DICTIONARY_ERROR']
-CORRUPTED_LABEL_ERROR = ['CORRUPTED_LABEL_ERROR']
-FILE_TYPE_NOT_SUPPORTED_ERROR = ['FILE_TYPE_NOT_SUPPORTED_ERROR']
-FEATURE_DOES_NOT_EXIST_ERROR = ['FEATURE_DOES_NOT_EXIST_ERROR']
-MODEL_WEIGHTS_INCONSISTENT_ERROR = ['MODEL_WEIGHTS_INCONSISTENT_ERROR']
-MODEL_FEATURES_INCONSISTENT_ERROR = ['MODEL_FEATURES_INCONSISTENT_ERROR']
-UPLOAD_OPERATION_NOT_SUPPORTED_ERROR = ['UPLOAD_OPERATION_NOT_SUPPORTED_ERROR']
-MUST_SET_DETECTION_RANGE_ERROR = ['MUST_SET_DETECTION_RANGE_ERROR']
-DETECTION_RANGE_INVALID_ERROR = ['DETECTION_RANGE_INVALID_ERROR']
-RESOURCE_EXISTS_ERROR = ['RESOURCE_EXISTS_ERROR']
+AUTHENTICATION_ERROR = ["AUTHENTICATION_ERROR"]
+AUTHORISATION_ERROR = ["AUTHORISATION_ERROR"]
+METHOD_NOT_ALLOWED_ERROR = ["METHOD_NOT_ALLOWED_ERROR"]
+UNKNOWN_ERROR = ["UNKNOWN_ERROR"]
+OPERATION_NOT_ALLOWED_ERROR = ["OPERATION_NOT_ALLOWED"]
+ANSWER_DICTIONARY_ERROR = ["ANSWER_DICTIONARY_ERROR"]
+CORRUPTED_LABEL_ERROR = ["CORRUPTED_LABEL_ERROR"]
+FILE_TYPE_NOT_SUPPORTED_ERROR = ["FILE_TYPE_NOT_SUPPORTED_ERROR"]
+FEATURE_DOES_NOT_EXIST_ERROR = ["FEATURE_DOES_NOT_EXIST_ERROR"]
+MODEL_WEIGHTS_INCONSISTENT_ERROR = ["MODEL_WEIGHTS_INCONSISTENT_ERROR"]
+MODEL_FEATURES_INCONSISTENT_ERROR = ["MODEL_FEATURES_INCONSISTENT_ERROR"]
+UPLOAD_OPERATION_NOT_SUPPORTED_ERROR = ["UPLOAD_OPERATION_NOT_SUPPORTED_ERROR"]
+MUST_SET_DETECTION_RANGE_ERROR = ["MUST_SET_DETECTION_RANGE_ERROR"]
+DETECTION_RANGE_INVALID_ERROR = ["DETECTION_RANGE_INVALID_ERROR"]
+RESOURCE_EXISTS_ERROR = ["RESOURCE_EXISTS_ERROR"]
 
 
 def check_error_response(response, payload=None):
@@ -57,8 +57,10 @@ def check_error_response(response, payload=None):
         raise AnswerDictionaryError("An object or classification is missing in the answer dictionaries.")
 
     if response == CORRUPTED_LABEL_ERROR:
-        raise CorruptedLabelError("The label blurb is corrupted. This could be due to the number of "
-                                  "frame labels exceeding the number of frames in the labelled video.")
+        raise CorruptedLabelError(
+            "The label blurb is corrupted. This could be due to the number of "
+            "frame labels exceeding the number of frames in the labelled video."
+        )
 
     if response == FILE_TYPE_NOT_SUPPORTED_ERROR:
         raise FileTypeNotSupportedError("Supported file types are: image/jpeg, image/png, video/webm, video/mp4.")
@@ -73,17 +75,18 @@ def check_error_response(response, payload=None):
         raise ModelFeaturesInconsistentError("The passed features are incompatible with the selected model.")
 
     if response == UPLOAD_OPERATION_NOT_SUPPORTED_ERROR:
-        raise UploadOperationNotSupportedError("Uploading a file to an external (e.g. S3/GCP/Azure) dataset is not "
-                                               "permitted.")
+        raise UploadOperationNotSupportedError(
+            "Uploading a file to an external (e.g. S3/GCP/Azure) dataset is not " "permitted."
+        )
 
     if response == DETECTION_RANGE_INVALID_ERROR:
-        raise DetectionRangeInvalidError("The detection range is invalid (e.g. less than 0, or"
-                                         " higher than num frames in the video)")
+        raise DetectionRangeInvalidError(
+            "The detection range is invalid (e.g. less than 0, or" " higher than num frames in the video)"
+        )
 
     if response == RESOURCE_EXISTS_ERROR:
         raise ResourceExistsError(
-            "Trying to create a resource that already exists. "
-            "Payload for this failure is: " + str(payload)
+            "Trying to create a resource that already exists. " "Payload for this failure is: " + str(payload)
         )
 
     pass

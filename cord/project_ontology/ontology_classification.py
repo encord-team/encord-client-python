@@ -9,4 +9,3 @@ class OntologyClassification:
     id: str
     feature_node_hash: str
     attributes: List[ClassificationAttribute]
-

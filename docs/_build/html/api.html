@@ -1,0 +1,1164 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>API Documentation &#8212; Cord Python SDK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/flasky.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="CVAT Integration" href="cvat-importer.html" />
+     
+    
+    <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+    
+    
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cvat-importer.html" title="CVAT Integration"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Cord Python SDK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">API Documentation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-cord.user_client"></span><span class="target" id="module-cord.client"></span><p><code class="docutils literal notranslate"><span class="pre">cord.client</span></code> provides a simple Python client that allows you
+to query project resources through the Cord API.</p>
+<p>Here is a simple example for instantiating the client for a project
+and obtaining project info:</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.client.CordClient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.client.</span></span><span class="sig-name descname"><span class="pre">CordClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">querier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cord client. Allows you to query db items associated
+with a project (e.g. label rows, datasets).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClient.initialise">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClient.initialise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and initialize a Cord client from a resource EntityId and API key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource_id</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – <p>either of
+- A project EntityId string.</p>
+<blockquote>
+<div><p>If None, uses the CORD_PROJECT_ID environment variable.</p>
+</div></blockquote>
+<ul>
+<li><p>A dataset EntityId string.
+If None, uses the CORD_DATASET_ID environment variable.</p></li>
+</ul>
+</p></li>
+<li><p><strong>api_key</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – An API key.
+If None, uses the CORD_API_KEY environment variable.</p></li>
+<li><p><strong>domain</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The cord api-server domain.
+If None, the CORD_DOMAIN is used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Cord client instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cord.client.CordClient" title="cord.client.CordClient">CordClient</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClient.initialise_with_config">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialise_with_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClient.initialise_with_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and initialize a Cord client from a Cord config instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#cord.configs.Config" title="cord.configs.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">Config</span></code></a>) – A Cord config instance.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Cord client instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cord.client.CordClient" title="cord.client.CordClient">CordClient</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.client.</span></span><span class="sig-name descname"><span class="pre">CordClientDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">querier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.add_private_data_to_dataset">
+<span class="sig-name descname"><span class="pre">add_private_data_to_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">integration_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">private_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.add_private_data_to_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append data hosted on private clouds to existing dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>integration_id</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – str
+EntityId of the cloud integration to be used when accessing those files</p></li>
+<li><p><strong>private_files</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TextIO</span></code>]) – A str path or Path object to a json file, json str or python dictionary of the files you wish to add</p></li>
+<li><p><strong>ignore_errors</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – bool, optional
+Ignore individual errors when trying to access the specified files</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.create_image_group">
+<span class="sig-name descname"><span class="pre">create_image_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.create_image_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an image group in Cord storage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – Cord client object.</p></li>
+<li><p><strong>file_paths</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – a list of paths to images, e.g.
+[‘/home/user/data/img1.png’, ‘/home/user/data/img2.png’]</p></li>
+<li><p><strong>max_workers</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Number of workers for parallel image upload. If set to None, this will be the number of CPU cores
+available on the machine.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cord.exceptions.UploadOperationNotSupportedError" title="cord.exceptions.UploadOperationNotSupportedError"><strong>UploadOperationNotSupportedError</strong></a> – If trying to upload to external
+    datasets (e.g. S3/GPC/Azure)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.delete_data">
+<span class="sig-name descname"><span class="pre">delete_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_hashes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.delete_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a video/image group from a dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – Cord client object.</p></li>
+<li><p><strong>data_hashes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – list of hash of the videos/image_groups you’d like to delete, all should belong to the same
+dataset</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.delete_image_group">
+<span class="sig-name descname"><span class="pre">delete_image_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_hash</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.delete_image_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an image group in Cord storage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – Cord client object.</p></li>
+<li><p><strong>data_hash</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the hash of the image group you’d like to delete</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.get_dataset">
+<span class="sig-name descname"><span class="pre">get_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.get_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve dataset info (pointers to data, labels).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – Cord client object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dataset record instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dataset</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If the dataset API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no dataset exists by the specified dataset EntityId.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while retrieving the dataset.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.re_encode_data">
+<span class="sig-name descname"><span class="pre">re_encode_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_hashes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.re_encode_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lanches a async task that can re-encode a list of videos.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – Cord client object.</p></li>
+<li><p><strong>data_hashes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – list of hash of the videos you’d like to re_encode, all should belong to the same
+dataset</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>EntityId(integer) of the async task launched.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.re_encode_data_status">
+<span class="sig-name descname"><span class="pre">re_encode_data_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.re_encode_data_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the status of an existing async task which is aimed at re-encoding videos.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – Cord client object.</p></li>
+<li><p><strong>job_id</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – id of the async task that was launched to re-encode the videos</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Object containing the status of the task, along with info about the new encoded videos</dt><dd><p>in case the task has been completed</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ReEncodeVideoTask</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.run_ocr">
+<span class="sig-name descname"><span class="pre">run_ocr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_group_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.run_ocr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an optical character recognition result for a given image group
+:type image_group_id: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
+:param image_group_id: the id of the image group in this dataset to run OCR on</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ImageGroupOCR</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns a list of ImageGroupOCR objects representing the text and corresponding coordinates
+found in each frame of the image group</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientDataset.upload_video">
+<span class="sig-name descname"><span class="pre">upload_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientDataset.upload_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload video to Cord storage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – Cord client object.</p></li>
+<li><p><strong>file_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – path to video e.g. ‘/home/user/data/video.mp4’</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cord.exceptions.UploadOperationNotSupportedError" title="cord.exceptions.UploadOperationNotSupportedError"><strong>UploadOperationNotSupportedError</strong></a> – If trying to upload to external
+    datasets (e.g. S3/GPC/Azure)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.client.CordClientProject">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.client.</span></span><span class="sig-name descname"><span class="pre">CordClientProject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">querier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.add_classification">
+<span class="sig-name descname"><span class="pre">add_classification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classification_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.add_classification" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the name of the classification</p></li>
+<li><p><strong>classification_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationType</span></code>) – the classification type (RADIO, TEXT or CHECKLIST)</p></li>
+<li><p><strong>required</strong> (<em>whether this classification is required by the annotator</em>) – </p></li>
+<li><p><strong>options</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – the list of options for the classification (to be set to None for texts)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If the project API key is invalid.
+AuthorisationError: If access to the specified resource is restricted.
+UnknownError: If an error occurs while add te classification to the project ontology
+OperationNotAllowed: If the operation is not allowed by the API key.
+ValueError: If invalid arguments are supplied in the function call</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError">AuthenticationError</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.add_datasets">
+<span class="sig-name descname"><span class="pre">add_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_hashes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.add_datasets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a dataset to a project</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataset_hashes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – List of dataset hashes of the datasets to be added</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If one or more datasets don’t exist by the specified dataset_hashes.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while adding the datasets to the project.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.OperationNotAllowed" title="cord.exceptions.OperationNotAllowed"><strong>OperationNotAllowed</strong></a> – If the write operation is not allowed by the API key.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.add_object">
+<span class="sig-name descname"><span class="pre">add_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.add_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add object to an ontology
+:type name: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
+:param name: the name of the object
+:type shape: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectShape</span></code>
+:param shape: the shape of the object (BOUNDING_BOX, POLYGON or KEY_POINT)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while add te object to the project ontology</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.OperationNotAllowed" title="cord.exceptions.OperationNotAllowed"><strong>OperationNotAllowed</strong></a> – If the operation is not allowed by the API key.</p></li>
+<li><p><strong>ValueError</strong> – If invalid arguments are supplied in the function call</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.add_users">
+<span class="sig-name descname"><span class="pre">add_users</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_emails</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_role</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.add_users" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add users to project</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_emails</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – list of user emails to be added</p></li>
+<li><p><strong>user_role</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectUserRole</span></code>) – the user role to assign to all users</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectUser</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ProjectUser</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no project exists by the specified project EntityId.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while adding the users to the project</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.copy_project">
+<span class="sig-name descname"><span class="pre">copy_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">copy_datasets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_collaborators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.copy_project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy the current project into a new one with copied contents including settings, datasets and users.
+Labels and models are optional
+:param copy_datasets: if True, the datasets of the existing project are copied over, and new</p>
+<blockquote>
+<div><p>tasks are created from those datasets</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>copy_collaborators</strong> – if True, all users of the existing project are copied over with their current roles.
+If label and/or annotator reviewer mapping is set, this will also be copied over</p></li>
+<li><p><strong>copy_models</strong> – currently if True, all models with their training information will be copied into the new
+project</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the EntityId of the newly created project</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no project exists by the specified project EntityId.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while copying the project.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.create_label_row">
+<span class="sig-name descname"><span class="pre">create_label_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.create_label_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a label row (for data in a project not previously been labeled).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>uid</strong> – the data_hash (uid) of the data unit being labeled.
+Available in client.get_project().get(‘label_rows’)
+where label_status is NOT_LABELLED.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A label row instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>LabelRow</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while saving the label.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.OperationNotAllowed" title="cord.exceptions.OperationNotAllowed"><strong>OperationNotAllowed</strong></a> – If the write operation is not allowed by the API key.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AnswerDictionaryError" title="cord.exceptions.AnswerDictionaryError"><strong>AnswerDictionaryError</strong></a> – If an object or classification instance is missing in answer dictionaries.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.CorruptedLabelError" title="cord.exceptions.CorruptedLabelError"><strong>CorruptedLabelError</strong></a> – If a blurb is corrupted (e.g. if the frame labels have more frames than the video).</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceExistsError" title="cord.exceptions.ResourceExistsError"><strong>ResourceExistsError</strong></a> – If a label row already exists for this project data. Avoids overriding existing work.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.create_model_row">
+<span class="sig-name descname"><span class="pre">create_model_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.create_model_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a model row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> – Model title.</p></li>
+<li><p><strong>description</strong> – Model description.</p></li>
+<li><p><strong>features</strong> – List of feature feature uid’s (hashes) to be included in the model.</p></li>
+<li><p><strong>model</strong> – Model (resnet18, resnet34, resnet50,
+resnet101, resnet152, vgg16, vgg19, yolov5, faster_rcnn, mask_rcnn).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A model_hash (uid) string.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ModelRow</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ModelFeaturesInconsistentError" title="cord.exceptions.ModelFeaturesInconsistentError"><strong>ModelFeaturesInconsistentError</strong></a> – If a feature type is different than what is supported by the model (e.g. if
+    creating a classification model using a bounding box).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.fitted_bounding_boxes">
+<span class="sig-name descname"><span class="pre">fitted_bounding_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.fitted_bounding_boxes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frames</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>) – <p>Labels for frames to be fitted. Frames are consumed in the form:</p>
+<dl>
+<dt>”frame”: {</dt><dd><dl>
+<dt>“objects”: [</dt><dd><dl>
+<dt>{</dt><dd><p>“objectHash”: object_uid,
+“featureHash”: feature_uid (from editor ontology),
+“polygon”: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>”0”: {</dt><dd><p>“x”: x1,
+“y”: y1,</p>
+</dd>
+</dl>
+<p>},
+“1”: {</p>
+<blockquote>
+<div><p>”x”: x2,
+“y”: y2,</p>
+</div></blockquote>
+<p>},
+“2” {</p>
+<blockquote>
+<div><p>”x”: x3,
+“y”: y3,</p>
+</div></blockquote>
+<p>},
+…,</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>},
+{</p>
+<blockquote>
+<div><p>…</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>]</p>
+</dd>
+</dl>
+<p>},
+“frame”: {</p>
+<blockquote>
+<div><p>…,</p>
+</div></blockquote>
+<p>}</p>
+</p></li>
+<li><p><strong>video</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>) – <p>Metadata of the video for which bounding box fitting needs to be run</p>
+<dl class="simple">
+<dt>{</dt><dd><p>“width” : w,
+“height” : h,</p>
+</dd>
+</dl>
+<p>}</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Full set of filled frames including fitted objects.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Fitting results</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while running interpolation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_hash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_signed_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve information about a video or image group.</p>
+<dl>
+<dt>Params:</dt><dd><p>data_hash: The uid of the data object
+get_signed_url: Optionally return signed URLs for timed public access to that resource</p>
+<blockquote>
+<div><p>(default False)</p>
+</div></blockquote>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Image</span></code>]]]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A consisting of the video (if it exists) and a list of individual images (if they exist)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while retrieving the object.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.get_label_row">
+<span class="sig-name descname"><span class="pre">get_label_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_signed_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.get_label_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve label row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – A label_hash (uid) string.</p></li>
+<li><p><strong>get_signed_url</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – By default the operation returns a signed URL for the underlying data asset. This can be</p></li>
+<li><p><strong>off</strong> (<em>expensive so it can optionally be turned</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A label row instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>LabelRow</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no label exists by the specified label_hash (uid).</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while retrieving the label.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.OperationNotAllowed" title="cord.exceptions.OperationNotAllowed"><strong>OperationNotAllowed</strong></a> – If the read operation is not allowed by the API key.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.get_project">
+<span class="sig-name descname"><span class="pre">get_project</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.get_project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve project info (pointers to data, labels).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – Cord client object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A project record instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Project</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no project exists by the specified project EntityId.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while retrieving the project.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.model_delete">
+<span class="sig-name descname"><span class="pre">model_delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.model_delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a model created on the platform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>uid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – A model_hash (uid) string.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no model exists by the specified model_hash (uid).</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs during training.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.model_inference">
+<span class="sig-name descname"><span class="pre">model_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base64_strings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_frame_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocation_enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.model_inference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run inference with model trained on the platform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uid</strong> – A model_iteration_hash (uid) string.</p></li>
+<li><p><strong>file_paths</strong> – List of local file paths to image(s) or video(s) - if running inference on files.</p></li>
+<li><p><strong>base64_strings</strong> – List of base 64 strings of image(s) or video(s) - if running inference on base64 strings.</p></li>
+<li><p><strong>conf_thresh</strong> – Confidence threshold (default 0.6).</p></li>
+<li><p><strong>iou_thresh</strong> – Intersection over union threshold (default 0.3).</p></li>
+<li><p><strong>device</strong> – Device (CPU or CUDA, default is CUDA).</p></li>
+<li><p><strong>detection_frame_range</strong> – Detection frame range (for videos).</p></li>
+<li><p><strong>allocation_enabled</strong> – Object UID allocation (tracking) enabled (disabled by default).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dict of inference results.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Inference results</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no model exists by the specified model_iteration_hash (uid).</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while running inference.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.FileTypeNotSupportedError" title="cord.exceptions.FileTypeNotSupportedError"><strong>FileTypeNotSupportedError</strong></a> – If the file type is not supported for inference (has to be an image or video)</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.DetectionRangeInvalidError" title="cord.exceptions.DetectionRangeInvalidError"><strong>DetectionRangeInvalidError</strong></a> – If a detection range is invalid for video inference</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.model_train">
+<span class="sig-name descname"><span class="pre">model_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_rows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.model_train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train a model created on the platform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uid</strong> – A model_hash (uid) string.</p></li>
+<li><p><strong>label_rows</strong> – List of label row uid’s (hashes) for training.</p></li>
+<li><p><strong>epochs</strong> – Number of passes through training dataset.</p></li>
+<li><p><strong>batch_size</strong> – Number of training examples utilized in one iteration.</p></li>
+<li><p><strong>weights</strong> – Model weights.</p></li>
+<li><p><strong>device</strong> – Device (CPU or CUDA, default is CUDA).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A model iteration object.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ModelWeightsInconsistentError" title="cord.exceptions.ModelWeightsInconsistentError"><strong>ModelWeightsInconsistentError</strong></a> – If the passed model weights are incompatible with the selected model.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no model exists by the specified model_hash (uid).</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs during training.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.object_interpolation">
+<span class="sig-name descname"><span class="pre">object_interpolation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objects_to_interpolate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.object_interpolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run object interpolation algorithm on project labels (requires an editor ontology and feature uid’s).</p>
+<p>Interpolation is supported for bounding box, polygon, and keypoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key_frames</strong> – <p>Labels for frames to be interpolated. Key frames are consumed in the form:</p>
+<dl>
+<dt>”frame”: {</dt><dd><dl>
+<dt>“objects”: [</dt><dd><dl>
+<dt>{</dt><dd><p>“objectHash”: object_uid,
+“featureHash”: feature_uid (from editor ontology),
+“polygon”: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>”0”: {</dt><dd><p>“x”: x1,
+“y”: y1,</p>
+</dd>
+</dl>
+<p>},
+“1”: {</p>
+<blockquote>
+<div><p>”x”: x2,
+“y”: y2,</p>
+</div></blockquote>
+<p>},
+“2” {</p>
+<blockquote>
+<div><p>”x”: x3,
+“y”: y3,</p>
+</div></blockquote>
+<p>},
+…,</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>},
+{</p>
+<blockquote>
+<div><p>…</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>]</p>
+</dd>
+</dl>
+<p>},
+“frame”: {</p>
+<blockquote>
+<div><p>…,</p>
+</div></blockquote>
+<p>}</p>
+</p></li>
+<li><p><strong>objects_to_interpolate</strong> – List of object uid’s (hashes) of objects to interpolate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Full set of filled frames including interpolated objects.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Interpolation results</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while running interpolation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.remove_datasets">
+<span class="sig-name descname"><span class="pre">remove_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_hashes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.remove_datasets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove datasets from project</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataset_hashes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – List of dataset hashes of the datasets to be removed</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no dataset exists by the specified dataset_hash (uid).</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while removing the datasets from the project.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.OperationNotAllowed" title="cord.exceptions.OperationNotAllowed"><strong>OperationNotAllowed</strong></a> – If the operation is not allowed by the API key.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cord.client.CordClientProject.save_label_row">
+<span class="sig-name descname"><span class="pre">save_label_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.client.CordClientProject.save_label_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save existing label row.</p>
+<p>If you have a series of frame labels and have not updated answer
+dictionaries, call the construct_answer_dictionaries utilities function
+to do so prior to saving labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uid</strong> – A label_hash (uid) string.</p></li>
+<li><p><strong>label</strong> – A label row instance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#cord.exceptions.AuthenticationError" title="cord.exceptions.AuthenticationError"><strong>AuthenticationError</strong></a> – If the project API key is invalid.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AuthorisationError" title="cord.exceptions.AuthorisationError"><strong>AuthorisationError</strong></a> – If access to the specified resource is restricted.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.ResourceNotFoundError" title="cord.exceptions.ResourceNotFoundError"><strong>ResourceNotFoundError</strong></a> – If no label exists by the specified label_hash (uid).</p></li>
+<li><p><strong>UnknownError</strong> – If an error occurs while saving the label.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.OperationNotAllowed" title="cord.exceptions.OperationNotAllowed"><strong>OperationNotAllowed</strong></a> – If the write operation is not allowed by the API key.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.AnswerDictionaryError" title="cord.exceptions.AnswerDictionaryError"><strong>AnswerDictionaryError</strong></a> – If an object or classification instance is missing in answer dictionaries.</p></li>
+<li><p><a class="reference internal" href="#cord.exceptions.CorruptedLabelError" title="cord.exceptions.CorruptedLabelError"><strong>CorruptedLabelError</strong></a> – If a blurb is corrupted (e.g. if the frame labels have more frames than the video).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-cord.configs"></span><dl class="py class">
+<dt class="sig sig-object py" id="cord.configs.BaseConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.configs.</span></span><span class="sig-name descname"><span class="pre">BaseConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.configs.BaseConfig" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.configs.Config">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.configs.</span></span><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">web_file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">websocket_endpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'wss://message-api.cord.tech/websocket'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.configs.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Config defining endpoint, project id, API key, and timeouts.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.configs.CordConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.configs.</span></span><span class="sig-name descname"><span class="pre">CordConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://api.cord.tech'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.configs.CordConfig" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.configs.UserConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.configs.</span></span><span class="sig-name descname"><span class="pre">UserConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">private_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://api.cord.tech'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.configs.UserConfig" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-cord.exceptions"></span><dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.AnswerDictionaryError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">AnswerDictionaryError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.AnswerDictionaryError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when answer dictionaries are incomplete.
+Occurs when an object or classification is missing.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.AuthenticationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">AuthenticationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.AuthenticationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when API key fails authentication.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.AuthorisationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">AuthorisationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.AuthorisationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when access is unauthorised.
+(E.g. access to a data asset or method).</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.CordException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">CordException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.CordException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for all exceptions.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.CorruptedLabelError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">CorruptedLabelError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.CorruptedLabelError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when a label is corrupted.
+(E.g. the frame labels have more frames than the video).</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.DetectionRangeInvalidError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">DetectionRangeInvalidError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.DetectionRangeInvalidError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when a detection range is invalid.
+(E.g. negative or higher than num frames in video).</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.FeatureDoesNotExistError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">FeatureDoesNotExistError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.FeatureDoesNotExistError" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a feature uid does not exist in a given project ontology.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.FileTypeNotSupportedError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">FileTypeNotSupportedError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.FileTypeNotSupportedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when a file type is not supported.
+Supported file types are: image/jpeg, image/png, video/webm, video/mp4.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.InitialisationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">InitialisationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.InitialisationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when API key fails to initialise.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.InvalidAlgorithmError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidAlgorithmError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.InvalidAlgorithmError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when invalid labeling algorithm name is sent.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.MethodNotAllowedError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">MethodNotAllowedError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.MethodNotAllowedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when HTTP method is not allowed.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.ModelFeaturesInconsistentError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">ModelFeaturesInconsistentError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.ModelFeaturesInconsistentError" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a feature type is different than what is supported by the model (e.g. if
+creating a classification model using a bounding box).</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.ModelWeightsInconsistentError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">ModelWeightsInconsistentError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.ModelWeightsInconsistentError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when an attempted model training iteration has a different
+type of weights than what is recorded (i.e. if type of model_hash (uid) is faster_rcnn,
+but is attempted trained with yolov5 weights).</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.OperationNotAllowed">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">OperationNotAllowed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.OperationNotAllowed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when a read/write operation is not allowed.
+The API key blocks the operation.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.RequestException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">RequestException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.RequestException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ambiguous exception while handling request.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.ResourceExistsError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">ResourceExistsError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.ResourceExistsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when trying to re-create a resource.
+Avoids overriding existing work.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.ResourceNotFoundError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">ResourceNotFoundError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.ResourceNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when a requested resource is not found.
+(E.g. label, data asset).</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.TimeOutError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">TimeOutError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.TimeOutError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when a request times out.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.UnknownException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">UnknownException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.UnknownException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unknown error.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="cord.exceptions.UploadOperationNotSupportedError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.exceptions.</span></span><span class="sig-name descname"><span class="pre">UploadOperationNotSupportedError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.exceptions.UploadOperationNotSupportedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when trying to upload a video/image group to non-Cord storage dataset</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.user_client.CordUserClient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.user_client.</span></span><span class="sig-name descname"><span class="pre">CordUserClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">querier</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.user_client.CordUserClient" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cord.user_client.CordUserClient.create_project_from_cvat">
+<span class="sig-name descname"><span class="pre">create_project_from_cvat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">import_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">review_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ReviewMode.LABELLED</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.user_client.CordUserClient.create_project_from_cvat" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Export your CVAT project with the “CVAT for images 1.1” option and use this function to import</dt><dd><p>your images and annotations into cord. Ensure that during you have the “Save images”
+checkbox enabled when exporting from CVAT.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>import_method</strong> (<a class="reference internal" href="#cord.utilities.client_utilities.LocalImport" title="cord.utilities.client_utilities.LocalImport"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalImport</span></code></a>) – The chosen import method. See the <cite>ImportMethod</cite> class for details.</p></li>
+<li><p><strong>dataset_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the dataset that will be created.</p></li>
+<li><p><strong>review_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ReviewMode</span></code>) – <dl class="simple">
+<dt>Set how much interaction is needed from the labeler and from the reviewer for the CVAT labels.</dt><dd><p>See the <cite>ReviewMode</cite> documentation for more details.</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>max_workers</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Number of workers for parallel image upload. If set to None, this will be the number of CPU cores
+available on the machine.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If the project was successfully imported.
+CvatImporterError: If the project could not be imported.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cord.utilities.client_utilities.CvatImporterSuccess" title="cord.utilities.client_utilities.CvatImporterSuccess">CvatImporterSuccess</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the CVAT directory has an invalid format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-cord.utilities.client_utilities"></span><dl class="py class">
+<dt class="sig sig-object py" id="cord.utilities.client_utilities.APIKeyScopes">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.utilities.client_utilities.</span></span><span class="sig-name descname"><span class="pre">APIKeyScopes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.utilities.client_utilities.APIKeyScopes" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.utilities.client_utilities.CvatImporterError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.utilities.client_utilities.</span></span><span class="sig-name descname"><span class="pre">CvatImporterError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_hash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">issues</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.utilities.client_utilities.CvatImporterError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.utilities.client_utilities.CvatImporterSuccess">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.utilities.client_utilities.</span></span><span class="sig-name descname"><span class="pre">CvatImporterSuccess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_hash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_hash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">issues</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.utilities.client_utilities.CvatImporterSuccess" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cord.utilities.client_utilities.ImportMethod">
+<span class="sig-prename descclassname"><span class="pre">cord.utilities.client_utilities.</span></span><span class="sig-name descname"><span class="pre">ImportMethod</span></span><a class="headerlink" href="#cord.utilities.client_utilities.ImportMethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Using images/videos in cloud storage as an alternative import method will be supported in the future.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.utilities.client_utilities.Issue">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.utilities.client_utilities.</span></span><span class="sig-name descname"><span class="pre">Issue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">issue_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instances</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.utilities.client_utilities.Issue" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each <cite>issue_type</cite> there may be multiple occurrences which are documented in the <cite>instances</cite>. The <cite>instances</cite>
+list can provide additional information on how the issue was encountered. If there is no additional information
+available, the <cite>instances</cite> list will be empty.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.utilities.client_utilities.Issues">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.utilities.client_utilities.</span></span><span class="sig-name descname"><span class="pre">Issues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warnings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.utilities.client_utilities.Issues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any issues that came up during importing a project. These usually come from incompatibilities between data saved
+on different platforms.</p>
+<p class="rubric">Examples</p>
+<p>You can use the prettyprinter package to inspect this dataclass if you’re using Python 3.9 or older</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">install</span> <span class="n">prettyprinter</span> <span class="k">as</span> <span class="n">pp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="o">.</span><span class="n">install_extras</span><span class="p">()</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">issues</span> <span class="o">=</span> <span class="o">...</span> <span class="c1"># some code which returns this object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">issues</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cord.utilities.client_utilities.LocalImport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cord.utilities.client_utilities.</span></span><span class="sig-name descname"><span class="pre">LocalImport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cord.utilities.client_utilities.LocalImport" title="Permalink to this definition">¶</a></dt>
+<dd><p>file_path: Supply the path of the exported folder which contains the images and <cite>annotations.xml</cite> file. Make
+sure to select “Save images” when exporting your CVAT Task or Project.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="cvat-importer.html" title="previous chapter">CVAT Integration</a></li>
+  </ul></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+
+    
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Denis Gavrielov.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.2.
+    </div>
+    
+
+  </body>
+</html>
