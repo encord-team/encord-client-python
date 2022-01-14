@@ -43,4 +43,3 @@ Exceptions
 .. automodule:: cord.exceptions
     :members:
     :undoc-members:
-
