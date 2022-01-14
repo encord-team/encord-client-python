@@ -9,6 +9,13 @@ Welcome to Cord Python SDK's documentation!
 ===========================================
 Check out our tutorials or browse the API to interact with Cord programmatically.
 
+.. NOTE::
+
+   Hi there!
+
+   Please note that this page is work in progress. It is nowhere close to a complete documentation and is currently only used as a playground for the Cord team. If you are interested in the current cord-client-python docs please `click here <https://docs.cord.tech/docs/client>`_.
+
+
 Indices and tables
 ==================
 
