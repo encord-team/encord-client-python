@@ -25,15 +25,15 @@ requests = "2.25.0"
 uuid = "^1.30"
 cryptography = "^3.4.8"
 tqdm = "4.32.1"
-
+Flask-Sphinx-Themes = "1.0.2"
+sphinx-autodoc-typehints = "1.15.2"
 
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.2"
 pre-commit = "^2.16.0"
 black = "^21.12b0"
-Flask-Sphinx-Themes = "1.0.2"
-sphinx-autodoc-typehints = "1.15.2"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
