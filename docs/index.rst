@@ -5,29 +5,19 @@
 
 
 
-Welcome to Cord Python SDK's documentation!
+Welcome to Cord Python SDK's API reference!
 ===========================================
-Check out our tutorials or browse the API to interact with Cord programmatically.
-
-.. NOTE::
-
-   Hi there!
-
-   Please note that this page is work in progress. It is nowhere close to a complete documentation and is currently only used as a playground for the Cord team. If you are interested in the current cord-client-python docs please `click here <https://docs.cord.tech/docs/client>`_.
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+If you would like to see our tutorial style documentation please `click here <https://docs.cord.tech/docs/client>`_
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Start:
 
-   introduction
-   cvat-importer
    api
+
+Indices and tables
+---------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
