@@ -4,7 +4,12 @@ import uuid
 from datetime import datetime, timezone
 
 from cord.client import CordClient
-from cord.exceptions import AuthenticationError, AuthorisationError, OperationNotAllowed, ResourceExistsError
+from cord.exceptions import (
+    AuthenticationError,
+    AuthorisationError,
+    OperationNotAllowed,
+    ResourceExistsError,
+)
 from cord.orm.label_row import LabelRow
 from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
 from tests.test_data.test_blurb import TEST_BLURB
@@ -105,7 +110,9 @@ class UnitTests(unittest.TestCase):
                 v["objectHash"] = OH
                 new_list.append(v.copy())
             test_blurb[key]["objects"] = new_list.copy()
-        objects = self.rw_c.object_interpolation(test_blurb, ["60f75ddb-aa68-4654-8c85-f6959dbb62eb"])
+        objects = self.rw_c.object_interpolation(
+            test_blurb, ["60f75ddb-aa68-4654-8c85-f6959dbb62eb"]
+        )
         assert isinstance(objects, dict)
 
     def test_upload_video(self):
@@ -134,7 +141,9 @@ class UnitTests(unittest.TestCase):
 
     def test_upload_image_group_different_resolution(self):
         path = os.path.dirname(__file__)
-        test_images_dir = os.path.join(path, "test_data", "media", "upload_image_group_different_resolution")
+        test_images_dir = os.path.join(
+            path, "test_data", "media", "upload_image_group_different_resolution"
+        )
         im1 = os.path.join(test_images_dir, "car-1280-720.jpeg")
         im2 = os.path.join(test_images_dir, "car-1920-1080.jpeg")
 

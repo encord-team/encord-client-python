@@ -136,3 +136,7 @@ class LabelRow(base_orm.BaseORM):
     NON_UPDATABLE_FIELDS = {
         "label_hash",
     }
+
+
+class Review:
+    pass

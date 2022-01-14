@@ -108,5 +108,7 @@ def test_save_label_with_read_key_throws_operation_not_allowed_exception(keys):
 
 def test_object_interpolation_with_polygons(keys):
     client = CordClient.initialise(keys[0], LABEL_READ_KEY)
-    objects = client.object_interpolation(INTERPOLATION_TEST_BLURB, ["60f75ddb-aa68-4654-8c85-f6959dbb62eb"])
+    objects = client.object_interpolation(
+        INTERPOLATION_TEST_BLURB, ["60f75ddb-aa68-4654-8c85-f6959dbb62eb"]
+    )
     assert isinstance(objects, dict)
