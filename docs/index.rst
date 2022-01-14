@@ -7,7 +7,7 @@
 
 Welcome to Cord Python SDK's documentation!
 ===========================================
-Bla bla bla. Here I have all my cool descriptions
+Check out our tutorials or browse the API to interact with Cord programmatically.
 
 Indices and tables
 ==================
@@ -21,6 +21,6 @@ Indices and tables
    :maxdepth: 2
    :caption: Start:
 
-   gru
+   introduction
    cvat-importer
    api

@@ -1,6 +1,6 @@
 CVAT Integration
 =======================
-If you are currently using [CVAT](https://github.com/openvinotoolkit/cvat) for image and video annotations, we have made it easy to import your entire project or single tasks to Cord.
+If you are currently using `CVAT <https://github.com/openvinotoolkit/cvat>`_ for image and video annotations, we have made it easy to import your entire project or single tasks to Cord.
 This will create the ontology and import all labels and classifications.
 
 Exporting Your CVAT Work
