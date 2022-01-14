@@ -17,11 +17,13 @@ from cord.orm.project import Project, ProjectImporter, ReviewMode, ProjectImport
 from cord.orm.project_api_key import ProjectAPIKey
 from cord.utilities.client_utilities import (
     APIKeyScopes,
-    CvatImporterSuccess,
-    Issues,
-    CvatImporterError,
+)
+from cord.utilities.user_client_utilities import (
     LocalImport,
     ImportMethod,
+    Issues,
+    CvatImporterSuccess,
+    CvatImporterError,
 )
 
 log = logging.getLogger(__name__)
@@ -108,8 +110,8 @@ class CordUserClient:
                 available on the machine.
 
         Returns:
-            CvatImporterSuccess: If the project was successfully imported.
-            CvatImporterError: If the project could not be imported.
+            Union[CvatImporterSuccess, CvatImporterError]: CvatImporterSuccess if the project was
+            successfully imported. CvatImporterError if the project could not be imported.
 
         Raises:
             ValueError:

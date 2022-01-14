@@ -7,15 +7,9 @@ User Client
     :members:
     :undoc-members:
 
-Utilities - Project User
-------------
-.. automodule:: cord.utilities.project_user
-    :members:
-    :undoc-members:
-
-Utilities - Label
-------------
-.. automodule:: cord.utilities.label_utilities
+Utilities - User Client
+------------------------
+.. automodule:: cord.utilities.user_client_utilities
     :members:
     :undoc-members:
 
@@ -27,10 +21,24 @@ Client
 
 
 Utilities - Client
-------------
+------------------------
 .. automodule:: cord.utilities.client_utilities
     :members:
     :undoc-members:
+
+Utilities - Project User
+------------------------
+.. automodule:: cord.utilities.project_user
+    :members:
+    :undoc-members:
+
+Utilities - Label
+------------------------
+.. automodule:: cord.utilities.label_utilities
+    :members:
+    :undoc-members:
+
+
 
 Configs
 ------------
