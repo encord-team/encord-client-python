@@ -17,3 +17,4 @@ API Documentation
 
 .. automodule:: cord.utilities.client_utilities
     :members:
+    :undoc-members:
