@@ -6,7 +6,7 @@ import os.path
 from typing import List, TypeVar, Optional
 
 import requests
-import concurrent
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from tqdm import tqdm
 
@@ -55,7 +55,7 @@ def upload_to_signed_url_list(
         raise ValueError(f"max_workers must be a positive integer. Received: {max_workers}")
 
     orm_class_list = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
         with tqdm(total=total, desc="Files upload progress: ") as pbar:
             futures = []
@@ -68,7 +68,7 @@ def upload_to_signed_url_list(
                 future = executor.submit(_upload_single_file, file_path, signed_url, querier, orm_class, pbar, is_video)
                 futures.append(future)
 
-            for future in concurrent.futures.as_completed(futures):
+            for future in as_completed(futures):
                 res = future.result()
                 orm_class_list.append(res)
 
