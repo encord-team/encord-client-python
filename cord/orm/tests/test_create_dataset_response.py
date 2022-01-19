@@ -7,7 +7,7 @@ DATASET_RESPONSE_JSON = {
     "title": "CVAT imported baking dataset",
     "type": 0,
     "dataset_hash": "460505dd-89ea-485a-b4ea-417558a26889",
-    "user_hash": "yiA5JxmLEGSoEcJAuxr3AJdDDXE2"
+    "user_hash": "yiA5JxmLEGSoEcJAuxr3AJdDDXE2",
 }
 
 

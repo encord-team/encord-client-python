@@ -196,11 +196,12 @@ class DatasetAPIKey(Formatter):
 
 class CreateDatasetResponse(UserDict, Formatter):
     def __init__(
-            self,
-            title: str,
-            storage_location: StorageLocation,
-            dataset_hash: str,
-            user_hash: str,):
+        self,
+        title: str,
+        storage_location: StorageLocation,
+        dataset_hash: str,
+        user_hash: str,
+    ):
         """
         This class has dict-style accessors for backwards compatibility.
         Clients who are using this class for the first time are encouraged to use the property accessors and setters
