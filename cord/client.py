@@ -545,7 +545,7 @@ class CordClientProject(CordClient):
             AuthorisationError: If access to the specified resource is restricted.
             ResourceNotFoundError: If no dataset exists by the specified dataset_hash (uid).
             UnknownError: If an error occurs while removing the datasets from the project.
-            OperationNotAllowed: If the o`peration is not allowed by the API key.
+            OperationNotAllowed: If the operation is not allowed by the API key.
         """
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
 
@@ -692,6 +692,7 @@ class CordClientProject(CordClient):
             ResourceNotFoundError: If no model exists by the specified model_hash (uid).
             UnknownError: If an error occurs during training.
         """
+
         return self._querier.basic_delete(Model, uid=uid)
 
     def model_inference(

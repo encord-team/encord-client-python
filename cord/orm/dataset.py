@@ -194,20 +194,71 @@ class DatasetAPIKey(Formatter):
         )
 
 
-@dataclasses.dataclass(frozen=True)
-class CreateDatasetResponse(Formatter):
-    title: str
-    type: StorageLocation
-    dataset_hash: str
-    user_uid: str
+class CreateDatasetResponse(UserDict, Formatter):
+    def __init__(
+            self,
+            title: str,
+            storage_location: StorageLocation,
+            dataset_hash: str,
+            user_hash: str,):
+        """
+        This class has dict-style accessors for backwards compatibility.
+        Clients who are using this class for the first time are encouraged to use the property accessors and setters
+        instead of the underlying dictionary.
+        The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
+
+        WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
+        datastructure.
+        """
+
+        super().__init__(
+            {
+                "title": title,
+                "type": storage_location.value,
+                "dataset_hash": dataset_hash,
+                "user_hash": user_hash,
+            }
+        )
+
+    @property
+    def title(self) -> str:
+        return self["title"]
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self["title"] = value
+
+    @property
+    def storage_location(self) -> StorageLocation:
+        return StorageLocation(self["type"])
+
+    @storage_location.setter
+    def storage_location(self, value: StorageLocation) -> None:
+        self["type"] = value.value
+
+    @property
+    def dataset_hash(self) -> str:
+        return self["dataset_hash"]
+
+    @dataset_hash.setter
+    def dataset_hash(self, value: str) -> None:
+        self["dataset_hash"] = value
+
+    @property
+    def user_hash(self) -> str:
+        return self["user_hash"]
+
+    @user_hash.setter
+    def user_hash(self, value: str) -> None:
+        self["user_hash"] = value
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> CreateDatasetResponse:
         return CreateDatasetResponse(
             title=json_dict["title"],
-            type=StorageLocation(json_dict["type"]),
+            storage_location=StorageLocation(json_dict["type"]),
             dataset_hash=json_dict["dataset_hash"],
-            user_uid=json_dict["user_hash"],
+            user_hash=json_dict["user_hash"],
         )
 
 
@@ -228,6 +279,10 @@ class StorageLocation(IntEnum):
         if string_location == "AZURE_STR":
             return StorageLocation.AZURE
         raise TypeError(f"Invalid storage location string: `{string_location}`")
+
+
+DatasetType = StorageLocation
+"""For backwards compatibility"""
 
 
 class DatasetScope(Enum):
