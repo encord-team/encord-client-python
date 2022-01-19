@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cord-client-python"
-version = "0.1.25"
+version = "0.1.24"
 description = "Cord Python SDK Client"
 authors = ["Cord Technologies Limited <hello@cord.tech>"]
 license = "Apache Software License"
@@ -24,7 +24,7 @@ python-dateutil = "^2.8.2"
 requests = "2.25.0"
 uuid = "^1.30"
 cryptography = "^3.4.8"
-tqdm = "^4.32.1"
+tqdm = "4.32.1"
 
 
 [tool.poetry.dev-dependencies]

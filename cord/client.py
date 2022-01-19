@@ -160,7 +160,7 @@ class CordClient(object):
 
 
 class CordClientDataset(CordClient):
-    def get_dataset(self):
+    def get_dataset(self) -> Dataset:
         """
         Retrieve dataset info (pointers to data, labels).
 
@@ -302,7 +302,7 @@ class CordClientDataset(CordClient):
 
     def re_encode_data(self, data_hashes: List[str]):
         """
-        Lanches a async task that can re-encode a list of videos.
+        Launches an async task that can re-encode a list of videos.
 
         Args:
             self: Cord client object.
@@ -510,7 +510,7 @@ class CordClientProject(CordClient):
         """
         return self._querier.basic_put(Review, uid=uid, payload=None)
 
-    def add_datasets(self, dataset_hashes: List[str]):
+    def add_datasets(self, dataset_hashes: List[str]) -> bool:
         """
         Add a dataset to a project
 
@@ -530,7 +530,7 @@ class CordClientProject(CordClient):
         payload = {"dataset_hashes": dataset_hashes}
         return self._querier.basic_setter(ProjectDataset, uid=None, payload=payload)
 
-    def remove_datasets(self, dataset_hashes: List[str]):
+    def remove_datasets(self, dataset_hashes: List[str]) -> bool:
         """
         Remove datasets from project
 
@@ -545,7 +545,7 @@ class CordClientProject(CordClient):
             AuthorisationError: If access to the specified resource is restricted.
             ResourceNotFoundError: If no dataset exists by the specified dataset_hash (uid).
             UnknownError: If an error occurs while removing the datasets from the project.
-            OperationNotAllowed: If the operation is not allowed by the API key.
+            OperationNotAllowed: If the o`peration is not allowed by the API key.
         """
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
 
@@ -593,7 +593,7 @@ class CordClientProject(CordClient):
             required (whether this classification is required by the annotator):
             options: the list of options for the classification (to be set to None for texts)
 
-        Returns:
+        Raises:
             AuthenticationError: If the project API key is invalid.
             AuthorisationError: If access to the specified resource is restricted.
             UnknownError: If an error occurs while add te classification to the project ontology
@@ -613,7 +613,7 @@ class CordClientProject(CordClient):
         description=None,
         features=None,
         model=None,
-    ):
+    ) -> str:
         """
         Create a model row.
 
@@ -625,7 +625,7 @@ class CordClientProject(CordClient):
                 resnet101, resnet152, vgg16, vgg19, yolov5, faster_rcnn, mask_rcnn).
 
         Returns:
-            ModelRow: A model_hash (uid) string.
+            The uid of the added model row.
 
         Raises:
             AuthenticationError: If the project API key is invalid.
@@ -692,7 +692,6 @@ class CordClientProject(CordClient):
             ResourceNotFoundError: If no model exists by the specified model_hash (uid).
             UnknownError: If an error occurs during training.
         """
-
         return self._querier.basic_delete(Model, uid=uid)
 
     def model_inference(

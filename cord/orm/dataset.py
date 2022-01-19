@@ -15,39 +15,161 @@
 from __future__ import annotations
 
 import dataclasses
+from datetime import datetime
+from dateutil import parser
 import json
-from collections import OrderedDict
+from collections import OrderedDict, UserDict
 from enum import IntEnum, Enum
-from typing import List, Dict
+from typing import List, Dict, Optional, NoReturn
 
+from cord.constants.enums import DataType
 from cord.orm import base_orm
 from cord.orm.formatter import Formatter
 
+DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-class Dataset(base_orm.BaseORM):
-    """
-    A dataset is a collection of data rows.
 
-    ORM:
+class DataRow(UserDict, Formatter):
+    def __init__(self, uid: str, title: str, data_type: DataType, created_at: datetime):
+        """
+        This class has dict-style accessors for backwards compatibility.
+        Clients who are using this class for the first time are encouraged to use the property accessors and setters
+        instead of the underlying dictionary.
+        The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
 
-    title,
-    description,
-    dataset_type (Cord storage vs. AWS/GCP/Azure),
-    data_rows: [
-        {
-            data_hash (uid),
-            data_title,
-            data_type,
-        }
-    ]
+        WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
+        datastructure.
+        """
+        super().__init__(
+            {
+                "data_hash": uid,
+                "data_title": title,
+                "data_type": data_type.to_upper_case_string(),
+                "created_at": created_at.strftime(DATETIME_STRING_FORMAT),
+            }
+        )
 
-    """
+    @property
+    def uid(self) -> str:
+        return self.data["data_hash"]
 
-    DB_FIELDS = OrderedDict([("title", str), ("description", str), ("dataset_type", str), ("data_rows", (list, str))])
+    @uid.setter
+    def uid(self, value: str) -> None:
+        self.data["data_hash"] = value
 
-    NON_UPDATABLE_FIELDS = {
-        "dataset_type",
-    }
+    @property
+    def title(self) -> str:
+        return self.data["data_title"]
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self.data["data_title"] = value
+
+    @property
+    def data_type(self) -> DataType:
+        return DataType.from_upper_case_string(self.data["data_type"])
+
+    @data_type.setter
+    def data_type(self, value: DataType) -> None:
+        self.data["data_type"] = value.to_upper_case_string()
+
+    @property
+    def created_at(self) -> datetime:
+        return parser.parse(self.data["created_at"])
+
+    @created_at.setter
+    def created_at(self, value: datetime) -> None:
+        """Datetime will trim milliseconds for backwards compatibility."""
+        self.data["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> DataRow:
+        data_type = DataType.from_upper_case_string(json_dict["data_type"])
+        if data_type is None:
+            raise TypeError(f"The DataRow constructor received an invalid data_type `{json_dict['data_type']}`")
+
+        return DataRow(
+            uid=json_dict["data_hash"],
+            title=json_dict["data_title"],
+            # The API server currently returns upper cased DataType strings.
+            data_type=data_type,
+            created_at=parser.parse(json_dict["created_at"]),
+        )
+
+    @classmethod
+    def from_dict_list(cls, json_list: List) -> List[DataRow]:
+        ret: List[DataRow] = list()
+        for json_dict in json_list:
+            ret.append(cls.from_dict(json_dict))
+        return ret
+
+
+class Dataset(UserDict, Formatter):
+    def __init__(
+        self,
+        title: str,
+        storage_location: StorageLocation,
+        data_rows: List[DataRow],
+        description: Optional[str] = None,
+    ):
+        """
+        This class has dict-style accessors for backwards compatibility.
+        Clients who are using this class for the first time are encouraged to use the property accessors and setters
+        instead of the underlying dictionary.
+        The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
+
+        WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
+        datastructure.
+        """
+        super().__init__(
+            {
+                "title": title,
+                "description": description,
+                "dataset_type": storage_location.name,
+                "data_rows": data_rows,
+            }
+        )
+
+    @property
+    def title(self) -> str:
+        return self["title"]
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self["title"] = value
+
+    @property
+    def description(self) -> str:
+        return self["description"]
+
+    @description.setter
+    def description(self, value: str) -> None:
+        self["description"] = value
+
+    @property
+    def storage_location(self) -> StorageLocation:
+        return StorageLocation.from_str(self["dataset_type"])
+
+    @storage_location.setter
+    def storage_location(self, value: StorageLocation) -> None:
+        self["dataset_type"] = value.name
+
+    @property
+    def data_rows(self) -> List[DataRow]:
+        return self["data_rows"]
+
+    @data_rows.setter
+    def data_rows(self, value: List[DataRow]) -> None:
+        self["data_rows"] = value
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> Dataset:
+        return Dataset(
+            title=json_dict["title"],
+            description=json_dict["description"],
+            storage_location=StorageLocation.from_str(json_dict["dataset_type"]),
+            data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])),
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -59,20 +181,53 @@ class DatasetAPIKey(Formatter):
     scopes: List[DatasetScope]
 
     @classmethod
-    def from_dict(cls, json_dict: Dict):
+    def from_dict(cls, json_dict: Dict) -> DatasetAPIKey:
         if isinstance(json_dict["scopes"], str):
             json_dict["scopes"] = json.loads(json_dict["scopes"])
         scopes = [DatasetScope(scope) for scope in json_dict["scopes"]]
         return DatasetAPIKey(
-            json_dict["resource_hash"], json_dict["api_key"], json_dict["title"], json_dict["key_hash"], scopes
+            json_dict["resource_hash"],
+            json_dict["api_key"],
+            json_dict["title"],
+            json_dict["key_hash"],
+            scopes,
         )
 
 
-class DatasetType(IntEnum):
+@dataclasses.dataclass(frozen=True)
+class CreateDatasetResponse(Formatter):
+    title: str
+    type: StorageLocation
+    dataset_hash: str
+    user_uid: str
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> CreateDatasetResponse:
+        return CreateDatasetResponse(
+            title=json_dict["title"],
+            type=StorageLocation(json_dict["type"]),
+            dataset_hash=json_dict["dataset_hash"],
+            user_uid=json_dict["user_hash"],
+        )
+
+
+class StorageLocation(IntEnum):
     CORD_STORAGE = (0,)
     AWS = (1,)
     GCP = (2,)
     AZURE = 3
+
+    @staticmethod
+    def from_str(string_location: str) -> StorageLocation:
+        if string_location == "CORD_STORAGE":
+            return StorageLocation.CORD_STORAGE
+        if string_location == "AWS_S3":
+            return StorageLocation.AWS
+        if string_location == "GCP_STR":
+            return StorageLocation.GCP
+        if string_location == "AZURE_STR":
+            return StorageLocation.AZURE
+        raise TypeError(f"Invalid storage location string: `{string_location}`")
 
 
 class DatasetScope(Enum):

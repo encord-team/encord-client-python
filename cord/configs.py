@@ -129,7 +129,12 @@ def get_env_api_key() -> str:
 
 
 class CordConfig(Config):
-    def __init__(self, resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: Optional[str] = None):
+    def __init__(
+        self,
+        resource_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        domain: Optional[str] = None,
+    ):
         web_file_path = CORD_PUBLIC_PATH
         super().__init__(resource_id, api_key, web_file_path=web_file_path, domain=domain)
 
