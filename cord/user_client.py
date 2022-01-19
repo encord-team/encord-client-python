@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import base64
+from dataclasses import dataclass
 import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
@@ -17,13 +19,11 @@ from cord.orm.project import Project, ProjectImporter, ReviewMode, ProjectImport
 from cord.orm.project_api_key import ProjectAPIKey
 from cord.utilities.client_utilities import (
     APIKeyScopes,
-)
-from cord.utilities.user_client_utilities import (
+    CvatImporterSuccess,
+    Issues,
+    CvatImporterError,
     LocalImport,
     ImportMethod,
-    Issues,
-    CvatImporterSuccess,
-    CvatImporterError,
 )
 
 log = logging.getLogger(__name__)
@@ -110,8 +110,8 @@ class CordUserClient:
                 available on the machine.
 
         Returns:
-            Union[CvatImporterSuccess, CvatImporterError]: CvatImporterSuccess if the project was
-            successfully imported. CvatImporterError if the project could not be imported.
+            CvatImporterSuccess: If the project was successfully imported.
+            CvatImporterError: If the project could not be imported.
 
         Raises:
             ValueError:
