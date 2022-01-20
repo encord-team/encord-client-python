@@ -1,0 +1,11 @@
+{
+  "hosting": {
+	"site": "python-docs",
+    "public": "_build/html",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

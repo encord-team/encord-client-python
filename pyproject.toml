@@ -17,7 +17,6 @@ classifiers=[
     "Operating System :: OS Independent",
 ]
 
-
 [tool.poetry.dependencies]
 python = "^3.6"
 python-dateutil = "^2.8.2"
@@ -26,11 +25,12 @@ uuid = "^1.30"
 cryptography = "^3.4.8"
 tqdm = "^4.32.1"
 
-
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.2"
 pre-commit = "^2.16.0"
 black = "^21.12b0"
+sphinx-autodoc-typehints = "1.15.2"
+prettyprinter = "0.18.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
