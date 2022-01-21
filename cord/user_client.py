@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
 
-from cord.client import CordClient
+from cord.client import CordClient, CordClientProject, CordClientDataset
 from cord.configs import UserConfig
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url_list
@@ -66,6 +66,13 @@ class CordUserClient:
         api_keys: List[DatasetAPIKey] = self.querier.get_multiple(DatasetAPIKey, uid=None, payload=api_key_payload)
         return api_keys
 
+    def get_or_create_dataset_api_key(self, dataset_hash: str) -> DatasetAPIKey:
+        api_key_payload = {
+            "dataset_hash": dataset_hash,
+        }
+        response = self.querier.basic_put(DatasetAPIKey, uid=None, payload=api_key_payload)
+        return DatasetAPIKey.from_dict(response)
+
     @staticmethod
     def create_with_ssh_private_key(ssh_private_key: str, password: str = None, **kwargs) -> CordUserClient:
         user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
@@ -85,6 +92,18 @@ class CordUserClient:
 
     def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
         return self.querier.get_multiple(ProjectAPIKey, uid=project_hash)
+
+    def get_or_create_project_api_key(self, project_hash: str) -> str:
+        return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
+
+    def get_dataset_client(self, dataset_hash: str, **kwargs) -> Union[CordClientProject, CordClientDataset]:
+        dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
+        return CordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
+
+    def get_project_client(self, project_hash: str, **kwargs) -> Union[CordClientProject, CordClientDataset]:
+        project_api_key: str = self.get_or_create_project_api_key(project_hash)
+        return CordClient.initialise(project_hash, project_api_key, **kwargs)
+
 
     def create_project_from_cvat(
         self,
