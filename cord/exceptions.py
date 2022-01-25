@@ -115,6 +115,14 @@ class FileTypeNotSupportedError(CordException):
     pass
 
 
+class FileSizeNotSupportedError(CordException):
+    """
+    Exception thrown when the combined size of the input files is larger than the supported limit.
+    """
+
+    pass
+
+
 class FeatureDoesNotExistError(CordException):
     """
     If a feature uid does not exist in a given project ontology.
