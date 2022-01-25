@@ -104,7 +104,6 @@ class CordUserClient:
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
         return CordClient.initialise(project_hash, project_api_key, **kwargs)
 
-
     def create_project_from_cvat(
         self,
         import_method: ImportMethod,
