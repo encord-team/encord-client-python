@@ -11,11 +11,17 @@ from cord.client import CordClient, CordClientProject, CordClientDataset
 from cord.configs import UserConfig
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url_list
-from cord.orm.dataset import SignedImagesURL, Image
+from cord.orm.dataset import SignedImagesURL, Image, CreateDatasetResponse
 from cord.orm.cloud_integration import CloudIntegration
-from cord.orm.dataset import Dataset, DatasetType
+from cord.orm.dataset import Dataset, StorageLocation
 from cord.orm.dataset import DatasetScope, DatasetAPIKey
-from cord.orm.project import Project, ProjectImporter, ReviewMode, ProjectImporterCvatInfo, CvatExportType
+from cord.orm.project import (
+    Project,
+    ProjectImporter,
+    ReviewMode,
+    ProjectImporterCvatInfo,
+    CvatExportType,
+)
 from cord.orm.project_api_key import ProjectAPIKey
 from cord.utilities.client_utilities import (
     APIKeyScopes,
@@ -34,10 +40,34 @@ class CordUserClient:
         self.user_config = user_config
         self.querier = querier
 
-    def create_private_dataset(self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None):
+    def create_private_dataset(
+        self,
+        dataset_title: str,
+        dataset_type: StorageLocation,
+        dataset_description: Optional[str] = None,
+    ) -> CreateDatasetResponse:
+        """
+        DEPRECATED - please use `create_dataset` instead.
+        """
         return self.create_dataset(dataset_title, dataset_type, dataset_description)
 
-    def create_dataset(self, dataset_title: str, dataset_type: DatasetType, dataset_description: str = None):
+    def create_dataset(
+        self,
+        dataset_title: str,
+        dataset_type: StorageLocation,
+        dataset_description: Optional[str] = None,
+    ) -> CreateDatasetResponse:
+        """
+        Args:
+            dataset_title:
+                Title of dataset.
+            dataset_type:
+                StorageLocation type where data will be stored.
+            dataset_description:
+                Optional description of the dataset.
+        Returns:
+            CreateDatasetResponse
+        """
         dataset = {
             "title": dataset_title,
             "type": dataset_type,
@@ -46,7 +76,8 @@ class CordUserClient:
         if dataset_description:
             dataset["description"] = dataset_description
 
-        return self.querier.basic_setter(Dataset, uid=None, payload=dataset)
+        result = self.querier.basic_setter(Dataset, uid=None, payload=dataset)
+        return CreateDatasetResponse.from_dict(result)
 
     def create_dataset_api_key(
         self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]
@@ -86,6 +117,10 @@ class CordUserClient:
         return self.querier.basic_setter(Project, uid=None, payload=project)
 
     def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
+        """
+        Returns:
+            The created project API key.
+        """
         payload = {"title": api_key_title, "scopes": list(map(lambda scope: scope.value, scopes))}
 
         return self.querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
@@ -221,9 +256,9 @@ class CordUserClient:
 
         short_names = list(map(lambda x: x.name, images_paths))
         file_path_strings = list(map(lambda x: str(x), images_paths))
-        dataset = self.create_dataset(dataset_name, DatasetType.CORD_STORAGE)
+        dataset = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
-        dataset_hash = dataset["dataset_hash"]
+        dataset_hash = dataset.dataset_hash
 
         dataset_api_key: DatasetAPIKey = self.create_dataset_api_key(
             dataset_hash, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
