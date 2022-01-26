@@ -25,7 +25,7 @@ DATASET_JSON = {
 def test_dataset_conversions():
     dataset = Dataset.from_dict(DATASET_JSON)
 
-    assert dataset.data == DATASET_JSON
+    assert dataset == DATASET_JSON
 
 
 def test_dataset_fields():
