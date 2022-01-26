@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: ${{ env.BACKEND_REPO }}
-          token: ${{ secrets.ACESS_TOKEN }}
+          token: ${{ secrets.ACCESS_TOKEN }}
 
       - name: Run tests
         run: ls -al
