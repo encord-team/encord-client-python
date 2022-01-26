@@ -57,7 +57,6 @@ jobs:
           python -m pip install --upgrade pip
           GIT_REPO=${{ github.repositoryUrl }}
           HTTPS="${GIT_REPO/"git:"/"https:"}"
-          echo $HTTPS
           poetry add git+${{ env.CLIENT_REPO }}
           poetry install
 
