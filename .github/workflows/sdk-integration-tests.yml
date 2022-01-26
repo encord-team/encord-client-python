@@ -31,10 +31,17 @@ jobs:
   run-sdk-tests:
     name: Run SDK tests in backend repo
     runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: DEV
+      SDK_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+      TEST_DIR: ./src/cord/sdk_integration_tests/tests
     steps:
       - name: Check URL
         run: |
-          echo URL=${{ github.repositoryUrl }}
+          URL=${{ github.repositoryUrl }}
+          irstString="I love Suzi and Marry"
+          secondString="Sara"
+          echo "${URL/"git:"/"http:"}"    
 
       - name: Checkout backend repo
         uses: actions/checkout@v2
@@ -55,7 +62,9 @@ jobs:
         run: |
           cd projects/${{ env.SDK_PROJECT }}
           python -m pip install --upgrade pip
-          poetry add git+${{ env.CLIENT_REPO }}
+          GIT_REPO=${{ github.repositoryUrl }}
+          HTTP="${GIT_REPO/"git:"/"http:"}"
+          poetry add git+$HTTP
           poetry install
 
       - name: Run tests
