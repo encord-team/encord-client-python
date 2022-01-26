@@ -36,13 +36,6 @@ jobs:
       SDK_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
       TEST_DIR: ./src/cord/sdk_integration_tests/tests
     steps:
-      - name: Check URL
-        run: |
-          URL=${{ github.repositoryUrl }}
-          irstString="I love Suzi and Marry"
-          secondString="Sara"
-          echo "${URL/"git:"/"http:"}"    
-
       - name: Checkout backend repo
         uses: actions/checkout@v2
         with:
@@ -64,7 +57,8 @@ jobs:
           python -m pip install --upgrade pip
           GIT_REPO=${{ github.repositoryUrl }}
           HTTP="${GIT_REPO/"git:"/"http:"}"
-          poetry add git+$HTTP
+          echo $HTTP
+          poetry add git+${{ env.CLIENT_REPO }}
           poetry install
 
       - name: Run tests
