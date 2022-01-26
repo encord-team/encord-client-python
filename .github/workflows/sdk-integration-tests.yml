@@ -30,10 +30,14 @@ jobs:
     name: Run SDK tests in backend repo
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Checkout backend repo
         uses: actions/checkout@v2
         with:
           repository: ${{ env.BACKEND_REPO }}
+          token: ${{ secrets.ACESS_TOKEN }}
 
       - name: Run tests
         run: ls -al
