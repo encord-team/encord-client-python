@@ -56,8 +56,8 @@ jobs:
           cd projects/${{ env.SDK_PROJECT }}
           python -m pip install --upgrade pip
           GIT_REPO=${{ github.repositoryUrl }}
-          HTTP="${GIT_REPO/"git:"/"http:"}"
-          echo $HTTP
+          HTTPS="${GIT_REPO/"git:"/"https:"}"
+          echo $HTTPS
           poetry add git+${{ env.CLIENT_REPO }}
           poetry install
 
