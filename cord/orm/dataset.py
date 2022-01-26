@@ -18,7 +18,7 @@ import dataclasses
 from datetime import datetime
 from dateutil import parser
 import json
-from collections import OrderedDict, UserDict
+from collections import OrderedDict
 from enum import IntEnum, Enum
 from typing import List, Dict, Optional, NoReturn
 
@@ -29,7 +29,7 @@ from cord.orm.formatter import Formatter
 DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-class DataRow(UserDict, Formatter):
+class DataRow(dict, Formatter):
     def __init__(self, uid: str, title: str, data_type: DataType, created_at: datetime):
         """
         This class has dict-style accessors for backwards compatibility.
@@ -51,36 +51,36 @@ class DataRow(UserDict, Formatter):
 
     @property
     def uid(self) -> str:
-        return self.data["data_hash"]
+        return self["data_hash"]
 
     @uid.setter
     def uid(self, value: str) -> None:
-        self.data["data_hash"] = value
+        self["data_hash"] = value
 
     @property
     def title(self) -> str:
-        return self.data["data_title"]
+        return self["data_title"]
 
     @title.setter
     def title(self, value: str) -> None:
-        self.data["data_title"] = value
+        self["data_title"] = value
 
     @property
     def data_type(self) -> DataType:
-        return DataType.from_upper_case_string(self.data["data_type"])
+        return DataType.from_upper_case_string(self["data_type"])
 
     @data_type.setter
     def data_type(self, value: DataType) -> None:
-        self.data["data_type"] = value.to_upper_case_string()
+        self["data_type"] = value.to_upper_case_string()
 
     @property
     def created_at(self) -> datetime:
-        return parser.parse(self.data["created_at"])
+        return parser.parse(self["created_at"])
 
     @created_at.setter
     def created_at(self, value: datetime) -> None:
         """Datetime will trim milliseconds for backwards compatibility."""
-        self.data["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
+        self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
@@ -104,7 +104,7 @@ class DataRow(UserDict, Formatter):
         return ret
 
 
-class Dataset(UserDict, Formatter):
+class Dataset(dict, Formatter):
     def __init__(
         self,
         title: str,
@@ -194,7 +194,7 @@ class DatasetAPIKey(Formatter):
         )
 
 
-class CreateDatasetResponse(UserDict, Formatter):
+class CreateDatasetResponse(dict, Formatter):
     def __init__(
         self,
         title: str,
