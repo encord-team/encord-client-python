@@ -1,0 +1,39 @@
+name: SDK integration tests
+
+on:
+  push:
+    branches:
+      - DEV-354-sdk-pipeline
+  workflow_dispatch:
+
+env:
+  BACKEND_REPO: cord-team/cord-backend
+  EVENT_KEY: cord-client-repo-tests
+
+concurrency:
+  group: cord-client-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+#  instigate-sdk-tests:
+#    name: Trigger SDK tests in backend repo
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Dispatch event
+#        uses: peter-evans/repository-dispatch@v1
+#        with:
+#          repository: ${{ env.BACKEND_REPO }}
+#          token: ${{ secrets.ACCESS_TOKEN }}
+#          event-type: ${{ env.EVENT_KEY }}
+#          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+  run-sdk-tests:
+    name: Run SDK tests in backend repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backend repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+
+      - name: Run tests
+        run: ls -al
