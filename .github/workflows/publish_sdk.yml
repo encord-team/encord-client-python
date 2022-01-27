@@ -42,5 +42,5 @@ jobs:
 
       - name: Publish SDK
         run: |
-          poetry config pypi-token.pypi ${{ env.PYPI_TOKEN}
+          poetry config pypi-token.pypi ${{ env.PYPI_TOKEN }}
           poetry publish --dry-run
