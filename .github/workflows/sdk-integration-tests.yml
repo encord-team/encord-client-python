@@ -61,10 +61,10 @@ jobs:
           name: ${{ env.TEST_REPORT }}
           path: projects/${{ env.PROJECT }}/${{ env.TEST_REPORT }}
 
-      - name: Publish report
+      - name: Publish test report
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
-          files: ${{ env.TEST_REPORT }}/*.xml
+          files: projects/${{ env.PROJECT }}/${{ env.TEST_REPORT }}
           check_name: Test report
 #
 #  publish-test-report:
