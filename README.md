@@ -5,7 +5,7 @@
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-***Where the world creates and manages training data***
+***Where the world creates and manages training dat***
 
 ## 💻 Features
 
