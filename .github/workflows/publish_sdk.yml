@@ -1,4 +1,4 @@
-name: SDK integration tests
+name: Publish SDK
 
 on:
   release:
