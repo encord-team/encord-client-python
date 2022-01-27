@@ -8,9 +8,11 @@ on:
 
 env:
   BACKEND_REPO: cord-team/cord-backend
-  SDK_PROJECT: sdk-integration-tests
-  SDK_TEST_REPORT: sdk-test-report.xml
-  CLIENT_REPO: https://github.com/cord-team/cord-client-python.git
+  PROJECT: sdk-integration-tests
+  TEST_REPORT: sdk-test-report.xml
+  PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+  TEST_DIR: ./src/cord/sdk_integration_tests/tests
+  ENVIRONMENT: DEV
 
 concurrency:
   group: cord-client-${{ github.ref }}
@@ -18,12 +20,8 @@ concurrency:
 
 jobs:
   sdk-tests:
-    name: Run SDK tests in backend repo
+    name: Run SDK tests
     runs-on: ubuntu-latest
-    env:
-      ENVIRONMENT: DEV
-      SDK_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
-      TEST_DIR: ./src/cord/sdk_integration_tests/tests
     steps:
       - name: Checkout backend repo
         uses: actions/checkout@v2
@@ -34,7 +32,7 @@ jobs:
       - name: Setup Poetry environment
         uses: ./.github/actions/setup-poetry-environment
         with:
-          project: ${{ env.SDK_PROJECT }}
+          project: ${{ env.PROJECT }}
           cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}
 
       - name: Setup FFMPEG
@@ -42,7 +40,7 @@ jobs:
 
       - name: Get SDK
         run: |
-          cd projects/${{ env.SDK_PROJECT }}
+          cd projects/${{ env.PROJECT }}
           python -m pip install --upgrade pip
           GIT_REPO=${{ github.repositoryUrl }}
           poetry add git+"${GIT_REPO/"git:"/"https:"}"
@@ -50,18 +48,18 @@ jobs:
 
       - name: Run tests
         run: |
-          cd projects/${{ env.SDK_PROJECT }}
+          cd projects/${{ env.PROJECT }}
           source .venv/bin/activate
           export CORD_ENV=${{ env.ENVIRONMENT }}
-          export PRIVATE_KEY="${{ env.SDK_PRIVATE_KEY }}"
-          python -m pytest ${{ env.TEST_DIR }} --rootdir=${{ env.TEST_DIR }} --verbose --junitxml=${{ env.SDK_TEST_REPORT }}
+          export PRIVATE_KEY="${{ env.PRIVATE_KEY }}"
+          python -m pytest ${{ env.TEST_DIR }} --rootdir=${{ env.TEST_DIR }} --verbose --junitxml=${{ env.TEST_REPORT }}
 
       - name: Upload report
         uses: actions/upload-artifact@v2
         if: always()
         with:
           name: ${{ env.SDK_TEST_REPORT }}
-          path: projects/${{ env.SDK_PROJECT }}/${{ env.SDK_TEST_REPORT }}
+          path: projects/${{ env.PROJECT }}/${{ env.TEST_REPORT }}
 
   publish-test-reports:
     name: Publish test reports
@@ -70,14 +68,14 @@ jobs:
     if: success() || failure()
 
     steps:
-      - name: Download SDK integration test report
+      - name: Download test report
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.SDK_TEST_REPORT }}
-          path: ${{ env.SDK_TEST_REPORT }}
+          name: ${{ env.TEST_REPORT }}
+          path: ${{ env.TEST_REPORT }}
 
-      - name: Publish SDK integration test report
+      - name: Test report
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
-          files: ${{ env.SDK_TEST_REPORT }}/*.xml
+          files: ${{ env.TEST_REPORT }}/*.xml
           check_name: SDK integration test report
