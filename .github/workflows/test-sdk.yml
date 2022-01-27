@@ -3,7 +3,7 @@ name: Test SDK
 on:
   push:
     branches:
-      - DEV-354-sdk-pipeline
+      - master
   workflow_dispatch:
 
 env:

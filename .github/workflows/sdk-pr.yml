@@ -3,7 +3,7 @@ name: SDK PR report
 on:
   pull_request:
     branches:
-      - DEV-354-sdk-pipeline
+      - master
 
 env:
   PYTHON: 3.7.12
