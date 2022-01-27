@@ -1,4 +1,4 @@
-name: Unit and SDK tests
+name: Testing pipeline
 
 on:
   push:
