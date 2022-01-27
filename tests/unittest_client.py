@@ -12,7 +12,7 @@ from cord.exceptions import (
 )
 from cord.orm.label_row import LabelRow
 from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
-from tests.test_data.test_blurb import TEST_BLURB
+# from tests.test_data.test_blurb import TEST_BLURB
 
 LABEL_READ_WRITE_KEY = "aJpUqf1UifGGc-c10MjbQ_ze7G6SOs0d-SwfO8D_Ntg"
 LABEL_READ_KEY = "1xI0y7cHYPPZRzCpDvk9WIBMfeonkKVBxjjgJHuYiUI"
@@ -85,22 +85,22 @@ class UnitTests(unittest.TestCase):
         with self.assertRaises(OperationNotAllowed):
             self.write_c.get_label_row(LABEL_ID)
 
-    def test_8(self):
-        new_test_blurb = TEST_BLURB.copy()
-        wrong_id = "97681cfa-0c3a-4ebe-aba3-f17e136fc231"
-        new_test_blurb["data_units"][DATA_ID] = new_test_blurb["data_units"][wrong_id]
-        del new_test_blurb["data_units"][wrong_id]
-        new_test_blurb["data_units"][DATA_ID]["data_hash"] = DATA_ID
-        blurb = self.rw_c.save_label_row(LABEL_ID, TEST_BLURB)
-        assert blurb is True
-
-    def test_10(self):
-        with self.assertRaises(AuthorisationError):
-            self.rw_c.save_label_row("test", TEST_BLURB)
-
-    def test_11(self):
-        with self.assertRaises(OperationNotAllowed):
-            self.read_c.save_label_row(LABEL_ID, TEST_BLURB)
+    # def test_8(self):
+    #     new_test_blurb = TEST_BLURB.copy()
+    #     wrong_id = "97681cfa-0c3a-4ebe-aba3-f17e136fc231"
+    #     new_test_blurb["data_units"][DATA_ID] = new_test_blurb["data_units"][wrong_id]
+    #     del new_test_blurb["data_units"][wrong_id]
+    #     new_test_blurb["data_units"][DATA_ID]["data_hash"] = DATA_ID
+    #     blurb = self.rw_c.save_label_row(LABEL_ID, TEST_BLURB)
+    #     assert blurb is True
+    #
+    # def test_10(self):
+    #     with self.assertRaises(AuthorisationError):
+    #         self.rw_c.save_label_row("test", TEST_BLURB)
+    #
+    # def test_11(self):
+    #     with self.assertRaises(OperationNotAllowed):
+    #         self.read_c.save_label_row(LABEL_ID, TEST_BLURB)
 
     def test_12(self):
         test_blurb = INTERPOLATION_TEST_BLURB.copy()

@@ -9,7 +9,7 @@ from cord.orm.label_row import LabelRow
 from cord.orm.project import Project
 from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
 from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
-from tests.test_data.test_blurb import TEST_BLURB
+# from tests.test_data.test_blurb import TEST_BLURB
 
 # Dummy keys, can be used and abused
 LABEL_READ_WRITE_KEY = "Igr3RTx7B4gJbHZM0eyjOXaPr7jg22Fw22AQbYT0nQM"
@@ -84,29 +84,29 @@ def test_get_label_with_write_key_throws_operation_not_allowed_exception(keys):
         client.get_label_row(keys[2])
 
 
-def test_save_video_label_row(keys, client):
-    blurb = client.save_label_row(keys[2], TEST_BLURB)
-    assert blurb is True
-
-
-def test_save_img_group_label_row(keys, client):
-    blurb = client.save_label_row(keys[3], IMG_GROUP_TEST_BLURB)
-    assert blurb is True
-
-
-def test_save_label_with_invalid_id_throws_authorisation_exception(keys, client):
-    with pytest.raises(expected_exception=cord.exceptions.AuthorisationError):
-        client.save_label_row("test", TEST_BLURB)
-
-
-def test_save_label_with_read_key_throws_operation_not_allowed_exception(keys):
-    client = CordClient.initialise(keys[0], LABEL_READ_KEY)
-
-    with pytest.raises(expected_exception=cord.exceptions.OperationNotAllowed):
-        client.save_label_row(keys[2], TEST_BLURB)
-
-
-def test_object_interpolation_with_polygons(keys):
-    client = CordClient.initialise(keys[0], LABEL_READ_KEY)
-    objects = client.object_interpolation(INTERPOLATION_TEST_BLURB, ["60f75ddb-aa68-4654-8c85-f6959dbb62eb"])
-    assert isinstance(objects, dict)
+# def test_save_video_label_row(keys, client):
+#     blurb = client.save_label_row(keys[2], TEST_BLURB)
+#     assert blurb is True
+#
+#
+# def test_save_img_group_label_row(keys, client):
+#     blurb = client.save_label_row(keys[3], IMG_GROUP_TEST_BLURB)
+#     assert blurb is True
+#
+#
+# def test_save_label_with_invalid_id_throws_authorisation_exception(keys, client):
+#     with pytest.raises(expected_exception=cord.exceptions.AuthorisationError):
+#         client.save_label_row("test", TEST_BLURB)
+#
+#
+# def test_save_label_with_read_key_throws_operation_not_allowed_exception(keys):
+#     client = CordClient.initialise(keys[0], LABEL_READ_KEY)
+#
+#     with pytest.raises(expected_exception=cord.exceptions.OperationNotAllowed):
+#         client.save_label_row(keys[2], TEST_BLURB)
+#
+#
+# def test_object_interpolation_with_polygons(keys):
+#     client = CordClient.initialise(keys[0], LABEL_READ_KEY)
+#     objects = client.object_interpolation(INTERPOLATION_TEST_BLURB, ["60f75ddb-aa68-4654-8c85-f6959dbb62eb"])
+#     assert isinstance(objects, dict)

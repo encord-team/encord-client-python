@@ -1,10 +1,8 @@
 name: SDK integration tests
 
 on:
-  push:
-    branches:
-      - DEV-354-sdk-pipeline
-  workflow_dispatch:
+  release:
+    types: [ created ]
 
 env:
   PYTHON: 3.7.12
