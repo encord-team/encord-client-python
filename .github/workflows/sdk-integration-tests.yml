@@ -62,20 +62,20 @@ jobs:
           path: projects/${{ env.PROJECT }}/${{ env.TEST_REPORT }}
 
   publish-test-reports:
-    name: Publish test reports
+    name: Publish test report
     runs-on: ubuntu-latest
     needs: [ sdk-tests ]
     if: success() || failure()
 
     steps:
-      - name: Download test report
+      - name: Download report
         uses: actions/download-artifact@v2
         with:
           name: ${{ env.TEST_REPORT }}
           path: ${{ env.TEST_REPORT }}
 
-      - name: Test report
+      - name: Publish report
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
           files: ${{ env.TEST_REPORT }}/*.xml
-          check_name: SDK integration test report
+          check_name: Test report
