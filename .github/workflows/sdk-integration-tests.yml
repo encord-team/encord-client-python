@@ -61,21 +61,27 @@ jobs:
           name: ${{ env.TEST_REPORT }}
           path: projects/${{ env.PROJECT }}/${{ env.TEST_REPORT }}
 
-  publish-test-reports:
-    name: Publish test report
-    runs-on: ubuntu-latest
-    needs: [ sdk-tests ]
-    if: success() || failure()
-
-    steps:
-      - name: Download report
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ env.TEST_REPORT }}
-          path: ${{ env.TEST_REPORT }}
-
       - name: Publish report
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
           files: ${{ env.TEST_REPORT }}/*.xml
           check_name: Test report
+#
+#  publish-test-report:
+#    name: Publish test report
+#    runs-on: ubuntu-latest
+#    needs: [ sdk-tests ]
+#    if: success() || failure()
+#
+#    steps:
+#      - name: Download report
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: ${{ env.TEST_REPORT }}
+#          path: ${{ env.TEST_REPORT }}
+#
+#      - name: Publish report
+#        uses: EnricoMi/publish-unit-test-result-action@v1
+#        with:
+#          files: ${{ env.TEST_REPORT }}/*.xml
+#          check_name: Test report
