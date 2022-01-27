@@ -35,9 +35,9 @@ def test_initialise(keys):
     assert isinstance(CordClient.initialise(resource_id=keys[0], api_key=keys[1]), CordClient)
 
 
-def test_initialise_with_config(keys):
-    config = CordConfig(resource_id=keys[0], api_key=keys[1])
-    assert isinstance(CordClient.initialise_with_config(config), CordClient)
+# def test_initialise_with_config(keys):
+#     config = CordConfig(resource_id=keys[0], api_key=keys[1])
+#     assert isinstance(CordClient.initialise_with_config(config), CordClient)
 
 
 def test_missing_key(keys):
@@ -47,21 +47,21 @@ def test_missing_key(keys):
     assert excinfo.value.message == "API key not provided"
 
 
-def test_missing_resource_id(keys):
-    with pytest.raises(expected_exception=cord.exceptions.AuthenticationError) as excinfo:
-        CordClient.initialise(api_key=keys[1])
-
-    assert excinfo.value.message == "Project ID or dataset ID not provided"
-
-
-def test_invalid_key(keys):
-    with pytest.raises(expected_exception=cord.exceptions.AuthenticationError):
-        CordClient.initialise(keys[0], uuid.uuid4())
+# def test_missing_resource_id(keys):
+#     with pytest.raises(expected_exception=cord.exceptions.AuthenticationError) as excinfo:
+#         CordClient.initialise(api_key=keys[1])
+#
+#     assert excinfo.value.message == "Project ID or dataset ID not provided"
 
 
-def test_invalid_resource_id(keys):
-    with pytest.raises(expected_exception=cord.exceptions.AuthenticationError):
-        CordClient.initialise(uuid.uuid4(), keys[1])
+# def test_invalid_key(keys):
+#     with pytest.raises(expected_exception=cord.exceptions.AuthenticationError):
+#         CordClient.initialise(keys[0], uuid.uuid4())
+
+
+# def test_invalid_resource_id(keys):
+#     with pytest.raises(expected_exception=cord.exceptions.AuthenticationError):
+#         CordClient.initialise(uuid.uuid4(), keys[1])
 
 
 def test_get_project(client):
@@ -77,11 +77,11 @@ def test_get_label_with_invalid_id_throws_authorisation_exception(client):
         client.get_label_row("test")
 
 
-def test_get_label_with_write_key_throws_operation_not_allowed_exception(keys):
-    client = CordClient.initialise(keys[0], LABEL_WRITE_KEY)
-
-    with pytest.raises(expected_exception=cord.exceptions.OperationNotAllowed):
-        client.get_label_row(keys[2])
+# def test_get_label_with_write_key_throws_operation_not_allowed_exception(keys):
+#     client = CordClient.initialise(keys[0], LABEL_WRITE_KEY)
+#
+#     with pytest.raises(expected_exception=cord.exceptions.OperationNotAllowed):
+#         client.get_label_row(keys[2])
 
 
 # def test_save_video_label_row(keys, client):
