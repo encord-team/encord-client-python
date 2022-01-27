@@ -14,7 +14,7 @@ DATASET_RESPONSE_JSON = {
 def test_create_dataset_response_conversions():
     create_dataset_response = CreateDatasetResponse.from_dict(DATASET_RESPONSE_JSON)
 
-    assert create_dataset_response.data == DATASET_RESPONSE_JSON
+    assert create_dataset_response == DATASET_RESPONSE_JSON
 
 
 def test_create_dataset_response_fields():

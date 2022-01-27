@@ -705,6 +705,7 @@ class CordClientProject(CordClient):
         device="cuda",
         detection_frame_range=None,
         allocation_enabled=False,
+        data_hashes=None
     ):
         """
         Run inference with model trained on the platform.
@@ -718,6 +719,7 @@ class CordClientProject(CordClient):
             device: Device (CPU or CUDA, default is CUDA).
             detection_frame_range: Detection frame range (for videos).
             allocation_enabled: Object UID allocation (tracking) enabled (disabled by default).
+            data_hashes: list of hash of the videos/image_groups you'd like to run inference on.
 
         Returns:
             Inference results: A dict of inference results.
@@ -728,13 +730,16 @@ class CordClientProject(CordClient):
             ResourceNotFoundError: If no model exists by the specified model_iteration_hash (uid).
             UnknownError: If an error occurs while running inference.
             FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
+            FileSizeNotSupportedError: If the file size is too big to be supported.
             DetectionRangeInvalidError: If a detection range is invalid for video inference
         """
-        if (file_paths is None and base64_strings is None) or (
+        if (file_paths is None and base64_strings is None and data_hashes is None) or (
             file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(base64_strings) > 0
+            and data_hashes is not None and len(data_hashes) > 0
         ):
             raise cord.exceptions.CordException(
-                message="To run model inference, you must pass either a list of files or base64 strings."
+                message="To run model inference, you must pass either a list of files or base64 strings or list of"
+                        " data hash."
             )
 
         if detection_frame_range is None:
@@ -768,6 +773,7 @@ class CordClientProject(CordClient):
                 "device": device,
                 "detection_frame_range": detection_frame_range,
                 "allocation_enabled": allocation_enabled,
+                "data_hashes": data_hashes
             }
         )
 
