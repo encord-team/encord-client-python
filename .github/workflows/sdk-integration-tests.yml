@@ -54,11 +54,11 @@ jobs:
           export PRIVATE_KEY="${{ env.PRIVATE_KEY }}"
           python -m pytest ${{ env.TEST_DIR }} --rootdir=${{ env.TEST_DIR }} --verbose --junitxml=${{ env.TEST_REPORT }}
 
-      - name: Upload report
+      - name: Upload test report
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: ${{ env.SDK_TEST_REPORT }}
+          name: ${{ env.TEST_REPORT }}
           path: projects/${{ env.PROJECT }}/${{ env.TEST_REPORT }}
 
   publish-test-reports:
