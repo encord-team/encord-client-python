@@ -1,4 +1,4 @@
-name: SDK integration tests
+name: Unit and SDK tests
 
 on:
   push:
