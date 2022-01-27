@@ -1,0 +1,46 @@
+name: SDK integration tests
+
+on:
+  push:
+    branches:
+      - DEV-354-sdk-pipeline
+  workflow_dispatch:
+
+env:
+  PYTHON: 3.7.12
+  POETRY: 1.1.12
+  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
+concurrency:
+  group: cord-client-${{ github.ref }}-publish
+  cancel-in-progress: true
+
+jobs:
+  publish-sdk:
+    name: Publish SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON }}
+
+      - name: Setup Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY }}
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Build SDK
+        run: poetry build
+
+      - name: Publish SDK
+        run: |
+          poetry config pypi-token.pypi ${{ env.PYPI_TOKEN}
+          poetry publish --dry-run
