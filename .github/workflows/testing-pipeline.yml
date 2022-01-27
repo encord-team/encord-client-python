@@ -7,20 +7,17 @@ on:
   workflow_dispatch:
 
 env:
-  BACKEND_REPO: cord-team/cord-backend
-  PROJECT: sdk-integration-tests
+  PYTHON: 3.7.12
+  POETRY: 1.1.12
   UNIT_TEST_REPORT: unit-test-report.xml
   SDK_TEST_REPORT: sdk-test-report.xml
-  PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
-  TEST_DIR: ./src/cord/sdk_integration_tests/tests
-  ENVIRONMENT: DEV
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
   cancel-in-progress: true
 
 jobs:
-  python-tests:
+  unit-tests:
     name: Run unit tests
     runs-on: ubuntu-latest
     steps:
@@ -30,11 +27,11 @@ jobs:
       - name: Set up python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7.12
+          python-version: ${{ env.PYTHON }}
 
       - uses: snok/install-poetry@v1
         with:
-          version: 1.1.12
+          version: ${{ env.POETRY }}
           virtualenvs-in-project: true
 
       - name: Check cache
@@ -42,7 +39,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .venv
-          key: sdk-${{ hashFiles('poetry.lock') }}
+          key: unit-${{ hashFiles('poetry.lock') }}-${{ env.PYTHON }}
 
       - name: Install dependencies
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -63,6 +60,12 @@ jobs:
   sdk-tests:
     name: Run SDK tests
     runs-on: ubuntu-latest
+    env:
+      BACKEND_REPO: cord-team/cord-backend
+      PROJECT: sdk-integration-tests
+      PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+      TEST_DIR: ./src/cord/sdk_integration_tests/tests
+      ENVIRONMENT: DEV
     steps:
       - name: Checkout backend repo
         uses: actions/checkout@v2
@@ -93,7 +96,7 @@ jobs:
           source .venv/bin/activate
           export CORD_ENV=${{ env.ENVIRONMENT }}
           export PRIVATE_KEY="${{ env.PRIVATE_KEY }}"
-          python -m pytest ${{ env.TEST_DIR }} --rootdir=${{ env.TEST_DIR }} --verbose --junitxml=${{ env.TEST_REPORT }}
+          python -m pytest ${{ env.TEST_DIR }} --rootdir=${{ env.TEST_DIR }} --verbose --junitxml=${{ env.SDK_TEST_REPORT }}
 
       - name: Upload report
         uses: actions/upload-artifact@v2
@@ -105,7 +108,7 @@ jobs:
   publish-test-reports:
       name: Publish test reports
       runs-on: ubuntu-latest
-      needs: [python-tests, sdk-tests]
+      needs: [unit-tests, sdk-tests]
       if: success() || failure()
 
       steps:
