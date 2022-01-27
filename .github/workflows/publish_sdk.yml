@@ -2,7 +2,7 @@ name: Publish SDK
 
 on:
   release:
-    types: [ created ]
+    types: [ published ]
 
 env:
   PYTHON: 3.7.12
