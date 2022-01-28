@@ -3,6 +3,7 @@ import unittest
 import uuid
 from datetime import datetime, timezone
 
+
 from cord.client import CordClient
 from cord.exceptions import (
     AuthenticationError,
