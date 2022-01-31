@@ -1,4 +1,4 @@
-name: "Send Slack message"
+name: "Send Slack notification"
 description: "Send Slack message on success/failure parameter"
 
 inputs:
