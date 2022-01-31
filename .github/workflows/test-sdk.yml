@@ -135,3 +135,24 @@ jobs:
           with:
             files: ${{ env.SDK_TEST_REPORT }}/*.xml
             check_name: SDK integration test report
+
+  send-slack-notification:
+    name: Send notification
+    runs-on: ubuntu-latest
+    needs: [ publish-test-reports ]
+    if: always()
+    env:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get workflow status
+        uses: technote-space/workflow-conclusion-action@v2
+
+      - name: Send Slack notification
+        uses: ./.github/actions/send-slack-notification
+        with:
+          success-parameter: ${{ env.WORKFLOW_CONCLUSION }}
+          failure-channel: ${{ secrets.SLACK_FAILURE_CHANNEL_ID }}
+          failure-message: This pipeline has failed!
