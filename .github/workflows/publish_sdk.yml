@@ -1,11 +1,8 @@
 name: Publish SDK
 
 on:
-  push:
-    branches:
-    - DEV-397-add-slack-notifications-for-sdk-pipeline
-#  release:
-#    types: [ published ]
+  release:
+    types: [ published ]
 
 env:
   PYTHON: 3.7.12
@@ -43,10 +40,10 @@ jobs:
       - name: Build SDK
         run: poetry build
 
-#      - name: Publish SDK
-#        run: |
-#          poetry config pypi-token.pypi ${{ env.PYPI_TOKEN }}
-#          poetry publish --dry-run
+      - name: Publish SDK
+        run: |
+          poetry config pypi-token.pypi ${{ env.PYPI_TOKEN }}
+          poetry publish
 
   send-slack-notification:
     name: Send notification

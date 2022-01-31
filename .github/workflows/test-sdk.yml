@@ -3,7 +3,7 @@ name: Test SDK
 on:
   push:
     branches:
-      - DEV-397-add-slack-notifications-for-sdk-pipeline
+      - master
   workflow_dispatch:
 
 env:
