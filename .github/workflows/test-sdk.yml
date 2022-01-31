@@ -47,7 +47,6 @@ jobs:
 
       - name: Run tests
         run: |
-          exit 1
           source .venv/bin/activate
           python -m pytest tests --verbose --junitxml=${{ env.UNIT_TEST_REPORT }}
 

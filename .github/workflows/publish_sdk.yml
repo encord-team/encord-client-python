@@ -36,7 +36,9 @@ jobs:
           virtualenvs-in-project: true
 
       - name: Install dependencies
-        run: poetry install --no-interaction
+        run: |
+        exit 1
+        poetry install --no-interaction
 
       - name: Build SDK
         run: poetry build
