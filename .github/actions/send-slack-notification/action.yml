@@ -26,6 +26,13 @@ runs:
   using: "composite"
 
   steps:
+    - id: commit-message
+      run: |
+        echo "${{ github.event.head_commit.message }}" > message.txt
+        sed -z 's/\n/\\n/g' message.txt > newmessage.txt
+        echo "::set-output name=message::$(cat newmessage.txt)"
+      shell: bash
+
     - uses: slackapi/slack-github-action@v1.18.0
       if: inputs.success-parameter == 'success' && inputs.success-channel != ''
       with:
@@ -38,7 +45,7 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": ":white_check_mark: Success: <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ github.workflow }}>\n:memo: Commit: <${{ github.event.head_commit.url }}|${{ github.ref_name }}>\n:hatching_chick: What's new: ${{ github.event.head_commit.message }}\n\n${{ inputs.success-message }}"
+                  "text": ":white_check_mark: Success: <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ github.workflow }}>\n:memo: Commit: <${{ github.event.head_commit.url }}|${{ github.ref_name }}>\n:hatching_chick: What's new: ${{ steps.commit-message.outputs.message }}\n\n${{ inputs.success-message }}"
                 }
               }
             ]
@@ -56,7 +63,7 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": ":exclamation: FAILURE: <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ github.workflow }}>\n:memo: Commit: <${{ github.event.head_commit.url }}|${{ github.ref_name }}>\n:beetle: Issue: ${{ github.event.head_commit.message }}\n\n${{ inputs.failure-message }}"
+                  "text": ":exclamation: FAILURE: <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ github.workflow }}>\n:memo: Commit: <${{ github.event.head_commit.url }}|${{ github.ref_name }}>\n:beetle: Issue: ${{ steps.commit-message.outputs.message }}\n\n${{ inputs.failure-message }}"
                 }
               }
             ]
