@@ -34,7 +34,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          exit 1
           poetry install --no-interaction
 
       - name: Build SDK
