@@ -298,7 +298,7 @@ class CordUserClient:
         Retrieve dataset info (pointers to data, labels).
 
         Args:
-            self: Cord client object.
+            self: CordUserClient object.
             dataset_hash: unique identifier of the dataset. Caller of this method should be the Admin of this dataset.
 
         Returns:
