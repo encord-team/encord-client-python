@@ -39,8 +39,6 @@ class CordUserClient:
     def __init__(self, user_config: UserConfig, querier: Querier):
         self.user_config = user_config
         self.querier = querier
-        self.dataset_client_dict: Dict[str, CordClientDataset] = {}
-        self.project_client_dict: Dict[str, CordClientProject] = {}
 
     def create_private_dataset(
         self,
@@ -133,11 +131,11 @@ class CordUserClient:
     def get_or_create_project_api_key(self, project_hash: str) -> str:
         return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
 
-    def get_dataset_client(self, dataset_hash: str, **kwargs) -> CordClientDataset:
+    def get_dataset_client(self, dataset_hash: str, **kwargs) -> Union[CordClientProject, CordClientDataset]:
         dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
         return CordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
 
-    def get_project_client(self, project_hash: str, **kwargs) -> CordClientProject:
+    def get_project_client(self, project_hash: str, **kwargs) -> Union[CordClientProject, CordClientDataset]:
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
         return CordClient.initialise(project_hash, project_api_key, **kwargs)
 
@@ -280,33 +278,3 @@ class CordUserClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
-
-    def __get_dataset_client_internal(self, dataset_hash) -> CordClientDataset:
-        if dataset_hash not in self.dataset_client_dict:
-            self.dataset_client_dict[dataset_hash] = self.get_dataset_client(dataset_hash)
-
-        return self.dataset_client_dict[dataset_hash]
-
-    def __get_project_client_internal(self, project_hash) -> CordClientProject:
-        if project_hash not in self.project_client_dict:
-            self.project_client_dict[project_hash] = self.get_project_client(project_hash)
-
-        return self.project_client_dict[project_hash]
-
-    def get_dataset(self, dataset_hash: str) -> Dataset:
-        """
-        Retrieve dataset info (pointers to data, labels).
-
-        Args:
-            self: CordUserClient object.
-            dataset_hash: unique identifier of the dataset. Caller of this method should be the Admin of this dataset.
-
-        Returns:
-            Dataset: A dataset record instance.
-
-        Raises:
-            AuthorisationError: If you are not the Admin of the dataset.
-            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
-            UnknownError: If an error occurs while retrieving the dataset.
-        """
-        return self.__get_dataset_client_internal(dataset_hash).get_dataset()
