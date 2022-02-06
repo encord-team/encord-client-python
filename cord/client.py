@@ -74,7 +74,7 @@ from cord.utilities.project_user import ProjectUserRole, ProjectUser
 logger = logging.getLogger(__name__)
 
 
-class CordClient(object):
+class EncordClient(object):
     """
     Cord client. Allows you to query db items associated
     with a project (e.g. label rows, datasets).
@@ -103,10 +103,10 @@ class CordClient(object):
                 If None, the CORD_DOMAIN is used
 
         Returns:
-            CordClient: A Cord client instance.
+            EncordClient: A Cord client instance.
         """
         config = CordConfig(resource_id, api_key, domain=domain)
-        return CordClient.initialise_with_config(config)
+        return EncordClient.initialise_with_config(config)
 
     @staticmethod
     def initialise_with_config(config: Config) -> Union[EncordClientProject, EncordClientDataset]:
@@ -117,7 +117,7 @@ class CordClient(object):
             config: A Cord config instance.
 
         Returns:
-            CordClient: A Cord client instance.
+            EncordClient: A Cord client instance.
         """
         querier = Querier(config)
         key_type = querier.basic_getter(ApiKeyMeta)
@@ -159,7 +159,10 @@ class CordClient(object):
         return self._querier.get_multiple(CloudIntegration)
 
 
-class EncordClientDataset(CordClient):
+CordClient = EncordClient
+
+
+class EncordClientDataset(EncordClient):
     def get_dataset(self) -> Dataset:
         """
         Retrieve dataset info (pointers to data, labels).
@@ -350,7 +353,7 @@ class EncordClientDataset(CordClient):
 CordClientDataset = EncordClientDataset
 
 
-class EncordClientProject(CordClient):
+class EncordClientProject(EncordClient):
     def get_project(self):
         """
         Retrieve project info (pointers to data, labels).
