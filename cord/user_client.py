@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
 
-from cord.client import CordClient, EncordClientProject, EncordClientDataset
+from cord.client import EncordClient, EncordClientProject, EncordClientDataset
 from cord.configs import UserConfig
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url_list
@@ -133,11 +133,11 @@ class CordUserClient:
 
     def get_dataset_client(self, dataset_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
         dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
-        return CordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
+        return EncordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
 
     def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
-        return CordClient.initialise(project_hash, project_api_key, **kwargs)
+        return EncordClient.initialise(project_hash, project_api_key, **kwargs)
 
     def create_project_from_cvat(
         self,
@@ -263,7 +263,7 @@ class CordUserClient:
             dataset_hash, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
         )
 
-        client = CordClient.initialise(
+        client = EncordClient.initialise(
             dataset_hash,
             dataset_api_key.api_key,
             domain=self.user_config.domain,
