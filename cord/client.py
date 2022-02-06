@@ -87,7 +87,7 @@ class CordClient(object):
     @staticmethod
     def initialise(
         resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = CORD_DOMAIN
-    ) -> Union[CordClientProject, EncordClientDataset]:
+    ) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Cord client from a resource EntityId and API key.
 
@@ -109,7 +109,7 @@ class CordClient(object):
         return CordClient.initialise_with_config(config)
 
     @staticmethod
-    def initialise_with_config(config: Config) -> Union[CordClientProject, EncordClientDataset]:
+    def initialise_with_config(config: Config) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Cord client from a Cord config instance.
 
@@ -125,7 +125,7 @@ class CordClient(object):
 
         if resource_type == TYPE_PROJECT:
             logger.info("Initialising Cord client for project using key: %s", key_type.get("title", ""))
-            return CordClientProject(querier, config)
+            return EncordClientProject(querier, config)
 
         elif resource_type == TYPE_DATASET:
             logger.info("Initialising Cord client for dataset using key: %s", key_type.get("title", ""))
@@ -141,7 +141,7 @@ class CordClient(object):
         value = self.__dict__.get(name)
         if not value:
             self_type = type(self).__name__
-            if self_type == "CordClientDataset" and name in CordClientProject.__dict__.keys():
+            if self_type == "CordClientDataset" and name in EncordClientProject.__dict__.keys():
                 raise cord.exceptions.CordException(
                     message=("{} is implemented in Projects, not Datasets.".format(name))
                 )
@@ -350,7 +350,7 @@ class EncordClientDataset(CordClient):
 CordClientDataset = EncordClientDataset
 
 
-class CordClientProject(CordClient):
+class EncordClientProject(CordClient):
     def get_project(self):
         """
         Retrieve project info (pointers to data, labels).
@@ -1061,3 +1061,6 @@ class CordClientProject(CordClient):
         """
         payload = {"editor": ontology.to_dict()}
         return self._querier.basic_setter(Project, uid=None, payload=payload)
+
+
+CordClientProject = EncordClientProject
