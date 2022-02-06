@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
 
-from cord.client import CordClient, CordClientProject, CordClientDataset
+from cord.client import CordClient, CordClientProject, EncordClientDataset
 from cord.configs import UserConfig
 from cord.http.querier import Querier
 from cord.http.utils import upload_to_signed_url_list
@@ -131,11 +131,11 @@ class CordUserClient:
     def get_or_create_project_api_key(self, project_hash: str) -> str:
         return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
 
-    def get_dataset_client(self, dataset_hash: str, **kwargs) -> Union[CordClientProject, CordClientDataset]:
+    def get_dataset_client(self, dataset_hash: str, **kwargs) -> Union[CordClientProject, EncordClientDataset]:
         dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
         return CordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
 
-    def get_project_client(self, project_hash: str, **kwargs) -> Union[CordClientProject, CordClientDataset]:
+    def get_project_client(self, project_hash: str, **kwargs) -> Union[CordClientProject, EncordClientDataset]:
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
         return CordClient.initialise(project_hash, project_api_key, **kwargs)
 

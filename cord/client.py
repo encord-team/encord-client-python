@@ -87,7 +87,7 @@ class CordClient(object):
     @staticmethod
     def initialise(
         resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = CORD_DOMAIN
-    ) -> Union[CordClientProject, CordClientDataset]:
+    ) -> Union[CordClientProject, EncordClientDataset]:
         """
         Create and initialize a Cord client from a resource EntityId and API key.
 
@@ -109,7 +109,7 @@ class CordClient(object):
         return CordClient.initialise_with_config(config)
 
     @staticmethod
-    def initialise_with_config(config: Config) -> Union[CordClientProject, CordClientDataset]:
+    def initialise_with_config(config: Config) -> Union[CordClientProject, EncordClientDataset]:
         """
         Create and initialize a Cord client from a Cord config instance.
 
@@ -129,7 +129,7 @@ class CordClient(object):
 
         elif resource_type == TYPE_DATASET:
             logger.info("Initialising Cord client for dataset using key: %s", key_type.get("title", ""))
-            return CordClientDataset(querier, config)
+            return EncordClientDataset(querier, config)
 
         else:
             raise cord.exceptions.InitialisationError(
@@ -145,7 +145,7 @@ class CordClient(object):
                 raise cord.exceptions.CordException(
                     message=("{} is implemented in Projects, not Datasets.".format(name))
                 )
-            elif self_type == "CordClientProject" and name in CordClientDataset.__dict__.keys():
+            elif self_type == "CordClientProject" and name in EncordClientDataset.__dict__.keys():
                 raise cord.exceptions.CordException(
                     message=("{} is implemented in Datasets, not Projects.".format(name))
                 )
@@ -159,7 +159,7 @@ class CordClient(object):
         return self._querier.get_multiple(CloudIntegration)
 
 
-class CordClientDataset(CordClient):
+class EncordClientDataset(CordClient):
     def get_dataset(self) -> Dataset:
         """
         Retrieve dataset info (pointers to data, labels).
@@ -345,6 +345,9 @@ class CordClientDataset(CordClient):
         response = self._querier.get_multiple(ImageGroupOCR, payload=payload)
 
         return response
+
+
+CordClientDataset = EncordClientDataset
 
 
 class CordClientProject(CordClient):
