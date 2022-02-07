@@ -74,7 +74,7 @@ from cord.utilities.project_user import ProjectUserRole, ProjectUser
 logger = logging.getLogger(__name__)
 
 
-class CordClient(object):
+class EncordClient(object):
     """
     Cord client. Allows you to query db items associated
     with a project (e.g. label rows, datasets).
@@ -87,7 +87,7 @@ class CordClient(object):
     @staticmethod
     def initialise(
         resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = CORD_DOMAIN
-    ) -> Union[CordClientProject, CordClientDataset]:
+    ) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Cord client from a resource EntityId and API key.
 
@@ -103,13 +103,13 @@ class CordClient(object):
                 If None, the CORD_DOMAIN is used
 
         Returns:
-            CordClient: A Cord client instance.
+            EncordClient: A Cord client instance.
         """
         config = CordConfig(resource_id, api_key, domain=domain)
-        return CordClient.initialise_with_config(config)
+        return EncordClient.initialise_with_config(config)
 
     @staticmethod
-    def initialise_with_config(config: Config) -> Union[CordClientProject, CordClientDataset]:
+    def initialise_with_config(config: Config) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Cord client from a Cord config instance.
 
@@ -117,7 +117,7 @@ class CordClient(object):
             config: A Cord config instance.
 
         Returns:
-            CordClient: A Cord client instance.
+            EncordClient: A Cord client instance.
         """
         querier = Querier(config)
         key_type = querier.basic_getter(ApiKeyMeta)
@@ -125,11 +125,11 @@ class CordClient(object):
 
         if resource_type == TYPE_PROJECT:
             logger.info("Initialising Cord client for project using key: %s", key_type.get("title", ""))
-            return CordClientProject(querier, config)
+            return EncordClientProject(querier, config)
 
         elif resource_type == TYPE_DATASET:
             logger.info("Initialising Cord client for dataset using key: %s", key_type.get("title", ""))
-            return CordClientDataset(querier, config)
+            return EncordClientDataset(querier, config)
 
         else:
             raise cord.exceptions.InitialisationError(
@@ -141,11 +141,11 @@ class CordClient(object):
         value = self.__dict__.get(name)
         if not value:
             self_type = type(self).__name__
-            if self_type == "CordClientDataset" and name in CordClientProject.__dict__.keys():
+            if self_type == "CordClientDataset" and name in EncordClientProject.__dict__.keys():
                 raise cord.exceptions.CordException(
                     message=("{} is implemented in Projects, not Datasets.".format(name))
                 )
-            elif self_type == "CordClientProject" and name in CordClientDataset.__dict__.keys():
+            elif self_type == "CordClientProject" and name in EncordClientDataset.__dict__.keys():
                 raise cord.exceptions.CordException(
                     message=("{} is implemented in Datasets, not Projects.".format(name))
                 )
@@ -159,7 +159,10 @@ class CordClient(object):
         return self._querier.get_multiple(CloudIntegration)
 
 
-class CordClientDataset(CordClient):
+CordClient = EncordClient
+
+
+class EncordClientDataset(EncordClient):
     def get_dataset(self) -> Dataset:
         """
         Retrieve dataset info (pointers to data, labels).
@@ -347,7 +350,10 @@ class CordClientDataset(CordClient):
         return response
 
 
-class CordClientProject(CordClient):
+CordClientDataset = EncordClientDataset
+
+
+class EncordClientProject(EncordClient):
     def get_project(self):
         """
         Retrieve project info (pointers to data, labels).
@@ -1058,3 +1064,6 @@ class CordClientProject(CordClient):
         """
         payload = {"editor": ontology.to_dict()}
         return self._querier.basic_setter(Project, uid=None, payload=payload)
+
+
+CordClientProject = EncordClientProject

@@ -37,35 +37,35 @@ export CORD_API_KEY="<project_api_key>"
 Passing the resource ID and API key as environment variables, you can initialise the Encord client directly.
 
 ```python
-from cord.client import CordClient
+from cord.client import EncordClient
 
-client = CordClient.initialise()
+client = EncordClient.initialise()
 ```
 
 If you want to avoid setting environment variables, you can initialise the Encord client by passing the resource ID and API key as strings.
 
 ```python
-from cord.client import CordClient
+from cord.client import EncordClient
 
-client = CordClient.initialise("<resource_id>", "<resource_api_key>")
+client = EncordClient.initialise("<resource_id>", "<resource_api_key>")
 ```
 
 If you wish to instantiate several client objects and avoid passing parameters each time, you can instantiate a CordConfig object, pass the resource ID and API key as strings, and initialise the client with the config object.
 
 ```py
-from cord.client import CordClient
+from cord.client import EncordClient
 from cord.client import CordConfig
 
 config = CordConfig("<resource_id>", "<resource_api_key>")
-client = CordClient.initialise_with_config(config)
+client = EncordClient.initialise_with_config(config)
 ```
 
 Once you have instantiated an Encord client, it is easy to fetch information associated with the given resource ID.
 
 ```py
-from cord.client import CordClient
+from cord.client import EncordClient
 
-client = CordClient.initialise()
+client = EncordClient.initialise()
 project = client.get_project()
 ```
 

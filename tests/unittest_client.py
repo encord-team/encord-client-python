@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 
 
-from cord.client import CordClient
+from cord.client import EncordClient
 from cord.exceptions import (
     AuthenticationError,
     AuthorisationError,
@@ -39,10 +39,10 @@ class UnitTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(UnitTests, cls).setUpClass()
-        cls.read_c = CordClient.initialise(PROJECT_ID, LABEL_READ_KEY)
-        cls.write_c = CordClient.initialise(PROJECT_ID, LABEL_WRITE_KEY)
-        cls.rw_c = CordClient.initialise(PROJECT_ID, LABEL_READ_WRITE_KEY)
-        cls.dt_c = CordClient.initialise(DATASET_ID, DATASET_KEY)
+        cls.read_c = EncordClient.initialise(PROJECT_ID, LABEL_READ_KEY)
+        cls.write_c = EncordClient.initialise(PROJECT_ID, LABEL_WRITE_KEY)
+        cls.rw_c = EncordClient.initialise(PROJECT_ID, LABEL_READ_WRITE_KEY)
+        cls.dt_c = EncordClient.initialise(DATASET_ID, DATASET_KEY)
 
     def test_create_label_wrong_data_hash(self):
         with self.assertRaises(AuthorisationError):
@@ -59,21 +59,21 @@ class UnitTests(unittest.TestCase):
 
     def test_1(self):
         with self.assertRaises(AuthenticationError) as excinfo:
-            CordClient.initialise(PROJECT_ID)
+            EncordClient.initialise(PROJECT_ID)
         self.assertEqual("API key not provided", str(excinfo.exception))
 
     def test_2(self):
         with self.assertRaises(AuthenticationError) as excinfo:
-            CordClient.initialise(api_key=LABEL_READ_WRITE_KEY)
+            EncordClient.initialise(api_key=LABEL_READ_WRITE_KEY)
         self.assertEqual("Project ID or dataset ID not provided", str(excinfo.exception))
 
     def test_3(self):
         with self.assertRaises(AuthenticationError):
-            client = CordClient.initialise(PROJECT_ID, uuid.uuid4())
+            client = EncordClient.initialise(PROJECT_ID, uuid.uuid4())
 
     def test_4(self):
         with self.assertRaises(AuthenticationError):
-            client = CordClient.initialise(uuid.uuid4(), LABEL_READ_WRITE_KEY)
+            client = EncordClient.initialise(uuid.uuid4(), LABEL_READ_WRITE_KEY)
 
     def test_5(self):
         assert isinstance(self.rw_c.get_label_row(LABEL_ID), LabelRow)
