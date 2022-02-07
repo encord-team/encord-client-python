@@ -24,7 +24,7 @@ For full documentation, visit [Encord Python API Client](https://docs.encord.com
 First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/stable/installing) package manager:
 
 ```bash
-pip install cord-client-python
+pip install encord-client-python
 ```
 
 Then, create an API key for authentication via the [Encord web app](https://app.encord.com). Pass the resource ID and API key as environment variables or pass them explicitly when you initialise the CordClient object.
@@ -37,7 +37,7 @@ export CORD_API_KEY="<project_api_key>"
 Passing the resource ID and API key as environment variables, you can initialise the Encord client directly.
 
 ```python
-from cord.client import EncordClient
+from encord.client import EncordClient
 
 client = EncordClient.initialise()
 ```
@@ -45,7 +45,7 @@ client = EncordClient.initialise()
 If you want to avoid setting environment variables, you can initialise the Encord client by passing the resource ID and API key as strings.
 
 ```python
-from cord.client import EncordClient
+from encord.client import EncordClient
 
 client = EncordClient.initialise("<resource_id>", "<resource_api_key>")
 ```
@@ -53,17 +53,17 @@ client = EncordClient.initialise("<resource_id>", "<resource_api_key>")
 If you wish to instantiate several client objects and avoid passing parameters each time, you can instantiate a CordConfig object, pass the resource ID and API key as strings, and initialise the client with the config object.
 
 ```py
-from cord.client import EncordClient
-from cord.client import CordConfig
+from encord.client import EncordClient
+from encord.client import EncordConfig
 
-config = CordConfig("<resource_id>", "<resource_api_key>")
+config = EncordConfig("<resource_id>", "<resource_api_key>")
 client = EncordClient.initialise_with_config(config)
 ```
 
 Once you have instantiated an Encord client, it is easy to fetch information associated with the given resource ID.
 
 ```py
-from cord.client import EncordClient
+from encord.client import EncordClient
 
 client = EncordClient.initialise()
 project = client.get_project()

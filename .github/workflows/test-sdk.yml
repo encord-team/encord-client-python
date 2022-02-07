@@ -13,7 +13,7 @@ env:
   SDK_TEST_REPORT: sdk-test-report.xml
 
 concurrency:
-  group: cord-client-${{ github.ref }}-test
+  group: encord-client-${{ github.ref }}-test
   cancel-in-progress: true
 
 jobs:
@@ -61,10 +61,10 @@ jobs:
     name: Run SDK tests
     runs-on: ubuntu-latest
     env:
-      BACKEND_REPO: cord-team/cord-backend
+      BACKEND_REPO: encord-team/encord-backend
       PROJECT: sdk-integration-tests
       PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
-      TEST_DIR: ./src/cord/sdk_integration_tests/tests
+      TEST_DIR: ./src/encord/sdk_integration_tests/tests
       ENVIRONMENT: DEV
     steps:
       - name: Checkout backend repo
