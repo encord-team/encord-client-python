@@ -7,6 +7,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
 
+<<<<<<< HEAD:encord/user_client.py
 from encord.client import EncordClient, EncordClientProject, EncordClientDataset
 from encord.configs import UserConfig
 from encord.http.querier import Querier
@@ -14,15 +15,17 @@ from encord.http.utils import upload_to_signed_url_list
 from encord.orm.dataset import SignedImagesURL, Image, CreateDatasetResponse
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Dataset, StorageLocation
+from cord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.dataset import DatasetScope, DatasetAPIKey
 from encord.orm.project import (
     Project,
     ProjectImporter,
     ReviewMode,
     ProjectImporterCvatInfo,
-    CvatExportType,
+    CvatExportType, ProjectUserRole,
 )
 from encord.orm.project_api_key import ProjectAPIKey
+from cord.orm.project_with_user_role import ProjectWithUserRole
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterSuccess,
@@ -104,12 +107,20 @@ class EncordUserClient:
         response = self.querier.basic_put(DatasetAPIKey, uid=None, payload=api_key_payload)
         return DatasetAPIKey.from_dict(response)
 
+    def get_datasets(self, filter=None):
+        data = self.querier.get_multiple(DatasetWithUserRole, payload={'filter': filter})
+        return [{"dataset": DatasetInfo(**d.dataset), "user_role": DatasetUserRole(d.user_role)} for d in data]
+
     @staticmethod
     def create_with_ssh_private_key(ssh_private_key: str, password: str = None, **kwargs) -> EncordUserClient:
         user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
         querier = Querier(user_config)
 
         return EncordUserClient(user_config, querier)
+
+    def get_projects(self, filter=None):
+        data = self.querier.get_multiple(ProjectWithUserRole, payload={'filter': filter})
+        return [{"project": Project(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
     def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
         project = {"title": project_title, "description": project_description, "dataset_hashes": dataset_hashes}

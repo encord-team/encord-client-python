@@ -14,9 +14,8 @@
 # under the License.
 
 from collections import OrderedDict
-from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, List, Union
+from enum import Enum, IntEnum
+from typing import Optional
 
 from encord.orm import base_orm
 
@@ -56,6 +55,7 @@ class Project(base_orm.BaseORM):
 
     DB_FIELDS = OrderedDict(
         [
+            ("project_hash", str),
             ("title", str),
             ("description", str),
             ("editor_ontology", (dict, str)),
@@ -76,6 +76,32 @@ class Project(base_orm.BaseORM):
             res.append(label.get("label_hash"))
         return res
 
+    @property
+    def project_hash(self):
+        return self["project_hash"]
+
+
+    @property
+    def title(self):
+        return self["title"]
+
+
+    @property
+    def description(self):
+        return self["description"]
+
+
+    @property
+    def editor_ontology(self):
+        return self["editor_ontology"]
+
+    @property
+    def datasets(self):
+        return self["datasets"]
+
+    @property
+    def label_rows(self):
+        return self["label_rows"]
 
 class ProjectCopy:
     pass
@@ -93,6 +119,14 @@ class ProjectCopyOptions(Enum):
     COLLABORATORS = "collaborators"
     DATASETS = "datasets"
     MODELS = "models"
+
+
+class ProjectUserRole(IntEnum):
+    ADMIN = 0,
+    USER = 1,
+    REVIEWER = 2,
+    ANNOTATOR_REVIEWER = 3,
+    TEAM_MANAGER = 4
 
 
 class StringEnum(Enum):
