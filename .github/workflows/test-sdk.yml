@@ -3,7 +3,7 @@ name: Test SDK
 on:
   push:
     branches:
-      - fix-failing-pipelines
+      - master
   workflow_dispatch:
 
 env:
