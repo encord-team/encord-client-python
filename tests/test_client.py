@@ -4,7 +4,7 @@ import pytest
 
 import cord.exceptions
 from cord.client import EncordClient
-from cord.configs import CordConfig
+from cord.configs import EncordConfig
 from cord.orm.label_row import LabelRow
 from cord.orm.project import Project
 from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
@@ -37,7 +37,7 @@ def test_initialise(keys):
 
 @pytest.mark.skip(reason="test not maintained")
 def test_initialise_with_config(keys):
-    config = CordConfig(resource_id=keys[0], api_key=keys[1])
+    config = EncordConfig(resource_id=keys[0], api_key=keys[1])
     assert isinstance(EncordClient.initialise_with_config(config), EncordClient)
 
 

@@ -146,7 +146,7 @@ class Querier:
         try:
             res_json = res.json()
         except Exception:
-            raise CordException("Error parsing JSON response: %s" % res.text)
+            raise EncordException("Error parsing JSON response: %s" % res.text)
 
         if res_json.get("status") != requests.codes.ok:
             response = res_json.get("response")

@@ -35,7 +35,7 @@ from cord.utilities.client_utilities import (
 log = logging.getLogger(__name__)
 
 
-class CordUserClient:
+class EncordUserClient:
     def __init__(self, user_config: UserConfig, querier: Querier):
         self.user_config = user_config
         self.querier = querier
@@ -105,11 +105,11 @@ class CordUserClient:
         return DatasetAPIKey.from_dict(response)
 
     @staticmethod
-    def create_with_ssh_private_key(ssh_private_key: str, password: str = None, **kwargs) -> CordUserClient:
+    def create_with_ssh_private_key(ssh_private_key: str, password: str = None, **kwargs) -> EncordUserClient:
         user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
         querier = Querier(user_config)
 
-        return CordUserClient(user_config, querier)
+        return EncordUserClient(user_config, querier)
 
     def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
         project = {"title": project_title, "description": project_description, "dataset_hashes": dataset_hashes}
@@ -278,3 +278,6 @@ class CordUserClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
+
+
+CordUserClient = EncordUserClient
