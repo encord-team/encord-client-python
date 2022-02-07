@@ -77,7 +77,7 @@ jobs:
         uses: ./.github/actions/setup-poetry-environment
         with:
           project: ${{ env.PROJECT }}
-          cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}
+          cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}-1
 
       - name: Setup FFMPEG
         uses: FedericoCarboni/setup-ffmpeg@v1
