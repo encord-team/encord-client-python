@@ -3,7 +3,7 @@ name: Test SDK
 on:
   push:
     branches:
-      - master
+      - fix-failing-pipelines
   workflow_dispatch:
 
 env:
@@ -39,7 +39,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .venv
-          key: unit-${{ hashFiles('poetry.lock') }}-${{ env.PYTHON }}
+          key: unit-${{ hashFiles('poetry.lock') }}-${{ env.PYTHON }}-1
 
       - name: Install dependencies
         if: steps.cached-poetry.outputs.cache-hit != 'true'
