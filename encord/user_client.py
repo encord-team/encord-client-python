@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import datetime
 from dataclasses import dataclass
 import logging
+from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
 
@@ -108,6 +110,8 @@ class EncordUserClient:
         return DatasetAPIKey.from_dict(response)
 
     def get_datasets(self, filter=None):
+        if filter is not None:
+            filter = self.__validate_filter(filter)
         data = self.querier.get_multiple(DatasetWithUserRole, payload={'filter': filter})
         return [{"dataset": DatasetInfo(**d.dataset), "user_role": DatasetUserRole(d.user_role)} for d in data]
 
@@ -119,6 +123,8 @@ class EncordUserClient:
         return EncordUserClient(user_config, querier)
 
     def get_projects(self, filter=None):
+        if filter is not None:
+            filter = self.__validate_filter(filter)
         data = self.querier.get_multiple(ProjectWithUserRole, payload={'filter': filter})
         return [{"project": Project(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
@@ -290,5 +296,47 @@ class EncordUserClient:
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
 
+<<<<<<< HEAD:encord/user_client.py
 
 CordUserClient = EncordUserClient
+=======
+    def __validate_filter(self, filter):
+        if not isinstance(filter, dict):
+            raise ValueError("Filter should be a dictionary")
+
+        valid_filters = set([f.value for f in ListingFilter])
+
+        ret = dict()
+
+        # be relaxed with what we receive: translate raw strings to enum values
+        for (clause, val) in filter.items():
+            if isinstance(clause, str) and clause in valid_filters:
+                clause = ListingFilter(clause)
+
+            if clause not in ListingFilter:
+                raise ValueError(f"Unknown filter '{clause}")
+
+            if clause.name.endswith("before") or clause.name.endswith("after"):
+                if isinstance(val, datetime.datetime):
+                    val = val.isoformat()
+                else:
+                    raise ValueError(f"Value for {clause.name} filter should be a datetime")
+
+            ret[clause.value] = val
+
+        return ret
+
+
+class ListingFilter(Enum):
+    """
+    Available filters for get_projects() and get_datasets()
+    """
+    TITLE_EQ = "title_eq"
+    TITLE_LIKE = "title_like"
+    DESC_EQ = "desc_eq"
+    DESC_LIKE = "desc_like"
+    CREATED_BEFORE = "created_before"
+    CREATED_AFTER = "created_after"
+    EDITED_BEFORE = "edited_before"
+    EDITED_AFTER = "edited_after"
+>>>>>>> 130e4d1 (Filtering capability):cord/user_client.py

@@ -12,9 +12,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import datetime
 from collections import OrderedDict
-from enum import Enum, IntEnum
+from enum import IntEnum, Enum
 from typing import Optional
 
 from encord.orm import base_orm
@@ -58,6 +58,8 @@ class Project(base_orm.BaseORM):
             ("project_hash", str),
             ("title", str),
             ("description", str),
+            ("created_at", datetime.datetime),
+            ("last_edited_at", datetime.datetime),
             ("editor_ontology", (dict, str)),
             ("datasets", (list, str)),
             ("label_rows", (list, str)),
