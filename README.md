@@ -54,9 +54,9 @@ If you wish to instantiate several client objects and avoid passing parameters e
 
 ```py
 from cord.client import EncordClient
-from cord.client import CordConfig
+from cord.client import EncordConfig
 
-config = CordConfig("<resource_id>", "<resource_api_key>")
+config = EncordConfig("<resource_id>", "<resource_api_key>")
 client = EncordClient.initialise_with_config(config)
 ```
 

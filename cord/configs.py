@@ -128,7 +128,7 @@ def get_env_api_key() -> str:
     return os.environ[_CORD_API_KEY]
 
 
-class CordConfig(Config):
+class EncordConfig(Config):
     def __init__(
         self,
         resource_id: Optional[str] = None,
@@ -137,6 +137,9 @@ class CordConfig(Config):
     ):
         web_file_path = CORD_PUBLIC_PATH
         super().__init__(resource_id, api_key, web_file_path=web_file_path, domain=domain)
+
+
+CordConfig = EncordConfig
 
 
 class UserConfig(BaseConfig):
