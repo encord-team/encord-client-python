@@ -30,7 +30,7 @@ CORD_PUBLIC_USER_PATH = "/public/user"
 CORD_ENDPOINT = CORD_DOMAIN + CORD_PUBLIC_PATH
 CORD_USER_ENDPOINT = CORD_DOMAIN + CORD_PUBLIC_USER_PATH
 WEBSOCKET_PATH = "/websocket"
-WEBSOCKET_DOMAIN = "wss://message-api.encord.tech"
+WEBSOCKET_DOMAIN = "wss://message-api.cord.tech"
 WEBSOCKET_ENDPOINT = WEBSOCKET_DOMAIN + WEBSOCKET_PATH
 
 _CORD_PROJECT_ID = "CORD_PROJECT_ID"
@@ -105,7 +105,7 @@ def get_env_resource_id() -> str:
         raise encord.exceptions.InitialisationError(
             message=(
                 "Found both Project EntityId and Dataset EntityId in os.environ. "
-                "Please initialise CordClient by passing resource_id."
+                "Please initialise EncordClient by passing resource_id."
             )
         )
 

@@ -21,9 +21,9 @@ and obtaining project info:
 
 .. test_blurb2.py code::
 
-    from encord.client import CordClient
+    from encord.client import EncordClient
 
-    client = CordClient.initialize('YourProjectID', 'YourAPIKey')
+    client = EncordClient.initialize('YourProjectID', 'YourAPIKey')
     client.get_project()
 
     Returns:
