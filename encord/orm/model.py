@@ -16,7 +16,7 @@
 from collections import OrderedDict
 from enum import Enum
 
-from cord.orm import base_orm
+from encord.orm import base_orm
 
 
 class ModelOperations(Enum):

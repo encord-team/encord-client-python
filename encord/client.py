@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-""" ``cord.client`` provides a simple Python client that allows you
+""" ``encord.client`` provides a simple Python client that allows you
 to query project resources through the Cord API.
 
 Here is a simple example for instantiating the client for a project
@@ -21,7 +21,7 @@ and obtaining project info:
 
 .. test_blurb2.py code::
 
-    from cord.client import CordClient
+    from encord.client import CordClient
 
     client = CordClient.initialize('YourProjectID', 'YourAPIKey')
     client.get_project()
@@ -42,15 +42,15 @@ import uuid
 from pathlib import Path
 from typing import List, Tuple, Union, Optional
 
-import cord.exceptions
-from cord.configs import EncordConfig, Config, CORD_DOMAIN
-from cord.constants.model import *
-from cord.constants.string_constants import *
-from cord.http.querier import Querier
-from cord.http.utils import upload_to_signed_url_list
-from cord.orm.api_key import ApiKeyMeta
-from cord.orm.cloud_integration import CloudIntegration
-from cord.orm.dataset import (
+import encord.exceptions
+from encord.configs import EncordConfig, Config, CORD_DOMAIN
+from encord.constants.model import *
+from encord.constants.string_constants import *
+from encord.http.querier import Querier
+from encord.http.utils import upload_to_signed_url_list
+from encord.orm.api_key import ApiKeyMeta
+from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.dataset import (
     Dataset,
     Image,
     ImageGroup,
@@ -61,15 +61,15 @@ from cord.orm.dataset import (
     ReEncodeVideoTask,
     ImageGroupOCR,
 )
-from cord.orm.label_log import LabelLog
-from cord.orm.label_row import LabelRow, Review
-from cord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
-from cord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
-from cord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers, ProjectCopyOptions
-from cord.project_ontology.classification_type import ClassificationType
-from cord.project_ontology.object_type import ObjectShape
-from cord.project_ontology.ontology import Ontology
-from cord.utilities.project_user import ProjectUserRole, ProjectUser
+from encord.orm.label_log import LabelLog
+from encord.orm.label_row import LabelRow, Review
+from encord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
+from encord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
+from encord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers, ProjectCopyOptions
+from encord.project_ontology.classification_type import ClassificationType
+from encord.project_ontology.object_type import ObjectShape
+from encord.project_ontology.ontology import Ontology
+from encord.utilities.project_user import ProjectUserRole, ProjectUser
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class EncordClient(object):
                   If None, uses the CORD_DATASET_ID environment variable.
             api_key: An API key.
                      If None, uses the CORD_API_KEY environment variable.
-            domain: The cord api-server domain.
+            domain: The encord api-server domain.
                 If None, the CORD_DOMAIN is used
 
         Returns:
@@ -132,7 +132,7 @@ class EncordClient(object):
             return EncordClientDataset(querier, config)
 
         else:
-            raise cord.exceptions.InitialisationError(
+            raise encord.exceptions.InitialisationError(
                 message=f"API key [{config.api_key}] is not associated with a project or dataset"
             )
 
@@ -142,17 +142,17 @@ class EncordClient(object):
         if not value:
             self_type = type(self).__name__
             if self_type == "CordClientDataset" and name in EncordClientProject.__dict__.keys():
-                raise cord.exceptions.EncordException(
+                raise encord.exceptions.EncordException(
                     message=("{} is implemented in Projects, not Datasets.".format(name))
                 )
             elif self_type == "CordClientProject" and name in EncordClientDataset.__dict__.keys():
-                raise cord.exceptions.EncordException(
+                raise encord.exceptions.EncordException(
                     message=("{} is implemented in Datasets, not Projects.".format(name))
                 )
             elif name == "items":
                 pass
             else:
-                raise cord.exceptions.EncordException(message="{} is not implemented.".format(name))
+                raise encord.exceptions.EncordException(message="{} is not implemented.".format(name))
         return value
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
@@ -204,9 +204,9 @@ class EncordClientDataset(EncordClient):
                 logger.info("Please run client.get_dataset() to refresh.")
                 return res
             else:
-                raise cord.exceptions.EncordException(message="An error has occurred during video upload.")
+                raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
         else:
-            raise cord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
+            raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
 
     def create_image_group(self, file_paths: typing.Iterable[str], max_workers: Optional[int] = None):
         """
@@ -229,7 +229,7 @@ class EncordClientDataset(EncordClient):
         """
         for file_path in file_paths:
             if not os.path.exists(file_path):
-                raise cord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
+                raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
         short_names = list(map(os.path.basename, file_paths))
         signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
         upload_to_signed_url_list(file_paths, signed_urls, self._querier, Image, max_workers)
@@ -241,7 +241,7 @@ class EncordClientDataset(EncordClient):
             logger.info("Please run client.get_dataset() to refresh.")
             return res
         else:
-            raise cord.exceptions.EncordException(message="An error has occurred during image group creation.")
+            raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
 
     def delete_image_group(self, data_hash: str):
         """
@@ -640,10 +640,10 @@ class EncordClientProject(EncordClient):
                 creating a classification model using a bounding box).
         """
         if title is None:
-            raise cord.exceptions.EncordException(message="You must set a title to create a model row.")
+            raise encord.exceptions.EncordException(message="You must set a title to create a model row.")
 
         if features is None:
-            raise cord.exceptions.EncordException(
+            raise encord.exceptions.EncordException(
                 message="You must pass a list of feature uid's (hashes) to create a model row."
             )
 
@@ -659,7 +659,7 @@ class EncordClientProject(EncordClient):
             FASTER_RCNN,
             MASK_RCNN,
         ]:
-            raise cord.exceptions.EncordException(
+            raise encord.exceptions.EncordException(
                 message="You must pass a model (resnet18, resnet34, resnet50, resnet101, resnet152, vgg16, vgg19, "
                 "yolov5, faster_rcnn, mask_rcnn) to create a model row."
             )
@@ -743,7 +743,7 @@ class EncordClientProject(EncordClient):
             file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(base64_strings) > 0
             and data_hashes is not None and len(data_hashes) > 0
         ):
-            raise cord.exceptions.EncordException(
+            raise encord.exceptions.EncordException(
                 message="To run model inference, you must pass either a list of files or base64 strings or list of"
                         " data hash."
             )
@@ -815,21 +815,21 @@ class EncordClientProject(EncordClient):
             UnknownError: If an error occurs during training.
         """
         if label_rows is None:
-            raise cord.exceptions.EncordException(
+            raise encord.exceptions.EncordException(
                 message="You must pass a list of label row uid's (hashes) to train a model."
             )
 
         if epochs is None:
-            raise cord.exceptions.EncordException(message="You must set number of epochs to train a model.")
+            raise encord.exceptions.EncordException(message="You must set number of epochs to train a model.")
 
         if batch_size is None:
-            raise cord.exceptions.EncordException(message="You must set a batch size to train a model.")
+            raise encord.exceptions.EncordException(message="You must set a batch size to train a model.")
 
         if weights is None:
-            raise cord.exceptions.EncordException(message="You must select model weights to train a model.")
+            raise encord.exceptions.EncordException(message="You must select model weights to train a model.")
 
         if device is None:
-            raise cord.exceptions.EncordException(message="You must set a device (cuda or CPU) train a model.")
+            raise encord.exceptions.EncordException(message="You must set a device (cuda or CPU) train a model.")
 
         training_params = ModelTrainingParams(
             {
@@ -904,7 +904,7 @@ class EncordClientProject(EncordClient):
             UnknownError: If an error occurs while running interpolation.
         """
         if len(key_frames) == 0 or len(objects_to_interpolate) == 0:
-            raise cord.exceptions.EncordException(
+            raise encord.exceptions.EncordException(
                 message="To run object interpolation, you must pass key frames and objects to interpolate.."
             )
 
@@ -980,7 +980,7 @@ class EncordClientProject(EncordClient):
             UnknownError: If an error occurs while running interpolation.
         """
         if len(frames) == 0 or len(video) == 0:
-            raise cord.exceptions.EncordException(
+            raise encord.exceptions.EncordException(
                 message="To run fitting, you must pass frames and video to run bounding box fitting on.."
             )
 

@@ -4,14 +4,14 @@ import uuid
 from datetime import datetime, timezone
 
 
-from cord.client import EncordClient
-from cord.exceptions import (
+from encord.client import EncordClient
+from encord.exceptions import (
     AuthenticationError,
     AuthorisationError,
     OperationNotAllowed,
     ResourceExistsError,
 )
-from cord.orm.label_row import LabelRow
+from encord.orm.label_row import LabelRow
 from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
 # from tests.test_data.test_blurb import TEST_BLURB
 

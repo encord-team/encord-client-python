@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, List, Union
 
-from cord.orm import base_orm
+from encord.orm import base_orm
 
 
 class Project(base_orm.BaseORM):

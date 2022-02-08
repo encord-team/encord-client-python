@@ -10,8 +10,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from tqdm import tqdm
 
-from cord.http.querier import Querier
-from cord.orm.dataset import Image, Video
+from encord.http.querier import Querier
+from encord.orm.dataset import Image, Video
 
 PROGRESS_BAR_FILE_FACTOR = 100
 

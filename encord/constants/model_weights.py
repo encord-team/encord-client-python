@@ -13,8 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from cord.constants.model import FAST_AI, YOLOV5, FASTER_RCNN, MASK_RCNN
-from cord.orm.model import ModelTrainingWeights
+from encord.constants.model import FAST_AI, YOLOV5, FASTER_RCNN, MASK_RCNN
+from encord.orm.model import ModelTrainingWeights
 
 fast_ai = ModelTrainingWeights({"model": FAST_AI, "training_config_link": "", "training_weights_link": ""})
 

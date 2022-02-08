@@ -1,12 +1,12 @@
 import uuid
 from typing import List, Dict, Optional, Iterable
 
-from cord.project_ontology.classification_attribute import ClassificationAttribute
-from cord.project_ontology.classification_option import ClassificationOption
-from cord.project_ontology.classification_type import ClassificationType
-from cord.project_ontology.object_type import ObjectShape
-from cord.project_ontology.ontology_classification import OntologyClassification
-from cord.project_ontology.ontology_object import OntologyObject
+from encord.project_ontology.classification_attribute import ClassificationAttribute
+from encord.project_ontology.classification_option import ClassificationOption
+from encord.project_ontology.classification_type import ClassificationType
+from encord.project_ontology.object_type import ObjectShape
+from encord.project_ontology.ontology_classification import OntologyClassification
+from encord.project_ontology.ontology_object import OntologyObject
 
 
 # removal may require calling label/delete/object and label/delete/attribute

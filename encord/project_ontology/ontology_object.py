@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from cord.project_ontology.object_type import ObjectShape
+from encord.project_ontology.object_type import ObjectShape
 
 
 @dataclass
