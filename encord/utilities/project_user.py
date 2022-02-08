@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Dict
 
-from cord.orm.formatter import Formatter
+from encord.orm.formatter import Formatter
 
 
 class ProjectUserRole(IntEnum):

@@ -27,17 +27,17 @@ First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/s
 pip install cord-client-python
 ```
 
-Then, create an API key for authentication via the [Encord web app](https://app.encord.com). Pass the resource ID and API key as environment variables or pass them explicitly when you initialise the CordClient object.
+Then, create an API key for authentication via the [Encord web app](https://app.encord.com). Pass the resource ID and API key as environment variables or pass them explicitly when you initialise the EncordClient object.
 
 ```bash
-export CORD_PROJECT_ID="<project_id>"
-export CORD_API_KEY="<project_api_key>"
+export ENCORD_PROJECT_ID="<project_id>"
+export ENCORD_API_KEY="<project_api_key>"
 ```
 
 Passing the resource ID and API key as environment variables, you can initialise the Encord client directly.
 
 ```python
-from cord.client import EncordClient
+from encord.client import EncordClient
 
 client = EncordClient.initialise()
 ```
@@ -45,16 +45,16 @@ client = EncordClient.initialise()
 If you want to avoid setting environment variables, you can initialise the Encord client by passing the resource ID and API key as strings.
 
 ```python
-from cord.client import EncordClient
+from encord.client import EncordClient
 
 client = EncordClient.initialise("<resource_id>", "<resource_api_key>")
 ```
 
-If you wish to instantiate several client objects and avoid passing parameters each time, you can instantiate a CordConfig object, pass the resource ID and API key as strings, and initialise the client with the config object.
+If you wish to instantiate several client objects and avoid passing parameters each time, you can instantiate a EncordConfig object, pass the resource ID and API key as strings, and initialise the client with the config object.
 
 ```py
-from cord.client import EncordClient
-from cord.client import EncordConfig
+from encord.client import EncordClient
+from encord.client import EncordConfig
 
 config = EncordConfig("<resource_id>", "<resource_api_key>")
 client = EncordClient.initialise_with_config(config)
@@ -63,7 +63,7 @@ client = EncordClient.initialise_with_config(config)
 Once you have instantiated an Encord client, it is easy to fetch information associated with the given resource ID.
 
 ```py
-from cord.client import EncordClient
+from encord.client import EncordClient
 
 client = EncordClient.initialise()
 project = client.get_project()

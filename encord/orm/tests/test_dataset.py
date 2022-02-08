@@ -4,8 +4,8 @@
 from datetime import datetime
 from dateutil import parser
 
-from cord.constants.enums import DataType
-from cord.orm.dataset import Dataset, StorageLocation
+from encord.constants.enums import DataType
+from encord.orm.dataset import Dataset, StorageLocation
 
 DATASET_JSON = {
     "title": "CVAT imported baking dataset",

@@ -15,7 +15,7 @@
 
 from collections import OrderedDict
 
-from cord.orm import base_orm
+from encord.orm import base_orm
 
 
 class ApiKeyMeta(base_orm.BaseORM):

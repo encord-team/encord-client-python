@@ -1,6 +1,6 @@
 from typing import Optional
 
-from cord.orm.project import StringEnum
+from encord.orm.project import StringEnum
 
 
 class DataType(StringEnum):

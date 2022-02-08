@@ -16,7 +16,7 @@
 import json
 from typing import Dict
 
-from cord.http.query_methods import QueryMethods
+from encord.http.query_methods import QueryMethods
 
 
 class Request(object):

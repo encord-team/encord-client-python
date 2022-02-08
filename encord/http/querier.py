@@ -22,12 +22,12 @@ from requests import Session, Timeout
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util import Retry
 
-from cord.configs import BaseConfig
-from cord.exceptions import *
-from cord.http.error_utils import check_error_response
-from cord.http.query_methods import QueryMethods
-from cord.http.request import Request
-from cord.orm.formatter import Formatter
+from encord.configs import BaseConfig
+from encord.exceptions import *
+from encord.http.error_utils import check_error_response
+from encord.http.query_methods import QueryMethods
+from encord.http.request import Request
+from encord.orm.formatter import Formatter
 
 logger = logging.getLogger(__name__)
 

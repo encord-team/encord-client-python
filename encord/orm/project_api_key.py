@@ -2,8 +2,8 @@ import json
 from dataclasses import dataclass
 from typing import List, Dict
 
-from cord.orm.formatter import Formatter
-from cord.utilities.client_utilities import APIKeyScopes
+from encord.orm.formatter import Formatter
+from encord.utilities.client_utilities import APIKeyScopes
 
 
 @dataclass(frozen=True)

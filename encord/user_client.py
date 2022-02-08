@@ -7,23 +7,23 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
 
-from cord.client import EncordClient, EncordClientProject, EncordClientDataset
-from cord.configs import UserConfig
-from cord.http.querier import Querier
-from cord.http.utils import upload_to_signed_url_list
-from cord.orm.dataset import SignedImagesURL, Image, CreateDatasetResponse
-from cord.orm.cloud_integration import CloudIntegration
-from cord.orm.dataset import Dataset, StorageLocation
-from cord.orm.dataset import DatasetScope, DatasetAPIKey
-from cord.orm.project import (
+from encord.client import EncordClient, EncordClientProject, EncordClientDataset
+from encord.configs import UserConfig
+from encord.http.querier import Querier
+from encord.http.utils import upload_to_signed_url_list
+from encord.orm.dataset import SignedImagesURL, Image, CreateDatasetResponse
+from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.dataset import Dataset, StorageLocation
+from encord.orm.dataset import DatasetScope, DatasetAPIKey
+from encord.orm.project import (
     Project,
     ProjectImporter,
     ReviewMode,
     ProjectImporterCvatInfo,
     CvatExportType,
 )
-from cord.orm.project_api_key import ProjectAPIKey
-from cord.utilities.client_utilities import (
+from encord.orm.project_api_key import ProjectAPIKey
+from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterSuccess,
     Issues,
@@ -148,7 +148,7 @@ class EncordUserClient:
     ) -> Union[CvatImporterSuccess, CvatImporterError]:
         """
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
-            your images and annotations into cord. Ensure that during you have the "Save images"
+            your images and annotations into encord. Ensure that during you have the "Save images"
             checkbox enabled when exporting from CVAT.
         Args:
             import_method:

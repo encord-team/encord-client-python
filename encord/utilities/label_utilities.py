@@ -12,9 +12,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-from cord.constants.enums import DataType
-from cord.orm.label_row import LabelRow
-from cord.constants.string_constants import *
+from encord.constants.enums import DataType
+from encord.orm.label_row import LabelRow
+from encord.constants.string_constants import *
 
 
 def construct_answer_dictionaries(label_row):

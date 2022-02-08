@@ -1,7 +1,7 @@
 """Unit tests for the dataset class"""
 
 
-from cord.orm.dataset import StorageLocation, CreateDatasetResponse
+from encord.orm.dataset import StorageLocation, CreateDatasetResponse
 
 DATASET_RESPONSE_JSON = {
     "title": "CVAT imported baking dataset",

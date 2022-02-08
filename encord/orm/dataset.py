@@ -22,9 +22,9 @@ from collections import OrderedDict
 from enum import IntEnum, Enum
 from typing import List, Dict, Optional, NoReturn
 
-from cord.constants.enums import DataType
-from cord.orm import base_orm
-from cord.orm.formatter import Formatter
+from encord.constants.enums import DataType
+from encord.orm import base_orm
+from encord.orm.formatter import Formatter
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 

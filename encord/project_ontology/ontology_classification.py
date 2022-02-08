@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from cord.project_ontology.classification_attribute import ClassificationAttribute
+from encord.project_ontology.classification_attribute import ClassificationAttribute
 
 
 @dataclass

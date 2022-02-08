@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from cord.exceptions import *
+from encord.exceptions import *
 
 # Error messages
 AUTHENTICATION_ERROR = ["AUTHENTICATION_ERROR"]

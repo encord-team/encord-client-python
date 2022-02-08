@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional, List, Iterable
 
-from cord.project_ontology.classification_option import ClassificationOption
-from cord.project_ontology.classification_type import ClassificationType
+from encord.project_ontology.classification_option import ClassificationOption
+from encord.project_ontology.classification_type import ClassificationType
 
 
 @dataclass

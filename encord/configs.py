@@ -22,7 +22,7 @@ import cryptography
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.hazmat.primitives.serialization import load_ssh_private_key, Encoding, PublicFormat
 
-import cord.exceptions
+import encord.exceptions
 
 CORD_DOMAIN = "https://api.cord.tech"
 CORD_PUBLIC_PATH = "/public"
@@ -102,10 +102,10 @@ class Config(BaseConfig):
 
 def get_env_resource_id() -> str:
     if (_CORD_PROJECT_ID in os.environ) and (_CORD_DATASET_ID in os.environ):
-        raise cord.exceptions.InitialisationError(
+        raise encord.exceptions.InitialisationError(
             message=(
                 "Found both Project EntityId and Dataset EntityId in os.environ. "
-                "Please initialise CordClient by passing resource_id."
+                "Please initialise EncordClient by passing resource_id."
             )
         )
 
@@ -116,14 +116,14 @@ def get_env_resource_id() -> str:
         resource_id = os.environ[_CORD_DATASET_ID]
 
     else:
-        raise cord.exceptions.AuthenticationError(message="Project EntityId or dataset EntityId not provided")
+        raise encord.exceptions.AuthenticationError(message="Project EntityId or dataset EntityId not provided")
 
     return resource_id
 
 
 def get_env_api_key() -> str:
     if _CORD_API_KEY not in os.environ:
-        raise cord.exceptions.AuthenticationError(message="API key not provided")
+        raise encord.exceptions.AuthenticationError(message="API key not provided")
 
     return os.environ[_CORD_API_KEY]
 
