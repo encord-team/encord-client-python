@@ -24,14 +24,14 @@ For full documentation, visit [Encord Python API Client](https://docs.encord.com
 First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/stable/installing) package manager:
 
 ```bash
-pip install encord-client-python
+pip install cord-client-python
 ```
 
-Then, create an API key for authentication via the [Encord web app](https://app.encord.com). Pass the resource ID and API key as environment variables or pass them explicitly when you initialise the CordClient object.
+Then, create an API key for authentication via the [Encord web app](https://app.encord.com). Pass the resource ID and API key as environment variables or pass them explicitly when you initialise the EncordClient object.
 
 ```bash
-export CORD_PROJECT_ID="<project_id>"
-export CORD_API_KEY="<project_api_key>"
+export ENCORD_PROJECT_ID="<project_id>"
+export ENCORD_API_KEY="<project_api_key>"
 ```
 
 Passing the resource ID and API key as environment variables, you can initialise the Encord client directly.
@@ -50,7 +50,7 @@ from encord.client import EncordClient
 client = EncordClient.initialise("<resource_id>", "<resource_api_key>")
 ```
 
-If you wish to instantiate several client objects and avoid passing parameters each time, you can instantiate a CordConfig object, pass the resource ID and API key as strings, and initialise the client with the config object.
+If you wish to instantiate several client objects and avoid passing parameters each time, you can instantiate a EncordConfig object, pass the resource ID and API key as strings, and initialise the client with the config object.
 
 ```py
 from encord.client import EncordClient

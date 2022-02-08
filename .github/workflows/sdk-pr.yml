@@ -11,7 +11,7 @@ env:
   UNIT_TEST_REPORT: unit-test-report.xml
 
 concurrency:
-  group: encord-client-${{ github.ref }}-pr
+  group: cord-client-${{ github.ref }}-pr
   cancel-in-progress: true
 
 jobs:

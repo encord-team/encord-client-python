@@ -10,7 +10,7 @@ env:
   PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
 concurrency:
-  group: encord-client-${{ github.ref }}-publish
+  group: cord-client-${{ github.ref }}-publish
   cancel-in-progress: true
 
 jobs:
@@ -64,5 +64,5 @@ jobs:
           success-parameter: ${{ env.WORKFLOW_CONCLUSION }}
           success-channel: ${{ secrets.SLACK_DEPLOYMENT_PROD_CHANNEL_ID }}
           failure-channel: ${{ secrets.SLACK_FAILURE_CHANNEL_ID }}
-          success-message: Deployed to https://pypi.org/project/encord-client-python/
+          success-message: Deployed to https://pypi.org/project/cord-client-python/
           failure-message: This pipeline has failed!
