@@ -108,7 +108,7 @@ class EncordUserClient:
         response = self.querier.basic_put(DatasetAPIKey, uid=None, payload=api_key_payload)
         return DatasetAPIKey.from_dict(response)
 
-    def get_datasets(self, properties_filter=None):
+    def get_datasets(self, properties_filter: Optional[Dict] = None) -> List[Dict]:
         if properties_filter is not None:
             properties_filter = self.__validate_filter(properties_filter)
         data = self.querier.get_multiple(DatasetWithUserRole, payload={'filter': properties_filter})
@@ -121,7 +121,7 @@ class EncordUserClient:
 
         return EncordUserClient(user_config, querier)
 
-    def get_projects(self, properties_filter=None):
+    def get_projects(self, properties_filter: Optional[Dict] = None):
         if properties_filter is not None:
             properties_filter = self.__validate_filter(properties_filter)
         data = self.querier.get_multiple(ProjectWithUserRole, payload={'filter': properties_filter})
@@ -295,7 +295,7 @@ class EncordUserClient:
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
 
-    def __validate_filter(self, properties_filter):
+    def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):
             raise ValueError("Filter should be a dictionary")
 
@@ -324,7 +324,9 @@ class EncordUserClient:
 
 class ListingFilter(Enum):
     """
-    Available filters for get_projects() and get_datasets()
+    Available properties_filter keys for get_projects() and get_datasets().
+
+    The values for *_before and *_after should be datetime objects.
     """
     TITLE_EQ = "title_eq"
     TITLE_LIKE = "title_like"
