@@ -108,10 +108,10 @@ class EncordUserClient:
         response = self.querier.basic_put(DatasetAPIKey, uid=None, payload=api_key_payload)
         return DatasetAPIKey.from_dict(response)
 
-    def get_datasets(self, filter=None):
-        if filter is not None:
-            filter = self.__validate_filter(filter)
-        data = self.querier.get_multiple(DatasetWithUserRole, payload={'filter': filter})
+    def get_datasets(self, properties_filter=None):
+        if properties_filter is not None:
+            properties_filter = self.__validate_filter(properties_filter)
+        data = self.querier.get_multiple(DatasetWithUserRole, payload={'filter': properties_filter})
         return [{"dataset": DatasetInfo(**d.dataset), "user_role": DatasetUserRole(d.user_role)} for d in data]
 
     @staticmethod
@@ -121,10 +121,10 @@ class EncordUserClient:
 
         return EncordUserClient(user_config, querier)
 
-    def get_projects(self, filter=None):
-        if filter is not None:
-            filter = self.__validate_filter(filter)
-        data = self.querier.get_multiple(ProjectWithUserRole, payload={'filter': filter})
+    def get_projects(self, properties_filter=None):
+        if properties_filter is not None:
+            properties_filter = self.__validate_filter(properties_filter)
+        data = self.querier.get_multiple(ProjectWithUserRole, payload={'filter': properties_filter})
         return [{"project": Project(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
     def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
@@ -295,8 +295,8 @@ class EncordUserClient:
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
 
-    def __validate_filter(self, filter):
-        if not isinstance(filter, dict):
+    def __validate_filter(self, properties_filter):
+        if not isinstance(properties_filter, dict):
             raise ValueError("Filter should be a dictionary")
 
         valid_filters = set([f.value for f in ListingFilter])
@@ -304,7 +304,7 @@ class EncordUserClient:
         ret = dict()
 
         # be relaxed with what we receive: translate raw strings to enum values
-        for (clause, val) in filter.items():
+        for (clause, val) in properties_filter.items():
             if isinstance(clause, str) and clause in valid_filters:
                 clause = ListingFilter(clause)
 
