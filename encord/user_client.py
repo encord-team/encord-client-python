@@ -9,15 +9,14 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
 
-<<<<<<< HEAD:encord/user_client.py
 from encord.client import EncordClient, EncordClientProject, EncordClientDataset
 from encord.configs import UserConfig
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
-from encord.orm.dataset import SignedImagesURL, Image, CreateDatasetResponse
+from encord.orm.dataset import SignedImagesURL, Image, CreateDatasetResponse, DatasetInfo, DatasetUserRole
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Dataset, StorageLocation
-from cord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.dataset import DatasetScope, DatasetAPIKey
 from encord.orm.project import (
     Project,
@@ -27,7 +26,7 @@ from encord.orm.project import (
     CvatExportType, ProjectUserRole,
 )
 from encord.orm.project_api_key import ProjectAPIKey
-from cord.orm.project_with_user_role import ProjectWithUserRole
+from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterSuccess,
@@ -296,10 +295,6 @@ class EncordUserClient:
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
 
-<<<<<<< HEAD:encord/user_client.py
-
-CordUserClient = EncordUserClient
-=======
     def __validate_filter(self, filter):
         if not isinstance(filter, dict):
             raise ValueError("Filter should be a dictionary")
@@ -339,4 +334,6 @@ class ListingFilter(Enum):
     CREATED_AFTER = "created_after"
     EDITED_BEFORE = "edited_before"
     EDITED_AFTER = "edited_after"
->>>>>>> 130e4d1 (Filtering capability):cord/user_client.py
+
+
+CordUserClient = EncordUserClient
