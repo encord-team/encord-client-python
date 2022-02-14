@@ -28,6 +28,10 @@ from encord.orm.formatter import Formatter
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+class DatasetUserRole(IntEnum):
+    ADMIN = 0,
+    USER = 1
+
 
 class DataRow(dict, Formatter):
     def __init__(self, uid: str, title: str, data_type: DataType, created_at: datetime):
@@ -103,6 +107,18 @@ class DataRow(dict, Formatter):
             ret.append(cls.from_dict(json_dict))
         return ret
 
+@dataclasses.dataclass(frozen=True)
+class DatasetInfo:
+    """
+    This class represents a dataset in the context of listing
+    """
+    dataset_hash: str
+    user_hash: str
+    title: str
+    description: str
+    type: int
+    created_at: datetime.datetime
+    last_edited_at: datetime.datetime
 
 class Dataset(dict, Formatter):
     def __init__(

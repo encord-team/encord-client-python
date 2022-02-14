@@ -12,11 +12,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import datetime
 from collections import OrderedDict
-from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, List, Union
+from enum import IntEnum, Enum
+from typing import Optional
 
 from encord.orm import base_orm
 
@@ -56,8 +55,11 @@ class Project(base_orm.BaseORM):
 
     DB_FIELDS = OrderedDict(
         [
+            ("project_hash", str),
             ("title", str),
             ("description", str),
+            ("created_at", datetime.datetime),
+            ("last_edited_at", datetime.datetime),
             ("editor_ontology", (dict, str)),
             ("datasets", (list, str)),
             ("label_rows", (list, str)),
@@ -76,6 +78,32 @@ class Project(base_orm.BaseORM):
             res.append(label.get("label_hash"))
         return res
 
+    @property
+    def project_hash(self):
+        return self["project_hash"]
+
+
+    @property
+    def title(self):
+        return self["title"]
+
+
+    @property
+    def description(self):
+        return self["description"]
+
+
+    @property
+    def editor_ontology(self):
+        return self["editor_ontology"]
+
+    @property
+    def datasets(self):
+        return self["datasets"]
+
+    @property
+    def label_rows(self):
+        return self["label_rows"]
 
 class ProjectCopy:
     pass
