@@ -123,14 +123,6 @@ class ProjectCopyOptions(Enum):
     MODELS = "models"
 
 
-class ProjectUserRole(IntEnum):
-    ADMIN = 0,
-    USER = 1,
-    REVIEWER = 2,
-    ANNOTATOR_REVIEWER = 3,
-    TEAM_MANAGER = 4
-
-
 class StringEnum(Enum):
     """
     Use this enum class if you need the helper that creates the enum instance from a string.

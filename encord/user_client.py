@@ -23,7 +23,7 @@ from encord.orm.project import (
     ProjectImporter,
     ReviewMode,
     ProjectImporterCvatInfo,
-    CvatExportType, ProjectUserRole,
+    CvatExportType,
 )
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
@@ -35,6 +35,7 @@ from encord.utilities.client_utilities import (
     LocalImport,
     ImportMethod,
 )
+from encord.utilities.project_user import ProjectUserRole
 
 log = logging.getLogger(__name__)
 
