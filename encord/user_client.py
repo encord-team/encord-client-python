@@ -145,7 +145,14 @@ class EncordUserClient:
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
         data = self.querier.get_multiple(DatasetWithUserRole, payload={'filter': properties_filter})
-        return [{"dataset": DatasetInfo(**d.dataset), "user_role": DatasetUserRole(d.user_role)} for d in data]
+
+
+        def convert_dates(dataset):
+            dataset['created_at'] = dateutil.parser.isoparse(dataset['created_at'])
+            dataset['last_edited_at'] = dateutil.parser.isoparse(dataset['last_edited_at'])
+            return dataset
+
+        return [{"dataset": DatasetInfo(**convert_dates(d.dataset)), "user_role": DatasetUserRole(d.user_role)} for d in data]
 
 
     @staticmethod
