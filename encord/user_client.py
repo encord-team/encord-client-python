@@ -9,6 +9,8 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Tuple, Union, Optional
 
+import dateutil
+
 from encord.client import EncordClient, EncordClientProject, EncordClientDataset
 from encord.configs import UserConfig
 from encord.http.querier import Querier
@@ -393,7 +395,9 @@ class EncordUserClient:
             if clause not in ListingFilter:
                 continue
 
-            if clause.name.endswith("before") or clause.name.endswith("after"):
+            if clause.value.endswith("before") or clause.value.endswith("after"):
+                if isinstance(val, str):
+                    val = dateutil.parser.isoparse(val)
                 if isinstance(val, datetime.datetime):
                     val = val.isoformat()
                 else:
