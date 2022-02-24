@@ -711,7 +711,7 @@ class EncordClientProject(EncordClient):
         device="cuda",
         detection_frame_range=None,
         allocation_enabled=False,
-        data_hashes=None
+        data_hashes=None,
     ):
         """
         Run inference with model trained on the platform.
@@ -740,12 +740,16 @@ class EncordClientProject(EncordClient):
             DetectionRangeInvalidError: If a detection range is invalid for video inference
         """
         if (file_paths is None and base64_strings is None and data_hashes is None) or (
-            file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(base64_strings) > 0
-            and data_hashes is not None and len(data_hashes) > 0
+            file_paths is not None
+            and len(file_paths) > 0
+            and base64_strings is not None
+            and len(base64_strings) > 0
+            and data_hashes is not None
+            and len(data_hashes) > 0
         ):
             raise encord.exceptions.EncordException(
                 message="To run model inference, you must pass either a list of files or base64 strings or list of"
-                        " data hash."
+                " data hash."
             )
 
         if detection_frame_range is None:
@@ -779,7 +783,7 @@ class EncordClientProject(EncordClient):
                 "device": device,
                 "detection_frame_range": detection_frame_range,
                 "allocation_enabled": allocation_enabled,
-                "data_hashes": data_hashes
+                "data_hashes": data_hashes,
             }
         )
 

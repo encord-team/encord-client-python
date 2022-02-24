@@ -4,9 +4,10 @@ version = "0.1.29"
 description = "Cord Python SDK Client"
 authors = ["Cord Technologies Limited <hello@cord.tech>"]
 license = "Apache Software License"
-keywords = ["cord"]
+keywords = ["cord", "encord"]
 packages = [
     { include = "cord"},
+    { include = "encord"},
 ]
 readme = "README.md"
 repository="https://github.com/cord-team/cord-client-python"
@@ -38,4 +39,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 120
-include = 'cord\/.*'
+include = 'encord\/.*'
