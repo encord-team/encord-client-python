@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from shapely.geometry import Polygon, box
+from shapely.geometry import Polygon, box, Point
 
 from encord.client import EncordClientProject
 
@@ -8,7 +8,7 @@ from encord.client import EncordClientProject
 def get_project_labels_consensus(
     baseline_project: EncordClientProject,
     comparing_projects: List[EncordClientProject],
-    label_types: List[str],
+    ontology_feature_node_hash_list: List[str],
     threshold: float = 0.7,
 ) -> Dict[str, Dict[str, float]]:
     """
@@ -19,8 +19,8 @@ def get_project_labels_consensus(
             The project to be evaluated.
         comparing_projects:
             The list of projects where consensus is extracted.
-        label_types:
-            The list of feature node hashes indicating objects from baseline_project to be evaluated.
+        ontology_feature_node_hash_list:
+            The list of feature node hashes denoting object classes from baseline_project ontology to be evaluated.
         threshold:
             Used in objects comparison. Two objects' instances are considered the same object if their Jaccard
             similarity coefficient is greater or equal than the threshold; otherwise, they represent distinct objects.
@@ -30,28 +30,35 @@ def get_project_labels_consensus(
 
     Raises:
         NotImplementedError:
-            If objects using skeleton shape have their feature node hashes in label_types.
+            If objects using point or skeleton shapes have their feature node hashes in ontology_feature_node_hash.
         ValueError:
             If a LabelRow of an EncordClientProject has an invalid format.
     """
-    label_types = set(label_types)  # Use set so 'in' operation is O(1) in the average case instead of O(n)
+    # Use set so 'in' operation is O(1) in the average case instead of O(n)
+    feature_node_hash_set = set(ontology_feature_node_hash_list)
 
     # Obtain LabelRows shared between baseline_project and projects in comparing_projects (same data_hash)
-    data_hash_to_label_hash = dict()
-    for label_row in baseline_project.get_project().label_rows:
-        if label_row["label_status"] == "LABELLED":
-            lr = baseline_project.get_label_row(label_row["label_hash"], get_signed_url=False)
-            data_hash_to_label_hash[label_row["data_hash"]] = [lr]
+    data_hash_to_label_rows = dict()
+    for label_row_metadata in baseline_project.get_project().label_rows:
+        if label_row_metadata["label_status"] == "LABELLED":
+            data_hash = label_row_metadata["data_hash"]
+            label_hash = label_row_metadata["label_hash"]
+            label_row = baseline_project.get_label_row(label_hash, get_signed_url=False)
+            data_hash_to_label_rows[data_hash] = [label_row]
     for project in comparing_projects:
-        for label_row in project.get_project().label_rows:
-            if label_row["label_status"] == "LABELLED" and label_row["data_hash"] in data_hash_to_label_hash:
-                lr = project.get_label_row(label_row["label_hash"], get_signed_url=False)
-                data_hash_to_label_hash[label_row["data_hash"]].append(lr)
+        for label_row_metadata in project.get_project().label_rows:
+            if label_row_metadata["label_status"] != "LABELLED":
+                continue
+            data_hash = label_row_metadata["data_hash"]
+            label_hash = label_row_metadata["label_hash"]
+            if data_hash in data_hash_to_label_rows:
+                label_row = project.get_label_row(label_hash, get_signed_url=False)
+                data_hash_to_label_rows[data_hash].append(label_row)
 
     # Find consensus within LabelRows that share the same data_hash and compare it with the corresponding LabelRow in
     # baseline_project in order to extract consensus score
     consensus_score = dict()
-    for label_row_list in data_hash_to_label_hash.values():
+    for label_row_list in data_hash_to_label_rows.values():
         if len(label_row_list) == 1:  # there is no consensus data to compare with
             continue
 
@@ -80,7 +87,7 @@ def get_project_labels_consensus(
                 data_unit[index] if index in data_unit else {"objects": [], "classifications": []}
                 for data_unit in label_row_list[1:]
             ]
-            __add_frame_consensus_score(frame, comparing_frames, label_types, threshold, consensus_score)
+            __add_frame_consensus_score(frame, comparing_frames, feature_node_hash_set, threshold, consensus_score)
 
     # Transform true_positive, false_positive and false_negative score to precision and recall metrics
     for feature_hash, score in consensus_score.items():
@@ -184,6 +191,10 @@ def __calculate_jaccard_similarity(obj1, obj2):
     """
     Calculate Jaccard similarity coefficient (Intersection over Union) between objects obj1 and obj2.
     """
+    if obj1["shape"] == "point" or obj2["shape"] == "point":
+        raise NotImplementedError("Point object's shape doesn't yet support similarity calculation")
+    if obj1["shape"] == "skeleton" or obj2["shape"] == "skeleton":
+        raise NotImplementedError("Skeleton object's shape doesn't yet support similarity calculation")
     p1 = __transform_obj_to_polygon(obj1)
     p2 = __transform_obj_to_polygon(obj2)
     intersection = p1.intersection(p2).area
@@ -205,6 +216,10 @@ def __transform_obj_to_polygon(obj):
         poly_dict = obj["polygon"]
         return Polygon([(poly_dict[str(i)]["x"], poly_dict[str(i)]["y"]) for i in range(len(poly_dict))])
     elif obj["shape"] == "point":
-        raise NotImplementedError("Skeleton type is not fully functional so any comparison involving it is not allowed")
+        x = obj["point"]["0"]["x"]
+        y = obj["point"]["0"]["y"]
+        return Point(x, y)
+    elif obj["shape"] == "skeleton":
+        raise NotImplementedError("Skeleton object's shape is not fully functional so no transformation is available")
     else:
         raise ValueError("{0} is not a supported object's shape".format(obj["shape"]))
