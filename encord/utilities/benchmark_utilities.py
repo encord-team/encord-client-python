@@ -1,8 +1,9 @@
 from typing import Dict, List
 
-from shapely.geometry import Polygon, box, Point
+from shapely.geometry import Point, Polygon, box
 
 from encord.client import EncordClientProject
+from encord.orm.label_row import LabelRow
 
 
 def get_project_labels_consensus(
@@ -61,31 +62,15 @@ def get_project_labels_consensus(
     for label_row_list in data_hash_to_label_rows.values():
         if len(label_row_list) == 1:  # there is no consensus data to compare with
             continue
-
-        # Extract frames within the LabelRows and reorder them in the fashion:
-        # {"frame": {"objects":[...], "classifications":[...]},
-        #  "frame": {"objects":[...], "classifications":[...]}, ...}
-        if label_row_list[0].data_type == "img_group":
-            for i in range(len(label_row_list)):
-                frames = dict()
-                for data_unit in label_row_list[i].data_units.values():
-                    frames[data_unit["data_sequence"]] = data_unit["labels"]
-                label_row_list[i] = frames
-        elif label_row_list[0].data_type == "video":
-            for i in range(len(label_row_list)):
-                for data_unit in label_row_list[i].data_units.values():
-                    label_row_list[i] = data_unit["labels"]
-                    break
-        else:
-            raise ValueError("{0} is not a supported LabelRow's data type".format(label_row_list[0].data_type))
+        frames_within_label_rows = [__extract_frames_within_label_row(label_row) for label_row in label_row_list]
 
         # Find frame consensus and add it to global consensus score
-        baseline_project_label_row = label_row_list[0]
-        for index, frame in baseline_project_label_row.items():
-            # If the frame is not found in a LabelRow, use a default value that indicates no available annotation
+        baseline_frames = frames_within_label_rows[0]
+        for index, frame in baseline_frames.items():
+            # If frame is not found in comparing_frames, use a default value that indicates no available annotation
             comparing_frames = [
-                data_unit[index] if index in data_unit else {"objects": [], "classifications": []}
-                for data_unit in label_row_list[1:]
+                current_frames[index] if index in current_frames else {"objects": [], "classifications": []}
+                for current_frames in frames_within_label_rows[1:]
             ]
             __add_frame_consensus_score(frame, comparing_frames, feature_node_hash_set, threshold, consensus_score)
 
@@ -223,3 +208,32 @@ def __transform_obj_to_polygon(obj):
         raise NotImplementedError("Skeleton object's shape is not fully functional so no transformation is available")
     else:
         raise ValueError("{0} is not a supported object's shape".format(obj["shape"]))
+
+
+def __extract_frames_within_label_row(label_row: LabelRow):
+    """
+    Extract all the frames within a LabelRow.
+
+    Args:
+        label_row: The LabelRow where the frames are going to be extracted.
+
+    Returns:
+        A dictionary following the pattern:
+        {"frame": {"objects":[...], "classifications":[...]},
+         "frame": {"objects":[...], "classifications":[...]}, ...}
+
+    Raises:
+        ValueError:
+            If the LabelRow has an invalid format.
+    """
+    frames = dict()
+    if label_row.data_type == "img_group":
+        for data_unit in label_row.data_units.values():
+            frames[data_unit["data_sequence"]] = data_unit["labels"]
+    elif label_row.data_type == "video":
+        for data_unit in label_row.data_units.values():
+            frames = data_unit["labels"]
+            break
+    else:
+        raise ValueError("{0} is not a supported LabelRow's data type".format(label_row.data_type))
+    return frames
