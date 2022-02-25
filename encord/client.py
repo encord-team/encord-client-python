@@ -40,7 +40,7 @@ import os.path
 import typing
 import uuid
 from pathlib import Path
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Union, Optional, Dict
 
 import encord.exceptions
 from encord.configs import EncordConfig, Config, CORD_DOMAIN
@@ -70,6 +70,11 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
 from encord.utilities.project_user import ProjectUserRole, ProjectUser
+from encord.utilities.benchmark_utilities import (
+    LabelAnnotationMetrics,
+    extract_frames_within_label_row,
+    add_frame_consensus_score,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -711,7 +716,7 @@ class EncordClientProject(EncordClient):
         device="cuda",
         detection_frame_range=None,
         allocation_enabled=False,
-        data_hashes=None
+        data_hashes=None,
     ):
         """
         Run inference with model trained on the platform.
@@ -740,12 +745,16 @@ class EncordClientProject(EncordClient):
             DetectionRangeInvalidError: If a detection range is invalid for video inference
         """
         if (file_paths is None and base64_strings is None and data_hashes is None) or (
-            file_paths is not None and len(file_paths) > 0 and base64_strings is not None and len(base64_strings) > 0
-            and data_hashes is not None and len(data_hashes) > 0
+            file_paths is not None
+            and len(file_paths) > 0
+            and base64_strings is not None
+            and len(base64_strings) > 0
+            and data_hashes is not None
+            and len(data_hashes) > 0
         ):
             raise encord.exceptions.EncordException(
                 message="To run model inference, you must pass either a list of files or base64 strings or list of"
-                        " data hash."
+                " data hash."
             )
 
         if detection_frame_range is None:
@@ -779,7 +788,7 @@ class EncordClientProject(EncordClient):
                 "device": device,
                 "detection_frame_range": detection_frame_range,
                 "allocation_enabled": allocation_enabled,
-                "data_hashes": data_hashes
+                "data_hashes": data_hashes,
             }
         )
 
@@ -1064,6 +1073,83 @@ class EncordClientProject(EncordClient):
         """
         payload = {"editor": ontology.to_dict()}
         return self._querier.basic_setter(Project, uid=None, payload=payload)
+
+    def get_project_labels_consensus(
+        self,
+        comparing_projects: List[EncordClientProject],
+        ontology_feature_node_hash_list: List[str],
+        threshold: float = 0.7,
+    ) -> Dict[str, LabelAnnotationMetrics]:
+        """
+        Calculate performance metrics of a label generating agent when compared with consensus reached by other agents.
+
+        Args:
+            self:
+                The project to be evaluated. Also known as baseline project.
+            comparing_projects:
+                The list of projects where consensus is extracted.
+            ontology_feature_node_hash_list:
+                The list of feature node hashes denoting object classes from baseline project ontology to be evaluated.
+            threshold:
+                Used in objects comparison. Two objects' instances are considered the same object if their Jaccard
+                similarity coefficient is greater or equal than the threshold; otherwise, they represent distinct objects.
+
+        Returns:
+            Label annotation metrics of object classes from baseline project indexed by their feature node hashes.
+
+        Raises:
+            NotImplementedError:
+                If objects using point or skeleton shapes have their feature node hashes in ontology_feature_node_hash.
+            ValueError:
+                If a LabelRow of an EncordClientProject has an invalid format.
+        """
+        baseline_project = self
+        # Use set so 'in' operation is O(1) in the average case instead of O(n)
+        feature_node_hash_set = set(ontology_feature_node_hash_list)
+
+        # Obtain LabelRows shared between baseline_project and projects in comparing_projects (same data_hash)
+        data_hash_to_label_rows = dict()
+        for label_row_metadata in baseline_project.get_project().label_rows:
+            if label_row_metadata["label_status"] == "LABELLED":
+                data_hash = label_row_metadata["data_hash"]
+                label_hash = label_row_metadata["label_hash"]
+                label_row = baseline_project.get_label_row(label_hash, get_signed_url=False)
+                data_hash_to_label_rows[data_hash] = [label_row]
+        for project in comparing_projects:
+            for label_row_metadata in project.get_project().label_rows:
+                if label_row_metadata["label_status"] != "LABELLED":
+                    continue
+                data_hash = label_row_metadata["data_hash"]
+                label_hash = label_row_metadata["label_hash"]
+                if data_hash in data_hash_to_label_rows:
+                    label_row = project.get_label_row(label_hash, get_signed_url=False)
+                    data_hash_to_label_rows[data_hash].append(label_row)
+
+        # Find consensus within LabelRows that share the same data_hash and compare it with the corresponding LabelRow in
+        # baseline_project in order to extract consensus score
+        consensus_score = dict()
+        for label_row_list in data_hash_to_label_rows.values():
+            if len(label_row_list) == 1:  # there is no consensus data to compare with
+                continue
+            frames_within_label_rows = [extract_frames_within_label_row(label_row) for label_row in label_row_list]
+
+            # Find frame consensus and add it to global consensus score
+            baseline_frames = frames_within_label_rows[0]
+            for index, frame in baseline_frames.items():
+                # If frame is not found in comparing_frames, use a default value that indicates no available annotation
+                comparing_frames = [
+                    current_frames[index] if index in current_frames else {"objects": [], "classifications": []}
+                    for current_frames in frames_within_label_rows[1:]
+                ]
+                add_frame_consensus_score(frame, comparing_frames, feature_node_hash_set, threshold, consensus_score)
+
+        # Transform true_positive, false_positive and false_negative score to precision and recall metrics
+        label_annotation_metrics = dict()
+        for feature_hash, score in consensus_score.items():
+            precision = score["TP"] if score["TP"] + score["FP"] == 0 else score["TP"] / (score["TP"] + score["FP"])
+            recall = score["TP"] if score["TP"] + score["FN"] == 0 else score["TP"] / (score["TP"] + score["FN"])
+            label_annotation_metrics[feature_hash] = LabelAnnotationMetrics(precision, recall)
+        return label_annotation_metrics
 
 
 CordClientProject = EncordClientProject
