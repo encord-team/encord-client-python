@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Dict, List
 
 from shapely.geometry import Point, Polygon, box
@@ -6,12 +7,18 @@ from encord.client import EncordClientProject
 from encord.orm.label_row import LabelRow
 
 
+@dataclasses.dataclass
+class LabelAnnotationMetrics:
+    precision: float
+    recall: float
+
+
 def get_project_labels_consensus(
     baseline_project: EncordClientProject,
     comparing_projects: List[EncordClientProject],
     ontology_feature_node_hash_list: List[str],
     threshold: float = 0.7,
-) -> Dict[str, Dict[str, float]]:
+) -> Dict[str, LabelAnnotationMetrics]:
     """
     Calculate performance metrics of a label generating agent when compared with consensus reached by other agents.
 
@@ -27,7 +34,7 @@ def get_project_labels_consensus(
             similarity coefficient is greater or equal than the threshold; otherwise, they represent distinct objects.
 
     Returns:
-        Consensus score (precision and recall) for objects from baseline_project indexed by their feature node hashes.
+        Label annotation metrics of object classes from baseline_project indexed by their feature node hashes.
 
     Raises:
         NotImplementedError:
@@ -75,11 +82,12 @@ def get_project_labels_consensus(
             __add_frame_consensus_score(frame, comparing_frames, feature_node_hash_set, threshold, consensus_score)
 
     # Transform true_positive, false_positive and false_negative score to precision and recall metrics
+    label_annotation_metrics = dict()
     for feature_hash, score in consensus_score.items():
         precision = score["TP"] if score["TP"] + score["FP"] == 0 else score["TP"] / (score["TP"] + score["FP"])
         recall = score["TP"] if score["TP"] + score["FN"] == 0 else score["TP"] / (score["TP"] + score["FN"])
-        consensus_score[feature_hash] = {"precision": precision, "recall": recall}
-    return consensus_score
+        label_annotation_metrics[feature_hash] = LabelAnnotationMetrics(precision, recall)
+    return label_annotation_metrics
 
 
 # ---------------------------------------------------------
