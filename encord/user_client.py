@@ -37,6 +37,9 @@ from encord.utilities.client_utilities import (
     LocalImport,
     ImportMethod,
 )
+
+# add this for backward compatible class comparisons
+from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.utilities.project_user import ProjectUserRole
 
 log = logging.getLogger(__name__)
@@ -250,7 +253,7 @@ class EncordUserClient:
             ValueError:
                 If the CVAT directory has an invalid format.
         """
-        if type(import_method) != LocalImport:
+        if not (type(import_method) == LocalImport or type(import_method) == CordLocalImport):
             raise ValueError("Only local imports are currently supported ")
 
         cvat_directory_path = import_method.file_path
