@@ -73,7 +73,7 @@ from encord.utilities.project_user import ProjectUserRole, ProjectUser
 from encord.utilities.benchmark_utilities import (
     LabelAnnotationMetrics,
     extract_frames_within_label_row,
-    add_frame_consensus_score,
+    __add_frame_consensus_score as add_frame_consensus_score,
 )
 
 logger = logging.getLogger(__name__)
@@ -1082,6 +1082,8 @@ class EncordClientProject(EncordClient):
     ) -> Dict[str, LabelAnnotationMetrics]:
         """
         Calculate performance metrics of a label generating agent when compared with consensus reached by other agents.
+        Two objects' instances are considered the same object if their Jaccard similarity coefficient is greater or
+        equal than the threshold; otherwise, they represent distinct objects.
 
         Args:
             self:
@@ -1091,8 +1093,7 @@ class EncordClientProject(EncordClient):
             ontology_feature_node_hashes:
                 The list of feature node hashes denoting object classes from baseline project ontology to be evaluated.
             threshold:
-                Used in objects comparison. Two objects' instances are considered the same object if their Jaccard
-                similarity coefficient is greater or equal than the threshold; otherwise, they represent distinct objects.
+                Used in objects comparison.
 
         Returns:
             A dict of ontology feature node hashes to LabelAnnotationMetrics.
@@ -1125,8 +1126,8 @@ class EncordClientProject(EncordClient):
                     label_row = project.get_label_row(label_hash, get_signed_url=False)
                     data_hash_to_label_rows[data_hash].append(label_row)
 
-        # Find consensus within LabelRows that share the same data_hash and compare it with the corresponding LabelRow in
-        # baseline_project in order to extract consensus score
+        # Find consensus within LabelRows that share the same data_hash and compare it with the corresponding LabelRow
+        # in baseline_project in order to extract consensus score
         consensus_score = dict()
         for label_row_list in data_hash_to_label_rows.values():
             if len(label_row_list) == 1:  # there is no consensus data to compare with
