@@ -1074,10 +1074,10 @@ class EncordClientProject(EncordClient):
         payload = {"editor": ontology.to_dict()}
         return self._querier.basic_setter(Project, uid=None, payload=payload)
 
-    def get_project_labels_consensus(
+    def get_labels_consensus(
         self,
         comparing_projects: List[EncordClientProject],
-        ontology_feature_node_hash_list: List[str],
+        ontology_feature_node_hashes: List[str],
         threshold: float = 0.7,
     ) -> Dict[str, LabelAnnotationMetrics]:
         """
@@ -1088,14 +1088,14 @@ class EncordClientProject(EncordClient):
                 The project to be evaluated. Also known as baseline project.
             comparing_projects:
                 The list of projects where consensus is extracted.
-            ontology_feature_node_hash_list:
+            ontology_feature_node_hashes:
                 The list of feature node hashes denoting object classes from baseline project ontology to be evaluated.
             threshold:
                 Used in objects comparison. Two objects' instances are considered the same object if their Jaccard
                 similarity coefficient is greater or equal than the threshold; otherwise, they represent distinct objects.
 
         Returns:
-            Label annotation metrics of object classes from baseline project indexed by their feature node hashes.
+            A dict of ontology feature node hashes to LabelAnnotationMetrics.
 
         Raises:
             NotImplementedError:
@@ -1105,7 +1105,7 @@ class EncordClientProject(EncordClient):
         """
         baseline_project = self
         # Use set so 'in' operation is O(1) in the average case instead of O(n)
-        feature_node_hash_set = set(ontology_feature_node_hash_list)
+        feature_node_hash_set = set(ontology_feature_node_hashes)
 
         # Obtain LabelRows shared between baseline_project and projects in comparing_projects (same data_hash)
         data_hash_to_label_rows = dict()
