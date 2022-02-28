@@ -87,7 +87,7 @@ class ModelInferenceParams(base_orm.BaseORM):
             ("device", str),
             ("detection_frame_range", list),
             ("allocation_enabled", bool),
-            ("data_hashes", list)
+            ("data_hashes", list),
         ]
     )
 

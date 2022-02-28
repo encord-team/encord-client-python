@@ -82,16 +82,13 @@ class Project(base_orm.BaseORM):
     def project_hash(self):
         return self["project_hash"]
 
-
     @property
     def title(self):
         return self["title"]
 
-
     @property
     def description(self):
         return self["description"]
-
 
     @property
     def editor_ontology(self):
@@ -104,6 +101,7 @@ class Project(base_orm.BaseORM):
     @property
     def label_rows(self):
         return self["label_rows"]
+
 
 class ProjectCopy:
     pass

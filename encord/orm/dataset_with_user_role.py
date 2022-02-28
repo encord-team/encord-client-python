@@ -21,5 +21,6 @@ class DatasetWithUserRole:
     """
     This is a helper class denoting the relationship between the current user an a project
     """
+
     user_role: str
     dataset: dict
