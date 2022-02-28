@@ -30,7 +30,7 @@ DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class DatasetUserRole(IntEnum):
-    ADMIN = (0,)
+    ADMIN = 0
     USER = 1
 
 

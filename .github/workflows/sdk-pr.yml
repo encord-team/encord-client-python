@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   formatting:
-    name: Assert code formatting
+    name: Assert code formattings
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
