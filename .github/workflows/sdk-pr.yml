@@ -15,6 +15,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  formatting:
+    name: Assert code formattings
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run black
+        uses: psf/black@stable
+        with:
+          options: "--check"
+          src: "."
+
   unit-tests:
     name: Run unit tests
     runs-on: ubuntu-latest
@@ -42,12 +55,6 @@ jobs:
       - name: Install dependencies
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
-
-      - name: Run black
-        uses: psf/black@stable
-        with:
-          options: "--check"
-          src: "."
 
       - name: Run tests
         run: |
