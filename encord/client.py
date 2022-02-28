@@ -1087,9 +1087,11 @@ class EncordClientProject(EncordClient):
 
         Args:
             self:
-                The project to be evaluated. Also known as baseline project.
+                The project to be evaluated. Also known as baseline project. Label rows used for comparison are those
+                with 'LABELLED' status.
             comparing_projects:
-                The list of projects where consensus is extracted.
+                The list of projects where consensus is extracted. Label rows used for comparison are those with
+                'LABELLED' status.
             ontology_feature_node_hashes:
                 The list of feature node hashes denoting object classes from baseline project ontology to be evaluated.
             threshold:
@@ -1149,7 +1151,7 @@ class EncordClientProject(EncordClient):
         for feature_hash, score in consensus_score.items():
             precision = score["TP"] if score["TP"] + score["FP"] == 0 else score["TP"] / (score["TP"] + score["FP"])
             recall = score["TP"] if score["TP"] + score["FN"] == 0 else score["TP"] / (score["TP"] + score["FN"])
-            label_annotation_metrics[feature_hash] = LabelAnnotationMetrics(precision, recall)
+            label_annotation_metrics[feature_hash] = LabelAnnotationMetrics(precision=precision, recall=recall)
         return label_annotation_metrics
 
 
