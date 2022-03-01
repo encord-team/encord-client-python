@@ -91,7 +91,7 @@ jobs:
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
 
 
-  integration-tests-python3-7:
+  integration-tests-python-3-7:
     name: Run integration tests
     runs-on: ubuntu-latest
     steps:
@@ -113,7 +113,7 @@ jobs:
         unit-tests-python-3-8, 
         unit-tests-python-3-9, 
         unit-tests-python-3-10, 
-        integration-tests-python3-7]
+        integration-tests-python-3-7]
       if: success() || failure()
 
       steps:
