@@ -29,6 +29,9 @@ runs:
   using: "composite"
 
   steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
       - name: Checkout backend repo
         uses: actions/checkout@v2
         with:
