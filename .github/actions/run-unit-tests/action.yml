@@ -38,11 +38,13 @@ runs:
       - name: Install dependencies
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
+        shell: bash
 
       - name: Run tests
         run: |
           source .venv/bin/activate
           python -m pytest tests --verbose --junitxml=${{ inputs.test-report-file }}
+        shell: bash
 
       - name: Upload report
         uses: actions/upload-artifact@v2
