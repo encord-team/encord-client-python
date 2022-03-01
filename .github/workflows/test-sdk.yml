@@ -10,15 +10,32 @@ env:
   PYTHON: 3.7.12
   POETRY: 1.1.12
   UNIT_TEST_REPORT: unit-test-report.xml
-  SDK_TEST_REPORT: sdk-test-report.xml
+  SDK_TEST_REPORT_PYTHON_3_6: sdk-test-report-python3_6.xml
+  SDK_TEST_REPORT_PYTHON_3_7: sdk-test-report-python3_7.xml
+  SDK_TEST_REPORT_PYTHON_3_8: sdk-test-report-python3_8.xml
+  SDK_TEST_REPORT_PYTHON_3_9: sdk-test-report-python3_9.xml
+  SDK_TEST_REPORT_PYTHON_3_10: sdk-test-report-python3_10.xml
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
-    name: Run unit tests
+  unit-tests-python-3-6:
+    name: Run unit tests for Python 3.6
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run unit tests for Python 3.6
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.6.15
+          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_6 }}
+
+  unit-tests-python-3-7:
+    name: Run unit tests for Python 3.7
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -28,7 +45,47 @@ jobs:
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.7.12
-          test-report-file: ${{ env.SDK_TEST_REPORT }}
+          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_7 }}
+
+  unit-tests-python-3-8:
+    name: Run unit tests for Python 3.8
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run unit tests for Python 3.8
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.8.12
+          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_8 }}
+
+  unit-tests-python-3-9:
+    name: Run unit tests for Python 3.9
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run unit tests for Python 3.9
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.9.10
+          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_9 }}
+
+  unit-tests-python-3-10:
+    name: Run unit tests for Python 3.10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run unit tests for Python 3.10
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.10.2
+          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_10 }}
+
 
   sdk-tests:
     name: Run SDK tests
@@ -81,15 +138,45 @@ jobs:
   publish-test-reports:
       name: Publish test reports
       runs-on: ubuntu-latest
-      needs: [unit-tests, sdk-tests]
+      needs: [
+        unit-tests-python-3-6, 
+        unit-tests-python-3-7, 
+        unit-tests-python-3-8, 
+        unit-tests-python-3-9, 
+        unit-tests-python-3-10, 
+        sdk-tests]
       if: success() || failure()
 
       steps:
-        - name: Download unit test report
+        - name: Download unit test report Python 3.6
           uses: actions/download-artifact@v2
           with:
-            name: ${{ env.UNIT_TEST_REPORT }}
-            path: ${{ env.UNIT_TEST_REPORT }}
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_6 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_6 }}
+
+        - name: Download unit test report Python 3.7
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
+
+        - name: Download unit test report Python 3.8
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
+
+        - name: Download unit test report Python 3.9
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
+
+        - name: Download unit test report Python 3.10
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
 
         - name: Download SDK integration test report
           uses: actions/download-artifact@v2
@@ -97,10 +184,34 @@ jobs:
             name: ${{ env.SDK_TEST_REPORT }}
             path: ${{ env.SDK_TEST_REPORT }}
 
-        - name: Publish unit test report
+        - name: Publish unit test report Python 3.6
           uses: EnricoMi/publish-unit-test-result-action@v1
           with:
-            files: ${{ env.UNIT_TEST_REPORT }}/*.xml
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_6 }}/*.xml
+            check_name: Unit test report
+
+        - name: Publish unit test report Python 3.7
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}/*.xml
+            check_name: Unit test report
+
+        - name: Publish unit test report Python 3.8
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}/*.xml
+            check_name: Unit test report
+
+        - name: Publish unit test report Python 3.9
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}/*.xml
+            check_name: Unit test report
+
+        - name: Publish unit test report Python 3.10
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}/*.xml
             check_name: Unit test report
 
         - name: Publish SDK integration test report
