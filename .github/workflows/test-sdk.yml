@@ -91,11 +91,11 @@ jobs:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
-      - name: Run integration tests for Python 3.9
+      - name: Run integration tests for Python 3.7
         uses: ./.github/actions/run-sdk-integration-tests
         with:
-          python-version: 3.9.10
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
+          python-version: 3.7.12
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
 
   integration-tests-python-3-8:
@@ -108,11 +108,11 @@ jobs:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
-      - name: Run integration tests for Python 3.9
+      - name: Run integration tests for Python 3.8
         uses: ./.github/actions/run-sdk-integration-tests
         with:
-          python-version: 3.9.10
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
+          python-version: 3.8.12
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_8 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
 
   integration-tests-python-3-9:
@@ -142,11 +142,11 @@ jobs:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
-      - name: Run integration tests for Python 3.9
+      - name: Run integration tests for Python 3.10
         uses: ./.github/actions/run-sdk-integration-tests
         with:
-          python-version: 3.9.10
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
+          python-version: 3.10.2
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
 
       
