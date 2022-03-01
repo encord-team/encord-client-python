@@ -21,41 +21,11 @@ jobs:
     name: Run unit tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-
-      - name: Set up python
-        uses: actions/setup-python@v2
+      - name: Run unit tests for Python 3.7
+        uses: actions/run-unit-tests
         with:
-          python-version: ${{ env.PYTHON }}
-
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY }}
-          virtualenvs-in-project: true
-
-      - name: Check cache
-        id: cached-poetry
-        uses: actions/cache@v2
-        with:
-          path: .venv
-          key: unit-${{ hashFiles('poetry.lock') }}-${{ env.PYTHON }}-1
-
-      - name: Install dependencies
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction
-
-      - name: Run tests
-        run: |
-          source .venv/bin/activate
-          python -m pytest tests --verbose --junitxml=${{ env.UNIT_TEST_REPORT }}
-
-      - name: Upload report
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: ${{ env.UNIT_TEST_REPORT }}
-          path: ${{ env.UNIT_TEST_REPORT }}
+          python-version: 3.7.12
+          test-report-file: ${{ SDK_TEST_REPORT }}
 
   sdk-tests:
     name: Run SDK tests
