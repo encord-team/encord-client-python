@@ -22,6 +22,8 @@ concurrency:
 jobs:
   checkout-repo:
     name: Checkout repo for github actions
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
