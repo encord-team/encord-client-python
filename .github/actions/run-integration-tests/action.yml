@@ -1,19 +1,10 @@
 name: 'Run integration tests'
 description: 'Run the integration tests for a given Python version. These tests come from the cord-backend.'
 
-BACKEND_REPO: cord-team/cord-backend
-PROJECT: sdk-integration-tests
-TEST_DIR: ./src/cord/sdk_integration_tests/tests
-ENVIRONMENT: DEV
-
 inputs:
   python-version:
     description: 'Python version to use'
     default: 3.7.12
-    required: false
-  poetry-version:
-    description: 'Poetry version to use'
-    default: 1.1.12
     required: false
   test-report-file:
     description: 'File name to save the test report in'
@@ -25,23 +16,41 @@ inputs:
     description: 'Access token to backend repo'
     required: true
 
+  poetry-version:
+    description: 'Poetry version to use'
+    default: 1.1.12
+    required: false
+  backend-repo:
+    description: 'Backend repo name'
+    default: cord-team/cord-backend
+    required: false
+  project: 
+    description: 'project of the backend repo.'
+    default: sdk-integration-tests
+    required: false
+  test-dir:
+    description: 'Test directory of the integration tests project.'
+    default: ./src/cord/sdk_integration_tests/tests
+    required: false
+  environment:
+    default: DEV
+    required: false
+
+
 runs:
   using: "composite"
 
   steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-
       - name: Checkout backend repo
         uses: actions/checkout@v2
         with:
-          repository: ${{ env.BACKEND_REPO }}
+          repository: ${{ inputs.backend-repo }}
           token: ${{ inputs.backend-access-token }}
 
       - name: Setup Poetry environment
         uses: ./.github/actions/setup-poetry-environment
         with:
-          project: ${{ env.PROJECT }}
+          project: ${{ inputs.project }}
           cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}-1
 
       - name: Setup FFMPEG
@@ -49,7 +58,7 @@ runs:
 
       - name: Get SDK
         run: |
-          cd projects/${{ env.PROJECT }}
+          cd projects/${{ inputs.project }}
           python -m pip install --upgrade pip
           GIT_REPO=${{ github.repositoryUrl }}
           poetry add git+"${GIT_REPO/"git:"/"https:"}"
@@ -58,16 +67,16 @@ runs:
 
       - name: Run tests
         run: |
-          cd projects/${{ env.PROJECT }}
+          cd projects/${{ inputs.project }}
           source .venv/bin/activate
-          export CORD_ENV=${{ env.ENVIRONMENT }}
+          export CORD_ENV=${{ inputs.environment }}
           export PRIVATE_KEY="${{ inputs.private-key }}"
-          python -m pytest ${{ env.TEST_DIR }} --rootdir=${{ env.TEST_DIR }} --verbose --junitxml=${{ env.SDK_TEST_REPORT }}
+          python -m pytest ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
         shell: bash
 
       - name: Upload report
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: ${{ env.SDK_TEST_REPORT }}
-          path: projects/${{ env.PROJECT }}/${{ env.SDK_TEST_REPORT }}
+          name: ${{ inputs.test-report-file }}
+          path: projects/${{ inputs.project }}/${{ inputs.test-report-file }}
