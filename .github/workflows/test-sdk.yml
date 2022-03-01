@@ -17,6 +17,7 @@ env:
   INTEGRATION_TEST_REPORT_PYTHON_3_8: integration-test-report-python3_8.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_9: integration-test-report-python3_9.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_10: integration-test-report-python3_10.xml
+  INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
@@ -101,6 +102,7 @@ jobs:
         with:
           python-version: 3.7.12
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
 
   publish-test-reports:
       name: Publish test reports

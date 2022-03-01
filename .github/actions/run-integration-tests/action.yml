@@ -3,7 +3,6 @@ description: 'Run the integration tests for a given Python version. These tests 
 
 BACKEND_REPO: cord-team/cord-backend
 PROJECT: sdk-integration-tests
-PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
 TEST_DIR: ./src/cord/sdk_integration_tests/tests
 ENVIRONMENT: DEV
 
@@ -18,6 +17,9 @@ inputs:
     required: false
   test-report-file:
     description: 'File name to save the test report in'
+    required: true
+  private-key:
+    description: 'Private key for integration tests'
     required: true
 
 runs:
@@ -53,7 +55,7 @@ runs:
           cd projects/${{ env.PROJECT }}
           source .venv/bin/activate
           export CORD_ENV=${{ env.ENVIRONMENT }}
-          export PRIVATE_KEY="${{ env.PRIVATE_KEY }}"
+          export PRIVATE_KEY="${{ inputs.private-key }}"
           python -m pytest ${{ env.TEST_DIR }} --rootdir=${{ env.TEST_DIR }} --verbose --junitxml=${{ env.SDK_TEST_REPORT }}
         shell: bash
 
