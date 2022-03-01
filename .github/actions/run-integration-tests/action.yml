@@ -52,6 +52,7 @@ runs:
         with:
           project: ${{ inputs.project }}
           cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}-1
+          python-version: ${{ inputs.python-version }}
 
       - name: Setup FFMPEG
         uses: FedericoCarboni/setup-ffmpeg@v1
