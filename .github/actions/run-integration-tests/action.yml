@@ -21,6 +21,9 @@ inputs:
   private-key:
     description: 'Private key for integration tests'
     required: true
+  backend-access-token:
+    description: 'Access token to backend repo'
+    required: true
 
 runs:
   using: "composite"
@@ -30,7 +33,7 @@ runs:
         uses: actions/checkout@v2
         with:
           repository: ${{ env.BACKEND_REPO }}
-          token: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ inputs.backend-access-token }}
 
       - name: Setup Poetry environment
         uses: ./.github/actions/setup-poetry-environment

@@ -12,12 +12,15 @@ env:
   UNIT_TEST_REPORT_PYTHON_3_8: unit-test-report-python3_8.xml
   UNIT_TEST_REPORT_PYTHON_3_9: unit-test-report-python3_9.xml
   UNIT_TEST_REPORT_PYTHON_3_10: unit-test-report-python3_10.xml
+  
   INTEGRATION_TEST_REPORT_PYTHON_3_6: integration-test-report-python3_6.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_7: integration-test-report-python3_7.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_8: integration-test-report-python3_8.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_9: integration-test-report-python3_9.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_10: integration-test-report-python3_10.xml
   INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+
+  BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
@@ -103,6 +106,7 @@ jobs:
           python-version: 3.7.12
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+          backend-access-token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
   publish-test-reports:
       name: Publish test reports
