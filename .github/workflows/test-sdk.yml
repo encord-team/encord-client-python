@@ -116,7 +116,7 @@ jobs:
         unit-tests-python-3-8, 
         unit-tests-python-3-9, 
         unit-tests-python-3-10, 
-        sdk-tests]
+        tegration-tests-python3-7]
       if: success() || failure()
 
       steps:
