@@ -193,6 +193,31 @@ class Dataset(dict, Formatter):
 
 
 @dataclasses.dataclass(frozen=True)
+class DatasetDataInfo(Formatter):
+    data_hash: str
+    title: str
+
+    @classmethod
+    def from_dict(self, json_dict: Dict) -> DatasetDataInfo:
+        return DatasetDataInfo(json_dict["data_hash"], json_dict["title"])
+
+
+@dataclasses.dataclass(frozen=True)
+class AddPrivateDataResponse(Formatter):
+    """Response of add_private_data_to_dataset"""
+
+    dataset_data_info: List[DatasetDataInfo]
+
+    @classmethod
+    def from_dict(self, json_dict: Dict) -> AddPrivateDataResponse:
+        data_info = json_dict["dataset_data_info"]
+        title_data_hash_mappings = []
+        for mapping in data_info:
+            title_data_hash_mappings.append(DatasetDataInfo.from_dict(mapping))
+        return AddPrivateDataResponse(title_data_hash_mappings)
+
+
+@dataclasses.dataclass(frozen=True)
 class DatasetAPIKey(Formatter):
     dataset_hash: str
     api_key: str

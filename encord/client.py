@@ -60,6 +60,7 @@ from encord.orm.dataset import (
     DatasetData,
     ReEncodeVideoTask,
     ImageGroupOCR,
+    AddPrivateDataResponse,
 )
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import LabelRow, Review
@@ -269,7 +270,7 @@ class EncordClientDataset(EncordClient):
         integration_id: str,
         private_files: Union[str, typing.Dict, Path, typing.TextIO],
         ignore_errors: bool = False,
-    ):
+    ) -> AddPrivateDataResponse:
         """
         Append data hosted on private clouds to existing dataset
 
@@ -300,8 +301,9 @@ class EncordClientDataset(EncordClient):
             raise ValueError(f"Type [{type(private_files)}] of argument private_files is not supported")
 
         payload = {"files": files, "integration_id": integration_id, "ignore_errors": ignore_errors}
+        response = self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
 
-        return self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
+        return AddPrivateDataResponse.from_dict(response)
 
     def re_encode_data(self, data_hashes: List[str]):
         """
