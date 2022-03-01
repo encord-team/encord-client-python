@@ -301,7 +301,7 @@ class EncordClientDataset(EncordClient):
 
         payload = {"files": files, "integration_id": integration_id, "ignore_errors": ignore_errors}
 
-        self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
+        return self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
 
     def re_encode_data(self, data_hashes: List[str]):
         """
