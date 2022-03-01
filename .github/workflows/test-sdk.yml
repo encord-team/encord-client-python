@@ -12,7 +12,6 @@ env:
   UNIT_TEST_REPORT_PYTHON_3_8: unit-test-report-python3_8.xml
   UNIT_TEST_REPORT_PYTHON_3_9: unit-test-report-python3_9.xml
   UNIT_TEST_REPORT_PYTHON_3_10: unit-test-report-python3_10.xml
-  # DENIS: I mixed up the test reports!
   INTEGRATION_TEST_REPORT_PYTHON_3_6: integration-test-report-python3_6.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_7: integration-test-report-python3_7.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_8: integration-test-report-python3_8.xml
@@ -27,7 +26,6 @@ jobs:
   unit-tests-python-3-6:
     name: Run unit tests for Python 3.6
     runs-on: ubuntu-latest
-    needs: [checkout-repo]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
