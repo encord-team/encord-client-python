@@ -80,3 +80,6 @@ runs:
         with:
           name: ${{ inputs.test-report-file }}
           path: projects/${{ inputs.project }}/${{ inputs.test-report-file }}
+
+      - name: Checkout current repo for post cleanup
+        uses: actions/checkout@v2
