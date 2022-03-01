@@ -7,39 +7,36 @@ on:
   workflow_dispatch:
 
 env:
-  UNIT_TEST_REPORT: unit-test-report.xml
+  UNIT_TEST_REPORT_PYTHON_3_6: unit-test-report-python3_6.xml
+  UNIT_TEST_REPORT_PYTHON_3_7: unit-test-report-python3_7.xml
+  UNIT_TEST_REPORT_PYTHON_3_8: unit-test-report-python3_8.xml
+  UNIT_TEST_REPORT_PYTHON_3_9: unit-test-report-python3_9.xml
+  UNIT_TEST_REPORT_PYTHON_3_10: unit-test-report-python3_10.xml
   # DENIS: I mixed up the test reports!
-  SDK_TEST_REPORT_PYTHON_3_6: sdk-test-report-python3_6.xml
-  SDK_TEST_REPORT_PYTHON_3_7: sdk-test-report-python3_7.xml
-  SDK_TEST_REPORT_PYTHON_3_8: sdk-test-report-python3_8.xml
-  SDK_TEST_REPORT_PYTHON_3_9: sdk-test-report-python3_9.xml
-  SDK_TEST_REPORT_PYTHON_3_10: sdk-test-report-python3_10.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_6: integration-test-report-python3_6.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_7: integration-test-report-python3_7.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_8: integration-test-report-python3_8.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_9: integration-test-report-python3_9.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_10: integration-test-report-python3_10.xml
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
   cancel-in-progress: true
 
 jobs:
-  checkout-repo:
-    name: Checkout repo for github actions
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-
   unit-tests-python-3-6:
     name: Run unit tests for Python 3.6
     runs-on: ubuntu-latest
     needs: [checkout-repo]
     steps:
-    # DENIS: do I need t o repeat this?
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
       - name: Run unit tests for Python 3.6
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.6.15
-          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_6 }}
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_6 }}
 
   unit-tests-python-3-7:
     name: Run unit tests for Python 3.7
@@ -52,7 +49,7 @@ jobs:
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.7.12
-          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_7 }}
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
 
   unit-tests-python-3-8:
     name: Run unit tests for Python 3.8
@@ -65,7 +62,7 @@ jobs:
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.8.12
-          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_8 }}
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
 
   unit-tests-python-3-9:
     name: Run unit tests for Python 3.9
@@ -78,7 +75,7 @@ jobs:
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.9.10
-          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_9 }}
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
 
   unit-tests-python-3-10:
     name: Run unit tests for Python 3.10
@@ -91,21 +88,21 @@ jobs:
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.10.2
-          test-report-file: ${{ env.SDK_TEST_REPORT_PYTHON_3_10 }}
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
 
 
   integration-tests-python3-7:
-    name: Run SDK tests
+    name: Run integration tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
 
       - name: Run integration tests for Python 3.7
-        uses: ./.github/actions/run-unit-tests
+        uses: ./.github/actions/run-integration-tests
         with:
           python-version: 3.7.12
-          test-report-file: ${{ env.UNIT_TEST_REPORT }}
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
 
   publish-test-reports:
       name: Publish test reports
@@ -153,8 +150,8 @@ jobs:
         - name: Download SDK integration test report
           uses: actions/download-artifact@v2
           with:
-            name: ${{ env.SDK_TEST_REPORT }}
-            path: ${{ env.SDK_TEST_REPORT }}
+            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
+            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
 
         - name: Publish unit test report Python 3.6
           uses: EnricoMi/publish-unit-test-result-action@v1
@@ -189,7 +186,7 @@ jobs:
         - name: Publish SDK integration test report
           uses: EnricoMi/publish-unit-test-result-action@v1
           with:
-            files: ${{ env.SDK_TEST_REPORT }}/*.xml
+            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}/*.xml
             check_name: SDK integration test report
 
   send-slack-notification:
