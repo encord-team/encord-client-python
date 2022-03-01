@@ -19,6 +19,8 @@ env:
   INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
 
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+  BACKEND_REPO: cord-team/cord-backend
+
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
@@ -83,61 +85,71 @@ jobs:
     name: Run integration tests for Python 3.7
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout backend repo
         uses: actions/checkout@v2
-
-      - name: Run integration tests for Python 3.7
-        uses: ./.github/actions/run-integration-tests
         with:
-          python-version: 3.7.12
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      - name: Run integration tests for Python 3.9
+        uses: ./.github/actions/run-sdk-integration-tests
+        with:
+          python-version: 3.9.10
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-          backend-access-token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
   integration-tests-python-3-8:
     name: Run integration tests for Python 3.8
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout backend repo
         uses: actions/checkout@v2
-
-      - name: Run integration tests for Python 3.8
-        uses: ./.github/actions/run-integration-tests
         with:
-          python-version: 3.8.12
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_8 }}
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      - name: Run integration tests for Python 3.9
+        uses: ./.github/actions/run-sdk-integration-tests
+        with:
+          python-version: 3.9.10
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-          backend-access-token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
   integration-tests-python-3-9:
     name: Run integration tests for Python 3.9
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout backend repo
         uses: actions/checkout@v2
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
       - name: Run integration tests for Python 3.9
-        uses: ./.github/actions/run-integration-tests
+        uses: ./.github/actions/run-sdk-integration-tests
         with:
           python-version: 3.9.10
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-          backend-access-token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
   integration-tests-python-3-10:
     name: Run integration tests for Python 3.10
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout backend repo
         uses: actions/checkout@v2
-
-      - name: Run integration tests for Python 3.10
-        uses: ./.github/actions/run-integration-tests
         with:
-          python-version: 3.10.2
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      - name: Run integration tests for Python 3.9
+        uses: ./.github/actions/run-sdk-integration-tests
+        with:
+          python-version: 3.9.10
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-          backend-access-token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      
 
   publish-test-reports:
       name: Publish test reports
