@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cord-client-python"
-version = "0.1.29"
+version = "0.1.31"
 description = "Cord Python SDK Client"
 authors = ["Cord Technologies Limited <hello@cord.tech>"]
 license = "Apache Software License"
