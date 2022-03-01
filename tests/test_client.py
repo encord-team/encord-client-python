@@ -1,3 +1,4 @@
+import os
 import uuid
 
 import pytest
@@ -7,8 +8,10 @@ from encord.client import EncordClient
 from encord.configs import EncordConfig
 from encord.orm.label_row import LabelRow
 from encord.orm.project import Project
+from encord.utilities.benchmark_utilities import LabelAnnotationMetrics
 from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
 from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
+
 # from tests.test_data.test_blurb import TEST_BLURB
 
 # Dummy keys, can be used and abused
@@ -29,6 +32,14 @@ def keys():
 @pytest.fixture
 def client(keys):
     return EncordClient.initialise(resource_id=keys[0], api_key=keys[1])
+
+
+@pytest.fixture
+def consensus_projects():
+    client1 = EncordClient.initialise(os.getenv("CONSENSUS_PROJECT1_ID"), os.getenv("CONSENSUS_PROJECT1_API_KEY"))
+    client2 = EncordClient.initialise(os.getenv("CONSENSUS_PROJECT2_ID"), os.getenv("CONSENSUS_PROJECT2_API_KEY"))
+    client3 = EncordClient.initialise(os.getenv("CONSENSUS_PROJECT3_ID"), os.getenv("CONSENSUS_PROJECT3_API_KEY"))
+    return [client1, client2, client3]
 
 
 def test_initialise(keys):
@@ -120,3 +131,15 @@ def test_object_interpolation_with_polygons(keys):
     client = EncordClient.initialise(keys[0], LABEL_READ_KEY)
     objects = client.object_interpolation(INTERPOLATION_TEST_BLURB, ["60f75ddb-aa68-4654-8c85-f6959dbb62eb"])
     assert isinstance(objects, dict)
+
+
+def test_get_labels_consensus(consensus_projects):
+    feature_hashes = [obj.feature_node_hash for obj in consensus_projects[0].get_project_ontology().ontology_objects]
+    answers = [
+        {"930994aa": LabelAnnotationMetrics(precision=10 / 10, recall=10 / 10)},
+        {"930994aa": LabelAnnotationMetrics(precision=7 / 9, recall=7 / 10)},
+        {"930994aa": LabelAnnotationMetrics(precision=9 / 11, recall=9 / 10)},
+    ]
+    for index, project in enumerate(consensus_projects):
+        consensus_score = project.get_labels_consensus(consensus_projects, feature_hashes)
+        assert consensus_score == answers[index]
