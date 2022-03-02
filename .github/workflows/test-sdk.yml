@@ -7,133 +7,260 @@ on:
   workflow_dispatch:
 
 env:
-  PYTHON: 3.7.12
-  POETRY: 1.1.12
-  UNIT_TEST_REPORT: unit-test-report.xml
-  SDK_TEST_REPORT: sdk-test-report.xml
+  UNIT_TEST_REPORT_PYTHON_3_7: unit-test-report-python3_7.xml
+  UNIT_TEST_REPORT_PYTHON_3_8: unit-test-report-python3_8.xml
+  UNIT_TEST_REPORT_PYTHON_3_9: unit-test-report-python3_9.xml
+  UNIT_TEST_REPORT_PYTHON_3_10: unit-test-report-python3_10.xml
+
+  INTEGRATION_TEST_REPORT_PYTHON_3_7: integration-test-report-python3_7.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_8: integration-test-report-python3_8.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_9: integration-test-report-python3_9.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_10: integration-test-report-python3_10.xml
+  INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+
+  BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+  BACKEND_REPO: cord-team/cord-backend
+
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
-    name: Run unit tests
+  # deliberately skipping Python 3.6 because some support for dev dependencies is dropped
+  unit-tests-python-3-7:
+    name: Run unit tests for Python 3.7
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - name: Set up python
-        uses: actions/setup-python@v2
+      - name: Run unit tests for Python 3.7
+        uses: ./.github/actions/run-unit-tests
         with:
-          python-version: ${{ env.PYTHON }}
+          python-version: 3.7.12
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
 
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY }}
-          virtualenvs-in-project: true
-
-      - name: Check cache
-        id: cached-poetry
-        uses: actions/cache@v2
-        with:
-          path: .venv
-          key: unit-${{ hashFiles('poetry.lock') }}-${{ env.PYTHON }}-1
-
-      - name: Install dependencies
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction
-
-      - name: Run tests
-        run: |
-          source .venv/bin/activate
-          python -m pytest tests --verbose --junitxml=${{ env.UNIT_TEST_REPORT }}
-
-      - name: Upload report
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: ${{ env.UNIT_TEST_REPORT }}
-          path: ${{ env.UNIT_TEST_REPORT }}
-
-  sdk-tests:
-    name: Run SDK tests
+  unit-tests-python-3-8:
+    name: Run unit tests for Python 3.8
     runs-on: ubuntu-latest
-    env:
-      BACKEND_REPO: cord-team/cord-backend
-      PROJECT: sdk-integration-tests
-      PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
-      TEST_DIR: ./src/cord/sdk_integration_tests/tests
-      ENVIRONMENT: DEV
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run unit tests for Python 3.8
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.8.12
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
+
+  unit-tests-python-3-9:
+    name: Run unit tests for Python 3.9
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run unit tests for Python 3.9
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.9.10
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
+
+  unit-tests-python-3-10:
+    name: Run unit tests for Python 3.10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run unit tests for Python 3.10
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.10.2
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
+
+
+  integration-tests-python-3-7:
+    name: Run integration tests for Python 3.7
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout backend repo
         uses: actions/checkout@v2
         with:
           repository: ${{ env.BACKEND_REPO }}
-          token: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
-      - name: Setup Poetry environment
-        uses: ./.github/actions/setup-poetry-environment
+      - name: Run integration tests for Python 3.7
+        uses: ./.github/actions/run-sdk-integration-tests
         with:
-          project: ${{ env.PROJECT }}
-          cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}-1
+          python-version: 3.7.12
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
 
-      - name: Setup FFMPEG
-        uses: FedericoCarboni/setup-ffmpeg@v1
-
-      - name: Get SDK
-        run: |
-          cd projects/${{ env.PROJECT }}
-          python -m pip install --upgrade pip
-          GIT_REPO=${{ github.repositoryUrl }}
-          poetry add git+"${GIT_REPO/"git:"/"https:"}"
-          poetry install
-
-      - name: Run tests
-        run: |
-          cd projects/${{ env.PROJECT }}
-          source .venv/bin/activate
-          export CORD_ENV=${{ env.ENVIRONMENT }}
-          export PRIVATE_KEY="${{ env.PRIVATE_KEY }}"
-          python -m pytest ${{ env.TEST_DIR }} --rootdir=${{ env.TEST_DIR }} --verbose --junitxml=${{ env.SDK_TEST_REPORT }}
-
-      - name: Upload report
-        uses: actions/upload-artifact@v2
-        if: always()
+  integration-tests-python-3-8:
+    name: Run integration tests for Python 3.8
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backend repo
+        uses: actions/checkout@v2
         with:
-          name: ${{ env.SDK_TEST_REPORT }}
-          path: projects/${{ env.PROJECT }}/${{ env.SDK_TEST_REPORT }}
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      - name: Run integration tests for Python 3.8
+        uses: ./.github/actions/run-sdk-integration-tests
+        with:
+          python-version: 3.8.12
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_8 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+
+  integration-tests-python-3-9:
+    name: Run integration tests for Python 3.9
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backend repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      - name: Run integration tests for Python 3.9
+        uses: ./.github/actions/run-sdk-integration-tests
+        with:
+          python-version: 3.9.10
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+
+  integration-tests-python-3-10:
+    name: Run integration tests for Python 3.10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backend repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      - name: Run integration tests for Python 3.10
+        uses: ./.github/actions/run-sdk-integration-tests
+        with:
+          python-version: 3.10.2
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+
+      
 
   publish-test-reports:
       name: Publish test reports
       runs-on: ubuntu-latest
-      needs: [unit-tests, sdk-tests]
+      needs: [
+        unit-tests-python-3-7,
+        unit-tests-python-3-8, 
+        unit-tests-python-3-9, 
+        unit-tests-python-3-10, 
+        integration-tests-python-3-7,
+        integration-tests-python-3-8,
+        integration-tests-python-3-9,
+        integration-tests-python-3-10,
+        ]
       if: success() || failure()
 
       steps:
-        - name: Download unit test report
+        - name: Download unit test report Python 3.7
           uses: actions/download-artifact@v2
           with:
-            name: ${{ env.UNIT_TEST_REPORT }}
-            path: ${{ env.UNIT_TEST_REPORT }}
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
 
-        - name: Download SDK integration test report
+        - name: Download unit test report Python 3.8
           uses: actions/download-artifact@v2
           with:
-            name: ${{ env.SDK_TEST_REPORT }}
-            path: ${{ env.SDK_TEST_REPORT }}
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
 
-        - name: Publish unit test report
+        - name: Download unit test report Python 3.9
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
+
+        - name: Download unit test report Python 3.10
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
+
+        - name: Download integration test report Python 3.7
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
+            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}
+
+        - name: Download integration test report Python 3.8
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_8 }}
+            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_8 }}
+
+        - name: Download integration test report Python 3.9
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
+            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}
+
+        - name: Download integration test report Python 3.10
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}
+            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}
+
+        - name: Publish unit test report Python 3.7
           uses: EnricoMi/publish-unit-test-result-action@v1
           with:
-            files: ${{ env.UNIT_TEST_REPORT }}/*.xml
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}/*.xml
             check_name: Unit test report
 
-        - name: Publish SDK integration test report
+        - name: Publish unit test report Python 3.8
           uses: EnricoMi/publish-unit-test-result-action@v1
           with:
-            files: ${{ env.SDK_TEST_REPORT }}/*.xml
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}/*.xml
+            check_name: Unit test report
+
+        - name: Publish unit test report Python 3.9
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}/*.xml
+            check_name: Unit test report
+
+        - name: Publish unit test report Python 3.10
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}/*.xml
+            check_name: Unit test report
+
+        - name: Publish integration test report Python 3.7
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_7 }}/*.xml
+            check_name: SDK integration test report
+
+        - name: Publish integration test report Python 3.8
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_8 }}/*.xml
+            check_name: SDK integration test report
+
+        - name: Publish integration test report Python 3.9
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_9 }}/*.xml
+            check_name: SDK integration test report
+
+        - name: Publish integration test report Python 3.10
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}/*.xml
             check_name: SDK integration test report
 
   send-slack-notification:
