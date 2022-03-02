@@ -198,7 +198,7 @@ class DatasetDataInfo(Formatter):
     title: str
 
     @classmethod
-    def from_dict(self, json_dict: Dict) -> DatasetDataInfo:
+    def from_dict(cls, json_dict: Dict) -> DatasetDataInfo:
         return DatasetDataInfo(json_dict["data_hash"], json_dict["title"])
 
 
@@ -206,15 +206,15 @@ class DatasetDataInfo(Formatter):
 class AddPrivateDataResponse(Formatter):
     """Response of add_private_data_to_dataset"""
 
-    dataset_data_info: List[DatasetDataInfo]
+    dataset_data_list: List[DatasetDataInfo]
 
     @classmethod
-    def from_dict(self, json_dict: Dict) -> AddPrivateDataResponse:
+    def from_dict(cls, json_dict: Dict) -> AddPrivateDataResponse:
         data_info = json_dict["dataset_data_info"]
-        title_data_hash_mappings = []
+        dataset_data_info_list = []
         for mapping in data_info:
-            title_data_hash_mappings.append(DatasetDataInfo.from_dict(mapping))
-        return AddPrivateDataResponse(title_data_hash_mappings)
+            dataset_data_info_list.append(DatasetDataInfo.from_dict(mapping))
+        return AddPrivateDataResponse(dataset_data_info_list)
 
 
 @dataclasses.dataclass(frozen=True)

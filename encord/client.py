@@ -281,6 +281,9 @@ class EncordClientDataset(EncordClient):
                 A str path or Path object to a json file, json str or python dictionary of the files you wish to add
             ignore_errors: bool, optional
                 Ignore individual errors when trying to access the specified files
+        Returns:
+            add_private_data_response List of DatasetDataInfo objects containing data_hash and title
+
         """
         if isinstance(private_files, dict):
             files = private_files
