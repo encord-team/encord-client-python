@@ -375,10 +375,12 @@ class EncordUserClient:
             if val is None:
                 continue
 
-            if isinstance(clause, str) and clause in valid_filters:
-                clause = ListingFilter(clause)
-
-            if clause not in ListingFilter:
+            if isinstance(clause, str):
+                if clause in valid_filters:
+                    clause = ListingFilter(clause)
+                else:
+                    continue
+            elif not isinstance(clause, ListingFilter):
                 continue
 
             if clause.value.endswith("before") or clause.value.endswith("after"):
