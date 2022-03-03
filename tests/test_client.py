@@ -35,7 +35,7 @@ def client(keys):
 
 
 @pytest.fixture
-def consensus_projects():
+def projects():
     client1 = EncordClient.initialise(os.getenv("CONSENSUS_PROJECT1_ID"), os.getenv("CONSENSUS_PROJECT1_API_KEY"))
     client2 = EncordClient.initialise(os.getenv("CONSENSUS_PROJECT2_ID"), os.getenv("CONSENSUS_PROJECT2_API_KEY"))
     client3 = EncordClient.initialise(os.getenv("CONSENSUS_PROJECT3_ID"), os.getenv("CONSENSUS_PROJECT3_API_KEY"))
@@ -133,13 +133,18 @@ def test_object_interpolation_with_polygons(keys):
     assert isinstance(objects, dict)
 
 
-def test_get_labels_consensus(consensus_projects):
-    feature_hashes = [obj.feature_node_hash for obj in consensus_projects[0].get_project_ontology().ontology_objects]
+def test_get_labels_consensus(projects):
+    feature_hashes = [obj.feature_node_hash for obj in projects[0].get_project_ontology().ontology_objects]
     answers = [
         {"930994aa": LabelAnnotationMetrics(precision=10 / 10, recall=10 / 10)},
         {"930994aa": LabelAnnotationMetrics(precision=7 / 9, recall=7 / 10)},
         {"930994aa": LabelAnnotationMetrics(precision=9 / 11, recall=9 / 10)},
+        {"930994aa": LabelAnnotationMetrics(precision=6 / 11, recall=6 / 7)},
     ]
-    for index, project in enumerate(consensus_projects):
-        consensus_score = project.get_labels_consensus(consensus_projects, feature_hashes)
+    for index, project in enumerate(projects):
+        consensus_score = project.get_labels_consensus(projects, feature_hashes)
         assert consensus_score == answers[index]
+
+    # check majority consensus (1 vs 1, 2 vs 2, ..., x vs x is no consensus)
+    consensus_score = projects[2].get_labels_consensus([projects[0], projects[1]], ["930994aa"])
+    assert consensus_score == answers[3]

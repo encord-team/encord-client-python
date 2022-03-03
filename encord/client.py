@@ -1082,8 +1082,8 @@ class EncordClientProject(EncordClient):
     ) -> Dict[str, LabelAnnotationMetrics]:
         """
         Calculate performance metrics of a label generating agent when compared with consensus reached by other agents.
-        Two objects' instances are considered the same object if their Jaccard similarity coefficient is greater or
-        equal than the threshold; otherwise, they represent distinct objects.
+        Consensus is reached by majority. Two objects' instances are considered the same object if their Jaccard
+        similarity coefficient is greater or equal than the threshold; otherwise, they represent distinct objects.
 
         Args:
             self:
