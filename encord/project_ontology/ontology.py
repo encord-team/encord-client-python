@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Dict, Optional, Iterable
+from typing import Dict, Iterable, List, Optional
 
 from encord.project_ontology.classification_attribute import ClassificationAttribute
 from encord.project_ontology.classification_option import ClassificationOption

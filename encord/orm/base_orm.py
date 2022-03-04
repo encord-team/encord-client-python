@@ -16,7 +16,7 @@
 import datetime
 import json
 import logging
-from collections import abc, OrderedDict
+from collections import OrderedDict, abc
 
 logger = logging.getLogger(__name__)
 

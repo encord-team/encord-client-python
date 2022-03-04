@@ -15,12 +15,13 @@
 from __future__ import annotations
 
 import dataclasses
-from datetime import datetime
-from dateutil import parser
 import json
 from collections import OrderedDict
-from enum import IntEnum, Enum
-from typing import List, Dict, Optional, NoReturn
+from datetime import datetime
+from typing import Dict, List, NoReturn, Optional
+from enum import Enum, IntEnum
+
+from dateutil import parser
 
 from encord.constants.enums import DataType
 from encord.orm import base_orm

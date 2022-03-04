@@ -14,7 +14,7 @@
 # under the License.
 import dataclasses
 import logging
-from typing import TypeVar, Type, List
+from typing import List, Type, TypeVar
 
 import requests
 import requests.exceptions

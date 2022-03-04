@@ -19,8 +19,15 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
 import cryptography
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
-from cryptography.hazmat.primitives.serialization import load_ssh_private_key, Encoding, PublicFormat
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+    Ed25519PublicKey,
+)
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    PublicFormat,
+    load_ssh_private_key,
+)
 
 import encord.exceptions
 

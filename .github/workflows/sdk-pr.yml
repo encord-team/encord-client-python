@@ -28,6 +28,11 @@ jobs:
           options: "--check"
           src: "."
 
+      - name: Run isort
+        # adds options `--check-only --diff` by default - https://pycqa.github.io/isort/docs/configuration/github_action.html
+        uses: jamescurtin/isort-action@master
+
+
   unit-tests:
     name: Run unit tests
     runs-on: ubuntu-latest

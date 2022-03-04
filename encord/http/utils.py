@@ -1,13 +1,11 @@
-import multiprocessing
-
-import mimetypes
 import logging
+import mimetypes
+import multiprocessing
 import os.path
-from typing import List, TypeVar, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Optional, TypeVar
 
 import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 from tqdm import tqdm
 
 from encord.http.querier import Querier

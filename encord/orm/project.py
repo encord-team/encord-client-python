@@ -14,7 +14,7 @@
 # under the License.
 import datetime
 from collections import OrderedDict
-from enum import IntEnum, Enum
+from enum import Enum, IntEnum
 from typing import Optional
 
 from encord.orm import base_orm

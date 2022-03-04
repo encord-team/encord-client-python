@@ -13,8 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 from encord.constants.enums import DataType
-from encord.orm.label_row import LabelRow
 from encord.constants.string_constants import *
+from encord.orm.label_row import LabelRow
 
 
 def construct_answer_dictionaries(label_row):
