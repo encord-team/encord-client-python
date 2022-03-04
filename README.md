@@ -10,8 +10,8 @@
 ## 💻 Features
 
 - Minimal low-level Python client that allows you to interact with Encord's API
-  - Supports Python: `3.7`, `3.8`, `3.9`, and `3.10`
-  s
+- Supports Python: `3.7`, `3.8`, `3.9`, and `3.10`
+
 ## ✨ Relevant Links
 * [Encord website](https://encord.com)
 * [Encord web app](https://app.encord.com)
