@@ -30,7 +30,7 @@ jobs:
 
       - name: Run isort
         # adds options `--check-only --diff` by default - https://pycqa.github.io/isort/docs/configuration/github_action.html
-        uses: jamescurtin/isort-action@master
+        uses: isort/isort-action@v0.1.0
 
 
   unit-tests:
