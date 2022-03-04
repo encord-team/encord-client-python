@@ -40,10 +40,10 @@ import os.path
 import typing
 import uuid
 from pathlib import Path
-from typing import List, Tuple, Union, Optional
+from typing import List, Optional, Tuple, Union
 
 import encord.exceptions
-from encord.configs import EncordConfig, Config, CORD_DOMAIN
+from encord.configs import CORD_DOMAIN, Config, EncordConfig
 from encord.constants.model import *
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
@@ -51,26 +51,42 @@ from encord.http.utils import upload_to_signed_url_list
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
+    AddPrivateDataResponse,
     Dataset,
+    DatasetData,
     Image,
     ImageGroup,
+    ImageGroupOCR,
+    ReEncodeVideoTask,
     SignedImagesURL,
     SignedVideoURL,
     Video,
-    DatasetData,
-    ReEncodeVideoTask,
-    ImageGroupOCR,
-    AddPrivateDataResponse,
 )
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import LabelRow, Review
-from encord.orm.labeling_algorithm import LabelingAlgorithm, ObjectInterpolationParams, BoundingBoxFittingParams
-from encord.orm.model import Model, ModelRow, ModelInferenceParams, ModelTrainingParams, ModelOperations
-from encord.orm.project import Project, ProjectCopy, ProjectDataset, ProjectUsers, ProjectCopyOptions
+from encord.orm.labeling_algorithm import (
+    BoundingBoxFittingParams,
+    LabelingAlgorithm,
+    ObjectInterpolationParams,
+)
+from encord.orm.model import (
+    Model,
+    ModelInferenceParams,
+    ModelOperations,
+    ModelRow,
+    ModelTrainingParams,
+)
+from encord.orm.project import (
+    Project,
+    ProjectCopy,
+    ProjectCopyOptions,
+    ProjectDataset,
+    ProjectUsers,
+)
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
-from encord.utilities.project_user import ProjectUserRole, ProjectUser
+from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 logger = logging.getLogger(__name__)
 

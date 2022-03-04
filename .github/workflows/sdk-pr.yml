@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   formatting:
-    name: Assert code formattings
+    name: Assert code formatting
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -27,6 +27,11 @@ jobs:
         with:
           options: "--check"
           src: "."
+
+      - name: Run isort
+        # adds options `--check-only --diff` by default - https://github.com/marketplace/actions/python-isort
+        uses: isort/isort-action@v0.1.0
+
 
   unit-tests:
     name: Run unit tests

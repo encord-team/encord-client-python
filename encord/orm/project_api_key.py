@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import Dict, List
 
 from encord.orm.formatter import Formatter
 from encord.utilities.client_utilities import APIKeyScopes

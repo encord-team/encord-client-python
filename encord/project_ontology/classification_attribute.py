@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List, Iterable
+from typing import Iterable, List, Optional
 
 from encord.project_ontology.classification_option import ClassificationOption
 from encord.project_ontology.classification_type import ClassificationType

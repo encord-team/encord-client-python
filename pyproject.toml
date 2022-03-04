@@ -32,6 +32,7 @@ pre-commit = "^2.16.0"
 black = "^21.12b0"
 sphinx-autodoc-typehints = "1.15.2"
 prettyprinter = "0.18.0"
+isort = "^5.10.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -40,3 +41,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length = 120
 include = 'encord\/.*'
+
+[tool.isort]
+# setting isort to a compatibility mode with `black`
+# https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
+profile = "black"
