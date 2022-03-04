@@ -43,4 +43,6 @@ line-length = 120
 include = 'encord\/.*'
 
 [tool.isort]
+# setting isort to a compatibility mode with `black`
+# https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
 profile = "black"
