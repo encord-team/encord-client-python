@@ -18,8 +18,8 @@ import dataclasses
 import json
 from collections import OrderedDict
 from datetime import datetime
-from typing import Dict, List, NoReturn, Optional
 from enum import Enum, IntEnum
+from typing import Dict, List, NoReturn, Optional
 
 from dateutil import parser
 
