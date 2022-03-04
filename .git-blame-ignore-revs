@@ -2,3 +2,5 @@
 # blame. These revisions are considered "unimportant" in that they are unlikely
 # to be what you are interested in when blaming.
 
+# Apply isort
+8de122a3f511350ac47c8fc0aee1fb4a4f6d5c39
