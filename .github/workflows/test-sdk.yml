@@ -27,7 +27,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # deliberately skipping Python 3.6 because some support for dev dependencies is dropped
   unit-tests-python-3-7:
     name: Run unit tests for Python 3.7
     runs-on: ubuntu-latest
