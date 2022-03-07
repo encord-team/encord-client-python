@@ -14,7 +14,9 @@ class LabelAnnotationMetrics:
 # ---------------------------------------------------------
 #                   Helper functions
 # ---------------------------------------------------------
-def __add_frame_consensus_score(base_frame, comparing_frames, feature_node_hash_set, threshold, consensus_score):
+def __add_frame_consensus_score(
+    base_frame, comparing_frames, feature_node_hash_set, classifications_answers_list, threshold, consensus_score
+):
     """
     Update consensus score when comparing base_frame's objects with consensus objects obtained from comparing_frames.
     Two objects' instances are considered the same object if their Jaccard similarity coefficient is greater or equal
@@ -38,10 +40,47 @@ def __add_frame_consensus_score(base_frame, comparing_frames, feature_node_hash_
             consensus_objects[feature_hash].pop(max_similarity[1])
         else:
             score["FP"] += 1
-    # Score each unmatched consensus object as false negative (FN)
+    # Score each unmatched consensus' object as false negative (FN)
     for feature_hash, objects in consensus_objects.items():
         score = consensus_score.setdefault(feature_hash, {"TP": 0, "FP": 0, "FN": 0})
         score["FN"] += len(objects)
+
+    consensus_classifications = __find_consensus_classifications(
+        comparing_frames, feature_node_hash_set, classifications_answers_list
+    )
+
+    for classification in base_frame["classifications"]:
+        feature_hash = classification["featureHash"]
+        if feature_hash not in feature_node_hash_set:
+            continue
+        consensus_classifications.setdefault(feature_hash, dict())
+        classification_hash = classification["classificationHash"]
+        score = consensus_score.setdefault(feature_hash, {"TP": 0, "FP": 0, "FN": 0})
+        # classifications_answers_list[0] is base_frame's classification_answers dict
+        for class_answer in classifications_answers_list[0][classification_hash]["classifications"]:
+            answers = class_answer["answers"]
+            attribute_feature_hash = class_answer["featureHash"]
+            if isinstance(answers, str):  # text type classification's answer
+                if attribute_feature_hash not in consensus_classifications[feature_hash].keys():
+                    score["FP"] += 1
+                elif consensus_classifications[feature_hash][attribute_feature_hash] == answers:
+                    score["TP"] += 1
+                    consensus_classifications[feature_hash].pop(attribute_feature_hash)
+                else:
+                    score["FP"] += 1
+            else:  # radio button or checklist classification's answer (list instance)
+                for answer in answers:
+                    answer_hash = answer["featureHash"]
+                    if answer_hash in consensus_classifications[feature_hash].keys():
+                        score["TP"] += 1
+                        consensus_classifications[feature_hash].pop(answer_hash)
+                    else:
+                        score["FP"] += 1
+
+    # Score each unmatched consensus' classification as false negative (FN)
+    for feature_hash, attributes in consensus_classifications.items():
+        score = consensus_score.setdefault(feature_hash, {"TP": 0, "FP": 0, "FN": 0})
+        score["FN"] += len(attributes)
 
 
 def __find_consensus_objects(comparing_frames, feature_node_hash_set, threshold):
@@ -99,6 +138,50 @@ def __find_consensus_objects(comparing_frames, feature_node_hash_set, threshold)
             for object_index in objects_used_in_base_dict:
                 object_dicts[base_index].pop(object_index)
     return consensus_objects
+
+
+def __find_consensus_classifications(comparing_frames, feature_node_hash_set, classifications_answers_list):
+    comparing_classifications = [frame["classifications"] for frame in comparing_frames]
+    feature_hash_to_attribute_answers = dict()
+    attributes_answers_count = dict()
+    for index, classifications in enumerate(comparing_classifications):
+        for classification in classifications:
+            feature_hash = classification["featureHash"]
+            if feature_hash not in feature_node_hash_set:
+                continue
+            classification_hash = classification["classificationHash"]
+            attribute_answers = feature_hash_to_attribute_answers.setdefault(feature_hash, set())
+            # classifications_answers_list[0] is base_frame's classification_answers dict, so the +1
+            for class_answer in classifications_answers_list[index + 1][classification_hash]["classifications"]:
+                answers = class_answer["answers"]
+                attribute_feature_hash = class_answer["featureHash"]
+                if isinstance(answers, str):  # text type classification's answer
+                    attribute_answers.add(attribute_feature_hash)
+                    str_to_count = attributes_answers_count.setdefault(attribute_feature_hash, dict())
+                    str_to_count[answers] = str_to_count.get(answers, 0) + 1
+                else:  # radio button or checklist classification's answer (list instance)
+                    for answer in answers:
+                        answer_hash = answer["featureHash"]
+                        attribute_answers.add(answer_hash)
+                        attributes_answers_count[answer_hash] = attributes_answers_count.get(answer_hash, 0) + 1
+
+    consensus_classifications = dict()
+    amount_agents = len(comparing_frames)
+    for feature_hash, attribute_answers in feature_hash_to_attribute_answers.items():
+        consensus_classifications[feature_hash] = dict()
+        for attribute in attribute_answers:
+            attribute_count = attributes_answers_count[attribute]
+            if isinstance(attribute_count, dict):
+                for answer, occurrences in attribute_count.items():
+                    if 2 * occurrences > amount_agents:
+                        consensus_classifications[feature_hash][attribute] = answer
+            else:
+                if 2 * attribute_count > amount_agents:
+                    consensus_classifications[feature_hash][attribute] = attribute
+        if len(consensus_classifications[feature_hash]) == 0:
+            consensus_classifications.pop(feature_hash)
+
+    return consensus_classifications
 
 
 def calculate_jaccard_similarity(obj1, obj2):

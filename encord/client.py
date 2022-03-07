@@ -1135,6 +1135,7 @@ class EncordClientProject(EncordClient):
             if len(label_row_list) == 1:  # there is no consensus data to compare with
                 continue
             frames_within_label_rows = [extract_frames_within_label_row(label_row) for label_row in label_row_list]
+            classification_answers_list = [label_row.classification_answers for label_row in label_row_list]
 
             # Find frame consensus and add it to global consensus score
             baseline_frames = frames_within_label_rows[0]
@@ -1144,7 +1145,14 @@ class EncordClientProject(EncordClient):
                     current_frames[index] if index in current_frames else {"objects": [], "classifications": []}
                     for current_frames in frames_within_label_rows[1:]
                 ]
-                add_frame_consensus_score(frame, comparing_frames, feature_node_hash_set, threshold, consensus_score)
+                add_frame_consensus_score(
+                    frame,
+                    comparing_frames,
+                    feature_node_hash_set,
+                    classification_answers_list,
+                    threshold,
+                    consensus_score,
+                )
 
         # Transform true_positive, false_positive and false_negative score to precision and recall metrics
         label_annotation_metrics = dict()
