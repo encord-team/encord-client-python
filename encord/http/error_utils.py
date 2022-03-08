@@ -33,6 +33,7 @@ UPLOAD_OPERATION_NOT_SUPPORTED_ERROR = ["UPLOAD_OPERATION_NOT_SUPPORTED_ERROR"]
 MUST_SET_DETECTION_RANGE_ERROR = ["MUST_SET_DETECTION_RANGE_ERROR"]
 DETECTION_RANGE_INVALID_ERROR = ["DETECTION_RANGE_INVALID_ERROR"]
 RESOURCE_EXISTS_ERROR = ["RESOURCE_EXISTS_ERROR"]
+INVALID_DATE_FORMAT_ERROR = ["INVALID_DATE_FORMAT_ERROR"]
 
 
 def check_error_response(response, payload=None):
@@ -93,6 +94,9 @@ def check_error_response(response, payload=None):
         raise DetectionRangeInvalidError(
             "The detection range is invalid (e.g. less than 0, or" " higher than num frames in the video)"
         )
+
+    if response == INVALID_DATE_FORMAT_ERROR:
+        raise InvalidDateFormatError("Invalid date format supplied as input")
 
     if response == RESOURCE_EXISTS_ERROR:
         raise ResourceExistsError(

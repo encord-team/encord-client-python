@@ -15,8 +15,11 @@
 
 import pprint
 from dataclasses import dataclass
+import datetime
 from enum import Enum
 from typing import List, Union
+
+import dateutil
 
 
 def pretty_print(data):
@@ -95,3 +98,14 @@ class CvatImporterSuccess:
 class CvatImporterError:
     dataset_hash: str
     issues: Issues
+
+
+def parse_datetime(key, val):
+    if not val:
+        return None
+    if isinstance(val, str):
+        return dateutil.parser.isoparse(val)
+    if isinstance(val, datetime.datetime):
+        return val.isoformat()
+    else:
+        raise ValueError(f"Value for {key} should be a datetime")
