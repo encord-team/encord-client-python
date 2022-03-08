@@ -169,3 +169,43 @@ class ProjectImporterCvatInfo(base_orm.BaseORM):
             ("export_type", CvatExportType),
         ]
     )
+
+
+class GetLabelRows(base_orm.BaseORM):
+    """
+    A project defines a label ontology and is a collection of datasets and label rows.
+
+    ORM:
+
+    label_rows: [
+        {
+            label_hash (uid),
+            data_hash (uid),
+            dataset_hash (uid),
+            dataset_title,
+            data_title,
+            data_type,
+            label_status
+        },
+        ...
+    ]
+
+    """
+
+    DB_FIELDS = OrderedDict([("label_rows", (list, str))])
+
+    NON_UPDATABLE_FIELDS = {"label_rows"}
+
+    def get_labels_list(self):
+        """
+        Returns a list of all label row IDs (label_hash uid) in a project.
+        """
+        labels = self.to_dic().get("label_rows")
+        res = []
+        for label in labels:
+            res.append(label.get("label_hash"))
+        return res
+
+    @property
+    def label_rows(self):
+        return self["label_rows"]

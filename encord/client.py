@@ -39,6 +39,7 @@ import logging
 import os.path
 import typing
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
@@ -77,6 +78,7 @@ from encord.orm.model import (
     ModelTrainingParams,
 )
 from encord.orm.project import (
+    GetLabelRows,
     Project,
     ProjectCopy,
     ProjectCopyOptions,
@@ -391,6 +393,23 @@ class EncordClientProject(EncordClient):
             UnknownError: If an error occurs while retrieving the project.
         """
         return self._querier.basic_getter(Project)
+
+    def get_label_rows(
+        self,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        edited_before: Optional[Union[str, datetime]] = None,
+        edited_after: Optional[Union[str, datetime]] = None,
+        label_statuses: Optional[List[str]] = [],
+    ):
+        payload = {
+            "created_before": created_before,
+            "created_after": created_after,
+            "edited_before": edited_before,
+            "edited_after": edited_after,
+            "label_statuses": label_statuses,
+        }
+        return self._querier.basic_getter(GetLabelRows, payload=payload)
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """
