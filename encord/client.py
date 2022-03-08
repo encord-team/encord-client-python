@@ -1093,7 +1093,8 @@ class EncordClientProject(EncordClient):
                 The list of projects where consensus is extracted. Label rows used for comparison are those with
                 'LABELLED' status.
             ontology_feature_node_hashes:
-                The list of feature node hashes denoting object classes from baseline project ontology to be evaluated.
+                The list of feature node hashes denoting object and/or classification classes from baseline
+                 project ontology to be evaluated.
             threshold:
                 Used in objects comparison.
 
