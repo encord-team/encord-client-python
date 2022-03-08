@@ -90,6 +90,9 @@ from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 logger = logging.getLogger(__name__)
 
+BACKFILL_START_DATE = "2021-01-01"
+BACKFILL_END_DATE = "2025-12-12"
+
 
 class EncordClient(object):
     """
@@ -446,7 +449,13 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
 
-    def get_label_row(self, uid: str, get_signed_url: bool = True):
+    def get_label_row(
+        self,
+        uid: str,
+        get_signed_url: bool = True,
+        created_at_range: List[str] = [BACKFILL_START_DATE, BACKFILL_END_DATE],
+        last_edited_at_range: List[str] = [BACKFILL_START_DATE, BACKFILL_END_DATE],
+    ):
         """
         Retrieve label row.
 
@@ -454,6 +463,8 @@ class EncordClientProject(EncordClient):
             uid: A label_hash (uid) string.
             get_signed_url: By default the operation returns a signed URL for the underlying data asset. This can be
             expensive so it can optionally be turned off
+            created_at_range: Date range in which the label row was created. Date format YYYY-MM-DD
+            last_edited_at_range: Date range in which the label was last edited. Date format YYYY-MM-DD
 
         Returns:
             LabelRow: A label row instance.
@@ -465,7 +476,11 @@ class EncordClientProject(EncordClient):
             UnknownError: If an error occurs while retrieving the label.
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
-        payload = {"get_signed_url": get_signed_url}
+        payload = {
+            "get_signed_url": get_signed_url,
+            "created_at_range": created_at_range,
+            "last_edited_at_range": last_edited_at_range,
+        }
 
         return self._querier.basic_getter(LabelRow, uid, payload=payload)
 
