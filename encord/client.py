@@ -74,6 +74,7 @@ from encord.utilities.benchmark_utilities import (
     LabelAnnotationMetrics,
     extract_frames_within_label_row,
     __add_frame_consensus_score as add_frame_consensus_score,
+    __get_last_frame_index as get_last_frame_index,
 )
 
 logger = logging.getLogger(__name__)
@@ -1137,17 +1138,20 @@ class EncordClientProject(EncordClient):
                 continue
             frames_within_label_rows = [extract_frames_within_label_row(label_row) for label_row in label_row_list]
             classification_answers_list = [label_row.classification_answers for label_row in label_row_list]
+            last_frame_index = max(get_last_frame_index(label_row) for label_row in label_row_list)
 
             # Find frame consensus and add it to global consensus score
-            baseline_frames = frames_within_label_rows[0]
-            for index, frame in baseline_frames.items():
-                # If frame is not found in comparing_frames, use a default value that indicates no available annotation
+            for index in map(str, range(last_frame_index + 1)):
+                # If frame is not found use a default value that indicates no available annotation
                 comparing_frames = [
                     current_frames[index] if index in current_frames else {"objects": [], "classifications": []}
-                    for current_frames in frames_within_label_rows[1:]
+                    for current_frames in frames_within_label_rows
                 ]
+                base_frame = comparing_frames[0]
+                comparing_frames.pop(0)  # remove base_frame from comparing_frames
+
                 add_frame_consensus_score(
-                    frame,
+                    base_frame,
                     comparing_frames,
                     feature_node_hash_set,
                     classification_answers_list,

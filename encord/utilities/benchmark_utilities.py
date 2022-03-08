@@ -192,6 +192,32 @@ def __find_consensus_classifications(comparing_frames, feature_node_hash_set, cl
     return consensus_classifications
 
 
+def __get_last_frame_index(label_row: LabelRow):
+    """
+    Find the last frame's index of a LabelRow.
+
+    Args:
+        label_row: The LabelRow where the frames are going to be extracted.
+
+    Returns:
+        The maximum index of all frames.
+
+    Raises:
+        ValueError:
+            If the LabelRow has an invalid format.
+    """
+    max_index = 0
+    if label_row.data_type == "img_group":
+        max_index = max(int(data_unit["data_sequence"]) for data_unit in label_row.data_units.values())
+    elif label_row.data_type == "video":
+        for data_unit in label_row.data_units.values():
+            max_index = max(int(key) for key in data_unit["labels"].keys())
+            break
+    else:
+        raise ValueError("{0} is not a supported LabelRow's data type".format(label_row.data_type))
+    return max_index
+
+
 def calculate_jaccard_similarity(obj1, obj2):
     """
     Calculate Jaccard similarity coefficient (Intersection over Union) between objects obj1 and obj2.
