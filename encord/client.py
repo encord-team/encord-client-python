@@ -78,7 +78,7 @@ from encord.orm.model import (
     ModelTrainingParams,
 )
 from encord.orm.project import (
-    GetLabelRows,
+    GetFilteredLabelRows,
     Project,
     ProjectCopy,
     ProjectCopyOptions,
@@ -394,7 +394,7 @@ class EncordClientProject(EncordClient):
         """
         return self._querier.basic_getter(Project)
 
-    def get_label_rows(
+    def get_filtered_label_rows(
         self,
         created_before: Optional[Union[str, datetime]] = None,
         created_after: Optional[Union[str, datetime]] = None,
@@ -409,7 +409,7 @@ class EncordClientProject(EncordClient):
             "edited_after": edited_after,
             "label_statuses": label_statuses,
         }
-        return self._querier.basic_getter(GetLabelRows, payload=payload)
+        return self._querier.basic_getter(GetFilteredLabelRows, payload=payload)
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """

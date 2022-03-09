@@ -171,7 +171,7 @@ class ProjectImporterCvatInfo(base_orm.BaseORM):
     )
 
 
-class GetLabelRows(base_orm.BaseORM):
+class GetFilteredLabelRows(base_orm.BaseORM):
     """
     A project defines a label ontology and is a collection of datasets and label rows.
 
