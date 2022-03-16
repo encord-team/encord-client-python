@@ -776,7 +776,7 @@ class EncordClientProject(EncordClient):
         detection_frame_range=None,
         allocation_enabled=False,
         data_hashes=None,
-        rdp_thresh=0.005
+        rdp_thresh=0.005,
     ):
         """
         Run inference with model trained on the platform.
@@ -851,7 +851,7 @@ class EncordClientProject(EncordClient):
                 "detection_frame_range": detection_frame_range,
                 "allocation_enabled": allocation_enabled,
                 "data_hashes": data_hashes,
-                "rdp_thresh": rdp_thresh
+                "rdp_thresh": rdp_thresh,
             }
         )
 

@@ -88,7 +88,7 @@ class ModelInferenceParams(base_orm.BaseORM):
             ("detection_frame_range", list),
             ("allocation_enabled", bool),
             ("data_hashes", list),
-            ("rdp_thresh", float)
+            ("rdp_thresh", float),
         ]
     )
 
