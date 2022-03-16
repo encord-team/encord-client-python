@@ -159,6 +159,7 @@ class LabelRowMetadata(Formatter):
     """
     Contains helpful information about a LabelRow.
     """
+
     label_hash: str
     data_hash: str
     dataset_hash: str
@@ -176,5 +177,3 @@ class LabelRowMetadata(Formatter):
             json_dict["data_type"],
             AnnotationTaskStatus(json_dict["annotation_task_status"]),
         )
-
-
