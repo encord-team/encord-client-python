@@ -733,6 +733,7 @@ class EncordClientProject(EncordClient):
         detection_frame_range=None,
         allocation_enabled=False,
         data_hashes=None,
+        rdp_thresh=0.005
     ):
         """
         Run inference with model trained on the platform.
@@ -747,6 +748,8 @@ class EncordClientProject(EncordClient):
             detection_frame_range: Detection frame range (for videos).
             allocation_enabled: Object UID allocation (tracking) enabled (disabled by default).
             data_hashes: list of hash of the videos/image_groups you'd like to run inference on.
+            rdp_thresh: parameter specifying the polygon coarseness to be used while running inference. The higher the
+                value, the less points in the segmented image
 
         Returns:
             Inference results: A dict of inference results.
@@ -805,6 +808,7 @@ class EncordClientProject(EncordClient):
                 "detection_frame_range": detection_frame_range,
                 "allocation_enabled": allocation_enabled,
                 "data_hashes": data_hashes,
+                "rdp_thresh": rdp_thresh
             }
         )
 
