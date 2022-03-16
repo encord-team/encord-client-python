@@ -66,7 +66,13 @@ from encord.orm.dataset import (
     Video,
 )
 from encord.orm.label_log import LabelLog
-from encord.orm.label_row import LabelRow, Review, AnnotationTaskStatus, LabelRowMetadata
+from encord.orm.label_row import (
+    AnnotationTaskStatus,
+    LabelRow,
+    LabelRowMetadata,
+    LabelStatus,
+    Review,
+)
 from encord.orm.labeling_algorithm import (
     BoundingBoxFittingParams,
     LabelingAlgorithm,
@@ -414,6 +420,27 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload)
 
+    def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
+        """
+        Set the label status for a label row to a desired value.
+
+        Args:
+            self: Cord client object.
+            label_hash: unique identifier of the label row whose status is to be updated.
+            label_status: the new status that needs to be set.
+
+        Returns:
+            Bool.
+
+        Raises:
+            AuthorisationError: If the label_hash provided is invalid or not a member of the project.
+            UnknownError: If an error occurs while updating the status.
+        """
+        payload = {
+            "label_status": label_status.value,
+        }
+        return self._querier.basic_setter(LabelStatus, label_hash, payload)
+
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """
         Add users to project
@@ -755,7 +782,7 @@ class EncordClientProject(EncordClient):
         detection_frame_range=None,
         allocation_enabled=False,
         data_hashes=None,
-        rdp_thresh=0.005
+        rdp_thresh=0.005,
     ):
         """
         Run inference with model trained on the platform.
@@ -830,7 +857,7 @@ class EncordClientProject(EncordClient):
                 "detection_frame_range": detection_frame_range,
                 "allocation_enabled": allocation_enabled,
                 "data_hashes": data_hashes,
-                "rdp_thresh": rdp_thresh
+                "rdp_thresh": rdp_thresh,
             }
         )
 
