@@ -12,10 +12,14 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import json
 from collections import OrderedDict
+from dataclasses import dataclass
+from enum import Enum
+from typing import Dict
 
 from encord.orm import base_orm
+from encord.orm.formatter import Formatter
 
 
 class LabelRow(base_orm.BaseORM):
@@ -140,3 +144,36 @@ class LabelRow(base_orm.BaseORM):
 
 class Review:
     pass
+
+
+class AnnotationTaskStatus(Enum):
+    QUEUED = "QUEUED"
+    ASSIGNED = "ASSIGNED"
+    IN_REVIEW = "IN_REVIEW"
+    RETURNED = "RETURNED"
+    COMPLETED = "COMPLETED"
+
+
+@dataclass(frozen=True)
+class LabelRowMetadata(Formatter):
+    """
+    Contains helpful information about a LabelRow.
+    """
+
+    label_hash: str
+    data_hash: str
+    dataset_hash: str
+    data_title: str
+    data_type: str
+    annotation_task_status: AnnotationTaskStatus
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        return LabelRowMetadata(
+            json_dict["label_hash"],
+            json_dict["data_hash"],
+            json_dict["dataset_hash"],
+            json_dict["data_title"],
+            json_dict["data_type"],
+            AnnotationTaskStatus(json_dict["annotation_task_status"]),
+        )

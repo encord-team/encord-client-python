@@ -76,6 +76,12 @@ class UnknownException(EncordException):
     pass
 
 
+class InvalidDateFormatError(EncordException):
+    """Invalid date format error"""
+
+    pass
+
+
 class MethodNotAllowedError(EncordException):
     """Exception thrown when HTTP method is not allowed."""
 

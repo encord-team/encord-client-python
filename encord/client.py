@@ -39,8 +39,11 @@ import logging
 import os.path
 import typing
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
+
+import dateutil
 
 import encord.exceptions
 from encord.configs import CORD_DOMAIN, Config, EncordConfig
@@ -63,7 +66,7 @@ from encord.orm.dataset import (
     Video,
 )
 from encord.orm.label_log import LabelLog
-from encord.orm.label_row import LabelRow, Review
+from encord.orm.label_row import LabelRow, Review, AnnotationTaskStatus, LabelRowMetadata
 from encord.orm.labeling_algorithm import (
     BoundingBoxFittingParams,
     LabelingAlgorithm,
@@ -86,6 +89,7 @@ from encord.orm.project import (
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
+from encord.utilities.client_utilities import parse_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 logger = logging.getLogger(__name__)
@@ -391,6 +395,24 @@ class EncordClientProject(EncordClient):
             UnknownError: If an error occurs while retrieving the project.
         """
         return self._querier.basic_getter(Project)
+
+    def list_label_rows(
+        self,
+        edited_before: Optional[Union[str, datetime]] = None,
+        edited_after: Optional[Union[str, datetime]] = None,
+        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+    ) -> List[LabelRowMetadata]:
+        if label_statuses:
+            label_statuses = [label_status.value for label_status in label_statuses]
+        edited_before = parse_datetime("edited_before", edited_before)
+        edited_after = parse_datetime("edited_after", edited_after)
+
+        payload = {
+            "edited_before": edited_before,
+            "edited_after": edited_after,
+            "label_statuses": label_statuses,
+        }
+        return self._querier.get_multiple(LabelRowMetadata, payload=payload)
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """
