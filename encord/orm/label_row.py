@@ -154,6 +154,15 @@ class AnnotationTaskStatus(Enum):
     COMPLETED = "COMPLETED"
 
 
+class LabelStatus(Enum):
+    NOT_LABELLED = "NOT_LABELLED"
+    LABEL_IN_PROGRESS = "LABEL_IN_PROGRESS"
+    LABELLED = "LABELLED"
+    REVIEW_IN_PROGRESS = "REVIEW_IN_PROGRESS"
+    REVIEWED = "REVIEWED"
+    REVIEWED_TWICE = "REVIEWED_TWICE"
+
+
 @dataclass(frozen=True)
 class LabelRowMetadata(Formatter):
     """
@@ -165,6 +174,7 @@ class LabelRowMetadata(Formatter):
     dataset_hash: str
     data_title: str
     data_type: str
+    label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
 
     @classmethod
@@ -175,5 +185,6 @@ class LabelRowMetadata(Formatter):
             json_dict["dataset_hash"],
             json_dict["data_title"],
             json_dict["data_type"],
+            LabelStatus(json_dict["label_status"]),
             AnnotationTaskStatus(json_dict["annotation_task_status"]),
         )
