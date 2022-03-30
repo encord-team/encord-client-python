@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "cord-client-python"
-version = "0.1.34"
-description = "Cord Python SDK Client"
-authors = ["Cord Technologies Limited <hello@cord.tech>"]
+name = "encord"
+version = "0.1.35"
+description = "Encord Python SDK Client"
+authors = ["Cord Technologies Limited <hello@encord.com>"]
 license = "Apache Software License"
 keywords = ["cord", "encord"]
 packages = [
@@ -10,8 +10,8 @@ packages = [
     { include = "encord"},
 ]
 readme = "README.md"
-repository="https://github.com/cord-team/cord-client-python"
-documentation="https://docs.cord.tech/docs/client"
+repository="https://github.com/encord-team/encord-client-python"
+documentation="https://python.docs.encord.com/"
 classifiers=[
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",

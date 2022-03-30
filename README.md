@@ -24,7 +24,7 @@ For full documentation, visit [Encord Python API Client](https://docs.encord.com
 First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/stable/installing) package manager:
 
 ```bash
-pip install cord-client-python
+pip install encord
 ```
 
 Then, create an API key for authentication via the [Encord web app](https://app.encord.com). Pass the resource ID and API key as environment variables or pass them explicitly when you initialise the EncordClient object.
