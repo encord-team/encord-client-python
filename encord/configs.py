@@ -16,6 +16,7 @@ import hashlib
 import logging
 import os
 from abc import ABC, abstractmethod
+from pickle import NONE
 from typing import Dict, Optional
 
 import cryptography
@@ -31,18 +32,21 @@ from cryptography.hazmat.primitives.serialization import (
 
 import encord.exceptions
 
-CORD_DOMAIN = "https://api.cord.tech"
-CORD_PUBLIC_PATH = "/public"
-CORD_PUBLIC_USER_PATH = "/public/user"
-CORD_ENDPOINT = CORD_DOMAIN + CORD_PUBLIC_PATH
-CORD_USER_ENDPOINT = CORD_DOMAIN + CORD_PUBLIC_USER_PATH
+ENCORD_DOMAIN = "https://api.cord.tech"
+ENCORD_PUBLIC_PATH = "/public"
+ENCORD_PUBLIC_USER_PATH = "/public/user"
+ENCORD_ENDPOINT = ENCORD_DOMAIN + ENCORD_PUBLIC_PATH
+ENCORD_USER_ENDPOINT = ENCORD_DOMAIN + ENCORD_PUBLIC_USER_PATH
 WEBSOCKET_PATH = "/websocket"
 WEBSOCKET_DOMAIN = "wss://message-api.cord.tech"
 WEBSOCKET_ENDPOINT = WEBSOCKET_DOMAIN + WEBSOCKET_PATH
 
 _CORD_PROJECT_ID = "CORD_PROJECT_ID"
+_ENCORD_PROJECT_ID = "ENCORD_PROJECT_ID"
 _CORD_DATASET_ID = "CORD_DATASET_ID"
+_ENCORD_DATASET_ID = "ENCORD_DATASET_ID"
 _CORD_API_KEY = "CORD_API_KEY"
+_ENCORD_API_KEY = "ENCORD_API_KEY"
 
 READ_TIMEOUT = 180  # In seconds
 WRITE_TIMEOUT = 180  # In seconds
@@ -104,11 +108,13 @@ class Config(BaseConfig):
         self.domain = domain
         endpoint = domain + web_file_path
         super().__init__(endpoint)
-        logger.info("Initialising Cord client with endpoint: %s and resource_id: %s", endpoint, resource_id)
+        logger.info("Initialising Encord client with endpoint: %s and resource_id: %s", endpoint, resource_id)
 
 
 def get_env_resource_id() -> str:
-    if (_CORD_PROJECT_ID in os.environ) and (_CORD_DATASET_ID in os.environ):
+    project_id = os.environ.get(_ENCORD_PROJECT_ID) or os.environ.get(_CORD_PROJECT_ID)
+    dataset_id = os.environ.get(_ENCORD_DATASET_ID) or os.environ.get(_CORD_DATASET_ID)
+    if (project_id is not None) and (dataset_id is not None):
         raise encord.exceptions.InitialisationError(
             message=(
                 "Found both Project EntityId and Dataset EntityId in os.environ. "
@@ -116,11 +122,11 @@ def get_env_resource_id() -> str:
             )
         )
 
-    elif _CORD_PROJECT_ID in os.environ:
-        resource_id = os.environ[_CORD_PROJECT_ID]
+    elif project_id is not None:
+        resource_id = project_id
 
-    elif _CORD_DATASET_ID in os.environ:
-        resource_id = os.environ[_CORD_DATASET_ID]
+    elif dataset_id is not None:
+        resource_id = dataset_id
 
     else:
         raise encord.exceptions.AuthenticationError(message="Project EntityId or dataset EntityId not provided")
@@ -129,10 +135,11 @@ def get_env_resource_id() -> str:
 
 
 def get_env_api_key() -> str:
-    if _CORD_API_KEY not in os.environ:
+    api_key = os.environ.get(_ENCORD_API_KEY) or os.environ.get(_CORD_API_KEY)
+    if api_key is None:
         raise encord.exceptions.AuthenticationError(message="API key not provided")
 
-    return os.environ[_CORD_API_KEY]
+    return api_key
 
 
 class EncordConfig(Config):
@@ -142,7 +149,7 @@ class EncordConfig(Config):
         api_key: Optional[str] = None,
         domain: Optional[str] = None,
     ):
-        web_file_path = CORD_PUBLIC_PATH
+        web_file_path = ENCORD_PUBLIC_PATH
         super().__init__(resource_id, api_key, web_file_path=web_file_path, domain=domain)
 
 
@@ -150,14 +157,14 @@ CordConfig = EncordConfig
 
 
 class UserConfig(BaseConfig):
-    def __init__(self, private_key: Ed25519PrivateKey, domain: str = CORD_DOMAIN):
+    def __init__(self, private_key: Ed25519PrivateKey, domain: str = ENCORD_DOMAIN):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
         self._public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
 
         self.domain = domain
 
-        endpoint = domain + CORD_PUBLIC_USER_PATH
+        endpoint = domain + ENCORD_PUBLIC_USER_PATH
         super().__init__(endpoint)
 
     def define_headers(self, data: str) -> Dict:

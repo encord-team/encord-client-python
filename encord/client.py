@@ -14,7 +14,7 @@
 # under the License.
 
 """ ``encord.client`` provides a simple Python client that allows you
-to query project resources through the Cord API.
+to query project resources through the Encord API.
 
 Here is a simple example for instantiating the client for a project
 and obtaining project info:
@@ -46,7 +46,7 @@ from typing import List, Optional, Tuple, Union
 import dateutil
 
 import encord.exceptions
-from encord.configs import CORD_DOMAIN, Config, EncordConfig
+from encord.configs import ENCORD_DOMAIN, Config, EncordConfig
 from encord.constants.model import *
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
@@ -103,7 +103,7 @@ logger = logging.getLogger(__name__)
 
 class EncordClient(object):
     """
-    Cord client. Allows you to query db items associated
+    Encord client. Allows you to query db items associated
     with a project (e.g. label rows, datasets).
     """
 
@@ -113,24 +113,27 @@ class EncordClient(object):
 
     @staticmethod
     def initialise(
-        resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = CORD_DOMAIN
+        resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = ENCORD_DOMAIN
     ) -> Union[EncordClientProject, EncordClientDataset]:
         """
-        Create and initialize a Cord client from a resource EntityId and API key.
+        Create and initialize a Encord client from a resource EntityId and API key.
 
         Args:
             resource_id: either of
                 - A project EntityId string.
-                  If None, uses the CORD_PROJECT_ID environment variable.
+                  If None, uses the ENCORD_PROJECT_ID environment variable.
+                  The CORD_PROJECT_ID environment variable is supported for backwards compatibility.
                 - A dataset EntityId string.
-                  If None, uses the CORD_DATASET_ID environment variable.
+                  If None, uses the ENCORD_DATASET_ID environment variable.
+                  The CORD_DATASET_ID environment variable is supported for backwards compatibility.
             api_key: An API key.
-                     If None, uses the CORD_API_KEY environment variable.
+                     If None, uses the ENCORD_API_KEY environment variable.
+                     The CORD_API_KEY environment variable is supported for backwards compatibility.
             domain: The encord api-server domain.
-                If None, the CORD_DOMAIN is used
+                If None, the ENCORD_DOMAIN is used
 
         Returns:
-            EncordClient: A Cord client instance.
+            EncordClient: A Encord client instance.
         """
         config = EncordConfig(resource_id, api_key, domain=domain)
         return EncordClient.initialise_with_config(config)
@@ -138,24 +141,24 @@ class EncordClient(object):
     @staticmethod
     def initialise_with_config(config: Config) -> Union[EncordClientProject, EncordClientDataset]:
         """
-        Create and initialize a Cord client from a Cord config instance.
+        Create and initialize a Encord client from a Encord config instance.
 
         Args:
-            config: A Cord config instance.
+            config: A Encord config instance.
 
         Returns:
-            EncordClient: A Cord client instance.
+            EncordClient: A Encord client instance.
         """
         querier = Querier(config)
         key_type = querier.basic_getter(ApiKeyMeta)
         resource_type = key_type.get("resource_type", None)
 
         if resource_type == TYPE_PROJECT:
-            logger.info("Initialising Cord client for project using key: %s", key_type.get("title", ""))
+            logger.info("Initialising Encord client for project using key: %s", key_type.get("title", ""))
             return EncordClientProject(querier, config)
 
         elif resource_type == TYPE_DATASET:
-            logger.info("Initialising Cord client for dataset using key: %s", key_type.get("title", ""))
+            logger.info("Initialising Encord client for dataset using key: %s", key_type.get("title", ""))
             return EncordClientDataset(querier, config)
 
         else:
@@ -195,7 +198,7 @@ class EncordClientDataset(EncordClient):
         Retrieve dataset info (pointers to data, labels).
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
 
         Returns:
             Dataset: A dataset record instance.
@@ -209,10 +212,10 @@ class EncordClientDataset(EncordClient):
 
     def upload_video(self, file_path: str):
         """
-        Upload video to Cord storage.
+        Upload video to Encord storage.
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
             file_path: path to video e.g. '/home/user/data/video.mp4'
 
         Returns:
@@ -237,10 +240,10 @@ class EncordClientDataset(EncordClient):
 
     def create_image_group(self, file_paths: typing.Iterable[str], max_workers: Optional[int] = None):
         """
-        Create an image group in Cord storage.
+        Create an image group in Encord storage.
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
             file_paths: a list of paths to images, e.g.
                 ['/home/user/data/img1.png', '/home/user/data/img2.png']
             max_workers:
@@ -272,10 +275,10 @@ class EncordClientDataset(EncordClient):
 
     def delete_image_group(self, data_hash: str):
         """
-        Create an image group in Cord storage.
+        Create an image group in Encord storage.
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
             data_hash: the hash of the image group you'd like to delete
         """
         self._querier.basic_delete(ImageGroup, uid=data_hash)
@@ -285,7 +288,7 @@ class EncordClientDataset(EncordClient):
         Delete a video/image group from a dataset.
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
             data_hashes: list of hash of the videos/image_groups you'd like to delete, all should belong to the same
              dataset
         """
@@ -339,7 +342,7 @@ class EncordClientDataset(EncordClient):
         Launches an async task that can re-encode a list of videos.
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
             data_hashes: list of hash of the videos you'd like to re_encode, all should belong to the same
              dataset
         Returns:
@@ -354,7 +357,7 @@ class EncordClientDataset(EncordClient):
         Returns the status of an existing async task which is aimed at re-encoding videos.
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
             job_id: id of the async task that was launched to re-encode the videos
 
         Returns:
@@ -390,7 +393,7 @@ class EncordClientProject(EncordClient):
         Retrieve project info (pointers to data, labels).
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
 
         Returns:
             Project: A project record instance.
@@ -425,7 +428,7 @@ class EncordClientProject(EncordClient):
         Set the label status for a label row to a desired value.
 
         Args:
-            self: Cord client object.
+            self: Encord client object.
             label_hash: unique identifier of the label row whose status is to be updated.
             label_status: the new status that needs to be set.
 

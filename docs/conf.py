@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath("../venv/lib/python3.7/site-packages"))
 
 # -- Project information -----------------------------------------------------
 
-project = "Cord Python SDK"
+project = "Encord Python SDK"
 copyright = "2022, Denis Gavrielov"
 author = "Denis Gavrielov"
 
