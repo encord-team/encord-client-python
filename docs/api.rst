@@ -1,40 +1,40 @@
-Cord Python SDK API Reference
+Encord Python SDK API Reference
 ================
 
 User Client
 ------------
-.. automodule:: cord.user_client
+.. automodule:: encord.user_client
     :members:
     :undoc-members:
 
 Utilities - User Client
 ------------------------
-.. automodule:: cord.utilities.user_client_utilities
+.. automodule:: encord.utilities.user_client_utilities
     :members:
     :undoc-members:
 
 Client
 ------------
-.. automodule:: cord.client
+.. automodule:: encord.client
     :members:
     :undoc-members:
 
 
 Utilities - Client
 ------------------------
-.. automodule:: cord.utilities.client_utilities
+.. automodule:: encord.utilities.client_utilities
     :members:
     :undoc-members:
 
 Utilities - Project User
 ------------------------
-.. automodule:: cord.utilities.project_user
+.. automodule:: encord.utilities.project_user
     :members:
     :undoc-members:
 
 Utilities - Label
 ------------------------
-.. automodule:: cord.utilities.label_utilities
+.. automodule:: encord.utilities.label_utilities
     :members:
     :undoc-members:
 
@@ -42,12 +42,12 @@ Utilities - Label
 
 Configs
 ------------
-.. automodule:: cord.configs
+.. automodule:: encord.configs
     :members:
     :undoc-members:
 
 Exceptions
 ------------
-.. automodule:: cord.exceptions
+.. automodule:: encord.exceptions
     :members:
     :undoc-members:

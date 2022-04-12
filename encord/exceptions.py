@@ -160,7 +160,7 @@ class ModelFeaturesInconsistentError(EncordException):
 
 
 class UploadOperationNotSupportedError(EncordException):
-    """Exception thrown when trying to upload a video/image group to non-Cord storage dataset"""
+    """Exception thrown when trying to upload a video/image group to non-Encord storage dataset"""
 
     pass
 
