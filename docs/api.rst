@@ -38,7 +38,47 @@ Utilities - Label
     :members:
     :undoc-members:
 
-
+Utilities - ORM classes
+-------------------------
+.. automodule:: encord.orm.api_key
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.base_orm
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.cloud_integration
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.dataset
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.dataset_with_user_role
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.formatter
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.label_log
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.label_row
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.labeling_algorithm
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.model
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.project
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.project_api_key
+    :members:
+    :undoc-members:
+.. automodule:: encord.orm.project_with_user_role
+    :members:
+    :undoc-members:
 
 Configs
 ------------
