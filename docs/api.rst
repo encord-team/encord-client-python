@@ -7,18 +7,17 @@ User Client
     :members:
     :undoc-members:
 
-Utilities - User Client
-------------------------
-.. automodule:: encord.utilities.user_client_utilities
-    :members:
-    :undoc-members:
-
 Client
 ------------
 .. automodule:: encord.client
     :members:
     :undoc-members:
 
+Utilities - User Client
+------------------------
+.. automodule:: encord.utilities.user_client_utilities
+    :members:
+    :undoc-members:
 
 Utilities - Client
 ------------------------
