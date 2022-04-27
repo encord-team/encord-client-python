@@ -123,9 +123,11 @@ class EncordClient(object):
                 - A project EntityId string.
                   If None, uses the ENCORD_PROJECT_ID environment variable.
                   The CORD_PROJECT_ID environment variable is supported for backwards compatibility.
+
                 - A dataset EntityId string.
                   If None, uses the ENCORD_DATASET_ID environment variable.
                   The CORD_DATASET_ID environment variable is supported for backwards compatibility.
+
             api_key: An API key.
                      If None, uses the ENCORD_API_KEY environment variable.
                      The CORD_API_KEY environment variable is supported for backwards compatibility.
@@ -470,7 +472,8 @@ class EncordClientProject(EncordClient):
     def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False):
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
-        Labels and models are optional
+        Labels and models are optional.
+
         Args:
             copy_datasets: if True, the datasets of the existing project are copied over, and new
                            tasks are created from those datasets

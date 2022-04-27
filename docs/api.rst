@@ -1,5 +1,5 @@
 Encord Python SDK API Reference
-================
+===============================
 
 User Client
 ------------

@@ -240,6 +240,7 @@ class EncordUserClient:
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
             your images and annotations into encord. Ensure that during you have the "Save images"
             checkbox enabled when exporting from CVAT.
+
         Args:
             import_method:
                 The chosen import method. See the `ImportMethod` class for details.
@@ -407,7 +408,7 @@ class ListingFilter(Enum):
     """
     Available properties_filter keys for get_projects() and get_datasets().
 
-    The values for *_before and *_after should be datetime objects.
+    The values for *_before* and *_after* should be datetime objects.
     """
 
     TITLE_EQ = "title_eq"
