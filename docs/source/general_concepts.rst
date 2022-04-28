@@ -10,6 +10,6 @@ client.
     |platform|.
 * **Dataset**: the space where the data it self lives. Datasets can be reused across
     multiple projects and contains no labels or annotations them selves.
-* **Project**: the space where labels, annotations, and reviews lives. Projects can be
-    linked to multiple datasets.
+* **Project**: the space where ontology information, labels, annotations, and reviews
+    lives. Projects can be linked to multiple datasets.
 
