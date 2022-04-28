@@ -3,9 +3,7 @@
 Quickstart
 ==========
 
-To use the |product| to fetch your labels, you first
-:ref:`install the SDK <installation:Installation>` and :xref:`add_your_public_ssh_key`
-to the |platform|. Successively, you write a script as the following to fetch labels.
+To use the |product| to fetch your labels, you first :ref:`install the SDK <installation:Installation>` and :xref:`add_your_public_ssh_key` to the |platform|. Successively, you write a script as the following to fetch labels.
 
 .. tabs::
 
@@ -39,5 +37,4 @@ to the |platform|. Successively, you write a script as the following to fetch la
         .. literalinclude:: json_blurps/video_label_row.json
             :language: json
 
-Obviously, many details are hidden here. We encourage you to keep reading at the
-:ref:`general_concepts:General Concepts` page.
+Obviously, many details are hidden here. We encourage you to keep reading at the :ref:`general_concepts:General Concepts` page.
