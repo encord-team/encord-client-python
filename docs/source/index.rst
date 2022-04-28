@@ -20,8 +20,6 @@ If you haven't been using the |platform| yet, we encourage you to start your jou
    authentication
    tutorials
 
-   user_client
-
 
 SDK docs
 --------
