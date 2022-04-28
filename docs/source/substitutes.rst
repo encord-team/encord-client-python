@@ -1,2 +1,3 @@
+.. |company| replace:: Encord
 .. |product| replace:: Encord SDK
-.. |the platform| replace:: the web-app
+.. |platform| replace:: web-app

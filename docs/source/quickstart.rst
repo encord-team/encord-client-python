@@ -4,8 +4,8 @@ Quickstart
 ==========
 
 To use the |product| to fetch your labels, you first
-:ref:`install the SDK <installation:Installation>` and :xref:`add_your_public_ssh_key` to
-|the platform|. Successively, you write a script as the following to fetch labels.
+:ref:`install the SDK <installation:Installation>` and :xref:`add_your_public_ssh_key`
+to the |platform|. Successively, you write a script as the following to fetch labels.
 
 .. code-block:: python
 
