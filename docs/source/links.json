@@ -18,5 +18,17 @@
   "dataset": {
     "user_text": "Dataset",
     "url": "https://docs.encord.com/docs/datasets/datasets-view"
+  },
+  "public_keys": {
+    "user_text": "Public keys",
+    "url": "https://docs.encord.com/docs/admins/settings/public-keys"
+  },
+  "navigation_bar": {
+    "user_text": "Navigation bar",
+    "url": "https://docs.encord.com/docs/getting-started/navigation-bar"
+  },
+  "login_url": {
+    "user_text": "Login url",
+    "url": "https://app.encord.com"
   }
 }
