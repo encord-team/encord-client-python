@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.abspath("../_extensions"))
 # -- Project information -----------------------------------------------------
 
 project = "Encord Python SDK"
-copyright = "2022, Denis Gavrielov"
-author = "Denis Gavrielov"
+copyright = "2022, Encord"
+author = "Denis Gavrielov, Frederik Hvilshøj"
 
 
 # -- General configuration ---------------------------------------------------
