@@ -25,6 +25,7 @@ requests = "2.25.0"
 uuid = "^1.30"
 cryptography = "^3.4.8"
 tqdm = "^4.32.1"
+sphinx-tabs = "^3.3.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.2"
