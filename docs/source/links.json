@@ -5,10 +5,18 @@
   },
   "docs_main_entry": {
     "user_text": "Web-app Documentation",
-    "url": "https://docs.cord.tech/docs/client"
+    "url": "https://docs.encord.com/docs/client"
   },
   "add_your_public_ssh_key": {
     "user_text": "add your public ssh key",
-    "url": "https://docs-dev.encord.com/docs/sdk-and-api/sdk/public-key"
+    "url": "https://docs.encord.com/docs/sdk-and-api/sdk/public-key"
+  },
+  "project": {
+    "user_text": "Project",
+    "url": "https://docs.encord.com/docs/projects/projects-view"
+  },
+  "dataset": {
+    "user_text": "Dataset",
+    "url": "https://docs.encord.com/docs/datasets/datasets-view"
   }
 }
