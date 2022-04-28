@@ -1,7 +1,8 @@
 .. include:: ./substitutes.rst
 
+*********
 Tutorials
-=========
+*********
 
 .. toctree::
    :maxdepth: 1

@@ -1,7 +1,8 @@
 .. include:: ./substitutes.rst
 
+************
 Installation
-============
+************
 
 The |product| is available through ``pypi`` and is installed with the following
 command:

@@ -1,7 +1,8 @@
 .. include:: ./substitutes.rst
 
+****************
 General Concepts
-================
+****************
 The |product| generally revolves around three major concepts, each having their own SDK
 client.
 
