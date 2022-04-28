@@ -3,11 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. include:: ./substitutes.rst
 
 
-Welcome to Encord Python SDK's API reference!
-=============================================
-If you are looking for our web-app documentation, please see :xref:`docs_main_entry`.
+Welcome to Encord Python SDK reference!
+=======================================
+If you haven't been used |platform| yet, we encourage you to start your journey at the
+:xref:`docs_main_entry` and come back, when you are ready to interact programmatically
+with your data on the |company| platform.
 
 .. toctree::
    :maxdepth: 1
