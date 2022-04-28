@@ -25,5 +25,7 @@ command:
 
     Please contact us if you have any difficulties with the migration.
 
-
+When you have successfully installed the |product|, you can go to the
+:ref:`authentication:Authentication` page to learn how to use authentication to interact
+with the |product|.
 
