@@ -7,6 +7,27 @@ If you are adding a new module which should be documented, follow the examples w
 
 Whenever you add a new public class or function, this documentation should be rebuild and uploaded to the server.
 
+## Common Doc-writing-patterns
+1. To keep terminology consistent, we have defined multiple substitutes for common 
+    entities in `source/substitutes.rst`. You should familiarise your self with them.
+    For example, instead of writing "Encord SDK" repeatedly, we have defined the
+    substitute `|product|` which will be substituted for "Encord SDK" at build time.
+2. To avoid having hardcoded links all over the place, we keep links in the 
+    `source/links.json` file. To insert a link, use ``:xref:`link_key` ``. For example,
+    in the `links.json` file, the following entry exists:
+    ```json
+    "create_project_on_platform": {
+        "user_text": "Create Project on Platform",
+        "url": "https://docs.encord.com/docs/projects/new-project"
+    }
+    ```
+    Using ``:xref:`create_project_on_platform` `` will be transformed into 
+    [Create Project on Platform](https://docs.encord.com/docs/projects/new-project) at
+    built time. 
+3. We have included the `sphinx_tabs` 
+    [module](https://github.com/executablebooks/sphinx-tabs), which, e.g., allows you to 
+    have both a code tab and an output tab. See, e.g., `source/quickstart.rst`.
+
 ## Hosting
 Bake this delicious recipe and share the docs publicly with your friends with these easy steps.
 
