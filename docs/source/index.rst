@@ -6,17 +6,30 @@
 
 
 Welcome to Encord Python SDK's API reference!
-===========================================
-If you would like to see our tutorial style documentation please `click here <https://docs.cord.tech/docs/client>`_
+=============================================
+If you are looking for our web-app documentation, please see :xref:`docs_main_entry`.
+
+.. toctree::
+   :maxdepth: 1
+
+   quickstart
+   general_concepts
+   installation
+   authentication
+   tutorials
+
+   user_client
 
 
+SDK docs
+--------
 .. toctree::
    :maxdepth: 2
 
    api
 
 Indices and tables
----------------------
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

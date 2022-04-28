@@ -11,11 +11,12 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import json
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
-sys.path.insert(0, os.path.abspath("../venv/lib/python3.7/site-packages"))
-
+sys.path.insert(0, os.path.abspath("../.."))
+sys.path.insert(0, os.path.abspath("../../venv/lib/python3.7/site-packages"))
+sys.path.insert(0, os.path.abspath("../_extensions"))
 
 # -- Project information -----------------------------------------------------
 
@@ -35,6 +36,8 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx.ext.viewcode",
+    "sphinx.ext.autosectionlabel",
+    "xref",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -56,8 +59,13 @@ html_theme = "alabaster"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+html_static_path = ["../_static"]
 
 autodoc_member_order = "bysource"
+autosectionlabel_prefix_document = True
 
 html_css_files = ["css/custom.css"]
+
+# Static links
+with open(os.path.abspath("./links.json")) as f:
+    xref_links = json.load(f)

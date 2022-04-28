@@ -1,0 +1,14 @@
+{
+  "create_project_on_platform": {
+    "user_text": "Create Project on Platform",
+    "url": "https://docs.encord.com/docs/projects/new-project"
+  },
+  "docs_main_entry": {
+    "user_text": "Web-app Documentation",
+    "url": "https://docs.cord.tech/docs/client"
+  },
+  "add_your_public_ssh_key": {
+    "user_text": "add your public ssh key",
+    "url": "https://docs-dev.encord.com/docs/sdk-and-api/sdk/public-key"
+  }
+}
