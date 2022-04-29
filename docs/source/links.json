@@ -30,5 +30,9 @@
   "login_url": {
     "user_text": "Login url",
     "url": "https://app.encord.com"
+  },
+  "public-private_key_pair": {
+    "user_text": "public-private key pair",
+    "url": "https://docs.encord.com/docs/admins/settings/public-keys"
   }
 }

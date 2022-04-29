@@ -1,11 +1,21 @@
-.. include:: ./substitutes.rst
-
 *********
 Tutorials
 *********
+We have separated the tutorials into those that relate to *datasets* and those that relate to *projects*.
 
+
+Datasets
+========
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 4
 
-   tutorials/downloading_label_rows
-   tutorials/updating_label_rows
+    ./tutorials/datasets/index
+
+
+Projects
+========
+.. toctree::
+    :maxdepth: 4
+
+    ./tutorials/projects/index
+

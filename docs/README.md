@@ -26,7 +26,7 @@ Whenever you add a new public class or function, this documentation should be re
 3. We have included the `sphinx_tabs` [module](https://github.com/executablebooks/sphinx-tabs), which, e.g., allows you to have both a code tab and an output tab. See, e.g., `source/quickstart.rst`.
 4. As demonstrated in the `source/quickstart.rst`, you can include code from files. 
     With python files (in `source/code_examples`), we try to keep them "blacked" with an enforced 60 column linewidth (to avoid horizontally scrolling code examples).
-    To black all code examples, you can run `> ./black_code_examples.sh`.
+    To black all code examples, you can run `> black source/code_examples/**/*.py --line-length 60`.
 
 ## Hosting
 Bake this delicious recipe and share the docs publicly with your friends with these easy steps.

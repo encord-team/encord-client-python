@@ -1,4 +1,4 @@
-.. include:: ../substitutes.rst
+.. include:: ../../../substitutes.rst
 
 Updating Label Rows
 ===================
