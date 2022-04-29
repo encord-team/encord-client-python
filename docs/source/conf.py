@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx_tabs.tabs",
     "sphinx_codeautolink",
+    "sphinx_copybutton",
     "xref",
 ]
 
