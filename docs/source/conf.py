@@ -38,6 +38,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
     "sphinx_tabs.tabs",
+    "sphinx_codeautolink",
     "xref",
 ]
 

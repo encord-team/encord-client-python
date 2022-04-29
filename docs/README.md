@@ -8,28 +8,25 @@ If you are adding a new module which should be documented, follow the examples w
 Whenever you add a new public class or function, this documentation should be rebuild and uploaded to the server.
 
 ## Common Doc-writing-patterns
-1. To keep terminology consistent, we have defined multiple substitutes for common 
-    entities in `source/substitutes.rst`. You should familiarise your self with them.
-    For example, instead of writing "Encord SDK" repeatedly, we have defined the
-    substitute `|product|` which will be substituted for "Encord SDK" at build time.
-2. To avoid having hardcoded links all over the place, we keep links in the 
-    `source/links.json` file. To insert a link, use ``:xref:`link_key` ``. For example,
-    in the `links.json` file, the following entry exists:
+1. To keep terminology consistent, we have defined multiple substitutes for common entities in `source/substitutes.rst`. 
+    You should familiarise your self with them.
+    For example, instead of writing "Encord SDK" repeatedly, we have defined the substitute `|product|` which will be substituted for "Encord SDK" at build time.
+2. To avoid having hardcoded links all over the place, we keep links in the `source/links.json` file. To insert a link, use ``:xref:`link_key` ``. 
+   For example, in the `links.json` file, the following entry exists:
     ```json
     "create_project_on_platform": {
         "user_text": "Create Project on Platform",
         "url": "https://docs.encord.com/docs/projects/new-project"
     }
     ```
-    Using ``:xref:`create_project_on_platform` `` will be transformed into 
-    [Create Project on Platform](https://docs.encord.com/docs/projects/new-project) at
-    built time.  
+    Using ``:xref:`create_project_on_platform` `` will be transformed into [Create Project on Platform](https://docs.encord.com/docs/projects/new-project) at built time.  
     __NB:__ There is a script that allows you to easily add a link to the json form the
     commandlind. Simply run `./add_link` and it will query the necessary information and
     (naively) check for duplicates.
-3. We have included the `sphinx_tabs` 
-    [module](https://github.com/executablebooks/sphinx-tabs), which, e.g., allows you to 
-    have both a code tab and an output tab. See, e.g., `source/quickstart.rst`.
+3. We have included the `sphinx_tabs` [module](https://github.com/executablebooks/sphinx-tabs), which, e.g., allows you to have both a code tab and an output tab. See, e.g., `source/quickstart.rst`.
+4. As demonstrated in the `source/quickstart.rst`, you can include code from files. 
+    With python files (in `source/code_examples`), we try to keep them "blacked" with an enforced 60 column linewidth (to avoid horizontally scrolling code examples).
+    To black all code examples, you can run `> ./black_code_examples.sh`.
 
 ## Hosting
 Bake this delicious recipe and share the docs publicly with your friends with these easy steps.

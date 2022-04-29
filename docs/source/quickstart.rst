@@ -10,28 +10,8 @@ To use the |product| to fetch your labels, you first :ref:`install the SDK <inst
 
     .. tab:: Code
 
-        .. code-block:: python
-
-            from encord.user_client import EncordUserClient
-
-            user_client = EncordUserClient.create_with_ssh_private_key(
-                "<your_private_key_content>",
-                password="<your_private_key_password_if_necessary>"
-            )
-
-            project_hash = next((
-                p['project']['project_hash']
-                for p in user_client.get_projects()
-            ))
-
-            project_client = user_client.get_project_client(project_hash)
-            label_hash = next((
-                lr['label_hash']
-                for lr in project_client.get_project().label_rows
-                if lr['label_hash'] is not None
-            ))
-            labels = project_client.get_label_row(label_hash)
-            print(labels)
+        .. literalinclude:: code_examples/quickstart.py
+            :language: python
 
     .. tab:: Example output
 
