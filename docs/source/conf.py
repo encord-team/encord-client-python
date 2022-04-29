@@ -65,7 +65,14 @@ html_theme = "alabaster"
 html_static_path = ["../_static"]
 
 autodoc_member_order = "bysource"
+
+# use :clase:`<filename>:<Section Name>` instead of `<Section Name>` which
+# could collide.
 autosectionlabel_prefix_document = True
+
+# Show tables in the autodoc of examples where definitions are used, e.g., in
+# tutorials.
+codeautolink_autodoc_inject = True
 
 html_css_files = ["css/custom.css"]
 

@@ -45,14 +45,9 @@ Public key authentication
 If you are using public key authentication, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
 Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`.EncordClient` objects tied to them
 
-.. code-block:: python
+.. literalinclude:: code_examples/authenticate_ssh.py
+    :language: python
 
-    from encord.user_client import EncordUserClient
-    user_client = EncordUserClient.create_with_ssh_private_key(
-        "<your_private_key>"
-    )
-    project_client = user_client.get_project_client("<project_id>")
-    dataset_client = user_client.get_dataset_client("<dataset_id>")
 
 
 API key authentication
@@ -61,21 +56,11 @@ API key authentication
 If you are using API key authentication, authenticate with |company| by passing the resource ID (project or dataset ID) and associated API key to an :class:`.EncordClient`.
 This will directly create an :class:`.EncordClient` to interact with a specific project or dataset
 
-.. code-block:: python
-
-    from encord.client import EncordClient
-    client = EncordClient.initialise(
-        "<resource_id>",
-        "<resource_api_key>"
-    )
+.. literalinclude:: code_examples/authenticate_api_key.py
+    :language: python
 
 You can instantiate several :class:`.EncordClient` objects by creating an :class:`.EncordConfig` object first. Pass the resource ID and API key as strings, and initialise the clients with the config object
 
-.. code-block:: python
-
-    from encord.client import EncordClient
-    from encord.client import EncordConfig
-    config = EncordConfig("<resource_id>", "<resource_api_key>")
-    client = EncordClient.initialise_with_config(config)
-
+.. literalinclude:: code_examples/authenticate_config.py
+    :language: python
 
