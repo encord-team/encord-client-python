@@ -31,4 +31,4 @@ If you haven't created a dataset already, you can have a look at :ref:`tutorials
               ]
             )
 
-You use the :class:`.DatasetAPIKey` for interactiong with the dataset. TODO add link and more text.
+You use the :class:`.DatasetAPIKey` for interacting with the dataset. TODO add link and more text.
