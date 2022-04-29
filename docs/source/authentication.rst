@@ -49,10 +49,10 @@ Once you have an :class:`.EncordUserClient`, you can use it to create new projec
 
     from encord.user_client import EncordUserClient
     user_client = EncordUserClient.create_with_ssh_private_key(
-        <your_private_key>
+        "<your_private_key>"
     )
-    project_client = user_client.get_project_client(<project_id>)
-    dataset_client = user_client.get_dataset_client(<dataset_id>)
+    project_client = user_client.get_project_client("<project_id>")
+    dataset_client = user_client.get_dataset_client("<dataset_id>")
 
 
 API key authentication
