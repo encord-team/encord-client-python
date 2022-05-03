@@ -5,7 +5,7 @@ Fetching dataset API keys
 
 Via the |product|, you can get all API keys for an existing dataset.
 You need to provide the ``dataset_hash`` which uniquely identifies a dataset (see, e.g., the :ref:`tutorials/datasets/listing_existing_datasets:Listing existing datasets` to get such hash).
-
+If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets/creating_a_dataset:Creating a Dataset`.
 
 .. tabs::
 
@@ -31,7 +31,4 @@ You need to provide the ``dataset_hash`` which uniquely identifies a dataset (se
                 ...
             ]
 
-
-.. Note::
-
-    This capability is available to only the Admin of a dataset.
+With the API key at hand, you can use :ref:`authentication:API key authentication`.

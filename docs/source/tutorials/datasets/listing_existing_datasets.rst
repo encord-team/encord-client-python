@@ -22,7 +22,7 @@ In the example below, a user authenticates with |company| and then fetches all d
                     "dataset": DatasetInfo(
                             dataset_hash="<dataset_hash>", 
                             user_hash="<user_hash>", 
-                            title="Coco Validation 2017", 
+                            title="Example title", 
                             description="Example description ... ", 
                             type=0, 
                             created_at=datetime.datetime(...), 
@@ -33,6 +33,6 @@ In the example below, a user authenticates with |company| and then fetches all d
                 ...
             ]
 
-Note, that the :meth:`.EncordUserClient.get_datasets` method has multiple optional arguments that allow you to query datasets with specific characteristics.
+Note, that :meth:`.EncordUserClient.get_datasets` has multiple optional arguments that allow you to query datasets with specific characteristics.
 For example, if you only want datasets with titles starting with "Validation", you could use ``user_client.get_datasets(title_like="Validation%")``.
-Other keyword arguments such as `created_before` or `edited_after` may also be of interest.
+Other keyword arguments such as :meth:`created_before  <.EncordUserClient.get_datasets>` or :meth:`edited_after <.EncordUserClient.get_datasets>` may also be of interest.
