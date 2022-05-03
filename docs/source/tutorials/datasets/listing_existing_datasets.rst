@@ -1,7 +1,8 @@
 .. include:: ../../substitutes.rst
 
+*************************
 Listing existing datasets
-=========================
+*************************
 
 Via the :class:`.EncordUserClient`, you can easily query and list all the datasets that are available to a given user.
 In the example below, a user authenticates with |company| and then fetches all datasets available.

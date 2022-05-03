@@ -21,7 +21,7 @@ Whenever you add a new public class or function, this documentation should be re
     ```
     Using ``:xref:`create_project_on_platform` `` will be transformed into [Create Project on Platform](https://docs.encord.com/docs/projects/new-project) at built time.  
     __NB:__ There is a script that allows you to easily add a link to the json form the
-    commandlind. Simply run `./add_link` and it will query the necessary information and
+    commandline. Simply run `./add_link` and it will query the necessary information and
     (naively) check for duplicates.
 3. We have included the `sphinx_tabs` [module](https://github.com/executablebooks/sphinx-tabs), which, e.g., allows you to have both a code tab and an output tab. See, e.g., `source/quickstart.rst`.
 4. As demonstrated in the `source/quickstart.rst`, you can include code from files. 

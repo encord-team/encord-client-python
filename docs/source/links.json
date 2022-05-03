@@ -34,5 +34,9 @@
   "public-private_key_pair": {
     "user_text": "public-private key pair",
     "url": "https://docs.encord.com/docs/admins/settings/public-keys"
+  },
+  "private_cloud_section": {
+    "user_text": "Private cloud section",
+    "url": "https://docs.encord.com/docs/datasets/private-cloud-integration#json-format"
   }
 }

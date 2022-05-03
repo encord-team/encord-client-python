@@ -2,7 +2,7 @@ from encord.user_client import EncordUserClient
 from encord.orm.dataset import DatasetScope, DatasetAPIKey
 
 user_client = EncordUserClient.create_with_ssh_private_key(
-    "<YOUR_PRIVATE_KEY>"
+    "<your_private_key>"
 )
 
 dataset_api_key: DatasetAPIKey = (

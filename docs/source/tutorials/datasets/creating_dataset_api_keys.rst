@@ -1,7 +1,8 @@
 .. include:: ../../substitutes.rst
 
+**************************
 Creating a dataset API key
-==========================
+**************************
 
 Via the |product| you can create a dataset-specific API key.
 The API key is one way to :ref:`authentication:Authenticate with Encord`.

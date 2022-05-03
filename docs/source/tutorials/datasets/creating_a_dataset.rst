@@ -1,7 +1,7 @@
 .. include:: ../../substitutes.rst
 
 ******************
-Creating a Dataset
+Creating a dataset
 ******************
 
 You can use the |product| to create a dataset.
