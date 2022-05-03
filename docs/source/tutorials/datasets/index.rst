@@ -1,12 +1,13 @@
-********
 Datasets
-********
+========
 
 .. toctree::
     :maxdepth: 2
 
     creating_a_dataset
     creating_dataset_api_keys
+    fetching_dataset_api_keys
+    listing_existing_datasets
 
 ..
     ---
@@ -16,58 +17,6 @@ Datasets
     ---
 
 
-    ## Fetching dataset API keys
-
-    Via the Python SDK you can get all API keys for an existing dataset.
-    You need to provide the `resource_id` which uniquely identifies a dataset.
-    This capability is available to only the Admin of a dataset.
-
-    ```py
-
-    from encord.user_client import EncordUserClient
-
-    user_client = EncordUserClient.create_with_ssh_private_key(
-        <YOUR_PRIVATE_KEY>)
-
-    user_client.get_dataset_api_key(
-        <RESOURCE_ID>)
-
-    ```
-
-    ```py
-
-    # For example this call will create a dataset, its corresponding API key and then fetch the same.
-
-    from encord.user_client import EncordUserClient
-    from encord.orm.dataset import DatasetType
-
-    user_client = EncordUserClient.create_with_ssh_private_key(
-        <YOUR_PRIVATE_KEY>)
-
-    dataset = user_client.create_dataset(
-        "Traffic Data",
-        DatasetType.AWS)
-
-    dataset_api_key: DatasetAPIKey = user_client.create_dataset_api_key(
-        dataset.get('dataset_hash'),
-        "Full Access API Key",
-        [DatasetScope.READ, DatasetScope.WRITE])
-
-    dataset_api_keys: List[DatasetAPIKey] = user_client.get_dataset_api_keys(
-        dataset.get('dataset_hash'))
-
-    print(dataset_api_keys)
-
-    # Prints
-    # [ DatasetAPIKey(
-    #	dataset_hash='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
-    #	api_key='lCuoabcdefabcdefabcdefabcdefabcdefabc-jlan8',
-    #	title='Full Access API Key',
-    #	scopes=[
-    #        <DatasetScope.READ: 'dataset.read'>,
-    #        <DatasetScope.WRITE: 'dataset.write'>]) ]
-
-    ```
 
     ## Interacting with a dataset
 

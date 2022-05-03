@@ -17,7 +17,7 @@ For example, the following example will create a dataset called "traffic data" t
         .. literalinclude:: /code_examples/tutorials/datasets/creating_a_dataset.py
             :language: python
 
-    .. tab:: Example Output
+    .. tab:: Example output
 
         .. code-block:: json
 
@@ -26,3 +26,4 @@ For example, the following example will create a dataset called "traffic data" t
                 "type": 1,
                 "dataset_hash": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
             }
+
