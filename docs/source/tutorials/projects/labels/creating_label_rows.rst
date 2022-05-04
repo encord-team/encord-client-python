@@ -1,7 +1,6 @@
 .. include:: ../../../substitutes.rst
 
 *******************
-Updating label rows
+Creating label rows
 *******************
-
 

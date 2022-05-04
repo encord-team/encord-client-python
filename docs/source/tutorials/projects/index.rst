@@ -15,6 +15,10 @@ General
     :maxdepth: 4
 
     creating_a_project
+    creating_a_project_api_key
+    listing_existing_projects
+    fetching_project_api_keys
+    adding_datasets_to_projects
 
 
 Labels
@@ -23,8 +27,10 @@ Labels
 .. toctree::
     :maxdepth: 3
 
-    ./labels/downloading_label_rows
+    ./labels/reading_label_rows
+    ./labels/creating_label_rows
     ./labels/updating_label_rows
+    ./labels/reading_label_logs
 
 
 Models
@@ -34,6 +40,7 @@ Models
     :maxdepth: 3
 
     ./models/creating_and_training_a_model
+    ./models/running_model_inference
 
 
 Algorithms

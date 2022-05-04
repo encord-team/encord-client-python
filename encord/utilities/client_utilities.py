@@ -27,6 +27,26 @@ def pretty_print(data):
 
 
 class APIKeyScopes(Enum):
+    """
+    The APIKeyScope is used to provide specific access rights to a project through
+    :meth:`.EncordUserClient.create_project_api_key`. The options are a follows:
+
+        * ``LABEL_READ``: access to
+          :ref:`tutorials/projects/labels/reading_label_rows:Reading label rows`
+        * ``LABEL_WRITE``: access to
+          :ref:`tutorials/projects/labels/creating_label_rows:Creating label rows`
+          or
+          :ref:`tutorials/projects/labels/updating_label_rows:Updating label rows`
+        * ``MODEL_INFERENCE``: access to
+          :ref:`tutorials/projects/models/running_model_inference:Running model inference`
+        * ``MODEL_TRAIN``: access to
+          :ref:`tutorials/projects/models/creating_and_training_a_model:Creating and training a model`
+        * ``LABEL_LOGS_READ``: access to
+          :ref:`tutorials/projects/labels/reading_label_logs:Reading label logs`
+        * ``ALGO_LIBRARY``: access to algorithms like
+          :ref:`tutorials/projects/algorithms/running_object_interpolation:Running object interpolation`
+
+    """
     LABEL_READ = "label.read"
     LABEL_WRITE = "label.write"
     MODEL_INFERENCE = "model.inference"
