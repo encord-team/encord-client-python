@@ -27,6 +27,11 @@ Whenever you add a new public class or function, this documentation should be re
 4. As demonstrated in the `source/quickstart.rst`, you can include code from files. 
     With python files (in `source/code_examples`), we try to keep them "blacked" with an enforced 60 column linewidth (to avoid horizontally scrolling code examples).
     To black all code examples, you can run `> black source/code_examples/**/*.py --line-length 60`.
+5. We use the [sphinx-codeautolink](https://sphinx-codeautolink.readthedocs.io/en/latest/index.html)
+    extension to allow clicking directly in code examples to get to the auto-generated doc.
+    If you want to make the extension recognize instances across code blocks on a page, you can use the `autolink-concat` feature.
+    You can also use the `autolink-preface` feature to "invisibly" instantiate objects in a preface.
+    For an example, have a look at `source/tutorials/datasets/adding_data_to_datasets.rst`.
 
 ## Hosting
 Bake this delicious recipe and share the docs publicly with your friends with these easy steps.
