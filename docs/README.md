@@ -33,6 +33,14 @@ Whenever you add a new public class or function, this documentation should be re
     You can also use the `autolink-preface` feature to "invisibly" instantiate objects in a preface.
     For an example, have a look at `source/tutorials/datasets/adding_data_to_datasets.rst`.
 
+## Other tricks
+1. To be able to run a spell checker like Grammarly on the docs, you can build a `txt` version of the documentation by running the command
+   ```shell
+   > sphinx-build -b text source _text
+   ```
+   This will build the docs in a separate `_text` directory from which you can copy the content of text files to, e.g., Grammarly.
+   
+
 ## Hosting
 Bake this delicious recipe and share the docs publicly with your friends with these easy steps.
 
