@@ -7,6 +7,13 @@ Listing existing datasets
 Via the :class:`.EncordUserClient`, you can easily query and list all the available datasets of a given user.
 In the example below, a user authenticates with |company| and then fetches all datasets available.
 
+
+.. autolink-concat:: section
+
+.. autolink-preface::
+    from encord.orm.dataset import DatasetInfo, DatasetUserRole, StorageLocation
+
+
 .. tabs::
 
     .. tab:: Code
@@ -16,7 +23,7 @@ In the example below, a user authenticates with |company| and then fetches all d
 
     .. tab:: Example output
 
-        .. code-block:: 
+        .. code-block:: python
 
             [
                 {
@@ -25,14 +32,16 @@ In the example below, a user authenticates with |company| and then fetches all d
                             user_hash="<user_hash>", 
                             title="Example title", 
                             description="Example description ... ", 
-                            type=0, 
+                            type=0,  # encord.orm.dataset.StorageLocation
                             created_at=datetime.datetime(...), 
                             last_edited_at=datetime.datetime(...)
                         ), 
-                    "user_role": <DatasetUserRole.ADMIN: 0>
+                    "user_role": DatasetUserRole.ADMIN
                 },
                 ...
             ]
+
+*Note:* the ``type`` attribute in the output refers to the :class:`.StorageLocation` used when :ref:`tutorials/datasets/creating_a_dataset:Creating a dataset`.
 
 .. note::
 

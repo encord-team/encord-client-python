@@ -5,7 +5,7 @@ Adding data
 ***********
 
 You can add data to datasets in multiple ways.
-You can both use |company| storage, as described next, and you can :ref:`add data from a private cloud <adding_data_to_datasets:Adding data from a private cloud>` to retain complete control of the data.
+You can both use |company| storage, as described next, and you can :ref:`add data from a private cloud <tutorials/datasets/adding_data_to_datasets:Adding data from a private cloud>` to retain complete control of the data.
 
 .. note::
     The following examples assume that you have an :class:`.EncordClientDataset` initialised as variable ``dataset_client`` and :ref:`authenticated <authentication:Authenticate with Encord>`.
@@ -28,7 +28,7 @@ Use the method :meth:`upload_video() <.EncordClientDataset.upload_video>` to upl
 
             In turn, I suffice with linking to the proper places in the prose surrounding the code examples.
 
-        SOLUTION:
+        SOLUTION (FHV):
             To mitigate the issue I had to instantiate "dummy" objects in the preface of the correct type.
 
 
