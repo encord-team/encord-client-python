@@ -8,6 +8,14 @@ Via the |product|, you can get all API keys for an existing dataset.
 You need to provide the ``dataset_hash`` which uniquely identifies a dataset (see, e.g., the :ref:`tutorials/datasets/listing_existing_datasets:Listing existing datasets` to get such hash).
 If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets/creating_a_dataset:Creating a Dataset`.
 
+
+.. autolink-concat:: section
+
+.. autolink-preface::
+    from encord.orm.dataset_api_keys import DatasetAPIKey
+    from encord.orm.dataset import DatasetScope
+
+
 .. tabs::
 
     .. tab:: Code
@@ -17,7 +25,7 @@ If you haven't created a dataset already, you can have a look at :ref:`tutorials
 
     .. tab:: Example output
 
-        .. code-block::
+        .. code-block:: python
 
             [
                 DatasetAPIKey(
@@ -25,11 +33,11 @@ If you haven't created a dataset already, you can have a look at :ref:`tutorials
                   api_key="<dataset_api_key>",
                   title="Full Access API Key",
                   scopes=[
-                      <DatasetScope.READ: "dataset.read">,
-                      <DatasetScope.WRITE: "dataset.write">
+                      DatasetScope.READ,
+                      DatasetScope.WRITE,
                   ]
                 ),
-                ...
+                # ...
             ]
 
 With the API key at hand, you can use :ref:`authentication:API key authentication`.

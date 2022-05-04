@@ -53,3 +53,7 @@ Bake this delicious recipe and share the docs publicly with your friends with th
 2) Run `firebase deploy --only hosting:python-docs` to publish them online.
 3) Visit the [firebase hosting site](https://console.firebase.google.com/u/0/project/cord-docs/hosting/sites/python-docs), check out the public docs domain and double check if everything is to your taste.
 4) Share the docs with your friends who are most hungry for knowledge! 
+
+# TODOs / potential improvements
+- [ ] Datasets, Projects, Label rows, etc. are not written consistently (caps or not) across the documentation.
+- [ ] There may be some remaining `resource_id` examples left, which are confusing because in most contexts, the `resource_id` can only be one of, e.g., a `project_hash` or `dataset_hash`. We should be specific when possible.
