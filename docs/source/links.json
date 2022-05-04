@@ -28,7 +28,7 @@
     "url": "https://docs.encord.com/docs/getting-started/navigation-bar"
   },
   "login_url": {
-    "user_text": "Login url",
+    "user_text": "Login URL",
     "url": "https://app.encord.com"
   },
   "public-private_key_pair": {

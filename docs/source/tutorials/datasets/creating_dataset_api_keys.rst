@@ -6,7 +6,7 @@ Creating a dataset API key
 
 Via the |product| you can create a dataset-specific API key.
 The API key is one way to :ref:`authentication:Authenticate with Encord`.
-You need to provide the ``dataset_hash`` which uniquely identifies a dataset (see, e.g., the :ref:`tutorials/datasets/listing_existing_datasets:Listing existing datasets` to get such hash).
+You need to provide the ``dataset_hash``, which uniquely identifies a dataset (see, e.g., the :ref:`tutorials/datasets/listing_existing_datasets:Listing existing datasets` to get such hash).
 If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets/creating_a_dataset:Creating a Dataset`.
 
 

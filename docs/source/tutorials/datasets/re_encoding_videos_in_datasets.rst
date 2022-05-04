@@ -10,7 +10,7 @@ A browser test in the |platform| can tell you if you are at risk of experiencing
 
 .. TODO: we desperately need a link to documentation here ^
 
-To mitigate such issue, you can re-encode your videos to get a new version of your videos that do not exhibit such issue.
+To mitigate such issues, you can re-encode your videos to get a new version of your videos that do not exhibit such issues.
 
 Trigger a re-encoding task
 --------------------------
@@ -38,13 +38,13 @@ Use the method :meth:`dataset_client.re_encode_data() <.EncordClientDataset.re_e
             1337   # Some integer
 
 
-On completion a ``task_id`` is returned which can be used for monitoring the progress of the task.
+On completion, a ``task_id`` is returned which can be used for monitoring the progress of the task.
 
 Please ensure that the list contains Videos from the same dataset which is used to initialise the EncordClient. Any Videos which do not belong to the dataset used for initialisation would be ignored.
 
 
-Check status of a re-encoding task
-----------------------------------
+Check the status of a re-encoding task
+--------------------------------------
 
 You can monitor the status of an existing Re-encoding Task using this |product|.
 
@@ -83,5 +83,5 @@ Use the method :meth:`dataset_client.re_encode_data_status(task_id) <.EncordClie
 The ReEncodeVideoTask contains a field called ``status`` which can take the values
 
 #. ``"SUBMITTED"`` means that the task is currently in progress and the status should be checked back again later.
-#. ``"DONE"`` means that the task has completed successfully and the field 'result' would contain metadata about the re-encoded video.
+#. ``"DONE"`` means that the task has been completed successfully and the field 'result' would contain metadata about the re-encoded video.
 #. ``"ERROR"`` signifies that the task has failed and could not complete the re-encoding.

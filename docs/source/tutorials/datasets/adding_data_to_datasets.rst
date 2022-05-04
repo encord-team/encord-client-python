@@ -5,7 +5,7 @@ Adding data
 ***********
 
 You can add data to datasets in multiple ways.
-You can both use |company| storage, as described next, and you can :ref:`add data from a private cloud <adding_data_to_datasets:Adding data from private cloud>` to retain complete control of the data.
+You can both use |company| storage, as described next, and you can :ref:`add data from a private cloud <adding_data_to_datasets:Adding data from a private cloud>` to retain complete control of the data.
 
 .. note::
     The following examples assume that you have an :class:`.EncordClientDataset` initialised as variable ``dataset_client`` and :ref:`authenticated <authentication:Authenticate with Encord>`.
@@ -82,8 +82,8 @@ This will upload the given list of images to the dataset associated with the :cl
     If the ordering is important, make sure to provide a list with filenames in the correct order.
 
 
-Adding data from private cloud
-==============================
+Adding data from a private cloud
+================================
 
 #.  Use :meth:`user_client.get_cloud_integrations() <.EncordUserClient.get_cloud_integrations>` method to retrieve a list of available Cloud Integrations
 #.  Grab the id from the integration of your choice and call :meth:`dataset_client.add_private_data_to_dataset() <.EncordClientDataset.add_private_data_to_dataset>` on the ``dataset_client`` with either the absolute path to a json file or a python dictionary in the format specified in the :xref:`private_cloud_section` of the |platform| datasets documentation

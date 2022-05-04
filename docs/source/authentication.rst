@@ -8,8 +8,8 @@ Set up authentication keys
 ==========================
 You can authenticate with |company| on a user basis by registering a public key, or on a specific project or dataset basis by using an |company|-generated API key tied to that resource.
 
-* :ref:`authentication:Register a public key`: registering a public key gives you full access, allowing you to access all your projects and datasets, as well as create new projects, datasets and api keys
-* :ref:`authentication:Create an API key`: creating an API key gives you access restricted to a particular project or dataset
+* :ref:`authentication:Register a public key`: registering a public key gives you full access, allowing you to access all your projects and datasets, as well as create new projects, datasets and API keys
+* :ref:`authentication:Create an API key`: creating an API key gives you restricted access to a particular project or dataset
 
 Public keys are used to authenticate the user for activities that require user-level access, for example creating projects and datasets. API keys are more restrictive and are tied to a particular project or dataset. API keys are used to authenticate calls that only require resource-level access, for example downloading label rows from a particular project.
 
@@ -28,7 +28,7 @@ API keys are tied to specific projects or datasets. You can generate multiple ke
 #. Select a project or dataset
 #. Navigate to the 'Settings' tab and select the 'API access' pane on the left
 #. Click on the *+ New API key* button, select relevant scopes and click the *Create* button
-#. Copy your API key and make a note of project or dataset ID. The API key is only displayed once. Example code is also displayed
+#. Copy your API key and make a note of the project or dataset ID. The API key is only displayed once. Example code is also displayed
 
 .. image:: images/api-key.png
 
