@@ -1,7 +1,8 @@
 .. include:: ../../substitutes.rst
 
+********
 Projects
-========
+********
 
 We have divided the project tutorials into a couple of subsets.
 First, we show general concepts like creating a new project from the |product|.
@@ -9,14 +10,17 @@ Afterwards, we go more into details with working with, e.g., labels,
 and our integrated automation models and algorithms.
 
 General
--------
+=======
+In this section, we include simple code examples to interact with the "metadata" of projects.
+With metadata we mean things that do not involve labels or the ontology of the project.
+Specifically, the following tutorials revolve around API keys, datasets and users associated to the project.
 
 .. toctree::
     :maxdepth: 4
 
     creating_a_project
-    creating_a_project_api_key
     listing_existing_projects
+    creating_a_project_api_key
     fetching_project_api_keys
     adding_datasets_to_projects
     removing_datasets_from_projects
@@ -24,7 +28,7 @@ General
 
 
 Labels
-------
+======
 
 .. toctree::
     :maxdepth: 3
@@ -36,7 +40,7 @@ Labels
 
 
 Models
-------
+======
 
 .. toctree::
     :maxdepth: 3
@@ -46,7 +50,7 @@ Models
 
 
 Algorithms
-----------
+==========
 
 .. toctree::
     :maxdepth: 3
@@ -54,9 +58,8 @@ Algorithms
     ./algorithms/running_object_interpolation
 
 
-
 Other Resources
----------------
+===============
 
 .. toctree::
     :maxdepth: 3
