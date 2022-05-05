@@ -63,3 +63,11 @@ Bake this delicious recipe and share the docs publicly with your friends with th
       A fix is commented out in the `_static/css/custom.css` file because it seems that black currently still allows longer lines than, e.g., 88 columns.
 - [ ] We should have one complete code example for each tutorial subsection where all the stuff possible is done in one example. 
       That way, developers can just copy this file instead of stitching all the tiny examples. 
+
+# Inconsistencies in our code
+I (FHV) have tried to take notes of inconsistencies in the code base that may be sources of confusion:
+
+1. `EncordUserClient.get_or_create_dataset_api_key` returns an `encord.orm.dataset.DatasetAPIKey` but `EncordUserClient.get_or_create_project_api_key` just returns the key as a string. 
+2. Access scopes for API keys are defined in different places for projects and datasets.
+   The project api keys have access scopes defined in `encord.utilities.client_utilities.APIKeyScopes` but dataset api keys have scopes defined in `encord.orm.dataset.DatasetScope` this makes no sense. 
+3. The `encord.orm.dataset.DatasetInfo` has the attribute `type` which is an int, but one uses the `encord.orm.dataset.StorageLocation` when creating a dataset. I see no reason why the DatasetInfo wouldn't present the type as a `StorageLocation` such that users don't need to guess what, e.g.,  type `0` means.
