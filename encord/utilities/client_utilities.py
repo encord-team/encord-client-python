@@ -47,6 +47,7 @@ class APIKeyScopes(Enum):
           :ref:`tutorials/projects/algorithms/running_object_interpolation:Running object interpolation`
 
     """
+
     LABEL_READ = "label.read"
     LABEL_WRITE = "label.write"
     MODEL_INFERENCE = "model.inference"

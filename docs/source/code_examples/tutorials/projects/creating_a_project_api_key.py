@@ -10,6 +10,6 @@ api_key = user_client.create_project_api_key(
     [
         APIKeyScopes.LABEL_READ,
         APIKeyScopes.LABEL_WRITE,
-    ]
+    ],
 )
 print(api_key)

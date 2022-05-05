@@ -10,6 +10,6 @@ project_client = user_client.get_project_client(
 
 added_users = project_client.add_users(
     ["example1@encord.com", "example2@encord.com"],
-    ProjectUserRole.ANNOTATOR
+    ProjectUserRole.ANNOTATOR,
 )
 print(added_users)

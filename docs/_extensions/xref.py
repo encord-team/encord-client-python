@@ -3,7 +3,15 @@ from docutils import nodes
 from sphinx.util import caption_ref_re
 
 
-def xref(typ, rawtext, text, lineno, inliner, options={}, content=[]):
+def xref(
+    typ,
+    rawtext,
+    text,
+    lineno,
+    inliner,
+    options={},
+    content=[],
+):
     title = target = text
     brace = text.find("<")
     if brace != -1:
@@ -18,9 +26,13 @@ def xref(typ, rawtext, text, lineno, inliner, options={}, content=[]):
 
     link = xref.links[target]
     if brace != -1:
-        pnode = nodes.reference(target, title, refuri=link["url"])
+        pnode = nodes.reference(
+            target, title, refuri=link["url"]
+        )
     else:
-        pnode = nodes.reference(target, link["user_text"], refuri=link["url"])
+        pnode = nodes.reference(
+            target, link["user_text"], refuri=link["url"]
+        )
 
     return [pnode], []
 
