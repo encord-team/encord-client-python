@@ -1,5 +1,5 @@
-from encord.user_client import EncordUserClient
 from encord.project_ontology.ontology import Ontology
+from encord.user_client import EncordUserClient
 
 user_client = EncordUserClient.create_with_ssh_private_key(
     "<your_private_key>"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 link_file = Path("./source/links.json")
 with link_file.open('r') as f:
