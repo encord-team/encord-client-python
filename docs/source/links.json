@@ -38,5 +38,13 @@
   "private_cloud_section": {
     "user_text": "Private cloud section",
     "url": "https://docs.encord.com/docs/datasets/private-cloud-integration#json-format"
+  },
+  "configure_label_editor_(ontology)": {
+    "user_text": "Configure label editor (ontology)",
+    "url": "https://docs.encord.com/docs/projects/new-project#3-configure-label-editor-ontology"
+  },
+  "hello@encord.com": {
+    "user_text": "hello@encord.com",
+    "url": "mailto:hello@encord.com"
   }
 }
