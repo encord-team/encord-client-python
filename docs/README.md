@@ -55,7 +55,8 @@ Bake this delicious recipe and share the docs publicly with your friends with th
 4) Share the docs with your friends who are most hungry for knowledge! 
 
 # TODOs / potential improvements
-- [ ] Datasets, Projects, Label rows, etc. are not written consistently (caps or not) across the documentation.
+- [ ] For "Pardon our dust"-sections, we could add links to (to-be-removed) docs from the web-app documentation until they are updated.
+- [ ] Datasets, Projects, Label rows, etc. are not written consistently (caps or not) across the documentation. Consider using substitutes for this.
 - [ ] There may be some remaining `resource_id` examples left, which are confusing because in most contexts, the `resource_id` can only be one of, e.g., a `project_hash` or `dataset_hash`. We should be specific when possible.
 - [ ] As we use Black which generally uses `line-length` 88 (88 columns code), the code in the auto-docs sometimes looks ugly. 
       See, e.g., [the docs for `get_datasets`](python.docs.encord.com/user_client.html#EncordUserClient.get_datasets).
