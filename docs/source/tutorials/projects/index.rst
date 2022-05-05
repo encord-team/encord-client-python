@@ -20,6 +20,7 @@ General
     fetching_project_api_keys
     adding_datasets_to_projects
     removing_datasets_from_projects
+    adding_users_to_projects
 
 
 Labels
