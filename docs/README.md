@@ -61,3 +61,5 @@ Bake this delicious recipe and share the docs publicly with your friends with th
       See, e.g., [the docs for `get_datasets`](python.docs.encord.com/user_client.html#EncordUserClient.get_datasets).
       It seems like there is a [css fix](https://github.com/sphinx-doc/sphinx/issues/3092#issuecomment-258922773) to this issue.
       A fix is commented out in the `_static/css/custom.css` file because it seems that black currently still allows longer lines than, e.g., 88 columns.
+- [ ] We should have one complete code example for each tutorial subsection where all the stuff possible is done in one example. 
+      That way, developers can just copy this file instead of stitching all the tiny examples. 
