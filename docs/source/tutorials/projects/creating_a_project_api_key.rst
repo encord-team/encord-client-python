@@ -4,6 +4,9 @@
 Creating a project API key
 **************************
 
+Creating a project API key with specific rights
+===============================================
+
 Via the |product|, you can create a project API key through :meth:`create_project_api_key() <.EncordUserClient.create_project_api_key>`, which is required to interact with a project.
 
 The method takes three arguments:
@@ -34,4 +37,24 @@ You use the ``<project_id>`` and ``<project_api_key>`` to obtain a :ref:`authent
 
 .. note::
     This capability is available to only the admin of the project.
+
+Creating a maser API key with full rights
+=========================================
+
+It is also possible to create or get a master API key with full access to *all* :class:`.APIKeyScopes.
+The following example show how to get hold of this key:
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/creating_a_master_api_key.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            # the <project_api_key>
+            "0-1aABCDE_aFGcdeHIfJ2KfLMgNO3PQh4RST5UV6W_X"
 
