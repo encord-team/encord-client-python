@@ -57,3 +57,7 @@ Bake this delicious recipe and share the docs publicly with your friends with th
 # TODOs / potential improvements
 - [ ] Datasets, Projects, Label rows, etc. are not written consistently (caps or not) across the documentation.
 - [ ] There may be some remaining `resource_id` examples left, which are confusing because in most contexts, the `resource_id` can only be one of, e.g., a `project_hash` or `dataset_hash`. We should be specific when possible.
+- [ ] As we use Black which generally uses `line-length` 88 (88 columns code), the code in the auto-docs sometimes looks ugly. 
+      See, e.g., [the docs for `get_datasets`](python.docs.encord.com/user_client.html#EncordUserClient.get_datasets).
+      It seems like there is a [css fix](https://github.com/sphinx-doc/sphinx/issues/3092#issuecomment-258922773) to this issue.
+      A fix is commented out in the `_static/css/custom.css` file because it seems that black currently still allows longer lines than, e.g., 88 columns.
