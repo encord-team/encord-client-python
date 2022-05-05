@@ -59,7 +59,7 @@ class LabelRow(base_orm.BaseORM):
             ...,
         }
 
-    A data unit can have any number of vector labels (e.g. bounding box, polygon, keypoint) and classifications.
+    A data unit can have any number of vector labels (e.g. bounding box, polygon, polyline, keypoint) and classifications.
 
     Each frame-level object and classification has unique identifiers 'objectHash' and 'classificationHash'.
     Each frame-level entity has a unique feature identifier 'featureHash', defined in the editor ontology.
