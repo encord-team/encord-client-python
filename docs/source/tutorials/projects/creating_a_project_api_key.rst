@@ -41,7 +41,7 @@ You use the ``<project_id>`` and ``<project_api_key>`` to obtain a :ref:`authent
 Creating a maser API key with full rights
 =========================================
 
-It is also possible to create or get a master API key with full access to *all* :class:`.APIKeyScopes.
+It is also possible to create or get a master API key with full access to *all* :class:`.APIKeyScopes`.
 The following example show how to get hold of this key:
 
 .. tabs::
