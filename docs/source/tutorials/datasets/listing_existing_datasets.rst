@@ -38,7 +38,7 @@ In the example below, a user authenticates with |company| and then fetches all d
                         ), 
                     "user_role": DatasetUserRole.ADMIN
                 },
-                ...
+                # ...
             ]
 
 *Note:* the ``type`` attribute in the output refers to the :class:`.StorageLocation` used when :ref:`tutorials/datasets/creating_a_dataset:Creating a dataset`.
