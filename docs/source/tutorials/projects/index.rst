@@ -27,6 +27,18 @@ Specifically, the following tutorials revolve around API keys, datasets and user
     adding_users_to_projects
 
 
+Ontology
+========
+A central component of a project is the |ontology|.
+In short, the ontology defines how the label structure of a given project.
+For a |platform|-related description of the |ontology|, please see :xref:`configure_label_editor_(ontology)`.
+
+.. toctree::
+    :maxdepth: 3
+
+    ./ontology/fetching_project_ontology
+
+
 Labels
 ======
 
