@@ -11,17 +11,22 @@ You can authenticate with |company| on a user basis by registering a public key,
 * :ref:`authentication:Register a public key`: registering a public key gives you full access, allowing you to access all your projects and datasets, as well as create new projects, datasets and API keys
 * :ref:`authentication:Create an API key`: creating an API key gives you restricted access to a particular project or dataset
 
-Public keys are used to authenticate the user for activities that require user-level access, for example creating projects and datasets. API keys are more restrictive and are tied to a particular project or dataset. API keys are used to authenticate calls that only require resource-level access, for example downloading label rows from a particular project.
+Public keys are used to authenticate the user for activities that require user-level access, for example creating projects and datasets.
+API keys are more restrictive and are tied to a particular project or dataset.
+API keys are used to authenticate calls that only require resource-level access, for example downloading label rows from a particular project.
 
 
 Register a public key
 ---------------------
-Public keys are tied to the user so need to be added to your profile. To register a public key, please follow the instructions in :xref:`public_keys` of the |product| documentation.
+Public keys are tied to the user so need to be added to your profile.
+To register a public key, please follow the instructions in :xref:`public_keys` of the |product| documentation.
 
 Create an API key
 -----------------
 
-API keys are tied to specific projects or datasets. You can generate multiple keys for each project or dataset. To create an API key:
+API keys are tied to specific projects or datasets.
+You can generate multiple keys for each project or dataset.
+To create an API key:
 
 #. Log in to your account on :xref:`login_url`
 #. Navigate to the :xref:`project` or :xref:`dataset` tab in the :xref:`navigation_bar`
@@ -59,7 +64,8 @@ This will directly create an :class:`.EncordClient` to interact with a specific 
 .. literalinclude:: code_examples/authenticate_api_key.py
     :language: python
 
-You can instantiate several :class:`.EncordClient` objects by creating an :class:`.EncordConfig` object first. Pass the resource ID and API key as strings, and initialise the clients with the config object
+You can instantiate several :class:`.EncordClient` objects by creating an :class:`.EncordConfig` object first.
+Pass the resource ID and API key as strings, and initialise the clients with the config object
 
 .. literalinclude:: code_examples/authenticate_config.py
     :language: python

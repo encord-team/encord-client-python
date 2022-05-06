@@ -40,7 +40,8 @@ Use the method :meth:`dataset_client.re_encode_data() <.EncordClientDataset.re_e
 
 On completion, a ``task_id`` is returned which can be used for monitoring the progress of the task.
 
-Please ensure that the list contains Videos from the same dataset which is used to initialise the EncordClient. Any Videos which do not belong to the dataset used for initialisation would be ignored.
+Please ensure that the list contains Videos from the same dataset which is used to initialise the EncordClient.
+Any Videos which do not belong to the dataset used for initialisation would be ignored.
 
 
 Check the status of a re-encoding task
@@ -82,6 +83,6 @@ Use the method :meth:`dataset_client.re_encode_data_status(task_id) <.EncordClie
 
 The ReEncodeVideoTask contains a field called ``status`` which can take the values
 
-#. ``"SUBMITTED"`` means that the task is currently in progress and the status should be checked back again later.
-#. ``"DONE"`` means that the task has been completed successfully and the field 'result' would contain metadata about the re-encoded video.
-#. ``"ERROR"`` signifies that the task has failed and could not complete the re-encoding.
+#. ``"SUBMITTED"`` means that the task is currently in progress and the status should be checked back again later
+#. ``"DONE"`` means that the task has been completed successfully and the field 'result' would contain metadata about the re-encoded video
+#. ``"ERROR"`` signifies that the task has failed and could not complete the re-encoding
