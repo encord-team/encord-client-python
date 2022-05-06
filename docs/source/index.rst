@@ -9,7 +9,7 @@
 Welcome to Encord Python SDK reference!
 =======================================
 To be able to use the SDK, you need to first have a way to authenticate the client.
-If you haven't been using the |platform| yet, we encourage you to start your journey at the :xref:`docs_main_entry` and come back, when you are ready to interact programmatically with your data on the |company| platform.
+If you haven't logged in to the platform and added a :xref:`public-private_key_pair`, please do so before using the |sdk|.
 
 .. toctree::
    :maxdepth: 3
