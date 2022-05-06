@@ -13,11 +13,13 @@ Client
     :members:
     :undoc-members:
 
-Utilities - User Client
-------------------------
-.. automodule:: encord.utilities.user_client_utilities
-    :members:
-    :undoc-members:
+..
+    FHV: I don't know why this i here?
+    Utilities - User Client
+    ------------------------
+    .. automodule:: encord.utilities.user_client_utilities
+        :members:
+        :undoc-members:
 
 Utilities - Client
 ------------------------
@@ -84,6 +86,9 @@ Configs
 .. automodule:: encord.configs
     :members:
     :undoc-members:
+
+.. autodata:: ENCORD_DOMAIN
+    :noindex:
 
 Exceptions
 ------------

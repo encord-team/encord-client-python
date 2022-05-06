@@ -119,20 +119,21 @@ class EncordClient(object):
         Create and initialize a Encord client from a resource EntityId and API key.
 
         Args:
-            resource_id: either of
-                - A project EntityId string.
-                  If None, uses the ENCORD_PROJECT_ID environment variable.
-                  The CORD_PROJECT_ID environment variable is supported for backwards compatibility.
+            resource_id: either of the following
 
-                - A dataset EntityId string.
-                  If None, uses the ENCORD_DATASET_ID environment variable.
-                  The CORD_DATASET_ID environment variable is supported for backwards compatibility.
+                * A <project_hash>.
+                  If ``None``, uses the ``ENCORD_PROJECT_ID`` environment variable.
+                  The ``CORD_PROJECT_ID`` environment variable is supported for backwards compatibility.
+
+                * A <dataset_hash>.
+                  If ``None``, uses the ``ENCORD_DATASET_ID`` environment variable.
+                  The ``CORD_DATASET_ID`` environment variable is supported for backwards compatibility.
 
             api_key: An API key.
-                     If None, uses the ENCORD_API_KEY environment variable.
-                     The CORD_API_KEY environment variable is supported for backwards compatibility.
+                     If None, uses the ``ENCORD_API_KEY`` environment variable.
+                     The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
             domain: The encord api-server domain.
-                If None, the ENCORD_DOMAIN is used
+                If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
 
         Returns:
             EncordClient: A Encord client instance.
@@ -1065,10 +1066,10 @@ class EncordClientProject(EncordClient):
         """
         Retrieve information about a video or image group.
 
-        Params:
+        Args:
             data_hash: The uid of the data object
             get_signed_url: Optionally return signed URLs for timed public access to that resource
-                            (default False)
+                (default False)
 
         Returns:
             A consisting of the video (if it exists) and a list of individual images (if they exist)

@@ -32,7 +32,7 @@ from cryptography.hazmat.primitives.serialization import (
 
 import encord.exceptions
 
-ENCORD_DOMAIN = "https://api.cord.tech"
+ENCORD_DOMAIN = "https://api.cord.tech"  #: str: The end-point for interacting with the Encord API.
 ENCORD_PUBLIC_PATH = "/public"
 ENCORD_PUBLIC_USER_PATH = "/public/user"
 ENCORD_ENDPOINT = ENCORD_DOMAIN + ENCORD_PUBLIC_PATH
