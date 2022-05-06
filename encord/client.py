@@ -945,36 +945,24 @@ class EncordClientProject(EncordClient):
         Interpolation is supported for bounding box, polygon, and keypoint.
 
         Args:
-            key_frames: Labels for frames to be interpolated. Key frames are consumed in the form:
+            key_frames: Labels for frames to be interpolated. Key frames are consumed in the form::
 
-                "frame": {
-                    "objects": [
-                        {
-                            "objectHash": object_uid,
-                            "featureHash": feature_uid (from editor ontology),
-                            "polygon": {
-                                "0": {
-                                    "x": x1,
-                                    "y": y1,
-                                },
-                                "1": {
-                                    "x": x2,
-                                    "y": y2,
-                                },
-                                "2" {
-                                    "x": x3,
-                                    "y": y3,
-                                },
-                                ...,
-                            }
-                        },
-                        {
-                            ...
-                        }
-                    ]
-                },
-                "frame": {
-                    ...,
+                {
+                    "<frame_number>": {
+                        "objects": [
+                            {
+                                "objectHash": "<object_hash>",
+                                "featureHash": "<feature_hash>",
+                                "polygon": {
+                                    "0": { "x": x1, "y": y1, },
+                                    "1": { "x": x2, "y": y2, },
+                                    # ...,
+                                }
+                            },
+                            # ...
+                        ]
+                    },
+                    # ...,
                 }
 
             objects_to_interpolate: List of object uid's (hashes) of objects to interpolate.
@@ -1016,44 +1004,33 @@ class EncordClientProject(EncordClient):
         """
 
         Args:
-            frames: Labels for frames to be fitted. Frames are consumed in the form:
-
-                "frame": {
-                    "objects": [
-                        {
-                            "objectHash": object_uid,
-                            "featureHash": feature_uid (from editor ontology),
-                            "polygon": {
-                                "0": {
-                                    "x": x1,
-                                    "y": y1,
-                                },
-                                "1": {
-                                    "x": x2,
-                                    "y": y2,
-                                },
-                                "2" {
-                                    "x": x3,
-                                    "y": y3,
-                                },
-                                ...,
-                            }
-                        },
-                        {
-                            ...
-                        }
-                    ]
-                },
-                "frame": {
-                    ...,
-                }
-
-            video: Metadata of the video for which bounding box fitting needs to be run
+            frames: Labels for frames to be fitted. Frames are consumed in the form::
 
                 {
-                    "width" : w,
-                    "height" : h,
+                    "<frame_number>": {
+                        "objects": [
+                            {
+                                "objectHash": "<object_hash>",
+                                "featureHash": "<feature_hash>",
+                                "polygon": {
+                                    "0": { "x": x1, "y": y1, },
+                                    "1": { "x": x2, "y": y2, },
+                                    # ...,
+                                }
+                            },
+                            # ...
+                        ]
+                    },
+                    # ...,
                 }
+
+            video: Metadata of the video for which bounding box fitting needs to be
+                   run::
+
+                        {
+                            "width" : w,
+                            "height" : h,
+                        }
 
         Returns:
             Fitting results: Full set of filled frames including fitted objects.

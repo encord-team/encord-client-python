@@ -24,101 +24,145 @@ from encord.orm.formatter import Formatter
 
 class LabelRow(base_orm.BaseORM):
     """
-    A label row contains a data unit or a collection of data units and associated labels,
-    and is specific to a data asset with type video or img_group:
+    A label row contains a data unit or a collection of data units and associated
+    labels, and is specific to a data asset with type ``video`` or ``img_group``:
 
-        - A label row with a data asset of type video contains a single data unit.
-        - A label row with a data asset of type img_group contains any number of data units.
+    * A label row with a data asset of type video contains a single data unit.
+    * A label row with a data asset of type img_group contains any number of data units.
 
-    Label row ORM:
+    The label row ORM is as follows:
 
-    label_hash (uid),
-    dataset_hash (uid),
-    dataset_title,
-    data_title,
-    data_type,
-    data_units,
-    object_answers,
-    classification_answers,
-    label_status
+    * ``label_hash`` (uid) is the unique identifier of the label row
+    * ``dataset_hash`` (uid) is the unique identifier of the dataset which contains the
+      particular video or image group
+    * ``dataset_title`` is the title of the dataset which contains the particular video
+      or image group
+    * ``data_title`` is the title of the video or image group
+    * ``data_type`` either ``video`` or ``img_group`` depending on data type
+    * ``data_units`` a dictionary with (key: data hash, value: data unit) pairs.
+    * ``object_answers`` is a dictionary with (key: object hash, value: object answer)
+      pairs.
+    * ``classification_answers`` is a dictionary with (key: classification hash, value:
+      classification answer) pairs.
+    * ``object_actions`` is a dictionary with (key: ``<object_hash>``, value: object
+      action) pairs.
+    * ``label_status`` is a string indicating label status. It can take the values
+      enumerated in :class:`encord.orm.label_row.LabelStatus`. *Note* that this does
+      *not* reflect thes status shown in the Projects->Labels section on the web-app.
 
-    A data unit, contained the dictionary data_units, is in the form:
+    A data unit, mentioned for the dictionary entry ``data_units`` above, has in the
+    form::
 
-        "data_units": {
-            data_hash: {
-                "data_hash": A data_hash (uid) string
-                "data_title": A data title string
-                "data_link": Signed URL expiring after 7 days,
-                "data_type": Data unit type (video/mp4, image/jpeg, etc.)
-                "data_fps": For video, the frame rate
-                "data_sequence": Sequence number of data unit in label row.
-                "labels": {
-                    ...
-                }
+        label_row = {  # The label row
+            # ...
+            "data_units": {
+                "<data_hash>": {
+                    "data_hash": "<data_hash>",  # A data_hash (uid) string
+                    "data_title": "A data title",
+                    "data_link": "<data_link>",  # Signed URL that expiring after 7 days
+                    "data_type": "<data_type>",  # (video/mp4, image/jpeg, etc.)
+                    "data_fps": 24.95,           # For video, the frame rate
+                    "data_sequence": "0",        # Defines order of data units
+                    "width": 640,                # The width of the content
+                    "height": 610,               # The height of the content
+                    "labels": {
+                        # ...
+                    }
+                },
+                # ...,
+            }
+        }
+
+
+    **Objects and classifications**
+
+    A data unit can have any number of vector labels (e.g., bounding boxes, polygons,
+    keypoints) and classifications.
+    Each frame-level object and classification has unique identifiers 'objectHash' and
+    'classificationHash'. Each frame-level entity has a unique feature identifier
+    'featureHash', defined in the editor ontology.
+
+    The object and classification answers are contained separately from the individual
+    data units to preserve space for video, sequential images, DICOM, etc.
+
+    The objects and classifications answer dictionaries contain classification 'answers'
+    (i.e. attributes that describe the object or classification). This is to avoid
+    storing the information at every frame in the blurb, of particular importance for
+    videos.
+
+    A labels dictionary for video is in the form::
+
+        label_row["data_units"]["<data_hash>"]["labels"] = {
+            "<frame_number>": {
+                "objects": [
+                    # { object 1 },
+                    # { object 2 },
+                    # ...
+                ],
+                "classifications": [
+                    # { classification 1 },
+                    # { classification 2 },
+                    # ...
+                ],
+            }
+        }
+
+    A labels dictionary for an img_group data unit is in the form::
+
+        label_row["data_units"]["<data_hash>"]["labels"] = {
+            "objects": [
+                # { object 1 },
+                # { object 2 },
+                # ...
+            ],
+            "classifications": [
+                # { classification 1 },
+                # { classification 2 },
+                # ...
+            ],
+        }
+
+    The object answers dictionary is in the form::
+
+        label_row["object_answers"] = {
+            "<object_hash>": {
+                "objectHash": "<object_hash>",
+                "classifications": [
+                    # {answer 1},
+                    # {answer 2},
+                    # ...
+                ]
             },
-            ...,
+            # ...
         }
 
-    A data unit can have any number of vector labels (e.g. bounding box, polygon, keypoint) and classifications.
+    The classification answers dictionary is in the form::
 
-    Each frame-level object and classification has unique identifiers 'objectHash' and 'classificationHash'.
-    Each frame-level entity has a unique feature identifier 'featureHash', defined in the editor ontology.
-
-    The object and classification answers are contained separately from the individual data units to
-    preserve space for video, sequential images, DICOM, etc.
-
-    The objects and classifications answer dictionaries contain classification 'answers' (i.e. attributes
-    that describe the object or classification). This is to avoid storing the information at every frame
-    in the blurb, of particular importance for videos.
-
-    A labels dictionary for video is in the form:
-    {
-        "frame": {
-            "objects": {
-                [{object 1}, {object 2}, ...]
-            }
-            "classifications": {
-                [{classification 1}, {classification 2}, ...]
-            }
+        label_row["classification_answers"] = {
+            "<classification_hash>": {
+                "classificationHash": "<classification_hash>",
+                "classifications": [
+                    # {answer 1},
+                    # {answer 2},
+                    # ...
+                ],
+            },
+            # ...
         }
-    }
 
-    A labels dictionary for an img_group data unit is in the form:
-    {
-        "objects": {
-            [{object 1}, {object 2}, ...]
+    The object actions dictionary is in the form::
+
+        label_row["object_actions"] = {
+            "<object_hash>": {
+                "objectHash": "<object_hash>",
+                "actions": [
+                    # {answer 1},
+                    # {answer 2},
+                    # ...
+                ],
+            },
+            # ...
         }
-        "classifications": {
-            [{classification 1}, {classification 2}, ...]
-        }
-    }
-
-    The object answers dictionary is in the form:
-    {
-        "objectHash": {
-            "objectHash": objectHash,
-            "classifications": [{answer 1}, {answer 2}, ...]
-        },
-        ...
-    }
-
-    The classification answers dictionary is in the form:
-    {
-        "classificationHash": {
-            "classificationHash": classificationHash,
-            "classifications": [{answer 1}, {answer 2}, ...]
-        },
-        ...
-    }
-
-    The object actions dictionary is in the form:
-    {
-        "objectHash": {
-            "objectHash": objectHash,
-            "actions": [{answer 1}, {answer 2}, ...]
-        },
-        ...
-    }
 
     """
 
