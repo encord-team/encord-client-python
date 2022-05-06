@@ -12,4 +12,3 @@ echo "Black"
 black . --include ".*\.py" --line-length 60
 
 make html
-make html  # FHV: Done twice because some file indices built only work second time (I think)
