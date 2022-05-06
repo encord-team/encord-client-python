@@ -15,7 +15,7 @@ To use the |sdk| to fetch your labels, you first :ref:`install the SDK <installa
 
     .. tab:: Example output
 
-        .. literalinclude:: json_blurps/video_label_row.json
-            :language: json
+        .. literalinclude:: json_blurps/video_label_row.py
+            :language: python
 
 Obviously, many details are hidden here. We encourage you to keep reading at the :ref:`general_concepts:General Concepts` page.
