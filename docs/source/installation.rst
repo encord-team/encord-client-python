@@ -4,7 +4,7 @@
 Installation
 ************
 
-The |product| is available through ``pypi`` and is installed with the following command:
+The |sdk| is available through ``pypi`` and is installed with the following command:
 
 .. code-block:: shell
 
@@ -17,11 +17,9 @@ The |product| is available through ``pypi`` and is installed with the following 
     From version ``0.1.35`` onward, all future updates will be available via the ``encord`` package.
 
     If you have been using the previous package up until now, upgrading is as simple as installing the new package and referencing any desired classes or methods from the new modules.
-    For your convenience, we will be maintaining backwards compatibility with the old modules and names for the foreseeable future, but advise |product| users to update their applications to the ``encord`` namespace at their earliest convenience.
+    For your convenience, we will be maintaining backwards compatibility with the old modules and names for the foreseeable future, but advise |sdk| users to update their applications to the ``encord`` namespace at their earliest convenience.
 
     Please contact us if you have any difficulties with the migration.
 
-When you have successfully installed the |product|, you can go to the
-:ref:`authentication:Authentication` page to learn how to use authentication to interact
-with the |product|.
+When you have successfully installed the |sdk|, you can go to the :ref:`authentication:Authentication` page to learn how to use authentication to interact with the |sdk|.
 
