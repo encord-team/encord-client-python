@@ -1,4 +1,7 @@
-from encord.client import EncordClientDataset, EncordClientProject
+from encord.client import (
+    EncordClientDataset,
+    EncordClientProject,
+)
 from encord.user_client import EncordUserClient
 
 user_client = EncordUserClient.create_with_ssh_private_key(
