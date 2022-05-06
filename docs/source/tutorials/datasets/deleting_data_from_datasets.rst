@@ -4,7 +4,7 @@
 Deleting Data
 *************
 
-You can remove both Videos and Image Groups from datasets created using both the |platform| and the |product|.
+You can remove both Videos and Image Groups from datasets created using both the |platform| and the |sdk|.
 Use the method :meth:`dataset_client.delete_data() <.EncordClientDataset.delete_data>` to delete from a dataset.
 
 .. autolink-concat:: section

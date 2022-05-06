@@ -3,7 +3,7 @@
 ****************
 General Concepts
 ****************
-The |product| generally revolves around three major concepts, each having their own SDK
+The |sdk| generally revolves around three major concepts, each having their own SDK
 client.
 
 * **User**: the user authenticated to interact with the |company| platform.
@@ -19,4 +19,4 @@ client.
 For each of the concepts, you find a client that allows you to interact with the specific subsets of the data.
 For example, the *Project* has an associated :class:`.EncordClientProject` and the *Dataset* has an associated :class:`.EncordClientDataset`.
 
-If you haven't already, you can go ahead and install the SDK by following the :ref:`installation:Installation` guide or skip directly to the :ref:`authentication:Authentication` page to get going with using the |product|.
+If you haven't already, you can go ahead and install the SDK by following the :ref:`installation:Installation` guide or skip directly to the :ref:`authentication:Authentication` page to get going with using the |sdk|.

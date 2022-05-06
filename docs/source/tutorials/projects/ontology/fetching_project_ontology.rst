@@ -4,7 +4,7 @@
 Fetching project ontology
 *************************
 
-You can fetch the |ontology| of an existing project for viewing via the |product|.
+You can fetch the |ontology| of an existing project for viewing via the |sdk|.
 For a |platform|-related description of the |ontology|, please see :xref:`configure_label_editor_(ontology)`.
 
 .. tabs::

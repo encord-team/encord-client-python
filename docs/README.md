@@ -10,7 +10,7 @@ Whenever you add a new public class or function, this documentation should be re
 ## Common Doc-writing-patterns
 1. To keep terminology consistent, we have defined multiple substitutes for common entities in `source/substitutes.rst`. 
     You should familiarise your self with them.
-    For example, instead of writing "Encord SDK" repeatedly, we have defined the substitute `|product|` which will be substituted for "Encord SDK" at build time.
+    For example, instead of writing "Encord SDK" repeatedly, we have defined the substitute `|sdk|` which will be substituted for "Encord SDK" at build time.
 2. To avoid having hardcoded links all over the place, we keep links in the `source/links.json` file. To insert a link, use ``:xref:`link_key` ``. 
    For example, in the `links.json` file, the following entry exists:
     ```json

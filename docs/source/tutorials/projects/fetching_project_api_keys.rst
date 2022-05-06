@@ -4,7 +4,7 @@
 Fetching project API keys
 *************************
 
-All API keys for an existing project can be obtained via the |product|.
+All API keys for an existing project can be obtained via the |sdk|.
 You need to provide the ``<project_hash>`` which uniquely identifies a project.
 Before you can fetch API keys, you need to i) :ref:`create a project <tutorials/projects/creating_a_project:Creating a project>` and ii) :ref:`add API keys <tutorials/projects/creating_a_project_api_key:Creating a project api key>`.
 

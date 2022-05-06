@@ -4,7 +4,7 @@
 Creating a dataset
 ******************
 
-You can use the |product| to create a dataset.
+You can use the |sdk| to create a dataset.
 First, you need to create a :xref:`public-private_key_pair` for |company|.
 
 You also need to select where your data will be hosted to select the appropriate :class:`StorageLocation <encord.orm.dataset.StorageLocation>`.

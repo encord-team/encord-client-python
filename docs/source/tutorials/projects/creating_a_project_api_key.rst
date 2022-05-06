@@ -7,7 +7,7 @@ Creating a project API key
 Creating a project API key with specific rights
 ===============================================
 
-Via the |product|, you can create a project API key through :meth:`create_project_api_key() <.EncordUserClient.create_project_api_key>`, which is required to interact with a project.
+Via the |sdk|, you can create a project API key through :meth:`create_project_api_key() <.EncordUserClient.create_project_api_key>`, which is required to interact with a project.
 
 The method takes three arguments:
 

@@ -19,7 +19,7 @@ API keys are used to authenticate calls that only require resource-level access,
 Register a public key
 ---------------------
 Public keys are tied to the user so need to be added to your profile.
-To register a public key, please follow the instructions in :xref:`public_keys` of the |product| documentation.
+To register a public key, please follow the instructions in :xref:`public_keys` of the |sdk| documentation.
 
 Create an API key
 -----------------

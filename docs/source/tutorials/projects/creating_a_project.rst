@@ -4,7 +4,7 @@
 Creating a Project
 ******************
 
-You can create a project via the |product|.
+You can create a project via the |sdk|.
 First, you need to create a :xref:`public-private_key_pair` for |company|.
 
 

@@ -15,7 +15,7 @@ To mitigate such issues, you can re-encode your videos to get a new version of y
 Trigger a re-encoding task
 --------------------------
 
-You re-encode a list of Videos by triggering a task for the same using the |product|.
+You re-encode a list of Videos by triggering a task for the same using the |sdk|.
 Use the method :meth:`dataset_client.re_encode_data() <.EncordClientDataset.re_encode_data>` to re-encode the list of videos specified
 
 .. tabs::
@@ -47,7 +47,7 @@ Any Videos which do not belong to the dataset used for initialisation would be i
 Check the status of a re-encoding task
 --------------------------------------
 
-You can monitor the status of an existing Re-encoding Task using this |product|.
+You can monitor the status of an existing Re-encoding Task using this |sdk|.
 
 Use the method :meth:`dataset_client.re_encode_data_status(task_id) <.EncordClientDataset.re_encode_data_status>` to get the status.
 

@@ -5,7 +5,7 @@
 Datasets
 ********
 
-The |product| allows you to interact with the datasets you have added to |company|. 
+The |sdk| allows you to interact with the datasets you have added to |company|.
 A dataset has the attributes ``title``, ``description``, ``dataset_type``, and ``data_rows``
 
 .. code-block:: 
