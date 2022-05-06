@@ -26,14 +26,14 @@ uuid = "^1.30"
 cryptography = "^3.4.8"
 tqdm = "^4.32.1"
 sphinx-tabs = "^3.3.1"
-sphinx-codeautolink = "^0.10.0"
-sphinx-copybutton = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.2"
 pre-commit = "^2.16.0"
 black = "^21.12b0"
 sphinx-autodoc-typehints = "1.15.2"
+sphinx-codeautolink = "^0.10.0"
+sphinx-copybutton = "^0.5.0"
 prettyprinter = "0.18.0"
 isort = "^5.10.1"
 
