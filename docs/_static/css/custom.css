@@ -18,6 +18,10 @@
     padding-top: 10px;
 }
 
+.navbar-brand > p {
+    margin-left: 5px;
+}
+
 /*
 pre {
     tab-size: 4;

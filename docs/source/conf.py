@@ -50,7 +50,7 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+templates_path = ["../_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -80,11 +80,14 @@ autosectionlabel_prefix_document = True
 # tutorials.
 codeautolink_autodoc_inject = True
 
+
+html_logo = "../_static/logo.svg"
 html_css_files = ["css/custom.css"]
 
 html_theme_options = {
     "show_nav_level": 3,
     "show_nav_level": 0,
+    "navbar_start": ["encord-navbar-logo"],
 }
 
 # Static links
