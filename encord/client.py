@@ -639,13 +639,14 @@ class EncordClientProject(EncordClient):
 
     def add_object(self, name: str, shape: ObjectShape) -> bool:
         """
-        Add object to an ontology
+        Add object to an ontology.
+
         Args:
             name: the name of the object
-            shape: the shape of the object (BOUNDING_BOX, POLYGON or KEY_POINT)
+            shape: the shape of the object. (BOUNDING_BOX, POLYGON, POLYLINE or KEY_POINT)
 
         Returns:
-            bool
+            True if the object was added successfully and False otherwise.
 
         Raises:
             AuthenticationError: If the project API key is invalid.

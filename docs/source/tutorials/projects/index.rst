@@ -37,6 +37,7 @@ For a |platform|-related description of the |ontology|, please see :xref:`config
     :maxdepth: 3
 
     ./ontology/fetching_project_ontology
+    ./ontology/adding_components_to_a_project_ontology
 
 
 Labels
