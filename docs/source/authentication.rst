@@ -35,8 +35,9 @@ To create an API key:
 #. Click on the *+ New API key* button, select relevant scopes and click the *Create* button
 #. Copy your API key and make a note of the project or dataset ID. The API key is only displayed once. Example code is also displayed
 
-.. image:: images/api-key.png
+.. figure:: images/api-key.png
 
+    Getting an API key from the |platform|.
 
 Authenticate with Encord
 ========================
