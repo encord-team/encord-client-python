@@ -29,8 +29,9 @@ jobs:
           src: "."
 
       - name: Run isort
-        # adds options `--check-only --diff` by default - https://github.com/marketplace/actions/python-isort
         uses: isort/isort-action@v0.1.0
+        with:
+          options: "--check --diff --resolve-all-configs"
 
 
   unit-tests:
