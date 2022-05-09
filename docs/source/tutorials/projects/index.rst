@@ -19,6 +19,7 @@ Specifically, the following tutorials revolve around API keys, datasets and user
     :maxdepth: 4
 
     creating_a_project
+    copying_a_project
     listing_existing_projects
     creating_a_project_api_key
     fetching_project_api_keys
