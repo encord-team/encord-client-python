@@ -11,6 +11,29 @@ Welcome to Encord Python SDK reference!
 To be able to use the SDK, you need to first have a way to authenticate the client.
 If you haven't logged in to the platform and added a :xref:`public-private_key_pair`, please do so before using the |sdk|.
 
+Before you start
+----------------
+Take a note of the following naming convention.
+When we include ``"<some_name>"``, both in code examples and in text, we mean a string with a specific value which is defined by the context *without the "<" and the ">"*.
+For example, ``"<project_hash>"`` would be the unique uid defining your project.
+
+*In our examples, we will write:*
+
+.. code-block:: python
+
+   project_hash = "<project_hash>"
+
+*In your code, you will write:*::
+
+    project_hash = "00000000-1111-2222-3333-eeeeeeeeeeee"
+
+In our docs, it should always be clear where to find such values and what the format should be.
+
+
+Tutorials
+=========
+Please find our documentation on how to perform specific actions below.
+
 .. toctree::
    :maxdepth: 3
 
