@@ -21,6 +21,37 @@ Client
         :members:
         :undoc-members:
 
+Project Ontology
+----------------
+.. automodule:: encord.project_ontology.classification_attribute
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.classification_option
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.classification_type
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.object_type
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology_classification
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology_object
+    :members:
+    :undoc-members:
+
+
 Utilities - Client
 ------------------------
 .. automodule:: encord.utilities.client_utilities
