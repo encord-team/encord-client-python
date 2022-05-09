@@ -65,10 +65,13 @@ Bake this delicious recipe and share the docs publicly with your friends with th
 - [ ] We should have one complete code example for each tutorial subsection where all the stuff possible is done in one example. 
       That way, developers can just copy this file instead of stitching all the tiny examples. 
 
-# Inconsistencies in our code
+# Inconsistencies/potential confusions in our code
 I (FHV) have tried to take notes of inconsistencies in the code base that may be sources of confusion:
 
 1. `EncordUserClient.get_or_create_dataset_api_key` returns an `encord.orm.dataset.DatasetAPIKey` but `EncordUserClient.get_or_create_project_api_key` just returns the key as a string. 
 2. Access scopes for API keys are defined in different places for projects and datasets.
    The project api keys have access scopes defined in `encord.utilities.client_utilities.APIKeyScopes` but dataset api keys have scopes defined in `encord.orm.dataset.DatasetScope` this makes no sense. 
 3. The `encord.orm.dataset.DatasetInfo` has the attribute `type` which is an int, but one uses the `encord.orm.dataset.StorageLocation` when creating a dataset. I see no reason why the DatasetInfo wouldn't present the type as a `StorageLocation` such that users don't need to guess what, e.g.,  type `0` means.
+4. FHV: It seems weird to me that the logic for converting ontology classifications and ontology objects to dictionaries is located in the `encord.project_ontology.ontology.py` file and not in the `encord.project_ontology.ontology_classification.py` class.  
+   Also, there is a lot of custom logic for doing so, when the `dataclasses.asdict` with a custom factory could do the same thing with much less code.
+   Note, I have a local `fhv/ontology_parsing` branch which does it with `asdict` but probably not perfectly structured either.
