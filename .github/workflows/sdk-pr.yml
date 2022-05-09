@@ -31,7 +31,7 @@ jobs:
       - name: Run isort
         uses: isort/isort-action@v0.1.0
         with:
-          options: "--check --diff --resolve-all-configs"
+          configuration: "--check --diff --resolve-all-configs"
 
 
   unit-tests:
