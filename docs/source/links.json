@@ -46,5 +46,13 @@
   "hello@encord.com": {
     "user_text": "hello@encord.com",
     "url": "mailto:hello@encord.com"
+  },
+  "create_model_guidelines": {
+    "user_text": "Create model guidelines",
+    "url": "https://docs.encord.com/docs/automate/training"
+  },
+  "cvat": {
+    "user_text": "CVAT",
+    "url": "https://github.com/openvinotoolkit/cvat"
   }
 }

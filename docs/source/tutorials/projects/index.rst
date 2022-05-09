@@ -47,6 +47,9 @@ Labels
 .. toctree::
     :maxdepth: 3
 
+    ./labels/labels
+
+..
     ./labels/reading_label_rows
     ./labels/creating_label_rows
     ./labels/updating_label_rows
@@ -59,6 +62,9 @@ Models
 .. toctree::
     :maxdepth: 3
 
+    ./models/models
+
+..
     ./models/creating_and_training_a_model
     ./models/running_model_inference
 
@@ -69,6 +75,9 @@ Algorithms
 .. toctree::
     :maxdepth: 3
 
+    ./algorithms/algorithms
+
+..
     ./algorithms/running_object_interpolation
 
 
