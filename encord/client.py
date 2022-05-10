@@ -47,7 +47,7 @@ import dateutil
 
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, Config, EncordConfig
-from encord.constants.model import *
+from encord.constants.model import AUTOMATION_MODELS
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
@@ -720,18 +720,7 @@ class EncordClientProject(EncordClient):
                 message="You must pass a list of feature uid's (hashes) to create a model row."
             )
 
-        if model is None or model not in [
-            RESNET18,
-            RESNET34,
-            RESNET50,
-            RESNET101,
-            RESNET152,
-            VGG16,
-            VGG19,
-            YOLOV5,
-            FASTER_RCNN,
-            MASK_RCNN,
-        ]:
+        if model is None or not AUTOMATION_MODELS.has_value(model):
             raise encord.exceptions.EncordException(
                 message="You must pass a model (resnet18, resnet34, resnet50, resnet101, resnet152, vgg16, vgg19, "
                 "yolov5, faster_rcnn, mask_rcnn) to create a model row."
