@@ -26,13 +26,9 @@ def xref(
 
     link = xref.links[target]
     if brace != -1:
-        pnode = nodes.reference(
-            target, title, refuri=link["url"]
-        )
+        pnode = nodes.reference(target, title, refuri=link["url"])
     else:
-        pnode = nodes.reference(
-            target, link["user_text"], refuri=link["url"]
-        )
+        pnode = nodes.reference(target, link["user_text"], refuri=link["url"])
 
     return [pnode], []
 

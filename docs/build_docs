@@ -9,6 +9,6 @@ echo "Isort"
 isort . --resolve-all-configs
 
 echo "Black"
-black . --include ".*\.py" --line-length 60
+black . --include ".*\.py" --line-length 80
 
 make html

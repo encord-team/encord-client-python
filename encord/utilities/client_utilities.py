@@ -32,19 +32,18 @@ class APIKeyScopes(Enum):
     :meth:`.EncordUserClient.create_project_api_key`. The options are a follows:
 
         * ``LABEL_READ``: access to
-          :ref:`tutorials/projects/labels/reading_label_rows:Reading label rows`
+          :ref:`tutorials/projects:Getting label rows`
         * ``LABEL_WRITE``: access to
-          :ref:`tutorials/projects/labels/creating_label_rows:Creating label rows`
-          or
-          :ref:`tutorials/projects/labels/updating_label_rows:Updating label rows`
+          :ref:`tutorials/projects:Saving label rows`
         * ``MODEL_INFERENCE``: access to
-          :ref:`tutorials/projects/models/running_model_inference:Running model inference`
+          :ref:`tutorials/projects:Inference`
         * ``MODEL_TRAIN``: access to
-          :ref:`tutorials/projects/models/creating_and_training_a_model:Creating and training a model`
+          :ref:`tutorials/projects:Creating a model row` and
+          :ref:`tutorials/projects:Training`
         * ``LABEL_LOGS_READ``: access to
-          :ref:`tutorials/projects/labels/reading_label_logs:Reading label logs`
+          :ref:`tutorials/projects:Reviewing label logs`
         * ``ALGO_LIBRARY``: access to algorithms like
-          :ref:`tutorials/projects/algorithms/running_object_interpolation:Running object interpolation`
+          :ref:`tutorials/projects:Object interpolation`
 
     """
 

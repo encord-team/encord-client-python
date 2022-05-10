@@ -1,10 +1,11 @@
 from encord.user_client import EncordUserClient
 from encord.utilities.client_utilities import APIKeyScopes
 
-user_client = EncordUserClient.create_with_ssh_private_key(
+user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     "<your_private_key>"
 )
-api_key = user_client.create_project_api_key(
+
+api_key: str = user_client.create_project_api_key(
     "<project_hash>",
     "Example API key title",
     [

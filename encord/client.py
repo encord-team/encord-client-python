@@ -470,7 +470,7 @@ class EncordClientProject(EncordClient):
 
         return list(map(lambda user: ProjectUser.from_dict(user), users))
 
-    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False):
+    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False) -> str:
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
         Labels and models are optional.

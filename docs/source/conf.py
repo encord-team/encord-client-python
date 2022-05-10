@@ -18,9 +18,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../.."))
 sys.path.insert(
     0,
-    os.path.abspath(
-        "../../venv/lib/python3.7/site-packages"
-    ),
+    os.path.abspath("../../venv/lib/python3.7/site-packages"),
 )
 sys.path.insert(0, os.path.abspath("../_extensions"))
 
@@ -85,8 +83,8 @@ html_logo = "../_static/logo.svg"
 html_css_files = ["css/custom.css"]
 
 html_theme_options = {
-    "show_nav_level": 3,
-    "show_nav_level": 0,
+    "show_nav_level": 1,
+    "show_toc_level": 2,
     "navbar_start": ["encord-navbar-logo"],
     "navbar_center": [],
 }
