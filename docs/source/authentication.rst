@@ -65,6 +65,8 @@ This will directly create an :class:`.EncordClient` to interact with a specific 
 .. literalinclude:: code_examples/authenticate_api_key.py
     :language: python
 
+In the example above, the ``<resource_id>`` can either be a ``<project_hash>`` or a ``<dataset_hash>``.
+
 You can instantiate several :class:`.EncordClient` objects by creating an :class:`.EncordConfig` object first.
 Pass the resource ID and API key as strings, and initialise the clients with the config object
 
