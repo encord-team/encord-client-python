@@ -12,6 +12,6 @@ We have separated the tutorials into those that relate to *datasets*, those that
     :maxdepth: 1
     :titlesonly:
 
-    ./tutorials/datasets/index
-    ./tutorials/projects/index
+    ./tutorials/datasets
+    ./tutorials/projects
     ./tutorials/end-to-end/index
