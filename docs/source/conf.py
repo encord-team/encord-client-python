@@ -88,6 +88,15 @@ html_theme_options = {
     "show_nav_level": 3,
     "show_nav_level": 0,
     "navbar_start": ["encord-navbar-logo"],
+    "navbar_center": [],
+}
+
+html_sidebars = {
+    "**": [
+        "search-field",
+        "encord-sidebar-nav-bs",
+        "sidebar-ethical-ads",
+    ]
 }
 
 # Static links
