@@ -688,10 +688,10 @@ class EncordClientProject(EncordClient):
 
     def create_model_row(
         self,
-        title=None,
-        description=None,
-        features=None,
-        model=None,
+        title: str,
+        description: str,
+        features: List[str],
+        model: Union[AutomationModels, str],
     ) -> str:
         """
         Create a model row.
@@ -699,9 +699,11 @@ class EncordClientProject(EncordClient):
         Args:
             title: Model title.
             description: Model description.
-            features: List of feature feature uid's (hashes) to be included in the model.
-            model: Model (resnet18, resnet34, resnet50,
-                resnet101, resnet152, vgg16, vgg19, yolov5, faster_rcnn, mask_rcnn).
+            features: List of <feature_node_hashes> which is id's of ontology objects
+                      or classifications to be included in the model.
+            model: the model type to be used.
+                   For backwards compatibility purposes, we continuously allow strings
+                   corresponding to the values of the :class:`.AutomationModels` Enum.
 
         Returns:
             The uid of the added model row.
