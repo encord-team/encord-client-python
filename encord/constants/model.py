@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List
+from typing import Set
 
 
 class AutomationModels(Enum):
@@ -33,14 +33,14 @@ class AutomationModels(Enum):
     MASK_RCNN = "mask_rcnn"
 
     @staticmethod
-    def classification_options() -> List[AutomationModels]:
+    def classification_options() -> Set[AutomationModels]:
         """
         Returns:
             Model types that can be used for frame-level classifications.
             That is, model types that can be used with ``<feature_node_hash>``es from
             the ``classification`` part of the ontology.
         """
-        return [
+        return {
             AutomationModels.FAST_AI,
             AutomationModels.RESNET18,
             AutomationModels.RESNET34,
@@ -49,25 +49,25 @@ class AutomationModels(Enum):
             AutomationModels.RESNET152,
             AutomationModels.VGG16,
             AutomationModels.VGG19,
-        ]
+        }
 
     @staticmethod
-    def object_detection_options() -> List[AutomationModels]:
+    def object_detection_options() -> Set[AutomationModels]:
         """
         Returns:
             Model types that can be used with bounding_box type
             ``<feature_node_hashes>`` from the ``objects`` part of the project ontology.
         """
-        return [AutomationModels.YOLOV5, AutomationModels.FASTER_RCNN]
+        return {AutomationModels.YOLOV5, AutomationModels.FASTER_RCNN}
 
     @staticmethod
-    def instance_segmentation_options() -> List[AutomationModels]:
+    def instance_segmentation_options() -> Set[AutomationModels]:
         """
         Returns:
             Model types that can be used with polygon type ``<feature_node_hashes>``
             from the ``objects`` part of the project ontology.
         """
-        return [AutomationModels.MASK_RCNN]
+        return {AutomationModels.MASK_RCNN}
 
     @classmethod
     def has_value(cls, value) -> bool:
