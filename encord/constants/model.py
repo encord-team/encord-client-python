@@ -19,7 +19,7 @@ from enum import Enum
 from typing import List
 
 
-class AUTOMATION_MODELS(Enum):
+class AutomationModels(Enum):
     FAST_AI = "fast_ai"
     RESNET18 = "resnet18"
     RESNET34 = "resnet34"
@@ -33,7 +33,7 @@ class AUTOMATION_MODELS(Enum):
     MASK_RCNN = "mask_rcnn"
 
     @staticmethod
-    def classification_options() -> List[AUTOMATION_MODELS]:
+    def classification_options() -> List[AutomationModels]:
         """
         Returns:
             Model types that can be used for frame-level classifications.
@@ -41,33 +41,33 @@ class AUTOMATION_MODELS(Enum):
             the ``classification`` part of the ontology.
         """
         return [
-            AUTOMATION_MODELS.FAST_AI,
-            AUTOMATION_MODELS.RESNET18,
-            AUTOMATION_MODELS.RESNET34,
-            AUTOMATION_MODELS.RESNET50,
-            AUTOMATION_MODELS.RESNET101,
-            AUTOMATION_MODELS.RESNET152,
-            AUTOMATION_MODELS.VGG16,
-            AUTOMATION_MODELS.VGG19,
+            AutomationModels.FAST_AI,
+            AutomationModels.RESNET18,
+            AutomationModels.RESNET34,
+            AutomationModels.RESNET50,
+            AutomationModels.RESNET101,
+            AutomationModels.RESNET152,
+            AutomationModels.VGG16,
+            AutomationModels.VGG19,
         ]
 
     @staticmethod
-    def object_detection_options() -> List[AUTOMATION_MODELS]:
+    def object_detection_options() -> List[AutomationModels]:
         """
         Returns:
             Model types that can be used with bounding_box type
             ``<feature_node_hashes>`` from the ``objects`` part of the project ontology.
         """
-        return [AUTOMATION_MODELS.YOLOV5, AUTOMATION_MODELS.FASTER_RCNN]
+        return [AutomationModels.YOLOV5, AutomationModels.FASTER_RCNN]
 
     @staticmethod
-    def instance_segmentation_options() -> List[AUTOMATION_MODELS]:
+    def instance_segmentation_options() -> List[AutomationModels]:
         """
         Returns:
             Model types that can be used with polygon type ``<feature_node_hashes>``
             from the ``objects`` part of the project ontology.
         """
-        return [AUTOMATION_MODELS.MASK_RCNN]
+        return [AutomationModels.MASK_RCNN]
 
     @staticmethod
     def has_value(cls, value):
@@ -75,14 +75,14 @@ class AUTOMATION_MODELS(Enum):
 
 
 # For backward compatibility
-FAST_AI = AUTOMATION_MODELS.FAST_AI
-RESNET18 = AUTOMATION_MODELS.RESNET18
-RESNET34 = AUTOMATION_MODELS.RESNET34
-RESNET50 = AUTOMATION_MODELS.RESNET50
-RESNET101 = AUTOMATION_MODELS.RESNET101
-RESNET152 = AUTOMATION_MODELS.RESNET152
-VGG16 = AUTOMATION_MODELS.VGG16
-VGG19 = AUTOMATION_MODELS.VGG19
-YOLOV5 = AUTOMATION_MODELS.YOLOV5
-FASTER_RCNN = AUTOMATION_MODELS.FASTER_RCNN
-MASK_RCNN = AUTOMATION_MODELS.MASK_RCNN
+FAST_AI = AutomationModels.FAST_AI.value
+RESNET18 = AutomationModels.RESNET18.value
+RESNET34 = AutomationModels.RESNET34.value
+RESNET50 = AutomationModels.RESNET50.value
+RESNET101 = AutomationModels.RESNET101.value
+RESNET152 = AutomationModels.RESNET152.value
+VGG16 = AutomationModels.VGG16.value
+VGG19 = AutomationModels.VGG19.value
+YOLOV5 = AutomationModels.YOLOV5.value
+FASTER_RCNN = AutomationModels.FASTER_RCNN.value
+MASK_RCNN = AutomationModels.MASK_RCNN.value

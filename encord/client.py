@@ -47,7 +47,7 @@ import dateutil
 
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, Config, EncordConfig
-from encord.constants.model import AUTOMATION_MODELS
+from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
