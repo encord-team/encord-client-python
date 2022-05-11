@@ -70,8 +70,8 @@ class AutomationModels(Enum):
         return [AutomationModels.MASK_RCNN]
 
     @staticmethod
-    def has_value(cls, value):
-        return value in set(v for v in cls._value2member_map_)
+    def has_value(cls, value) -> bool:
+        return value in cls._value2member_map_
 
 
 # For backward compatibility
