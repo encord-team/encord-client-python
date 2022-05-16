@@ -67,3 +67,4 @@ node_modules/
 
 # dotenv environment variables file
 .env
+/source/tutorials/end-to-end/

@@ -22,6 +22,27 @@
     margin-left: 5px;
 }
 
+
+div.sphx-glr-download a {
+  background-color: inherit;
+  background-image: inherit;
+  border-radius: inherit;
+  border: inherit;
+  color: inherit;
+  display: inline-block;
+  font-weight: inherit;
+  padding: 1ex;
+  text-align: center;
+}
+
+div.sphx-glr-download a:hover {
+    color: #007bff;
+    box-shadow: initial;
+    text-decoration: initial;
+    background-image: initial;
+    background-color: initial;
+}
+
 /*
 pre {
     tab-size: 4;

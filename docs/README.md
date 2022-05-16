@@ -75,6 +75,8 @@ I (FHV) have tried to take notes of inconsistencies in the code base that may be
 4. FHV: It seems weird to me that the logic for converting ontology classifications and ontology objects to dictionaries is located in the `encord.project_ontology.ontology.py` file and not in the `encord.project_ontology.ontology_classification.py` class.  
    Also, there is a lot of custom logic for doing so, when the `dataclasses.asdict` with a custom factory could do the same thing with much less code.
    Note, I have a local `fhv/ontology_parsing` branch which does it with `asdict` but probably not perfectly structured either.
+5. FHV: Why is the `ObjectShape` definitions in the file `encord.project_ontology.object_type`? It makes no sense that both are not called either `object_type` or `object_shape`.
+   For classifications, they are both called `ClassificationType`.
 
 # Known issues
 1. The scrollspy (right-side toc) highlights the previous item when clicking a link. This is apparently a [bootstrap issue](https://github.com/twbs/bootstrap/issues/32496). 
