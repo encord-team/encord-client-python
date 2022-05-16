@@ -28,20 +28,28 @@ class EncordException(Exception):
 CordException = EncordException
 
 
+class ServerError(EncordException):
+    """Exception thrown when a request to the Encord server has lead to an error."""
+
+
 class InitialisationError(EncordException):
-    """Exception thrown when API key fails to initialise."""
+    """--DEPRECATED--
+
+    Exception thrown when API key fails to initialise."""
 
     pass
 
 
 class AuthenticationError(EncordException):
-    """Exception thrown when API key fails authentication."""
+    """--DEPRECATED--
+    Exception thrown when API key fails authentication."""
 
     pass
 
 
 class AuthorisationError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when access is unauthorised.
     (E.g. access to a data asset or method).
     """
@@ -50,7 +58,8 @@ class AuthorisationError(EncordException):
 
 
 class ResourceNotFoundError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when a requested resource is not found.
     (E.g. label, data asset).
     """
@@ -59,37 +68,43 @@ class ResourceNotFoundError(EncordException):
 
 
 class TimeOutError(EncordException):
-    """Exception thrown when a request times out."""
+    """--DEPRECATED--
+    Exception thrown when a request times out."""
 
     pass
 
 
 class RequestException(EncordException):
-    """Ambiguous exception while handling request."""
+    """--DEPRECATED--
+    Ambiguous exception while handling request."""
 
     pass
 
 
 class UnknownException(EncordException):
-    """Unknown error."""
+    """--DEPRECATED--
+    Unknown error."""
 
     pass
 
 
 class InvalidDateFormatError(EncordException):
-    """Invalid date format error"""
+    """--DEPRECATED--
+    Invalid date format error"""
 
     pass
 
 
 class MethodNotAllowedError(EncordException):
-    """Exception thrown when HTTP method is not allowed."""
+    """--DEPRECATED--
+    Exception thrown when HTTP method is not allowed."""
 
     pass
 
 
 class OperationNotAllowed(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when a read/write operation is not allowed.
     The API key blocks the operation.
     """
@@ -98,7 +113,8 @@ class OperationNotAllowed(EncordException):
 
 
 class AnswerDictionaryError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when answer dictionaries are incomplete.
     Occurs when an object or classification is missing.
     """
@@ -107,7 +123,8 @@ class AnswerDictionaryError(EncordException):
 
 
 class CorruptedLabelError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when a label is corrupted.
     (E.g. the frame labels have more frames than the video).
     """
@@ -116,7 +133,8 @@ class CorruptedLabelError(EncordException):
 
 
 class FileTypeNotSupportedError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when a file type is not supported.
     Supported file types are: image/jpeg, image/png, video/webm, video/mp4.
     """
@@ -125,7 +143,8 @@ class FileTypeNotSupportedError(EncordException):
 
 
 class FileSizeNotSupportedError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when the combined size of the input files is larger than the supported limit.
     """
 
@@ -133,7 +152,8 @@ class FileSizeNotSupportedError(EncordException):
 
 
 class FeatureDoesNotExistError(EncordException):
-    """
+    """--DEPRECATED--
+
     If a feature uid does not exist in a given project ontology.
     """
 
@@ -141,7 +161,8 @@ class FeatureDoesNotExistError(EncordException):
 
 
 class ModelWeightsInconsistentError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when an attempted model training iteration has a different
     type of weights than what is recorded (i.e. if type of model_hash (uid) is faster_rcnn,
     but is attempted trained with yolov5 weights).
@@ -151,7 +172,8 @@ class ModelWeightsInconsistentError(EncordException):
 
 
 class ModelFeaturesInconsistentError(EncordException):
-    """
+    """--DEPRECATED--
+
     If a feature type is different than what is supported by the model (e.g. if
     creating a classification model using a bounding box).
     """
@@ -160,13 +182,15 @@ class ModelFeaturesInconsistentError(EncordException):
 
 
 class UploadOperationNotSupportedError(EncordException):
-    """Exception thrown when trying to upload a video/image group to non-Encord storage dataset"""
+    """--DEPRECATED--
+    Exception thrown when trying to upload a video/image group to non-Encord storage dataset"""
 
     pass
 
 
 class DetectionRangeInvalidError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when a detection range is invalid.
     (E.g. negative or higher than num frames in video).
     """
@@ -175,13 +199,15 @@ class DetectionRangeInvalidError(EncordException):
 
 
 class InvalidAlgorithmError(EncordException):
-    """Exception thrown when invalid labeling algorithm name is sent."""
+    """--DEPRECATED--
+    Exception thrown when invalid labeling algorithm name is sent."""
 
     pass
 
 
 class ResourceExistsError(EncordException):
-    """
+    """--DEPRECATED--
+
     Exception thrown when trying to re-create a resource.
     Avoids overriding existing work.
     """
