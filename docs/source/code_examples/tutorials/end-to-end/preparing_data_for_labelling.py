@@ -8,18 +8,16 @@ structure (ontology) defined, your dataset attached, and ready to be labelled.
 Imports
 --------------
 """
+# sphinx_gallery_thumbnail_path = 'images/end-to-end-thumbs/product-image.svg'
+
 from pathlib import Path
 
 from encord.client import EncordClientDataset
-from encord.orm.dataset import (
-    CreateDatasetResponse,
-    DataRow,
-    Dataset,
-    StorageLocation,
-)
+from encord.orm.dataset import CreateDatasetResponse, Dataset, StorageLocation
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.user_client import EncordUserClient
+from encord.utilities.project_user import ProjectUserRole
 
 #%%
 # Authenticating
@@ -123,6 +121,30 @@ project_client.add_classification(
     required=False,
     options=["Leash", "Blanket", "Harness"],
 )
+
+#%%
+# Adding your team to the project
+# -------------------------------
+# To allow annotators, reviewers and team managers to access your project, they need to
+# be added to the project by their emails (Encord accounts). You add each type of member
+# by one call to the project client each:
+
+project_client.add_users(
+    ["annotator1@your.domain", "annotator2@your.domain"],
+    user_role=ProjectUserRole.ANNOTATOR,
+)
+project_client.add_users(
+    ["reviewer1@your.domain", "reviewer2@your.domain"],
+    user_role=ProjectUserRole.REVIEWER,
+)
+project_client.add_users(
+    ["annotator_reviewer@your.domain"],
+    user_role=ProjectUserRole.ANNOTATOR_REVIEWER,
+)
+project_client.add_users(
+    ["team_manager@your.domain"], user_role=ProjectUserRole.TEAM_MANAGER
+)
+
 
 #%%
 # At this point, your data is ready to be annotated with the project-specific

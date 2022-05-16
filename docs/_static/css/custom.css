@@ -43,6 +43,11 @@ div.sphx-glr-download a:hover {
     background-color: initial;
 }
 
+.sphx-glr-thumbcontainer figure img {
+    width: 200px !important;
+    height: 200px !important;
+}
+
 /*
 pre {
     tab-size: 4;
