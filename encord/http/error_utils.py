@@ -21,5 +21,7 @@ def check_error_response(response, payload=None):
     Checks server response.
     Called if HTTP response status code is an error response.
     """
-    message = f"The server has reported a response of type `{response}` with the following message: `{payload}`"
+    if payload is not None:
+        payload = " with the following message: " + payload
+    message = f"The server has reported a response of type `{response}`{payload}"
     raise ServerError(message)

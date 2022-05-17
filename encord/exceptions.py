@@ -41,8 +41,7 @@ class InitialisationError(EncordException):
 
 
 class AuthenticationError(EncordException):
-    """--DEPRECATED--
-    Exception thrown when API key fails authentication."""
+    """Exception thrown when API key fails authentication."""
 
     pass
 
