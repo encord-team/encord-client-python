@@ -47,12 +47,15 @@ _CORD_DATASET_ID = "CORD_DATASET_ID"
 _ENCORD_DATASET_ID = "ENCORD_DATASET_ID"
 _CORD_API_KEY = "CORD_API_KEY"
 _ENCORD_API_KEY = "ENCORD_API_KEY"
+_ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
 
 READ_TIMEOUT = 180  # In seconds
 WRITE_TIMEOUT = 180  # In seconds
 CONNECT_TIMEOUT = 180  # In seconds
 
 logger = logging.getLogger(__name__)
+
+from encord.exceptions import ResourceNotFoundError
 
 
 class BaseConfig(ABC):
@@ -142,6 +145,24 @@ def get_env_api_key() -> str:
     return api_key
 
 
+def get_env_ssh_key() -> str:
+    ssh_file = os.environ.get(_ENCORD_SSH_KEY)
+    if not ssh_file:
+        raise ResourceNotFoundError(
+            f"Environment variable {_ENCORD_SSH_KEY} not found. Failed to load private ssh key."
+        )
+
+    ssh_file = os.path.abspath(os.path.expanduser(ssh_file))
+    if not os.path.exists(ssh_file):
+        raise ResourceNotFoundError(
+            f"SSH key file `{ssh_file}` which is defined in the `{_ENCORD_SSH_KEY}` environment variable does not seem to exist. "
+            f"Failed to load private ssh key."
+        )
+
+    with open(ssh_file) as f:
+        return f.read()
+
+
 class EncordConfig(Config):
     def __init__(
         self,
@@ -181,7 +202,21 @@ class UserConfig(BaseConfig):
         }
 
     @staticmethod
-    def from_ssh_private_key(ssh_private_key: str, password: Optional[str], **kwargs):
+    def from_ssh_private_key(ssh_private_key: str, password: Optional[str] = "", **kwargs):
+        """
+        Instantiate a UserConfig object by the content of a private ssh key.
+
+        Args:
+            ssh_private_key: The content of a private key file.
+            password: The password for the private key file.
+
+        Returns:
+            The user configuration.
+
+        Raises:
+            ValueError: If the provided key content is not of the correct format.
+
+        """
         key_bytes = ssh_private_key.encode()
         password_bytes = password and password.encode()
         private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
@@ -190,3 +225,22 @@ class UserConfig(BaseConfig):
             return UserConfig(private_key, **kwargs)
         else:
             raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
+
+    @staticmethod
+    def from_env_variable(password: Optional[str] = "", **kwargs):
+        """
+        Instantiate a UserConfig object by looking up the private ssh key based on the
+        environment variable `ENCORD_SSH_KEY`.
+
+        Args:
+            password: The password for the ssh key, if needed.
+
+        Returns:
+            The user configuration.
+
+        Raises:
+            ResourceNotFoundError: If the environment variable is not defined or the
+                                   specified ssh key does not exist.
+        """
+        ssh_private_key = get_env_ssh_key()
+        return UserConfig.from_ssh_private_key(ssh_private_key, password=password, **kwargs)

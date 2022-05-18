@@ -163,8 +163,13 @@ class EncordUserClient:
         ]
 
     @staticmethod
-    def create_with_ssh_private_key(ssh_private_key: str, password: str = None, **kwargs) -> EncordUserClient:
-        user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
+    def create_with_ssh_private_key(
+        ssh_private_key: Optional[str] = None, password: str = None, **kwargs
+    ) -> EncordUserClient:
+        if ssh_private_key:
+            user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
+        else:
+            user_config = UserConfig.from_env_variable(password, **kwargs)
         querier = Querier(user_config)
 
         return EncordUserClient(user_config, querier)
