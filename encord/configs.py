@@ -48,6 +48,7 @@ _ENCORD_DATASET_ID = "ENCORD_DATASET_ID"
 _CORD_API_KEY = "CORD_API_KEY"
 _ENCORD_API_KEY = "ENCORD_API_KEY"
 _ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
+_ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 READ_TIMEOUT = 180  # In seconds
 WRITE_TIMEOUT = 180  # In seconds
@@ -146,21 +147,37 @@ def get_env_api_key() -> str:
 
 
 def get_env_ssh_key() -> str:
-    ssh_file = os.environ.get(_ENCORD_SSH_KEY)
-    if not ssh_file:
-        raise ResourceNotFoundError(
-            f"Environment variable {_ENCORD_SSH_KEY} not found. Failed to load private ssh key."
-        )
+    """
+    Returns the raw ssh key by looking up the `ENCORD_SSH_KEY_FILE` and `ENCORD_SSH_KEY` environment variables
+    in the mentioned order and returns the first successfully identified key.
+    """
+    # == 1. Look for key file
+    ssh_file = os.environ.get(_ENCORD_SSH_KEY_FILE)
+    if ssh_file:
+        ssh_file = os.path.abspath(os.path.expanduser(ssh_file))
+        if not os.path.exists(ssh_file):
+            raise ResourceNotFoundError(
+                f"SSH key file `{ssh_file}` which is defined in the `{_ENCORD_SSH_KEY_FILE}` environment variable does not seem to exist. "
+                f"Failed to load private ssh key."
+            )
 
-    ssh_file = os.path.abspath(os.path.expanduser(ssh_file))
-    if not os.path.exists(ssh_file):
+        with open(ssh_file) as f:
+            return f.read()
+
+    # == 2. Look for raw key
+    raw_ssh_key = os.environ.get(_ENCORD_SSH_KEY)
+    if raw_ssh_key is None:
         raise ResourceNotFoundError(
-            f"SSH key file `{ssh_file}` which is defined in the `{_ENCORD_SSH_KEY}` environment variable does not seem to exist. "
+            f"Neither of the environment variables {_ENCORD_SSH_KEY_FILE} or {_ENCORD_SSH_KEY} were found. "
             f"Failed to load private ssh key."
         )
 
-    with open(ssh_file) as f:
-        return f.read()
+    if raw_ssh_key == "":
+        raise ResourceNotFoundError(
+            f"Environment variable {_ENCORD_SSH_KEY} found but is empty. " f"Failed to load private ssh key."
+        )
+
+    return raw_ssh_key
 
 
 class EncordConfig(Config):
@@ -225,22 +242,3 @@ class UserConfig(BaseConfig):
             return UserConfig(private_key, **kwargs)
         else:
             raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
-
-    @staticmethod
-    def from_env_variable(password: Optional[str] = "", **kwargs):
-        """
-        Instantiate a UserConfig object by looking up the private ssh key based on the
-        environment variable `ENCORD_SSH_KEY`.
-
-        Args:
-            password: The password for the ssh key, if needed.
-
-        Returns:
-            The user configuration.
-
-        Raises:
-            ResourceNotFoundError: If the environment variable is not defined or the
-                                   specified ssh key does not exist.
-        """
-        ssh_private_key = get_env_ssh_key()
-        return UserConfig.from_ssh_private_key(ssh_private_key, password=password, **kwargs)
