@@ -228,7 +228,7 @@ class UserConfig(BaseConfig):
             password: The password for the private key file.
 
         Returns:
-            The user configuration.
+            UserConfig.
 
         Raises:
             ValueError: If the provided key content is not of the correct format.
