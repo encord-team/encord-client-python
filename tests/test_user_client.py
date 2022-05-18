@@ -3,42 +3,55 @@ import os
 import pytest
 
 import encord.exceptions
-from encord.configs import _ENCORD_SSH_KEY
+from encord.configs import _ENCORD_SSH_KEY, _ENCORD_SSH_KEY_FILE
 from encord.user_client import EncordUserClient
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+PRIVATE_KEY = Ed25519PrivateKey.generate().private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.OpenSSH,
+    encryption_algorithm=serialization.NoEncryption()
+).decode('utf-8')
 
 
 @pytest.fixture
 def ssh_key_file_path():
-    # TODO: What is the proper way to do this?
-    return "./ssh_private_test_key"
+    return "./resources/test_key"
 
 
-def test_initialise_without_env_variable_or_arguments():
+@pytest.fixture
+def ssh_key_content():
+    return PRIVATE_KEY
+
+
+def test_initialise_without_env_variables_or_arguments():
     assert _ENCORD_SSH_KEY not in os.environ
+    assert _ENCORD_SSH_KEY_FILE not in os.environ
     with pytest.raises(expected_exception=encord.exceptions.ResourceNotFoundError) as excinfo:
         EncordUserClient.create_with_ssh_private_key()
 
 
 def test_initialise_with_wrong_ssh_file_path():
-    os.environ[_ENCORD_SSH_KEY] = "some_wrong/file/path"
+    os.environ[_ENCORD_SSH_KEY_FILE] = "some_wrong/file/path"
     with pytest.raises(expected_exception=encord.exceptions.ResourceNotFoundError) as excinfo:
         EncordUserClient.create_with_ssh_private_key()
-    del os.environ[_ENCORD_SSH_KEY]
 
 
-@pytest.mark.skip(reason="Not clear how to get an ssh key file for the purpose")
-def test_initialise_with_correct_ssh_file_path(ssh_key_file_path):
-    os.environ[_ENCORD_SSH_KEY] = ssh_key_file_path
+def test_initialise_with_correct_ssh_file_path_from_env(ssh_key_file_path):
+    os.environ[_ENCORD_SSH_KEY_FILE] = ssh_key_file_path
     user_client = EncordUserClient.create_with_ssh_private_key()
     assert isinstance(user_client, EncordUserClient)
 
 
-@pytest.mark.skip(reason="Not clear how to get an ssh key file for the purpose")
-def test_initialise_with_correct_ssh_file_content(ssh_key_file_path):
-    with open(ssh_key_file_path, 'r') as f:
-        private_key = f.read()
+def test_initialise_with_correct_ssh_file_content(ssh_key_content):
+    user_client = EncordUserClient.create_with_ssh_private_key(ssh_key_content)
+    assert isinstance(user_client, EncordUserClient)
 
-    user_client = EncordUserClient.create_with_ssh_private_key(private_key)
+
+def test_initialise_with_correct_ssh_file_content_from_env(ssh_key_content):
+    os.environ[_ENCORD_SSH_KEY] = ssh_key_content
+    user_client = EncordUserClient.create_with_ssh_private_key()
     assert isinstance(user_client, EncordUserClient)
 
 
@@ -46,4 +59,9 @@ def test_initialise_with_wrong_ssh_file_content():
     with pytest.raises(expected_exception=ValueError) as excinfo:
         user_client = EncordUserClient.create_with_ssh_private_key("Some random content.")
 
+
+def test_initialise_with_wrong_ssh_file_content_from_env():
+    os.environ[_ENCORD_SSH_KEY] = "Some random content."
+    with pytest.raises(expected_exception=ValueError) as excinfo:
+        user_client = EncordUserClient.create_with_ssh_private_key()
 
