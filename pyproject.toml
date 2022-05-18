@@ -33,6 +33,8 @@ black = "^21.12b0"
 sphinx-autodoc-typehints = "1.15.2"
 prettyprinter = "0.18.0"
 isort = "^5.10.1"
+# Pinning click to solve black issues https://stackoverflow.com/questions/71673404/importerror-cannot-import-name-unicodefun-from-click
+click = "8.0.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
