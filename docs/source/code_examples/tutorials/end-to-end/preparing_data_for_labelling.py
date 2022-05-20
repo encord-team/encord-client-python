@@ -142,7 +142,8 @@ project_client.add_users(
     user_role=ProjectUserRole.ANNOTATOR_REVIEWER,
 )
 project_client.add_users(
-    ["team_manager@your.domain"], user_role=ProjectUserRole.TEAM_MANAGER
+    ["team_manager@your.domain"],
+    user_role=ProjectUserRole.TEAM_MANAGER,
 )
 
 
