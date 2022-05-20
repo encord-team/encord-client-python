@@ -47,12 +47,16 @@ _CORD_DATASET_ID = "CORD_DATASET_ID"
 _ENCORD_DATASET_ID = "ENCORD_DATASET_ID"
 _CORD_API_KEY = "CORD_API_KEY"
 _ENCORD_API_KEY = "ENCORD_API_KEY"
+_ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
+_ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 READ_TIMEOUT = 180  # In seconds
 WRITE_TIMEOUT = 180  # In seconds
 CONNECT_TIMEOUT = 180  # In seconds
 
 logger = logging.getLogger(__name__)
+
+from encord.exceptions import ResourceNotFoundError
 
 
 class BaseConfig(ABC):
@@ -142,6 +146,40 @@ def get_env_api_key() -> str:
     return api_key
 
 
+def get_env_ssh_key() -> str:
+    """
+    Returns the raw ssh key by looking up the `ENCORD_SSH_KEY_FILE` and `ENCORD_SSH_KEY` environment variables
+    in the mentioned order and returns the first successfully identified key.
+    """
+    # == 1. Look for key file
+    ssh_file = os.environ.get(_ENCORD_SSH_KEY_FILE)
+    if ssh_file:
+        ssh_file = os.path.abspath(os.path.expanduser(ssh_file))
+        if not os.path.exists(ssh_file):
+            raise ResourceNotFoundError(
+                f"SSH key file `{ssh_file}` which is defined in the `{_ENCORD_SSH_KEY_FILE}` environment variable does not seem to exist. "
+                f"Failed to load private ssh key."
+            )
+
+        with open(ssh_file) as f:
+            return f.read()
+
+    # == 2. Look for raw key
+    raw_ssh_key = os.environ.get(_ENCORD_SSH_KEY)
+    if raw_ssh_key is None:
+        raise ResourceNotFoundError(
+            f"Neither of the environment variables {_ENCORD_SSH_KEY_FILE} or {_ENCORD_SSH_KEY} were found. "
+            f"Failed to load private ssh key."
+        )
+
+    if raw_ssh_key == "":
+        raise ResourceNotFoundError(
+            f"Environment variable {_ENCORD_SSH_KEY} found but is empty. " f"Failed to load private ssh key."
+        )
+
+    return raw_ssh_key
+
+
 class EncordConfig(Config):
     def __init__(
         self,
@@ -181,7 +219,21 @@ class UserConfig(BaseConfig):
         }
 
     @staticmethod
-    def from_ssh_private_key(ssh_private_key: str, password: Optional[str], **kwargs):
+    def from_ssh_private_key(ssh_private_key: str, password: Optional[str] = "", **kwargs):
+        """
+        Instantiate a UserConfig object by the content of a private ssh key.
+
+        Args:
+            ssh_private_key: The content of a private key file.
+            password: The password for the private key file.
+
+        Returns:
+            UserConfig.
+
+        Raises:
+            ValueError: If the provided key content is not of the correct format.
+
+        """
         key_bytes = ssh_private_key.encode()
         password_bytes = password and password.encode()
         private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
