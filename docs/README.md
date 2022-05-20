@@ -1,7 +1,24 @@
 # Instructions around using Sphinx
-Simply build with
-* `make html` from within the `docs` directory.
-* You can open the `_build/html/index.html` page to inspect your changes.
+
+To build the documentation, follow these steps:
+
+1. Navigate to the root of the repo and run 
+```shell
+> poetry install
+```
+2. Navigate back to this directory (`docs`) and run
+```shell
+> make html
+```
+3. You can open the `_build/html/index.html` page to inspect your changes.
+
+### For those writing docs:
+Instead of `make html`, you can run
+```shell
+> ./build_docs
+```
+This will run `black`, `isort`, and `make html` with appropriate configurations. 
+
 
 If you are adding a new module which should be documented, follow the examples within `api.rst` to add this new module.
 
