@@ -6,14 +6,16 @@
 .. include:: ./substitutes.rst
 
 
-Welcome to Encord Python SDK reference!
+Welcome to the |sdk| reference!
 =======================================
-To be able to use the SDK, you need to first have a way to authenticate the client.
+To use the |sdk|, you first need to have a way to authenticate the client.
 If you haven't logged in to the platform and added a :xref:`public-private_key_pair`, please do so before using the |sdk|.
 
 Before you start
 ----------------
-Take a note of the following naming convention.
+Please take a note of the following naming convention.
+
+
 When we include ``"<some_name>"``, both in code examples and in text, we mean a string with a specific value which is defined by the context *without the "<" and the ">"*.
 For example, ``"<project_hash>"`` would be the unique uid defining your project.
 
