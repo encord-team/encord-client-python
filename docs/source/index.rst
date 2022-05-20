@@ -7,12 +7,12 @@
 
 
 Welcome to the |sdk| reference!
-=======================================
+===============================
 To use the |sdk|, you first need to have a way to authenticate the client.
 If you haven't logged in to the platform and added a :xref:`public-private_key_pair`, please do so before using the |sdk|.
 
 Before you start
-----------------
+""""""""""""""""
 Please take a note of the following naming convention.
 
 
@@ -31,6 +31,19 @@ For example, ``"<project_hash>"`` would be the unique uid defining your project.
 
 In our docs, it should always be clear where to find such values and what the format should be.
 
+Getting started
+"""""""""""""""
+
+Here are some resources to get you started with the |sdk|:
+
+.. toctree::
+   :maxdepth: 1
+
+   quickstart
+   general_concepts
+   installation
+   authentication
+
 
 Tutorials
 =========
@@ -39,22 +52,18 @@ Please find our documentation on how to perform specific actions below.
 .. toctree::
    :maxdepth: 3
 
-   quickstart
-   general_concepts
-   installation
-   authentication
    tutorials
 
 
 SDK docs
---------
+========
 .. toctree::
    :maxdepth: 2
 
    api
 
 Indices and tables
-------------------
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
