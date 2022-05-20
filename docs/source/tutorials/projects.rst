@@ -343,8 +343,8 @@ The ontology essentially defines the label structure of a given project.
 For a |platform| description of the |ontology|, please see :xref:`configure_label_editor_(ontology)`.
 
 
-Fetching project ontology
--------------------------
+Fetching a project's ontology
+-----------------------------
 
 You can fetch the |ontology| of an existing project for viewing via the |sdk|.
 For a |platform|-related description of the |ontology|, please see :xref:`configure_label_editor_(ontology)`.
@@ -823,7 +823,7 @@ The easiest way to get started with creating a model row is to navigate to the '
 
     Getting model API details.
 
-Click on the 'Model API details' button to toggle a code snippet with create model row API details when you are happy with your selected parameters.
+Click on the *Model API details* button to toggle a code snippet with create model row API details when you are happy with your selected parameters.
 
 .. code-block::
 
@@ -871,7 +871,7 @@ Training
 --------
 
 To get started with model training, navigate to the 'models' tab in your project on the |platform|.
-Start by creating a model row using the Python SDK or by following the :xref:`create_model_guidelines`.
+Start by creating a model by following the :xref:`create_model_guidelines`.
 You can also use an existing model by clicking on the 'train' button.
 
 Navigate through the training flow and set parameters accordingly.
@@ -880,7 +880,7 @@ Navigate through the training flow and set parameters accordingly.
 
     API details for training a model.
 
-Click on the 'Training API details' button to toggle a code snippet with model training API details when you are happy with your selected label rows and parameters.
+Click on the *Training API details* button to toggle a code snippet with model training API details when you are happy with your selected label rows and parameters.
 
 
 .. code-block::
@@ -1028,11 +1028,12 @@ The model inference API also accepts a list of base64 encoded strings.
     print(inference_result)
 
 Limits on the input values
-* ``conf_thresh`` - the value of this parameter should be between 0 and 1.
-* ``iou_thresh`` - the value of this parameter should be between 0 and 1.
-* ``rdp_thresh`` - the value for this paramater should be between 0 and 0.01.
-* ``data_hashes`` - the cumulative size of the videos/image groups specified should be less than or equal to 1 GB, otherwise a FileSizeNotSupportedError would be thrown.
-* ``detection_frame_range`` - the maximum difference between the 2 frame range values can be 1000, otherwise a DetectionRangeInvalidError would be thrown.
+
+* ``conf_thresh``: the value of this parameter should be between 0 and 1.
+* ``iou_thresh``: the value of this parameter should be between 0 and 1.
+* ``rdp_thresh``: the value for this paramater should be between 0 and 0.01.
+* ``data_hashes``: the cumulative size of the videos/image groups specified should be less than or equal to 1 GB, otherwise a FileSizeNotSupportedError would be thrown.
+* ``detection_frame_range``: the maximum difference between the 2 frame range values can be 1000, otherwise a DetectionRangeInvalidError would be thrown.
 
 
 
@@ -1065,67 +1066,71 @@ Interpolation is supported for the following annotation types:
 2.  Polygon
 3.  Keypoint
 
-Use the ``client.object_interpolation(key_frames, objects_to_interpolate)`` method to run object interpolation.
+Use the :meth:`.EncordClientProject.object_interpolation` method to run object interpolation.
 
-Key frames (``key_frames``) can be obtained from a label row for the ``video`` data type.
-The objects to interpolate between key frames is a list object IDs (``objectHash`` uid) contained within the ``labels`` dictionary.
+Key frames, between which interpolation is run, can be obtained from label rows containing videos.
+The objects to interpolate between key frames is a list of ``<object_hash>`` values obtained from the ``label_row["labels"]["<frame_number>"]["objects"]`` entry in the label row.
+An object (identified by its ``<object_hash>``) is interpolated between the key frames where it is present.
 
-An object is interpolated between the key frames where it is present, and is based on its object ID.
+The interpolation algorithm can be run on multiple objects with different ontological objects at the same time (i.e., you can run interpolation on bounding box, polygon, and keypoint, using the same function call) on any number of key frames.
 
-The interpolation algorithm can be run on multiple objects with different ontological objects at the same time (i.e. you can run interpolation on bounding box, polygon, and keypoint, using the same function call) on any number of key frames.
+.. tabs::
 
+    .. tab:: Code
 
-.. code-block::
+        .. code-block:: python
 
-    # Fetch label row
-    sample_label = client.get_label_row('sample_label_uid')
+            # Fetch label row
+            sample_label = client.get_label_row("sample_label_uid")
 
-    # Prepare interpolation
-    key_frames = sample_label['data_units']['sample_data_hash']['labels']
-    objects_to_interpolate = ['sample_object_uid']
+            # Prepare interpolation
+            key_frames = sample_label["data_units"]["sample_data_hash"]["labels"]
+            objects_to_interpolate = ["sample_object_uid"]
 
-    # Run interpolation
-    interpolation_result = client.object_interpolation(key_frames, objects_to_interpolate)
-    print(interpolation_result)
+            # Run interpolation
+            interpolation_result = client.object_interpolation(key_frames, objects_to_interpolate)
+            print(interpolation_result)
 
-The interpolation algorithm can also be run from sample key frames kept locally, with ``key_frames`` passed in a simple JSON structure.
+    .. tab:: Example output
 
-All that is required is a feature ID (``featureHash``: uid) and object ID (``objectHash``: uid) for each object in your set of key frames.
+        .. code-block::
 
-.. code-block::
-
-    {
-        "frame": {
-            "objects": [
-                {
-                    "objectHash": object_uid,
-                    "featureHash": feature_uid (from editor ontology),
-                    "polygon": {
-                        "0": {
-                            "x": x1,
-                            "y": y1,
+            {
+                "frame": {
+                    "objects": [
+                        {
+                            "objectHash": object_uid,
+                            "featureHash": feature_uid (from editor ontology),
+                            "polygon": {
+                                "0": {
+                                    "x": x1,
+                                    "y": y1,
+                                },
+                                "1": {
+                                    "x": x2,
+                                    "y": y2,
+                                },
+                                "2" {
+                                    "x": x3,
+                                    "y": y3,
+                                },
+                                ...,
+                            }
                         },
-                        "1": {
-                            "x": x2,
-                            "y": y2,
-                        },
-                        "2" {
-                            "x": x3,
-                            "y": y3,
-                        },
-                        ...,
-                    }
+                        {
+                            ...
+                        }
+                    ]
                 },
-                {
-                    ...
+                "frame": {
+                    ...,
                 }
-            ]
-        },
-        "frame": {
-            ...,
-        }
-    }
+            }
 
+
+The interpolation algorithm can also be run from sample frames kept locally, with ``key_frames`` passed in a simple JSON structure (see :meth:`doc-strings <.EncordClientProject.object_interpolation>`).
+
+All that is required is a ``<feature_hash>`` and ``object_hash`` for each object in your set of key frames.
 
 
 Other Resources
