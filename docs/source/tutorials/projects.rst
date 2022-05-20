@@ -8,15 +8,12 @@ The project tutorials are divided into a couple of subsets.
 First, we show general concepts like creating a new project from the |sdk|.
 Afterwards, we go into more detail such as working with attributes (e.g. labels),
 and incorporating advanced features such as integrating our automation models and algorithms.
+Make sure that you have associated a :xref:`public-private_key_pair` with |company| before you start.
 
 Creating a Project
 ==================
 
-You can create a new project using the :meth:`create_project() <.EncordUserClient.create_project>` method.
-First, you need to create a :xref:`public-private_key_pair` for |company|.
-
-
-:meth:`create_project() <.EncordUserClient.create_project>` takes three parameters:
+You can create a new project using the :meth:`create_project() <.EncordUserClient.create_project>` method that takes three parameters:
 
 * :meth:`project_title <.EncordUserClient.create_project>`: the title of the project as a string
 
@@ -49,7 +46,6 @@ The following shows the general structure for creating a project.
 Copying a project
 =================
 
-You can copy a project over via the |sdk|.
 Copying a project creates another project with the same ontology and settings [#F1]_.
 You can also decide to copy over the same users, datasets and models (which aren't copied over by default).
 
@@ -234,7 +230,6 @@ The following example show how to get hold of a master key:
 Fetching project API keys
 -------------------------
 
-All API keys for an existing project can be obtained via the |sdk|.
 All API keys for an existing project can be obtained using the ``<project_hash>`` which uniquely identifies a project.
 Before you can fetch API keys, you need to i) :ref:`create a project <tutorials/projects:Creating a project>` and ii) :ref:`add API keys <tutorials/projects:Creating a project api key>`.
 
@@ -279,13 +274,7 @@ Data
 Adding datasets to a project
 ----------------------------
 
-You can add existing datasets to a project.
-You can use the ``<dataset_hash>`` to add existing datasets to a project.
-The ``<dataset_hash>`` can be found, for example, by :ref:`tutorials/datasets:Listing existing datasets`.
-Similarly, a ``<project_hash>`` is needed to authenticate a project client.
-The hash can, e.g., be obtained by :ref:`tutorials/projects:Listing existing projects`.
-
-This is an example of adding datasets to a project.
+To add an existing dataset to a project, you use the ``<dataset_hash>`` as follows:
 
 .. tabs::
 
@@ -439,11 +428,10 @@ For example, if you want to be able to annotate whether an image is of a cat or 
 Objects, on the other hand, are specific to locations in a frame.
 For example, if you want to annotate where the dog is in the image, you would add a dog object to the ontology.
 Objects are located using a graphical annotation, such as a bounding box or a polygon, indicating where the dog is.
-In the following subsections, we will show you how both scenarios are done.
 
 
 Adding a classification to an ontology
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here we are in the "cat vs. dog" scenario from above.
 Classifications for cats and dogs are added to an ontology using the :meth:`add_classification() <.EncordClientProject.add_classification>` method.
 
@@ -471,9 +459,9 @@ The :meth:`add_classification() <.EncordClientProject.add_classification>` metho
 
 
 Adding an object to an ontology
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here we are in the "where is the dog" scenario.
-Objects are added to to an existing ontology using the :meth:`add_object() <.EncordClientProject.add_object>` method.
+Objects are added to an existing ontology using the :meth:`add_object() <.EncordClientProject.add_object>` method.
 
 The :meth:`add_object() <.EncordClientProject.add_object>` method takes the following parameters:
 
@@ -499,9 +487,9 @@ Labels
 ======
 
 .. note::
-    This section is undergoing a reconstruction [Tuesday, May 10th 2022].
+    This section is undergoing a review [Tuesday, May 10th 2022].
 
-A label row has the attributes ``<label_hash>`` uid, ``data_title``, ``data_type``, ``data_units``, and ``label_status``.
+A label row has this structure:
 
 .. code-block::
 
@@ -515,7 +503,7 @@ A label row has the attributes ``<label_hash>`` uid, ``data_title``, ``data_type
         'label_status': label_status,
     }
 
-A label row contains a single data point or a collection of data points together with associated labels, and is specific to a data asset with type video or image group.
+A label row contains a single data unit or a collection of data units together with associated labels, and is specific to a data asset with type video or image group.
 
 1.  A label row with a data asset of type ``video`` contains a single data unit.
 2.  A label row with a data asset of type ``img_group`` contains any number of data units.
@@ -571,7 +559,7 @@ Use the ``project.get_labels_list()`` method to get a list of label IDs (``<labe
         lb = client.get_label_row(label_hash)
         label_rows.append(lb)
 
-The label row object contains data points with signed URLs (``data_link``: string) to the labeled data asset.
+The label row object contains data units with signed URLs (``data_link``: string) to the labeled data asset.
 
 
 .. code-block::
@@ -686,16 +674,16 @@ Then save the labels.
 
     sample_label = client.get_label_row('sample_label_uid')
 
-updated_label = label_utilities.construct_answer_dictionaries(sample_label)
-client.save_label_row('sample_label_uid', updated_label)
+    updated_label = label_utilities.construct_answer_dictionaries(sample_label)
+    client.save_label_row('sample_label_uid', updated_label)
 
 
 Creating a label row
 --------------------
 
-If you want to save labels to a unit of data (``video``, ``img_group``) for which a label row (and thus a ``<label_hash>`` uid) does not exist yet, you need to create a label row associated with the data.
+If you want to save labels to a unit of data (``video``, ``img_group``) for which a label row (and thus a ``<label_hash>``) does not yet exist, you need to first create a label row associated with the data.
 
-1.  Get the data_hash (``<data_hash>`` uid) that you want to create labels for.
+1.  Get the data_hash ``<data_hash>`` that you want to create labels for.
 To do this, request all label rows and note the ones that are NOT_LABELLED under 'label_status' (or, where ``<label_hash>`` is None):
 
 .. code-block::
@@ -747,7 +735,7 @@ The following method can be used in case you want to submit a label row for revi
 
 .. code-block::
 
-    client.submit_label_row_for_review('sample_label_uid')
+    client.submit_label_row_for_review('<label_hash>')
 
 The above method will submit the annotation task corresponding to the label row and create the review tasks corresponding to it based on the sampling rate in the project settings.
 
@@ -760,7 +748,7 @@ A data row contains a data unit, or a collection of data units, and has attribut
 .. code-block::
 
     {
-        'data_hash': data_hash (uid),
+        'data_hash': <data_hash>,
         'video': video,
         'images': images,
     }
@@ -773,16 +761,16 @@ Before you start, make sure that a project client is initialised with the approp
 
 .. code-block::
 
-    data_row = client.get_data('sample_data_uid', generate_signed_url=True)
+    data_row = client.get_data('<data_hash>', generate_signed_url=True)
 
 You can optionally return signed URLs for timed public access to that resource (default is False).
 
 Reviewing label logs
 --------------------
 
-You can query information about a project's labels by using the ``get_label_logs`` method of a client initialised for that project.
+You can query information about a project's labels by using the :meth:`get_label_logs() <.EncordClientProject.get_label_logs>` method of a client initialised for that project.
 You will need an API key with the ``label_logs.read`` permission.
-The ``get_label_logs`` method takes a number of optional parameters to narrow down the retrieved logs:
+The :meth:`get_label_logs() <.EncordClientProject.get_label_logs>` method takes a number of optional parameters to narrow down the retrieved logs:
 
 .. code-block::
 
@@ -872,7 +860,7 @@ Training
 
 To get started with model training, navigate to the 'models' tab in your project on the |platform|.
 Start by creating a model by following the :xref:`create_model_guidelines`.
-You can also use an existing model by clicking on the 'train' button.
+You can also use an existing model by clicking on the *Train* button.
 
 Navigate through the training flow and set parameters accordingly.
 
@@ -1003,7 +991,7 @@ In case of locally stored images only JPEG and PNG file types are supported for 
     )
     print(inference_result)
 
-For running inference on locally stored videos, only MP4 and WebM video types are supported.
+For running inference on locally stored videos, only ``mp4`` and ``webm`` video types are supported.
 
 
 .. code-block::
@@ -1154,11 +1142,13 @@ Exporting from the CVAT UI
 """"""""""""""""""""""""""
 
 For project exports:
+
 .. figure:: /images/cvat_project_export.png
 
     Export Project.
 
 Or for task exports:
+
 .. figure:: /images/cvat_task_export.png
 
     Export Task.
@@ -1166,6 +1156,7 @@ Or for task exports:
 Then in the popup, please ensure that images are saved too:
 
 .. figure:: /images/cvat_project_export_popup.png
+    :width: 450
 
     Export Project.
 
