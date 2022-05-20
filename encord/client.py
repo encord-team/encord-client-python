@@ -47,7 +47,7 @@ import dateutil
 
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, Config, EncordConfig
-from encord.constants.model import *
+from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
@@ -693,10 +693,10 @@ class EncordClientProject(EncordClient):
 
     def create_model_row(
         self,
-        title=None,
-        description=None,
-        features=None,
-        model=None,
+        title: str,
+        description: str,
+        features: List[str],
+        model: Union[AutomationModels, str],
     ) -> str:
         """
         Create a model row.
@@ -704,9 +704,11 @@ class EncordClientProject(EncordClient):
         Args:
             title: Model title.
             description: Model description.
-            features: List of feature feature uid's (hashes) to be included in the model.
-            model: Model (resnet18, resnet34, resnet50,
-                resnet101, resnet152, vgg16, vgg19, yolov5, faster_rcnn, mask_rcnn).
+            features: List of <feature_node_hashes> which is id's of ontology objects
+                      or classifications to be included in the model.
+            model: the model type to be used.
+                   For backwards compatibility purposes, we continuously allow strings
+                   corresponding to the values of the :class:`.AutomationModels` Enum.
 
         Returns:
             The uid of the added model row.
@@ -725,21 +727,13 @@ class EncordClientProject(EncordClient):
                 message="You must pass a list of feature uid's (hashes) to create a model row."
             )
 
-        if model is None or model not in [
-            RESNET18,
-            RESNET34,
-            RESNET50,
-            RESNET101,
-            RESNET152,
-            VGG16,
-            VGG19,
-            YOLOV5,
-            FASTER_RCNN,
-            MASK_RCNN,
-        ]:
+        if isinstance(model, AutomationModels):
+            model = model.value
+
+        elif model is None or not AutomationModels.has_value(model):  # Backward compatibility with string options
             raise encord.exceptions.EncordException(
-                message="You must pass a model (resnet18, resnet34, resnet50, resnet101, resnet152, vgg16, vgg19, "
-                "yolov5, faster_rcnn, mask_rcnn) to create a model row."
+                message="You must pass a model from the `encord.constants.model.AutomationModels` Enum to create a "
+                "model row."
             )
 
         model_row = ModelRow(

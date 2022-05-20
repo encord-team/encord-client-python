@@ -29,17 +29,15 @@ A dataset has the attributes ``title``, ``description``, ``dataset_type``, and `
 
 Note how the ``data_rows`` can both consist of videos and image groups.
 
-Below, you can find tutorials on how to interact with your datasets.
+Below, you can find tutorials on how to interact with your datasets when you have associated a :xref:`public-private_key_pair` with |company|.
 
 
 Creating a dataset
 ==================
 
-You can use the |sdk| to create a dataset.
-First, you need to create a :xref:`public-private_key_pair` for |company|.
-
-You also need to select where your data will be hosted to select the appropriate :class:`StorageLocation <encord.orm.dataset.StorageLocation>`.
-For example, the following example will create a dataset called "traffic data" that will expect data hosted on AWS S3.
+To create a dataset, need to select where your data will be hosted with the appropriate :class:`StorageLocation <encord.orm.dataset.StorageLocation>`.
+The following example will create a dataset called "Example Title" that will expect data hosted on AWS S3.
+If you just with to upload your data from local storage to |company|, :class:`CORD_STORAGE <encord.orm.dataset.StorageLocation>` would be the appropriate choice.
 
 .. tabs::
 
@@ -63,7 +61,7 @@ For example, the following example will create a dataset called "traffic data" t
 Listing existing datasets
 =========================
 
-Via the :class:`.EncordUserClient`, you can easily query and list all the available datasets of a given user.
+Using the :class:`.EncordUserClient`, you can easily query and list all the available datasets of a given user.
 In the example below, a user authenticates with |company| and then fetches all datasets available.
 
 
@@ -114,8 +112,8 @@ In the example below, a user authenticates with |company| and then fetches all d
 API keys
 ========
 
-Creating a maser API key with full rights
------------------------------------------
+Creating a master API key with full rights
+------------------------------------------
 
 It is also possible to create or get a master API key with both read and write access (both values of :class:`.DatasetScope`).
 The following example show how to get hold of this key:
@@ -150,9 +148,9 @@ The following example show how to get hold of this key:
 Creating a dataset API key with specific rights
 -----------------------------------------------
 
-Via the |sdk| you can create a dataset-specific API key.
-The API key is one way to :ref:`authentication:Authenticate with Encord`.
-You need to provide the ``dataset_hash``, which uniquely identifies a dataset (see, e.g., the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
+:ref:`authentication:Authenticate with Encord` using an API key allows you to control which capabilities the dataset client will have.
+This can be useful if you, for example, want to share read-only access with some third-party.
+You need to provide the ``<dataset_hash>``, which uniquely identifies a dataset (see, for example, the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
 If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets:Creating a Dataset`.
 
 .. autolink-concat:: section
@@ -186,17 +184,16 @@ If you haven't created a dataset already, you can have a look at :ref:`tutorials
 
 .. note::
 
-    This capability is available to only the Admin of a dataset.
+    This capability is only available to an admin of a dataset.
 
 
-With the API key at hand, you can use :ref:`authentication:API key authentication`.
+With the API key in hand, you can now use :ref:`authentication:API key authentication`.
 
 
 Fetching dataset API keys
 -------------------------
 
-Via the |sdk|, you can get all API keys for an existing dataset.
-You need to provide the ``dataset_hash`` which uniquely identifies a dataset (see, e.g., the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
+To get a list of all API keys of a dataset, you need to provide the ``<dataset_hash>`` which uniquely identifies the dataset (see, for example, the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
 If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets:Creating a Dataset`.
 
 
@@ -231,8 +228,7 @@ If you haven't created a dataset already, you can have a look at :ref:`tutorials
                 # ...
             ]
 
-With the API key at hand, you can use :ref:`authentication:API key authentication`.
-
+You can now use this API key for :ref:`authentication:API key authentication`.
 
 Data
 ====
@@ -241,7 +237,7 @@ Adding data
 -----------
 
 You can add data to datasets in multiple ways.
-You can both use |company| storage, as described next, and you can :ref:`add data from a private cloud <tutorials/datasets:Adding data from a private cloud>` to retain complete control of the data.
+You can both use |company| storage, as described next, and you can :ref:`add data from a private cloud <tutorials/datasets:Adding data from a private cloud>` to integrate any pre-existing data.
 
 .. note::
     The following examples assume that you have an :class:`.EncordClientDataset` initialised as variable ``dataset_client`` and :ref:`authenticated <authentication:Authenticate with Encord>`.
@@ -282,7 +278,7 @@ Use the method :meth:`upload_video() <.EncordClientDataset.upload_video>` to upl
     dataset_client.upload_video("path/to/your/video.mp4")
 
 
-This will upload the given video file to the dataset associated to the :class:`dataset_client <.EncordClientDataset>`.
+This will upload the given video file to the dataset associated with the :class:`dataset_client <.EncordClientDataset>`.
 
 Uploading images
 """"""""""""""""
@@ -363,27 +359,27 @@ Use the method :meth:`dataset_client.delete_data() <.EncordClientDataset.delete_
     )
 
 
-In case the Video or Image Group belongs to |company|-hosted storage, the corresponding file shall be removed from the Encord-hosted storage.
+In case the Video or Image Group belongs to |company|-hosted storage, the corresponding file will be removed from the Encord-hosted storage.
 
 Please ensure that the list contains Videos/Image Groups from the same dataset which is used to initialise the :class:`dataset_client <.EncordClientDataset>`.
-Any Videos or Image Groups which do not belong to the dataset used for initialisation would be ignored.
+Any Videos or Image Groups which do not belong to the dataset used for initialisation will be ignored.
 
 
 Re-encoding videos
 ------------------
 
-As videos come with various formats, frame rates, etc., one may in rare cases experience some frame-syncing issues on the |platform|.
-Specifically, it can be the case that, e.g., frame 100 on the |platform| does not correspond to the hundredth frame that you load with python.
-A browser test in the |platform| can tell you if you are at risk of experiencing this issue.
+As videos come in various formats, frame rates, etc., one may - in rare cases - experience some frame-syncing issues on the |platform|.
+For example, it might be the case that, e.g., frame 100 on the |platform| does not correspond to the hundredth frame that you load with python.
+We provide a browser test in the |platform| that can tell you if you are at risk of experiencing this issue.
 
 .. TODO: we desperately need a link to documentation here ^
 
-To mitigate such issues, you can re-encode your videos to get a new version of your videos that do not exhibit such issues.
+To mitigate such issues, you can re-encode your videos to get a new version of your videos that do not exhibit these issues.
 
 Trigger a re-encoding task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You re-encode a list of Videos by triggering a task for the same using the |sdk|.
+You re-encode a list of videos by triggering a task for the same using the |sdk|.
 Use the method :meth:`dataset_client.re_encode_data() <.EncordClientDataset.re_encode_data>` to re-encode the list of videos specified
 
 .. tabs::
@@ -409,16 +405,14 @@ Use the method :meth:`dataset_client.re_encode_data() <.EncordClientDataset.re_e
 
 On completion, a ``task_id`` is returned which can be used for monitoring the progress of the task.
 
-Please ensure that the list contains Videos from the same dataset which is used to initialise the EncordClient.
-Any Videos which do not belong to the dataset used for initialisation would be ignored.
+Please ensure that the list contains videos from the same dataset that was used to initialise the :class:`.EncordClient`.
+Any videos which do not belong to the dataset used for initialisation will be ignored.
 
 
 Check the status of a re-encoding task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can monitor the status of an existing Re-encoding Task using this |sdk|.
-
-Use the method :meth:`dataset_client.re_encode_data_status(task_id) <.EncordClientDataset.re_encode_data_status>` to get the status.
+Use the method :meth:`dataset_client.re_encode_data_status(task_id) <.EncordClientDataset.re_encode_data_status>` to get the status of an existing re-encoding task.
 
 .. tabs::
 
@@ -450,8 +444,8 @@ Use the method :meth:`dataset_client.re_encode_data_status(task_id) <.EncordClie
             )
 
 
-The ReEncodeVideoTask contains a field called ``status`` which can take the values
+The :class:`.ReEncodeVideoTask` contains a field called ``status`` which can take the values
 
-#. ``"SUBMITTED"`` means that the task is currently in progress and the status should be checked back again later
-#. ``"DONE"`` means that the task has been completed successfully and the field 'result' would contain metadata about the re-encoded video
-#. ``"ERROR"`` signifies that the task has failed and could not complete the re-encoding
+#. ``"SUBMITTED"``: the task is currently in progress and the status should be checked back again later
+#. ``"DONE"``: the task has been completed successfully and the field 'result' would contain metadata about the re-encoded video
+#. ``"ERROR"``: the task has failed and could not complete the re-encoding
