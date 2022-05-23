@@ -35,7 +35,7 @@ Below, you can find tutorials on how to interact with your datasets when you hav
 Creating a dataset
 ==================
 
-To create a dataset, need to select where your data will be hosted with the appropriate :class:`StorageLocation <encord.orm.dataset.StorageLocation>`.
+To create a dataset, first select where your data will be hosted with the appropriate :class:`StorageLocation <encord.orm.dataset.StorageLocation>`.
 The following example will create a dataset called "Example Title" that will expect data hosted on AWS S3.
 If you just with to upload your data from local storage to |company|, :class:`CORD_STORAGE <encord.orm.dataset.StorageLocation>` would be the appropriate choice.
 
@@ -339,7 +339,7 @@ Adding data from a private cloud
 Deleting data
 -------------
 
-You can remove both Videos and Image Groups from datasets created using both the |platform| and the |sdk|.
+You can remove both videos and image group from datasets created using both the |platform| and the |sdk|.
 Use the method :meth:`dataset_client.delete_data() <.EncordClientDataset.delete_data>` to delete from a dataset.
 
 .. autolink-concat:: section
@@ -359,10 +359,10 @@ Use the method :meth:`dataset_client.delete_data() <.EncordClientDataset.delete_
     )
 
 
-In case the Video or Image Group belongs to |company|-hosted storage, the corresponding file will be removed from the Encord-hosted storage.
+In case the video or image group belongs to |company|-hosted storage, the corresponding file will be removed from the Encord-hosted storage.
 
-Please ensure that the list contains Videos/Image Groups from the same dataset which is used to initialise the :class:`dataset_client <.EncordClientDataset>`.
-Any Videos or Image Groups which do not belong to the dataset used for initialisation will be ignored.
+Please ensure that the list contains videos/image groups from the same dataset which is used to initialise the :class:`dataset_client <.EncordClientDataset>`.
+Any videos or image groups which do not belong to the dataset used for initialisation will be ignored.
 
 
 Re-encoding videos
