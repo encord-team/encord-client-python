@@ -20,17 +20,10 @@ from encord.user_client import EncordUserClient
 # To interact with Encord, you need to authenticate a client. You can find more details
 # :ref:`here <authentication:Authentication>`.
 
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
-    "<your_private_key>"
-)
+user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key("<your_private_key>")
 
 # Find project to work with based on title.
-project: Project = next(
-    (
-        p["project"]
-        for p in user_client.get_projects(title_eq="Your project name")
-    )
-)
+project: Project = next((p["project"] for p in user_client.get_projects(title_eq="Your project name")))
 project_client = user_client.get_project_client(project.project_hash)
 
 # %%
@@ -158,23 +151,17 @@ def include_object_fn_base(
         return False
 
     # Filter reviewed status
-    if (
-        only_approved
-        and not object["reviews"]
-        or not object["reviews"][-1]["approved"]
-    ):
+    if only_approved and not object["reviews"] or not object["reviews"][-1]["approved"]:
         return False
 
     return True
 
 
 # Trick to preselect object_type
-include_object_fn_bbox: Callable[[dict], bool] = partial(
-    include_object_fn_base, object_type=ObjectShape.BOUNDING_BOX
-)
+include_object_fn_bbox: Callable[[dict], bool] = partial(include_object_fn_base, object_type=ObjectShape.BOUNDING_BOX)
 
 #%%
-# Not we can use the iterator and the filter to collect the objects.
+# Now we can use the iterator and the filter to collect the objects.
 
 reviewed_bounding_boxes: List[AnnotationObject] = []
 for label_row in project.label_rows:
@@ -182,9 +169,7 @@ for label_row in project.label_rows:
         continue
 
     label_row_details = project_client.get_label_row(label_row["label_hash"])
-    reviewed_bounding_boxes += list(
-        iterate_over_objects(label_row_details, include_object_fn_bbox)
-    )
+    reviewed_bounding_boxes += list(iterate_over_objects(label_row_details, include_object_fn_bbox))
 
 print(reviewed_bounding_boxes)
 
@@ -234,7 +219,7 @@ print(reviewed_bounding_boxes)
 #             },
 #             file_name="your_file_name.jpg",
 #             frame=None,  # or a number if video annotation,
-#             data_url="<signed_link_to_data_at_encord>"
+#             data_url="<signed_link_to_data>",
 #         )
 #         # ...
 #     ]
@@ -258,11 +243,7 @@ print(reviewed_bounding_boxes)
 # Assuming that the reviewed bounding boxes fetched above have nested attributes, the
 # following code example shows how to get the nested classification information.
 
-print(
-    label_row_details["object_answers"][
-        reviewed_bounding_boxes[-1].object["objectHash"]
-    ]
-)
+print(label_row_details["object_answers"][reviewed_bounding_boxes[-1].object["objectHash"]])
 
 # %%
 # Expected output:
