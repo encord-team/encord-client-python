@@ -1,5 +1,5 @@
 Encord Python SDK API Reference
-================
+===============================
 
 User Client
 ------------
@@ -7,15 +7,47 @@ User Client
     :members:
     :undoc-members:
 
-Utilities - User Client
-------------------------
-.. automodule:: encord.utilities.user_client_utilities
-    :members:
-    :undoc-members:
-
 Client
 ------------
 .. automodule:: encord.client
+    :members:
+    :undoc-members:
+
+..
+    FHV: I don't know why this i here?
+    Utilities - User Client
+    ------------------------
+    .. automodule:: encord.utilities.user_client_utilities
+        :members:
+        :undoc-members:
+
+Project Ontology
+----------------
+.. automodule:: encord.project_ontology.classification_attribute
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.classification_option
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.classification_type
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.object_type
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology_classification
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology_object
     :members:
     :undoc-members:
 
@@ -85,6 +117,9 @@ Configs
 .. automodule:: encord.configs
     :members:
     :undoc-members:
+
+.. autodata:: ENCORD_DOMAIN
+    :noindex:
 
 Exceptions
 ------------

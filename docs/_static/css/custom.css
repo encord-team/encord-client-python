@@ -17,3 +17,22 @@
     padding-bottom: 10px;
     padding-top: 10px;
 }
+
+.navbar-brand > p {
+    margin-left: 5px;
+}
+
+/*
+pre {
+    tab-size: 4;
+    width: 88ch;
+}
+
+div.document {
+    width: 100em;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-right: 0px;
+    margin-left: 0px;
+}
+*/

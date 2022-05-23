@@ -26,30 +26,35 @@ class Project(base_orm.BaseORM):
 
     ORM:
 
-    title,
-    description,
-    editor_ontology,
-    datasets: [
-       {
-            dataset_hash (uid),
-            title,
-            description,
-            dataset_type (internal vs. AWS/GCP/Azure),
-       },
-       ...
-    ],
-    label_rows: [
-        {
-            label_hash (uid),
-            data_hash (uid),
-            dataset_hash (uid),
-            dataset_title,
-            data_title,
-            data_type,
-            label_status
-        },
-        ...
-    ]
+    * title,
+    * description,
+    * editor_ontology,
+    * datasets::
+
+        [
+           {
+                dataset_hash (uid),
+                title,
+                description,
+                dataset_type (internal vs. AWS/GCP/Azure),
+           },
+           ...
+        ],
+    * label_rows::
+
+        [
+            {
+                label_hash (uid),
+                data_hash (uid),
+                dataset_hash (uid),
+                dataset_title,
+                data_title,
+                data_type,
+                label_status
+            },
+            ...
+        ]
+    * annotation_task_status
 
     """
 

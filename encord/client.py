@@ -119,18 +119,21 @@ class EncordClient(object):
         Create and initialize a Encord client from a resource EntityId and API key.
 
         Args:
-            resource_id: either of
-                - A project EntityId string.
-                  If None, uses the ENCORD_PROJECT_ID environment variable.
-                  The CORD_PROJECT_ID environment variable is supported for backwards compatibility.
-                - A dataset EntityId string.
-                  If None, uses the ENCORD_DATASET_ID environment variable.
-                  The CORD_DATASET_ID environment variable is supported for backwards compatibility.
+            resource_id: either of the following
+
+                * A <project_hash>.
+                  If ``None``, uses the ``ENCORD_PROJECT_ID`` environment variable.
+                  The ``CORD_PROJECT_ID`` environment variable is supported for backwards compatibility.
+
+                * A <dataset_hash>.
+                  If ``None``, uses the ``ENCORD_DATASET_ID`` environment variable.
+                  The ``CORD_DATASET_ID`` environment variable is supported for backwards compatibility.
+
             api_key: An API key.
-                     If None, uses the ENCORD_API_KEY environment variable.
-                     The CORD_API_KEY environment variable is supported for backwards compatibility.
+                     If None, uses the ``ENCORD_API_KEY`` environment variable.
+                     The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
             domain: The encord api-server domain.
-                If None, the ENCORD_DOMAIN is used
+                If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
 
         Returns:
             EncordClient: A Encord client instance.
@@ -467,10 +470,11 @@ class EncordClientProject(EncordClient):
 
         return list(map(lambda user: ProjectUser.from_dict(user), users))
 
-    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False):
+    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False) -> str:
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
-        Labels and models are optional
+        Labels and models are optional.
+
         Args:
             copy_datasets: if True, the datasets of the existing project are copied over, and new
                            tasks are created from those datasets
@@ -635,13 +639,14 @@ class EncordClientProject(EncordClient):
 
     def add_object(self, name: str, shape: ObjectShape) -> bool:
         """
-        Add object to an ontology
+        Add object to an ontology.
+
         Args:
             name: the name of the object
-            shape: the shape of the object (BOUNDING_BOX, POLYGON or KEY_POINT)
+            shape: the shape of the object. (BOUNDING_BOX, POLYGON, POLYLINE or KEY_POINT)
 
         Returns:
-            bool
+            True if the object was added successfully and False otherwise.
 
         Raises:
             AuthenticationError: If the project API key is invalid.
@@ -936,36 +941,24 @@ class EncordClientProject(EncordClient):
         Interpolation is supported for bounding box, polygon, and keypoint.
 
         Args:
-            key_frames: Labels for frames to be interpolated. Key frames are consumed in the form:
+            key_frames: Labels for frames to be interpolated. Key frames are consumed in the form::
 
-                "frame": {
-                    "objects": [
-                        {
-                            "objectHash": object_uid,
-                            "featureHash": feature_uid (from editor ontology),
-                            "polygon": {
-                                "0": {
-                                    "x": x1,
-                                    "y": y1,
-                                },
-                                "1": {
-                                    "x": x2,
-                                    "y": y2,
-                                },
-                                "2" {
-                                    "x": x3,
-                                    "y": y3,
-                                },
-                                ...,
-                            }
-                        },
-                        {
-                            ...
-                        }
-                    ]
-                },
-                "frame": {
-                    ...,
+                {
+                    "<frame_number>": {
+                        "objects": [
+                            {
+                                "objectHash": "<object_hash>",
+                                "featureHash": "<feature_hash>",
+                                "polygon": {
+                                    "0": { "x": x1, "y": y1, },
+                                    "1": { "x": x2, "y": y2, },
+                                    # ...,
+                                }
+                            },
+                            # ...
+                        ]
+                    },
+                    # ...,
                 }
 
             objects_to_interpolate: List of object uid's (hashes) of objects to interpolate.
@@ -1007,44 +1000,33 @@ class EncordClientProject(EncordClient):
         """
 
         Args:
-            frames: Labels for frames to be fitted. Frames are consumed in the form:
-
-                "frame": {
-                    "objects": [
-                        {
-                            "objectHash": object_uid,
-                            "featureHash": feature_uid (from editor ontology),
-                            "polygon": {
-                                "0": {
-                                    "x": x1,
-                                    "y": y1,
-                                },
-                                "1": {
-                                    "x": x2,
-                                    "y": y2,
-                                },
-                                "2" {
-                                    "x": x3,
-                                    "y": y3,
-                                },
-                                ...,
-                            }
-                        },
-                        {
-                            ...
-                        }
-                    ]
-                },
-                "frame": {
-                    ...,
-                }
-
-            video: Metadata of the video for which bounding box fitting needs to be run
+            frames: Labels for frames to be fitted. Frames are consumed in the form::
 
                 {
-                    "width" : w,
-                    "height" : h,
+                    "<frame_number>": {
+                        "objects": [
+                            {
+                                "objectHash": "<object_hash>",
+                                "featureHash": "<feature_hash>",
+                                "polygon": {
+                                    "0": { "x": x1, "y": y1, },
+                                    "1": { "x": x2, "y": y2, },
+                                    # ...,
+                                }
+                            },
+                            # ...
+                        ]
+                    },
+                    # ...,
                 }
+
+            video: Metadata of the video for which bounding box fitting needs to be
+                   run::
+
+                        {
+                            "width" : w,
+                            "height" : h,
+                        }
 
         Returns:
             Fitting results: Full set of filled frames including fitted objects.
@@ -1079,10 +1061,10 @@ class EncordClientProject(EncordClient):
         """
         Retrieve information about a video or image group.
 
-        Params:
+        Args:
             data_hash: The uid of the data object
             get_signed_url: Optionally return signed URLs for timed public access to that resource
-                            (default False)
+                (default False)
 
         Returns:
             A consisting of the video (if it exists) and a list of individual images (if they exist)

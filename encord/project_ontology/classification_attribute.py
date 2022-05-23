@@ -7,11 +7,21 @@ from encord.project_ontology.classification_type import ClassificationType
 
 @dataclass
 class ClassificationAttribute:
+    """
+    A dataclass which holds classification attributes.
+    """
+
+    #: A unique (to the ontology) identifier of the attribute.
     id: str
+    #: The descriptive name of the attribute.
     name: str
+    #: What type of attribute it is. E.g., Checkbox or radio button.
     classification_type: ClassificationType
+    #: Whether annotating this attribute is required.
     required: bool
+    #: An 8-character hex string uniquely defining the attribute.
     feature_node_hash: str
+    #: Nested classification options.
     options: Optional[Iterable[ClassificationOption]] = None
 
     def __setattr__(self, name, value):

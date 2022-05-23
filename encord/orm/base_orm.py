@@ -111,14 +111,17 @@ class BaseORM(dict):
             temp_dict[attribute] = row[i]
         return temp_dict
 
-    def to_dic(self, time_str=True):
+    def to_dic(self, time_str: bool = True):
         """
         Conveniently set client object as dict.
         Only considers the dict items, no other object attr will be counted
-        :param time_str: time_str, if set to True, will convert datetime field
-                         to str with format %Y-%m-%d %H:%M:%S
-        If False, will keep the original datetime type. Default will be True.
-        :return:
+
+        Args:
+            time_str: if set to True, will convert datetime field
+                      to str with format %Y-%m-%d %H:%M:%S.
+                      If False, will keep the original datetime type.
+                      Default will be True.
+
         """
         res = {}
         for k, v in self.items():
