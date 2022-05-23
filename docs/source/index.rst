@@ -55,8 +55,8 @@ Please find our documentation on how to perform specific actions below.
    tutorials
 
 
-SDK docs
-========
+SDK Reference
+=============
 .. toctree::
    :maxdepth: 2
 
