@@ -101,14 +101,14 @@ In the example below, a user authenticates with |company| and then fetches all p
 
             [
                 {
-                    'project': {
-                        'created_at': datetime.datetime(...),
-                        'description': 'Example description',
-                        'last_edited_at': datetime.datetime(...),
-                        'project_hash': '<project_hash>',
-                        'title': 'Example title'
+                    "project": {
+                        "created_at": datetime.datetime(...),
+                        "description": "Example description",
+                        "last_edited_at": datetime.datetime(...),
+                        "project_hash": "<project_hash>",
+                        "title": "Example title"
                     },
-                    'user_role': <ProjectUserRole.ADMIN: 0>
+                    "user_role": <ProjectUserRole.ADMIN: 0>
                 },
                 ...
             ]
@@ -207,7 +207,7 @@ You use the ``<project_id>`` and ``<project_api_key>`` to obtain an :ref:`authen
     This capability is only available to project admins.
 
 Creating a master API key with full rights
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is also possible to create or get a master API key with full access to *all* :class:`.APIKeyScopes`.
 The following example show how to get hold of a master key:
@@ -349,72 +349,72 @@ For a |platform|-related description of the |ontology|, please see :xref:`config
 
         .. code-block:: python
 
-            {'classifications': [{'attributes': [{'featureNodeHash': '237c442f',
-                                                  'id': '1.1',
-                                                  'name': 'Radio Example',
-                                                  'options': [{'featureNodeHash': '00fe752c',
-                                                               'id': '1.1.1',
-                                                               'label': 'Cat',
-                                                               'value': 'cat'},
-                                                              {'featureNodeHash': '0538f289',
-                                                               'id': '1.1.2',
-                                                               'label': 'Dog',
-                                                               'value': 'dog'},
-                                                              {'featureNodeHash': '4d2c4767',
-                                                               'id': '1.1.3',
-                                                               'label': 'Horse',
-                                                               'value': 'horse'}],
-                                                  'required': False,
-                                                  'type': 'radio'}],
-                                  'featureNodeHash': '21b68c3b',
-                                  'id': '1'},
-                                 {'attributes': [{'featureNodeHash': 'd7c2ad1b',
-                                                  'id': '2.1',
-                                                  'name': 'Checkbox example',
-                                                  'options': [{'featureNodeHash': '88903c98',
-                                                               'id': '2.1.1',
-                                                               'label': 'check 1: are '
-                                                                        'there people in '
-                                                                        'the image',
-                                                               'value': 'check_1:_are_there_people_in_the_image'},
-                                                              {'featureNodeHash': 'a5c19b1b',
-                                                               'id': '2.1.2',
-                                                               'label': 'check if there is '
-                                                                        'a pink elephant '
-                                                                        'with cat eyes in '
-                                                                        'the image',
-                                                               'value': 'check_if_there_is_a_pink_elephant_with_cat_eyes_in_the_image'}],
-                                                  'required': False,
-                                                  'type': 'checklist'}],
-                                  'featureNodeHash': '59151c93',
-                                  'id': '2'},
-                                 {'attributes': [{'featureNodeHash': '2afbce16',
-                                                  'id': '3.1',
-                                                  'name': 'Text example',
-                                                  'required': False,
-                                                  'type': 'text'}],
-                                  'featureNodeHash': '8161c61a',
-                                  'id': '3'}],
-             'objects': [{'color': '#D33115',
-                          'featureNodeHash': '41d0a534',
-                          'id': '1',
-                          'name': 'cat',
-                          'shape': 'polygon'},
-                         {'color': '#FCDC00',
-                          'featureNodeHash': 'edf21536',
-                          'id': '2',
-                          'name': 'bus',
-                          'shape': 'polygon'},
-                         {'color': '#DBDF00',
-                          'featureNodeHash': '2a9ab898',
-                          'id': '3',
-                          'name': 'airplane',
-                          'shape': 'bounding_box'},
-                         {'color': '#A4DD00',
-                          'featureNodeHash': '56996de1',
-                          'id': '4',
-                          'name': 'bird',
-                          'shape': 'point'}]}
+            {"classifications": [{"attributes": [{"featureNodeHash": "237c442f",
+                                                  "id": "1.1",
+                                                  "name": "Radio Example",
+                                                  "options": [{"featureNodeHash": "00fe752c",
+                                                               "id": "1.1.1",
+                                                               "label": "Cat",
+                                                               "value": "cat"},
+                                                              {"featureNodeHash": "0538f289",
+                                                               "id": "1.1.2",
+                                                               "label": "Dog",
+                                                               "value": "dog"},
+                                                              {"featureNodeHash": "4d2c4767",
+                                                               "id": "1.1.3",
+                                                               "label": "Horse",
+                                                               "value": "horse"}],
+                                                  "required": False,
+                                                  "type": "radio"}],
+                                  "featureNodeHash": "21b68c3b",
+                                  "id": "1"},
+                                 {"attributes": [{"featureNodeHash": "d7c2ad1b",
+                                                  "id": "2.1",
+                                                  "name": "Checkbox example",
+                                                  "options": [{"featureNodeHash": "88903c98",
+                                                               "id": "2.1.1",
+                                                               "label": "check 1: are "
+                                                                        "there people in "
+                                                                        "the image",
+                                                               "value": "check_1:_are_there_people_in_the_image"},
+                                                              {"featureNodeHash": "a5c19b1b",
+                                                               "id": "2.1.2",
+                                                               "label": "check if there is "
+                                                                        "a pink elephant "
+                                                                        "with cat eyes in "
+                                                                        "the image",
+                                                               "value": "check_if_there_is_a_pink_elephant_with_cat_eyes_in_the_image"}],
+                                                  "required": False,
+                                                  "type": "checklist"}],
+                                  "featureNodeHash": "59151c93",
+                                  "id": "2"},
+                                 {"attributes": [{"featureNodeHash": "2afbce16",
+                                                  "id": "3.1",
+                                                  "name": "Text example",
+                                                  "required": False,
+                                                  "type": "text"}],
+                                  "featureNodeHash": "8161c61a",
+                                  "id": "3"}],
+             "objects": [{"color": "#D33115",
+                          "featureNodeHash": "41d0a534",
+                          "id": "1",
+                          "name": "cat",
+                          "shape": "polygon"},
+                         {"color": "#FCDC00",
+                          "featureNodeHash": "edf21536",
+                          "id": "2",
+                          "name": "bus",
+                          "shape": "polygon"},
+                         {"color": "#DBDF00",
+                          "featureNodeHash": "2a9ab898",
+                          "id": "3",
+                          "name": "airplane",
+                          "shape": "bounding_box"},
+                         {"color": "#A4DD00",
+                          "featureNodeHash": "56996de1",
+                          "id": "4",
+                          "name": "bird",
+                          "shape": "point"}]}
 
 
 Adding components to a project ontology
@@ -494,21 +494,21 @@ A label row has this structure:
 .. code-block::
 
     {
-        'label_hash': label_hash (uid),
-        'data_title': data_title,
-        'data_type': data_type,
-        'data_units': data_units,
-        'object_answers': object_answers,
-        'classification_answers': classification_answers,
-        'label_status': label_status,
+        "label_hash": "<label_hash>",
+        "data_title": "<data_title>",
+        "data_type": "<data_type>",
+        "data_units": { ... },
+        "object_answers": { ... },
+        "classification_answers": { ... },
+        "label_status": "<label_status>",
     }
 
 A label row contains a single data unit or a collection of data units together with associated labels, and is specific to a data asset with type video or image group.
 
-1.  A label row with a data asset of type ``video`` contains a single data unit.
-2.  A label row with a data asset of type ``img_group`` contains any number of data units.
+#.  A label row with a data asset of type ``video`` contains a single data unit.
+#.  A label row with a data asset of type ``img_group`` contains any number of data units.
 
-A data unit can have any number of vector labels (e.g. bounding box, polygon, keypoint) and classifications.
+A data unit can have any number of vector labels (e.g. bounding box, polygon, polyline, keypoint) and classifications.
 
 Before you start, make sure that a project client is initialised with the appropriate project ID and API key.
 
@@ -516,29 +516,30 @@ Before you start, make sure that a project client is initialised with the approp
 
     from encord.client import EncordClient
 
-    client = EncordClient.initialise("<project_id>", "<project_api_key>")
+    client = EncordClient.initialise("<project_hash>", "<project_api_key>")
 
 
 Getting label rows
 ------------------
 
-A project's label row IDs (``<label_hash>`` uid) are found in the project information Python JSON (``client.get_project()``), which also contain information about the ``data_title``, ``data_type`` and ``label_status``.
+A project's ``<label_hash>`` is found in the project information ``client.get_project()``, which also contain information about the ``data_title``, ``data_type`` and ``label_status``.
 
 .. code-block::
 
     {
         ...,
-        'label_rows': [{
-            'label_hash': 'sample_label_uid',
-            'data_hash': 'sample_data_uid',
-            'dataset_hash': 'sample_dataset_uid',
-            'dataset_title': 'sample_dataset_title',
-            'data_title': 'sample_data.mp4',
-            'data_type': 'VIDEO',
-            'label_status': 'LABELLED',
-        }, {
-            'label_hash': ...,
-        }]
+        "label_rows": [{
+            "label_hash": "<label_hash>",
+            "data_hash": "<data_hash>",
+            "dataset_hash": "<dataset_hash>",
+            "dataset_title": "<sample_dataset_title>",
+            "data_title": "example.mp4",
+            "data_type": "VIDEO",
+            "label_status": "LABELLED",
+            "annotation_task_status": "IN_REVIEW"
+        },
+        # ...
+        ]
     }
 
 
@@ -546,9 +547,9 @@ Use the client to fetch individual label objects.
 
 .. code-block::
 
-    label = client.get_label_row('sample_label_uid')
+    label = client.get_label_row("<label_hash>")
 
-Use the ``project.get_labels_list()`` method to get a list of label IDs (``<label_hash>``: uid) in a project and fetch all project labels.
+Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels.
 
 .. code-block::
 
@@ -559,91 +560,84 @@ Use the ``project.get_labels_list()`` method to get a list of label IDs (``<labe
         lb = client.get_label_row(label_hash)
         label_rows.append(lb)
 
-The label row object contains data units with signed URLs (``data_link``: string) to the labeled data asset.
-
+The label row object contains data units with signed URLs (``<data_link>``) to the labeled data asset.
 
 .. code-block::
 
     {
-        'label_hash': 'sample_label_uid',
-        'data_hash': 'sample_data_uid',
-        'data_type': 'sample_data_type',
-        'data_units': {
+        "label_hash": "<label_hash>",
+        "data_hash": "data_hash",
+        "data_type": "sample_data_type",
+        "data_units": {
             ...,
-            'sample_data_hash': {
-                'data_hash': 'sample_data_hash',
-                'data_title': 'sample_data_title',
-                'data_link': 'sample_data_link',
-                'data_type': 'sample_data_type',
-                'data_fps': 'sample_dat_fps' # For video
-                'data_sequence': 'sample_sequence_number',
-                'labels': {
-                    ...
-                },
+            "<data_unit_hash>": {
+                "data_hash": "<data_unit_hash>",
+                "data_title": "Example title",
+                "data_link": "<data_link>",
+                "data_type": "img_group",  # or "video"
+                "data_fps": "<fps>" # For videos
+                "data_sequence": "<data_sequence>",  # defines order of data units
+                "labels": { ... },
             },
         },
-        'object_answers': {
-            ...
-        },
-        'classification_answers': {
-            ...
+        "object_answers": { ... },
+        "classification_answers": { ... }
+    }
+
+
+For the ``img_group`` data type, the ``labels`` dictionary contains ``objects`` and ``classifications``.
+
+.. code-block::
+
+    {
+        "objects": {
+            [{object 1}, {object 2}, ...]
+        }
+        "classifications": {
+            [{classification 1}, {classification 2}, ...]
         }
     }
 
-The objects and classifications answer dictionaries contain 'answers', attributes that describe the object or classification.
-This is to avoid storing the information at every frame in the label dictionary.
 
 For the ``video`` data type, the ``labels`` dictionary contains a series of frames.
 
 .. code-block::
 
     {
-        'frame': {
-            'objects': {
+        "<frame>": {
+            "objects": {
                 [{object 1}, {object 2}, ...]
             }
-            'classifications': {
+            "classifications": {
                 [{classification 1}, {classification 2}, ...]
             }
         },
         ...
     }
 
-For the ``img_group`` data type, the ``objects`` and ``classifications`` are spread in ``labels``.
 
-Each frame entry in the labels dictionary must have an ``objects`` and ``classifications`` key with a list of objects and classifications.
-For videos, frames must be in a linearly ordered set.
-
-.. code-block::
-
-    {
-        'frame': {
-            'objects': [{...}],
-            'classifications': [{...}],
-        },
-    }
-
+The objects and classifications answer dictionaries contain 'answers' attributes that describe the object or classification.
+This is to avoid storing the information at every frame in the label dictionary.
 The ``object answers`` dictionary is in the form:
 
 .. code-block::
 
     {
-        'objectHash': {
-            'objectHash': objectHash,
-            'classifications': [{answer 1}, {answer 2}, ...]
+        "objectHash": {
+            "objectHash": objectHash,
+            "classifications": [{answer 1}, {answer 2}, ...]
         },
         ...
     }
 
 The ``classification answers`` dictionary is in the form:
 
-
 .. code-block::
 
     {
-        'classificationHash': {
-            'classificationHash': classificationHash,
-            'classifications': [{answer 1}, {answer 2}, ...]
+        "classificationHash": {
+            "classificationHash": classificationHash,
+            "classifications": [{answer 1}, {answer 2}, ...]
         },
         ...
     }
@@ -652,30 +646,23 @@ The ``classification answers`` dictionary is in the form:
 Saving label rows
 -----------------
 
-Labels are saved to their label row ID (``<label_hash>``: uid) from a label row instance.
-In case you want to save labels for the data which was not labeled before, follow the steps under "Creating label rows" below.
+Labels are saved to their ``<label_hash>`` from a label row instance.
+To save labels for the data which was not labeled before, follow the steps under :ref:`tutorials/projects:Creating a label row` below.
 
 .. code-block::
 
-    client.save_label_row('sample_label_uid', sample_label)
+    client.save_label_row('<label_hash>', sample_label)
 
 Label rows have to be saved in the same format as fetched.
-The function ``construct_answer_dictionaries`` helps construct answer dictionaries for all objects and classifications in the label row if they do not exist, returning a label row object with updated object and classification answer dictionaries.
+The function :meth:`construct_answer_dictionaries() <encord.utilities.label_utilities.construct_answer_dictionaries>` helps construct answer dictionaries for all objects and classifications in the label row if they do not exist, returning a label row object with updated object and classification answer dictionaries.
 
-First, import the label_utilities library.
+.. code-block:: python
 
-.. code-block::
+    from encord.utilities.label_utilities import construct_answer_dictionaries
 
-    from encord.utilities import label_utilities
-
-Then save the labels.
-
-.. code-block::
-
-    sample_label = client.get_label_row('sample_label_uid')
-
+    sample_label = client.get_label_row("sample_label_uid")
     updated_label = label_utilities.construct_answer_dictionaries(sample_label)
-    client.save_label_row('sample_label_uid', updated_label)
+    client.save_label_row(sample_label["label_hash"], updated_label)
 
 
 Creating a label row
@@ -683,59 +670,59 @@ Creating a label row
 
 If you want to save labels to a unit of data (``video``, ``img_group``) for which a label row (and thus a ``<label_hash>``) does not yet exist, you need to first create a label row associated with the data.
 
-1.  Get the data_hash ``<data_hash>`` that you want to create labels for.
-To do this, request all label rows and note the ones that are NOT_LABELLED under 'label_status' (or, where ``<label_hash>`` is None):
+#. Get the data_hash ``<data_hash>`` that you want to create labels for.
+   To do this, request all label rows and note the ones that are NOT_LABELLED under 'label_status' (or, where ``<label_hash>`` is None):
 
-.. code-block::
+   .. code-block:: python
 
-    project = client.get_project()
-    print(project.label_rows)
+       project = client.get_project()
+       print(project.label_rows)
 
-In this example project, we have two videos.
-The first is not labeled so you can use its ``<data_hash>`` uid to create a new label row for this video.
-
-
-.. code-block::
-
-    [
-      {
-      'label_hash': None,
-      'data_hash': '<data_hash>',
-      'data_title': 'sample_video_1.mp4',
-      'cord_type': 0,
-      'data_type': 'VIDEO',
-      'label_status': 'NOT_LABELLED'
-      },
-      {
-      'label_hash': '<label_hash>',
-      'data_hash': '<data_hash>',
-      'data_title': 'sample_video_2.mp4',
-      'cord_type': 0,
-      'data_type': 'VIDEO',
-      'label_status': 'LABELLED'
-      }
-    ]
+   In this example project, we have two videos.
+   The first is not labeled so you can use its ``<data_hash>`` uid to create a new label row for this video.
 
 
-2.  Create the label row:
+   .. code-block::
 
-.. code-block::
+       [
+         {
+         "label_hash": None,
+         "data_hash": "<data_hash>",
+         "data_title": "sample_video_1.mp4",
+         "cord_type": 0,
+         "data_type": "VIDEO",
+         "label_status": "NOT_LABELLED"
+         },
+         {
+         "label_hash": "<label_hash>",
+         "data_hash": "<data_hash>",
+         "data_title": "sample_video_2.mp4',
+         "cord_type": 0,
+         "data_type": "VIDEO",
+         "label_status": "LABELLED"
+         }
+       ]
 
-    data_hash = '<data_hash>'
-    my_label_row = client.create_label_row(data_hash)
+
+#. Create the label row:
+
+    .. code-block:: python
+
+        data_hash = label_row["data_hash"]
+        my_label_row = client.create_label_row(data_hash)
 
 
-The label row will have the expected structure and can be updated as needed.
-You can retrieve its uid via ``my_label_row.label_hash`` and run other operations such as get and save.
+    The label row will have the expected structure and can be updated as needed.
+    You can retrieve its uid via ``my_label_row.label_hash`` and run other operations such as get and save.
 
 Submitting a label row for review
 ---------------------------------
 
-The following method can be used in case you want to submit a label row for review.
+The following method can be used to submit a label row for review.
 
 .. code-block::
 
-    client.submit_label_row_for_review('<label_hash>')
+    client.submit_label_row_for_review("<label_hash>")
 
 The above method will submit the annotation task corresponding to the label row and create the review tasks corresponding to it based on the sampling rate in the project settings.
 
@@ -744,24 +731,23 @@ Getting data rows
 
 A data row contains a data unit, or a collection of data units, and has attributes ``<data_hash>``, ``video``, and ``images``.
 
-
 .. code-block::
 
     {
-        'data_hash': <data_hash>,
-        'video': video,
-        'images': images,
+        "data_hash": <data_hash>,
+        "video": video,
+        "images": [ images ],
     }
 
 
-1.  A data row with a data asset of type ``video`` contains a single data unit in the form of a video
-2.  A data row with a data asset of type ``img_group`` contains as many data units as there are images in the group
+#. A data row with a data asset of type ``video`` contains a single data unit in the form of a video
+#. A data row with a data asset of type ``img_group`` contains as many data units as there are images in the group
 
 Before you start, make sure that a project client is initialised with the appropriate project ID and API key.
 
-.. code-block::
-
-    data_row = client.get_data('<data_hash>', generate_signed_url=True)
+.. code-block:: python
+    # type: Tuple[Optional[dict], Optional[List[dict]]
+    video, images = client.get_data("<data_hash>", generate_signed_url=True)
 
 You can optionally return signed URLs for timed public access to that resource (default is False).
 
@@ -813,10 +799,10 @@ The easiest way to get started with creating a model row is to navigate to the '
 
 Click on the *Model API details* button to toggle a code snippet with create model row API details when you are happy with your selected parameters.
 
-.. code-block::
+.. code-block:: python
 
     from encord.client import EncordClient
-    from encord.constants.model import *
+    from encord.constants.model import FASTER_RCNN
 
     # Initialize project client
     client = EncordClient.initialise(
@@ -824,13 +810,14 @@ Click on the *Model API details* button to toggle a code snippet with create mod
       "<project_api_key>"  # API key
     )
 
-    model_row_uid = client.create_model_row(
-                                title='Sample title',
-                                description='Sample description',  # Optional
-                                features=['feature_uid_1', 'feature_uid_2', ...], #  List of feature feature uid's (hashes) to be included in the model.
-                                model=FASTER_RCNN
-                            )
-    print(model_row_uid)
+    model_row_hash = client.create_model_row(
+        title="Sample title",
+        description="Sample description",  # Optional
+        #  List of feature feature uid's (hashes) to be included in the model.
+        features=["<feature_hash_1>", "<feature_hash_2>", ...],
+        model=FASTER_RCNN
+    )
+    print(model_row_hash)
 
 
 The following models are available, and are all imported using ``from encord.constants.model import *``.
@@ -885,7 +872,7 @@ Click on the *Training API details* button to toggle a code snippet with model t
     # Run training and print resulting model iteration object
     model_iteration = client.model_train(
       <model_uid>,
-      label_rows=['label_row_uid_1', 'label_row_uid_2', ...], # Label row uid's
+      label_rows=["<label_row_1>", "<label_row_2>", ...], # Label row uid's
       epochs=500, # Number of passes through training dataset.
       batch_size=24, # Number of training examples utilized in one iteration.
       weights=fast_ai, # Model weights.
@@ -954,7 +941,7 @@ Click the 'Inference API details' icon next to the download button to toggle a c
     # Run inference and print inference result
     inference_result = client.model_inference(
       "<model_iteration_id>",  # Model iteration ID
-      data_hashes=['video1_data_hash', 'video2_data_hash'],  # List of data_hash values for videos/image groups
+      data_hashes=["video1_data_hash", "video2_data_hash"],  # List of data_hash values for videos/image groups
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
     )
     print(inference_result)
@@ -970,7 +957,7 @@ The default confidence threshold is set to ``0.6``, the default IoU threshold is
 
     inference_result = client.model_inference(
       "<model_iteration_id>",  # Model iteration ID
-      data_hashes=['video1_data_hash', 'video2_data_hash'],  # List of data_hash values for videos/image groups
+      data_hashes=["video1_data_hash", "video2_data_hash"],  # List of data_hash values for videos/image groups
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
       conf_thresh=0.6,  # Set confidence threshold to 0.6
       iou_thresh=0.3,  # Set IoU threshold to 0.3
@@ -986,7 +973,7 @@ In case of locally stored images only JPEG and PNG file types are supported for 
 
     inference_result = client.model_inference(
       "<model_iteration_id>",  # Model iteration ID
-      file_paths=['path/to/file/1.jpg', 'path/to/file/2.jpg'],  # Local file paths to images
+      file_paths=["path/to/file/1.jpg", "path/to/file/2.jpg"],  # Local file paths to images
       detection_frame_range=[1,1],
     )
     print(inference_result)
@@ -998,7 +985,7 @@ For running inference on locally stored videos, only ``mp4`` and ``webm`` video 
 
     inference_result = client.model_inference(
       "<model_iteration_id>",  # Model iteration ID
-      file_paths=['path/to/file/1.mp4', 'path/to/file/2.mp4'],  # Local file paths to videos
+      file_paths=["path/to/file/1.mp4", "path/to/file/2.mp4"],  # Local file paths to videos
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
     )
     print(inference_result)
@@ -1050,9 +1037,9 @@ The client object interpolator allows you to run interpolation algorithms on pro
 
 Interpolation is supported for the following annotation types:
 
-1.  Bounding box
-2.  Polygon
-3.  Keypoint
+#. Bounding box
+#. Polygon
+#. Keypoint
 
 Use the :meth:`.EncordClientProject.object_interpolation` method to run object interpolation.
 
