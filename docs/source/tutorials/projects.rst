@@ -487,7 +487,7 @@ Labels
 ======
 
 .. note::
-    This section is undergoing a review [Tuesday, May 10th 2022].
+    This section is undergoing a review [Monday, May 23rd 2022].
 
 A label row has this structure:
 
@@ -783,7 +783,7 @@ Models
 ======
 
 .. note::
-    This section is undergoing a review [Tuesday, May 10th 2022].
+    This section is undergoing a review [Monday, May 23rd 2022].
 
 The |sdk| allows you to interact with Encord's advanced model features.
 Our model library includes state-of-the-art classification, object detection, segmentation, and pose estimation models.
@@ -1016,7 +1016,7 @@ Algorithms
 ==========
 
 .. note::
-    This section is undergoing a review [Tuesday, May 10th 2022].
+    This section is undergoing a review [Monday, May 23rd 2022].
 
 The |sdk| allows you to interact with Encord's algorithmic automation features.
 Our library includes sampling, augmentation, transformation and labeling algorithms.
@@ -1112,7 +1112,7 @@ Other Resources
 ===============
 
 .. note::
-    This section is undergoing a review [Monday, May 9th 2022].
+    This section is undergoing a review [Monday, May 23rd 2022].
 
 CVAT Integration
 ----------------
