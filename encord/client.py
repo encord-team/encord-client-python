@@ -1073,6 +1073,7 @@ class Project(EncordClient):
         return video, images
 
     def get_websocket_url(self) -> str:
+        return self._config.get_websocket_url()
         return (
             f"{self._config.websocket_endpoint}?"
             f"client_type={2}&"

@@ -170,6 +170,9 @@ class Config(BaseConfig):
         super().__init__(endpoint)
         logger.info("Initialising Encord client with endpoint: %s and resource_id: %s", endpoint, resource_id)
 
+    def get_websocket_url(self):
+        pass  # DENIS: abstractmethod but also backwards compatibility.
+
 
 def get_env_resource_id() -> str:
     project_id = os.environ.get(_ENCORD_PROJECT_ID) or os.environ.get(_CORD_PROJECT_ID)
@@ -259,6 +262,14 @@ class ApiKeyConfig(Config):
     def define_headers(self, data) -> Dict:
         return self._headers
 
+    def get_websocket_url(self):
+        return (
+            f"{self.websocket_endpoint}?"
+            f"client_type={2}&"
+            f"project_hash={self.resource_id}&"
+            f"api_key={self.api_key}"
+        )
+
 
 EncordConfig = ApiKeyConfig
 
@@ -285,6 +296,15 @@ class SshConfig(Config):
             "ResourceType": self._resource_type,
             "Authorization": _get_ssh_authorization_header(self._user_config._public_key_hex, signature),
         }
+
+    def get_websocket_url(self):
+        signature = _get_signature(self.resource_id, self._user_config.private_key)
+        return (
+            f"{self.websocket_endpoint}?"
+            f"client_type={2}&"
+            f"project_hash={self.resource_id}"
+            f"ssh_authorization={_get_ssh_authorization_header(self._user_config._public_key_hex, signature)}"
+        )
 
 
 CordConfig = EncordConfig
