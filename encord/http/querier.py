@@ -84,7 +84,7 @@ class Querier:
             db_object_type,
             uid,
             self._config.write_timeout,
-            payload=payload,
+            payloadØ=payload,
         )
 
         res = self.execute(request)

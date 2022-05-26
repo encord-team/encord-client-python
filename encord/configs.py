@@ -17,7 +17,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from pickle import NONE
-from typing import Dict, Optional
+from typing import Dict, Literal, Optional
 
 import cryptography
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -31,6 +31,7 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 import encord.exceptions
+from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
 
 ENCORD_DOMAIN = "https://api.cord.tech"  #: str: The end-point for interacting with the Encord API.
 ENCORD_PUBLIC_PATH = "/public"
@@ -72,19 +73,79 @@ class BaseConfig(ABC):
         pass
 
 
+def _get_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
+    hash_builder = hashlib.sha256()
+    hash_builder.update(data.encode())
+    contents_hash = hash_builder.digest()
+
+    return private_key.sign(contents_hash)
+
+
+def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
+    return f"{public_key_hex}:{signature.hex()}"
+
+
+class UserConfig(BaseConfig):
+    def __init__(self, private_key: Ed25519PrivateKey, domain: str = ENCORD_DOMAIN):
+        self.private_key: Ed25519PrivateKey = private_key
+        self.public_key: Ed25519PublicKey = private_key.public_key()  # DENIS: check if I can hide this.
+        #  DENIS: make this public?
+        self._public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
+
+        self.domain = domain
+
+        endpoint = domain + ENCORD_PUBLIC_USER_PATH
+        super().__init__(endpoint)
+
+    def define_headers(self, data: str) -> Dict:
+        signature = _get_signature(data, self.private_key)
+
+        return {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": _get_ssh_authorization_header(self._public_key_hex, signature),
+        }
+
+    @staticmethod
+    def from_ssh_private_key(ssh_private_key: str, password: Optional[str] = "", **kwargs):
+        """
+        Instantiate a UserConfig object by the content of a private ssh key.
+
+        Args:
+            ssh_private_key: The content of a private key file.
+            password: The password for the private key file.
+
+        Returns:
+            UserConfig.
+
+        Raises:
+            ValueError: If the provided key content is not of the correct format.
+
+        """
+        key_bytes = ssh_private_key.encode()
+        password_bytes = password and password.encode()
+        private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
+
+        if isinstance(private_key, Ed25519PrivateKey):
+            return UserConfig(private_key, **kwargs)
+        else:
+            raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
+
+
 class Config(BaseConfig):
     """
     Config defining endpoint, project id, API key, and timeouts.
     """
 
-    def define_headers(self, data) -> Dict:
-        return self._headers
+    # def define_headers(self, data) -> Dict:
+    #     return self._headers
 
     def __init__(
         self,
         resource_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-        web_file_path: Optional[str] = None,
+        # DENIS: cannot remove the api_key for backwards compatibility.
+        # api_key: Optional[str] = None,
+        web_file_path: str = ENCORD_PUBLIC_PATH,
         domain: Optional[str] = None,
         websocket_endpoint: str = WEBSOCKET_ENDPOINT,
     ):
@@ -92,20 +153,15 @@ class Config(BaseConfig):
         if resource_id is None:
             resource_id = get_env_resource_id()
 
-        if api_key is None:
-            api_key = get_env_api_key()
-
         self.resource_id = resource_id
-        self.api_key = api_key
+        # self.api_key = api_key
         self.websocket_endpoint = websocket_endpoint
-        self._headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "ResourceID": resource_id,
-            "Authorization": self.api_key,
-        }
-        if web_file_path is None:
-            raise RuntimeError("`web_file_path` must be specified")
+        # self._headers = {
+        #     "Accept": "application/json",
+        #     "Content-Type": "application/json",
+        #     "ResourceID": resource_id,
+        #     "Authorization": self.api_key,
+        # }
         if domain is None:
             raise RuntimeError("`domain` must be specified")
 
@@ -180,7 +236,7 @@ def get_env_ssh_key() -> str:
     return raw_ssh_key
 
 
-class EncordConfig(Config):
+class ApiKeyConfig(Config):
     def __init__(
         self,
         resource_id: Optional[str] = None,
@@ -188,57 +244,47 @@ class EncordConfig(Config):
         domain: Optional[str] = None,
     ):
         web_file_path = ENCORD_PUBLIC_PATH
-        super().__init__(resource_id, api_key, web_file_path=web_file_path, domain=domain)
+        if api_key is None:
+            api_key = get_env_api_key()
+
+        self.api_key = api_key
+        self._headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "ResourceID": resource_id,
+            "Authorization": self.api_key,
+        }
+        super().__init__(resource_id, web_file_path=web_file_path, domain=domain)
+
+    def define_headers(self, data) -> Dict:
+        return self._headers
 
 
-CordConfig = EncordConfig
+EncordConfig = ApiKeyConfig
 
 
-class UserConfig(BaseConfig):
-    def __init__(self, private_key: Ed25519PrivateKey, domain: str = ENCORD_DOMAIN):
-        self.private_key: Ed25519PrivateKey = private_key
-        self.public_key: Ed25519PublicKey = private_key.public_key()
-        self._public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
-
-        self.domain = domain
-
-        endpoint = domain + ENCORD_PUBLIC_USER_PATH
-        super().__init__(endpoint)
+class SshConfig(Config):
+    def __init__(
+        self,
+        user_config: UserConfig,
+        resource_type: str,  # DENIS: typed?
+        resource_id: Optional[str] = None,
+        domain: Optional[str] = None,
+    ):
+        self._user_config = user_config
+        self._resource_type = resource_type
+        # self.resource_id = resource_id
+        super().__init__(resource_id=resource_id, domain=domain)
 
     def define_headers(self, data: str) -> Dict:
-        hash_builder = hashlib.sha256()
-        hash_builder.update(data.encode())
-        contents_hash = hash_builder.digest()
-
-        signature = self.private_key.sign(contents_hash)
-
+        signature = _get_signature(data, self._user_config.private_key)
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": f"{self._public_key_hex}:{signature.hex()}",
+            "ResourceID": self.resource_id,
+            "ResourceType": self._resource_type,
+            "Authorization": _get_ssh_authorization_header(self._user_config._public_key_hex, signature),
         }
 
-    @staticmethod
-    def from_ssh_private_key(ssh_private_key: str, password: Optional[str] = "", **kwargs):
-        """
-        Instantiate a UserConfig object by the content of a private ssh key.
 
-        Args:
-            ssh_private_key: The content of a private key file.
-            password: The password for the private key file.
-
-        Returns:
-            UserConfig.
-
-        Raises:
-            ValueError: If the provided key content is not of the correct format.
-
-        """
-        key_bytes = ssh_private_key.encode()
-        password_bytes = password and password.encode()
-        private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
-
-        if isinstance(private_key, Ed25519PrivateKey):
-            return UserConfig(private_key, **kwargs)
-        else:
-            raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
+CordConfig = EncordConfig

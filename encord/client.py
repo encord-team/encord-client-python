@@ -43,28 +43,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import dateutil
-
 import encord.exceptions
-from encord.configs import ENCORD_DOMAIN, Config, EncordConfig
+
+# DENIS: this change is not backwards compatible in case people are relying on transient imports.
+import encord.orm.dataset as orm_dataset
+import encord.orm.project as orm_project
+from encord.configs import ENCORD_DOMAIN, BaseConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import (
-    AddPrivateDataResponse,
-    Dataset,
-    DatasetData,
-    Image,
-    ImageGroup,
-    ImageGroupOCR,
-    ReEncodeVideoTask,
-    SignedImagesURL,
-    SignedVideoURL,
-    Video,
-)
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -85,13 +75,6 @@ from encord.orm.model import (
     ModelRow,
     ModelTrainingParams,
 )
-from encord.orm.project import (
-    Project,
-    ProjectCopy,
-    ProjectCopyOptions,
-    ProjectDataset,
-    ProjectUsers,
-)
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
@@ -102,11 +85,6 @@ logger = logging.getLogger(__name__)
 
 
 class EncordClient(object):
-    """
-    Encord client. Allows you to query db items associated
-    with a project (e.g. label rows, datasets).
-    """
-
     def __init__(self, querier: Querier, config: Config):
         self._querier = querier
         self._config: Config = config
@@ -142,7 +120,7 @@ class EncordClient(object):
         return EncordClient.initialise_with_config(config)
 
     @staticmethod
-    def initialise_with_config(config: Config) -> Union[EncordClientProject, EncordClientDataset]:
+    def initialise_with_config(config: ApiKeyConfig) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Encord client from a Encord config instance.
 
@@ -195,8 +173,8 @@ class EncordClient(object):
 CordClient = EncordClient
 
 
-class EncordClientDataset(EncordClient):
-    def get_dataset(self) -> Dataset:
+class Dataset(EncordClient):
+    def get_dataset(self) -> orm_dataset.Dataset:
         """
         Retrieve dataset info (pointers to data, labels).
 
@@ -204,14 +182,14 @@ class EncordClientDataset(EncordClient):
             self: Encord client object.
 
         Returns:
-            Dataset: A dataset record instance.
+            orm_dataset.Dataset: A dataset record instance.
 
         Raises:
             AuthorisationError: If the dataset API key is invalid.
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
-        return self._querier.basic_getter(Dataset)
+        return self._querier.basic_getter(orm_dataset.Dataset)
 
     def upload_video(self, file_path: str):
         """
@@ -230,8 +208,8 @@ class EncordClientDataset(EncordClient):
         """
         if os.path.exists(file_path):
             short_name = os.path.basename(file_path)
-            signed_url = self._querier.basic_getter(SignedVideoURL, uid=short_name)
-            res = upload_to_signed_url_list([file_path], [signed_url], self._querier, Video)
+            signed_url = self._querier.basic_getter(orm_dataset.SignedVideoURL, uid=short_name)
+            res = upload_to_signed_url_list([file_path], [signed_url], self._querier, orm_dataset.Video)
             if res:
                 logger.info("Upload complete.")
                 logger.info("Please run client.get_dataset() to refresh.")
@@ -264,10 +242,10 @@ class EncordClientDataset(EncordClient):
             if not os.path.exists(file_path):
                 raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
         short_names = list(map(os.path.basename, file_paths))
-        signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
-        upload_to_signed_url_list(file_paths, signed_urls, self._querier, Image, max_workers)
+        signed_urls = self._querier.basic_getter(orm_dataset.SignedImagesURL, uid=short_names)
+        upload_to_signed_url_list(file_paths, signed_urls, self._querier, orm_dataset.Image, max_workers)
         image_hash_list = list(map(lambda signed_url: signed_url.get("data_hash"), signed_urls))
-        res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={})
+        res = self._querier.basic_setter(orm_dataset.ImageGroup, uid=image_hash_list, payload={})
         if res:
             titles = [video_data.get("title") for video_data in res]
             logger.info("Upload successful! {} created.".format(titles))
@@ -284,7 +262,7 @@ class EncordClientDataset(EncordClient):
             self: Encord client object.
             data_hash: the hash of the image group you'd like to delete
         """
-        self._querier.basic_delete(ImageGroup, uid=data_hash)
+        self._querier.basic_delete(orm_dataset.ImageGroup, uid=data_hash)
 
     def delete_data(self, data_hashes: List[str]):
         """
@@ -295,14 +273,14 @@ class EncordClientDataset(EncordClient):
             data_hashes: list of hash of the videos/image_groups you'd like to delete, all should belong to the same
              dataset
         """
-        self._querier.basic_delete(Video, uid=data_hashes)
+        self._querier.basic_delete(orm_dataset.Video, uid=data_hashes)
 
     def add_private_data_to_dataset(
         self,
         integration_id: str,
         private_files: Union[str, typing.Dict, Path, typing.TextIO],
         ignore_errors: bool = False,
-    ) -> AddPrivateDataResponse:
+    ) -> orm_dataset.AddPrivateDataResponse:
         """
         Append data hosted on private clouds to existing dataset
 
@@ -336,9 +314,9 @@ class EncordClientDataset(EncordClient):
             raise ValueError(f"Type [{type(private_files)}] of argument private_files is not supported")
 
         payload = {"files": files, "integration_id": integration_id, "ignore_errors": ignore_errors}
-        response = self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
+        response = self._querier.basic_setter(orm_dataset.DatasetData, self._config.resource_id, payload=payload)
 
-        return AddPrivateDataResponse.from_dict(response)
+        return orm_dataset.AddPrivateDataResponse.from_dict(response)
 
     def re_encode_data(self, data_hashes: List[str]):
         """
@@ -353,7 +331,7 @@ class EncordClientDataset(EncordClient):
 
         """
         payload = {"data_hash": data_hashes}
-        return self._querier.basic_put(ReEncodeVideoTask, uid=None, payload=payload)
+        return self._querier.basic_put(orm_dataset.ReEncodeVideoTask, uid=None, payload=payload)
 
     def re_encode_data_status(self, job_id: int):
         """
@@ -364,33 +342,34 @@ class EncordClientDataset(EncordClient):
             job_id: id of the async task that was launched to re-encode the videos
 
         Returns:
-            ReEncodeVideoTask: Object containing the status of the task, along with info about the new encoded videos
+            orm_dataset.ReEncodeVideoTask: Object containing the status of the task, along with info about the new encoded videos
              in case the task has been completed
         """
-        return self._querier.basic_getter(ReEncodeVideoTask, uid=job_id)
+        return self._querier.basic_getter(orm_dataset.ReEncodeVideoTask, uid=job_id)
 
-    def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
+    def run_ocr(self, image_group_id: str) -> List[orm_dataset.ImageGroupOCR]:
         """
         Returns an optical character recognition result for a given image group
         Args:
             image_group_id: the id of the image group in this dataset to run OCR on
 
         Returns:
-            Returns a list of ImageGroupOCR objects representing the text and corresponding coordinates
+            Returns a list of orm_dataset.ImageGroupOCR objects representing the text and corresponding coordinates
             found in each frame of the image group
         """
 
         payload = {"image_group_data_hash": image_group_id}
 
-        response = self._querier.get_multiple(ImageGroupOCR, payload=payload)
+        response = self._querier.get_multiple(orm_dataset.ImageGroupOCR, payload=payload)
 
         return response
 
 
+EncordClientDataset = Dataset
 CordClientDataset = EncordClientDataset
 
 
-class EncordClientProject(EncordClient):
+class Project(EncordClient):
     def get_project(self):
         """
         Retrieve project info (pointers to data, labels).
@@ -406,7 +385,7 @@ class EncordClientProject(EncordClient):
             ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while retrieving the project.
         """
-        return self._querier.basic_getter(Project)
+        return self._querier.basic_getter(orm_project.Project)
 
     def list_label_rows(
         self,
@@ -466,7 +445,7 @@ class EncordClientProject(EncordClient):
 
         payload = {"user_emails": user_emails, "user_role": user_role}
 
-        users = self._querier.basic_setter(ProjectUsers, self._config.resource_id, payload=payload)
+        users = self._querier.basic_setter(orm_project.ProjectUsers, self._config.resource_id, payload=payload)
 
         return list(map(lambda user: ProjectUser.from_dict(user), users))
 
@@ -494,13 +473,13 @@ class EncordClientProject(EncordClient):
 
         payload = {"copy_project_options": []}
         if copy_datasets:
-            payload["copy_project_options"].append(ProjectCopyOptions.DATASETS.value)
+            payload["copy_project_options"].append(orm_project.ProjectCopyOptions.DATASETS.value)
         if copy_models:
-            payload["copy_project_options"].append(ProjectCopyOptions.MODELS.value)
+            payload["copy_project_options"].append(orm_project.ProjectCopyOptions.MODELS.value)
         if copy_collaborators:
-            payload["copy_project_options"].append(ProjectCopyOptions.COLLABORATORS.value)
+            payload["copy_project_options"].append(orm_project.ProjectCopyOptions.COLLABORATORS.value)
 
-        return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
+        return self._querier.basic_setter(orm_project.ProjectCopy, self._config.resource_id, payload=payload)
 
     def get_label_row(self, uid: str, get_signed_url: bool = True):
         """
@@ -611,7 +590,7 @@ class EncordClientProject(EncordClient):
             OperationNotAllowed: If the write operation is not allowed by the API key.
         """
         payload = {"dataset_hashes": dataset_hashes}
-        return self._querier.basic_setter(ProjectDataset, uid=None, payload=payload)
+        return self._querier.basic_setter(orm_project.ProjectDataset, uid=None, payload=payload)
 
     def remove_datasets(self, dataset_hashes: List[str]) -> bool:
         """
@@ -630,7 +609,7 @@ class EncordClientProject(EncordClient):
             UnknownError: If an error occurs while removing the datasets from the project.
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
-        return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
+        return self._querier.basic_delete(orm_project.ProjectDataset, uid=dataset_hashes)
 
     def get_project_ontology(self) -> Ontology:
         project = self.get_project()
@@ -1057,7 +1036,9 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
 
-    def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
+    def get_data(
+        self, data_hash: str, get_signed_url: bool = False
+    ) -> Tuple[Optional[orm_dataset.Video], Optional[List[orm_dataset.Image]]]:
         """
         Retrieve information about a video or image group.
 
@@ -1076,18 +1057,18 @@ class EncordClientProject(EncordClient):
         """
         uid = {"data_hash": data_hash, "get_signed_url": get_signed_url}
 
-        dataset_data: DatasetData = self._querier.basic_getter(DatasetData, uid=uid)
+        dataset_data: orm_dataset.DatasetData = self._querier.basic_getter(orm_dataset.DatasetData, uid=uid)
 
-        video: Union[Video, None] = None
+        video: Union[orm_dataset.Video, None] = None
         if dataset_data["video"] is not None:
-            video = Video(dataset_data["video"])
+            video = orm_dataset.Video(dataset_data["video"])
 
-        images: Union[List[Image], None] = None
+        images: Union[List[orm_dataset.Image], None] = None
         if dataset_data["images"] is not None:
             images = []
 
             for image in dataset_data["images"]:
-                images.append(Image(image))
+                images.append(orm_dataset.Image(image))
 
         return video, images
 
@@ -1096,6 +1077,7 @@ class EncordClientProject(EncordClient):
             f"{self._config.websocket_endpoint}?"
             f"client_type={2}&"
             f"project_hash={self._config.resource_id}&"
+            # DENIS: deal with this not being there for SshConfig
             f"api_key={self._config.api_key}"
         )
 
@@ -1120,7 +1102,9 @@ class EncordClientProject(EncordClient):
             bool
         """
         payload = {"editor": ontology.to_dict()}
-        return self._querier.basic_setter(Project, uid=None, payload=payload)
+        return self._querier.basic_setter(orm_project.Project, uid=None, payload=payload)
 
 
+# DENIS: try to do docstrings here.
+EncordClientProject = Project
 CordClientProject = EncordClientProject
