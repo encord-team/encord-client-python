@@ -16,22 +16,17 @@ import hashlib
 import logging
 import os
 from abc import ABC, abstractmethod
-from pickle import NONE
-from typing import Dict, Literal, Optional
+from typing import Dict, Optional
 
 import cryptography
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    PublicFormat,
-    load_ssh_private_key,
-)
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 import encord.exceptions
-from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
+from encord.constants.string_constants import ALL_RESOURCE_TYPES
 
 ENCORD_DOMAIN = "https://api.cord.tech"  #: str: The end-point for interacting with the Encord API.
 ENCORD_PUBLIC_PATH = "/public"
@@ -88,9 +83,8 @@ def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
 class UserConfig(BaseConfig):
     def __init__(self, private_key: Ed25519PrivateKey, domain: str = ENCORD_DOMAIN):
         self.private_key: Ed25519PrivateKey = private_key
-        self.public_key: Ed25519PublicKey = private_key.public_key()  # DENIS: check if I can hide this.
-        #  DENIS: make this public?
-        self._public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
+        self.public_key: Ed25519PublicKey = private_key.public_key()
+        self.public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
 
         self.domain = domain
 
@@ -103,7 +97,7 @@ class UserConfig(BaseConfig):
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": _get_ssh_authorization_header(self._public_key_hex, signature),
+            "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
         }
 
     @staticmethod
@@ -137,14 +131,9 @@ class Config(BaseConfig):
     Config defining endpoint, project id, API key, and timeouts.
     """
 
-    # def define_headers(self, data) -> Dict:
-    #     return self._headers
-
     def __init__(
         self,
         resource_id: Optional[str] = None,
-        # DENIS: cannot remove the api_key for backwards compatibility.
-        # api_key: Optional[str] = None,
         web_file_path: str = ENCORD_PUBLIC_PATH,
         domain: Optional[str] = None,
         websocket_endpoint: str = WEBSOCKET_ENDPOINT,
@@ -154,14 +143,7 @@ class Config(BaseConfig):
             resource_id = get_env_resource_id()
 
         self.resource_id = resource_id
-        # self.api_key = api_key
         self.websocket_endpoint = websocket_endpoint
-        # self._headers = {
-        #     "Accept": "application/json",
-        #     "Content-Type": "application/json",
-        #     "ResourceID": resource_id,
-        #     "Authorization": self.api_key,
-        # }
         if domain is None:
             raise RuntimeError("`domain` must be specified")
 
@@ -170,8 +152,9 @@ class Config(BaseConfig):
         super().__init__(endpoint)
         logger.info("Initialising Encord client with endpoint: %s and resource_id: %s", endpoint, resource_id)
 
+    @abstractmethod
     def get_websocket_url(self):
-        pass  # DENIS: abstractmethod but also backwards compatibility.
+        raise NotImplementedError("The specialised config needs to implement this method.")
 
 
 def get_env_resource_id() -> str:
@@ -272,20 +255,21 @@ class ApiKeyConfig(Config):
 
 
 EncordConfig = ApiKeyConfig
+CordConfig = EncordConfig
 
 
 class SshConfig(Config):
     def __init__(
         self,
         user_config: UserConfig,
-        resource_type: str,  # DENIS: typed?
+        resource_type: str,
         resource_id: Optional[str] = None,
-        domain: Optional[str] = None,
     ):
         self._user_config = user_config
+        if resource_type not in ALL_RESOURCE_TYPES:
+            raise TypeError(f"The passed resource type `{resource_type}` is invalid.")
         self._resource_type = resource_type
-        # self.resource_id = resource_id
-        super().__init__(resource_id=resource_id, domain=domain)
+        super().__init__(resource_id=resource_id, domain=self._user_config.domain)
 
     def define_headers(self, data: str) -> Dict:
         signature = _get_signature(data, self._user_config.private_key)
@@ -294,7 +278,7 @@ class SshConfig(Config):
             "Content-Type": "application/json",
             "ResourceID": self.resource_id,
             "ResourceType": self._resource_type,
-            "Authorization": _get_ssh_authorization_header(self._user_config._public_key_hex, signature),
+            "Authorization": _get_ssh_authorization_header(self._user_config.public_key_hex, signature),
         }
 
     def get_websocket_url(self):
@@ -302,9 +286,6 @@ class SshConfig(Config):
         return (
             f"{self.websocket_endpoint}?"
             f"client_type={2}&"
-            f"project_hash={self.resource_id}"
-            f"ssh_authorization={_get_ssh_authorization_header(self._user_config._public_key_hex, signature)}"
+            f"project_hash={self.resource_id}&"
+            f"ssh_authorization={_get_ssh_authorization_header(self._user_config.public_key_hex, signature)}"
         )
-
-
-CordConfig = EncordConfig

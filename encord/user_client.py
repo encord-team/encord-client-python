@@ -11,23 +11,23 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import dateutil
 
-import encord.orm.dataset as orm_dataset
-import encord.orm.project as orm_project
-
 # add this for backward compatible class comparisons
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.client import (
-    Dataset,
+    DatasetManager,
     EncordClient,
     EncordClientDataset,
     EncordClientProject,
+    ProjectManager,
 )
-from encord.configs import UserConfig, get_env_ssh_key
+from encord.configs import SshConfig, UserConfig, get_env_ssh_key
+from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (  # Dataset,
     CreateDatasetResponse,
+    Dataset,
     DatasetAPIKey,
     DatasetInfo,
     DatasetScope,
@@ -39,6 +39,7 @@ from encord.orm.dataset import (  # Dataset,
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.project import (  # Project,
     CvatExportType,
+    Project,
     ProjectImporter,
     ProjectImporterCvatInfo,
     ReviewMode,
@@ -99,8 +100,18 @@ class EncordUserClient:
         if dataset_description:
             dataset["description"] = dataset_description
 
-        result = self.querier.basic_setter(orm_dataset.Dataset, uid=None, payload=dataset)
+        result = self.querier.basic_setter(Dataset, uid=None, payload=dataset)
         return CreateDatasetResponse.from_dict(result)
+
+    def get_dataset_manager(self, dataset_hash: str):
+        config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
+        querier = Querier(config)
+        return DatasetManager(querier=querier, config=config)
+
+    def get_project_manager(self, project_hash: str):
+        config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
+        querier = Querier(config)
+        return ProjectManager(querier=querier, config=config)
 
     def create_dataset_api_key(
         self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]
@@ -210,12 +221,12 @@ class EncordUserClient:
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
         data = self.querier.get_multiple(ProjectWithUserRole, payload={"filter": properties_filter})
-        return [{"project": orm_project.Project(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
+        return [{"project": Project(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
     def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
         project = {"title": project_title, "description": project_description, "dataset_hashes": dataset_hashes}
 
-        return self.querier.basic_setter(orm_project.Project, uid=None, payload=project)
+        return self.querier.basic_setter(Project, uid=None, payload=project)
 
     def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
         """
@@ -241,15 +252,6 @@ class EncordUserClient:
         """Deprecated??"""
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
         return EncordClient.initialise(project_hash, project_api_key, **kwargs)
-
-    def get_dataset(self, dataset_hash: str):
-        config = self.user_config
-        querier = Querier(config)
-        # DENIS: NOTE: need to modify the config a little bit (create two different classes for example) to make this work.
-        return Dataset(querier=querier, config=config)
-
-    def get_project(self, project_hash: str):
-        pass
 
     def create_project_from_cvat(
         self,
