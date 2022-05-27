@@ -746,6 +746,7 @@ A data row contains a data unit, or a collection of data units, and has attribut
 Before you start, make sure that a project client is initialised with the appropriate project ID and API key.
 
 .. code-block:: python
+
     # type: Tuple[Optional[dict], Optional[List[dict]]
     video, images = client.get_data("<data_hash>", generate_signed_url=True)
 
