@@ -108,6 +108,18 @@ In the example below, a user authenticates with |company| and then fetches all d
     Other keyword arguments such as :meth:`created_before  <.EncordUserClient.get_datasets>` or :meth:`edited_after <.EncordUserClient.get_datasets>` may also be of interest.
 
 
+Managing a dataset
+==================
+Your default choice for interacting with a dataset is via the :ref:`authentication:Public key authentication`.
+
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/datasets/creating_a_dataset_manager.py
+            :language: python
+
 
 API keys
 ========
@@ -148,7 +160,7 @@ The following example show how to get hold of this key:
 Creating a dataset API key with specific rights
 -----------------------------------------------
 
-:ref:`authentication:Authenticate with Encord` using an API key allows you to control which capabilities the dataset client will have.
+:ref:`authentication:API key authentication` using an API key allows you to control which capabilities the dataset client will have.
 This can be useful if you, for example, want to share read-only access with some third-party.
 You need to provide the ``<dataset_hash>``, which uniquely identifies a dataset (see, for example, the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
 If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets:Creating a Dataset`.
@@ -240,7 +252,7 @@ You can add data to datasets in multiple ways.
 You can both use |company| storage, as described next, and you can :ref:`add data from a private cloud <tutorials/datasets:Adding data from a private cloud>` to integrate any pre-existing data.
 
 .. note::
-    The following examples assume that you have an :class:`.EncordClientDataset` initialised as variable ``dataset_client`` and :ref:`authenticated <authentication:Authenticate with Encord>`.
+    The following examples assume that you have an :class:`.DatasetManager` initialised as variable ``dataset_manager`` and :ref:`authenticated <authentication:API key authentication>`.
 
 Adding data to Encord-hosted storage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -256,7 +268,7 @@ Use the method :meth:`upload_video() <.EncordClientDataset.upload_video>` to upl
             I suspect the issue is that, e.g., ``user_client.get_project_client`` returns a ``Union[EncordClientProject, EncordClientDataset]`` and not just an ``EncordClientProject``, so the extension doesn't know which one it is.
             As a consequence, it cannot find the correct link.
 
-            Adding, e.g., ``user_client.get_dataset_client("test")`` to one of the following code blocks yields links, so the preface it self works.
+            Adding, e.g., ``user_client.get_dataset_manager("test")`` to one of the following code blocks yields links, so the preface it self works.
 
             In turn, I suffice with linking to the proper places in the prose surrounding the code examples.
 
@@ -270,15 +282,15 @@ Use the method :meth:`upload_video() <.EncordClientDataset.upload_video>` to upl
 .. autolink-preface::
 
     from encord.client import EncordClientDataset
-    dataset_client = EncordClientDataset()  #  user_client.get_dataset_client("<dataset_hash>")
+    dataset_manager = EncordClientDataset()  #  user_client.get_dataset_manager("<dataset_hash>")
 
 
 .. code-block:: python
 
-    dataset_client.upload_video("path/to/your/video.mp4")
+    dataset_manager.upload_video("path/to/your/video.mp4")
 
 
-This will upload the given video file to the dataset associated with the :class:`dataset_client <.EncordClientDataset>`.
+This will upload the given video file to the dataset associated with the :class:`dataset_manager <.EncordClientDataset>`.
 
 Uploading images
 """"""""""""""""
@@ -290,18 +302,18 @@ Use the method :meth:`create_image_group() <.EncordClientDataset.create_image_gr
 .. autolink-preface::
 
     from encord.client import EncordClientDataset
-    dataset_client = EncordClientDataset()  #  user_client.get_dataset_client("<dataset_hash>")
+    dataset_manager = EncordClientDataset()  #  user_client.get_dataset_manager("<dataset_hash>")
 
 .. code-block:: python
 
-    dataset_client.create_image_group(
+    dataset_manager.create_image_group(
         [
             "path/to/your/img1.jpeg",
             "path/to/your/img2.jpeg",
         ]
     )
 
-This will upload the given list of images to the dataset associated with the :class:`dataset_client <.EncordClientDataset>` and create an image group.
+This will upload the given list of images to the dataset associated with the :class:`dataset_manager <.EncordClientDataset>` and create an image group.
 
 .. note::
 
@@ -318,7 +330,7 @@ Adding data from a private cloud
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #.  Use :meth:`user_client.get_cloud_integrations() <.EncordUserClient.get_cloud_integrations>` method to retrieve a list of available Cloud Integrations
-#.  Grab the id from the integration of your choice and call :meth:`dataset_client.add_private_data_to_dataset() <.EncordClientDataset.add_private_data_to_dataset>` on the ``dataset_client`` with either the absolute path to a json file or a python dictionary in the format specified in the :xref:`private_cloud_section` of the |platform| datasets documentation
+#.  Grab the id from the integration of your choice and call :meth:`dataset_manager.add_private_data_to_dataset() <.EncordClientDataset.add_private_data_to_dataset>` on the ``dataset_manager`` with either the absolute path to a json file or a python dictionary in the format specified in the :xref:`private_cloud_section` of the |platform| datasets documentation
 
 .. tabs::
 
@@ -340,18 +352,18 @@ Deleting data
 -------------
 
 You can remove both videos and image group from datasets created using both the |platform| and the |sdk|.
-Use the method :meth:`dataset_client.delete_data() <.EncordClientDataset.delete_data>` to delete from a dataset.
+Use the method :meth:`dataset_manager.delete_data() <.EncordClientDataset.delete_data>` to delete from a dataset.
 
 .. autolink-concat:: section
 
 .. autolink-preface::
 
     from encord.client import EncordClientDataset
-    dataset_client = EncordClientDataset()
+    dataset_manager = EncordClientDataset()
 
 .. code-block:: python
 
-    dataset_client.delete_data(
+    dataset_manager.delete_data(
         [
             "<video1_data_hash>",
             "<image_group1_data_hash>",
@@ -361,7 +373,7 @@ Use the method :meth:`dataset_client.delete_data() <.EncordClientDataset.delete_
 
 In case the video or image group belongs to |company|-hosted storage, the corresponding file will be removed from the Encord-hosted storage.
 
-Please ensure that the list contains videos/image groups from the same dataset which is used to initialise the :class:`dataset_client <.EncordClientDataset>`.
+Please ensure that the list contains videos/image groups from the same dataset which is used to initialise the :class:`dataset_manager <.EncordClientDataset>`.
 Any videos or image groups which do not belong to the dataset used for initialisation will be ignored.
 
 
@@ -380,7 +392,7 @@ Trigger a re-encoding task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You re-encode a list of videos by triggering a task for the same using the |sdk|.
-Use the method :meth:`dataset_client.re_encode_data() <.EncordClientDataset.re_encode_data>` to re-encode the list of videos specified
+Use the method :meth:`dataset_manager.re_encode_data() <.EncordClientDataset.re_encode_data>` to re-encode the list of videos specified
 
 .. tabs::
 
@@ -388,7 +400,7 @@ Use the method :meth:`dataset_client.re_encode_data() <.EncordClientDataset.re_e
 
         .. code-block:: python
 
-            task_id = dataset_client.re_encode_data(
+            task_id = dataset_manager.re_encode_data(
                 [
                     "video1_data_hash",
                     "video2_data_hash",
@@ -412,7 +424,7 @@ Any videos which do not belong to the dataset used for initialisation will be ig
 Check the status of a re-encoding task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Use the method :meth:`dataset_client.re_encode_data_status(task_id) <.EncordClientDataset.re_encode_data_status>` to get the status of an existing re-encoding task.
+Use the method :meth:`dataset_manager.re_encode_data_status(task_id) <.EncordClientDataset.re_encode_data_status>` to get the status of an existing re-encoding task.
 
 .. tabs::
 
@@ -422,7 +434,7 @@ Use the method :meth:`dataset_client.re_encode_data_status(task_id) <.EncordClie
 
             from encord.orm.dataset import ReEncodeVideoTask
             task: ReEncodeVideoTask = (
-                dataset_client.re_encode_data_status(task_id)
+                dataset_manager.re_encode_data_status(task_id)
             )
             print(task)
 

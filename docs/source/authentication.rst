@@ -11,6 +11,7 @@ You can authenticate with |company| on a user basis by registering an :xref:`ssh
 Public key authentication
 ----------------------------
 Using the public key authentication will give you full access to all the capabilities of the SDK.
+**This is our recommended default authentication method.**
 
 You will need to choose this authentication method to interact with the :class:`EncordUserClient <encord.EncordUserClient>`.
 

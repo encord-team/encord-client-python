@@ -9,6 +9,7 @@ First, we show general concepts like creating a new project from the |sdk|.
 Afterwards, we go into more detail such as working with attributes (e.g. labels),
 and incorporating advanced features such as integrating our automation models and algorithms.
 Make sure that you have associated a :xref:`public-private_key_pair` with |company| before you start.
+If not you can do so by following the :ref:`authentication:Public key authentication` tutorial.
 
 Creating a Project
 ==================
@@ -21,7 +22,7 @@ You can create a new project using the :meth:`create_project() <.EncordUserClien
   For more details on creating datasets, see :ref:`tutorials/datasets:Creating a dataset`.
   This can be set to an empty list
 
-* :meth:`project_description <.EncordClientProject.create_project>`: the description of the project as a string.
+* :meth:`project_description <.EncordUserClient.create_project>`: the description of the project as a string.
   This parameter is optional
 
 :meth:`create_project() <.EncordUserClient.create_project>` will return the ``<project_hash>`` of the created project.
@@ -49,16 +50,16 @@ Copying a project
 Copying a project creates another project with the same ontology and settings [#F1]_.
 You can also decide to copy over the same users, datasets and models (which aren't copied over by default).
 
-The :meth:`copy_project() <.EncordClientProject>` method takes the following parameters, all of which are optional:
+The :meth:`copy_project() <.ProjectManager.copy_project>` method takes the following parameters, all of which are optional:
 
-* ``copy_datasets``: when set to ``True``, the datasets from the original project will be copied over and new tasks will be created from them
-* ``copy_collaborators``:  when set to ``True``, the collaborators from the original project will be copied over with their existing roles
-* ``copy_models``:  when set to ``True``, the models and their training data from the original project will be copied over
+* :meth:`copy_datasets <.ProjectManager.copy_project>`: when set to ``True``, the datasets from the original project will be copied over and new tasks will be created from them
+* :meth:`copy_collaborators <.ProjectManager.copy_project>`:  when set to ``True``, the collaborators from the original project will be copied over with their existing roles
+* :meth:`copy_models <.ProjectManager.copy_project>`:  when set to ``True``, the models and their training data from the original project will be copied over
 
 The parameters above are set to ``False`` by default, meaning you do not need to include any of them if you
 do not want to copy that feature into your new project.
 
-:meth:`copy_project <.EncordClientProject.copy_project>` returns the ``<project_hash>`` of the new project.
+:meth:`copy_project <.ProjectManager.copy_project>` returns the ``<project_hash>`` of the new project.
 
 Here is an example of copying a project:
 
@@ -116,10 +117,10 @@ In the example below, a user authenticates with |company| and then fetches all p
 
 .. note::
 
-    :meth:`.EncordUserClient.get_projects` has multiple optional arguments that allow you to query projects with specific characteristics.
+    :meth:`.EncordUserClient.get_projects` has multiple optional arguments that allow you to perform a filtered search when querying projects.
 
     For example, if you only want projects with titles starting with "Validation", you could use ``user_client.get_projects(title_like="Validation%")``.
-    Other keyword arguments such as :meth:`created_before  <.EncordUserClient.get_datasets>` or :meth:`edited_after <.EncordUserClient.get_datasets>` may also be of interest.
+    Other keyword arguments such as :meth:`created_before  <.EncordUserClient.get_projects>` or :meth:`edited_after <.EncordUserClient.get_projects>` may also be of interest.
 
 
 Adding users to projects
@@ -165,6 +166,18 @@ Note how all users get assigned the same role.
 The return value is a list of :class:`.ProjectUser`.
 Each :class:`.ProjectUser` contains information about email, :class:`.ProjectUserRole` and ``<project_hash>``.
 
+Managing a project
+==================
+Your default choice for interacting with a project is via the :ref:`authentication:Public key authentication`.
+
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/creating_a_project_manager.py
+            :language: python
+
 
 API keys
 ========
@@ -175,7 +188,7 @@ Creating a project API key
 Creating a project API key with specific rights
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can create a project API key through :meth:`create_project_api_key() <.EncordUserClient.create_project_api_key>`, which is required to interact with a project using the project client.
+You can create a project API key through :meth:`create_project_api_key() <.EncordUserClient.create_project_api_key>`, which is required to interact with a project using the :class:`.ProjectManager`.
 
 This method takes three arguments:
 
@@ -293,7 +306,7 @@ To add an existing dataset to a project, you use the ``<dataset_hash>`` as follo
     You need to be an admin of the datasets that you want to add.
 
 .. note::
-    :meth:`add_datasets() <.EncordClientProject.add_datasets>` will throw an error if it is unable to add a dataset to a project.
+    :meth:`add_datasets() <.ProjectManager.add_datasets>` will throw an error if it is unable to add a dataset to a project.
     See the doc-string documentation for further details.
 
 Removing datasets from a project
@@ -321,7 +334,7 @@ To get those hashes, you can follow the example in :ref:`tutorials/datasets:List
     You need to be an admin of the datasets that you want to remove.
 
 .. note::
-    :meth:`remove_datasets() <.EncordClientProject.remove_datasets>` will throw an error if it is unable to remove a dataset from a project.
+    :meth:`remove_datasets() <.ProjectManager.remove_datasets>` will throw an error if it is unable to remove a dataset from a project.
     See the doc-string documentation for further details.
 
 
@@ -433,9 +446,9 @@ Objects are located using a graphical annotation, such as a bounding box or a po
 Adding a classification to an ontology
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here we are in the "cat vs. dog" scenario from above.
-Classifications for cats and dogs are added to an ontology using the :meth:`add_classification() <.EncordClientProject.add_classification>` method.
+Classifications for cats and dogs are added to an ontology using the :meth:`add_classification() <.ProjectManager.add_classification>` method.
 
-The :meth:`add_classification() <.EncordClientProject.add_classification>` method takes the following parameters:
+The :meth:`add_classification() <.ProjectManager.add_classification>` method takes the following parameters:
 
 * ``name``: the description of the classification as a string
 * ``classification_type``: a value from the :class:`.ClassificationType` enum.
@@ -461,9 +474,9 @@ The :meth:`add_classification() <.EncordClientProject.add_classification>` metho
 Adding an object to an ontology
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here we are in the "where is the dog" scenario.
-Objects are added to an existing ontology using the :meth:`add_object() <.EncordClientProject.add_object>` method.
+Objects are added to an existing ontology using the :meth:`add_object() <.ProjectManager.add_object>` method.
 
-The :meth:`add_object() <.EncordClientProject.add_object>` method takes the following parameters:
+The :meth:`add_object() <.ProjectManager.add_object>` method takes the following parameters:
 
 * ``name``: the description of the object as a string
 * ``shape``: the shape of the object used to annotate it of type :class:`.ObjectShape` enum
@@ -510,19 +523,10 @@ A label row contains a single data unit or a collection of data units together w
 
 A data unit can have any number of vector labels (e.g. bounding box, polygon, polyline, keypoint) and classifications.
 
-Before you start, make sure that a project client is initialised with the appropriate project ID and API key.
-
-.. code-block::
-
-    from encord.client import EncordClient
-
-    client = EncordClient.initialise("<project_hash>", "<project_api_key>")
-
-
 Getting label rows
 ------------------
 
-A project's ``<label_hash>`` is found in the project information ``client.get_project()``, which also contain information about the ``data_title``, ``data_type`` and ``label_status``.
+A project's ``<label_hash>`` is found in the project information ``project_manager.get_project()``, which also contain information about the ``data_title``, ``data_type`` and ``label_status``.
 
 .. code-block::
 
@@ -543,21 +547,21 @@ A project's ``<label_hash>`` is found in the project information ``client.get_pr
     }
 
 
-Use the client to fetch individual label objects.
+Use the :class:`.ProjectManager` to fetch individual label objects.
 
 .. code-block::
 
-    label = client.get_label_row("<label_hash>")
+    label = project_manager.get_label_row("<label_hash>")
 
 Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels.
 
 .. code-block::
 
-    project = client.get_project()
+    project = project_manager.get_project()
 
     label_rows = []
     for label_hash in project.get_labels_list():
-        lb = client.get_label_row(label_hash)
+        lb = project_manager.get_label_row(label_hash)
         label_rows.append(lb)
 
 The label row object contains data units with signed URLs (``<data_link>``) to the labeled data asset.
@@ -651,7 +655,7 @@ To save labels for the data which was not labeled before, follow the steps under
 
 .. code-block::
 
-    client.save_label_row('<label_hash>', sample_label)
+    project_manager.save_label_row('<label_hash>', sample_label)
 
 Label rows have to be saved in the same format as fetched.
 The function :meth:`construct_answer_dictionaries() <encord.utilities.label_utilities.construct_answer_dictionaries>` helps construct answer dictionaries for all objects and classifications in the label row if they do not exist, returning a label row object with updated object and classification answer dictionaries.
@@ -660,9 +664,9 @@ The function :meth:`construct_answer_dictionaries() <encord.utilities.label_util
 
     from encord.utilities.label_utilities import construct_answer_dictionaries
 
-    sample_label = client.get_label_row("sample_label_uid")
+    sample_label = project_manager.get_label_row("sample_label_uid")
     updated_label = label_utilities.construct_answer_dictionaries(sample_label)
-    client.save_label_row(sample_label["label_hash"], updated_label)
+    project_manager.save_label_row(sample_label["label_hash"], updated_label)
 
 
 Creating a label row
@@ -675,7 +679,7 @@ If you want to save labels to a unit of data (``video``, ``img_group``) for whic
 
    .. code-block:: python
 
-       project = client.get_project()
+       project = project_manager.get_project()
        print(project.label_rows)
 
    In this example project, we have two videos.
@@ -709,7 +713,7 @@ If you want to save labels to a unit of data (``video``, ``img_group``) for whic
     .. code-block:: python
 
         data_hash = label_row["data_hash"]
-        my_label_row = client.create_label_row(data_hash)
+        my_label_row = project_manager.create_label_row(data_hash)
 
 
     The label row will have the expected structure and can be updated as needed.
@@ -722,7 +726,7 @@ The following method can be used to submit a label row for review.
 
 .. code-block::
 
-    client.submit_label_row_for_review("<label_hash>")
+    project_manager.submit_label_row_for_review("<label_hash>")
 
 The above method will submit the annotation task corresponding to the label row and create the review tasks corresponding to it based on the sampling rate in the project settings.
 
@@ -743,27 +747,24 @@ A data row contains a data unit, or a collection of data units, and has attribut
 #. A data row with a data asset of type ``video`` contains a single data unit in the form of a video
 #. A data row with a data asset of type ``img_group`` contains as many data units as there are images in the group
 
-Before you start, make sure that a project client is initialised with the appropriate project ID and API key.
 
 .. code-block:: python
+
     # type: Tuple[Optional[dict], Optional[List[dict]]
-    video, images = client.get_data("<data_hash>", generate_signed_url=True)
+    video, images = project_manager.get_data("<data_hash>", generate_signed_url=True)
 
 You can optionally return signed URLs for timed public access to that resource (default is False).
 
 Reviewing label logs
 --------------------
 
-You can query information about a project's labels by using the :meth:`get_label_logs() <.EncordClientProject.get_label_logs>` method of a client initialised for that project.
+You can query information about a project's labels by using the :meth:`get_label_logs() <.ProjectManager.get_label_logs>` method of a corresponding :class:`ProjectManager <.ProjectManager>`.
 You will need an API key with the ``label_logs.read`` permission.
-The :meth:`get_label_logs() <.EncordClientProject.get_label_logs>` method takes a number of optional parameters to narrow down the retrieved logs:
+The :meth:`get_label_logs() <.ProjectManager.get_label_logs>` method takes a number of optional parameters to narrow down the retrieved logs:
 
 .. code-block::
 
-    from encord.client import EncordClient
-
-    client = EncordClient.initialise("<project_id>", "<project_api_key>")
-    logs = client.get_label_logs(user_hash=<user_hash>)
+    logs = project_manager.get_label_logs(user_hash=<user_hash>)
     for log in logs:
         print(log)
 
@@ -801,16 +802,9 @@ Click on the *Model API details* button to toggle a code snippet with create mod
 
 .. code-block:: python
 
-    from encord.client import EncordClient
     from encord.constants.model import FASTER_RCNN
 
-    # Initialize project client
-    client = EncordClient.initialise(
-      "<project_id>",  # Project ID
-      "<project_api_key>"  # API key
-    )
-
-    model_row_hash = client.create_model_row(
+    model_row_hash = project_manager.create_model_row(
         title="Sample title",
         description="Sample description",  # Optional
         #  List of feature feature uid's (hashes) to be included in the model.
@@ -860,17 +854,10 @@ Click on the *Training API details* button to toggle a code snippet with model t
 
 .. code-block::
 
-    from encord.client import EncordClient
     from encord.constants.model_weights import *
 
-    # Initialize project client
-    client = EncordClient.initialise(
-      "<project_id>",  # Project ID
-      "<project_api_key>"  # API key with model.train access
-    )
-
     # Run training and print resulting model iteration object
-    model_iteration = client.model_train(
+    model_iteration = project_manager.model_train(
       <model_uid>,
       label_rows=["<label_row_1>", "<label_row_2>", ...], # Label row uid's
       epochs=500, # Number of passes through training dataset.
@@ -930,16 +917,8 @@ Click the 'Inference API details' icon next to the download button to toggle a c
 
 .. code-block::
 
-    from encord.client import EncordClient
-
-    # Initialize project client
-    client = EncordClient.initialise(
-      "<project_id>",  # Project ID
-      "<project_api_key>"  # API key with model.inference access
-    )
-
     # Run inference and print inference result
-    inference_result = client.model_inference(
+    inference_result = project_manager.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       data_hashes=["video1_data_hash", "video2_data_hash"],  # List of data_hash values for videos/image groups
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
@@ -955,7 +934,7 @@ The default confidence threshold is set to ``0.6``, the default IoU threshold is
 
 .. code-block::
 
-    inference_result = client.model_inference(
+    inference_result = project_manager.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       data_hashes=["video1_data_hash", "video2_data_hash"],  # List of data_hash values for videos/image groups
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
@@ -971,7 +950,7 @@ In case of locally stored images only JPEG and PNG file types are supported for 
 
 .. code-block::
 
-    inference_result = client.model_inference(
+    inference_result = project_manager.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       file_paths=["path/to/file/1.jpg", "path/to/file/2.jpg"],  # Local file paths to images
       detection_frame_range=[1,1],
@@ -983,7 +962,7 @@ For running inference on locally stored videos, only ``mp4`` and ``webm`` video 
 
 .. code-block::
 
-    inference_result = client.model_inference(
+    inference_result = project_manager.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       file_paths=["path/to/file/1.mp4", "path/to/file/2.mp4"],  # Local file paths to videos
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
@@ -995,7 +974,7 @@ The model inference API also accepts a list of base64 encoded strings.
 
 .. code-block::
 
-    inference_result = client.model_inference(
+    inference_result = project_manager.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       base64_strings=[base64_str_1, base_64_str_2],  # Base 64 encoded strings of images/videos
       detection_frame_range=[1,1],
@@ -1021,19 +1000,11 @@ Algorithms
 The |sdk| allows you to interact with Encord's algorithmic automation features.
 Our library includes sampling, augmentation, transformation and labeling algorithms.
 
-To get started with our algorithmic automation features, make you have created an API key with ``algo.library`` added to access scopes and initialised a project client with the appropriate project ID and API key.
-
-.. code-block::
-
-    from encord.client import EncordClient
-    client = EncordClient.initialise("<resource_id>", "<resource_api_key>")
-
-
 
 Object interpolation
 --------------------
 
-The client object interpolator allows you to run interpolation algorithms on project labels (requires a project ontology).
+The :class:`.ProjectManager` object interpolator allows you to run interpolation algorithms on project labels (requires a project ontology).
 
 Interpolation is supported for the following annotation types:
 
@@ -1041,7 +1012,7 @@ Interpolation is supported for the following annotation types:
 #. Polygon
 #. Keypoint
 
-Use the :meth:`.EncordClientProject.object_interpolation` method to run object interpolation.
+Use the :meth:`.ProjectManager.object_interpolation` method to run object interpolation.
 
 Key frames, between which interpolation is run, can be obtained from label rows containing videos.
 The objects to interpolate between key frames is a list of ``<object_hash>`` values obtained from the ``label_row["labels"]["<frame_number>"]["objects"]`` entry in the label row.
@@ -1056,14 +1027,14 @@ The interpolation algorithm can be run on multiple objects with different ontolo
         .. code-block:: python
 
             # Fetch label row
-            sample_label = client.get_label_row("sample_label_uid")
+            sample_label = project_manager.get_label_row("sample_label_uid")
 
             # Prepare interpolation
             key_frames = sample_label["data_units"]["sample_data_hash"]["labels"]
             objects_to_interpolate = ["sample_object_uid"]
 
             # Run interpolation
-            interpolation_result = client.object_interpolation(key_frames, objects_to_interpolate)
+            interpolation_result = project_manager.object_interpolation(key_frames, objects_to_interpolate)
             print(interpolation_result)
 
     .. tab:: Example output
@@ -1103,7 +1074,7 @@ The interpolation algorithm can be run on multiple objects with different ontolo
             }
 
 
-The interpolation algorithm can also be run from sample frames kept locally, with ``key_frames`` passed in a simple JSON structure (see :meth:`doc-strings <.EncordClientProject.object_interpolation>`).
+The interpolation algorithm can also be run from sample frames kept locally, with ``key_frames`` passed in a simple JSON structure (see :meth:`doc-strings <.ProjectManager.object_interpolation>`).
 
 All that is required is a ``<feature_hash>`` and ``object_hash`` for each object in your set of key frames.
 
