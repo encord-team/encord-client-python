@@ -25,7 +25,7 @@ from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import (  # Dataset,
+from encord.orm.dataset import (
     CreateDatasetResponse,
     Dataset,
     DatasetAPIKey,
@@ -37,7 +37,7 @@ from encord.orm.dataset import (  # Dataset,
     StorageLocation,
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
-from encord.orm.project import (  # Project,
+from encord.orm.project import (
     CvatExportType,
     Project,
     ProjectImporter,
@@ -103,12 +103,12 @@ class EncordUserClient:
         result = self.querier.basic_setter(Dataset, uid=None, payload=dataset)
         return CreateDatasetResponse.from_dict(result)
 
-    def get_dataset_manager(self, dataset_hash: str):
+    def get_dataset_manager(self, dataset_hash: str) -> DatasetManager:
         config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         querier = Querier(config)
         return DatasetManager(querier=querier, config=config)
 
-    def get_project_manager(self, project_hash: str):
+    def get_project_manager(self, project_hash: str) -> ProjectManager:
         config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
         querier = Querier(config)
         return ProjectManager(querier=querier, config=config)

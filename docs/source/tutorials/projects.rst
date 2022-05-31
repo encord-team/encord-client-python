@@ -166,7 +166,7 @@ The return value is a list of :class:`.ProjectUser`.
 Each :class:`.ProjectUser` contains information about email, :class:`.ProjectUserRole` and ``<project_hash>``.
 
 
-API Keys
+API keys
 ========
 
 Creating a project API key

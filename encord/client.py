@@ -27,7 +27,7 @@ and obtaining project info:
     client.get_project()
 
     Returns:
-        ProjectManager: A project record instance. See Project ORM for details.
+        Project: A project record instance. See Project ORM for details.
 
 """
 
