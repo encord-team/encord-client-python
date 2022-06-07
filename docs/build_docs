@@ -9,6 +9,5 @@ poetry run isort . --resolve-all-configs
 echo "Black"
 poetry run black . --include ".*\.py" --line-length 80
 
-poetry run python -c "from PIL import Image; print(Image)"
-
+poetry run make clean
 poetry run make html
