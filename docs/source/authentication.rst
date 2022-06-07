@@ -23,7 +23,7 @@ You can use the client to interact with a :ref:`general_concepts:Dataset` or a :
 
 API key authentication
 ----------------------
-You can additionally access a specific project or dataset via the API key authentication.
+You can access a specific project or dataset via API key authentication.
 An individual API key is always tied to one specific project or dataset.
 
 We only recommend you to use this authentication if
