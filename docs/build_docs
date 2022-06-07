@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(poetry env info --path)/bin/activate
+
+echo "Isort"
+# isort ./**/*.py --profile black --line-length 60
+isort . --resolve-all-configs
+
+echo "Black"
+black . --include ".*\.py" --line-length 80
+
+make html

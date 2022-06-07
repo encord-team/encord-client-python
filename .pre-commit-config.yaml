@@ -1,7 +1,8 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 21.12b0
+  - repo: local
     hooks:
       - id: black
-        language_version: python3.7
-        files: "encord\/.*"
+        name: black
+        entry: poetry run black --config=pyproject.toml
+        types_or: [ python, pyi ]
+        language: system

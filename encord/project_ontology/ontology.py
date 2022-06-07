@@ -11,6 +11,9 @@ from encord.project_ontology.ontology_object import OntologyObject
 
 # removal may require calling label/delete/object and label/delete/attribute
 def generate_feature_node_hash() -> str:
+    """
+    Utility function to generate an 8-character hex string.
+    """
     return str(uuid.uuid4())[0:8]
 
 
@@ -61,6 +64,12 @@ class Ontology:
 
     @classmethod
     def from_dict(cls, ontology_dict: Dict):
+        """
+        Convert python dictionary too an :class:`.Ontology` object.
+
+        Args:
+            ontology_dict: The dictionary to convert.
+        """
         ontology = Ontology()
         ontology.ontology_objects = cls.__build_ontology_objects(ontology_dict["objects"])
         ontology.ontology_classifications = cls.__build_ontology_classifications(ontology_dict["classifications"])
@@ -118,6 +127,14 @@ class Ontology:
         return options
 
     def add_object(self, name: str, shape: ObjectShape) -> None:
+        """
+        Add an :class:`.OntologyObject` to the ontology.
+
+        Args:
+            name: A descriptive name of the object.
+            shape: The shape of the object.
+
+        """
         ontology_object = OntologyObject(
             str(self.__current_object_id()), self.COLORS[self.color_index], name, shape, generate_feature_node_hash()
         )
@@ -131,6 +148,16 @@ class Ontology:
         required: bool,
         options: Optional[Iterable[str]] = None,
     ) -> None:
+        """
+        Add a classification to the ontology.
+
+        Args:
+             name: A descriptive name of the classification.
+             classification_type: The type of the classification.
+             required: Indicate whether annotating this classification is required.
+             options: Nested classification options.
+
+        """
         ontology_classification = OntologyClassification(
             str(self.__current_classification_id()),
             generate_feature_node_hash(),
@@ -164,6 +191,9 @@ class Ontology:
         return classification_attribute
 
     def to_dict(self) -> dict:
+        """
+        Convert the ontology object to a python dictionary.
+        """
         objects = []
         classifications = []
 

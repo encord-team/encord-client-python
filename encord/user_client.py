@@ -14,7 +14,7 @@ import dateutil
 # add this for backward compatible class comparisons
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
-from encord.configs import UserConfig
+from encord.configs import UserConfig, get_env_ssh_key
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
 from encord.orm.cloud_integration import CloudIntegration
@@ -163,7 +163,12 @@ class EncordUserClient:
         ]
 
     @staticmethod
-    def create_with_ssh_private_key(ssh_private_key: str, password: str = None, **kwargs) -> EncordUserClient:
+    def create_with_ssh_private_key(
+        ssh_private_key: Optional[str] = None, password: str = None, **kwargs
+    ) -> EncordUserClient:
+        if not ssh_private_key:
+            ssh_private_key = get_env_ssh_key()
+
         user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
         querier = Querier(user_config)
 
@@ -240,6 +245,7 @@ class EncordUserClient:
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
             your images and annotations into encord. Ensure that during you have the "Save images"
             checkbox enabled when exporting from CVAT.
+
         Args:
             import_method:
                 The chosen import method. See the `ImportMethod` class for details.
@@ -407,7 +413,7 @@ class ListingFilter(Enum):
     """
     Available properties_filter keys for get_projects() and get_datasets().
 
-    The values for *_before and *_after should be datetime objects.
+    The values for *_before* and *_after* should be datetime objects.
     """
 
     TITLE_EQ = "title_eq"

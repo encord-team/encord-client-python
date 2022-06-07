@@ -1,0 +1,58 @@
+{
+  "create_project_on_platform": {
+    "user_text": "Create Project on Platform",
+    "url": "https://docs.encord.com/docs/projects/new-project"
+  },
+  "docs_main_entry": {
+    "user_text": "Web-app Documentation",
+    "url": "https://docs.encord.com/docs/client"
+  },
+  "add_your_public_ssh_key": {
+    "user_text": "add your public ssh key",
+    "url": "https://docs.encord.com/docs/sdk-and-api/sdk/public-key"
+  },
+  "project": {
+    "user_text": "Project",
+    "url": "https://docs.encord.com/docs/projects/projects-view"
+  },
+  "dataset": {
+    "user_text": "Dataset",
+    "url": "https://docs.encord.com/docs/datasets/datasets-view"
+  },
+  "public_keys": {
+    "user_text": "Public keys",
+    "url": "https://docs.encord.com/docs/admins/settings/public-keys"
+  },
+  "navigation_bar": {
+    "user_text": "Navigation bar",
+    "url": "https://docs.encord.com/docs/getting-started/navigation-bar"
+  },
+  "login_url": {
+    "user_text": "Login URL",
+    "url": "https://app.encord.com"
+  },
+  "public-private_key_pair": {
+    "user_text": "public-private key pair",
+    "url": "https://docs.encord.com/docs/admins/settings/public-keys"
+  },
+  "private_cloud_section": {
+    "user_text": "Private cloud section",
+    "url": "https://docs.encord.com/docs/datasets/private-cloud-integration#json-format"
+  },
+  "configure_label_editor_(ontology)": {
+    "user_text": "Configure label editor (ontology)",
+    "url": "https://docs.encord.com/docs/projects/new-project#3-configure-label-editor-ontology"
+  },
+  "hello@encord.com": {
+    "user_text": "hello@encord.com",
+    "url": "mailto:hello@encord.com"
+  },
+  "create_model_guidelines": {
+    "user_text": "Create model guidelines",
+    "url": "https://docs.encord.com/docs/automate/training"
+  },
+  "cvat": {
+    "user_text": "CVAT",
+    "url": "https://github.com/openvinotoolkit/cvat"
+  }
+}
