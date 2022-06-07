@@ -28,7 +28,7 @@ An individual API key is always tied to one specific project or dataset.
 
 We only recommend you to use this authentication if
 
-* You do not have the access rights to access a project or dataset
+* You do not have user access rights for a project or dataset
 * You want to access a project or dataset as part of an automated pipeline without using a user access
 
 
