@@ -104,11 +104,30 @@ class EncordUserClient:
         return CreateDatasetResponse.from_dict(result)
 
     def get_dataset_manager(self, dataset_hash: str) -> DatasetManager:
+        """
+        Get a `DatasetManager` to interact with a specific project. This DatasetManager will be authenticated for all
+        operations if
+            * You are a dataset admin or
+            * You are an organisation admin of the organisation that holds the project
+
+        Args:
+            dataset_hash: The hash value under the Dataset ID
+        """
         config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         querier = Querier(config)
         return DatasetManager(querier=querier, config=config)
 
     def get_project_manager(self, project_hash: str) -> ProjectManager:
+        """
+        Get a `ProjectManager` to interact with a specific project. This ProjectManager will be authenticated for all
+        operations if
+            * You are a project admin or
+            * You are a project team manager or
+            * You are an organisation admin of the organisation that holds the project
+
+        Args:
+            project_hash: The hash value under the Project ID
+        """
         config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
         querier = Querier(config)
         return ProjectManager(querier=querier, config=config)
@@ -244,12 +263,16 @@ class EncordUserClient:
         return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
 
     def get_dataset_client(self, dataset_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
-        """Deprecated??"""
+        """
+        DEPRECATED - prefer using `get_dataset_manager()` instead.
+        """
         dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
         return EncordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
 
     def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
-        """Deprecated??"""
+        """
+        DEPRECATED - prefer using `get_project_manager()` instead.
+        """
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
         return EncordClient.initialise(project_hash, project_api_key, **kwargs)
 

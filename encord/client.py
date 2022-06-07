@@ -19,8 +19,6 @@ to query project resources through the Encord API.
 Here is a simple example for instantiating the client for a project
 and obtaining project info:
 
-.. test_blurb2.py code::
-
     from encord.client import EncordClient
 
     client = EncordClient.initialize('YourProjectID', 'YourAPIKey')
