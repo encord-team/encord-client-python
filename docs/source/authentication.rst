@@ -74,7 +74,7 @@ Once you have registered a public key or created an API key, you can authenticat
 Public key authentication with the SDK
 --------------------------------------------------
 
-If you are using public key authentication, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
+After registering your public key, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
 Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`.ProjectManager` or :class:`.DatasetManager` objects tied to them
 
 .. literalinclude:: code_examples/authenticate_ssh.py
