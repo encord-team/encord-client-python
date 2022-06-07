@@ -7,7 +7,7 @@
 
 
 Welcome to the |company| Python SDK reference!
-===========================================
+==============================================
 
 To use the |company| Python SDK, you first need to have a way to authenticate the client.
 If you haven't logged in to the platform and added a :xref:`public-private_key_pair`, please do so before using the |sdk|.
