@@ -15,7 +15,7 @@ Public key authentication gives you full access to all the capabilities of the S
 
 Public key authentication is required to use the :class:`.EncordUserClient`.
 
-This authentication method will also allow you to interact with a :ref:`general_concepts:Dataset` or a :ref:`general_concepts:Project` assuming you are either of the following:
+You can use the client to interact with a :ref:`general_concepts:Dataset` or a :ref:`general_concepts:Project` assuming you are either of the following:
 
 * An organisation admin of the organisation this project or dataset is part of
 * A project admin or project manager of the project that is being accessed
