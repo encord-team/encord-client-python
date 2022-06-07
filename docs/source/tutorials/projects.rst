@@ -181,6 +181,8 @@ Your default choice for interacting with a project is via the :ref:`authenticati
 
 API keys
 ========
+We recommend using a :class:`.ProjectManager` as described in :ref:`tutorials/projects:Managing a project`.
+This will be simpler than dealing with API keys which should only be used under specific circumstances as described in :ref:`authentication:API key authentication`.
 
 Creating a project API key
 --------------------------

@@ -13,7 +13,7 @@ Public key authentication
 Using the public key authentication will give you full access to all the capabilities of the SDK.
 **This is our recommended default authentication method.**
 
-You will need to choose this authentication method to interact with the :class:`EncordUserClient <encord.EncordUserClient>`.
+You will need to choose this authentication method to interact with the :class:`.EncordUserClient`.
 
 This authentication method will also allow you to interact with a :ref:`general_concepts:Dataset` or a :ref:`general_concepts:Project` assuming you are either of the following:
 
@@ -75,7 +75,7 @@ Public key authentication with the SDK
 --------------------------------------------------
 
 If you are using public key authentication, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
-Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`encord.ProjectManager` or :class:`encord.DatasetManager` objects tied to them
+Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`.ProjectManager` or :class:`.DatasetManager` objects tied to them
 
 .. literalinclude:: code_examples/authenticate_ssh.py
     :language: python
@@ -86,7 +86,11 @@ API key authentication with the SDK
 --------------------------------------------
 
 If you are using API key authentication, authenticate with |company| by passing the resource ID (project or dataset ID) and associated API key to an :class:`.EncordClient`.
-This will directly create an :class:`.EncordClient` to interact with a specific project or dataset
+This will directly create an :class:`.EncordClient` to interact with a specific project or dataset.
 
 .. literalinclude:: code_examples/authenticate_api_key.py
     :language: python
+
+.. note::
+    The :class:`encord.client.EncordClientProject` is functionally equivalent to the :class:`.ProjectManager`.
+    The :class:`encord.client.EncordClientDataset` is functionally equivalent to the :class:`.DatasetManager`.

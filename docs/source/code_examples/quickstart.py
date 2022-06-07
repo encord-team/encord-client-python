@@ -5,7 +5,7 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     password="<your_private_key_password_if_necessary>",
 )
 
-# Get the project client
+# Get the project manager
 project_hash: str = next((p["project"]["project_hash"] for p in user_client.get_projects()))
 project_manager: ProjectManager = user_client.get_project_manager(project_hash)
 
