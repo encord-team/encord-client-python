@@ -13,7 +13,7 @@ Public key authentication
 Public key authentication gives you full access to all the capabilities of the SDK.
 **This is our recommended default authentication method.**
 
-You will need to choose this authentication method to interact with the :class:`.EncordUserClient`.
+Public key authentication is required to use the :class:`.EncordUserClient`.
 
 This authentication method will also allow you to interact with a :ref:`general_concepts:Dataset` or a :ref:`general_concepts:Project` assuming you are either of the following:
 
