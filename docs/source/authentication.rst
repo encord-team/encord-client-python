@@ -46,7 +46,7 @@ Create an API key
 API keys are tied to specific projects or datasets.
 You can generate multiple keys for each project or dataset.
 
-To create an API key you can use the |platform|:
+To create an API key use the |platform|:
 
 #. Log in to your account on :xref:`login_url`
 #. Navigate to the :xref:`project` or :xref:`dataset` tab in the :xref:`navigation_bar`
