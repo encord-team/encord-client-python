@@ -107,7 +107,9 @@ class EncordUserClient:
         """
         Get a `DatasetManager` to interact with a specific project. This DatasetManager will be authenticated for all
         operations if
+
             * You are a dataset admin or
+
             * You are an organisation admin of the organisation that holds the project
 
         Args:
@@ -121,8 +123,11 @@ class EncordUserClient:
         """
         Get a `ProjectManager` to interact with a specific project. This ProjectManager will be authenticated for all
         operations if
+
             * You are a project admin or
+
             * You are a project team manager or
+
             * You are an organisation admin of the organisation that holds the project
 
         Args:
