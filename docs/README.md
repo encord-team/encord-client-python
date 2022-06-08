@@ -6,11 +6,15 @@ To build the documentation, follow these steps:
 ```shell
 > poetry install
 ```
-2. Navigate back to this directory (`docs`) and run
+2. Activate the poetry environment
+```shell
+> poetry shell
+```
+3. Navigate back to this directory (`docs`) and run
 ```shell
 > make html
 ```
-3. You can open the `_build/html/index.html` page to inspect your changes.
+4. You can open the `_build/html/index.html` page to inspect your changes.
 
 ### For those writing docs:
 Instead of `make html`, you can run
