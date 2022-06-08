@@ -186,7 +186,8 @@ class EncordClient(object):
 CordClient = EncordClient
 
 
-class DatasetManager(EncordClient):
+# DENIS: could make this a base and add the `get_dataset` into the impl if we don't want to expose it
+class EncordClientDataset(EncordClient):
     def get_dataset(self) -> Dataset:
         """
         Retrieve dataset info (pointers to data, labels).
@@ -378,11 +379,11 @@ class DatasetManager(EncordClient):
         return response
 
 
-EncordClientDataset = DatasetManager
+# EncordClientDataset = DatasetManager
 CordClientDataset = EncordClientDataset
 
 
-class ProjectManager(EncordClient):
+class EncordClientProject(EncordClient):
     def get_project(self):
         """
         Retrieve project info (pointers to data, labels).
@@ -1109,6 +1110,6 @@ class ProjectManager(EncordClient):
         return self._querier.basic_setter(Project, uid=None, payload=payload)
 
 
-EncordClientProject = ProjectManager
+# EncordClientProject = ProjectManager
 
 CordClientProject = EncordClientProject

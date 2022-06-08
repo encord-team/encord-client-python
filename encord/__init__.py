@@ -1,2 +1,3 @@
-from encord.client import DatasetManager, ProjectManager
+from encord.dataset import Dataset
+from encord.project import Project
 from encord.user_client import EncordUserClient

@@ -13,15 +13,14 @@ import dateutil
 
 # add this for backward compatible class comparisons
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
-from encord.client import (
-    DatasetManager,
+from encord.client import (  # DatasetManager,; ProjectManager,
     EncordClient,
     EncordClientDataset,
     EncordClientProject,
-    ProjectManager,
 )
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
+from encord.dataset import Dataset as DatasetClass
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
 from encord.orm.cloud_integration import CloudIntegration
@@ -103,39 +102,45 @@ class EncordUserClient:
         result = self.querier.basic_setter(Dataset, uid=None, payload=dataset)
         return CreateDatasetResponse.from_dict(result)
 
-    def get_dataset_manager(self, dataset_hash: str) -> DatasetManager:
-        """
-        Get a `DatasetManager` to interact with a specific project. This DatasetManager will be authenticated for all
-        operations if
-
-            * You are a dataset admin or
-
-            * You are an organisation admin of the organisation that holds the project
-
-        Args:
-            dataset_hash: The hash value under the Dataset ID
-        """
+    def get_dataset(self, dataset_hash: str) -> DatasetClass:
         config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         querier = Querier(config)
-        return DatasetManager(querier=querier, config=config)
+        client = EncordClientDataset(querier=querier, config=config)
+        return DatasetClass(client)
 
-    def get_project_manager(self, project_hash: str) -> ProjectManager:
-        """
-        Get a `ProjectManager` to interact with a specific project. This ProjectManager will be authenticated for all
-        operations if
-
-            * You are a project admin or
-
-            * You are a project team manager or
-
-            * You are an organisation admin of the organisation that holds the project
-
-        Args:
-            project_hash: The hash value under the Project ID
-        """
-        config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
-        querier = Querier(config)
-        return ProjectManager(querier=querier, config=config)
+    # def get_dataset_manager(self, dataset_hash: str) -> DatasetManager:
+    #     """
+    #     Get a `DatasetManager` to interact with a specific project. This DatasetManager will be authenticated for all
+    #     operations if
+    #
+    #         * You are a dataset admin or
+    #
+    #         * You are an organisation admin of the organisation that holds the project
+    #
+    #     Args:
+    #         dataset_hash: The hash value under the Dataset ID
+    #     """
+    #     config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
+    #     querier = Querier(config)
+    #     return DatasetManager(querier=querier, config=config)
+    #
+    # def get_project_manager(self, project_hash: str) -> ProjectManager:
+    #     """
+    #     Get a `ProjectManager` to interact with a specific project. This ProjectManager will be authenticated for all
+    #     operations if
+    #
+    #         * You are a project admin or
+    #
+    #         * You are a project team manager or
+    #
+    #         * You are an organisation admin of the organisation that holds the project
+    #
+    #     Args:
+    #         project_hash: The hash value under the Project ID
+    #     """
+    #     config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
+    #     querier = Querier(config)
+    #     return ProjectManager(querier=querier, config=config)
 
     def create_dataset_api_key(
         self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]

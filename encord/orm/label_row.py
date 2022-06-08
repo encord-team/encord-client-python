@@ -16,7 +16,7 @@ import json
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict
+from typing import Dict, List
 
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
@@ -223,7 +223,7 @@ class LabelRowMetadata(Formatter):
     annotation_task_status: AnnotationTaskStatus
 
     @classmethod
-    def from_dict(cls, json_dict: Dict):
+    def from_dict(cls, json_dict: Dict) -> "LabelRowMetadata":
         return LabelRowMetadata(
             json_dict["label_hash"],
             json_dict["data_hash"],
@@ -233,3 +233,10 @@ class LabelRowMetadata(Formatter):
             LabelStatus(json_dict["label_status"]),
             AnnotationTaskStatus(json_dict["annotation_task_status"]),
         )
+
+    @classmethod
+    def from_list(cls, json_list: list) -> List["LabelRowMetadata"]:
+        ret = []
+        for i in json_list:
+            ret.append(cls.from_dict(i))
+        return ret
