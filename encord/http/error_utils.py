@@ -13,15 +13,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from encord.exceptions import *
+from encord.exceptions import ServerError
 
 
-def check_error_response(response, payload=None):
+def check_error_response(error_string: str, error_code: int, payload=None):
     """
     Checks server response.
     Called if HTTP response status code is an error response.
     """
     if payload is not None:
         payload = " with the following message: " + payload
-    message = f"The server has reported a response of type `{response}`{payload}"
+    message = f"The server has reported an error response with error code `{error_code}` and error string `{error_string}`{payload}"
     raise ServerError(message)

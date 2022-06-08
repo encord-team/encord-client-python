@@ -149,9 +149,10 @@ class Querier:
             raise EncordException("Error parsing JSON response: %s" % res.text)
 
         if res_json.get("status") != requests.codes.ok:
-            response = res_json.get("response")
+            error_string = res_json.get("response")
+            error_code = res_json.get("error_code")
             extra_payload = res_json.get("payload")
-            check_error_response(response, extra_payload)
+            check_error_response(error_string, error_code, extra_payload)
 
         session.close()
 

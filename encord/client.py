@@ -225,7 +225,7 @@ class EncordClientDataset(EncordClient):
             Bool.
 
         Raises:
-            UploadOperationNotSupportedError: If trying to upload to external
+            ServerError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
         if os.path.exists(file_path):
@@ -257,7 +257,7 @@ class EncordClientDataset(EncordClient):
             Bool.
 
         Raises:
-            UploadOperationNotSupportedError: If trying to upload to external
+            ServerError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
         for file_path in file_paths:
@@ -571,7 +571,8 @@ class EncordClientProject(EncordClient):
             OperationNotAllowed: If the write operation is not allowed by the API key.
             AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
-            ResourceExistsError: If a label row already exists for this project data. Avoids overriding existing work.
+            ServerError:
+                If a label row already exists for this project data. Avoids overriding existing work.
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload=None)
 
@@ -812,7 +813,7 @@ class EncordClientProject(EncordClient):
             UnknownError: If an error occurs while running inference.
             FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video)
             FileSizeNotSupportedError: If the file size is too big to be supported.
-            DetectionRangeInvalidError: If a detection range is invalid for video inference
+            ServerError: If a detection range is invalid for video inference
         """
         if (file_paths is None and base64_strings is None and data_hashes is None) or (
             file_paths is not None
