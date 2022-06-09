@@ -1,6 +1,10 @@
 import json
 import os
 
+import encord.objects.attribute
+import encord.objects.classification
+import encord.objects.common
+import encord.objects.ontology_object
 from encord.objects import ontology
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -8,33 +12,33 @@ DATA_DIR = os.path.join(CURRENT_DIR, "data")
 
 EXPECTED_ONTOLOGY: ontology.Ontology = ontology.Ontology(
     objects=[
-        ontology.Object(
+        encord.objects.ontology_object.Object(
             uid=1,
             name="Eye",
             color="#D33115",
-            shape=ontology.Shape.BOUNDING_BOX,
+            shape=encord.objects.common.Shape.BOUNDING_BOX,
             feature_node_hash="a55abbeb",
         ),
-        ontology.Object(
+        encord.objects.ontology_object.Object(
             uid=2,
             name="Nose",
             color="#E27300",
-            shape=ontology.Shape.POLYGON,
+            shape=encord.objects.common.Shape.POLYGON,
             feature_node_hash="86648f32",
             attributes=[
-                ontology.ChecklistAttribute(
+                encord.objects.common.ChecklistAttribute(
                     uid=[2, 1],
                     feature_node_hash="1e3e5cad",
                     name="Additional details about the nose",
                     required=True,
                     options=[
-                        ontology.FlatOption(
+                        encord.objects.common.FlatOption(
                             uid=[2, 1, 1],
                             feature_node_hash="2bc17c88",
                             label="Is it a cute nose?",
                             value="is_it_a_cute_nose?",
                         ),
-                        ontology.FlatOption(
+                        encord.objects.common.FlatOption(
                             uid=[2, 1, 2],
                             feature_node_hash="86eaa4f2",
                             label="Is it a wet nose? ",
@@ -44,26 +48,26 @@ EXPECTED_ONTOLOGY: ontology.Ontology = ontology.Ontology(
                 )
             ],
         ),
-        ontology.Object(
+        encord.objects.ontology_object.Object(
             uid=3,
             name="Example",
             color="#FE9200",
-            shape=ontology.Shape.BOUNDING_BOX,
+            shape=encord.objects.common.Shape.BOUNDING_BOX,
             feature_node_hash="6eeba59b",
             attributes=[
-                ontology.RadioAttribute(
+                encord.objects.common.RadioAttribute(
                     uid=[4, 1],
                     feature_node_hash="cabfedb5",
                     name="Radio with options",
                     required=False,
                     options=[
-                        ontology.NestableOption(
+                        encord.objects.common.NestableOption(
                             uid=[4, 1, 1],
                             feature_node_hash="5d102ce6",
                             label="Nested Option",
                             value="nested_option",
                             nested_options=[
-                                ontology.RadioAttribute(
+                                encord.objects.common.RadioAttribute(
                                     uid=[4, 1, 1, 1],
                                     feature_node_hash="59204845",
                                     name="Leaf",
@@ -77,23 +81,23 @@ EXPECTED_ONTOLOGY: ontology.Ontology = ontology.Ontology(
         ),
     ],
     classifications=[
-        ontology.Classification(
+        encord.objects.classification.Classification(
             uid=1,
             feature_node_hash="a39d81c0",
             attributes=[
-                ontology.RadioAttribute(
+                encord.objects.common.RadioAttribute(
                     uid=[1, 1],
                     feature_node_hash="a6136d14",
                     name="Is the cat standing?",
                     required=True,
                     options=[
-                        ontology.NestableOption(
+                        encord.objects.common.NestableOption(
                             uid=[1, 1, 1],
                             feature_node_hash="a3aeb48d",
                             label="Yes",
                             value="yes",
                         ),
-                        ontology.NestableOption(
+                        encord.objects.common.NestableOption(
                             uid=[1, 1, 2],
                             feature_node_hash="d0a4b373",
                             label="No",
