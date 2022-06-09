@@ -15,7 +15,7 @@ import dateutil
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
-from encord.constants.string_constants import TYPE_DATASET
+from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
@@ -89,7 +89,7 @@ class EncordUserClient:
         Args:
             project_hash: The Project ID
         """
-        config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=project_hash)
+        config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
         querier = Querier(config)
         client = EncordClientProject(querier=querier, config=config)
         return Project(client)

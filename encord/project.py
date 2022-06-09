@@ -3,6 +3,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels
+from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
@@ -138,7 +139,7 @@ class Project:
         edited_after: Optional[Union[str, datetime.datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
     ) -> List[LabelRowMetadata]:
-        return self._client.list_label_rows(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.list_label_rows(edited_before, edited_after, label_statuses)
 
     def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
         """
@@ -156,7 +157,7 @@ class Project:
             AuthorisationError: If the label_hash provided is invalid or not a member of the project.
             UnknownError: If an error occurs while updating the status.
         """
-        return self._client.set_label_status(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.set_label_status(label_hash, label_status)
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """
@@ -174,7 +175,7 @@ class Project:
             ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while adding the users to the project
         """
-        return self._client.add_users(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.add_users(user_emails, user_role)
 
     def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False) -> str:
         """
@@ -197,7 +198,7 @@ class Project:
             ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while copying the project.
         """
-        return self._client.copy_project(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.copy_project(copy_datasets, copy_collaborators, copy_models)
 
     def get_label_row(self, uid: str, get_signed_url: bool = True):
         """
@@ -218,7 +219,7 @@ class Project:
             UnknownError: If an error occurs while retrieving the label.
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
-        return self._client.get_label_row(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.get_label_row(uid, get_signed_url)
 
     def save_label_row(self, uid, label):
         """
@@ -244,7 +245,7 @@ class Project:
             AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
         """
-        return self._client.save_label_row(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.save_label_row(uid, label)
 
     def create_label_row(self, uid: str):
         """
@@ -267,7 +268,7 @@ class Project:
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
             ResourceExistsError: If a label row already exists for this project data. Avoids overriding existing work.
         """
-        return self._client.create_label_row(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.create_label_row(uid)
 
     def submit_label_row_for_review(self, uid: str):
         """
@@ -285,7 +286,7 @@ class Project:
             UnknownError: If an error occurs while submitting for review.
             OperationNotAllowed: If the write operation is not allowed by the API key.
         """
-        return self._client.submit_label_row_for_review(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.submit_label_row_for_review(uid)
 
     def add_datasets(self, dataset_hashes: List[str]) -> bool:
         """
@@ -304,7 +305,7 @@ class Project:
             UnknownError: If an error occurs while adding the datasets to the project.
             OperationNotAllowed: If the write operation is not allowed by the API key.
         """
-        return self._client.add_datasets(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.add_datasets(dataset_hashes)
 
     def remove_datasets(self, dataset_hashes: List[str]) -> bool:
         """
@@ -323,7 +324,7 @@ class Project:
             UnknownError: If an error occurs while removing the datasets from the project.
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
-        return self._client.remove_datasets(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.remove_datasets(dataset_hashes)
 
     def get_project_ontology(self) -> LegacyOntology:
         """
@@ -349,7 +350,7 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call
         """
-        return self._client.add_object(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.add_object(name, shape)
 
     def add_classification(
         self,
@@ -372,7 +373,7 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call
         """
-        return self._client.add_classification(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.add_classification(name, classification_type, required, options)
 
     def create_model_row(
         self,
@@ -402,7 +403,7 @@ class Project:
             ModelFeaturesInconsistentError: If a feature type is different than what is supported by the model (e.g. if
                 creating a classification model using a bounding box).
         """
-        return self._client.create_model_row(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.create_model_row(title, description, features, model)
 
     def model_delete(self, uid: str) -> bool:
         """
@@ -421,7 +422,7 @@ class Project:
             UnknownError: If an error occurs during training.
         """
 
-        return self._client.model_delete(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.model_delete(uid)
 
     def model_inference(
         self,
@@ -464,7 +465,18 @@ class Project:
             FileSizeNotSupportedError: If the file size is too big to be supported.
             DetectionRangeInvalidError: If a detection range is invalid for video inference
         """
-        return self._client.model_inference(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.model_inference(
+            uid,
+            file_paths,
+            base64_strings,
+            conf_thresh,
+            iou_thresh,
+            device,
+            detection_frame_range,
+            allocation_enabled,
+            data_hashes,
+            rdp_thresh,
+        )
 
     def model_train(self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"):
         """
@@ -488,7 +500,14 @@ class Project:
             ResourceNotFoundError: If no model exists by the specified model_hash (uid).
             UnknownError: If an error occurs during training.
         """
-        return self._client.model_train(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.model_train(
+            uid,
+            label_rows,
+            epochs,
+            batch_size,
+            weights,
+            device,
+        )
 
     def object_interpolation(
         self,
@@ -531,7 +550,7 @@ class Project:
             AuthorisationError: If access to the specified resource is restricted.
             UnknownError: If an error occurs while running interpolation.
         """
-        return self._client.object_interpolation(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.object_interpolation(key_frames, objects_to_interpolate)
 
     def fitted_bounding_boxes(
         self,
@@ -577,7 +596,7 @@ class Project:
             AuthorisationError: If access to the specified resource is restricted.
             UnknownError: If an error occurs while running interpolation.
         """
-        return self._client.fitted_bounding_boxes(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.fitted_bounding_boxes(frames, video)
 
     def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
         """
@@ -596,7 +615,7 @@ class Project:
             AuthorisationError: If access to the specified resource is restricted.
             UnknownError: If an error occurs while retrieving the object.
         """
-        return self._client.get_data(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.get_data(data_hash, get_signed_url)
 
     def get_websocket_url(self) -> str:
         return self._client.get_websocket_url()
@@ -604,7 +623,10 @@ class Project:
     def get_label_logs(
         self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
     ) -> List[LabelLog]:
-        return self._client.get_label_logs(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.get_label_logs(user_hash, data_hash, from_unix_seconds, to_unix_seconds)
+
+    def get_cloud_integrations(self) -> List[CloudIntegration]:
+        return self._client.get_cloud_integrations()
 
     def _get_project_instance(self):
         if self._project_instance is None:
