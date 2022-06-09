@@ -1,7 +1,6 @@
 import json
 import os
 
-import encord.objects.attribute
 import encord.objects.classification
 import encord.objects.common
 import encord.objects.ontology_object
@@ -52,7 +51,7 @@ EXPECTED_ONTOLOGY: ontology.Ontology = ontology.Ontology(
             uid=3,
             name="Example",
             color="#FE9200",
-            shape=encord.objects.common.Shape.BOUNDING_BOX,
+            shape=encord.objects.common.Shape.POLYLINE,
             feature_node_hash="6eeba59b",
             attributes=[
                 encord.objects.common.RadioAttribute(

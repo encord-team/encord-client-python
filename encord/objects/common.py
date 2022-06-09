@@ -22,6 +22,7 @@ class Shape(StringEnum):
     POLYGON = "polygon"
     POINT = "point"
     SKELETON = "skeleton"
+    POLYLINE = "polyline"
 
 
 @dataclass

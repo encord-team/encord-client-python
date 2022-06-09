@@ -41,7 +41,7 @@
       "id": "3",
       "name": "Example",
       "color": "#FE9200",
-      "shape": "bounding_box",
+      "shape": "polyline",
       "featureNodeHash": "6eeba59b",
       "attributes": [
         {
