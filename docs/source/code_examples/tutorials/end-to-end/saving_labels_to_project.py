@@ -1,6 +1,6 @@
 """
-Writing project labels
-======================
+Saving project labels
+=====================
 
 Use this script to save your local labels to your Encord project.
 
