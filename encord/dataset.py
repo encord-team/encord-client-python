@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, TextIO, Union
 
 from encord.client import EncordClientDataset
+from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import ImageGroupOCR, StorageLocation
@@ -169,6 +170,9 @@ class Dataset:
             found in each frame of the image group
         """
         return self._client.run_ocr(image_group_id)
+
+    def get_cloud_integrations(self) -> List[CloudIntegration]:
+        return self._client.get_cloud_integrations()
 
     def _get_dataset_instance(self):
         if self._dataset_instance is None:

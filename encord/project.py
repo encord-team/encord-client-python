@@ -3,6 +3,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels
+from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
@@ -612,6 +613,9 @@ class Project:
         self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
     ) -> List[LabelLog]:
         return self._client.get_label_logs(user_hash, data_hash, from_unix_seconds, to_unix_seconds)
+
+    def get_cloud_integrations(self) -> List[CloudIntegration]:
+        return self._client.get_cloud_integrations()
 
     def _get_project_instance(self):
         if self._project_instance is None:
