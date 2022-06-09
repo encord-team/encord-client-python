@@ -6,7 +6,7 @@ from encord.project_ontology.object_type import ObjectShape
 @dataclass
 class OntologyObject:
     """
-    A dataclass which holds an object for of the :class:`.Ontology`.
+    A dataclass which holds an object for of the :class:`encord.project_ontology.Ontology`.
     """
 
     #: A unique (to the ontology) identifier of the classification.

@@ -33,6 +33,33 @@ Client
         :members:
         :undoc-members:
 
+Encord Objects
+---------------
+.. automodule:: encord.objects.ontology
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.ontology_object
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.classification
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.common
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.utils
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.project
+    :members:
+    :undoc-members:
+
+
 Project Ontology
 ----------------
 .. automodule:: encord.project_ontology.classification_attribute

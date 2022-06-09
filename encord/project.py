@@ -67,6 +67,17 @@ class Project:
     def ontology(self) -> dict:
         """
         Get the ontology of the project.
+
+        BETA: Prefer using the :meth:`encord.objects.ontology.Ontology` class to work with the data.
+
+        .. code::
+
+            from encord.object.ontology import Ontology
+
+            project = user_client.get_project("<project_hash>")
+
+            ontology = Ontology.from_dict(project.ontology)
+
         """
         project_instance = self._get_project_instance()
         return project_instance.editor_ontology
