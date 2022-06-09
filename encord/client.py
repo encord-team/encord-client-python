@@ -46,7 +46,7 @@ from typing import List, Optional, Tuple, Union
 import dateutil
 
 import encord.exceptions
-from encord.configs import ENCORD_DOMAIN, Config, EncordConfig
+from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
@@ -142,7 +142,7 @@ class EncordClient(object):
         return EncordClient.initialise_with_config(config)
 
     @staticmethod
-    def initialise_with_config(config: Config) -> Union[EncordClientProject, EncordClientDataset]:
+    def initialise_with_config(config: ApiKeyConfig) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Encord client from a Encord config instance.
 
@@ -1092,12 +1092,7 @@ class EncordClientProject(EncordClient):
         return video, images
 
     def get_websocket_url(self) -> str:
-        return (
-            f"{self._config.websocket_endpoint}?"
-            f"client_type={2}&"
-            f"project_hash={self._config.resource_id}&"
-            f"api_key={self._config.api_key}"
-        )
+        return self._config.get_websocket_url()
 
     def get_label_logs(
         self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
