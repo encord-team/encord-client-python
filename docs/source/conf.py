@@ -48,6 +48,8 @@ extensions = [
     "xref",
 ]
 
+highlight_language = "python3"
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["../_templates"]
 
@@ -113,6 +115,10 @@ sphinx_gallery_conf = {
     "line_numbers": True,
     "remove_config_comments": True,
     "min_reported_time": 10,
+    "doc_module": ("encord",),
+    "reference_url": {
+        "encord": None,
+    },
 }
 
 # Static links
