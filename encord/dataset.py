@@ -64,7 +64,7 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.upload_video(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.upload_video(file_path)
 
     def create_image_group(self, file_paths: Iterable[str], max_workers: Optional[int] = None):
         """
@@ -85,7 +85,7 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.create_image_group(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.create_image_group(file_paths, max_workers)
 
     def delete_image_group(self, data_hash: str):
         """
@@ -106,7 +106,7 @@ class Dataset:
             data_hashes: list of hash of the videos/image_groups you'd like to delete, all should belong to the same
              dataset
         """
-        return self._client.delete_data(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.delete_data(data_hashes)
 
     def add_private_data_to_dataset(
         self,
@@ -128,7 +128,7 @@ class Dataset:
             add_private_data_response List of DatasetDataInfo objects containing data_hash and title
 
         """
-        return self._client.add_private_data_to_dataset(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.add_private_data_to_dataset(integration_id, private_files, ignore_errors)
 
     def re_encode_data(self, data_hashes: List[str]):
         """
@@ -142,7 +142,7 @@ class Dataset:
             EntityId(integer) of the async task launched.
 
         """
-        return self._client.re_encode_data(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.re_encode_data(data_hashes)
 
     def re_encode_data_status(self, job_id: int):
         """
@@ -156,7 +156,7 @@ class Dataset:
             ReEncodeVideoTask: Object containing the status of the task, along with info about the new encoded videos
              in case the task has been completed
         """
-        return self._client.re_encode_data_status(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.re_encode_data_status(job_id)
 
     def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
         """
@@ -168,7 +168,7 @@ class Dataset:
             Returns a list of ImageGroupOCR objects representing the text and corresponding coordinates
             found in each frame of the image group
         """
-        return self._client.run_ocr(**{k: v for k, v in locals().items() if k != "self"})
+        return self._client.run_ocr(image_group_id)
 
     def _get_dataset_instance(self):
         if self._dataset_instance is None:
