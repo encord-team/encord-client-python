@@ -75,7 +75,7 @@ class Project:
 
             project = user_client.get_project("<project_hash>")
 
-            ontology = Ontology.from_dict(project.datasets)
+            ontology = Ontology.from_dict(project.ontology)
 
         """
         project_instance = self._get_project_instance()
