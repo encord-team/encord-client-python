@@ -22,6 +22,8 @@ from encord.orm import base_orm
 
 class Project(base_orm.BaseORM):
     """
+    DEPRECATED - prefer using the `encord.project.Project` class instead.
+
     A project defines a label ontology and is a collection of datasets and label rows.
 
     ORM:

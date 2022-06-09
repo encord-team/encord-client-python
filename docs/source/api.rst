@@ -7,6 +7,18 @@ User Client
     :members:
     :undoc-members:
 
+Project
+--------
+.. automodule:: encord.project
+    :members:
+    :undoc-members:
+
+Dataset
+--------
+.. automodule:: encord.dataset
+    :members:
+    :undoc-members:
+
 Client
 ------------
 .. automodule:: encord.client

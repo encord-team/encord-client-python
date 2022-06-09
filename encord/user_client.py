@@ -14,13 +14,15 @@ import dateutil
 # add this for backward compatible class comparisons
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
-from encord.configs import UserConfig, get_env_ssh_key
+from encord.configs import SshConfig, UserConfig, get_env_ssh_key
+from encord.constants.string_constants import TYPE_DATASET
+from encord.dataset import Dataset
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
 from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.dataset import CreateDatasetResponse
+from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
-    CreateDatasetResponse,
-    Dataset,
     DatasetAPIKey,
     DatasetInfo,
     DatasetScope,
@@ -30,15 +32,12 @@ from encord.orm.dataset import (
     StorageLocation,
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
-from encord.orm.project import (
-    CvatExportType,
-    Project,
-    ProjectImporter,
-    ProjectImporterCvatInfo,
-    ReviewMode,
-)
+from encord.orm.project import CvatExportType
+from encord.orm.project import Project as OrmProject
+from encord.orm.project import ProjectImporter, ProjectImporterCvatInfo, ReviewMode
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
+from encord.project import Project
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -56,6 +55,44 @@ class EncordUserClient:
     def __init__(self, user_config: UserConfig, querier: Querier):
         self.user_config = user_config
         self.querier = querier
+
+    def get_dataset(self, dataset_hash: str) -> Dataset:
+        """
+        Get the Project class to access project fields and manipulate a project.
+
+        You will only have access to this project if you are one of the following
+
+            * Dataset admin
+
+            * Organisation admin of the project
+
+        Args:
+            dataset_hash: The Dataset ID
+        """
+        config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
+        querier = Querier(config)
+        client = EncordClientDataset(querier=querier, config=config)
+        return Dataset(client)
+
+    def get_project(self, project_hash: str) -> Project:
+        """
+        Get the Project class to access project fields and manipulate a project.
+
+        You will only have access to this project if you are one of the following
+
+            * Project admin
+
+            * Project team manager
+
+            * Organisation admin of the project
+
+        Args:
+            project_hash: The Project ID
+        """
+        config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=project_hash)
+        querier = Querier(config)
+        client = EncordClientProject(querier=querier, config=config)
+        return Project(client)
 
     def create_private_dataset(
         self,
@@ -93,7 +130,7 @@ class EncordUserClient:
         if dataset_description:
             dataset["description"] = dataset_description
 
-        result = self.querier.basic_setter(Dataset, uid=None, payload=dataset)
+        result = self.querier.basic_setter(OrmDataset, uid=None, payload=dataset)
         return CreateDatasetResponse.from_dict(result)
 
     def create_dataset_api_key(
@@ -204,12 +241,12 @@ class EncordUserClient:
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
         data = self.querier.get_multiple(ProjectWithUserRole, payload={"filter": properties_filter})
-        return [{"project": Project(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
+        return [{"project": OrmProject(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
     def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
         project = {"title": project_title, "description": project_description, "dataset_hashes": dataset_hashes}
 
-        return self.querier.basic_setter(Project, uid=None, payload=project)
+        return self.querier.basic_setter(OrmProject, uid=None, payload=project)
 
     def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
         """
@@ -227,10 +264,16 @@ class EncordUserClient:
         return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
 
     def get_dataset_client(self, dataset_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
+        """
+        DEPRECATED - prefer using :meth:`get_dataset()` instead.
+        """
         dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
         return EncordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
 
     def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
+        """
+        DEPRECATED - prefer using :meth:`get_project()` instead.
+        """
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
         return EncordClient.initialise(project_hash, project_api_key, **kwargs)
 
