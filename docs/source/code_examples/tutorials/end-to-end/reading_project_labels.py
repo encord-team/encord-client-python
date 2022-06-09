@@ -2,42 +2,42 @@
 Reading project labels
 ======================
 
-This example shows you how to read labels from your project.
+Use this script to read labels from your Encord project.
 
+Imports and authentication
+--------------------------
 """
+
 # sphinx_gallery_thumbnail_path = 'images/end-to-end-thumbs/product-data.svg'
 from dataclasses import dataclass
 from functools import partial
 from typing import Callable, Generator, List, Optional
 
+from encord import EncordUserClient, ProjectManager
 from encord.orm.project import Project
 from encord.project_ontology.object_type import ObjectShape
-from encord.user_client import EncordUserClient
 
-# %%
-# Authenticating
-# --------------
+#%%
 # To interact with Encord, you need to authenticate a client. You can find more details
 # :ref:`here <authentication:Authentication>`.
 
+# Authenticate
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key("<your_private_key>")
 
 # Find project to work with based on title.
-project: Project = next((p["project"] for p in user_client.get_projects(title_eq="Your project name")))
-project_client = user_client.get_project_client(project.project_hash)
+project: Project = next((p["project"] for p in user_client.get_projects(title_eq="The title of the project")))
+project_manager: ProjectManager = user_client.get_project_manager(project.project_hash)
 
 # %%
 # 1. The high-level view of your labels
 # -------------------------------------
-# Generally, project data is grouped into label_rows, which point to individual image
-# groups or videos. Each label row will have its own label status, as not all label
-# rows may be annotated at a given point in time.
+# Project data is grouped into label_rows, which point to individual image groups or
+# videos. Each label row will have its own label status, as not all label rows may be
+# annotated at a given point in time.
 #
-# First, we list the high-level state of each label row:
+# Here is an example of listing the label status of a label row:
 
-
-# This project instance is populated with high-level `label_row` info and ontology.
-project: Project = project_client.get_project()
+project: Project = project_manager.get_project()
 
 # Fetch one label row as an example.
 for label_row in project.label_rows:
@@ -59,17 +59,14 @@ for label_row in project.label_rows:
 #        "annotation_task_status": "ASSIGNED"
 #     }
 #
-# See :ref:`tutorials/projects:Getting label rows` for more details of possible values
-# for the different attributes.
-#
+# From the high-level data, you can, for example, compute some statistics of the
+# progress of your annotators:
 
-# Compute label row statistics
 status_counts = {}
 for label_row in project.label_rows:
     status = label_row["annotation_task_status"]
     status_counts[status] = status_counts.setdefault(status, 0) + 1
 print(status_counts)
-
 
 # %%
 # Expected output:
@@ -99,8 +96,8 @@ class AnnotationObject:
 
 #%%
 # Then we define a function which iterates over all objects of a label row fetched with
-# :class:`.EncordClientProject.get_label_row`. The function has a callable argument used
-# to filter which objects should be returned.
+# :class:`.EncordClientProject.get_label_row()`. The function has a callable argument
+# used to filter which objects should be returned.
 
 
 def iterate_over_objects(
@@ -142,9 +139,9 @@ def iterate_over_objects(
 
 
 def include_object_fn_base(
-    object,
+    object: dict,
     object_type: Optional[ObjectShape] = None,
-    only_approved=True,
+    only_approved: bool = True,
 ):
     # Filter object type
     if object_type and object["shape"].lower() != object_type.value.lower():
@@ -230,15 +227,14 @@ print(reviewed_bounding_boxes)
 # Similarly, you can define your own filtering function to replace
 # ``include_object_fn_base`` to select only the objects that you need for your purpose.
 # Finally, if you want to get classifications rather than objects, you will have to
-# change the ``"objects"`` dictionary lookups to ``"classifications"`` and compose a new
-# filtering function.
+# change the ``"objects"`` dictionary lookups (line 129 and 141) to
+# ``"classifications"`` and compose a new filtering function.
 #
 # 3. Fetching nested classifications
 # ----------------------------------
-# It is possible to make nested classifications on objects as well as top-level
-# classifications. The information about such nested classifications is stored in the
-# ``classification_answers``, ``object_answers`` and ``object_actions`` sections of the
-# ``label_row_details``.
+# It is possible to make nested classifications on objects. The information about such
+# nested classifications is stored in the ``classification_answers``, ``object_answers``
+# and ``object_actions`` sections of the ``label_row_details``.
 #
 # Assuming that the reviewed bounding boxes fetched above have nested attributes, the
 # following code example shows how to get the nested classification information.

@@ -2,7 +2,7 @@
 Writing project labels
 ======================
 
-Use this script to save your local labels to Encord.
+Use this script to save your local labels to your Encord project.
 
 The code uses a couple of utility functions for constructing dictionaries following the
 structure of Encord label rows and finding ontology dictionaries from the Encord
@@ -13,7 +13,7 @@ ontology. You can safely skip those details.
    <details>
    <summary><a>Utility code</a></summary>
 """
-# sphinx_gallery_thumbnail_path = 'images/end-to-end-thumbs/product-data.svg'
+# sphinx_gallery_thumbnail_path = 'images/end-to-end-thumbs/Artboard 10.svg'
 
 import uuid
 from datetime import datetime
@@ -259,9 +259,13 @@ from encord import EncordUserClient, ProjectManager
 from encord.orm.project import Project
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
+# Authenticate
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key("<your_private_key>")
-project_hash = "<project_hash>"
-project_manager: ProjectManager = user_client.get_project_manager(project_hash)
+
+# Find project to work with based on title.
+project: Project = next((p["project"] for p in user_client.get_projects(title_eq="Your project name")))
+project_manager: ProjectManager = user_client.get_project_manager(project.project_hash)
+
 project: Project = project_manager.get_project()
 ontology = project["editor_ontology"]
 
@@ -278,8 +282,8 @@ ontology = project["editor_ontology"]
 # 1. Defining object mapping
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# You need a way to map between your "local" object identifiers and the objects from the
-# Encord ontology. The mapping in this example is based on the # ontology names that
+# You need a way to map between your local object identifiers and the objects from the
+# Encord ontology. The mapping in this example is based on the ontology names that
 # were defined when :ref:`tutorials/projects:Adding components to a project ontology`.
 # You find the Encord ontology object names with the following lines of code::
 #
@@ -298,11 +302,13 @@ ontology = project["editor_ontology"]
 #
 
 #%%
-# Below, is an example of how to define your own mapping between your “local” object
-# identifiers and Encord ontology objects.
+# Below, is an example of how to define your own mapping between your local object
+# identifiers and Encord ontology objects. Note that the keys in the dictionary could
+# be any type of keys. So if your local object types are defined by integers, for
+# example, you can use integers as keys.
 
 LOCAL_TO_ENCORD_NAMES = {
-    # local object itendifier: Encord object name
+    # local object identifier: Encord object name
     "Dog": "Dog (polygon)",
     "Snake": "Snake (polyline)",
     "Tiger": "Tiger (bounding_box)",
@@ -395,8 +401,8 @@ for local_frame_level_objects in local_objects:
     # encord_frame_labels["objects"] = []
 
     for local_class in local_frame_level_objects["objects"]:
-        local_obj_name: str = local_class["type"]
-        encord_obj_type: dict = local_to_encord_ont_objects[local_obj_name]
+        local_obj_type: str = local_class["type"]
+        encord_obj_type: dict = local_to_encord_ont_objects[local_obj_type]
 
         track_id = local_class.get("track_id")
         object_hash: Optional[str] = object_hash_idx.get(track_id)
@@ -458,7 +464,7 @@ local_objects = {
 #%%
 # The data is saved by the following code example.
 
-# Take any label row, which contains images from your local dictionary.
+# Take any label row, which contains images with names from `local_objects`.
 label_row = project.label_rows[0]
 
 # Create or fetch details of the label row.
@@ -481,8 +487,8 @@ for encord_data_unit in label_row["data_units"].values():
     encord_labels: dict = encord_data_unit["labels"]
 
     for local_class in local_objects[encord_data_unit["data_title"]]:
-        local_obj_name: str = local_class["type"]
-        encord_obj_type: dict = local_to_encord_ont_objects[local_obj_name]
+        local_obj_type: str = local_class["type"]
+        encord_obj_type: dict = local_to_encord_ont_objects[local_obj_type]
         track_id = local_class.get("track_id")
         object_hash: Optional[str] = object_hash_idx.get(track_id)
 
@@ -597,10 +603,10 @@ local_classifications = [  # NEW
                     2,
                 ],  # Choose both car (local id 1) and leash (local id 2)
             },
-            {
+            {  # Text type classification
                 "type": "description",
                 "data": "Your description of the frame",
-            },  # Text classification
+            },
         ],
     },
     {
