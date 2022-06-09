@@ -13,6 +13,10 @@ from encord.objects.common import (
 
 @dataclass
 class Object:
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     uid: int
     name: str
     color: str

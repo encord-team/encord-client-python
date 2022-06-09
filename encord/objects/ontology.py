@@ -9,7 +9,10 @@ from encord.objects.ontology_object import Object
 
 @dataclass
 class Ontology:
-    # could add the project_uid here
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     objects: List[Object] = field(default_factory=list)
     classifications: List[Classification] = field(default_factory=list)
 

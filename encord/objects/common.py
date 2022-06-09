@@ -151,7 +151,13 @@ class TextAttribute(_AttributeBase):
 
 
 Attribute = Union[RadioAttribute, ChecklistAttribute, TextAttribute]
+"""
+This class is currently in BETA. Its API might change in future minor version releases. 
+"""
 OptionAttribute = Union[RadioAttribute, ChecklistAttribute]
+"""
+This class is currently in BETA. Its API might change in future minor version releases. 
+"""
 
 
 def _attribute_id_from_json_str(attribute_id: str) -> NestedID:
@@ -255,3 +261,6 @@ class NestableOption(_OptionBase):
 
 
 Option = Union[FlatOption, NestableOption]
+"""
+This class is currently in BETA. Its API might change in future minor version releases. 
+"""

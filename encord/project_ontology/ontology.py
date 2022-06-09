@@ -18,6 +18,10 @@ def generate_feature_node_hash() -> str:
 
 
 class Ontology:
+    """
+    BETA: prefer using :class:`encord.objects.ontology.Ontology`
+    """
+
     COLORS = (
         "#D33115",
         "#E27300",
