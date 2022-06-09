@@ -42,7 +42,7 @@ def check_error_response(response, payload=None):
     Called if HTTP response status code is an error response.
     """
     if response == AUTHENTICATION_ERROR:
-        raise AuthenticationError("Invalid API key.")
+        raise AuthenticationError("You are not authenticated to access the Encord platform.")
 
     if response == AUTHORISATION_ERROR:
         raise AuthorisationError("You are not authorised to access this asset.")
