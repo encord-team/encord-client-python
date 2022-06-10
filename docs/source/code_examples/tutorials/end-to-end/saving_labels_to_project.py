@@ -255,19 +255,19 @@ def find_ontology_classification(ontology: dict, local_to_encord_classifications
 # --------------------------
 # First, import dependencies and athenticate a project manager.
 
-from encord import EncordUserClient, ProjectManager
-from encord.orm.project import Project
+from encord import EncordUserClient
+from encord.project import Project
+from encord.orm.project import Project as OrmProject
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
 # Authenticate
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key("<your_private_key>")
 
 # Find project to work with based on title.
-project: Project = next((p["project"] for p in user_client.get_projects(title_eq="Your project name")))
-project_manager: ProjectManager = user_client.get_project_manager(project.project_hash)
+project_orm: OrmProject = next((p["project"] for p in user_client.get_projects(title_eq="Your project name")))
+project: Project = user_client.get_project(project_orm.project_hash)
 
-project: Project = project_manager.get_project()
-ontology = project["editor_ontology"]
+ontology = project.ontology
 
 #%%
 # Saving objects
@@ -382,9 +382,9 @@ label_row: dict = next((lr for lr in project.label_rows if lr["data_title"] == v
 
 # Create or fetch details of the label row from Encord.
 if label_row["label_hash"] is None:
-    label_row: dict = project_manager.create_label_row(label_row["data_hash"])
+    label_row: dict = project.create_label_row(label_row["data_hash"])
 else:
-    label_row: dict = project_manager.get_label_row(label_row["label_hash"])
+    label_row: dict = project.get_label_row(label_row["label_hash"])
 
 # Videos only have one data unit, so fetch the labels of that data unit.
 encord_labels: dict = next((du for du in label_row["data_units"].values()))["labels"]
@@ -417,7 +417,7 @@ for local_frame_level_objects in local_objects:
 
 # NB: This call is important to maintain a valid label_row structure!
 label_row = construct_answer_dictionaries(label_row)
-project_manager.save_label_row(label_row)
+project.save_label_row(label_row["label_hash"], label_row)
 
 #%%
 # **Saving objects to label rows with image groups**
@@ -469,9 +469,9 @@ label_row = project.label_rows[0]
 
 # Create or fetch details of the label row.
 if label_row["label_hash"] is None:
-    label_row = project_manager.create_label_row(label_row["data_hash"])
+    label_row = project.create_label_row(label_row["data_hash"])
 else:
-    label_row = project_manager.get_label_row(label_row["label_hash"])
+    label_row = project.get_label_row(label_row["label_hash"])
 
 # Collection of Encord object_hashes to allow track_ids to persist across frames.
 object_hash_idx: Dict[int, str] = {}
@@ -502,7 +502,7 @@ for encord_data_unit in label_row["data_units"].values():
 
 # NB: This call is important to maintain a valid label_row structure!
 label_row = construct_answer_dictionaries(label_row)
-project_manager.save_label_row(label_row)
+project.save_label_row(label_row["label_hash"], label_row)
 
 
 #%%
@@ -633,9 +633,9 @@ label_row: dict = next((lr for lr in project.label_rows if lr["data_title"] == v
 
 # Create or fetch details of the label row.
 if label_row["label_hash"] is None:
-    label_row: dict = project_manager.create_label_row(label_row["data_hash"])
+    label_row: dict = project.create_label_row(label_row["data_hash"])
 else:
-    label_row: dict = project_manager.get_label_row(label_row["label_hash"])
+    label_row: dict = project.get_label_row(label_row["label_hash"])
 
 # Videos only have one data unit, so fetch the labels of that data unit.
 encord_labels: dict = next((du for du in label_row["data_units"].values()))["labels"]
@@ -690,7 +690,7 @@ for local_frame_level_classifications in local_classifications:
 
 # NB: This call is important to maintain a valid label_row structure!
 label_row = construct_answer_dictionaries(label_row)
-project_manager.save_label_row(label_row)
+project.save_label_row(label_row["label_hash"], label_row)
 
 #%%
 # **Saving classification to label rows with image groups**
@@ -732,9 +732,9 @@ label_row = project.label_rows[0]
 
 # Create or fetch details of the label row.
 if label_row["label_hash"] is None:
-    label_row = project_manager.create_label_row(label_row["data_hash"])
+    label_row = project.create_label_row(label_row["data_hash"])
 else:
-    label_row = project_manager.get_label_row(label_row["label_hash"])
+    label_row = project.get_label_row(label_row["label_hash"])
 
 classification_answers = label_row["classification_answers"]
 
@@ -788,4 +788,4 @@ for encord_data_unit in label_row["data_units"].values():
 
 # NB: This call is important to maintain a valid label_row structure!
 label_row = construct_answer_dictionaries(label_row)
-project_manager.save_label_row(label_row)
+project.save_label_row(label_row["label_hash"], label_row)

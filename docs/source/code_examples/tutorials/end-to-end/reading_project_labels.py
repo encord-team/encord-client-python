@@ -13,8 +13,9 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Callable, Generator, List, Optional
 
-from encord import EncordUserClient, ProjectManager
-from encord.orm.project import Project
+from encord import EncordUserClient
+from encord.project import Project
+from encord.orm.project import Project as OrmProject
 from encord.project_ontology.object_type import ObjectShape
 
 #%%
@@ -25,8 +26,8 @@ from encord.project_ontology.object_type import ObjectShape
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key("<your_private_key>")
 
 # Find project to work with based on title.
-project: Project = next((p["project"] for p in user_client.get_projects(title_eq="The title of the project")))
-project_manager: ProjectManager = user_client.get_project_manager(project.project_hash)
+project_orm: OrmProject = next((p["project"] for p in user_client.get_projects(title_eq="The title of the project")))
+project: Project = user_client.get_project(project_orm.project_hash)
 
 # %%
 # 1. The high-level view of your labels
@@ -36,8 +37,6 @@ project_manager: ProjectManager = user_client.get_project_manager(project.projec
 # annotated at a given point in time.
 #
 # Here is an example of listing the label status of a label row:
-
-project: Project = project_manager.get_project()
 
 # Fetch one label row as an example.
 for label_row in project.label_rows:
@@ -165,7 +164,7 @@ for label_row in project.label_rows:
     if not label_row["label_hash"]:  # No objects in this label row yet.
         continue
 
-    label_row_details = project_client.get_label_row(label_row["label_hash"])
+    label_row_details = project.get_label_row(label_row["label_hash"])
     reviewed_bounding_boxes += list(iterate_over_objects(label_row_details, include_object_fn_bbox))
 
 print(reviewed_bounding_boxes)
