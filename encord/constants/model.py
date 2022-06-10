@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Set
+from typing import Set, cast
 
 
 class AutomationModels(Enum):
@@ -75,14 +75,14 @@ class AutomationModels(Enum):
 
 
 # For backward compatibility
-FAST_AI = AutomationModels.FAST_AI.value
-RESNET18 = AutomationModels.RESNET18.value
-RESNET34 = AutomationModels.RESNET34.value
-RESNET50 = AutomationModels.RESNET50.value
-RESNET101 = AutomationModels.RESNET101.value
-RESNET152 = AutomationModels.RESNET152.value
-VGG16 = AutomationModels.VGG16.value
-VGG19 = AutomationModels.VGG19.value
-YOLOV5 = AutomationModels.YOLOV5.value
-FASTER_RCNN = AutomationModels.FASTER_RCNN.value
-MASK_RCNN = AutomationModels.MASK_RCNN.value
+FAST_AI = cast(str, AutomationModels.FAST_AI.value)
+RESNET18 = cast(str, AutomationModels.RESNET18.value)
+RESNET34 = cast(str, AutomationModels.RESNET34.value)
+RESNET50 = cast(str, AutomationModels.RESNET50.value)
+RESNET101 = cast(str, AutomationModels.RESNET101.value)
+RESNET152 = cast(str, AutomationModels.RESNET152.value)
+VGG16 = cast(str, AutomationModels.VGG16.value)
+VGG19 = cast(str, AutomationModels.VGG19.value)
+YOLOV5 = cast(str, AutomationModels.YOLOV5.value)
+FASTER_RCNN = cast(str, AutomationModels.FASTER_RCNN.value)
+MASK_RCNN = cast(str, AutomationModels.MASK_RCNN.value)
