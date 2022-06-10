@@ -4,17 +4,36 @@
 Authentication
 **************
 
+Types of authentication
+========================
+You can authenticate with |company| on a user basis by registering an :xref:`ssh_public_key_authentication` (i.e. "public key" in this document), or on a specific project or dataset basis by using an |company|-generated API key tied to that resource.
+
+Public key authentication
+----------------------------
+Public key authentication gives you full access to all the capabilities of the SDK.
+**This is our recommended default authentication method.**
+
+Public key authentication is required to use the :class:`.EncordUserClient`.
+
+You can use the client to interact with a :ref:`general_concepts:Dataset` or a :ref:`general_concepts:Project` assuming you are either of the following:
+
+* An organisation admin of the organisation this project or dataset is part of
+* A project admin or project manager of the project that is being accessed
+* A dataset admin of the dataset that is being accessed
+
+API key authentication
+----------------------
+You can access a specific project or dataset via API key authentication.
+An individual API key is always tied to one specific project or dataset.
+
+We only recommend you to use this authentication if
+
+* You do not have user access rights for a project or dataset
+* You want to access a project or dataset as part of an automated pipeline without using a specific user account
+
+
 Set up authentication keys
 ==========================
-You can authenticate with |company| on a user basis by registering a public key, or on a specific project or dataset basis by using an |company|-generated API key tied to that resource.
-
-* :ref:`authentication:Register a public key`: registering a public key gives you full access, allowing you to access all your projects and datasets, as well as create new projects, datasets and API keys
-* :ref:`authentication:Create an API key`: creating an API key gives you restricted access to a particular project or dataset
-
-Public keys are used to authenticate the user for activities that require user-level access, for example creating projects and datasets.
-API keys are more restrictive and are tied to a particular project or dataset.
-API keys are used to authenticate calls that only require resource-level access, for example downloading label rows from a particular project.
-
 
 Register a public key
 ---------------------
@@ -26,7 +45,8 @@ Create an API key
 
 API keys are tied to specific projects or datasets.
 You can generate multiple keys for each project or dataset.
-To create an API key:
+
+To create an API key use the |platform|:
 
 #. Log in to your account on :xref:`login_url`
 #. Navigate to the :xref:`project` or :xref:`dataset` tab in the :xref:`navigation_bar`
@@ -39,37 +59,38 @@ To create an API key:
 
     Getting an API key from the |platform|.
 
-Authenticate with Encord
-========================
+You can additionally create them programmatically as you can see in these guides:
+
+* Create :ref:`tutorials/projects:API keys` for projects
+* Create :ref:`tutorials/datasets:API keys` for datasets
+
+
+Authenticate with |company|
+===========================
 
 Once you have registered a public key or created an API key, you can authenticate your SDK client with |company| and get started with the SDK.
 
 
-Public key authentication
--------------------------
+Public key authentication with the SDK
+--------------------------------------------------
 
-If you are using public key authentication, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
-Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`.EncordClient` objects tied to them
+After registering your public key, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
+Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`.ProjectManager` or :class:`.DatasetManager` objects tied to them
 
 .. literalinclude:: code_examples/authenticate_ssh.py
     :language: python
 
 
 
-API key authentication
-----------------------
+API key authentication with the SDK
+--------------------------------------------
 
 If you are using API key authentication, authenticate with |company| by passing the resource ID (project or dataset ID) and associated API key to an :class:`.EncordClient`.
-This will directly create an :class:`.EncordClient` to interact with a specific project or dataset
+This will directly create an :class:`.EncordClient` to interact with a specific project or dataset.
 
 .. literalinclude:: code_examples/authenticate_api_key.py
     :language: python
 
-In the example above, the ``<resource_id>`` can either be a ``<project_hash>`` or a ``<dataset_hash>``.
-
-You can instantiate several :class:`.EncordClient` objects by creating an :class:`.EncordConfig` object first.
-Pass the resource ID and API key as strings, and initialise the clients with the config object
-
-.. literalinclude:: code_examples/authenticate_config.py
-    :language: python
-
+.. note::
+    The :class:`encord.client.EncordClientProject` is functionally equivalent to the :class:`.ProjectManager`.
+    The :class:`encord.client.EncordClientDataset` is functionally equivalent to the :class:`.DatasetManager`.
