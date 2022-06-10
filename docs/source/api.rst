@@ -7,6 +7,18 @@ User Client
     :members:
     :undoc-members:
 
+Project
+--------
+.. automodule:: encord.project
+    :members:
+    :undoc-members:
+
+Dataset
+--------
+.. automodule:: encord.dataset
+    :members:
+    :undoc-members:
+
 Client
 ------------
 .. automodule:: encord.client
@@ -20,6 +32,33 @@ Client
     .. automodule:: encord.utilities.user_client_utilities
         :members:
         :undoc-members:
+
+Encord Objects
+---------------
+.. automodule:: encord.objects.ontology
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.ontology_object
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.classification
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.common
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.utils
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.project
+    :members:
+    :undoc-members:
+
 
 Project Ontology
 ----------------

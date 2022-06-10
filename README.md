@@ -19,7 +19,7 @@
 
 ## 💡 Getting Started
 
-For full documentation, visit [Encord Python API Client](https://docs.encord.com/docs/client/).
+For full documentation, please visit [Encord Python SDK](https://python.docs.encord.com/).
 
 First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/stable/installing) package manager:
 

@@ -7,7 +7,7 @@ from encord.project_ontology.classification_attribute import ClassificationAttri
 @dataclass
 class OntologyClassification:
     """
-    A dataclass which holds classifications of the :class:`.Ontology`.
+    A dataclass which holds classifications of the :class:`encord.project_ontology.Ontology`.
     """
 
     #: A unique (to the ontology) identifier of the classification.

@@ -32,3 +32,4 @@ FITTED_BOUNDING_BOX = "fitted_bounding_box"
 # Type of Cord API key
 TYPE_PROJECT = "project"
 TYPE_DATASET = "dataset"
+ALL_RESOURCE_TYPES = [TYPE_PROJECT, TYPE_DATASET]
