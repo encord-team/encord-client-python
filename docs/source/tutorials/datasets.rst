@@ -111,7 +111,7 @@ In the example below, a user authenticates with |company| and then fetches all d
 
 Managing a dataset
 ==================
-Your default choice for interacting with a dataset is via the :ref:`authentication:Public key authentication`.
+Your default choice for interacting with a dataset is via the :ref:`authentication:User authentication`.
 
 
 .. tabs::
@@ -121,129 +121,6 @@ Your default choice for interacting with a dataset is via the :ref:`authenticati
         .. literalinclude:: /code_examples/tutorials/datasets/creating_a_dataset_object.py
             :language: python
 
-
-API keys
-========
-We recommend using a :class:`~encord.dataset.Dataset` as described in :ref:`tutorials/datasets:Managing a dataset`.
-This will be simpler than dealing with API keys which should only be used under specific circumstances as described in :ref:`authentication:API key authentication`.
-
-Creating a master API key with full rights
-------------------------------------------
-
-It is also possible to create or get a master API key with both read and write access (both values of :class:`.DatasetScope`).
-The following example show how to get hold of this key:
-
-.. autolink-concat:: section
-
-.. autolink-preface::
-    from encord.orm.dataset_api_keys import DatasetAPIKey
-    from encord.orm.dataset import DatasetScope
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/datasets/creating_a_master_api_key.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            DatasetAPIKey(
-              dataset_hash="<dataset_hash>",
-              api_key="<api_key>",
-              title="",
-              scopes=[
-                  DatasetScope.READ,
-                  DatasetScope.WRITE,
-              ]
-            )
-
-Creating a dataset API key with specific rights
------------------------------------------------
-
-:ref:`authentication:API key authentication` using an API key allows you to control which capabilities the dataset client will have.
-This can be useful if you, for example, want to share read-only access with some third-party.
-You need to provide the ``<dataset_hash>``, which uniquely identifies a dataset (see, for example, the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
-If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets:Creating a Dataset`.
-
-.. autolink-concat:: section
-
-.. autolink-preface::
-    from encord.orm.dataset_api_keys import DatasetAPIKey
-    from encord.orm.dataset import DatasetScope
-
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/datasets/creating_a_dataset_api_key.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            DatasetAPIKey(
-              dataset_hash="<dataset_hash>",
-              api_key="<api_key>",
-              title="Example api key title",
-              scopes=[
-                  DatasetScope.READ,
-                  DatasetScope.WRITE,
-              ]
-            )
-
-
-.. note::
-
-    This capability is only available to an admin of a dataset.
-
-
-With the API key in hand, you can now use :ref:`authentication:API key authentication`.
-
-
-Fetching dataset API keys
--------------------------
-
-To get a list of all API keys of a dataset, you need to provide the ``<dataset_hash>`` which uniquely identifies the dataset (see, for example, the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
-If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets:Creating a Dataset`.
-
-
-.. autolink-concat:: section
-
-.. autolink-preface::
-    from encord.orm.dataset_api_keys import DatasetAPIKey
-    from encord.orm.dataset import DatasetScope
-
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/datasets/fetching_dataset_api_keys.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            [
-                DatasetAPIKey(
-                  dataset_hash="<dataset_hash>",
-                  api_key="<dataset_api_key>",
-                  title="Full Access API Key",
-                  scopes=[
-                      DatasetScope.READ,
-                      DatasetScope.WRITE,
-                  ]
-                ),
-                # ...
-            ]
-
-You can now use this API key for :ref:`authentication:API key authentication`.
 
 Data
 ====
@@ -255,7 +132,7 @@ You can add data to datasets in multiple ways.
 You can both use |company| storage, as described next, and you can :ref:`add data from a private cloud <tutorials/datasets:Adding data from a private cloud>` to integrate any pre-existing data.
 
 .. note::
-    The following examples assume that you have a :class:`~encord.dataset.Dataset` initialised as variable ``dataset`` and :ref:`authenticated <authentication:API key authentication>`.
+    The following examples assume that you have a :class:`~encord.dataset.Dataset` initialised as variable ``dataset`` and :ref:`authenticated <authentication:Resource authentication>`.
 
 Adding data to Encord-hosted storage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -464,3 +341,127 @@ The :class:`.ReEncodeVideoTask` contains a field called ``status`` which can tak
 #. ``"SUBMITTED"``: the task is currently in progress and the status should be checked back again later
 #. ``"DONE"``: the task has been completed successfully and the field 'result' would contain metadata about the re-encoded video
 #. ``"ERROR"``: the task has failed and could not complete the re-encoding
+
+
+API keys
+========
+We recommend using a :class:`~encord.dataset.Dataset` as described in :ref:`tutorials/datasets:Managing a dataset`.
+This will be simpler than dealing with the soon to be deprecated API keys which should only be used under specific circumstances as described in :ref:`authentication:Resource authentication`.
+
+Creating a master API key with full rights
+------------------------------------------
+
+It is also possible to create or get a master API key with both read and write access (both values of :class:`.DatasetScope`).
+The following example show how to get hold of this key:
+
+.. autolink-concat:: section
+
+.. autolink-preface::
+    from encord.orm.dataset_api_keys import DatasetAPIKey
+    from encord.orm.dataset import DatasetScope
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/datasets/creating_a_master_api_key.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            DatasetAPIKey(
+              dataset_hash="<dataset_hash>",
+              api_key="<api_key>",
+              title="",
+              scopes=[
+                  DatasetScope.READ,
+                  DatasetScope.WRITE,
+              ]
+            )
+
+Creating a dataset API key with specific rights
+-----------------------------------------------
+
+:ref:`authentication:Resource authentication` using an API key allows you to control which capabilities the dataset client will have.
+This can be useful if you, for example, want to share read-only access with some third-party.
+You need to provide the ``<dataset_hash>``, which uniquely identifies a dataset (see, for example, the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
+If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets:Creating a Dataset`.
+
+.. autolink-concat:: section
+
+.. autolink-preface::
+    from encord.orm.dataset_api_keys import DatasetAPIKey
+    from encord.orm.dataset import DatasetScope
+
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/datasets/creating_a_dataset_api_key.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            DatasetAPIKey(
+              dataset_hash="<dataset_hash>",
+              api_key="<api_key>",
+              title="Example api key title",
+              scopes=[
+                  DatasetScope.READ,
+                  DatasetScope.WRITE,
+              ]
+            )
+
+
+.. note::
+
+    This capability is only available to an admin of a dataset.
+
+
+With the API key in hand, you can now use :ref:`authentication:Resource authentication`.
+
+
+Fetching dataset API keys
+-------------------------
+
+To get a list of all API keys of a dataset, you need to provide the ``<dataset_hash>`` which uniquely identifies the dataset (see, for example, the :ref:`tutorials/datasets:Listing existing datasets` to get such hash).
+If you haven't created a dataset already, you can have a look at :ref:`tutorials/datasets:Creating a Dataset`.
+
+
+.. autolink-concat:: section
+
+.. autolink-preface::
+    from encord.orm.dataset_api_keys import DatasetAPIKey
+    from encord.orm.dataset import DatasetScope
+
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/datasets/fetching_dataset_api_keys.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            [
+                DatasetAPIKey(
+                  dataset_hash="<dataset_hash>",
+                  api_key="<dataset_api_key>",
+                  title="Full Access API Key",
+                  scopes=[
+                      DatasetScope.READ,
+                      DatasetScope.WRITE,
+                  ]
+                ),
+                # ...
+            ]
+
+You can now use this API key for :ref:`authentication:Resource authentication`.

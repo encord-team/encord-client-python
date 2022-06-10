@@ -6,7 +6,7 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 )
 
 # Get the project
-project_hash: str = next((p["project"]["project_hash"] for p in user_client.get_projects()))
+project_hash: str = user_client.get_projects()[0]["project"]["project_hash"]
 project: Project = user_client.get_project(project_hash)
 
 # Get the labels (from one label_row, not entire set of labels from the project).

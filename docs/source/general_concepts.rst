@@ -19,7 +19,7 @@ For a |platform| specific introduction, please refer to the |platform| :xref:`da
 
 Project
 =======
-The space where ontology information, labels, annotations, and reviews live.
+The space where labels, annotations, and reviews live.
 Projects can be linked to multiple datasets.
 For a |platform| specific introduction, please refer to the |platform| :xref:`project` page.
 

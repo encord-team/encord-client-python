@@ -9,7 +9,7 @@ First, we show general concepts like creating a new project from the |sdk|.
 Afterwards, we go into more detail such as working with attributes (e.g. labels),
 and incorporating advanced features such as integrating our automation models and algorithms.
 Make sure that you have associated a :xref:`public-private_key_pair` with |company| before you start.
-If not you can do so by following the :ref:`authentication:Public key authentication` tutorial.
+If not you can do so by following the :ref:`authentication:User authentication` tutorial.
 
 Creating a Project
 ==================
@@ -168,7 +168,7 @@ Each :class:`.ProjectUser` contains information about email, :class:`.ProjectUse
 
 Managing a project
 ==================
-Your default choice for interacting with a project is via the :ref:`authentication:Public key authentication`.
+Your default choice for interacting with a project is via the :ref:`authentication:User authentication`.
 
 
 .. tabs::
@@ -179,109 +179,6 @@ Your default choice for interacting with a project is via the :ref:`authenticati
             :language: python
 
 
-API keys
-========
-We recommend using a :class:`encord.project.Project` as described in :ref:`tutorials/projects:Managing a project`.
-This will be simpler than dealing with API keys which should only be used under specific circumstances as described in :ref:`authentication:API key authentication`.
-
-Creating a project API key
---------------------------
-
-Creating a project API key with specific rights
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can create a project API key through :meth:`create_project_api_key() <.EncordUserClient.create_project_api_key>`, which is required to interact with a project using the :class:`encord.project.Project`.
-
-This method takes three arguments:
-
-* ``project_id``: the ``<project_hash>`` of your project, obtained - for example - by :ref:`tutorials/projects:Creating a project` or :ref:`tutorials/projects:Listing existing projects`
-* ``api_key_title``: the title of the API key
-* ``scopes``: a list of :class:`.APIKeyScopes` enum values specifying what is accessible with the API key.
-
-The following code example creates an API key with read and write permissions for the project labels.
-For the full set of permissions, see :class:`.APIKeyScopes`.
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/projects/creating_a_project_api_key.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            # the <project_api_key>
-            "0-1aABCDE_aFGcdeHIfJ2KfLMgNO3PQh4RST5UV6W_X"
-
-
-You use the ``<project_id>`` and ``<project_api_key>`` to obtain an :ref:`authentication:API key authentication` which is specific to the project with the specified permissions.
-
-.. note::
-    This capability is only available to project admins.
-
-Creating a master API key with full rights
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-It is also possible to create or get a master API key with full access to *all* :class:`.APIKeyScopes`.
-The following example show how to get hold of a master key:
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/projects/creating_a_master_api_key.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            # the <project_api_key>
-            "0-1aABCDE_aFGcdeHIfJ2KfLMgNO3PQh4RST5UV6W_X"
-
-
-Fetching project API keys
--------------------------
-
-All API keys for an existing project can be obtained using the ``<project_hash>`` which uniquely identifies a project.
-Before you can fetch API keys, you need to i) :ref:`create a project <tutorials/projects:Creating a project>` and ii) :ref:`add API keys <tutorials/projects:Creating a project api key>`.
-
-.. autolink-concat:: section
-
-.. autolink-preface::
-    from encord.orm.project_api_key import ProjectAPIKey, APIKeyScopes
-
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/projects/fetching_project_api_keys.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            [
-                ProjectAPIKey(
-                    api_key="0-1aABCDE_aFGcdeHIfJ2KfLMgNO3PQh4RST5UV6W_X",
-                    title="Example title",
-                    scopes=[
-                        APIKeyScopes.LABEL_READ,
-                        APIKeyScopes.LABEL_WRITE,
-                    ]
-                ),
-                # ...
-            ]
-
-
-.. note::
-    This capability is available to only the Admin of a project.
-..
-    fetching_project_api_keys
 
 Data
 ====
@@ -1170,3 +1067,106 @@ There are other limitations which are documented in the :class:`Issues <.client_
 Please reach out to the Encord team if those need clarification.
 
 
+API keys
+========
+We recommend using a :class:`encord.project.Project` as described in :ref:`tutorials/projects:Managing a project`.
+This will be simpler than dealing with the soon to be deprecated API keys which should only be used under specific circumstances as described in :ref:`authentication:Resource authentication`.
+
+Creating a project API key
+--------------------------
+
+Creating a project API key with specific rights
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can create a project API key through :meth:`create_project_api_key() <.EncordUserClient.create_project_api_key>`, which is required to interact with a project using the :class:`encord.project.Project`.
+
+This method takes three arguments:
+
+* ``project_id``: the ``<project_hash>`` of your project, obtained - for example - by :ref:`tutorials/projects:Creating a project` or :ref:`tutorials/projects:Listing existing projects`
+* ``api_key_title``: the title of the API key
+* ``scopes``: a list of :class:`.APIKeyScopes` enum values specifying what is accessible with the API key.
+
+The following code example creates an API key with read and write permissions for the project labels.
+For the full set of permissions, see :class:`.APIKeyScopes`.
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/creating_a_project_api_key.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            # the <project_api_key>
+            "0-1aABCDE_aFGcdeHIfJ2KfLMgNO3PQh4RST5UV6W_X"
+
+
+You use the ``<project_id>`` and ``<project_api_key>`` to obtain an :ref:`authentication:Resource authentication` which is specific to the project with the specified permissions.
+
+.. note::
+    This capability is only available to project admins.
+
+Creating a master API key with full rights
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is also possible to create or get a master API key with full access to *all* :class:`.APIKeyScopes`.
+The following example show how to get hold of a master key:
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/creating_a_master_api_key.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            # the <project_api_key>
+            "0-1aABCDE_aFGcdeHIfJ2KfLMgNO3PQh4RST5UV6W_X"
+
+
+Fetching project API keys
+-------------------------
+
+All API keys for an existing project can be obtained using the ``<project_hash>`` which uniquely identifies a project.
+Before you can fetch API keys, you need to i) :ref:`create a project <tutorials/projects:Creating a project>` and ii) :ref:`add API keys <tutorials/projects:Creating a project api key>`.
+
+.. autolink-concat:: section
+
+.. autolink-preface::
+    from encord.orm.project_api_key import ProjectAPIKey, APIKeyScopes
+
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/fetching_project_api_keys.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            [
+                ProjectAPIKey(
+                    api_key="0-1aABCDE_aFGcdeHIfJ2KfLMgNO3PQh4RST5UV6W_X",
+                    title="Example title",
+                    scopes=[
+                        APIKeyScopes.LABEL_READ,
+                        APIKeyScopes.LABEL_WRITE,
+                    ]
+                ),
+                # ...
+            ]
+
+
+.. note::
+    This capability is available to only the Admin of a project.
+..
+    fetching_project_api_keys

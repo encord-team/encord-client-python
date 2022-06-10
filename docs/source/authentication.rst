@@ -8,8 +8,8 @@ Types of authentication
 ========================
 You can authenticate with |company| on a user basis by registering an :xref:`ssh_public_key_authentication` (i.e. "public key" in this document), or on a specific project or dataset basis by using an |company|-generated API key tied to that resource.
 
-Public key authentication
-----------------------------
+User authentication via public key (**recommended**)
+------------------------------------------------------------------------
 Public key authentication gives you full access to all the capabilities of the SDK.
 **This is our recommended default authentication method.**
 
@@ -21,28 +21,41 @@ You can use the client to interact with a :ref:`general_concepts:Dataset` or a :
 * A project admin or project manager of the project that is being accessed
 * A dataset admin of the dataset that is being accessed
 
-API key authentication
-----------------------
+Resource authentication via API key (supports legacy flows)
+------------------------------------------------------------------
 You can access a specific project or dataset via API key authentication.
 An individual API key is always tied to one specific project or dataset.
+**This is an authentication flow that will be deprecated in the future in favour of the public key authentication.**
 
 We only recommend you to use this authentication if
 
 * You do not have user access rights for a project or dataset
 * You want to access a project or dataset as part of an automated pipeline without using a specific user account
 
-
-Set up authentication keys
+User authentication
 ==========================
 
-Register a public key
----------------------
+Set up authentication keys - user authentication
+--------------------------------------------------------------------
 Public keys are tied to the user so need to be added to your profile.
 To register a public key, please follow the instructions in :xref:`public_keys` of the |sdk| documentation.
 
-Create an API key
------------------
 
+Authenticate with |company| - user authentication
+--------------------------------------------------------------------
+
+After registering your public key, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
+Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`.ProjectManager` or :class:`.DatasetManager` objects tied to them
+
+.. literalinclude:: code_examples/authenticate_ssh.py
+    :language: python
+
+
+Resource authentication
+=======================
+
+Set up authentication keys - resource authentication
+--------------------------------------------------------------------
 API keys are tied to specific projects or datasets.
 You can generate multiple keys for each project or dataset.
 
@@ -64,27 +77,8 @@ You can additionally create them programmatically as you can see in these guides
 * Create :ref:`tutorials/projects:API keys` for projects
 * Create :ref:`tutorials/datasets:API keys` for datasets
 
-
-Authenticate with |company|
-===========================
-
-Once you have registered a public key or created an API key, you can authenticate your SDK client with |company| and get started with the SDK.
-
-
-Public key authentication with the SDK
---------------------------------------------------
-
-After registering your public key, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
-Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`.ProjectManager` or :class:`.DatasetManager` objects tied to them
-
-.. literalinclude:: code_examples/authenticate_ssh.py
-    :language: python
-
-
-
-API key authentication with the SDK
---------------------------------------------
-
+Authenticate with |company| - resource authentication
+--------------------------------------------------------------------
 If you are using API key authentication, authenticate with |company| by passing the resource ID (project or dataset ID) and associated API key to an :class:`.EncordClient`.
 This will directly create an :class:`.EncordClient` to interact with a specific project or dataset.
 
@@ -92,5 +86,5 @@ This will directly create an :class:`.EncordClient` to interact with a specific 
     :language: python
 
 .. note::
-    The :class:`encord.client.EncordClientProject` is functionally equivalent to the :class:`.ProjectManager`.
-    The :class:`encord.client.EncordClientDataset` is functionally equivalent to the :class:`.DatasetManager`.
+    The :class:`encord.client.EncordClientProject` is functionally equivalent to the :class:`.ProjectManager`, and the recomended interface going forward.
+    The :class:`encord.client.EncordClientDataset` is functionally equivalent to the :class:`.DatasetManager`, and the recomended interface going forward.
