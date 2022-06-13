@@ -34,8 +34,8 @@ MUST_SET_DETECTION_RANGE_ERROR = ["MUST_SET_DETECTION_RANGE_ERROR"]
 DETECTION_RANGE_INVALID_ERROR = ["DETECTION_RANGE_INVALID_ERROR"]
 RESOURCE_EXISTS_ERROR = ["RESOURCE_EXISTS_ERROR"]
 INVALID_DATE_FORMAT_ERROR = ["INVALID_DATE_FORMAT_ERROR"]
-DUPLICATE_SSH_KEY = ["DUPLICATE_SSH_KEY"]
-SSH_KEY_NOT_FOUND = ["SSH_KEY_NOT_FOUND"]
+DUPLICATE_SSH_KEY_ERROR = ["DUPLICATE_SSH_KEY_ERROR"]
+SSH_KEY_NOT_FOUND_ERROR = ["SSH_KEY_NOT_FOUND_ERROR"]
 
 
 def check_error_response(response, payload=None):
@@ -105,10 +105,10 @@ def check_error_response(response, payload=None):
             "Trying to create a resource that already exists. " "Payload for this failure is: " + str(payload)
         )
 
-    if response == DUPLICATE_SSH_KEY:
+    if response == DUPLICATE_SSH_KEY_ERROR:
         raise DuplicateSshKeyError("The used SSH key exists more than once. Please create a unique user SSH key.")
 
-    if response == SSH_KEY_NOT_FOUND:
+    if response == SSH_KEY_NOT_FOUND_ERROR:
         raise SshKeyNotFound(
             "The used SSH key does not exist on the Encord platform. Please add this SSH key to your user profile."
         )
