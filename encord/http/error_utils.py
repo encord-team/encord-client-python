@@ -103,4 +103,7 @@ def check_error_response(response, payload=None):
             "Trying to create a resource that already exists. " "Payload for this failure is: " + str(payload)
         )
 
-    pass
+    raise GenericServerError(
+        "The Encord server has reported an error. Upgrade the SDK to the latest version to get the exact error."
+        f"The reported error is of type `{response}`."
+    )
