@@ -113,4 +113,7 @@ def check_error_response(response, payload=None):
             "The used SSH key does not exist on the Encord platform. Please add this SSH key to your user profile."
         )
 
-    pass
+    raise GenericServerError(
+        f"The Encord server has reported an error of type `{response}`. Please do not parse this error "
+        "programmatically, instead please upgrade the SDK to the latest version to get the exact error."
+    )
