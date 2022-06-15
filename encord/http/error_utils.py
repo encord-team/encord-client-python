@@ -104,6 +104,6 @@ def check_error_response(response, payload=None):
         )
 
     raise GenericServerError(
-        "The Encord server has reported an error. Upgrade the SDK to the latest version to get the exact error."
-        f"The reported error is of type `{response}`."
+        f"The Encord server has reported an error of type `{response}`. Please do not parse this error "
+        "programmatically, instead please upgrade the SDK to the latest version to get the exact error."
     )
