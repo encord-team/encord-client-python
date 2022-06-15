@@ -14,9 +14,15 @@
 # under the License.
 
 from collections import OrderedDict
+from dataclasses import dataclass
 from enum import Enum
+from typing import List
 
+from encord.constants.model import AutomationModels
+from encord.exceptions import EncordException
 from encord.orm import base_orm
+from encord.orm.formatter import Formatter
+from encord.utilities.common import ENCORD_CONTACT_SUPPORT_EMAIL
 
 
 class ModelOperations(Enum):
@@ -37,6 +43,41 @@ class Model(base_orm.BaseORM):
     """
 
     DB_FIELDS = OrderedDict([("model_operation", int), ("model_parameters", dict)])
+
+
+@dataclass
+class ModelConfiguration(Formatter):
+
+    model_uid: str
+    title: str
+    description: str
+    # The corresponding feature node hashes of the ontology object
+    feature_node_hashes: List[str]
+    model: AutomationModels
+
+    @classmethod
+    def from_dict(cls, json_dict: dict):
+        return ModelConfiguration(
+            model_uid=json_dict["model_hash"],
+            title=json_dict["title"],
+            description=json_dict["description"],
+            feature_node_hashes=cls._get_feature_node_hashes(json_dict["features"]),
+            model=cls._get_automation_model(json_dict["model"]),
+        )
+
+    @classmethod
+    def _get_feature_node_hashes(cls, features: dict) -> List[str]:
+        return list(features.keys())
+
+    @classmethod
+    def _get_automation_model(cls, automation_model_str: str) -> AutomationModels:
+        try:
+            return AutomationModels(automation_model_str)
+        except ValueError as e:
+            raise EncordException(
+                "A model was returned which was not recognised. Please upgrade your SDK "
+                f"to the latest version or contact support at {ENCORD_CONTACT_SUPPORT_EMAIL}."
+            ) from e
 
 
 class ModelRow(base_orm.BaseORM):

@@ -7,6 +7,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from encord.orm.model import ModelConfiguration
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -374,6 +375,12 @@ class Project:
             ValueError: If invalid arguments are supplied in the function call
         """
         return self._client.add_classification(name, classification_type, required, options)
+
+    def list_models(self) -> List[ModelConfiguration]:
+        """
+        List all models that are associated with the project.
+        """
+        return self._client.list_models()
 
     def create_model_row(
         self,

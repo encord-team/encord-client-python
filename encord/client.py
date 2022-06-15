@@ -78,6 +78,7 @@ from encord.orm.labeling_algorithm import (
 )
 from encord.orm.model import (
     Model,
+    ModelConfiguration,
     ModelInferenceParams,
     ModelOperations,
     ModelRow,
@@ -471,6 +472,12 @@ class EncordClientProject(EncordClient):
         ontology = self.get_project_ontology()
         ontology.add_classification(name, classification_type, required, options)
         return self.__set_project_ontology(ontology)
+
+    def list_models(self) -> List[ModelConfiguration]:
+        """
+        This function is documented in :meth:`encord.project.Project.create_model_row`.
+        """
+        return self._querier.get_multiple(ModelConfiguration)
 
     def create_model_row(
         self,
