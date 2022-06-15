@@ -187,3 +187,17 @@ class ResourceExistsError(EncordException):
     """
 
     pass
+
+
+class DuplicateSshKeyError(EncordException):
+    """
+    Exception thrown when using an SSH key that was added twice to the platform.
+    """
+
+    pass
+
+
+class SshKeyNotFound(EncordException):
+    """
+    Exception thrown when using an SSH key that was not added to the platform.
+    """
