@@ -246,7 +246,7 @@ class CreateDatasetResponse(dict, Formatter):
     def __init__(
         self,
         title: str,
-        storage_location: str,
+        storage_location: int,
         dataset_hash: str,
         user_hash: str,
     ):
@@ -279,11 +279,11 @@ class CreateDatasetResponse(dict, Formatter):
 
     @property
     def storage_location(self) -> StorageLocation:
-        return StorageLocation.from_str(self["type"])
+        return StorageLocation(self["type"])
 
     @storage_location.setter
     def storage_location(self, value: StorageLocation) -> None:
-        self["type"] = value.get_str()
+        self["type"] = value.value
 
     @property
     def dataset_hash(self) -> str:
