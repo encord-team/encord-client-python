@@ -121,15 +121,15 @@ class DatasetInfo:
     title: str
     description: str
     type: int
-    created_at: datetime.datetime
-    last_edited_at: datetime.datetime
+    created_at: datetime
+    last_edited_at: datetime
 
 
 class Dataset(dict, Formatter):
     def __init__(
         self,
         title: str,
-        storage_location: StorageLocation,
+        storage_location: str,
         data_rows: List[DataRow],
         description: Optional[str] = None,
     ):
@@ -148,7 +148,7 @@ class Dataset(dict, Formatter):
             {
                 "title": title,
                 "description": description,
-                "dataset_type": storage_location.name,
+                "dataset_type": storage_location,
                 "data_rows": data_rows,
             }
         )
@@ -175,7 +175,7 @@ class Dataset(dict, Formatter):
 
     @storage_location.setter
     def storage_location(self, value: StorageLocation) -> None:
-        self["dataset_type"] = value.name
+        self["dataset_type"] = value.get_str()
 
     @property
     def data_rows(self) -> List[DataRow]:
@@ -190,7 +190,7 @@ class Dataset(dict, Formatter):
         return Dataset(
             title=json_dict["title"],
             description=json_dict["description"],
-            storage_location=StorageLocation.from_str(json_dict["dataset_type"]),
+            storage_location=json_dict["dataset_type"],
             data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])),
         )
 
@@ -246,7 +246,7 @@ class CreateDatasetResponse(dict, Formatter):
     def __init__(
         self,
         title: str,
-        storage_location: StorageLocation,
+        storage_location: str,
         dataset_hash: str,
         user_hash: str,
     ):
@@ -263,7 +263,7 @@ class CreateDatasetResponse(dict, Formatter):
         super().__init__(
             {
                 "title": title,
-                "type": storage_location.value,
+                "type": storage_location,
                 "dataset_hash": dataset_hash,
                 "user_hash": user_hash,
             }
@@ -279,11 +279,11 @@ class CreateDatasetResponse(dict, Formatter):
 
     @property
     def storage_location(self) -> StorageLocation:
-        return StorageLocation(self["type"])
+        return StorageLocation.from_str(self["type"])
 
     @storage_location.setter
     def storage_location(self, value: StorageLocation) -> None:
-        self["type"] = value.value
+        self["type"] = value.get_str()
 
     @property
     def dataset_hash(self) -> str:
@@ -305,7 +305,7 @@ class CreateDatasetResponse(dict, Formatter):
     def from_dict(cls, json_dict: Dict) -> CreateDatasetResponse:
         return CreateDatasetResponse(
             title=json_dict["title"],
-            storage_location=StorageLocation(json_dict["type"]),
+            storage_location=json_dict["type"],
             dataset_hash=json_dict["dataset_hash"],
             user_hash=json_dict["user_hash"],
         )
@@ -328,6 +328,16 @@ class StorageLocation(IntEnum):
         if string_location == "AZURE_STR":
             return StorageLocation.AZURE
         raise TypeError(f"Invalid storage location string: `{string_location}`")
+
+    def get_str(self) -> str:
+        if self == StorageLocation.CORD_STORAGE:
+            return "CORD_STORAGE"
+        if self == StorageLocation.AWS:
+            return "AWS_S3"
+        if self == StorageLocation.GCP:
+            return "GCP_STR"
+        if self == StorageLocation.AZURE:
+            return "AZURE_STR"
 
 
 DatasetType = StorageLocation
