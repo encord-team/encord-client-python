@@ -5,7 +5,7 @@ from encord.orm.dataset import CreateDatasetResponse, StorageLocation
 
 DATASET_RESPONSE_JSON = {
     "title": "CVAT imported baking dataset",
-    "type": StorageLocation.CORD_STORAGE.get_str(),
+    "type": 0,
     "dataset_hash": "460505dd-89ea-485a-b4ea-417558a26889",
     "user_hash": "yiA5JxmLEGSoEcJAuxr3AJdDDXE2",
 }
