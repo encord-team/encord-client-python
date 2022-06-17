@@ -9,6 +9,7 @@ from encord.constants.enums import DataType
 from encord.orm.dataset import Dataset, StorageLocation
 
 DATASET_JSON = {
+    "dataset_hash": "93a90f72-0da4-47d9-8ffe-b779a7d0b22a",
     "title": "CVAT imported baking dataset",
     "description": "Suiting description",
     "dataset_type": "CORD_STORAGE",
@@ -32,6 +33,7 @@ def test_dataset_conversions():
 def test_dataset_fields():
     dataset = Dataset.from_dict(DATASET_JSON)
 
+    assert dataset.dataset_hash == DATASET_JSON["dataset_hash"]
     assert dataset.title == DATASET_JSON["title"]
     assert dataset.description == DATASET_JSON["description"]
     assert dataset.storage_location == StorageLocation.CORD_STORAGE
