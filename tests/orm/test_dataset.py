@@ -85,3 +85,7 @@ def test_dataset_backwards_compatibility():
     dataset.items()
     dataset.keys()
     dataset.values()
+    assert dataset["title"] == DATASET_JSON["title"]
+    assert dataset["description"] == DATASET_JSON["description"]
+    assert dataset["dataset_type"] == DATASET_JSON["dataset_type"]
+    assert dataset["data_rows"] == DATASET_JSON["data_rows"]
