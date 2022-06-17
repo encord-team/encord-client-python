@@ -131,6 +131,7 @@ class Dataset(dict, Formatter):
         title: str,
         storage_location: str,
         data_rows: List[DataRow],
+        dataset_hash: str,
         description: Optional[str] = None,
     ):
         """
@@ -146,12 +147,17 @@ class Dataset(dict, Formatter):
         """
         super().__init__(
             {
+                "dataset_hash": dataset_hash,
                 "title": title,
                 "description": description,
                 "dataset_type": storage_location,
                 "data_rows": data_rows,
             }
         )
+
+    @property
+    def dataset_hash(self) -> str:
+        return self["dataset_hash"]
 
     @property
     def title(self) -> str:
@@ -191,6 +197,7 @@ class Dataset(dict, Formatter):
             title=json_dict["title"],
             description=json_dict["description"],
             storage_location=json_dict["dataset_type"],
+            dataset_hash=json_dict["dataset_hash"],
             data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])),
         )
 
