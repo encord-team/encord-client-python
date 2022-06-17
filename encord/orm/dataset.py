@@ -437,7 +437,8 @@ class ImageGroupOCR:
 @dataclasses.dataclass(frozen=True)
 class ReEncodeVideoTaskResult:
     data_hash: str
-    signed_url: str
+    # The signed url is only present when using StorageLocation.CORD_STORAGE
+    signed_url: Optional[str]
     bucket_path: str
 
 
