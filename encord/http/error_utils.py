@@ -36,6 +36,7 @@ RESOURCE_EXISTS_ERROR = ["RESOURCE_EXISTS_ERROR"]
 INVALID_DATE_FORMAT_ERROR = ["INVALID_DATE_FORMAT_ERROR"]
 DUPLICATE_SSH_KEY_ERROR = ["DUPLICATE_SSH_KEY_ERROR"]
 SSH_KEY_NOT_FOUND_ERROR = ["SSH_KEY_NOT_FOUND_ERROR"]
+INVALID_ARGUMENTS_ERROR = ["INVALID_ARGUMENTS_ERROR"]
 
 
 def check_error_response(response, payload=None):
@@ -113,7 +114,18 @@ def check_error_response(response, payload=None):
             "The used SSH key does not exist on the Encord platform. Please add this SSH key to your user profile."
         )
 
+    if response == INVALID_ARGUMENTS_ERROR:
+        default_message = "Some of the arguments to the SDK function were invalid."
+        if payload is None:
+            message = default_message
+        else:
+            message = payload
+        raise InvalidArgumentsError(message)
+
+    payload_string = ""
+    if payload:
+        payload_string = f" with the following payload `{payload}`"
     raise GenericServerError(
-        f"The Encord server has reported an error of type `{response}`. Please do not parse this error "
+        f"The Encord server has reported an error of type `{response}`{payload_string}. Please do not parse this error "
         "programmatically, instead please upgrade the SDK to the latest version to get the exact error."
     )
