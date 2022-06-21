@@ -425,7 +425,7 @@ A data unit can have any number of vector labels (e.g. bounding box, polygon, po
 Getting label rows
 ------------------
 
-A project's ``<label_hash>`` is found in the project information ``project_manager.get_project()``, which also contain information about the ``data_title``, ``data_type`` and ``label_status``.
+A project's ``<label_hash>`` is found in the project information ``project``, which also contain information about the ``data_title``, ``data_type`` and ``label_status``.
 
 .. code-block::
 
@@ -450,17 +450,17 @@ Use the :class:`encord.project.Project` to fetch individual label objects.
 
 .. code-block::
 
-    label = project_manager.get_label_row("<label_hash>")
+    label = project.get_label_row("<label_hash>")
 
 Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels.
 
 .. code-block::
 
-    project = project_manager.get_project()
+    project_orm = project.get_project()
 
     label_rows = []
-    for label_hash in project.get_labels_list():
-        lb = project_manager.get_label_row(label_hash)
+    for label_hash in project_orm.get_labels_list():
+        lb = project.get_label_row(label_hash)
         label_rows.append(lb)
 
 The label row object contains data units with signed URLs (``<data_link>``) to the labeled data asset.
@@ -554,7 +554,7 @@ To save labels for the data which was not labeled before, follow the steps under
 
 .. code-block::
 
-    project_manager.save_label_row('<label_hash>', sample_label)
+    project.save_label_row('<label_hash>', sample_label)
 
 Label rows have to be saved in the same format as fetched.
 The function :meth:`construct_answer_dictionaries() <encord.utilities.label_utilities.construct_answer_dictionaries>` helps construct answer dictionaries for all objects and classifications in the label row if they do not exist, returning a label row object with updated object and classification answer dictionaries.
@@ -563,9 +563,9 @@ The function :meth:`construct_answer_dictionaries() <encord.utilities.label_util
 
     from encord.utilities.label_utilities import construct_answer_dictionaries
 
-    sample_label = project_manager.get_label_row("sample_label_uid")
+    sample_label = project.get_label_row("sample_label_uid")
     updated_label = label_utilities.construct_answer_dictionaries(sample_label)
-    project_manager.save_label_row(sample_label["label_hash"], updated_label)
+    project.save_label_row(sample_label["label_hash"], updated_label)
 
 
 Creating a label row
@@ -578,7 +578,6 @@ If you want to save labels to a unit of data (``video``, ``img_group``) for whic
 
    .. code-block:: python
 
-       project = project_manager.get_project()
        print(project.label_rows)
 
    In this example project, we have two videos.
@@ -612,7 +611,7 @@ If you want to save labels to a unit of data (``video``, ``img_group``) for whic
     .. code-block:: python
 
         data_hash = label_row["data_hash"]
-        my_label_row = project_manager.create_label_row(data_hash)
+        my_label_row = project.create_label_row(data_hash)
 
 
     The label row will have the expected structure and can be updated as needed.
@@ -625,7 +624,7 @@ The following method can be used to submit a label row for review.
 
 .. code-block::
 
-    project_manager.submit_label_row_for_review("<label_hash>")
+    project.submit_label_row_for_review("<label_hash>")
 
 The above method will submit the annotation task corresponding to the label row and create the review tasks corresponding to it based on the sampling rate in the project settings.
 
@@ -650,20 +649,20 @@ A data row contains a data unit, or a collection of data units, and has attribut
 .. code-block:: python
 
     # type: Tuple[Optional[dict], Optional[List[dict]]
-    video, images = project_manager.get_data("<data_hash>", generate_signed_url=True)
+    video, images = project.get_data("<data_hash>", generate_signed_url=True)
 
 You can optionally return signed URLs for timed public access to that resource (default is False).
 
 Reviewing label logs
 --------------------
 
-You can query information about a project's labels by using the :meth:`get_label_logs() <encord.project.Project.get_label_logs>` method of a corresponding :class:`ProjectManager <encord.project.Project>`.
+You can query information about a project's labels by using the :meth:`get_label_logs() <encord.project.Project.get_label_logs>` method of a corresponding :class:`~encord.project.Project`.
 You will need an API key with the ``label_logs.read`` permission.
 The :meth:`get_label_logs() <encord.project.Project.get_label_logs>` method takes a number of optional parameters to narrow down the retrieved logs:
 
 .. code-block::
 
-    logs = project_manager.get_label_logs(user_hash=<user_hash>)
+    logs = project.get_label_logs(user_hash=<user_hash>)
     for log in logs:
         print(log)
 
@@ -703,7 +702,7 @@ Click on the *Model API details* button to toggle a code snippet with create mod
 
     from encord.constants.model import FASTER_RCNN
 
-    model_row_hash = project_manager.create_model_row(
+    model_row_hash = project.create_model_row(
         title="Sample title",
         description="Sample description",  # Optional
         #  List of feature feature uid's (hashes) to be included in the model.
@@ -756,7 +755,7 @@ Click on the *Training API details* button to toggle a code snippet with model t
     from encord.constants.model_weights import *
 
     # Run training and print resulting model iteration object
-    model_iteration = project_manager.model_train(
+    model_iteration = project.model_train(
       <model_uid>,
       label_rows=["<label_row_1>", "<label_row_2>", ...], # Label row uid's
       epochs=500, # Number of passes through training dataset.
@@ -817,7 +816,7 @@ Click the 'Inference API details' icon next to the download button to toggle a c
 .. code-block::
 
     # Run inference and print inference result
-    inference_result = project_manager.model_inference(
+    inference_result = project.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       data_hashes=["video1_data_hash", "video2_data_hash"],  # List of data_hash values for videos/image groups
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
@@ -833,7 +832,7 @@ The default confidence threshold is set to ``0.6``, the default IoU threshold is
 
 .. code-block::
 
-    inference_result = project_manager.model_inference(
+    inference_result = project.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       data_hashes=["video1_data_hash", "video2_data_hash"],  # List of data_hash values for videos/image groups
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
@@ -849,7 +848,7 @@ In case of locally stored images only JPEG and PNG file types are supported for 
 
 .. code-block::
 
-    inference_result = project_manager.model_inference(
+    inference_result = project.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       file_paths=["path/to/file/1.jpg", "path/to/file/2.jpg"],  # Local file paths to images
       detection_frame_range=[1,1],
@@ -861,7 +860,7 @@ For running inference on locally stored videos, only ``mp4`` and ``webm`` video 
 
 .. code-block::
 
-    inference_result = project_manager.model_inference(
+    inference_result = project.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       file_paths=["path/to/file/1.mp4", "path/to/file/2.mp4"],  # Local file paths to videos
       detection_frame_range=[0, 100],  # Run detection on frames 0 to 100
@@ -873,7 +872,7 @@ The model inference API also accepts a list of base64 encoded strings.
 
 .. code-block::
 
-    inference_result = project_manager.model_inference(
+    inference_result = project.model_inference(
       "<model_iteration_id>",  # Model iteration ID
       base64_strings=[base64_str_1, base_64_str_2],  # Base 64 encoded strings of images/videos
       detection_frame_range=[1,1],
@@ -926,14 +925,14 @@ The interpolation algorithm can be run on multiple objects with different ontolo
         .. code-block:: python
 
             # Fetch label row
-            sample_label = project_manager.get_label_row("sample_label_uid")
+            sample_label = project.get_label_row("sample_label_uid")
 
             # Prepare interpolation
             key_frames = sample_label["data_units"]["sample_data_hash"]["labels"]
             objects_to_interpolate = ["sample_object_uid"]
 
             # Run interpolation
-            interpolation_result = project_manager.object_interpolation(key_frames, objects_to_interpolate)
+            interpolation_result = project.object_interpolation(key_frames, objects_to_interpolate)
             print(interpolation_result)
 
     .. tab:: Example output

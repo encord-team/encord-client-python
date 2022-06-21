@@ -45,7 +45,7 @@ Authenticate with |company| - user authentication
 --------------------------------------------------------------------
 
 After registering your public key, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
-Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`.ProjectManager` or :class:`.DatasetManager` objects tied to them
+Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`~encord.project.Project` or :class:`~encord.dataset.Dataset` objects tied to them
 
 .. literalinclude:: code_examples/authenticate_ssh.py
     :language: python
@@ -87,5 +87,5 @@ This will directly create an :class:`.EncordClient` to interact with a specific 
     :language: python
 
 .. note::
-    The :class:`encord.client.EncordClientProject` is functionally equivalent to the :class:`.ProjectManager`, and the recomended interface going forward.
-    The :class:`encord.client.EncordClientDataset` is functionally equivalent to the :class:`.DatasetManager`, and the recomended interface going forward.
+    The :class:`encord.client.EncordClientProject` is functionally equivalent to the :class:`~encord.project.Project`, and the recomended interface going forward.
+    The :class:`encord.client.EncordClientDataset` is functionally equivalent to the :class:`~encord.dataset.Dataset`, and the recomended interface going forward.
