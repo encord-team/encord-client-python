@@ -24,7 +24,7 @@ Projects can be linked to multiple datasets.
 For a |platform| specific introduction, please refer to the |platform| :xref:`project` page.
 
 For each of the concepts, you find a class that allows you to interact with their specific attributes.
-For example, the *Project* has an associated :class:`~encord.project.Project` and the *Dataset* has an associated :class:`~encord.dataset.Dataset`.
+For example, the *Project* has an associated :class:`~encord.project.Project` class and the *Dataset* has an associated :class:`~encord.dataset.Dataset` class.
 
 
 If you haven't already, you can go ahead and install the SDK by following the :ref:`installation:Installation` guide or skip directly to the :ref:`authentication:Authentication` page to get started with the |sdk|.
