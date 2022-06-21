@@ -53,6 +53,7 @@ Once you have an :class:`.EncordUserClient`, you can use it to create new projec
 
 Resource authentication
 =======================
+This is an authentication flow that will be deprecated in the future in favour of public key authentication.
 
 Set up authentication keys - resource authentication
 --------------------------------------------------------------------
