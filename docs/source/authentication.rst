@@ -25,7 +25,7 @@ Resource authentication via API key (supports legacy flows)
 ------------------------------------------------------------------
 You can access a specific project or dataset via API key authentication.
 An individual API key is always tied to one specific project or dataset.
-**This is an authentication flow that will be deprecated in the future in favour of the public key authentication.**
+**This is an authentication flow that will be deprecated in the future in favour of public key authentication.**
 
 We only recommend you to use this authentication if
 
