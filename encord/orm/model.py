@@ -54,6 +54,7 @@ class ModelConfiguration(Formatter):
     # The corresponding feature node hashes of the ontology object
     feature_node_hashes: List[str]
     model: AutomationModels
+    # All the UIDs of individual model training instances
     model_iteration_uids: List[str]
 
     @classmethod
