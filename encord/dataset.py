@@ -18,6 +18,14 @@ class Dataset:
         self._dataset_instance = None
 
     @property
+    def dataset_hash(self) -> str:
+        """
+        Get the dataset hash (i.e. the Dataset ID).
+        """
+        dataset_instance = self._get_dataset_instance()
+        return dataset_instance.dataset_hash
+
+    @property
     def title(self) -> str:
         dataset_instance = self._get_dataset_instance()
         return dataset_instance.title

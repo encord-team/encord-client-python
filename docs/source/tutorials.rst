@@ -2,10 +2,10 @@
 Tutorials
 *********
 
-The tutorials are separated into those that relate to *datasets*, those that relate to *projects* and those that give you end-to-end examples of common scenarios.
+The tutorials are separated into those that relate to *datasets* and those that relate to *projects*.
 
 .. note::
-    Throughout the tutorials, we use :class:`user_client <.EncordUserClient>`, :class:`dataset_client <.EncordClientDataset>` and :class:`project_client <.EncordClientProject>` extensively.
+    Throughout the tutorials, we use :class:`user_client <.EncordUserClient>`, :class:`dataset <encord.dataset.Dataset>` and :class:`project <encord.project.Project>` extensively.
     We refer to the :ref:`authentication:Authentication` page for examples of how to instantiate those.
 
 .. toctree::
@@ -14,4 +14,3 @@ The tutorials are separated into those that relate to *datasets*, those that rel
 
     ./tutorials/datasets
     ./tutorials/projects
-    ./tutorials/end-to-end/index

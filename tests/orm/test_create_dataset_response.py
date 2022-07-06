@@ -53,3 +53,8 @@ def test_create_dataset_response_backwards_compatibility():
     create_dataset_response.items()
     create_dataset_response.keys()
     create_dataset_response.values()
+
+    assert create_dataset_response["title"] == DATASET_RESPONSE_JSON["title"]
+    assert create_dataset_response["type"] == DATASET_RESPONSE_JSON["type"]
+    assert create_dataset_response["dataset_hash"] == DATASET_RESPONSE_JSON["dataset_hash"]
+    assert create_dataset_response["user_hash"] == DATASET_RESPONSE_JSON["user_hash"]
