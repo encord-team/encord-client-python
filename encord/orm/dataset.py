@@ -461,7 +461,7 @@ class ReEncodeVideoTask(Formatter):
         if "result" in json_dict:
             dict_results = json_dict["result"]
             results = [
-                ReEncodeVideoTaskResult(result["data_hash"], result["signed_url"], result["bucket_path"])
+                ReEncodeVideoTaskResult(result["data_hash"], result.get("signed_url"), result["bucket_path"])
                 for result in dict_results
             ]
             return ReEncodeVideoTask(json_dict["status"], results)
