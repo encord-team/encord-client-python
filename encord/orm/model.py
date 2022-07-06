@@ -54,6 +54,7 @@ class ModelConfiguration(Formatter):
     # The corresponding feature node hashes of the ontology object
     feature_node_hashes: List[str]
     model: AutomationModels
+    model_iteration_uids: List[str]
 
     @classmethod
     def from_dict(cls, json_dict: dict):
@@ -63,6 +64,7 @@ class ModelConfiguration(Formatter):
             description=json_dict["description"],
             feature_node_hashes=cls._get_feature_node_hashes(json_dict["features"]),
             model=cls._get_automation_model(json_dict["model"]),
+            model_iteration_uids=json_dict["model_iteration_uids"],
         )
 
     @classmethod
