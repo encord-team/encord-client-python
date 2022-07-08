@@ -12,9 +12,7 @@ Imports
 
 from pathlib import Path
 
-from encord import EncordUserClient
-from encord.project import Project
-from encord.dataset import Dataset
+from encord import Dataset, EncordUserClient, Project
 from encord.orm.dataset import CreateDatasetResponse, StorageLocation
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape

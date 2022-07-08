@@ -50,6 +50,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length = 120
 include = 'encord\/.*'
+resolve_all_configs = true
 
 [tool.isort]
 # setting isort to a compatibility mode with `black`

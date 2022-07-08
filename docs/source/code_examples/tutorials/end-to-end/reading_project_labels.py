@@ -14,8 +14,8 @@ from functools import partial
 from typing import Callable, Generator, List, Optional
 
 from encord import EncordUserClient
-from encord.project import Project
 from encord.orm.project import Project as OrmProject
+from encord.project import Project
 from encord.project_ontology.object_type import ObjectShape
 
 #%%
@@ -77,7 +77,7 @@ print(status_counts)
 # 2. Getting all label details
 # ----------------------------
 # The actual labels in the label rows are fetched by
-# :class:`.EncordClientProject.get_label_row()`. This function will return a nested
+# :meth:`.EncordClientProject.get_label_row()`. This function will return a nested
 # dictionary structure, with all details about classifications as well as objects.
 # In this section, we show how to build a list of all bounding boxes that have been
 # reviewed and marked as approved.
@@ -95,7 +95,7 @@ class AnnotationObject:
 
 #%%
 # Then we define a function which iterates over all objects of a label row fetched with
-# :class:`.EncordClientProject.get_label_row()`. The function has a callable argument
+# :meth:`.EncordClientProject.get_label_row()`. The function has a callable argument
 # used to filter which objects should be returned.
 
 

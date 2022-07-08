@@ -253,10 +253,9 @@ def find_ontology_classification(ontology: dict, local_to_encord_classifications
 #%%
 # Imports and authentication
 # --------------------------
-# First, import dependencies and athenticate a project manager.
+# First, import dependencies and authenticate a project manager.
 
-from encord import EncordUserClient
-from encord.project import Project
+from encord import EncordUserClient, Project
 from encord.orm.project import Project as OrmProject
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
@@ -287,7 +286,7 @@ ontology = project.ontology
 # were defined when :ref:`tutorials/projects:Adding components to a project ontology`.
 # You find the Encord ontology object names with the following lines of code::
 #
-#     ontology = project_manager.get_project()["editor_ontology"]
+#     ontology = project.get_project()["editor_ontology"]
 #     for obj in ontology["objects"]:
 #         print(f"Type: {obj['shape']:15s} Name: {obj['name']}")
 #
