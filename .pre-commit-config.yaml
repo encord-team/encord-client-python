@@ -6,3 +6,10 @@ repos:
         entry: poetry run black --config=pyproject.toml
         types_or: [ python, pyi ]
         language: system
+        files: ^encord/.*
+      - id: black
+        name: black_docs
+        entry: poetry run black --config=docs/source/code_examples/pyproject.toml
+        types_or: [ python, pyi ]
+        language: system
+        files: ^docs/source/code_examples/.*

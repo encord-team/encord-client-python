@@ -24,7 +24,9 @@ from encord.utilities.project_user import ProjectUserRole
 # To interact with Encord, you need to authenticate a client. You can find more details
 # :ref:`here <authentication:Authentication>`.
 
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key("<your_private_key>")
+user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
+    "<your_private_key>"
+)
 
 #%%
 # 1. Creating and populating the dataset
@@ -33,16 +35,28 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key("<y
 # dataset.
 
 # Create the dataset
-dataset_response: CreateDatasetResponse = user_client.create_dataset("Example Title", StorageLocation.CORD_STORAGE)
+dataset_response: CreateDatasetResponse = user_client.create_dataset(
+    "Example Title", StorageLocation.CORD_STORAGE
+)
 dataset_hash = dataset_response.dataset_hash
 
 # Add data to the dataset
 dataset: Dataset = user_client.get_dataset(dataset_hash)
 
-image_files = sorted([p.as_posix() for p in Path("path/to/images").iterdir() if p.suffix in {".jpg", ".png"}])
+image_files = sorted(
+    [
+        p.as_posix()
+        for p in Path("path/to/images").iterdir()
+        if p.suffix in {".jpg", ".png"}
+    ]
+)
 dataset.create_image_group(image_files)
 
-video_files = [p.as_posix() for p in Path("path/to/videos").iterdir() if p.suffix in {".mp4", ".webm"}]
+video_files = [
+    p.as_posix()
+    for p in Path("path/to/videos").iterdir()
+    if p.suffix in {".mp4", ".webm"}
+]
 
 for v in video_files:
     dataset.upload_video(v)
@@ -52,7 +66,11 @@ for v in video_files:
 # ----------------------------------------
 
 for data_row in dataset.data_rows:
-    print(f"data-hash: '{data_row.uid}', " f"data-type: {data_row.data_type}, " f"title: '{data_row.title}'")
+    print(
+        f"data-hash: '{data_row.uid}', "
+        f"data-type: {data_row.data_type}, "
+        f"title: '{data_row.title}'"
+    )
 
 #%%
 # The code will produce an output similar to the following:

@@ -93,37 +93,58 @@ def make_object_dict(
         try:
             data_iter = iter(object_data)
         except TypeError:
-            raise ValueError(f"The `object_data` for {shape} should be an iterable of points.")
+            raise ValueError(
+                f"The `object_data` for {shape} should be an iterable of points."
+            )
 
-        object_dict[shape] = {str(i): {"x": round(x, 4), "y": round(y, 4)} for i, (x, y) in enumerate(data_iter)}
+        object_dict[shape] = {
+            str(i): {"x": round(x, 4), "y": round(y, 4)}
+            for i, (x, y) in enumerate(data_iter)
+        }
 
     elif shape == "point":
         # Check type
         if not isinstance(object_data, (list, tuple)):
-            raise ValueError(f"The `object_data` for {shape} should be a list or tuple.")
+            raise ValueError(
+                f"The `object_data` for {shape} should be a list or tuple."
+            )
 
         if len(object_data) != 2:
-            raise ValueError(f"The `object_data` for {shape} should have two coordinates.")
+            raise ValueError(
+                f"The `object_data` for {shape} should have two coordinates."
+            )
 
         if not isinstance(object_data[0], float):
-            raise ValueError(f"The `object_data` for {shape} should contain floats.")
+            raise ValueError(
+                f"The `object_data` for {shape} should contain floats."
+            )
 
         # Make dict
-        object_dict[shape] = {"0": {"x": round(object_data[0], 4), "y": round(object_data[1], 4)}}
+        object_dict[shape] = {
+            "0": {"x": round(object_data[0], 4), "y": round(object_data[1], 4)}
+        }
 
     elif shape == "bounding_box":
         # Check type
         if not isinstance(object_data, dict):
-            raise ValueError(f"The `object_data` for {shape} should be a dictionary.")
+            raise ValueError(
+                f"The `object_data` for {shape} should be a dictionary."
+            )
 
         if len(BBOX_KEYS.union(set(object_data.keys()))) != 4:
-            raise ValueError(f"The `object_data` for {shape} should have keys {BBOX_KEYS}.")
+            raise ValueError(
+                f"The `object_data` for {shape} should have keys {BBOX_KEYS}."
+            )
 
         if not isinstance(object_data["x"], float):
-            raise ValueError(f"The `object_data` for {shape} should float values.")
+            raise ValueError(
+                f"The `object_data` for {shape} should float values."
+            )
 
         # Make dict
-        object_dict["boundingBox"] = {k: round(v, 4) for k, v in object_data.items()}
+        object_dict["boundingBox"] = {
+            k: round(v, 4) for k, v in object_data.items()
+        }
 
     return object_dict
 
@@ -159,9 +180,17 @@ def make_classification_dict_and_answer_dict(
         answers_list: List[dict] = []
         for answer in answers:
             try:
-                attribute = next((attr for attr in ontology_class["attributes"] if answer in attr["options"]))
+                attribute = next(
+                    (
+                        attr
+                        for attr in ontology_class["attributes"]
+                        if answer in attr["options"]
+                    )
+                )
             except StopIteration:
-                raise ValueError(f"Couldn't find answer `{answer['label']}` in the ontology class")
+                raise ValueError(
+                    f"Couldn't find answer `{answer['label']}` in the ontology class"
+                )
             answers_list.append(
                 {
                     "featureHash": answer["featureNodeHash"],
@@ -172,10 +201,18 @@ def make_classification_dict_and_answer_dict(
 
     else:  # Text attribute
         try:
-            attribute = next((attr for attr in ontology_class["attributes"] if attr["type"] == "text"))
+            attribute = next(
+                (
+                    attr
+                    for attr in ontology_class["attributes"]
+                    if attr["type"] == "text"
+                )
+            )
             answers_list = [answers]
         except StopIteration:
-            raise ValueError(f"Couldn't find ontology with type text for the string answer {answers}")
+            raise ValueError(
+                f"Couldn't find ontology with type text for the string answer {answers}"
+            )
 
     classification_dict = {
         "classificationHash": classification_hash,
@@ -207,24 +244,45 @@ def make_classification_dict_and_answer_dict(
 
 def find_ontology_object(ontology: dict, encord_name: str):
     try:
-        obj = next((o for o in ontology["objects"] if o["name"].lower() == encord_name.lower()))
+        obj = next(
+            (
+                o
+                for o in ontology["objects"]
+                if o["name"].lower() == encord_name.lower()
+            )
+        )
     except StopIteration:
-        raise ValueError(f"Couldn't match Encord ontology name `{encord_name}` to objects in the " f"Encord ontology.")
+        raise ValueError(
+            f"Couldn't match Encord ontology name `{encord_name}` to objects in the "
+            f"Encord ontology."
+        )
     return obj
 
 
-def __find_option(top_level_classification: dict, encord_option_name: Optional[str]):
+def __find_option(
+    top_level_classification: dict, encord_option_name: Optional[str]
+):
     if top_level_classification["type"] == "text":
         # Text classifications do not have options
         return None
     try:
-        option = next((o for o in top_level_classification["options"] if o["label"].lower() == encord_option_name))
+        option = next(
+            (
+                o
+                for o in top_level_classification["options"]
+                if o["label"].lower() == encord_option_name
+            )
+        )
     except StopIteration:
-        raise ValueError(f"Couldn't match option name {encord_option_name} to any ontology object.")
+        raise ValueError(
+            f"Couldn't match option name {encord_option_name} to any ontology object."
+        )
     return option
 
 
-def find_ontology_classification(ontology: dict, local_to_encord_classifications: dict):
+def find_ontology_classification(
+    ontology: dict, local_to_encord_classifications: dict
+):
     encord_name = local_to_encord_classifications["name"]
     top_level_attribute = None
     for classification in ontology["classifications"]:
@@ -236,10 +294,13 @@ def find_ontology_classification(ontology: dict, local_to_encord_classifications
             break
 
     if top_level_attribute is None:
-        raise ValueError(f"Couldn't match {encord_name} to Encord classification.")
+        raise ValueError(
+            f"Couldn't match {encord_name} to Encord classification."
+        )
 
     options = {
-        o[0]: __find_option(top_level_attribute, o[1]) for o in local_to_encord_classifications.get("options", [])
+        o[0]: __find_option(top_level_attribute, o[1])
+        for o in local_to_encord_classifications.get("options", [])
     }
     return {"classification": top_level_attribute, "options": options}
 
@@ -260,10 +321,17 @@ from encord.orm.project import Project as OrmProject
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
 # Authenticate
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key("<your_private_key>")
+user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
+    "<your_private_key>"
+)
 
 # Find project to work with based on title.
-project_orm: OrmProject = next((p["project"] for p in user_client.get_projects(title_eq="Your project name")))
+project_orm: OrmProject = next(
+    (
+        p["project"]
+        for p in user_client.get_projects(title_eq="Your project name")
+    )
+)
 project: Project = user_client.get_project(project_orm.project_hash)
 
 ontology = project.ontology
@@ -314,7 +382,10 @@ LOCAL_TO_ENCORD_NAMES = {
     "Ant": "Ant (key-point)",
 }
 
-local_to_encord_ont_objects = {k: find_ontology_object(ontology, v) for k, v in LOCAL_TO_ENCORD_NAMES.items()}
+local_to_encord_ont_objects = {
+    k: find_ontology_object(ontology, v)
+    for k, v in LOCAL_TO_ENCORD_NAMES.items()
+}
 
 #%%
 # 2. Saving objects to Encord
@@ -377,7 +448,9 @@ local_objects = [
 video_name = "example_video.mp4"
 
 # Find the label row corresponding to the video associated with the local objects.
-label_row: dict = next((lr for lr in project.label_rows if lr["data_title"] == video_name))
+label_row: dict = next(
+    (lr for lr in project.label_rows if lr["data_title"] == video_name)
+)
 
 # Create or fetch details of the label row from Encord.
 if label_row["label_hash"] is None:
@@ -386,7 +459,9 @@ else:
     label_row: dict = project.get_label_row(label_row["label_hash"])
 
 # Videos only have one data unit, so fetch the labels of that data unit.
-encord_labels: dict = next((du for du in label_row["data_units"].values()))["labels"]
+encord_labels: dict = next((du for du in label_row["data_units"].values()))[
+    "labels"
+]
 
 # Collection of Encord object_hashes to allow track_ids to persist across frames.
 object_hash_idx: Dict[int, str] = {}
@@ -395,7 +470,9 @@ for local_frame_level_objects in local_objects:
     frame: int = local_frame_level_objects["frame"]
 
     # Note that we will append to list of existing objects in the label row.
-    encord_frame_labels: dict = encord_labels.setdefault(str(frame), {"objects": [], "classifications": []})
+    encord_frame_labels: dict = encord_labels.setdefault(
+        str(frame), {"objects": [], "classifications": []}
+    )
     # Uncomment this line if you want to overwrite the objects on the platform
     # encord_frame_labels["objects"] = []
 
@@ -407,7 +484,9 @@ for local_frame_level_objects in local_objects:
         object_hash: Optional[str] = object_hash_idx.get(track_id)
 
         # Construct Encord object dictionary
-        encord_object: dict = make_object_dict(encord_obj_type, local_class["data"], object_hash=object_hash)
+        encord_object: dict = make_object_dict(
+            encord_obj_type, local_class["data"], object_hash=object_hash
+        )
         # Add to existing objects in this frame.
         encord_frame_labels["objects"].append(encord_object)
 
@@ -492,7 +571,9 @@ for encord_data_unit in label_row["data_units"].values():
         object_hash: Optional[str] = object_hash_idx.get(track_id)
 
         # Construct Encord object dictionary
-        encord_object: dict = make_object_dict(encord_obj_type, local_class["data"], object_hash=object_hash)
+        encord_object: dict = make_object_dict(
+            encord_obj_type, local_class["data"], object_hash=object_hash
+        )
         # Add to existing objects in this frame.
         encord_labels["objects"].append(encord_object)
 
@@ -570,7 +651,8 @@ LOCAL_TO_ENCORD_NAMES: dict = {  # NEW
 }
 
 local_to_encord_ont_classifications = {  # NEW
-    k: find_ontology_classification(ontology, v) for k, v in LOCAL_TO_ENCORD_NAMES.items()
+    k: find_ontology_classification(ontology, v)
+    for k, v in LOCAL_TO_ENCORD_NAMES.items()
 }
 
 #%%
@@ -628,7 +710,9 @@ local_classifications = [  # NEW
 video_name = "example_video.mp4"
 
 # Find the label row corresponding to the video that the labels are associated to.
-label_row: dict = next((lr for lr in project.label_rows if lr["data_title"] == video_name))
+label_row: dict = next(
+    (lr for lr in project.label_rows if lr["data_title"] == video_name)
+)
 
 # Create or fetch details of the label row.
 if label_row["label_hash"] is None:
@@ -637,7 +721,9 @@ else:
     label_row: dict = project.get_label_row(label_row["label_hash"])
 
 # Videos only have one data unit, so fetch the labels of that data unit.
-encord_labels: dict = next((du for du in label_row["data_units"].values()))["labels"]
+encord_labels: dict = next((du for du in label_row["data_units"].values()))[
+    "labels"
+]
 classification_answers = label_row["classification_answers"]  # New
 
 # Collection of Encord object_hashes to allow track_ids to persist across frames.
@@ -647,7 +733,9 @@ for local_frame_level_classifications in local_classifications:
     frame: int = local_frame_level_classifications["frame"]
 
     # Note that we will append to list of existing objects in the label row.
-    encord_frame_labels: dict = encord_labels.setdefault(str(frame), {"objects": [], "classifications": []})
+    encord_frame_labels: dict = encord_labels.setdefault(
+        str(frame), {"objects": [], "classifications": []}
+    )
     # Uncomment this line if you want to overwrite the classifications on the platform
     # encord_frame_labels["classifications"] = []
 
@@ -655,13 +743,17 @@ for local_frame_level_classifications in local_classifications:
         local_class_type: str = local_class["type"]
 
         # NEW start
-        encord_class_info: dict = local_to_encord_ont_classifications[local_class_type]
+        encord_class_info: dict = local_to_encord_ont_classifications[
+            local_class_type
+        ]
         encord_classification: dict = encord_class_info["classification"]
         option_map: dict = encord_class_info["options"]
 
         if not option_map:  # Text classification
             answers = local_class["data"]
-        elif isinstance(local_class["data"], (list, tuple)):  # Multi-option checklist
+        elif isinstance(
+            local_class["data"], (list, tuple)
+        ):  # Multi-option checklist
             answers = [option_map[o] for o in local_class["data"]]
         else:  # Single option
             answers = option_map[local_class["data"]]
@@ -672,7 +764,10 @@ for local_frame_level_classifications in local_classifications:
 
         # NEW start
         # Construct Encord object dictionary
-        (encord_class_dict, encord_answers,) = make_classification_dict_and_answer_dict(
+        (
+            encord_class_dict,
+            encord_answers,
+        ) = make_classification_dict_and_answer_dict(
             encord_classification,
             answers,
             classification_hash=classification_hash,
@@ -681,10 +776,14 @@ for local_frame_level_classifications in local_classifications:
         encord_frame_labels["classifications"].append(encord_class_dict)
 
         if classification_hash is None:  # Save answers once for each track id.
-            classification_answers[encord_class_dict["classificationHash"]] = encord_answers
+            classification_answers[
+                encord_class_dict["classificationHash"]
+            ] = encord_answers
 
         # Remember object hash for next time.
-        object_hash_idx.setdefault(track_id, encord_class_dict["classificationHash"])
+        object_hash_idx.setdefault(
+            track_id, encord_class_dict["classificationHash"]
+        )
         # NEW end
 
 # NB: This call is important to maintain a valid label_row structure!
@@ -754,13 +853,17 @@ for encord_data_unit in label_row["data_units"].values():
         local_class_type: str = local_class["type"]
 
         # NEW start
-        encord_class_info: dict = local_to_encord_ont_classifications[local_class_type]
+        encord_class_info: dict = local_to_encord_ont_classifications[
+            local_class_type
+        ]
         encord_classification: dict = encord_class_info["classification"]
         option_map: dict = encord_class_info["options"]
 
         if not option_map:  # Text classification
             answers = local_class["data"]
-        elif isinstance(local_class["data"], (list, tuple)):  # Multi-option checklist
+        elif isinstance(
+            local_class["data"], (list, tuple)
+        ):  # Multi-option checklist
             answers = [option_map[o] for o in local_class["data"]]
         else:  # Single option
             answers = option_map[local_class["data"]]
@@ -771,7 +874,10 @@ for encord_data_unit in label_row["data_units"].values():
 
         # NEW start
         # Construct Encord object dictionary
-        (encord_class_dict, encord_answers,) = make_classification_dict_and_answer_dict(
+        (
+            encord_class_dict,
+            encord_answers,
+        ) = make_classification_dict_and_answer_dict(
             encord_classification,
             answers,
             classification_hash=classification_hash,
@@ -780,10 +886,14 @@ for encord_data_unit in label_row["data_units"].values():
         encord_labels["classifications"].append(encord_class_dict)
 
         if classification_hash is None:  # Save answers once for each track id.
-            classification_answers[encord_class_dict["classificationHash"]] = encord_answers
+            classification_answers[
+                encord_class_dict["classificationHash"]
+            ] = encord_answers
 
         # Remember object hash for next time.
-        object_hash_idx.setdefault(track_id, encord_class_dict["classificationHash"])
+        object_hash_idx.setdefault(
+            track_id, encord_class_dict["classificationHash"]
+        )
 
 # NB: This call is important to maintain a valid label_row structure!
 label_row = construct_answer_dictionaries(label_row)
