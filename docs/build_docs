@@ -7,7 +7,7 @@ echo "Isort"
 poetry run isort . --resolve-all-configs
 
 echo "Black"
-poetry run black . --include ".*\.py" --line-length 80
+poetry run black --config=source/code_examples/pyproject.toml
 
 poetry run make clean
 poetry run make html
