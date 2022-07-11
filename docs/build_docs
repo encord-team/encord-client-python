@@ -2,13 +2,12 @@
 
 set -e
 
-source $(poetry env info --path)/bin/activate
-
 echo "Isort"
 # isort ./**/*.py --profile black --line-length 60
-isort . --resolve-all-configs
+poetry run isort . --resolve-all-configs
 
 echo "Black"
-black . --include ".*\.py" --line-length 80
+poetry run black . --include ".*\.py" --line-length 80
 
-make html
+poetry run make clean
+poetry run make html

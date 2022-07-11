@@ -16,10 +16,6 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../.."))
-sys.path.insert(
-    0,
-    os.path.abspath("../../venv/lib/python3.7/site-packages"),
-)
 sys.path.insert(0, os.path.abspath("../_extensions"))
 
 # -- Project information -----------------------------------------------------
@@ -38,14 +34,17 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
-    "sphinx_autodoc_typehints",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
-    "sphinx_tabs.tabs",
-    "sphinx_codeautolink",
+    "sphinx_autodoc_typehints",
     "sphinx_copybutton",
+    "sphinx_gallery.gen_gallery",
+    "sphinx_codeautolink",
+    "sphinx_tabs.tabs",
     "xref",
 ]
+
+highlight_language = "python3"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["../_templates"]
@@ -53,7 +52,12 @@ templates_path = ["../_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "source/code_examples/tutorials/end-to-end/README.rst",
+]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -79,6 +83,7 @@ autosectionlabel_prefix_document = True
 codeautolink_autodoc_inject = True
 
 
+# == THEME CONFIG SECTION == #
 html_logo = "../_static/logo.svg"
 html_css_files = ["css/custom.css"]
 
@@ -95,6 +100,21 @@ html_sidebars = {
         "encord-sidebar-nav-bs",
         "sidebar-ethical-ads",
     ]
+}
+
+# == END THEME SECTION == #
+
+sphinx_gallery_conf = {
+    "examples_dirs": "code_examples/tutorials/end-to-end",
+    "gallery_dirs": "tutorials/end-to-end",
+    "default_thumb_file": "source/images/end-to-end-thumbs/default.png",
+    "line_numbers": True,
+    "remove_config_comments": True,
+    "min_reported_time": 10,
+    "doc_module": ("encord",),
+    "reference_url": {
+        "encord": None,
+    },
 }
 
 # Static links
