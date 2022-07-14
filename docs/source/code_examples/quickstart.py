@@ -10,6 +10,12 @@ project_hash: str = user_client.get_projects()[0]["project"]["project_hash"]
 project: Project = user_client.get_project(project_hash)
 
 # Get the labels (from one label_row, not entire set of labels from the project).
-label_hash: str = next((lr["label_hash"] for lr in project.label_rows if lr["label_hash"] is not None))
+label_hash: str = next(
+    (
+        lr["label_hash"]
+        for lr in project.label_rows
+        if lr["label_hash"] is not None
+    )
+)
 labels: dict = project.get_label_row(label_hash)
 print(labels)
