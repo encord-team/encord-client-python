@@ -1,0 +1,9 @@
+[tool.black]
+line-length = 80
+include = '.*\.py'
+
+[tool.isort]
+# setting isort to a compatibility mode with `black`
+# https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
+profile = "black"
+line_length = 80
