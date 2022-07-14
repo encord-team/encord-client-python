@@ -140,7 +140,19 @@ class Dataset:
         return self._client.add_private_data_to_dataset(integration_id, private_files, ignore_errors)
 
     def update_data_item(self, dataset_hash: str, data_item: Video):
-        """This function is documented in :meth:`encord.client.EncordClientDataset.update_data_item"""
+        """
+        Update a data item
+
+        Args:
+            dataset_hash: str
+                Dataset hash of the dataset that contains the data item being updated
+            data_item:
+                Video object with the relevant fields already updated.
+                The data_hash should remain the same as it cannot be updated
+        Returns:
+           Returns a success of failure message
+
+        """
         self._client.update_data_items(dataset_hash, data_item)
 
     def re_encode_data(self, data_hashes: List[str]):

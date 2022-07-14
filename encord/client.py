@@ -297,19 +297,7 @@ class EncordClientDataset(EncordClient):
         return AddPrivateDataResponse.from_dict(response)
 
     def update_data_item(self, dataset_hash: str, data_item: Video):
-        """
-        Update a data item
-
-        Args:
-            dataset_hash: str
-                Dataset hash of the dataset that contains the data item being updated
-            data_item:
-                Video object with the relevant fields already updated.
-                The data_hash should remain the same as it cannot be updated
-        Returns:
-           Returns a success of failure message
-
-        """
+        """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""
         payload = [{"video_hash": data_item.data_hash, "title": data_item.title}]
         return self._querier.basic_setter(Video, dataset_hash, payload=payload)
 
