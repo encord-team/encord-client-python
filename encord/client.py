@@ -51,7 +51,7 @@ from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import AddPrivateDataResponse
+from encord.orm.dataset import AddPrivateDataResponse, UpdatableDataFields
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetData,
@@ -296,7 +296,7 @@ class EncordClientDataset(EncordClient):
 
         return AddPrivateDataResponse.from_dict(response)
 
-    def update_data_item(self, dataset_hash: str, data_item: Video):
+    def update_data_item(self, dataset_hash: str, data_item: UpdatableDataFields):
         """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""
         payload = [{"video_hash": data_item.data_hash, "title": data_item.title}]
         return self._querier.basic_setter(Video, dataset_hash, payload=payload)

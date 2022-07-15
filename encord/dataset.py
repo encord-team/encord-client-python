@@ -3,9 +3,9 @@ from typing import Dict, Iterable, List, Optional, TextIO, Union
 
 from encord.client import EncordClientDataset
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import AddPrivateDataResponse, DataRow
+from encord.orm.dataset import AddPrivateDataResponse, DataRow, UpdatableDataFields
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset import ImageGroupOCR, StorageLocation, Video
+from encord.orm.dataset import ImageGroupOCR, StorageLocation
 
 
 class Dataset:
@@ -139,7 +139,7 @@ class Dataset:
         """
         return self._client.add_private_data_to_dataset(integration_id, private_files, ignore_errors)
 
-    def update_data_item(self, dataset_hash: str, data_item: Video):
+    def update_data_item(self, dataset_hash: str, data_item: UpdatableDataFields):
         """
         Update a data item
 
