@@ -51,7 +51,7 @@ from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import AddPrivateDataResponse, UpdatableDataFields
+from encord.orm.dataset import AddPrivateDataResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetData,
@@ -61,6 +61,7 @@ from encord.orm.dataset import (
     ReEncodeVideoTask,
     SignedImagesURL,
     SignedVideoURL,
+    UpdatableDataFields,
     Video,
 )
 from encord.orm.label_log import LabelLog
