@@ -139,6 +139,21 @@ class Dataset:
         """
         return self._client.add_private_data_to_dataset(integration_id, private_files, ignore_errors)
 
+    def update_data_item(self, data_hash: str, new_title: str) -> bool:
+        """
+        Update a data item
+
+        Args:
+            data_hash: str
+                Data hash of the item being updated
+            new_title:
+                String containing the new title of the data item being updated
+        Returns:
+           Returns a boolean for whether the update was successful
+
+        """
+        return self._client.update_data_item(data_hash, new_title)
+
     def re_encode_data(self, data_hashes: List[str]):
         """
         Launches an async task that can re-encode a list of videos.
