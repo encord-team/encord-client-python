@@ -61,7 +61,6 @@ from encord.orm.dataset import (
     ReEncodeVideoTask,
     SignedImagesURL,
     SignedVideoURL,
-    UpdatableDataFields,
     Video,
 )
 from encord.orm.label_log import LabelLog
@@ -297,10 +296,15 @@ class EncordClientDataset(EncordClient):
 
         return AddPrivateDataResponse.from_dict(response)
 
-    def update_data_item(self, dataset_hash: str, data_item: UpdatableDataFields):
+    def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""
-        payload = [{"video_hash": data_item.data_hash, "title": data_item.title}]
-        return self._querier.basic_setter(Video, dataset_hash, payload=payload)
+        payload = [{"video_hash": data_hash, "title": new_title}]
+
+        response = self._querier.basic_setter(Video, self.get_dataset().dataset_hash, payload=payload)
+        try:
+            return response.get("success", False)
+        except AttributeError:
+            return False
 
     def re_encode_data(self, data_hashes: List[str]):
         """

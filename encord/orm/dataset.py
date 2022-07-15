@@ -404,21 +404,6 @@ class Video(base_orm.BaseORM):
     }
 
 
-class UpdatableDataFields(base_orm.BaseORM):
-    """A video object with supporting information."""
-
-    DB_FIELDS = OrderedDict(
-        [
-            ("data_hash", str),
-            ("title", str),
-        ]
-    )
-
-    NON_UPDATABLE_FIELDS = {
-        "data_hash",
-    }
-
-
 class ImageGroup(base_orm.BaseORM):
     """An image group object with supporting information."""
 
