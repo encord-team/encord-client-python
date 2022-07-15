@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional, Type, TypeVar
 
 from encord.objects.common import (
     Attribute,
     Shape,
+    _add_attribute,
     attribute_from_dict,
     attributes_to_list_dict,
 )
@@ -59,3 +60,15 @@ class Object:
             ret["attributes"] = attributes_list
 
         return ret
+
+    T = TypeVar("T", bound=Attribute)
+
+    def add_attribute(
+        self,
+        cls: Type[T],
+        name: str,
+        local_uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+        required: bool = False,
+    ) -> T:
+        return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required)

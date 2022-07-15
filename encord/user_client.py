@@ -15,10 +15,12 @@ import dateutil
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
-from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
+from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.http.querier import Querier
 from encord.http.utils import upload_to_signed_url_list
+from encord.objects.ontology_structure import OntologyStructure
+from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import CreateDatasetResponse
 from encord.orm.dataset import Dataset as OrmDataset
@@ -32,6 +34,7 @@ from encord.orm.dataset import (
     StorageLocation,
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import CvatExportType
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectImporter, ProjectImporterCvatInfo, ReviewMode
@@ -46,6 +49,7 @@ from encord.utilities.client_utilities import (
     Issues,
     LocalImport,
 )
+from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
 
 log = logging.getLogger(__name__)
@@ -93,6 +97,11 @@ class EncordUserClient:
         querier = Querier(config)
         client = EncordClientProject(querier=querier, config=config)
         return Project(client)
+
+    def get_ontology(self, ontology_hash: str) -> Ontology:
+        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
+        querier = Querier(config)
+        return Ontology(querier, config)
 
     def create_private_dataset(
         self,
@@ -243,8 +252,16 @@ class EncordUserClient:
         data = self.querier.get_multiple(ProjectWithUserRole, payload={"filter": properties_filter})
         return [{"project": OrmProject(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
-    def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
-        project = {"title": project_title, "description": project_description, "dataset_hashes": dataset_hashes}
+    def create_project(
+        self, project_title: str, dataset_hashes: List[str], project_description: str = "", ontology_hash: str = ""
+    ) -> str:
+        project = {
+            "title": project_title,
+            "description": project_description,
+            "dataset_hashes": dataset_hashes,
+        }
+        if ontology_hash and len(ontology_hash):
+            project["ontology_hash"] = ontology_hash
 
         return self.querier.basic_setter(OrmProject, uid=None, payload=project)
 
@@ -417,6 +434,64 @@ class EncordUserClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
+
+    def get_ontologies(
+        self,
+        title_eq: Optional[str] = None,
+        title_like: Optional[str] = None,
+        desc_eq: Optional[str] = None,
+        desc_like: Optional[str] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        edited_before: Optional[Union[str, datetime]] = None,
+        edited_after: Optional[Union[str, datetime]] = None,
+    ) -> List[Dict]:
+        """
+        List either all (if called with no arguments) or matching ontologies the user has access to.
+
+        Args:
+            title_eq: optional exact title filter
+            title_like: optional fuzzy title filter; SQL syntax
+            desc_eq: optional exact description filter
+            desc_like: optional fuzzy description filter; SQL syntax
+            created_before: optional creation date filter, 'less'
+            created_after: optional creation date filter, 'greater'
+            edited_before: optional last modification date filter, 'less'
+            edited_after: optional last modification date filter, 'greater'
+
+        Returns:
+            list of (role, projects) pairs for ontologies matching filter conditions.
+        """
+        properties_filter = self.__validate_filter(locals())
+        # a hack to be able to share validation code without too much c&p
+        data = self.querier.get_multiple(OntologyWithUserRole, payload={"filter": properties_filter})
+        retval: List[Dict] = []
+        for row in data:
+            ontology = OrmOntology.from_dict(row.ontology)
+            config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
+            querier = Querier(config)
+            retval.append(
+                {
+                    "ontology": Ontology(querier, config, ontology),
+                    "user_role": OntologyUserRole(row.user_role),
+                }
+            )
+        return retval
+
+    def create_ontology(self, title: str, description: str = "", structure: OntologyStructure = None) -> Ontology:
+        structure_dict = structure.to_dict() if structure else dict()
+        ontology = {
+            "title": title,
+            "description": description,
+            "editor": structure_dict,
+        }
+
+        retval = self.querier.basic_setter(OrmOntology, uid=None, payload=ontology)
+        ontology = OrmOntology.from_dict(retval)
+        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
+        querier = Querier(config)
+
+        return Ontology(querier, config, ontology)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):

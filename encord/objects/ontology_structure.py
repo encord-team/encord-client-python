@@ -1,0 +1,150 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from enum import IntEnum
+from typing import List, TypeVar
+from uuid import uuid4
+
+from encord.objects.classification import Classification
+from encord.objects.common import Shape
+from encord.objects.ontology_object import Object
+
+AVAILABLE_COLORS = (
+    "#D33115",
+    "#E27300",
+    "#16406C",
+    "#FE9200",
+    "#FCDC00",
+    "#DBDF00",
+    "#A4DD00",
+    "#68CCCA",
+    "#73D8FF",
+    "#AEA1FF",
+    "#FCC400",
+    "#B0BC00",
+    "#68BC00",
+    "#16A5A5",
+    "#009CE0",
+    "#7B64FF",
+    "#FA28FF",
+    "#B3B3B3",
+    "#9F0500",
+    "#C45100",
+    "#FB9E00",
+    "#808900",
+    "#194D33",
+    "#0C797D",
+    "#0062B1",
+    "#653294",
+    "#AB149E",
+)
+
+
+@dataclass
+class OntologyStructure:
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
+    objects: List[Object] = field(default_factory=list)
+    classifications: List[Classification] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> OntologyStructure:
+        """
+        Args:
+            d: a JSON blob of an "editor
+
+        Raises:
+            KeyError: If the dict is missing a required field.
+        """
+        objects_ret: List[Object] = list()
+        for object_dict in d["objects"]:
+            objects_ret.append(Object.from_dict(object_dict))
+
+        classifications_ret: List[Classification] = list()
+        for classification_dict in d["classifications"]:
+            classifications_ret.append(Classification.from_dict(classification_dict))
+
+        return OntologyStructure(objects=objects_ret, classifications=classifications_ret)
+
+    def to_dict(self) -> dict:
+        """
+        Returns:
+            The dict equivalent to the ontology.
+
+        Raises:
+            KeyError: If the dict is missing a required field.
+        """
+        ret = dict()
+        ontology_objects = list()
+        ret["objects"] = ontology_objects
+        for ontology_object in self.objects:
+            ontology_objects.append(ontology_object.to_dict())
+
+        ontology_classifications = list()
+        ret["classifications"] = ontology_classifications
+        for ontology_classification in self.classifications:
+            ontology_classifications.append(ontology_classification.to_dict())
+
+        return ret
+
+    def add_object(
+        self,
+        name: str,
+        shape: Shape,
+        uid: Optional[int] = None,
+        color: Optional[str] = None,
+        feature_node_hash: Optional[str] = None,
+    ) -> Object:
+        if uid is None:
+            if self.objects:
+                uid = max([obj.uid for obj in self.objects]) + 1
+            else:
+                uid = 1
+        else:
+            if any([obj.uid == uid for obj in self.objects]):
+                raise ValueError(f"Duplicate uid '{uid}'")
+
+        if color is None:
+            color_index = 0
+            if self.objects:
+                try:
+                    color_index = AVAILABLE_COLORS.index(self.objects[-1].color) + 1
+                except ValueError:
+                    pass
+            color = AVAILABLE_COLORS[color_index]
+
+        if feature_node_hash is None:
+            feature_node_hash = str(uuid4())[:8]
+
+        if any([obj.feature_node_hash == feature_node_hash for obj in self.objects]):
+            raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+        obj = Object(uid, name, color, shape, feature_node_hash)
+        self.objects.append(obj)
+        return obj
+
+    def add_classification(
+        self,
+        uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+    ) -> Classification:
+        if uid is None:
+            if self.classifications:
+                uid = max([cls.uid for cls in self.classifications]) + 1
+            else:
+                uid = 1
+        else:
+            if any([cls.uid == uid for cls in self.classifications]):
+                raise ValueError(f"Duplicate uid '{uid}'")
+
+        if feature_node_hash is None:
+            feature_node_hash = str(uuid4())[:8]
+
+        if any([cls.feature_node_hash == feature_node_hash for cls in self.classifications]):
+            raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+        cls = Classification(uid, feature_node_hash, list())
+        self.classifications.append(cls)
+        return cls

@@ -31,6 +31,7 @@ class Project(base_orm.BaseORM):
     * title,
     * description,
     * editor_ontology,
+    * ontology_hash,
     * datasets::
 
         [
@@ -70,6 +71,7 @@ class Project(base_orm.BaseORM):
             ("editor_ontology", (dict, str)),
             ("datasets", (list, str)),
             ("label_rows", (list, str)),
+            ("ontology_hash", str),
         ]
     )
 
@@ -108,6 +110,10 @@ class Project(base_orm.BaseORM):
     @property
     def label_rows(self):
         return self["label_rows"]
+
+    @property
+    def ontology_hash(self):
+        return self["ontology_hash"]
 
 
 class ProjectCopy:
