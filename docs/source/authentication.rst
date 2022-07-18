@@ -44,7 +44,7 @@ To register a public key, please follow the instructions in :xref:`public_keys` 
 Authenticate with |company| - user authentication
 --------------------------------------------------------------------
 
-After registering your public key, authenticate with |company| by passing the corresponding private key to an :class:`.EncordUserClient`.
+After registering your public key, authenticate with |company| by passing the corresponding :xref:`private_key` to an :class:`.EncordUserClient`.
 Once you have an :class:`.EncordUserClient`, you can use it to create new projects and datasets, or interact with existing ones by creating separate :class:`~encord.project.Project` or :class:`~encord.dataset.Dataset` objects tied to them
 
 .. literalinclude:: code_examples/authenticate_ssh.py
