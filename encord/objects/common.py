@@ -5,7 +5,7 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, List, Optional, TypeVar, Union
+from typing import List, Optional, Tuple, Type, TypeVar, Union
 
 from encord.objects.utils import _decode_nested_uid
 from encord.orm.project import StringEnum
@@ -361,7 +361,7 @@ def _add_option(
     parent_uid: List[int],
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,
-    value: Optional[string] = None,
+    value: Optional[str] = None,
 ) -> OT:
 
     local_uid, feature_node_hash = __build_identifiers(options, local_uid, feature_node_hash)

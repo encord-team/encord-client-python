@@ -1,11 +1,10 @@
 import datetime
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Optional
 
 from encord.configs import SshConfig
 from encord.http.querier import Querier
 from encord.objects.ontology_structure import OntologyStructure
 from encord.orm.ontology import Ontology as OrmOntology
-from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 
 
 class Ontology:
@@ -92,42 +91,6 @@ class Ontology:
             payload["editor"] = self._ontology_instance.structure.to_dict()  # we're using internal/legacy name here
             payload.pop("structure", None)
             self._querier.basic_put(OrmOntology, self._config.resource_id, payload)
-
-    def add_users(self, user_emails: List[str], user_role: OntologyUserRole) -> List:
-        """
-        Add users to ontology
-
-        Args:
-            user_emails: list of user emails to be added
-            user_role: the user role to assign to all users
-
-        Returns:
-            OntologyUser
-
-        Raises:
-            AuthorisationError: If the ontology API key is invalid.
-            ResourceNotFoundError: If no ontology exists by the specified ontology EntityId.
-            UnknownError: If an error occurs while adding the users to the ontology
-        """
-        return self._client.add_users(user_emails, user_role)
-
-    def copy_ontology(self, new_title: str, new_description: str) -> str:
-        """
-        Copy the current ontology into a new one with copied contents including settings, datasets and users.
-        Labels and models are optional.
-
-        Args:
-            new_title: the title of the new ontology
-            new_description: the description of the new ontology
-        Returns:
-            the EntityId of the newly created ontology
-
-        Raises:
-            AuthorisationError: If the ontology API key is invalid.
-            ResourceNotFoundError: If no ontology exists by the specified ontology EntityId.
-            UnknownError: If an error occurs while copying the ontology.
-        """
-        return self._client.copy_ontology()
 
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._config.resource_id)

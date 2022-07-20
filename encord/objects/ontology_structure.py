@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import IntEnum
-from typing import List, TypeVar
+from typing import List, Optional
 from uuid import uuid4
 
 from encord.objects.classification import Classification
