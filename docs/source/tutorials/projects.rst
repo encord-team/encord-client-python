@@ -450,10 +450,6 @@ Use the :class:`encord.client.EncordClientProject` to fetch individual label obj
 
 .. code-block::
 
-    client = EncordClient.initialise(
-        resource_id="<project_id>",  # Project ID
-        api_key="<api_key>",  # API key
-    )
     label = client.get_label_row("<label_hash>")
 
 Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels.
