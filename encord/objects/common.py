@@ -125,6 +125,10 @@ class _AttributeBase(ABC):
 
 @dataclass
 class RadioAttribute(_AttributeBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     options: List[NestableOption] = field(default_factory=list)
 
     def get_property_type(self) -> PropertyType:
@@ -140,12 +144,28 @@ class RadioAttribute(_AttributeBase):
         value: Optional[str] = None,
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
-    ):
+    ) -> NestableOption:
+        """
+        Args:
+            label: user-visible name of the option
+            value: internal unique value; optional; normally mechanically constructed from the label
+            local_uid: integer identifier of the option. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the option. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+
+        Returns:
+            a `NestableOption` instance attached to the attribute. This can be further specified by adding nested attributes.
+        """
         return _add_option(self.options, NestableOption, label, self.uid, local_uid, feature_node_hash, value)
 
 
 @dataclass
 class ChecklistAttribute(_AttributeBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     options: List[FlatOption] = field(default_factory=list)
 
     def get_property_type(self) -> PropertyType:
@@ -162,11 +182,26 @@ class ChecklistAttribute(_AttributeBase):
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
     ):
+        """
+        Args:
+            label: user-visible name of the option
+            value: internal unique value; optional; normally mechanically constructed from the label
+            local_uid: integer identifier of the option. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the option. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+        Returns:
+            a `FlatOption` instance attached to the attribute.
+        """
         return _add_option(self.options, FlatOption, label, self.uid, local_uid, feature_node_hash, value)
 
 
 @dataclass
 class TextAttribute(_AttributeBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     def get_property_type(self) -> PropertyType:
         return PropertyType.TEXT
 
@@ -252,6 +287,10 @@ class _OptionBase(ABC):
 
 @dataclass
 class FlatOption(_OptionBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     def get_option_type(self) -> OptionType:
         return OptionType.FLAT
 
@@ -265,6 +304,10 @@ class FlatOption(_OptionBase):
 
 @dataclass
 class NestableOption(_OptionBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     nested_options: List[Attribute] = field(default_factory=list)
 
     def get_option_type(self) -> OptionType:
@@ -292,6 +335,24 @@ class NestableOption(_OptionBase):
         feature_node_hash: Optional[str] = None,
         required: bool = False,
     ) -> T:
+        """
+        Adds a nested attribute to a RadioAttribute option.
+
+        Args:
+            cls: attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`
+            name: the user-visible name of the attribute
+            local_uid: integer identifier of the attribute. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            required: whether the label editor would mark this attribute as 'required'
+
+        Returns:
+            the created attribute that can be further specified with Options, where appropriate
+
+        Raises:
+            ValueError: if specified `local_uid` or `feature_node_hash` violate uniqueness constraints
+        """
         return _add_attribute(self.nested_options, cls, name, self.uid, local_uid, feature_node_hash, required)
 
 

@@ -52,7 +52,7 @@ class OntologyStructure:
     def from_dict(cls, d: dict) -> OntologyStructure:
         """
         Args:
-            d: a JSON blob of an "editor
+            d: a JSON blob of an "ontology structure" (e.g. from Encord web app)
 
         Raises:
             KeyError: If the dict is missing a required field.
@@ -96,6 +96,21 @@ class OntologyStructure:
         color: Optional[str] = None,
         feature_node_hash: Optional[str] = None,
     ) -> Object:
+        """
+        Adds an object class definition to the ontology.
+
+        Args:
+            name: the user-visible name of the object
+            shape: the kind of object (bounding box, polygon, etc). See Shape enum for possible values
+            uid: integer identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            color: the color of the object in the label editor. Normally auto-assigned, should be in '#1A2B3F' syntax.
+            feature_node_hash: global identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+
+        Returns:
+            the created object class that can be further customised with attributes.
+        """
         if uid is None:
             if self.objects:
                 uid = max([obj.uid for obj in self.objects]) + 1
@@ -129,6 +144,18 @@ class OntologyStructure:
         uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
     ) -> Classification:
+        """
+        Adds an classification definition to the ontology.
+
+        Args:
+            uid: integer identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+
+        Returns:
+            the created classification node. Note that classification attribute should be further specified by calling its `add_attribute()` method.
+        """
         if uid is None:
             if self.classifications:
                 uid = max([cls.uid for cls in self.classifications]) + 1
