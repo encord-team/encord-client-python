@@ -97,16 +97,32 @@ class OntologyStructure:
         feature_node_hash: Optional[str] = None,
     ) -> Object:
         """
-        Adds an object class definition to the ontology.
+        Adds an object class definition to the structure.
+
+        .. code::
+
+            structure = ontology_structure.OntologyStructure()
+
+            eye = structure.add_object(
+                name="Eye",
+            )
+            nose = structure.add_object(
+                name="Nose",
+            )
+            nose_detail = nose.add_attribute(
+                encord.objects.common.ChecklistAttribute,
+            )
+            nose_detail.add_option(feature_node_hash="2bc17c88", label="Is it a cute nose?")
+            nose_detail.add_option(feature_node_hash="86eaa4f2", label="Is it a wet nose? ")
 
         Args:
             name: the user-visible name of the object
-            shape: the kind of object (bounding box, polygon, etc). See Shape enum for possible values
+            shape: the kind of object (bounding box, polygon, etc). See :py:class:`encord.objects.common.Shape` enum for possible values
             uid: integer identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                    omit this unless the aim is to create an exact clone of existing structure
             color: the color of the object in the label editor. Normally auto-assigned, should be in '#1A2B3F' syntax.
             feature_node_hash: global identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                    omit this unless the aim is to create an exact clone of existing structure
 
         Returns:
             the created object class that can be further customised with attributes.
@@ -147,11 +163,24 @@ class OntologyStructure:
         """
         Adds an classification definition to the ontology.
 
+        .. code::
+            structure = ontology_structure.OntologyStructure()
+
+            cls = structure.add_classification(feature_node_hash="a39d81c0")
+            cat_standing = cls.add_attribute(
+                encord.objects.common.RadioAttribute,
+                feature_node_hash="a6136d14",
+                name="Is the cat standing?",
+                required=True,
+            )
+            cat_standing.add_option(feature_node_hash="a3aeb48d", label="Yes")
+            cat_standing.add_option(feature_node_hash="d0a4b373", label="No")
+
         Args:
             uid: integer identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                    omit this unless the aim is to create an exact clone of existing structure
             feature_node_hash: global identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                    omit this unless the aim is to create an exact clone of existing structure
 
         Returns:
             the created classification node. Note that classification attribute should be further specified by calling its `add_attribute()` method.
