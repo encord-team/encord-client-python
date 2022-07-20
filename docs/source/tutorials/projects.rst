@@ -446,11 +446,15 @@ A project's ``<label_hash>`` is found in the project information ``project``, wh
     }
 
 
-Use the :class:`encord.project.Project` to fetch individual label objects.
+Use the :class:`encord.client.EncordClientProject` to fetch individual label objects.
 
 .. code-block::
 
-    label = project.get_label_row("<label_hash>")
+    client = EncordClient.initialise(
+        resource_id="<project_id>",  # Project ID
+        api_key="<api_key>",  # API key
+    )
+    label = client.get_label_row("<label_hash>")
 
 Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels.
 
@@ -554,7 +558,7 @@ To save labels for the data which was not labeled before, follow the steps under
 
 .. code-block::
 
-    project.save_label_row('<label_hash>', sample_label)
+    client.save_label_row('<label_hash>', sample_label)
 
 Label rows have to be saved in the same format as fetched.
 The function :meth:`construct_answer_dictionaries() <encord.utilities.label_utilities.construct_answer_dictionaries>` helps construct answer dictionaries for all objects and classifications in the label row if they do not exist, returning a label row object with updated object and classification answer dictionaries.
@@ -563,9 +567,9 @@ The function :meth:`construct_answer_dictionaries() <encord.utilities.label_util
 
     from encord.utilities.label_utilities import construct_answer_dictionaries
 
-    sample_label = project.get_label_row("sample_label_uid")
+    sample_label = client.get_label_row("sample_label_uid")
     updated_label = label_utilities.construct_answer_dictionaries(sample_label)
-    project.save_label_row(sample_label["label_hash"], updated_label)
+    client.save_label_row(sample_label["label_hash"], updated_label)
 
 
 Creating a label row
