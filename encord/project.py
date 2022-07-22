@@ -336,6 +336,8 @@ class Project:
         """
         Add object to an ontology.
 
+        ATTENTION: this legacy method will affect all the projects sharing the same ontology
+
         Args:
             name: the name of the object
             shape: the shape of the object. (BOUNDING_BOX, POLYGON, POLYLINE or KEY_POINT)
@@ -360,6 +362,10 @@ class Project:
         options: Optional[Iterable[str]] = None,
     ):
         """
+        Add classification to an ontology.
+
+        ATTENTION: this legacy method will affect all the projects sharing the same ontology
+
         Args:
             name: the name of the classification
             classification_type: the classification type (RADIO, TEXT or CHECKLIST)

@@ -1,0 +1,93 @@
+# Copyright (c) 2020 Cord Technologies Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+from __future__ import annotations
+
+from enum import IntEnum
+from typing import Dict, Optional
+
+from encord.objects.ontology_structure import OntologyStructure
+from encord.orm.formatter import Formatter
+
+DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+class OntologyUserRole(IntEnum):
+    ADMIN = 0
+    USER = 1
+
+
+class Ontology(dict, Formatter):
+    def __init__(
+        self,
+        title: str,
+        structure: OntologyStructure,
+        ontology_hash: str,
+        description: Optional[str] = None,
+    ):
+        """
+        DEPRECATED - prefer using the :class:`encord.ontology.Ontology` class instead.
+
+        This class has dict-style accessors for backwards compatibility.
+        Clients who are using this class for the first time are encouraged to use the property accessors and setters
+        instead of the underlying dictionary.
+        The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
+
+        WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
+        datastructure.
+        """
+        super().__init__(
+            {
+                "ontology_hash": ontology_hash,
+                "title": title,
+                "description": description,
+                "structure": structure,
+            }
+        )
+
+    @property
+    def ontology_hash(self) -> str:
+        return self["ontology_hash"]
+
+    @property
+    def title(self) -> str:
+        return self["title"]
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self["title"] = value
+
+    @property
+    def description(self) -> str:
+        return self["description"]
+
+    @description.setter
+    def description(self, value: str) -> None:
+        self["description"] = value
+
+    @property
+    def structure(self) -> OntologyStructure:
+        return self["structure"]
+
+    @structure.setter
+    def structure(self, value: OntologyStructure) -> None:
+        self["structure"] = value
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> Ontology:
+        return Ontology(
+            title=json_dict["title"],
+            description=json_dict["description"],
+            ontology_hash=json_dict["ontology_hash"],
+            structure=OntologyStructure.from_dict(json_dict["editor"]),
+        )
