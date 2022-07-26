@@ -127,11 +127,12 @@ def _upload_single_file(
         status_code = res_upload.status_code
         headers = res_upload.headers
         res_text = res_upload.text
-        error_string = (
+        error_string = str(
             f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
             f"'{signed_url.get('signed_url')}'.\n"
-            f"Response data: status code: '{status_code}', headers: '{headers}', content: '{res_text}'",
+            f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
         )
+
         logger.error(error_string)
         raise RuntimeError(error_string)
 
