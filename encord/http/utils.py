@@ -124,8 +124,11 @@ def _upload_single_file(
             logger.info("Error uploading: %s", signed_url.get("title", ""))
 
     else:
+        res_content = res_upload.content
         error_string = (
-            f"Error uploading file '{signed_url.get('title', '')}' to signed url: " f"'{signed_url.get('signed_url')}'",
+            f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
+            f"'{signed_url.get('signed_url')}'. "
+            f"Response content: '{res_content}'",
         )
         logger.error(error_string)
         raise RuntimeError(error_string)
