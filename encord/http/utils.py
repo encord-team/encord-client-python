@@ -46,6 +46,10 @@ def read_in_chunks(file_path, pbar, blocksize=1024, chunks=-1):
             chunks -= 1
             step = round(blocksize / size * PROGRESS_BAR_FILE_FACTOR, 1)
             current = min(PROGRESS_BAR_FILE_FACTOR, current + step)
+            print(f"file factor {PROGRESS_BAR_FILE_FACTOR}")
+            print(f"current {current}")
+            print(f"step {step}")
+            print("pbar update", min(PROGRESS_BAR_FILE_FACTOR - current, step))
             pbar.update(min(PROGRESS_BAR_FILE_FACTOR - current, step))
 
 
@@ -124,11 +128,13 @@ def _upload_single_file(
             logger.info("Error uploading: %s", signed_url.get("title", ""))
 
     else:
-        res_content = res_upload.content
+        status_code = res_upload.status_code
+        headers = res_upload.headers
+        res_text = res_upload.text
         error_string = (
             f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
-            f"'{signed_url.get('signed_url')}'. "
-            f"Response content: '{res_content}'",
+            f"'{signed_url.get('signed_url')}'.\n"
+            f"Response data: status code: '{status_code}', headers: '{headers}', content: '{res_text}'",
         )
         logger.error(error_string)
         raise RuntimeError(error_string)
