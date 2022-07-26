@@ -260,7 +260,6 @@ class EncordClientDataset(EncordClient):
         if res:
             titles = [video_data.get("title") for video_data in res]
             logger.info("Upload successful! {} created.".format(titles))
-            logger.info("Please run client.get_dataset() to refresh.")
             return res
         else:
             raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
