@@ -48,7 +48,7 @@ from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
-from encord.http.utils import upload_to_signed_url_list
+from encord.http.utils import CloudUploadSettings, upload_to_signed_url_list
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse
@@ -215,14 +215,16 @@ class EncordClientDataset(EncordClient):
         """
         return self._querier.basic_getter(OrmDataset)
 
-    def upload_video(self, file_path: str):
+    def upload_video(self, file_path: str, cloud_upload_settings: CloudUploadSettings = CloudUploadSettings()):
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
         if os.path.exists(file_path):
             short_name = os.path.basename(file_path)
             signed_url = self._querier.basic_getter(SignedVideoURL, uid=short_name)
-            res = upload_to_signed_url_list([file_path], [signed_url], self._querier, Video)
+            res = upload_to_signed_url_list(
+                [file_path], [signed_url], self._querier, Video, cloud_upload_settings=cloud_upload_settings
+            )
             if res:
                 logger.info("Upload complete.")
                 return res
@@ -231,7 +233,12 @@ class EncordClientDataset(EncordClient):
         else:
             raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
 
-    def create_image_group(self, file_paths: typing.Iterable[str], max_workers: Optional[int] = None):
+    def create_image_group(
+        self,
+        file_paths: typing.Iterable[str],
+        max_workers: Optional[int] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
         """
@@ -241,7 +248,9 @@ class EncordClientDataset(EncordClient):
         short_names = list(map(os.path.basename, file_paths))
         signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
 
-        uploaded_images = upload_to_signed_url_list(file_paths, signed_urls, self._querier, Image)
+        uploaded_images = upload_to_signed_url_list(
+            file_paths, signed_urls, self._querier, Image, cloud_upload_settings=cloud_upload_settings
+        )
         image_hash_list = [uploaded_image.get("data_hash") for uploaded_image in uploaded_images]
         res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={})
 

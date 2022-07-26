@@ -1,14 +1,11 @@
 import logging
 import mimetypes
-import multiprocessing
 import os.path
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from functools import partial
+from dataclasses import dataclass
 from time import sleep
-from typing import List, Optional, TypeVar
+from typing import List, TypeVar
 
 import requests
-from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from encord.exceptions import UploadError
@@ -18,6 +15,22 @@ from encord.orm.dataset import Image, Video
 PROGRESS_BAR_FILE_FACTOR = 100
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CloudUploadSettings:
+    """
+    The settings for uploading data into the GCP cloud storage. These apply for each individual upload.
+    """
+
+    # Number of allowed retries when uploading
+    max_retries: int = 5
+    # With each retry, there will be a sleep of backoff_factor * (retry_number + 1)
+    backoff_factor: float = 0.1
+    # If failures are allowed, the upload will continue even if some items were not successfully uploaded even
+    # after retries. For example, upon creation of a large image group, you might want to create the image group
+    # even if a few images were not successfully uploaded. The unsuccessfully uploaded images will then be logged.
+    allow_failures: bool = False
 
 
 def read_in_chunks(file_path, pbar, blocksize=1024, chunks=-1):
@@ -38,17 +51,13 @@ def read_in_chunks(file_path, pbar, blocksize=1024, chunks=-1):
 
 OrmT = TypeVar("OrmT")
 
-# DENIS: deprecate max workers
+
 def upload_to_signed_url_list(
     file_paths: List[str],
     signed_urls,
     querier: Querier,
     orm_class: OrmT,
-    max_workers: Optional[int] = None,
-    #  DENIS: probably want something like "cloud upload settings" object
-    max_retries: int = 5,
-    backoff_factor: float = 0.1,
-    allow_failures: bool = False,
+    cloud_upload_settings: CloudUploadSettings,
 ) -> List[OrmT]:
     if orm_class == Image:
         is_video = False
@@ -71,16 +80,23 @@ def upload_to_signed_url_list(
 
             try:
                 res = _upload_single_file(
-                    file_path, signed_url, querier, orm_class, pbar, is_video, max_retries, backoff_factor
+                    file_path,
+                    signed_url,
+                    querier,
+                    orm_class,
+                    pbar,
+                    is_video,
+                    cloud_upload_settings.max_retries,
+                    cloud_upload_settings.backoff_factor,
                 )
                 orm_class_list.append(res)
             except UploadError as e:
-                if allow_failures:
+                if cloud_upload_settings.allow_failures:
                     failed_uploads.append(file_path)  # DENIS: return this.
                 else:
                     raise e
 
-    if allow_failures:
+    if cloud_upload_settings:
         logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
 
     return orm_class_list
