@@ -84,8 +84,7 @@ class Dataset:
             file_paths: a list of paths to images, e.g.
                 ['/home/user/data/img1.png', '/home/user/data/img2.png']
             max_workers:
-                Number of workers for parallel image upload. If set to None, this will be the number of CPU cores
-                available on the machine.
+                DEPRECATED: This argument will be ignored
 
         Returns:
             Bool.
@@ -94,7 +93,7 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.create_image_group(file_paths, max_workers)
+        return self._client.create_image_group(file_paths)
 
     def delete_image_group(self, data_hash: str):
         """

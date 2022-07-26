@@ -40,7 +40,15 @@ OrmT = TypeVar("OrmT")
 
 # DENIS: deprecate max workers
 def upload_to_signed_url_list(
-    file_paths: List[str], signed_urls, querier: Querier, orm_class: OrmT, max_workers: Optional[int] = None
+    file_paths: List[str],
+    signed_urls,
+    querier: Querier,
+    orm_class: OrmT,
+    max_workers: Optional[int] = None,
+    #  DENIS: probably want something like "cloud upload settings" object
+    max_retries: int = 5,
+    backoff_factor: float = 0.1,
+    allow_failures: bool = False,
 ) -> List[OrmT]:
     if orm_class == Image:
         is_video = False
@@ -62,11 +70,18 @@ def upload_to_signed_url_list(
             assert signed_url.get("title", "") == file_name, "Ordering issue"
 
             try:
-                res = _upload_single_file(file_path, signed_url, querier, orm_class, pbar, is_video)
+                res = _upload_single_file(
+                    file_path, signed_url, querier, orm_class, pbar, is_video, max_retries, backoff_factor
+                )
                 orm_class_list.append(res)
-            except UploadError:
-                # DENIS: for special exceptions
-                failed_uploads.append(file_path)  # DENIS: return this.
+            except UploadError as e:
+                if allow_failures:
+                    failed_uploads.append(file_path)  # DENIS: return this.
+                else:
+                    raise e
+
+    if allow_failures:
+        logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
 
     return orm_class_list
 
@@ -78,45 +93,11 @@ def _upload_single_file(
     orm_class: OrmT,
     pbar,
     is_video: bool,
+    max_retries: int,
+    backoff_factor: float,
 ) -> OrmT:
-    # s = requests.Session()
-    # retries = Retry(
-    #     total=5,
-    #     backoff_factor=2,
-    # )
-    # s.mount("https://", HTTPAdapter(max_retries=retries))
 
-    # content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
-    # res_upload = requests.put(
-    #     signed_url.get("signed_url"), data=read_in_chunks(file_path, pbar), headers={"Content-Type": content_type}
-    # )
-
-    # DENIS: these are arguments
-    # max_retries = 5
-    # backoff_factor = 0.1
-    #
-    # current_backoff = backoff_factor
-    # for i in range(max_retries):
-    #     try:
-    #         res_upload = requests.put(
-    #             # "https://blabla.cosdf",
-    #             signed_url.get("signed_url"),
-    #             data=read_in_chunks(file_path, pbar),
-    #             headers={"Content-Type": content_type},
-    #         )
-    #         break
-    #     except Exception as e:
-    #         if i < max_retries - 1:
-    #             logger.warning(
-    #                 "An exception occurred during the file upload. Will retry in %s seconds",
-    #                 current_backoff,
-    #                 exc_info=True,
-    #             )
-    #             sleep(current_backoff)
-    #             current_backoff *= 2
-    # else:
-    #     raise UploadError("")
-    res_upload = _data_upload_with_retries(file_path, signed_url, pbar, is_video)
+    res_upload = _data_upload_with_retries(file_path, signed_url, pbar, is_video, max_retries, backoff_factor)
 
     if res_upload.status_code == 200:
         data_hash = signed_url.get("data_hash")
@@ -141,22 +122,20 @@ def _data_upload_with_retries(
     signed_url: dict,
     pbar,
     is_video: bool,
+    max_retries: int,
+    backoff_factor: float,
 ):
     content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
-
-    max_retries = 5
-    backoff_factor = 0.1
 
     current_backoff = backoff_factor
     for i in range(max_retries):
         try:
             return requests.put(
-                # "https://blabla.cosdf",
                 signed_url.get("signed_url"),
                 data=read_in_chunks(file_path, pbar),
                 headers={"Content-Type": content_type},
             )
-        except Exception as e:
+        except Exception:
             if i < max_retries - 1:
                 logger.warning(
                     "An exception occurred during the file upload. Retrying upload in %s seconds",
@@ -166,4 +145,4 @@ def _data_upload_with_retries(
                 sleep(current_backoff)
                 current_backoff *= 2
 
-    raise UploadError("")
+    raise UploadError("Could not upload a file. Please check the logs for details.")
