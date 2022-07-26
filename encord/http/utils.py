@@ -46,10 +46,6 @@ def read_in_chunks(file_path, pbar, blocksize=1024, chunks=-1):
             chunks -= 1
             step = round(blocksize / size * PROGRESS_BAR_FILE_FACTOR, 1)
             current = min(PROGRESS_BAR_FILE_FACTOR, current + step)
-            print(f"file factor {PROGRESS_BAR_FILE_FACTOR}")
-            print(f"current {current}")
-            print(f"step {step}")
-            print("pbar update", min(PROGRESS_BAR_FILE_FACTOR - current, step))
             pbar.update(min(PROGRESS_BAR_FILE_FACTOR - current, step))
 
 
