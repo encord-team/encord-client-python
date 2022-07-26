@@ -241,8 +241,8 @@ class EncordClientDataset(EncordClient):
         short_names = list(map(os.path.basename, file_paths))
         signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
 
-        upload_to_signed_url_list(file_paths, signed_urls, self._querier, Image)
-        image_hash_list = list(map(lambda signed_url: signed_url.get("data_hash"), signed_urls))
+        uploaded_images = upload_to_signed_url_list(file_paths, signed_urls, self._querier, Image)
+        image_hash_list = [uploaded_image.get("data_hash") for uploaded_image in uploaded_images]
         res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={})
 
         if res:
