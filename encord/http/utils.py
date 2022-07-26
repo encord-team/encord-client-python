@@ -144,21 +144,25 @@ def _data_upload_with_retries(
     content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
 
     current_backoff = backoff_factor
-    for i in range(max_retries):
+    for i in range(max_retries + 1):
         try:
             return requests.put(
-                signed_url.get("signed_url"),
+                # signed_url.get("signed_url"),
+                "https://blabla.co.coc",
                 data=read_in_chunks(file_path, pbar),
                 headers={"Content-Type": content_type},
             )
         except Exception:
-            if i < max_retries - 1:
+            if i < max_retries:
                 logger.warning(
-                    "An exception occurred during the file upload. Retrying upload in %s seconds",
+                    "An exception occurred during uploading the file `%s`. Retrying upload in %s seconds",
+                    file_path,
                     current_backoff,
                     exc_info=True,
                 )
                 sleep(current_backoff)
                 current_backoff *= 2
+            else:
+                logger.exception("An exception occurred during uploading the file `%s`", file_path)
 
     raise UploadError("Could not upload a file. Please check the logs for details.")

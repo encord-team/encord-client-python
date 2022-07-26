@@ -251,6 +251,9 @@ class EncordClientDataset(EncordClient):
         uploaded_images = upload_to_signed_url_list(
             file_paths, signed_urls, self._querier, Image, cloud_upload_settings=cloud_upload_settings
         )
+        if not uploaded_images:
+            raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
+
         image_hash_list = [uploaded_image.get("data_hash") for uploaded_image in uploaded_images]
         res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={})
 
