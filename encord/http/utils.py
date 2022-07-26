@@ -96,7 +96,7 @@ def upload_to_signed_url_list(
                 else:
                     raise e
 
-    if cloud_upload_settings:
+    if failed_uploads:
         logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
 
     return orm_class_list
