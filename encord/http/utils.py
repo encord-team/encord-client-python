@@ -8,7 +8,7 @@ from typing import List, TypeVar
 import requests
 from tqdm import tqdm
 
-from encord.exceptions import UploadError
+from encord.exceptions import CloudUploadError
 from encord.http.querier import Querier
 from encord.orm.dataset import Image, Video
 
@@ -90,9 +90,9 @@ def upload_to_signed_url_list(
                     cloud_upload_settings.backoff_factor,
                 )
                 orm_class_list.append(res)
-            except UploadError as e:
+            except CloudUploadError as e:
                 if cloud_upload_settings.allow_failures:
-                    failed_uploads.append(file_path)  # DENIS: return this.
+                    failed_uploads.append(file_path)
                 else:
                     raise e
 
@@ -147,8 +147,7 @@ def _data_upload_with_retries(
     for i in range(max_retries + 1):
         try:
             return requests.put(
-                # signed_url.get("signed_url"),
-                "https://blabla.co.coc",
+                signed_url.get("signed_url"),
                 data=read_in_chunks(file_path, pbar),
                 headers={"Content-Type": content_type},
             )
@@ -165,4 +164,4 @@ def _data_upload_with_retries(
             else:
                 logger.exception("An exception occurred during uploading the file `%s`", file_path)
 
-    raise UploadError("Could not upload a file. Please check the logs for details.")
+    raise CloudUploadError("Could not upload a file. Please check the logs for details.")

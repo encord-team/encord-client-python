@@ -218,9 +218,9 @@ class GenericServerError(EncordException):
     pass
 
 
-class UploadError(EncordException):
+class CloudUploadError(EncordException):
     """
-    The upload was not successful
+    The upload to the cloud was not successful
     """
 
     pass
