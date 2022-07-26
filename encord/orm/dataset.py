@@ -437,6 +437,13 @@ class Image(base_orm.BaseORM):
 
 
 @dataclasses.dataclass(frozen=True)
+class Images:
+    """DENIS: for multiple image upload"""
+
+    success: bool
+
+
+@dataclasses.dataclass(frozen=True)
 class ImageGroupOCR:
     processed_texts: Dict
 

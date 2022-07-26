@@ -48,7 +48,12 @@ from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
 from encord.http.querier import Querier
-from encord.http.utils import CloudUploadSettings, upload_to_signed_url_list
+from encord.http.utils import (
+    CloudUploadSettings,
+    upload_images_to_encord,
+    upload_to_signed_url_list,
+    upload_video_to_encord,
+)
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse
@@ -58,6 +63,7 @@ from encord.orm.dataset import (
     Image,
     ImageGroup,
     ImageGroupOCR,
+    Images,
     ReEncodeVideoTask,
     SignedImagesURL,
     SignedVideoURL,
@@ -225,8 +231,11 @@ class EncordClientDataset(EncordClient):
             res = upload_to_signed_url_list(
                 [file_path], [signed_url], self._querier, Video, cloud_upload_settings=cloud_upload_settings
             )
+            res = upload_video_to_encord(signed_url, self._querier)
+
             if res:
                 logger.info("Upload complete.")
+                # DENIS: what is currently being returned? What will be returned later?
                 return res
             else:
                 raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
@@ -246,6 +255,7 @@ class EncordClientDataset(EncordClient):
             if not os.path.exists(file_path):
                 raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
         short_names = list(map(os.path.basename, file_paths))
+
         signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
 
         uploaded_images = upload_to_signed_url_list(
@@ -253,6 +263,7 @@ class EncordClientDataset(EncordClient):
         )
         if not uploaded_images:
             raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
+        upload_images_to_encord(signed_urls, self._querier)
 
         image_hash_list = [uploaded_image.get("data_hash") for uploaded_image in uploaded_images]
         res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={})
