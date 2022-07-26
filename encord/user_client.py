@@ -298,8 +298,7 @@ class EncordUserClient:
                 Set how much interaction is needed from the labeler and from the reviewer for the CVAT labels.
                     See the `ReviewMode` documentation for more details.
             max_workers:
-                Number of workers for parallel image upload. If set to None, this will be the number of CPU cores
-                available on the machine.
+                DEPRECATED: This argument will be ignored
 
         Returns:
             CvatImporterSuccess: If the project was successfully imported.
@@ -329,7 +328,7 @@ class EncordUserClient:
         images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name, max_workers)
+        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name)
         log.info("Image upload completed.")
 
         payload = {
@@ -382,9 +381,7 @@ class EncordUserClient:
             raise ValueError(f"No images found in the provided data folder.")
         return images
 
-    def __upload_cvat_images(
-        self, images_paths: List[Path], dataset_name: str, max_workers: int
-    ) -> Tuple[str, Dict[str, str]]:
+    def __upload_cvat_images(self, images_paths: List[Path], dataset_name: str) -> Tuple[str, Dict[str, str]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -409,7 +406,7 @@ class EncordUserClient:
         )
 
         signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
-        upload_to_signed_url_list(file_path_strings, signed_urls, client._querier, Image, max_workers)
+        upload_to_signed_url_list(file_path_strings, signed_urls, client._querier, Image)
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
 
