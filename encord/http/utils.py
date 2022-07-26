@@ -23,14 +23,16 @@ class CloudUploadSettings:
     The settings for uploading data into the GCP cloud storage. These apply for each individual upload.
     """
 
-    # Number of allowed retries when uploading
     max_retries: int = 5
-    # With each retry, there will be a sleep of backoff_factor * (retry_number + 1)
+    """Number of allowed retries when uploading"""
     backoff_factor: float = 0.1
-    # If failures are allowed, the upload will continue even if some items were not successfully uploaded even
-    # after retries. For example, upon creation of a large image group, you might want to create the image group
-    # even if a few images were not successfully uploaded. The unsuccessfully uploaded images will then be logged.
+    """With each retry, there will be a sleep of backoff_factor * (retry_number + 1)"""
     allow_failures: bool = False
+    """
+    If failures are allowed, the upload will continue even if some items were not successfully uploaded even
+    after retries. For example, upon creation of a large image group, you might want to create the image group
+    even if a few images were not successfully uploaded. The unsuccessfully uploaded images will then be logged.
+    """
 
 
 def read_in_chunks(file_path, pbar, blocksize=1024, chunks=-1):

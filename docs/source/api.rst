@@ -165,3 +165,9 @@ Exceptions
 .. automodule:: encord.exceptions
     :members:
     :undoc-members:
+
+Utilities
+----------
+.. autoclass:: encord.http.utils.CloudUploadSettings
+    :members:
+    :undoc-members:
