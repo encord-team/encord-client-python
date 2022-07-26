@@ -225,7 +225,6 @@ class EncordClientDataset(EncordClient):
             res = upload_to_signed_url_list([file_path], [signed_url], self._querier, Video)
             if res:
                 logger.info("Upload complete.")
-                logger.info("Please run client.get_dataset() to refresh.")
                 return res
             else:
                 raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
@@ -241,9 +240,11 @@ class EncordClientDataset(EncordClient):
                 raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
         short_names = list(map(os.path.basename, file_paths))
         signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
+
         upload_to_signed_url_list(file_paths, signed_urls, self._querier, Image, max_workers)
         image_hash_list = list(map(lambda signed_url: signed_url.get("data_hash"), signed_urls))
         res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={})
+
         if res:
             titles = [video_data.get("title") for video_data in res]
             logger.info("Upload successful! {} created.".format(titles))

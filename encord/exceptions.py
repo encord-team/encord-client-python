@@ -216,3 +216,11 @@ class GenericServerError(EncordException):
     """
 
     pass
+
+
+class UploadError(EncordException):
+    """
+    The upload was not successful
+    """
+
+    pass
