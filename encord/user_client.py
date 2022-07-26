@@ -18,7 +18,7 @@ from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.http.querier import Querier
-from encord.http.utils import upload_to_signed_url_list
+from encord.http.utils import CloudUploadSettings, upload_to_signed_url_list
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import CreateDatasetResponse
 from encord.orm.dataset import Dataset as OrmDataset
@@ -406,7 +406,7 @@ class EncordUserClient:
         )
 
         signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
-        upload_to_signed_url_list(file_path_strings, signed_urls, client._querier, Image)
+        upload_to_signed_url_list(file_path_strings, signed_urls, client._querier, Image, CloudUploadSettings())
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
 
