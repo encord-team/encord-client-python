@@ -438,7 +438,7 @@ class Image(base_orm.BaseORM):
 
 @dataclasses.dataclass(frozen=True)
 class Images:
-    """DENIS: for multiple image upload"""
+    """Uploading multiple images in a batch mode."""
 
     success: bool
 

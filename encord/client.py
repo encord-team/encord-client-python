@@ -233,7 +233,6 @@ class EncordClientDataset(EncordClient):
 
             if res:
                 logger.info("Upload complete.")
-                # DENIS: what is currently being returned? What will be returned later?
                 return res
             else:
                 raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
@@ -257,7 +256,7 @@ class EncordClientDataset(EncordClient):
         signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
 
         successful_uploads = upload_to_signed_url_list(
-            file_paths, signed_urls, Image, cloud_upload_settings=cloud_upload_settings
+            file_paths, signed_urls, Images, cloud_upload_settings=cloud_upload_settings
         )
         if not successful_uploads:
             raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")

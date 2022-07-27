@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from encord.exceptions import CloudUploadError
 from encord.http.querier import Querier
-from encord.orm.dataset import Image, Images, Video
+from encord.orm.dataset import Images, Video
 
 PROGRESS_BAR_FILE_FACTOR = 100
 
@@ -60,7 +60,7 @@ def upload_to_signed_url_list(
     orm_class: OrmT,
     cloud_upload_settings: CloudUploadSettings,
 ) -> List[dict]:
-    if orm_class == Image:
+    if orm_class == Images:
         is_video = False
     elif orm_class == Video:
         is_video = True
