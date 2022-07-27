@@ -425,8 +425,8 @@ class EncordUserClient:
         )
 
         signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
-        upload_to_signed_url_list(file_path_strings, signed_urls, Image, CloudUploadSettings())
-        upload_images_to_encord(signed_urls, client._querier)
+        successful_uploads = upload_to_signed_url_list(file_path_strings, signed_urls, Image, CloudUploadSettings())
+        upload_images_to_encord(successful_uploads, client._querier)
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
 

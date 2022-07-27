@@ -57,10 +57,9 @@ OrmT = TypeVar("OrmT")
 def upload_to_signed_url_list(
     file_paths: List[str],
     signed_urls,
-    querier: Querier,
     orm_class: OrmT,
     cloud_upload_settings: CloudUploadSettings,
-) -> List[OrmT]:
+) -> List[dict]:
     if orm_class == Image:
         is_video = False
     elif orm_class == Video:
@@ -71,7 +70,7 @@ def upload_to_signed_url_list(
     assert len(file_paths) == len(signed_urls), "Error getting the correct number of signed urls"
 
     failed_uploads = []
-    orm_class_list = []
+    successful_uploads = []
     total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
     with tqdm(total=total, desc="Files upload progress: ") as pbar:
         for i in range(len(file_paths)):
@@ -81,17 +80,15 @@ def upload_to_signed_url_list(
             assert signed_url.get("title", "") == file_name, "Ordering issue"
 
             try:
-                res = _upload_single_file(
+                _upload_single_file(
                     file_path,
                     signed_url,
-                    querier,
-                    orm_class,
                     pbar,
                     is_video,
                     cloud_upload_settings.max_retries,
                     cloud_upload_settings.backoff_factor,
                 )
-                orm_class_list.append(res)
+                successful_uploads.append(signed_url)
             except CloudUploadError as e:
                 if cloud_upload_settings.allow_failures:
                     failed_uploads.append(file_path)
@@ -101,46 +98,7 @@ def upload_to_signed_url_list(
     if failed_uploads:
         logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
 
-    return orm_class_list
-
-
-# def upload_to_signed_url_list(
-#     file_paths: List[str], signed_urls, orm_class: OrmT, max_workers: Optional[int] = None
-# ) -> None:
-#     """
-#     The max_workers argument will be ignored.
-#     """
-#     if orm_class == Images:
-#         is_video = False
-#     elif orm_class == Video:
-#         is_video = True
-#     else:
-#         raise RuntimeError(f"Currently only `Images` or `Video` orm_class supported. Got type `{orm_class}`")
-#
-#     assert len(file_paths) == len(signed_urls), "Error getting the correct number of signed urls"
-#
-#     # orm_class_list = []
-#     # with ThreadPoolExecutor(max_workers=max_workers) as executor:
-#     total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
-#     with tqdm(total=total, desc="Files upload progress: ") as pbar:
-#         # futures = []
-#         for i in range(len(file_paths)):
-#             file_path = file_paths[i]
-#             file_name = os.path.basename(file_path)
-#             signed_url = signed_urls[i]
-#             assert signed_url.get("title", "") == file_name, "Ordering issue"
-#
-#             _upload_single_file(file_path, signed_url, pbar, is_video)
-#             # future = executor.submit(_upload_single_file, file_path, signed_url, querier, orm_class, pbar, is_video)
-#             # futures.append(future)
-#
-#         # for future in as_completed(futures):
-#         #     res = future.result()
-#         #     orm_class_list.append(res)
-#
-#     # DENIS: maybe have this outside the function at all?
-#     # return _upload_to_encord(querier, signed_urls, is_video)
-#     return
+    return successful_uploads
 
 
 def upload_video_to_encord(signed_url: dict, querier: Querier) -> Video:
@@ -154,8 +112,6 @@ def upload_images_to_encord(signed_urls: List[dict], querier: Querier) -> Images
 def _upload_single_file(
     file_path: str,
     signed_url: dict,
-    querier: Querier,
-    orm_class: OrmT,
     pbar,
     is_video: bool,
     max_retries: int,
@@ -164,15 +120,7 @@ def _upload_single_file(
 
     res_upload = _data_upload_with_retries(file_path, signed_url, pbar, is_video, max_retries, backoff_factor)
 
-    if res_upload.status_code == 200:
-        data_hash = signed_url.get("data_hash")
-
-        res = querier.basic_put(orm_class, uid=data_hash, payload=signed_url, enable_logging=False)
-
-        if not orm_class(res):
-            logger.info("Error uploading: %s", signed_url.get("title", ""))
-
-    else:
+    if res_upload.status_code != 200:
         status_code = res_upload.status_code
         headers = res_upload.headers
         res_text = res_upload.text
@@ -184,35 +132,6 @@ def _upload_single_file(
 
         logger.error(error_string)
         raise RuntimeError(error_string)
-
-    return orm_class(res)
-
-
-# # DENIS: this will be responsible to upload to signed url
-# def _upload_single_file(file_path: str, signed_url: dict, pbar, is_video: bool) -> None:
-#     content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
-#     # DENIS: retry here. => just create the right settings with this trick: https://stackoverflow.com/questions/15431044/can-i-set-max-retries-for-requests-request
-#     res_upload = requests.put(
-#         signed_url.get("signed_url"), data=read_in_chunks(file_path, pbar), headers={"Content-Type": content_type}
-#     )
-#
-#     if res_upload.status_code == 200:
-#         # data_hash = signed_url.get("data_hash")
-#         return
-#         #
-#         # res = querier.basic_put(orm_class, uid=data_hash, payload=signed_url, enable_logging=False)
-#         #
-#         # if not orm_class(res):
-#         #     logger.info("Error uploading: %s", signed_url.get("title", ""))
-#
-#     else:
-#         error_string = (
-#             f"Error uploading file '{signed_url.get('title', '')}' to signed url: " f"'{signed_url.get('signed_url')}'",
-#         )
-#         logger.error(error_string)
-#         raise RuntimeError(error_string)
-#
-#     # return orm_class(res)
 
 
 def _data_upload_with_retries(
