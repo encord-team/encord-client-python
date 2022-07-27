@@ -3,7 +3,7 @@ import mimetypes
 import os.path
 from dataclasses import dataclass
 from time import sleep
-from typing import List, TypeVar
+from typing import List, TypeVar, Union
 
 import requests
 from tqdm import tqdm
@@ -57,7 +57,7 @@ OrmT = TypeVar("OrmT")
 def upload_to_signed_url_list(
     file_paths: List[str],
     signed_urls,
-    orm_class: OrmT,
+    orm_class: Union[Images, Video],
     cloud_upload_settings: CloudUploadSettings,
 ) -> List[dict]:
     if orm_class == Images:
@@ -116,7 +116,7 @@ def _upload_single_file(
     is_video: bool,
     max_retries: int,
     backoff_factor: float,
-) -> OrmT:
+) -> None:
 
     res_upload = _data_upload_with_retries(file_path, signed_url, pbar, is_video, max_retries, backoff_factor)
 
