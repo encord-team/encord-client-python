@@ -3,14 +3,14 @@ import mimetypes
 import os.path
 from dataclasses import dataclass
 from time import sleep
-from typing import List, TypeVar
+from typing import List, TypeVar, Union
 
 import requests
 from tqdm import tqdm
 
 from encord.exceptions import CloudUploadError
 from encord.http.querier import Querier
-from encord.orm.dataset import Image, Video
+from encord.orm.dataset import Images, Video
 
 PROGRESS_BAR_FILE_FACTOR = 100
 
@@ -57,11 +57,10 @@ OrmT = TypeVar("OrmT")
 def upload_to_signed_url_list(
     file_paths: List[str],
     signed_urls,
-    querier: Querier,
-    orm_class: OrmT,
+    orm_class: Union[Images, Video],
     cloud_upload_settings: CloudUploadSettings,
-) -> List[OrmT]:
-    if orm_class == Image:
+) -> List[dict]:
+    if orm_class == Images:
         is_video = False
     elif orm_class == Video:
         is_video = True
@@ -71,7 +70,7 @@ def upload_to_signed_url_list(
     assert len(file_paths) == len(signed_urls), "Error getting the correct number of signed urls"
 
     failed_uploads = []
-    orm_class_list = []
+    successful_uploads = []
     total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
     with tqdm(total=total, desc="Files upload progress: ") as pbar:
         for i in range(len(file_paths)):
@@ -81,17 +80,15 @@ def upload_to_signed_url_list(
             assert signed_url.get("title", "") == file_name, "Ordering issue"
 
             try:
-                res = _upload_single_file(
+                _upload_single_file(
                     file_path,
                     signed_url,
-                    querier,
-                    orm_class,
                     pbar,
                     is_video,
                     cloud_upload_settings.max_retries,
                     cloud_upload_settings.backoff_factor,
                 )
-                orm_class_list.append(res)
+                successful_uploads.append(signed_url)
             except CloudUploadError as e:
                 if cloud_upload_settings.allow_failures:
                     failed_uploads.append(file_path)
@@ -101,31 +98,29 @@ def upload_to_signed_url_list(
     if failed_uploads:
         logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
 
-    return orm_class_list
+    return successful_uploads
+
+
+def upload_video_to_encord(signed_url: dict, querier: Querier) -> Video:
+    return querier.basic_put(Video, uid=signed_url.get("data_hash"), payload=signed_url, enable_logging=False)
+
+
+def upload_images_to_encord(signed_urls: List[dict], querier: Querier) -> Images:
+    return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
 
 
 def _upload_single_file(
     file_path: str,
     signed_url: dict,
-    querier: Querier,
-    orm_class: OrmT,
     pbar,
     is_video: bool,
     max_retries: int,
     backoff_factor: float,
-) -> OrmT:
+) -> None:
 
     res_upload = _data_upload_with_retries(file_path, signed_url, pbar, is_video, max_retries, backoff_factor)
 
-    if res_upload.status_code == 200:
-        data_hash = signed_url.get("data_hash")
-
-        res = querier.basic_put(orm_class, uid=data_hash, payload=signed_url, enable_logging=False)
-
-        if not orm_class(res):
-            logger.info("Error uploading: %s", signed_url.get("title", ""))
-
-    else:
+    if res_upload.status_code != 200:
         status_code = res_upload.status_code
         headers = res_upload.headers
         res_text = res_upload.text
@@ -137,8 +132,6 @@ def _upload_single_file(
 
         logger.error(error_string)
         raise RuntimeError(error_string)
-
-    return orm_class(res)
 
 
 def _data_upload_with_retries(

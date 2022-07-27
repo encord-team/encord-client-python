@@ -437,6 +437,13 @@ class Image(base_orm.BaseORM):
 
 
 @dataclasses.dataclass(frozen=True)
+class Images:
+    """Uploading multiple images in a batch mode."""
+
+    success: bool
+
+
+@dataclasses.dataclass(frozen=True)
 class ImageGroupOCR:
     processed_texts: Dict
 
