@@ -59,7 +59,7 @@ def upload_to_signed_url_list(
     querier: Querier,
     orm_class: Union[Images, Video],
     cloud_upload_settings: CloudUploadSettings,
-) -> List[dict]:
+) -> List[SignedVideoURL, SignedImagesURL]:
     if orm_class == Images:
         is_video = False
     elif orm_class == Video:
@@ -107,7 +107,7 @@ def upload_images_to_encord(signed_urls: List[dict], querier: Querier) -> Images
     return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
 
 
-def _get_signed_url(file_name: str, is_video: bool, querier: Querier) -> dict:
+def _get_signed_url(file_name: str, is_video: bool, querier: Querier) -> Union[SignedVideoURL, SignedImagesURL]:
     if is_video:
         return querier.basic_getter(SignedVideoURL, uid=file_name)
     else:
@@ -137,6 +137,8 @@ def _upload_single_file(
 
         logger.error(error_string)
         raise RuntimeError(error_string)
+
+    return orm_class(res)
 
 
 def _data_upload_with_retries(
