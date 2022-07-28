@@ -327,7 +327,7 @@ class StorageLocation(IntEnum):
 
     @staticmethod
     def from_str(string_location: str) -> StorageLocation:
-        return STORAGE_LOCATION_STR[string_location]
+        return STORAGE_LOCATION_BY_STR[string_location]
 
     def get_str(self) -> str:
         if self == StorageLocation.CORD_STORAGE:
@@ -342,7 +342,7 @@ class StorageLocation(IntEnum):
             return "OTC_STR"
 
 
-STORAGE_LOCATION_STR = {location.get_str(): location for location in StorageLocation}
+STORAGE_LOCATION_BY_STR: Dict[str, StorageLocation] = {location.get_str(): location for location in StorageLocation}
 
 DatasetType = StorageLocation
 """For backwards compatibility"""
