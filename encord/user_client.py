@@ -5,7 +5,7 @@ import datetime
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import dateutil
 
@@ -424,11 +424,13 @@ class EncordUserClient:
             domain=self.user_config.domain,
         )
 
-        signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
-        successful_uploads = upload_to_signed_url_list(file_path_strings, signed_urls, Images, CloudUploadSettings())
-        upload_images_to_encord(successful_uploads, client._querier)
+        successful_uploads = upload_to_signed_url_list(
+            file_path_strings, client._querier, Images, CloudUploadSettings()
+        )
+        bla = upload_images_to_encord(successful_uploads, client._querier)
+        # DENIS: is the right thing returned here?
 
-        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
+        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), bla))
 
         return dataset_hash, image_title_to_image_hash_map
 
