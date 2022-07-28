@@ -19,7 +19,7 @@ import json
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
-from typing import Dict, List, NoReturn, Optional
+from typing import Dict, List, Optional
 
 from dateutil import parser
 
@@ -323,29 +323,26 @@ class StorageLocation(IntEnum):
     AWS = (1,)
     GCP = (2,)
     AZURE = 3
+    OTC = 4
 
     @staticmethod
     def from_str(string_location: str) -> StorageLocation:
-        if string_location == "CORD_STORAGE":
-            return StorageLocation.CORD_STORAGE
-        if string_location == "AWS_S3":
-            return StorageLocation.AWS
-        if string_location == "GCP_STR":
-            return StorageLocation.GCP
-        if string_location == "AZURE_STR":
-            return StorageLocation.AZURE
-        raise TypeError(f"Invalid storage location string: `{string_location}`")
+        return STORAGE_LOCATION_BY_STR[string_location]
 
     def get_str(self) -> str:
         if self == StorageLocation.CORD_STORAGE:
             return "CORD_STORAGE"
-        if self == StorageLocation.AWS:
+        elif self == StorageLocation.AWS:
             return "AWS_S3"
-        if self == StorageLocation.GCP:
+        elif self == StorageLocation.GCP:
             return "GCP_STR"
-        if self == StorageLocation.AZURE:
+        elif self == StorageLocation.AZURE:
             return "AZURE_STR"
+        elif self == StorageLocation.OTC:
+            return "OTC_STR"
 
+
+STORAGE_LOCATION_BY_STR: Dict[str, StorageLocation] = {location.get_str(): location for location in StorageLocation}
 
 DatasetType = StorageLocation
 """For backwards compatibility"""
