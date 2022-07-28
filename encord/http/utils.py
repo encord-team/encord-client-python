@@ -10,7 +10,13 @@ from tqdm import tqdm
 
 from encord.exceptions import CloudUploadError
 from encord.http.querier import Querier
-from encord.orm.dataset import Images, SignedImagesURL, SignedVideoURL, Video
+from encord.orm.dataset import (
+    Images,
+    SignedImagesURL,
+    SignedImageURL,
+    SignedVideoURL,
+    Video,
+)
 
 PROGRESS_BAR_FILE_FACTOR = 100
 
@@ -59,7 +65,7 @@ def upload_to_signed_url_list(
     querier: Querier,
     orm_class: Union[Images, Video],
     cloud_upload_settings: CloudUploadSettings,
-) -> List[SignedVideoURL, SignedImagesURL]:
+) -> List[SignedVideoURL, SignedImageURL]:
     if orm_class == Images:
         is_video = False
     elif orm_class == Video:
@@ -107,7 +113,7 @@ def upload_images_to_encord(signed_urls: List[dict], querier: Querier) -> Images
     return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
 
 
-def _get_signed_url(file_name: str, is_video: bool, querier: Querier) -> Union[SignedVideoURL, SignedImagesURL]:
+def _get_signed_url(file_name: str, is_video: bool, querier: Querier) -> Union[SignedVideoURL, SignedImageURL]:
     if is_video:
         return querier.basic_getter(SignedVideoURL, uid=file_name)
     else:
