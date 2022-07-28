@@ -70,7 +70,7 @@ def upload_to_signed_url_list(
     failed_uploads = []
     orm_class_list = []
     total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
-    with tqdm(total=total, desc="Files upload progress: ") as pbar:
+    with tqdm(total=total, desc="Files upload progress: ", leave=False) as pbar:
         for i in range(len(file_paths)):
             file_path = file_paths[i]
             file_name = os.path.basename(file_path)
