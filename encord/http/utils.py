@@ -144,8 +144,6 @@ def _upload_single_file(
         logger.error(error_string)
         raise RuntimeError(error_string)
 
-    return orm_class(res)
-
 
 def _data_upload_with_retries(
     file_path: str,
