@@ -408,7 +408,6 @@ class EncordUserClient:
             * A map from an image title to the image hash which is stored in the DB.
         """
 
-        short_names = list(map(lambda x: x.name, images_paths))
         file_path_strings = list(map(lambda x: str(x), images_paths))
         dataset = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
@@ -427,10 +426,9 @@ class EncordUserClient:
         successful_uploads = upload_to_signed_url_list(
             file_path_strings, client._querier, Images, CloudUploadSettings()
         )
-        bla = upload_images_to_encord(successful_uploads, client._querier)
-        # DENIS: is the right thing returned here?
+        upload_images_to_encord(successful_uploads, client._querier)
 
-        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), bla))
+        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), successful_uploads))
 
         return dataset_hash, image_title_to_image_hash_map
 
