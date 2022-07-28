@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import dateutil
 
@@ -405,10 +405,9 @@ class EncordUserClient:
             domain=self.user_config.domain,
         )
 
-        signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
-        upload_to_signed_url_list(file_path_strings, signed_urls, client._querier, Image, CloudUploadSettings())
+        images = upload_to_signed_url_list(file_path_strings, client._querier, Image, CloudUploadSettings())
 
-        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
+        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), images))
 
         return dataset_hash, image_title_to_image_hash_map
 
