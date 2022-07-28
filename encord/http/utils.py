@@ -65,7 +65,7 @@ def upload_to_signed_url_list(
     querier: Querier,
     orm_class: Union[Images, Video],
     cloud_upload_settings: CloudUploadSettings,
-) -> List[SignedVideoURL, SignedImageURL]:
+) -> List[Union[SignedVideoURL, SignedImageURL]]:
     if orm_class == Images:
         is_video = False
     elif orm_class == Video:
