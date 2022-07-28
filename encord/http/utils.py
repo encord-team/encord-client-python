@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from encord.exceptions import CloudUploadError
 from encord.http.querier import Querier
-from encord.orm.dataset import Image, Video
+from encord.orm.dataset import Image, SignedImagesURL, SignedVideoURL, Video
 
 PROGRESS_BAR_FILE_FACTOR = 100
 
@@ -56,7 +56,6 @@ OrmT = TypeVar("OrmT")
 
 def upload_to_signed_url_list(
     file_paths: List[str],
-    signed_urls,
     querier: Querier,
     orm_class: OrmT,
     cloud_upload_settings: CloudUploadSettings,
@@ -68,8 +67,6 @@ def upload_to_signed_url_list(
     else:
         raise RuntimeError(f"Currently only `Image` or `Video` orm_class supported. Got type `{orm_class}`")
 
-    assert len(file_paths) == len(signed_urls), "Error getting the correct number of signed urls"
-
     failed_uploads = []
     orm_class_list = []
     total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
@@ -77,7 +74,7 @@ def upload_to_signed_url_list(
         for i in range(len(file_paths)):
             file_path = file_paths[i]
             file_name = os.path.basename(file_path)
-            signed_url = signed_urls[i]
+            signed_url = _get_signed_url(file_name, is_video, querier)
             assert signed_url.get("title", "") == file_name, "Ordering issue"
 
             try:
@@ -102,6 +99,13 @@ def upload_to_signed_url_list(
         logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
 
     return orm_class_list
+
+
+def _get_signed_url(file_name: str, is_video: bool, querier: Querier) -> dict:
+    if is_video:
+        return querier.basic_getter(SignedVideoURL, uid=file_name)
+    else:
+        return querier.basic_getter(SignedImagesURL, uid=[file_name])[0]
 
 
 def _upload_single_file(

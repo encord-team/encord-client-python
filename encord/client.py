@@ -220,10 +220,8 @@ class EncordClientDataset(EncordClient):
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
         if os.path.exists(file_path):
-            short_name = os.path.basename(file_path)
-            signed_url = self._querier.basic_getter(SignedVideoURL, uid=short_name)
             res = upload_to_signed_url_list(
-                [file_path], [signed_url], self._querier, Video, cloud_upload_settings=cloud_upload_settings
+                [file_path], self._querier, Video, cloud_upload_settings=cloud_upload_settings
             )
             if res:
                 logger.info("Upload complete.")
@@ -245,11 +243,9 @@ class EncordClientDataset(EncordClient):
         for file_path in file_paths:
             if not os.path.exists(file_path):
                 raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
-        short_names = list(map(os.path.basename, file_paths))
-        signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
 
         uploaded_images = upload_to_signed_url_list(
-            file_paths, signed_urls, self._querier, Image, cloud_upload_settings=cloud_upload_settings
+            file_paths, self._querier, Image, cloud_upload_settings=cloud_upload_settings
         )
         if not uploaded_images:
             raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
