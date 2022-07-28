@@ -409,24 +409,17 @@ class EncordUserClient:
         """
 
         file_path_strings = list(map(lambda x: str(x), images_paths))
-        dataset = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
+        dataset_info = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
-        dataset_hash = dataset.dataset_hash
+        dataset_hash = dataset_info.dataset_hash
 
-        dataset_api_key: DatasetAPIKey = self.create_dataset_api_key(
-            dataset_hash, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
-        )
-
-        client = EncordClient.initialise(
+        dataset = self.get_dataset(
             dataset_hash,
-            dataset_api_key.api_key,
-            domain=self.user_config.domain,
         )
+        querier = dataset._client._quierer
 
-        successful_uploads = upload_to_signed_url_list(
-            file_path_strings, client._querier, Images, CloudUploadSettings()
-        )
-        upload_images_to_encord(successful_uploads, client._querier)
+        successful_uploads = upload_to_signed_url_list(file_path_strings, querier, Images, CloudUploadSettings())
+        upload_images_to_encord(successful_uploads, querier)
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), successful_uploads))
 
