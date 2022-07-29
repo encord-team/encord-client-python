@@ -416,7 +416,7 @@ class EncordUserClient:
         dataset = self.get_dataset(
             dataset_hash,
         )
-        querier = dataset._quierer
+        querier = dataset._client._querier
 
         successful_uploads = upload_to_signed_url_list(file_path_strings, querier, Images, CloudUploadSettings())
         upload_images_to_encord(successful_uploads, querier)
