@@ -5,7 +5,7 @@ import datetime
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import dateutil
 
@@ -408,27 +408,20 @@ class EncordUserClient:
             * A map from an image title to the image hash which is stored in the DB.
         """
 
-        short_names = list(map(lambda x: x.name, images_paths))
         file_path_strings = list(map(lambda x: str(x), images_paths))
-        dataset = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
+        dataset_info = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
-        dataset_hash = dataset.dataset_hash
+        dataset_hash = dataset_info.dataset_hash
 
-        dataset_api_key: DatasetAPIKey = self.create_dataset_api_key(
-            dataset_hash, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
-        )
-
-        client = EncordClient.initialise(
+        dataset = self.get_dataset(
             dataset_hash,
-            dataset_api_key.api_key,
-            domain=self.user_config.domain,
         )
+        querier = dataset._client._querier
 
-        signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
-        successful_uploads = upload_to_signed_url_list(file_path_strings, signed_urls, Images, CloudUploadSettings())
-        upload_images_to_encord(successful_uploads, client._querier)
+        successful_uploads = upload_to_signed_url_list(file_path_strings, querier, Images, CloudUploadSettings())
+        upload_images_to_encord(successful_uploads, querier)
 
-        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
+        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), successful_uploads))
 
         return dataset_hash, image_title_to_image_hash_map
 

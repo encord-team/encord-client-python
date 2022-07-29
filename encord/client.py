@@ -65,8 +65,6 @@ from encord.orm.dataset import (
     ImageGroupOCR,
     Images,
     ReEncodeVideoTask,
-    SignedImagesURL,
-    SignedVideoURL,
     Video,
 )
 from encord.orm.label_log import LabelLog
@@ -226,11 +224,10 @@ class EncordClientDataset(EncordClient):
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
         if os.path.exists(file_path):
-            short_name = os.path.basename(file_path)
-            signed_url = self._querier.basic_getter(SignedVideoURL, uid=short_name)
-            upload_to_signed_url_list([file_path], [signed_url], Video, cloud_upload_settings=cloud_upload_settings)
-            res = upload_video_to_encord(signed_url, self._querier)
-
+            signed_urls = upload_to_signed_url_list(
+                [file_path], self._querier, Video, cloud_upload_settings=cloud_upload_settings
+            )
+            res = upload_video_to_encord(signed_urls[0], self._querier)
             if res:
                 logger.info("Upload complete.")
                 return res
@@ -251,12 +248,9 @@ class EncordClientDataset(EncordClient):
         for file_path in file_paths:
             if not os.path.exists(file_path):
                 raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
-        short_names = list(map(os.path.basename, file_paths))
-
-        signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
 
         successful_uploads = upload_to_signed_url_list(
-            file_paths, signed_urls, Images, cloud_upload_settings=cloud_upload_settings
+            file_paths, self._querier, Images, cloud_upload_settings=cloud_upload_settings
         )
         if not successful_uploads:
             raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
