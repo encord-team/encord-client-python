@@ -47,6 +47,7 @@ import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
+from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
@@ -115,7 +116,10 @@ class EncordClient(object):
 
     @staticmethod
     def initialise(
-        resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = ENCORD_DOMAIN
+        resource_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        domain: str = ENCORD_DOMAIN,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Encord client from a resource EntityId and API key.
@@ -136,11 +140,12 @@ class EncordClient(object):
                      The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
             domain: The encord api-server domain.
                 If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
+            requests_settings: The RequestsSettings from this config
 
         Returns:
             EncordClient: A Encord client instance.
         """
-        config = EncordConfig(resource_id, api_key, domain=domain)
+        config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
         return EncordClient.initialise_with_config(config)
 
     @staticmethod
@@ -225,7 +230,7 @@ class EncordClientDataset(EncordClient):
         """
         if os.path.exists(file_path):
             signed_urls = upload_to_signed_url_list(
-                [file_path], self._querier, Video, cloud_upload_settings=cloud_upload_settings
+                [file_path], self._config, self._querier, Video, cloud_upload_settings=cloud_upload_settings
             )
             print("starting upload")
             res = upload_video_to_encord(signed_urls[0], self._querier)
@@ -252,7 +257,7 @@ class EncordClientDataset(EncordClient):
                 raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
 
         successful_uploads = upload_to_signed_url_list(
-            file_paths, self._querier, Images, cloud_upload_settings=cloud_upload_settings
+            file_paths, self._config, self._querier, Images, cloud_upload_settings=cloud_upload_settings
         )
         if not successful_uploads:
             raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")

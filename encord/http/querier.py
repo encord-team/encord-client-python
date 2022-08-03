@@ -141,7 +141,13 @@ class Querier:
             def _do_request(session: Session, req, timeouts: tuple):
                 return session.send(req, timeout=timeouts)
 
-            res = _do_request(session, req, timeouts, max_retries=10, backoff_factor=0.3)
+            res = _do_request(
+                session,
+                req,
+                timeouts,
+                max_retries=self._config.requests_settings.max_retries,
+                backoff_factor=self._config.requests_settings.backoff_factor,
+            )
         except Timeout as e:
             raise TimeOutError(str(e))
         except RequestException as e:

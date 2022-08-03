@@ -2,11 +2,12 @@ import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
-from typing import List, TypeVar, Union
+from typing import List, Optional, TypeVar, Union
 
 import requests
 from tqdm import tqdm
 
+from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError
 from encord.http.helpers import retry_on_network_errors
 from encord.http.querier import Querier
@@ -19,8 +20,6 @@ from encord.orm.dataset import (
 )
 
 PROGRESS_BAR_FILE_FACTOR = 100
-DEFAULT_MAX_RETRIES = 5
-DEFAULT_BACKOFF_FACTOR = 0.1
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +27,15 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CloudUploadSettings:
     """
-    The settings for uploading data into the GCP cloud storage. These apply for each individual upload.
+    The settings for uploading data into the GCP cloud storage. These apply for each individual upload. These settings
+    will overwrite the :meth:`encord.http.constants.RequestsSettings` which is set during
+    :class:`encord.EncordUserClient` creation.
     """
 
-    max_retries: int = DEFAULT_MAX_RETRIES
+    max_retries: Optional[int] = None
     """Number of allowed retries when uploading"""
-    backoff_factor: float = DEFAULT_BACKOFF_FACTOR
-    """With each retry, there will be a sleep of backoff_factor * (retry_number + 1)"""
+    backoff_factor: Optional[float] = None
+    """With each retry, there will be a sleep of backoff_factor * (2 ** retry_number)"""
     allow_failures: bool = False
     """
     If failures are allowed, the upload will continue even if some items were not successfully uploaded even
@@ -64,6 +65,7 @@ OrmT = TypeVar("OrmT")
 
 def upload_to_signed_url_list(
     file_paths: List[str],
+    config: BaseConfig,
     querier: Querier,
     orm_class: Union[Images, Video],
     cloud_upload_settings: CloudUploadSettings,
@@ -86,13 +88,23 @@ def upload_to_signed_url_list(
             assert signed_url.get("title", "") == file_name, "Ordering issue"
 
             try:
+                if cloud_upload_settings.max_retries is not None:
+                    max_retries = cloud_upload_settings.max_retries
+                else:
+                    max_retries = config.requests_settings.max_retries
+
+                if cloud_upload_settings.backoff_factor is not None:
+                    backoff_factor = cloud_upload_settings.backoff_factor
+                else:
+                    backoff_factor = config.requests_settings.backoff_factor
+
                 _upload_single_file(
                     file_path,
                     signed_url,
                     pbar,
                     is_video,
-                    cloud_upload_settings.max_retries,
-                    cloud_upload_settings.backoff_factor,
+                    max_retries,
+                    backoff_factor,
                 )
                 successful_uploads.append(signed_url)
             except CloudUploadError as e:
