@@ -1,73 +1,72 @@
+import http.client
 import logging
 import sys
-from collections import Callable
+import urllib.error
 
+import pytest
 import requests
 
-from encord.http.utils import (
-    retry_network_errorrs,
-    retry_network_errors,
-    retry_network_errors2,
+from encord.http.utils import retry_network_errors
+
+DEFAULT_BACKOFF_FACTOR = 0.0000001
+DEFAULT_MAX_RETRIES = 3
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [requests.exceptions.ConnectionError, urllib.error.URLError, http.client.HTTPException],
 )
+def test_network_retries_for_failing_function(exception):
+    count = 0
 
-logging.basicConfig(
-    stream=sys.stdout,
-    level=logging.INFO,
-    format="[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)s] [%(funcName)s()] %(message)s",
-    datefmt="%m/%d/%Y %I:%M:%S %p",
-)
+    @retry_network_errors
+    def failing_function():
+        nonlocal count
+        count += 1
+        raise exception("Simulated Error")
 
-
-def test_network_retries():
-    @retry_network_errorrs
-    def failing_function(some_arg: str):
-        print(f"some_arg = {some_arg}")
-        raise requests.exceptions.ConnectionError("Simulated ConnectionError.")
-
-    failing_function("bla", max_retries=3, backoff_factor=0.1)
+    with pytest.raises(exception):
+        failing_function(max_retries=DEFAULT_MAX_RETRIES, backoff_factor=DEFAULT_BACKOFF_FACTOR)
+    assert count == DEFAULT_MAX_RETRIES + 1
 
 
-def test_network_retries_context_manager():
-    def failing_function(some_arg: str):
-        print(f"some_arg = {some_arg}")
-        # print(f"max_retries = {max_retries}")
-        # print(f"backoff_factor = {backoff_factor}")
-        raise requests.exceptions.ConnectionError("Simulated ConnectionError.")
+def test_network_retries_for_non_network_exception():
+    count = 0
 
-    with retry_network_errors(failing_function, max_retries=3, backoff_factor=3.3) as func:
-        func("argsss")
+    @retry_network_errors
+    def failing_function():
+        nonlocal count
+        if count == 0:
+            count += 1
+            raise requests.exceptions.ConnectionError("Simulated Error")
+        else:
+            raise RuntimeError("Oh no!")
+
+    with pytest.raises(RuntimeError):
+        failing_function(max_retries=DEFAULT_MAX_RETRIES, backoff_factor=DEFAULT_BACKOFF_FACTOR)
+
+    assert count == 1
 
 
-def failing_function(some_arg: str):
-    print(f"some_arg = {some_arg}")
-    # print(f"max_retries = {max_retries}")
-    # print(f"backoff_factor = {backoff_factor}")
-    raise requests.exceptions.ConnectionError("Simulated ConnectionError.")
+def test_network_retry_function_returns_successful_response():
+    """Testing args and kwargs"""
+    count = 0
+    expected_response = "finally a response!"
 
+    @retry_network_errors
+    def partially_failing_function(response_part_one: str, response_part_two: str):
+        nonlocal count
+        if count == 0:
+            count += 1
+            raise requests.exceptions.ConnectionError("Simulated Error")
+        else:
+            return response_part_one + response_part_two
 
-def test_network_retries_func():
-    result = retry_network_errors2(
-        failing_function, func_args=["arg"], func_kwargs={}, max_retries=3, backoff_factor=0.1
+    actual_response = partially_failing_function(
+        expected_response[:1],
+        response_part_two=expected_response[1:],
+        max_retries=DEFAULT_MAX_RETRIES,
+        backoff_factor=DEFAULT_BACKOFF_FACTOR,
     )
-
-
-def test_bla():
-    async def gru(one_arg: str):
-        print(one_arg)
-
-    x = gru("my arg")
-    # await x
-
-    # def wrapper(func: Callable):
-    #     func
-
-
-def test_gru():
-    """essentially create a decorator which just passes on the same function and makes you call it again
-    so you'd need to do something like
-    retrier(network_function(one, two), max_retries=5, ...)
-
-    """
-
-    def wrapper():
-        pass
+    assert actual_response == expected_response
+    assert count == 1
