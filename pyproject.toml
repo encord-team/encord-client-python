@@ -22,6 +22,7 @@ classifiers=[
 python = "^3.7"
 python-dateutil = "^2.8.2"
 requests = "2.25.0"
+certifi = "2021.10.8"
 uuid = "^1.30"
 cryptography = "^3.4.8"
 tqdm = "^4.32.1"
