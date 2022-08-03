@@ -25,6 +25,7 @@ from requests.packages.urllib3.util import Retry
 from encord.configs import BaseConfig
 from encord.exceptions import *
 from encord.http.error_utils import check_error_response
+from encord.http.helpers import retry_on_network_errors
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
 from encord.orm.formatter import Formatter
@@ -135,7 +136,12 @@ class Querier:
         timeouts = (request.connect_timeout, request.timeout)
 
         try:
-            res = session.send(req, timeout=timeouts)
+
+            @retry_on_network_errors
+            def _do_request(session: Session, req, timeouts: tuple):
+                return session.send(req, timeout=timeouts)
+
+            res = _do_request(session, req, timeouts, max_retries=10, backoff_factor=0.3)
         except Timeout as e:
             raise TimeOutError(str(e))
         except RequestException as e:

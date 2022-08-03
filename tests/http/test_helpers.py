@@ -1,12 +1,10 @@
 import http.client
-import logging
-import sys
 import urllib.error
 
 import pytest
 import requests
 
-from encord.http.utils import retry_network_errors
+from encord.http.helpers import retry_on_network_errors
 
 DEFAULT_BACKOFF_FACTOR = 0.0000001
 DEFAULT_MAX_RETRIES = 3
@@ -19,7 +17,7 @@ DEFAULT_MAX_RETRIES = 3
 def test_network_retries_for_failing_function(exception):
     count = 0
 
-    @retry_network_errors
+    @retry_on_network_errors
     def failing_function():
         nonlocal count
         count += 1
@@ -33,7 +31,7 @@ def test_network_retries_for_failing_function(exception):
 def test_network_retries_for_non_network_exception():
     count = 0
 
-    @retry_network_errors
+    @retry_on_network_errors
     def failing_function():
         nonlocal count
         if count == 0:
@@ -53,7 +51,7 @@ def test_network_retry_function_returns_successful_response():
     count = 0
     expected_response = "finally a response!"
 
-    @retry_network_errors
+    @retry_on_network_errors
     def partially_failing_function(response_part_one: str, response_part_two: str):
         nonlocal count
         if count == 0:

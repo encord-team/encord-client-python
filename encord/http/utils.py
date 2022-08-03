@@ -1,18 +1,14 @@
-import functools
-import http.client
 import logging
 import mimetypes
 import os.path
-import urllib.error
-from contextlib import contextmanager
 from dataclasses import dataclass
-from time import sleep
-from typing import Callable, List, TypeVar, Union
+from typing import List, TypeVar, Union
 
 import requests
 from tqdm import tqdm
 
 from encord.exceptions import CloudUploadError
+from encord.http.helpers import retry_on_network_errors
 from encord.http.querier import Querier
 from encord.orm.dataset import (
     Images,
@@ -135,7 +131,9 @@ def _upload_single_file(
     backoff_factor: float,
 ) -> None:
 
-    res_upload = _data_upload_with_retries(file_path, signed_url, pbar, is_video, max_retries, backoff_factor)
+    res_upload = _data_upload(
+        file_path, signed_url, pbar, is_video, max_retries=max_retries, backoff_factor=backoff_factor
+    )
 
     if res_upload.status_code != 200:
         status_code = res_upload.status_code
@@ -151,77 +149,16 @@ def _upload_single_file(
         raise RuntimeError(error_string)
 
 
-def retry_network_errors(func: Callable):
-    """
-    Decorator for a function that do network requests where we would like to retry those network requests.
-    The decorated function cannot use the keyword arguments `max_retries` and `backoff_factor`.
-    """
-
-    @functools.wraps(func)
-    def wrapper_network_retries(*args, max_retries: int, backoff_factor: float, **kwargs):
-        if max_retries < 0 or not isinstance(max_retries, int):
-            raise TypeError(
-                f"The max_retries argument must be a positive integer. It is currently set to `{max_retries}`"
-            )
-        if backoff_factor <= 0:
-            raise TypeError(
-                f"The back_off factor argument must be a float larger than 0. It is currently set to `{backoff_factor}"
-            )
-
-        current_backoff = backoff_factor
-
-        for i in range(max_retries + 1):
-            try:
-                return func(*args, **kwargs)
-            except (
-                requests.exceptions.RequestException,
-                urllib.error.URLError,
-                http.client.HTTPException,
-            ) as e:
-                if i < max_retries:
-                    logger.warning(
-                        "An exception occurred during a network request. Retrying upload in %s seconds",
-                        current_backoff,
-                        exc_info=True,
-                    )
-                    sleep(current_backoff)
-                    current_backoff *= 2
-                else:
-                    logger.exception("An exception occurred during a network request. All retries are exhausted")
-                    raise e
-
-    return wrapper_network_retries
-
-
-def _data_upload_with_retries(
+@retry_on_network_errors
+def _data_upload(
     file_path: str,
     signed_url: dict,
     pbar,
     is_video: bool,
-    max_retries: int,
-    backoff_factor: float,
 ):
     content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
-
-    current_backoff = backoff_factor
-    for i in range(max_retries + 1):
-        try:
-            return requests.put(
-                signed_url.get("signed_url"),
-                data=read_in_chunks(file_path, pbar),
-                headers={"Content-Type": content_type},
-            )
-        except Exception:
-            if i < max_retries:
-                logger.warning(
-                    "An exception occurred during uploading the file `%s`. Retrying upload in %s seconds",
-                    file_path,
-                    current_backoff,
-                    exc_info=True,
-                )
-                sleep(current_backoff)
-                current_backoff *= 2
-            else:
-                logger.exception("An exception occurred during uploading the file `%s`", file_path)
-
-    raise CloudUploadError("Could not upload a file. Please check the logs for details.")
+    return requests.put(
+        signed_url.get("signed_url"),
+        data=read_in_chunks(file_path, pbar),
+        headers={"Content-Type": content_type},
+    )
