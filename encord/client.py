@@ -227,7 +227,9 @@ class EncordClientDataset(EncordClient):
             signed_urls = upload_to_signed_url_list(
                 [file_path], self._querier, Video, cloud_upload_settings=cloud_upload_settings
             )
+            print("starting upload")
             res = upload_video_to_encord(signed_urls[0], self._querier)
+            print("done with upload")
             if res:
                 logger.info("Upload complete.")
                 return res
