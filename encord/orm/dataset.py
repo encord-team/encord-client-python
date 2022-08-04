@@ -91,8 +91,6 @@ class DataRow(dict, Formatter):
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
         data_type = DataType.from_upper_case_string(json_dict["data_type"])
-        if data_type is None:
-            raise TypeError(f"The DataRow constructor received an invalid data_type `{json_dict['data_type']}`")
 
         return DataRow(
             uid=json_dict["data_hash"],
