@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from encord.orm.project import StringEnum
 
 
@@ -9,7 +7,7 @@ class DataType(StringEnum):
     DICOM = "dicom"
 
     @staticmethod
-    def from_upper_case_string(string: str) -> DataType:
+    def from_upper_case_string(string: str) -> "DataType":
         for data_type in DataType:
             if string == data_type.to_upper_case_string():
                 return data_type
