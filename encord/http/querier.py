@@ -18,7 +18,7 @@ from typing import List, Type, TypeVar
 
 import requests
 import requests.exceptions
-from requests import Session, Timeout
+from requests import Session
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util import Retry
 
@@ -40,6 +40,7 @@ class Querier:
 
     def __init__(self, config: BaseConfig):
         self._config = config
+        self._session: Session = self.create_new_session()
 
     def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
         """Single DB object getter."""
@@ -123,9 +124,6 @@ class Querier:
         if enable_logging:
             logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)
 
-        session = Session()
-        session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))
-
         req = requests.Request(
             method=request.http_method,
             url=self._config.endpoint,
@@ -135,36 +133,39 @@ class Querier:
 
         timeouts = (request.connect_timeout, request.timeout)
 
-        try:
+        @retry_on_network_errors
+        def _do_request(req, timeouts: tuple):
+            try:
+                return self._session.send(req, timeout=timeouts)
+            except requests.exceptions.RequestException as e:
+                if enable_logging:
+                    logger.info(f"Received exception [{e}]. Opening new session.")
+                self._session = self.create_new_session()
+                return self._session.send(req, timeout=timeouts)
 
-            @retry_on_network_errors
-            def _do_request(session: Session, req, timeouts: tuple):
-                return session.send(req, timeout=timeouts)
-
-            res = _do_request(
-                session,
-                req,
-                timeouts,
-                max_retries=self._config.requests_settings.max_retries,
-                backoff_factor=self._config.requests_settings.backoff_factor,
-            )
-        except Timeout as e:
-            raise TimeOutError(str(e))
-        except RequestException as e:
-            raise RequestException(str(e))
-        except Exception as e:
-            raise UnknownException(str(e))
+        res = _do_request(
+            req,
+            timeouts,
+            max_retries=self._config.requests_settings.max_retries,
+            backoff_factor=self._config.requests_settings.backoff_factor,
+        )
 
         try:
             res_json = res.json()
-        except Exception:
-            raise EncordException("Error parsing JSON response: %s" % res.text)
+        except Exception as e:
+            raise EncordException("Error parsing JSON response: %s" % res.text) from e
 
         if res_json.get("status") != requests.codes.ok:
             response = res_json.get("response")
             extra_payload = res_json.get("payload")
             check_error_response(response, extra_payload)
 
-        session.close()
-
         return res_json.get("response")
+
+    @staticmethod
+    def create_new_session() -> Session:
+        session = Session()
+
+        session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))
+
+        return session
