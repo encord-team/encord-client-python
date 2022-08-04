@@ -14,7 +14,9 @@
 # under the License.
 import dataclasses
 import logging
+from random import random
 from typing import List, Type, TypeVar
+from urllib.error import URLError
 
 import requests
 import requests.exceptions
@@ -135,13 +137,7 @@ class Querier:
 
         @retry_on_network_errors
         def _do_request(req, timeouts: tuple):
-            try:
-                return self._session.send(req, timeout=timeouts)
-            except requests.exceptions.RequestException as e:
-                if enable_logging:
-                    logger.info(f"Received exception [{e}]. Opening new session.")
-                self._session = self.create_new_session()
-                return self._session.send(req, timeout=timeouts)
+            return self._session.send(req, timeout=timeouts)
 
         res = _do_request(
             req,
