@@ -2,13 +2,14 @@ import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
-from time import sleep
-from typing import List, TypeVar, Union
+from typing import List, Optional, TypeVar, Union
 
 import requests
 from tqdm import tqdm
 
+from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError
+from encord.http.helpers import retry_on_network_errors
 from encord.http.querier import Querier
 from encord.orm.dataset import (
     Images,
@@ -26,13 +27,15 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CloudUploadSettings:
     """
-    The settings for uploading data into the GCP cloud storage. These apply for each individual upload.
+    The settings for uploading data into the GCP cloud storage. These apply for each individual upload. These settings
+    will overwrite the :meth:`encord.http.constants.RequestsSettings` which is set during
+    :class:`encord.EncordUserClient` creation.
     """
 
-    max_retries: int = 5
+    max_retries: Optional[int] = None
     """Number of allowed retries when uploading"""
-    backoff_factor: float = 0.1
-    """With each retry, there will be a sleep of backoff_factor * (retry_number + 1)"""
+    backoff_factor: Optional[float] = None
+    """With each retry, there will be a sleep of backoff_factor * (2 ** retry_number)"""
     allow_failures: bool = False
     """
     If failures are allowed, the upload will continue even if some items were not successfully uploaded even
@@ -62,6 +65,7 @@ OrmT = TypeVar("OrmT")
 
 def upload_to_signed_url_list(
     file_paths: List[str],
+    config: BaseConfig,
     querier: Querier,
     orm_class: Union[Images, Video],
     cloud_upload_settings: CloudUploadSettings,
@@ -84,13 +88,23 @@ def upload_to_signed_url_list(
             assert signed_url.get("title", "") == file_name, "Ordering issue"
 
             try:
+                if cloud_upload_settings.max_retries is not None:
+                    max_retries = cloud_upload_settings.max_retries
+                else:
+                    max_retries = config.requests_settings.max_retries
+
+                if cloud_upload_settings.backoff_factor is not None:
+                    backoff_factor = cloud_upload_settings.backoff_factor
+                else:
+                    backoff_factor = config.requests_settings.backoff_factor
+
                 _upload_single_file(
                     file_path,
                     signed_url,
                     pbar,
                     is_video,
-                    cloud_upload_settings.max_retries,
-                    cloud_upload_settings.backoff_factor,
+                    max_retries,
+                    backoff_factor,
                 )
                 successful_uploads.append(signed_url)
             except CloudUploadError as e:
@@ -129,7 +143,9 @@ def _upload_single_file(
     backoff_factor: float,
 ) -> None:
 
-    res_upload = _data_upload_with_retries(file_path, signed_url, pbar, is_video, max_retries, backoff_factor)
+    res_upload = _data_upload(
+        file_path, signed_url, pbar, is_video, max_retries=max_retries, backoff_factor=backoff_factor
+    )
 
     if res_upload.status_code != 200:
         status_code = res_upload.status_code
@@ -145,35 +161,16 @@ def _upload_single_file(
         raise RuntimeError(error_string)
 
 
-def _data_upload_with_retries(
+@retry_on_network_errors
+def _data_upload(
     file_path: str,
     signed_url: dict,
     pbar,
     is_video: bool,
-    max_retries: int,
-    backoff_factor: float,
 ):
     content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
-
-    current_backoff = backoff_factor
-    for i in range(max_retries + 1):
-        try:
-            return requests.put(
-                signed_url.get("signed_url"),
-                data=read_in_chunks(file_path, pbar),
-                headers={"Content-Type": content_type},
-            )
-        except Exception:
-            if i < max_retries:
-                logger.warning(
-                    "An exception occurred during uploading the file `%s`. Retrying upload in %s seconds",
-                    file_path,
-                    current_backoff,
-                    exc_info=True,
-                )
-                sleep(current_backoff)
-                current_backoff *= 2
-            else:
-                logger.exception("An exception occurred during uploading the file `%s`", file_path)
-
-    raise CloudUploadError("Could not upload a file. Please check the logs for details.")
+    return requests.put(
+        signed_url.get("signed_url"),
+        data=read_in_chunks(file_path, pbar),
+        headers={"Content-Type": content_type},
+    )

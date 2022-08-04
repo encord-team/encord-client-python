@@ -15,6 +15,7 @@ from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
+from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
@@ -212,12 +213,17 @@ class EncordUserClient:
 
     @staticmethod
     def create_with_ssh_private_key(
-        ssh_private_key: Optional[str] = None, password: str = None, **kwargs
+        ssh_private_key: Optional[str] = None,
+        password: str = None,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        **kwargs,
     ) -> EncordUserClient:
         if not ssh_private_key:
             ssh_private_key = get_env_ssh_key()
 
-        user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
+        user_config = UserConfig.from_ssh_private_key(
+            ssh_private_key, password, requests_settings=requests_settings, **kwargs
+        )
         querier = Querier(user_config)
 
         return EncordUserClient(user_config, querier)
@@ -287,14 +293,18 @@ class EncordUserClient:
         DEPRECATED - prefer using :meth:`get_dataset()` instead.
         """
         dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
-        return EncordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
+        return EncordClient.initialise(
+            dataset_hash, dataset_api_key.api_key, requests_settings=self.user_config.requests_settings, **kwargs
+        )
 
     def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
         """
         DEPRECATED - prefer using :meth:`get_project()` instead.
         """
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
-        return EncordClient.initialise(project_hash, project_api_key, **kwargs)
+        return EncordClient.initialise(
+            project_hash, project_api_key, requests_settings=self.user_config.requests_settings, **kwargs
+        )
 
     def create_project_from_cvat(
         self,
@@ -418,7 +428,9 @@ class EncordUserClient:
         )
         querier = dataset._client._querier
 
-        successful_uploads = upload_to_signed_url_list(file_path_strings, querier, Images, CloudUploadSettings())
+        successful_uploads = upload_to_signed_url_list(
+            file_path_strings, self.user_config, querier, Images, CloudUploadSettings()
+        )
         upload_images_to_encord(successful_uploads, querier)
 
         image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), successful_uploads))

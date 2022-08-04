@@ -157,6 +157,9 @@ Utilities - Other
     :members:
     :undoc-members:
 
+.. automodule:: encord.http.constants
+    :members:
+    :undoc-members:
 
 Configs
 ------------
