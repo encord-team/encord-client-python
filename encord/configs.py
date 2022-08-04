@@ -29,7 +29,7 @@ import encord.exceptions
 from encord.constants.string_constants import ALL_RESOURCE_TYPES
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 
-ENCORD_DOMAIN = "https://api.cord.tech"  #: str: The end-point for interacting with the Encord API.
+ENCORD_DOMAIN = "https://api.encord.com"
 ENCORD_PUBLIC_PATH = "/public"
 ENCORD_PUBLIC_USER_PATH = "/public/user"
 ENCORD_ENDPOINT = ENCORD_DOMAIN + ENCORD_PUBLIC_PATH
