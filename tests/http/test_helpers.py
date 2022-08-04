@@ -34,8 +34,8 @@ def test_network_retries_for_non_network_exception():
     @retry_on_network_errors
     def failing_function():
         nonlocal count
-        if count == 0:
-            count += 1
+        count += 1
+        if count == 1:
             raise requests.exceptions.ConnectionError("Simulated Error")
         else:
             raise RuntimeError("Oh no!")
@@ -43,7 +43,7 @@ def test_network_retries_for_non_network_exception():
     with pytest.raises(RuntimeError):
         failing_function(max_retries=DEFAULT_MAX_RETRIES, backoff_factor=DEFAULT_BACKOFF_FACTOR)
 
-    assert count == 1
+    assert count == 2
 
 
 def test_network_retry_function_returns_successful_response():
@@ -54,8 +54,8 @@ def test_network_retry_function_returns_successful_response():
     @retry_on_network_errors
     def partially_failing_function(response_part_one: str, response_part_two: str):
         nonlocal count
-        if count == 0:
-            count += 1
+        count += 1
+        if count == 1:
             raise requests.exceptions.ConnectionError("Simulated Error")
         else:
             return response_part_one + response_part_two
@@ -67,4 +67,4 @@ def test_network_retry_function_returns_successful_response():
         backoff_factor=DEFAULT_BACKOFF_FACTOR,
     )
     assert actual_response == expected_response
-    assert count == 1
+    assert count == 2
