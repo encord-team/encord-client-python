@@ -473,7 +473,10 @@ def extract_frames(video_file_name: Path, img_dir: Path):
     img_dir.mkdir(parents=True, exist_ok=True)
     command = f"ffmpeg -i {video_file_name} -start_number 0 {img_dir}/%d.jpg -hide_banner"
     if subprocess.run(command, shell=True, capture_output=True, stdout=None, check=True).returncode != 0:
-        logger.warning("Splitting video into separate frames failed.")
+        raise RuntimeError(
+            "Splitting videos into multiple image files failed. Please ensure that you have FFMPEG "
+            f"installed on your machine: https://ffmpeg.org/download.html The comamand that failed was `{command}`."
+        )
 
 
 #
