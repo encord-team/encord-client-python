@@ -6,16 +6,13 @@ import pytest
 import torch
 import torchvision
 from deepdiff import DeepDiff
-from encord_coco.coco_encoder import (
+from encord.transformers.coco.coco_encoder import (
     CocoEncoder,
     EncodingError,
     download_file,
     extract_frames,
 )
-from encord_coco.coco_transcoders_copied import (
-    ConvertFromCordAnnotationFormatToCOCOAnnotationFormat,
-)
-from encord_coco.tests.data.project_1 import (
+from tests.transformers.coco.data.project_1 import (
     cute_cat_mp4,
     existing_image_group,
     image_group_a2198,
@@ -30,7 +27,7 @@ from encord_coco.tests.data.project_1 import (
 )
 
 from encord.objects.common import Shape
-from encord.objects.ontology import Ontology
+from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.ontology_object import Object
 
 ENABLE_INTEGRATION_TESTS = False
@@ -146,7 +143,7 @@ def test_coco_transcoder_no_labels():
 
 def test_coco_transcoder_wrong_ontology():
     labels = [image_group_a2198, existing_image_group, image_group_fded8, cute_cat_mp4]
-    ontology = Ontology()
+    ontology = OntologyStructure()
 
     with pytest.raises(EncodingError):
         CocoEncoder(labels, ontology).encode(

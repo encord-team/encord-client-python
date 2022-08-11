@@ -1,7 +1,7 @@
 import os
 
 from encord import EncordUserClient
-from encord.objects.ontology import Ontology
+from encord.objects.ontology_structure import OntologyStructure
 
 DEV_DOMAIN = "https://dev.api.cord.tech"
 LOCAL_DOMAIN = "http://127.0.0.1:8000"
