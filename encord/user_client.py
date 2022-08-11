@@ -10,7 +10,6 @@ from typing import Dict, List, Optional, Tuple, Type, Union
 import dateutil
 
 # add this for backward compatible class comparisons
-from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
@@ -337,7 +336,7 @@ class EncordUserClient:
             ValueError:
                 If the CVAT directory has an invalid format.
         """
-        if not (type(import_method) == LocalImport or type(import_method) == CordLocalImport):
+        if not (type(import_method) == LocalImport):
             raise ValueError("Only local imports are currently supported ")
 
         cvat_directory_path = import_method.file_path

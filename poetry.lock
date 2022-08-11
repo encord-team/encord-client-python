@@ -175,6 +175,20 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "deepdiff"
+version = "5.8.1"
+description = "Deep Difference and Search of any Python object/data."
+category = "dev"
+optional = true
+python-versions = ">=3.6"
+
+[package.dependencies]
+ordered-set = ">=4.1.0,<4.2.0"
+
+[package.extras]
+cli = ["click (==8.0.3)", "pyyaml (==5.4.1)", "toml (==0.10.2)", "clevercsv (==0.7.1)"]
+
+[[package]]
 name = "distlib"
 version = "0.3.5"
 description = "Distribution utilities"
@@ -365,6 +379,17 @@ description = "NumPy is the fundamental package for array computing with Python.
 category = "dev"
 optional = false
 python-versions = ">=3.7"
+
+[[package]]
+name = "ordered-set"
+version = "4.1.0"
+description = "An OrderedSet is a custom MutableSet that remembers its order, so that every"
+category = "dev"
+optional = true
+python-versions = ">=3.7"
+
+[package.extras]
+dev = ["pytest", "black", "mypy"]
 
 [[package]]
 name = "packaging"
@@ -607,7 +632,7 @@ toml = ["setuptools (>=42)"]
 
 [[package]]
 name = "shapely"
-version = "1.8.2"
+version = "1.8.1"
 description = "Geometric objects, predicates, and operations"
 category = "main"
 optional = true
@@ -953,8 +978,8 @@ coco = ["Shapely"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.7"
-content-hash = "d5a002314dd07b8fb067de0323004d0195be565f860819fb7d6193a458e5e7b6"
+python-versions = ">= 3.7"
+content-hash = "c33f2f8eee7869ac4b1dfcf54d75b93045c5e98dcb9d6ff86fdd683a6f19f67c"
 
 [metadata.files]
 alabaster = []
@@ -972,6 +997,7 @@ colorama = []
 colorful = []
 cryptography = []
 cycler = []
+deepdiff = []
 distlib = []
 docutils = []
 filelock = []
@@ -989,6 +1015,7 @@ matplotlib = []
 mypy-extensions = []
 nodeenv = []
 numpy = []
+ordered-set = []
 packaging = []
 pathspec = []
 pillow = []
