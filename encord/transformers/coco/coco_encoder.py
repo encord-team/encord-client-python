@@ -366,6 +366,7 @@ class CocoEncoder:
         return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation)
 
     def get_polyline(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+        # DENIS: next up: check how this is done for skeleton and implement here.
         raise NotImplementedError(
             "The get_polyline function will need to be overwritten if you want to convert these objects."
         )
@@ -388,6 +389,7 @@ class CocoEncoder:
         return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation, keypoints, num_keypoints)
 
     def get_skeleton(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+        # DENIS: next up: check how this is visualised.
         area = 0
         segmentation = []
         keypoints = []
