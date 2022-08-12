@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, TextIO, Union
 
 from encord.client import EncordClientDataset
+from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
@@ -58,13 +59,15 @@ class Dataset:
         """
         return self._client.get_dataset()
 
-    def upload_video(self, file_path: str):
+    def upload_video(self, file_path: str, cloud_upload_settings: CloudUploadSettings = CloudUploadSettings()):
         """
         Upload video to Encord storage.
 
         Args:
             self: Encord client object.
             file_path: path to video e.g. '/home/user/data/video.mp4'
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
         Returns:
             Bool.
@@ -73,9 +76,14 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.upload_video(file_path)
+        return self._client.upload_video(file_path, cloud_upload_settings=cloud_upload_settings)
 
-    def create_image_group(self, file_paths: Iterable[str], max_workers: Optional[int] = None):
+    def create_image_group(
+        self,
+        file_paths: Iterable[str],
+        max_workers: Optional[int] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ):
         """
         Create an image group in Encord storage.
 
@@ -84,8 +92,9 @@ class Dataset:
             file_paths: a list of paths to images, e.g.
                 ['/home/user/data/img1.png', '/home/user/data/img2.png']
             max_workers:
-                Number of workers for parallel image upload. If set to None, this will be the number of CPU cores
-                available on the machine.
+                DEPRECATED: This argument will be ignored
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
         Returns:
             Bool.
@@ -94,7 +103,7 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.create_image_group(file_paths, max_workers)
+        return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings)
 
     def delete_image_group(self, data_hash: str):
         """
@@ -138,6 +147,21 @@ class Dataset:
 
         """
         return self._client.add_private_data_to_dataset(integration_id, private_files, ignore_errors)
+
+    def update_data_item(self, data_hash: str, new_title: str) -> bool:
+        """
+        Update a data item
+
+        Args:
+            data_hash: str
+                Data hash of the item being updated
+            new_title:
+                String containing the new title of the data item being updated
+        Returns:
+           Returns a boolean for whether the update was successful
+
+        """
+        return self._client.update_data_item(data_hash, new_title)
 
     def re_encode_data(self, data_hashes: List[str]):
         """

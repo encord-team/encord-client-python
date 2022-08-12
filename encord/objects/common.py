@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import re
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Type, TypeVar, Union
 
 from encord.objects.utils import _decode_nested_uid
 from encord.orm.project import StringEnum
@@ -40,6 +42,7 @@ class _AttributeBase(ABC):
     def get_property_type(self) -> PropertyType:
         pass
 
+    @classmethod
     @abstractmethod
     def has_options_field(self) -> bool:
         pass
@@ -122,31 +125,87 @@ class _AttributeBase(ABC):
 
 @dataclass
 class RadioAttribute(_AttributeBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     options: List[NestableOption] = field(default_factory=list)
 
     def get_property_type(self) -> PropertyType:
         return PropertyType.RADIO
 
+    @classmethod
     def has_options_field(self) -> bool:
         return True
+
+    def add_option(
+        self,
+        label: str,
+        value: Optional[str] = None,
+        local_uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+    ) -> NestableOption:
+        """
+        Args:
+            label: user-visible name of the option
+            value: internal unique value; optional; normally mechanically constructed from the label
+            local_uid: integer identifier of the option. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the option. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+
+        Returns:
+            a `NestableOption` instance attached to the attribute. This can be further specified by adding nested attributes.
+        """
+        return _add_option(self.options, NestableOption, label, self.uid, local_uid, feature_node_hash, value)
 
 
 @dataclass
 class ChecklistAttribute(_AttributeBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     options: List[FlatOption] = field(default_factory=list)
 
     def get_property_type(self) -> PropertyType:
         return PropertyType.CHECKLIST
 
+    @classmethod
     def has_options_field(self) -> bool:
         return True
+
+    def add_option(
+        self,
+        label: str,
+        value: Optional[str] = None,
+        local_uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+    ):
+        """
+        Args:
+            label: user-visible name of the option
+            value: internal unique value; optional; normally mechanically constructed from the label
+            local_uid: integer identifier of the option. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the option. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+        Returns:
+            a `FlatOption` instance attached to the attribute.
+        """
+        return _add_option(self.options, FlatOption, label, self.uid, local_uid, feature_node_hash, value)
 
 
 @dataclass
 class TextAttribute(_AttributeBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     def get_property_type(self) -> PropertyType:
         return PropertyType.TEXT
 
+    @classmethod
     def has_options_field(self) -> bool:
         return False
 
@@ -228,6 +287,10 @@ class _OptionBase(ABC):
 
 @dataclass
 class FlatOption(_OptionBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     def get_option_type(self) -> OptionType:
         return OptionType.FLAT
 
@@ -241,6 +304,10 @@ class FlatOption(_OptionBase):
 
 @dataclass
 class NestableOption(_OptionBase):
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
     nested_options: List[Attribute] = field(default_factory=list)
 
     def get_option_type(self) -> OptionType:
@@ -260,8 +327,107 @@ class NestableOption(_OptionBase):
             nested_options=nested_options_ret,
         )
 
+    def add_nested_option(
+        self,
+        cls: Type[T],
+        name: str,
+        local_uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+        required: bool = False,
+    ) -> T:
+        """
+        Adds a nested attribute to a RadioAttribute option.
+
+        Args:
+            cls: attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`
+            name: the user-visible name of the attribute
+            local_uid: integer identifier of the attribute. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            required: whether the label editor would mark this attribute as 'required'
+
+        Returns:
+            the created attribute that can be further specified with Options, where appropriate
+
+        Raises:
+            ValueError: if specified `local_uid` or `feature_node_hash` violate uniqueness constraints
+        """
+        return _add_attribute(self.nested_options, cls, name, self.uid, local_uid, feature_node_hash, required)
+
 
 Option = Union[FlatOption, NestableOption]
 """
 This class is currently in BETA. Its API might change in future minor version releases. 
 """
+
+
+def __build_identifiers(
+    existent_items: Union[Attribute, Option],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+) -> Tuple[int, str]:
+    if local_uid is None:
+        if existent_items:
+            local_uid = max([item.uid[-1] for item in existent_items]) + 1
+        else:
+            local_uid = 1
+    else:
+        if any([item.uid[-1] == local_uid for item in existent_items]):
+            raise ValueError(f"Duplicate uid '{local_uid}'")
+
+    if feature_node_hash is None:
+        feature_node_hash = str(uuid.uuid4())[:8]
+    elif any([item.feature_node_hash == feature_node_hash for item in existent_items]):
+        raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+    return local_uid, feature_node_hash
+
+
+T = TypeVar("T", bound=Attribute)
+
+
+def _add_attribute(
+    attributes: List[Attribute],
+    cls: Type[T],
+    name: str,
+    parent_uid: List[int],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+    required: bool = False,
+) -> T:
+    local_uid, feature_node_hash = __build_identifiers(attributes, local_uid, feature_node_hash)
+
+    constructor_params = {
+        "name": name,
+        "uid": parent_uid + [local_uid],
+        "feature_node_hash": feature_node_hash,
+        "required": required,
+    }
+
+    if cls.has_options_field():
+        constructor_params["options"] = []
+    attr = cls(**constructor_params)
+    attributes.append(attr)
+    return attr
+
+
+OT = TypeVar("OT", bound=Option)
+
+
+def _add_option(
+    options: List[Option],
+    cls: Type[OT],
+    label: str,
+    parent_uid: List[int],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+    value: Optional[str] = None,
+) -> OT:
+
+    local_uid, feature_node_hash = __build_identifiers(options, local_uid, feature_node_hash)
+    if not value:
+        value = re.sub(r"[\s]", "_", label).lower()
+    option = cls(parent_uid + [local_uid], feature_node_hash, label, value)
+    options.append(option)
+    return option

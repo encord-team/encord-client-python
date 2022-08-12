@@ -23,6 +23,10 @@
     "user_text": "Public keys",
     "url": "https://docs.encord.com/docs/admins/settings/public-keys"
   },
+  "private_key": {
+    "user_text": "private key",
+    "url": "https://docs.encord.com/docs/admins/settings/public-keys/#1-generate-a-public-private-key-pair"
+  },
   "navigation_bar": {
     "user_text": "Navigation bar",
     "url": "https://docs.encord.com/docs/getting-started/navigation-bar"

@@ -151,6 +151,16 @@ Utilities - ORM classes
     :members:
     :undoc-members:
 
+Utilities - Other
+-----------------
+.. autoclass:: encord.http.utils.CloudUploadSettings
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.http.constants
+    :members:
+    :undoc-members:
+
 Configs
 ------------
 .. automodule:: encord.configs
@@ -165,3 +175,4 @@ Exceptions
 .. automodule:: encord.exceptions
     :members:
     :undoc-members:
+

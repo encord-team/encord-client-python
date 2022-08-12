@@ -1,19 +1,47 @@
 import logging
 import mimetypes
-import multiprocessing
 import os.path
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Optional, TypeVar
+from dataclasses import dataclass
+from typing import List, Optional, TypeVar, Union
 
 import requests
 from tqdm import tqdm
 
+from encord.configs import BaseConfig
+from encord.exceptions import CloudUploadError
+from encord.http.helpers import retry_on_network_errors
 from encord.http.querier import Querier
-from encord.orm.dataset import Image, Video
+from encord.orm.dataset import (
+    Images,
+    SignedImagesURL,
+    SignedImageURL,
+    SignedVideoURL,
+    Video,
+)
 
 PROGRESS_BAR_FILE_FACTOR = 100
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CloudUploadSettings:
+    """
+    The settings for uploading data into the GCP cloud storage. These apply for each individual upload. These settings
+    will overwrite the :meth:`encord.http.constants.RequestsSettings` which is set during
+    :class:`encord.EncordUserClient` creation.
+    """
+
+    max_retries: Optional[int] = None
+    """Number of allowed retries when uploading"""
+    backoff_factor: Optional[float] = None
+    """With each retry, there will be a sleep of backoff_factor * (2 ** retry_number)"""
+    allow_failures: bool = False
+    """
+    If failures are allowed, the upload will continue even if some items were not successfully uploaded even
+    after retries. For example, upon creation of a large image group, you might want to create the image group
+    even if a few images were not successfully uploaded. The unsuccessfully uploaded images will then be logged.
+    """
 
 
 def read_in_chunks(file_path, pbar, blocksize=1024, chunks=-1):
@@ -36,64 +64,113 @@ OrmT = TypeVar("OrmT")
 
 
 def upload_to_signed_url_list(
-    file_paths: List[str], signed_urls, querier: Querier, orm_class: OrmT, max_workers: Optional[int] = None
-) -> List[OrmT]:
-    if orm_class == Image:
+    file_paths: List[str],
+    config: BaseConfig,
+    querier: Querier,
+    orm_class: Union[Images, Video],
+    cloud_upload_settings: CloudUploadSettings,
+) -> List[Union[SignedVideoURL, SignedImageURL]]:
+    if orm_class == Images:
         is_video = False
     elif orm_class == Video:
         is_video = True
     else:
         raise RuntimeError(f"Currently only `Image` or `Video` orm_class supported. Got type `{orm_class}`")
 
-    assert len(file_paths) == len(signed_urls), "Error getting the correct number of signed urls"
+    failed_uploads = []
+    successful_uploads = []
+    total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
+    with tqdm(total=total, desc="Files upload progress: ", leave=False) as pbar:
+        for i in range(len(file_paths)):
+            file_path = file_paths[i]
+            file_name = os.path.basename(file_path)
+            signed_url = _get_signed_url(file_name, is_video, querier)
+            assert signed_url.get("title", "") == file_name, "Ordering issue"
 
-    if max_workers is None:
-        max_workers = min(multiprocessing.cpu_count(), len(file_paths))
-    elif max_workers < 1:
-        raise ValueError(f"max_workers must be a positive integer. Received: {max_workers}")
+            try:
+                if cloud_upload_settings.max_retries is not None:
+                    max_retries = cloud_upload_settings.max_retries
+                else:
+                    max_retries = config.requests_settings.max_retries
 
-    orm_class_list = []
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
-        with tqdm(total=total, desc="Files upload progress: ") as pbar:
-            futures = []
-            for i in range(len(file_paths)):
-                file_path = file_paths[i]
-                file_name = os.path.basename(file_path)
-                signed_url = signed_urls[i]
-                assert signed_url.get("title", "") == file_name, "Ordering issue"
+                if cloud_upload_settings.backoff_factor is not None:
+                    backoff_factor = cloud_upload_settings.backoff_factor
+                else:
+                    backoff_factor = config.requests_settings.backoff_factor
 
-                future = executor.submit(_upload_single_file, file_path, signed_url, querier, orm_class, pbar, is_video)
-                futures.append(future)
+                _upload_single_file(
+                    file_path,
+                    signed_url,
+                    pbar,
+                    is_video,
+                    max_retries,
+                    backoff_factor,
+                )
+                successful_uploads.append(signed_url)
+            except CloudUploadError as e:
+                if cloud_upload_settings.allow_failures:
+                    failed_uploads.append(file_path)
+                else:
+                    raise e
 
-            for future in as_completed(futures):
-                res = future.result()
-                orm_class_list.append(res)
+    if failed_uploads:
+        logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
 
-    return orm_class_list
+    return successful_uploads
+
+
+def upload_video_to_encord(signed_url: dict, querier: Querier) -> Video:
+    return querier.basic_put(Video, uid=signed_url.get("data_hash"), payload=signed_url, enable_logging=False)
+
+
+def upload_images_to_encord(signed_urls: List[dict], querier: Querier) -> Images:
+    return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
+
+
+def _get_signed_url(file_name: str, is_video: bool, querier: Querier) -> Union[SignedVideoURL, SignedImageURL]:
+    if is_video:
+        return querier.basic_getter(SignedVideoURL, uid=file_name)
+    else:
+        return querier.basic_getter(SignedImagesURL, uid=[file_name])[0]
 
 
 def _upload_single_file(
-    file_path: str, signed_url: dict, querier: Querier, orm_class: OrmT, pbar, is_video: bool
-) -> OrmT:
-    content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
-    res_upload = requests.put(
-        signed_url.get("signed_url"), data=read_in_chunks(file_path, pbar), headers={"Content-Type": content_type}
+    file_path: str,
+    signed_url: dict,
+    pbar,
+    is_video: bool,
+    max_retries: int,
+    backoff_factor: float,
+) -> None:
+
+    res_upload = _data_upload(
+        file_path, signed_url, pbar, is_video, max_retries=max_retries, backoff_factor=backoff_factor
     )
 
-    if res_upload.status_code == 200:
-        data_hash = signed_url.get("data_hash")
-
-        res = querier.basic_put(orm_class, uid=data_hash, payload=signed_url, enable_logging=False)
-
-        if not orm_class(res):
-            logger.info("Error uploading: %s", signed_url.get("title", ""))
-
-    else:
-        error_string = (
-            f"Error uploading file '{signed_url.get('title', '')}' to signed url: " f"'{signed_url.get('signed_url')}'",
+    if res_upload.status_code != 200:
+        status_code = res_upload.status_code
+        headers = res_upload.headers
+        res_text = res_upload.text
+        error_string = str(
+            f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
+            f"'{signed_url.get('signed_url')}'.\n"
+            f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
         )
+
         logger.error(error_string)
         raise RuntimeError(error_string)
 
-    return orm_class(res)
+
+@retry_on_network_errors
+def _data_upload(
+    file_path: str,
+    signed_url: dict,
+    pbar,
+    is_video: bool,
+):
+    content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
+    return requests.put(
+        signed_url.get("signed_url"),
+        data=read_in_chunks(file_path, pbar),
+        headers={"Content-Type": content_type},
+    )

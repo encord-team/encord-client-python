@@ -96,6 +96,19 @@ I (FHV) have tried to take notes of inconsistencies in the code base that may be
 4. FHV: It seems weird to me that the logic for converting ontology classifications and ontology objects to dictionaries is located in the `encord.project_ontology.ontology.py` file and not in the `encord.project_ontology.ontology_classification.py` class.  
    Also, there is a lot of custom logic for doing so, when the `dataclasses.asdict` with a custom factory could do the same thing with much less code.
    Note, I have a local `fhv/ontology_parsing` branch which does it with `asdict` but probably not perfectly structured either.
+5. FHV: Why is the `ObjectShape` definitions in the file `encord.project_ontology.object_type`? It makes no sense that both are not called either `object_type` or `object_shape`.
+   For classifications, they are both called `ClassificationType`.
+6. FHV: When fetching projects through the `EncordUserClient`, the return type is a list of dictionaries with key `project` and value `encord.orm.project.Project` value.
+   The `Project` orm has properties apart from properties like `title`, `description`, and `project_hash`, which work fine for the particular call, the `Project` definition also has properties `label_rows` and `editor_ontology`, which are not populated in the mentioned call.
+   Even worse, when calling `project.label_rows`, a `KeyError` is thrown.
+7. We are super inconsistent with the use of `uid`, `project_hash`, etc. 
+   I think that we should be as specific as possible. 
+   There is no point in abstracting away the distinction. We just make everything more confusing that way.
+   For example, `encord.orm.dataset.DataRow` uses `data_hash`  under the name `uid` which makes no sense.
+8. Why does `project_client.get_label_row('<label_hash>')` not have a `data_hash` attribute in the response, similar to `project_client.get_project().label_rows[0]`?
+   When wanting to run OCR stuff, you need the `data_hash` but can only obtain it from that one place.
+9. There is no way to be 100% sure that the results from the `dataset_client.run_ocr` corresponds to specific data_units in the label row.
+
 
 # Known issues
 1. The scrollspy (right-side toc) highlights the previous item when clicking a link. This is apparently a [bootstrap issue](https://github.com/twbs/bootstrap/issues/32496). 

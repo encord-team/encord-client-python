@@ -136,3 +136,6 @@ test_blurb2.py
 
 tests/internal_tests
 script.py
+
+# VIM temporary files
+.*.swp

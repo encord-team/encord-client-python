@@ -14,3 +14,4 @@ The tutorials are separated into those that relate to *datasets* and those that 
 
     ./tutorials/datasets
     ./tutorials/projects
+    ./tutorials/end-to-end/index

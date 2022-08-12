@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional, Type, TypeVar
 
 from encord.objects.common import (
     Attribute,
     Shape,
+    _add_attribute,
     attribute_from_dict,
     attributes_to_list_dict,
 )
@@ -59,3 +60,33 @@ class Object:
             ret["attributes"] = attributes_list
 
         return ret
+
+    T = TypeVar("T", bound=Attribute)
+
+    def add_attribute(
+        self,
+        cls: Type[T],
+        name: str,
+        local_uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+        required: bool = False,
+    ) -> T:
+        """
+        Adds an attribute to the object.
+
+        Args:
+            cls: attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`
+            name: the user-visible name of the attribute
+            local_uid: integer identifier of the attribute. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the attribute. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            required: whether the label editor would mark this attribute as 'required'
+
+        Returns:
+            the created attribute that can be further specified with Options, where appropriate
+
+        Raises:
+            ValueError: if specified `local_uid` or `feature_node_hash` violate uniqueness constraints
+        """
+        return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required)

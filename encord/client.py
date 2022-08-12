@@ -47,8 +47,14 @@ import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
+from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
-from encord.http.utils import upload_to_signed_url_list
+from encord.http.utils import (
+    CloudUploadSettings,
+    upload_images_to_encord,
+    upload_to_signed_url_list,
+    upload_video_to_encord,
+)
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse
@@ -58,9 +64,8 @@ from encord.orm.dataset import (
     Image,
     ImageGroup,
     ImageGroupOCR,
+    Images,
     ReEncodeVideoTask,
-    SignedImagesURL,
-    SignedVideoURL,
     Video,
 )
 from encord.orm.label_log import LabelLog
@@ -112,7 +117,10 @@ class EncordClient(object):
 
     @staticmethod
     def initialise(
-        resource_id: Optional[str] = None, api_key: Optional[str] = None, domain: str = ENCORD_DOMAIN
+        resource_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        domain: str = ENCORD_DOMAIN,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Encord client from a resource EntityId and API key.
@@ -133,11 +141,12 @@ class EncordClient(object):
                      The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
             domain: The encord api-server domain.
                 If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
+            requests_settings: The RequestsSettings from this config
 
         Returns:
             EncordClient: A Encord client instance.
         """
-        config = EncordConfig(resource_id, api_key, domain=domain)
+        config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
         return EncordClient.initialise_with_config(config)
 
     @staticmethod
@@ -216,39 +225,49 @@ class EncordClientDataset(EncordClient):
         """
         return self._querier.basic_getter(OrmDataset)
 
-    def upload_video(self, file_path: str):
+    def upload_video(self, file_path: str, cloud_upload_settings: CloudUploadSettings = CloudUploadSettings()):
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
         if os.path.exists(file_path):
-            short_name = os.path.basename(file_path)
-            signed_url = self._querier.basic_getter(SignedVideoURL, uid=short_name)
-            res = upload_to_signed_url_list([file_path], [signed_url], self._querier, Video)
+            signed_urls = upload_to_signed_url_list(
+                [file_path], self._config, self._querier, Video, cloud_upload_settings=cloud_upload_settings
+            )
+            res = upload_video_to_encord(signed_urls[0], self._querier)
             if res:
                 logger.info("Upload complete.")
-                logger.info("Please run client.get_dataset() to refresh.")
                 return res
             else:
                 raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
         else:
             raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
 
-    def create_image_group(self, file_paths: typing.Iterable[str], max_workers: Optional[int] = None):
+    def create_image_group(
+        self,
+        file_paths: typing.Iterable[str],
+        max_workers: Optional[int] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
         """
         for file_path in file_paths:
             if not os.path.exists(file_path):
                 raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
-        short_names = list(map(os.path.basename, file_paths))
-        signed_urls = self._querier.basic_getter(SignedImagesURL, uid=short_names)
-        upload_to_signed_url_list(file_paths, signed_urls, self._querier, Image, max_workers)
-        image_hash_list = list(map(lambda signed_url: signed_url.get("data_hash"), signed_urls))
+
+        successful_uploads = upload_to_signed_url_list(
+            file_paths, self._config, self._querier, Images, cloud_upload_settings=cloud_upload_settings
+        )
+        if not successful_uploads:
+            raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
+        upload_images_to_encord(successful_uploads, self._querier)
+
+        image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
         res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={})
+
         if res:
             titles = [video_data.get("title") for video_data in res]
             logger.info("Upload successful! {} created.".format(titles))
-            logger.info("Please run client.get_dataset() to refresh.")
             return res
         else:
             raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
@@ -296,6 +315,16 @@ class EncordClientDataset(EncordClient):
         response = self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
 
         return AddPrivateDataResponse.from_dict(response)
+
+    def update_data_item(self, data_hash: str, new_title: str) -> bool:
+        """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""
+        payload = [{"video_hash": data_hash, "title": new_title}]
+
+        response = self._querier.basic_setter(Video, self.get_dataset().dataset_hash, payload=payload)
+        try:
+            return response.get("success", False)
+        except AttributeError:
+            return False
 
     def re_encode_data(self, data_hashes: List[str]):
         """

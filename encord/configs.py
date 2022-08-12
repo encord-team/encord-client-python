@@ -27,8 +27,9 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 import encord.exceptions
 from encord.constants.string_constants import ALL_RESOURCE_TYPES
+from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 
-ENCORD_DOMAIN = "https://api.cord.tech"  #: str: The end-point for interacting with the Encord API.
+ENCORD_DOMAIN = "https://api.encord.com"
 ENCORD_PUBLIC_PATH = "/public"
 ENCORD_PUBLIC_USER_PATH = "/public/user"
 ENCORD_ENDPOINT = ENCORD_DOMAIN + ENCORD_PUBLIC_PATH
@@ -56,12 +57,13 @@ from encord.exceptions import ResourceNotFoundError
 
 
 class BaseConfig(ABC):
-    def __init__(self, endpoint: str):
+    def __init__(self, endpoint: str, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS):
         self.read_timeout: int = READ_TIMEOUT
         self.write_timeout: int = WRITE_TIMEOUT
         self.connect_timeout: int = CONNECT_TIMEOUT
 
         self.endpoint: str = endpoint
+        self.requests_settings = requests_settings
 
     @abstractmethod
     def define_headers(self, data: str) -> Dict:
@@ -81,7 +83,12 @@ def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
 
 
 class UserConfig(BaseConfig):
-    def __init__(self, private_key: Ed25519PrivateKey, domain: str = ENCORD_DOMAIN):
+    def __init__(
+        self,
+        private_key: Ed25519PrivateKey,
+        domain: str = ENCORD_DOMAIN,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+    ):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
         self.public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
@@ -89,7 +96,7 @@ class UserConfig(BaseConfig):
         self.domain = domain
 
         endpoint = domain + ENCORD_PUBLIC_USER_PATH
-        super().__init__(endpoint)
+        super().__init__(endpoint, requests_settings=requests_settings)
 
     def define_headers(self, data: str) -> Dict:
         signature = _get_signature(data, self.private_key)
@@ -101,13 +108,19 @@ class UserConfig(BaseConfig):
         }
 
     @staticmethod
-    def from_ssh_private_key(ssh_private_key: str, password: Optional[str] = "", **kwargs):
+    def from_ssh_private_key(
+        ssh_private_key: str,
+        password: Optional[str] = "",
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        **kwargs,
+    ):
         """
         Instantiate a UserConfig object by the content of a private ssh key.
 
         Args:
             ssh_private_key: The content of a private key file.
             password: The password for the private key file.
+            requests_settings: The requests settings for all outgoing network requests.
 
         Returns:
             UserConfig.
@@ -121,7 +134,7 @@ class UserConfig(BaseConfig):
         private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
 
         if isinstance(private_key, Ed25519PrivateKey):
-            return UserConfig(private_key, **kwargs)
+            return UserConfig(private_key, requests_settings=requests_settings, **kwargs)
         else:
             raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
 
@@ -137,6 +150,7 @@ class Config(BaseConfig):
         web_file_path: str = ENCORD_PUBLIC_PATH,
         domain: Optional[str] = None,
         websocket_endpoint: str = WEBSOCKET_ENDPOINT,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
 
         if resource_id is None:
@@ -149,7 +163,7 @@ class Config(BaseConfig):
 
         self.domain = domain
         endpoint = domain + web_file_path
-        super().__init__(endpoint)
+        super().__init__(endpoint, requests_settings=requests_settings)
         logger.info("Initialising Encord client with endpoint: %s and resource_id: %s", endpoint, resource_id)
 
     @abstractmethod
@@ -228,6 +242,7 @@ class ApiKeyConfig(Config):
         resource_id: Optional[str] = None,
         api_key: Optional[str] = None,
         domain: Optional[str] = None,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
         web_file_path = ENCORD_PUBLIC_PATH
         if api_key is None:
@@ -240,7 +255,7 @@ class ApiKeyConfig(Config):
             "ResourceID": resource_id,
             "Authorization": self.api_key,
         }
-        super().__init__(resource_id, web_file_path=web_file_path, domain=domain)
+        super().__init__(resource_id, web_file_path=web_file_path, domain=domain, requests_settings=requests_settings)
 
     def define_headers(self, data) -> Dict:
         return self._headers
@@ -269,7 +284,11 @@ class SshConfig(Config):
         if resource_type not in ALL_RESOURCE_TYPES:
             raise TypeError(f"The passed resource type `{resource_type}` is invalid.")
         self._resource_type = resource_type
-        super().__init__(resource_id=resource_id, domain=self._user_config.domain)
+        super().__init__(
+            resource_id=resource_id,
+            domain=self._user_config.domain,
+            requests_settings=self._user_config.requests_settings,
+        )
 
     def define_headers(self, data: str) -> Dict:
         signature = _get_signature(data, self._user_config.private_key)

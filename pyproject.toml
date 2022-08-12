@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "encord"
-version = "0.1.39"
+version = "0.1.43"
 description = "Encord Python SDK Client"
 authors = ["Cord Technologies Limited <hello@encord.com>"]
 license = "Apache Software License"
@@ -22,7 +22,6 @@ classifiers=[
 python = "^3.7"
 python-dateutil = "^2.8.2"
 requests = "2.25.0"
-uuid = "^1.30"
 cryptography = "^3.4.8"
 tqdm = "^4.32.1"
 
@@ -37,6 +36,9 @@ sphinx-copybutton = "^0.5.0"
 prettyprinter = "0.18.0"
 isort = "^5.10.1"
 pydata-sphinx-theme = "^0.8.1"
+Pillow = "^9.1.0"
+sphinx-gallery = "^0.10.1"
+matplotlib = "^3.5.2"
 # Pinning click to solve black issues https://stackoverflow.com/questions/71673404/importerror-cannot-import-name-unicodefun-from-click
 click = "8.0.2"
 
@@ -52,3 +54,11 @@ include = 'encord\/.*'
 # setting isort to a compatibility mode with `black`
 # https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
 profile = "black"
+
+[tool.pylint.'MASTER']
+ignore = "tests"
+
+[tool.pylint.'MESSAGES CONTROL']
+max-line-length = 120
+disable = "all"
+enable = "C0123, C0200, C0209, E0401, E0602, E1101, E1205, W0611, W0621, W1309, W1404, W1514"

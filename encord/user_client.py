@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 import base64
 import datetime
 import logging
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import dateutil
 
@@ -15,10 +13,17 @@ import dateutil
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
-from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
+from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
+from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
-from encord.http.utils import upload_to_signed_url_list
+from encord.http.utils import (
+    CloudUploadSettings,
+    upload_images_to_encord,
+    upload_to_signed_url_list,
+)
+from encord.objects.ontology_structure import OntologyStructure
+from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import CreateDatasetResponse
 from encord.orm.dataset import Dataset as OrmDataset
@@ -27,11 +32,12 @@ from encord.orm.dataset import (
     DatasetInfo,
     DatasetScope,
     DatasetUserRole,
-    Image,
+    Images,
     SignedImagesURL,
     StorageLocation,
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import CvatExportType
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectImporter, ProjectImporterCvatInfo, ReviewMode
@@ -46,6 +52,7 @@ from encord.utilities.client_utilities import (
     Issues,
     LocalImport,
 )
+from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
 
 log = logging.getLogger(__name__)
@@ -93,6 +100,11 @@ class EncordUserClient:
         querier = Querier(config)
         client = EncordClientProject(querier=querier, config=config)
         return Project(client)
+
+    def get_ontology(self, ontology_hash: str) -> Ontology:
+        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
+        querier = Querier(config)
+        return Ontology(querier, config)
 
     def create_private_dataset(
         self,
@@ -201,12 +213,17 @@ class EncordUserClient:
 
     @staticmethod
     def create_with_ssh_private_key(
-        ssh_private_key: Optional[str] = None, password: str = None, **kwargs
+        ssh_private_key: Optional[str] = None,
+        password: str = None,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        **kwargs,
     ) -> EncordUserClient:
         if not ssh_private_key:
             ssh_private_key = get_env_ssh_key()
 
-        user_config = UserConfig.from_ssh_private_key(ssh_private_key, password, **kwargs)
+        user_config = UserConfig.from_ssh_private_key(
+            ssh_private_key, password, requests_settings=requests_settings, **kwargs
+        )
         querier = Querier(user_config)
 
         return EncordUserClient(user_config, querier)
@@ -243,8 +260,16 @@ class EncordUserClient:
         data = self.querier.get_multiple(ProjectWithUserRole, payload={"filter": properties_filter})
         return [{"project": OrmProject(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
-    def create_project(self, project_title: str, dataset_hashes: List[str], project_description: str = "") -> str:
-        project = {"title": project_title, "description": project_description, "dataset_hashes": dataset_hashes}
+    def create_project(
+        self, project_title: str, dataset_hashes: List[str], project_description: str = "", ontology_hash: str = ""
+    ) -> str:
+        project = {
+            "title": project_title,
+            "description": project_description,
+            "dataset_hashes": dataset_hashes,
+        }
+        if ontology_hash and len(ontology_hash):
+            project["ontology_hash"] = ontology_hash
 
         return self.querier.basic_setter(OrmProject, uid=None, payload=project)
 
@@ -268,14 +293,18 @@ class EncordUserClient:
         DEPRECATED - prefer using :meth:`get_dataset()` instead.
         """
         dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
-        return EncordClient.initialise(dataset_hash, dataset_api_key.api_key, **kwargs)
+        return EncordClient.initialise(
+            dataset_hash, dataset_api_key.api_key, requests_settings=self.user_config.requests_settings, **kwargs
+        )
 
     def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
         """
         DEPRECATED - prefer using :meth:`get_project()` instead.
         """
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
-        return EncordClient.initialise(project_hash, project_api_key, **kwargs)
+        return EncordClient.initialise(
+            project_hash, project_api_key, requests_settings=self.user_config.requests_settings, **kwargs
+        )
 
     def create_project_from_cvat(
         self,
@@ -298,8 +327,7 @@ class EncordUserClient:
                 Set how much interaction is needed from the labeler and from the reviewer for the CVAT labels.
                     See the `ReviewMode` documentation for more details.
             max_workers:
-                Number of workers for parallel image upload. If set to None, this will be the number of CPU cores
-                available on the machine.
+                DEPRECATED: This argument will be ignored
 
         Returns:
             CvatImporterSuccess: If the project was successfully imported.
@@ -329,7 +357,7 @@ class EncordUserClient:
         images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name, max_workers)
+        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name)
         log.info("Image upload completed.")
 
         payload = {
@@ -382,9 +410,7 @@ class EncordUserClient:
             raise ValueError(f"No images found in the provided data folder.")
         return images
 
-    def __upload_cvat_images(
-        self, images_paths: List[Path], dataset_name: str, max_workers: int
-    ) -> Tuple[str, Dict[str, str]]:
+    def __upload_cvat_images(self, images_paths: List[Path], dataset_name: str) -> Tuple[str, Dict[str, str]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -392,31 +418,85 @@ class EncordUserClient:
             * A map from an image title to the image hash which is stored in the DB.
         """
 
-        short_names = list(map(lambda x: x.name, images_paths))
         file_path_strings = list(map(lambda x: str(x), images_paths))
-        dataset = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
+        dataset_info = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
-        dataset_hash = dataset.dataset_hash
+        dataset_hash = dataset_info.dataset_hash
 
-        dataset_api_key: DatasetAPIKey = self.create_dataset_api_key(
-            dataset_hash, dataset_name + " - Full Access API Key", [DatasetScope.READ, DatasetScope.WRITE]
-        )
-
-        client = EncordClient.initialise(
+        dataset = self.get_dataset(
             dataset_hash,
-            dataset_api_key.api_key,
-            domain=self.user_config.domain,
         )
+        querier = dataset._client._querier
 
-        signed_urls = client._querier.basic_getter(SignedImagesURL, uid=short_names)
-        upload_to_signed_url_list(file_path_strings, signed_urls, client._querier, Image, max_workers)
+        successful_uploads = upload_to_signed_url_list(
+            file_path_strings, self.user_config, querier, Images, CloudUploadSettings()
+        )
+        upload_images_to_encord(successful_uploads, querier)
 
-        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), signed_urls))
+        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), successful_uploads))
 
         return dataset_hash, image_title_to_image_hash_map
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self.querier.get_multiple(CloudIntegration)
+
+    def get_ontologies(
+        self,
+        title_eq: Optional[str] = None,
+        title_like: Optional[str] = None,
+        desc_eq: Optional[str] = None,
+        desc_like: Optional[str] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        edited_before: Optional[Union[str, datetime]] = None,
+        edited_after: Optional[Union[str, datetime]] = None,
+    ) -> List[Dict]:
+        """
+        List either all (if called with no arguments) or matching ontologies the user has access to.
+
+        Args:
+            title_eq: optional exact title filter
+            title_like: optional fuzzy title filter; SQL syntax
+            desc_eq: optional exact description filter
+            desc_like: optional fuzzy description filter; SQL syntax
+            created_before: optional creation date filter, 'less'
+            created_after: optional creation date filter, 'greater'
+            edited_before: optional last modification date filter, 'less'
+            edited_after: optional last modification date filter, 'greater'
+
+        Returns:
+            list of (role, projects) pairs for ontologies matching filter conditions.
+        """
+        properties_filter = self.__validate_filter(locals())
+        # a hack to be able to share validation code without too much c&p
+        data = self.querier.get_multiple(OntologyWithUserRole, payload={"filter": properties_filter})
+        retval: List[Dict] = []
+        for row in data:
+            ontology = OrmOntology.from_dict(row.ontology)
+            config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
+            querier = Querier(config)
+            retval.append(
+                {
+                    "ontology": Ontology(querier, config, ontology),
+                    "user_role": OntologyUserRole(row.user_role),
+                }
+            )
+        return retval
+
+    def create_ontology(self, title: str, description: str = "", structure: OntologyStructure = None) -> Ontology:
+        structure_dict = structure.to_dict() if structure else dict()
+        ontology = {
+            "title": title,
+            "description": description,
+            "editor": structure_dict,
+        }
+
+        retval = self.querier.basic_setter(OrmOntology, uid=None, payload=ontology)
+        ontology = OrmOntology.from_dict(retval)
+        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
+        querier = Querier(config)
+
+        return Ontology(querier, config, ontology)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):
