@@ -161,6 +161,10 @@ Utilities - Other
     :members:
     :undoc-members:
 
+.. automodule:: encord.utilities.project_utilities
+    :members:
+    :undoc-members:
+
 Configs
 ------------
 .. automodule:: encord.configs
