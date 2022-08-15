@@ -86,7 +86,7 @@ class Dataset:
     ):
         """
         Create an image group in Encord storage. Choose this type of image upload for sequential images. Else, you can
-        choose the :meth:`.dataset.upload_image` function.
+        choose the :meth:`.Dataset.upload_image` function.
 
         Args:
             self: Encord client object.
@@ -114,12 +114,12 @@ class Dataset:
     ) -> Image:
         """
         Upload a single image to Encord storage. If your images are sequential we recommend creating an image group via
-        the :meth:`.dataset.create_image_group` function. For more information please compare
+        the :meth:`.Dataset.create_image_group` function. For more information please compare
         https://docs.encord.com/docs/annotate/editor/images and https://docs.encord.com/docs/annotate/editor/videos
 
         Args:
             file_path: The file path to the image
-            title: The title of the image will be the file name. Optionally choose a custom title.
+            title: The image title. If unspecified, this will be the file name.
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
