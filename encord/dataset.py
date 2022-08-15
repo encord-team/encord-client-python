@@ -131,8 +131,7 @@ class Dataset:
         Delete an image group in Encord storage.
 
         Args:
-            self: Encord client object.
-            data_hash: the hash of the image group you'd like to delete
+            data_hash: the hash of the image group to delete
         """
         return self._client.delete_image_group(data_hash)
 
