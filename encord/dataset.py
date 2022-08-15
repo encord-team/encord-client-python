@@ -85,7 +85,8 @@ class Dataset:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ):
         """
-        Create an image group in Encord storage.
+        Create an image group in Encord storage. Choose this type of image upload for sequential images. Else, you can
+        choose the :meth:`.dataset.upload_image` function.
 
         Args:
             self: Encord client object.
@@ -105,8 +106,29 @@ class Dataset:
         """
         return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings)
 
+    def upload_image(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ):
+        """
+        Upload a single image to Encord storage. If your images are sequential we recommend creating an image group via
+        the :meth:`.dataset.create_image_group` function. For more information please compare
+        https://docs.encord.com/docs/annotate/editor/images and https://docs.encord.com/docs/annotate/editor/videos
+
+        Args:
+            file_path: The file path to the image
+            title: The title of the image will be the file name. Optionally choose a custom title.
+            cloud_upload_settings: DENIS:
+
+        DENIS: returns??
+        """
+        return self._client.upload_image(file_path, title, cloud_upload_settings)
+
     def delete_image_group(self, data_hash: str):
         """
+        # DENIS: update this doc!
         Create an image group in Encord storage.
 
         Args:

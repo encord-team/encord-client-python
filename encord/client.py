@@ -66,6 +66,7 @@ from encord.orm.dataset import (
     ImageGroupOCR,
     Images,
     ReEncodeVideoTask,
+    SingleImage,
     Video,
 )
 from encord.orm.label_log import LabelLog
@@ -270,6 +271,42 @@ class EncordClientDataset(EncordClient):
             return res
         else:
             raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
+
+    def upload_image(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ) -> Image:
+        """
+        This function is documented in :meth:`encord.dataset.Dataset.upload_image`.
+        """
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        if not file_path.is_file():
+            raise encord.exceptions.EncordException(message=f"{str(file_path)} does not point to a file.")
+
+        successful_uploads = upload_to_signed_url_list(
+            [str(file_path)], self._config, self._querier, Images, cloud_upload_settings=cloud_upload_settings
+        )
+        if not successful_uploads:
+            raise encord.exceptions.EncordException("Image upload failed.")
+        # upload_images_to_encord(successful_uploads, self._querier)
+
+        upload = successful_uploads[0]
+        if title is not None:
+            upload["title"] = title
+        # image_hash
+
+        res = self._querier.basic_setter(SingleImage, uid=None, payload=upload)
+
+        if res["success"]:
+            image_data = Image(
+                {"data_hash": upload["data_hash"], "title": upload["title"], "file_link": upload["file_link"]}
+            )
+            return image_data
+        else:
+            raise encord.exceptions.EncordException("Image upload failed.")
 
     def delete_image_group(self, data_hash: str):
         """
