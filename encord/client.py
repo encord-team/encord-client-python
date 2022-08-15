@@ -291,12 +291,10 @@ class EncordClientDataset(EncordClient):
         )
         if not successful_uploads:
             raise encord.exceptions.EncordException("Image upload failed.")
-        # upload_images_to_encord(successful_uploads, self._querier)
 
         upload = successful_uploads[0]
         if title is not None:
             upload["title"] = title
-        # image_hash
 
         res = self._querier.basic_setter(SingleImage, uid=None, payload=upload)
 

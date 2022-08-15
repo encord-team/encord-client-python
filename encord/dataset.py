@@ -6,7 +6,7 @@ from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset import ImageGroupOCR, StorageLocation
+from encord.orm.dataset import Image, ImageGroupOCR, StorageLocation
 
 
 class Dataset:
@@ -111,7 +111,7 @@ class Dataset:
         file_path: Union[Path, str],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
-    ):
+    ) -> Image:
         """
         Upload a single image to Encord storage. If your images are sequential we recommend creating an image group via
         the :meth:`.dataset.create_image_group` function. For more information please compare
@@ -120,16 +120,15 @@ class Dataset:
         Args:
             file_path: The file path to the image
             title: The title of the image will be the file name. Optionally choose a custom title.
-            cloud_upload_settings: DENIS:
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
-        DENIS: returns??
         """
         return self._client.upload_image(file_path, title, cloud_upload_settings)
 
     def delete_image_group(self, data_hash: str):
         """
-        # DENIS: update this doc!
-        Create an image group in Encord storage.
+        Delete an image group in Encord storage.
 
         Args:
             self: Encord client object.
