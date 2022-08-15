@@ -53,11 +53,11 @@ class ModelConfiguration(Formatter):
     model_uid: str
     title: str
     description: str
-    # The corresponding feature node hashes of the ontology object
     feature_node_hashes: List[str]
+    """The corresponding feature node hashes of the ontology object"""
     model: AutomationModels
-    # All the UIDs of individual model training instances
     model_iteration_uids: List[str]
+    """All the UIDs of individual model training instances"""
 
     @classmethod
     def from_dict(cls, json_dict: dict):

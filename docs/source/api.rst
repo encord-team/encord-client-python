@@ -35,7 +35,7 @@ Client
 
 Encord Objects
 ---------------
-.. automodule:: encord.objects.ontology
+.. automodule:: encord.objects.ontology_structure
     :members:
     :undoc-members:
 

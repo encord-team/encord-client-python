@@ -69,15 +69,15 @@ class Project:
         """
         Get the ontology of the project.
 
-        BETA: Prefer using the :meth:`encord.objects.ontology.Ontology` class to work with the data.
+        BETA: Prefer using the :class:`encord.objects.ontology_structure.OntologyStructure` class to work with the data.
 
         .. code::
 
-            from encord.object.ontology import Ontology
+            from encord.object.ontology_structure import OntologyStructure
 
             project = user_client.get_project("<project_hash>")
 
-            ontology = Ontology.from_dict(project.ontology)
+            ontology = OntologyStructure.from_dict(project.ontology)
 
         """
         project_instance = self._get_project_instance()
@@ -388,6 +388,7 @@ class Project:
         :meth:`encord.project.Project.get_training_metadata` to get more metadata about each training instance.
 
         .. code::
+
             from encord.utilities.project_utilities import get_all_model_iteration_uids
 
             project = client_instance.get_project(<project_hash>)
@@ -396,7 +397,7 @@ class Project:
             all_model_iteration_uids = get_all_model_iteration_uids(model_configurations)
             training_metadata = project.get_training_metadata(
                 all_model_iteration_uids,
-                get_model_training_labels,
+                get_model_training_labels=True,
             )
         """
         return self._client.list_models()

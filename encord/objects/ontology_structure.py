@@ -164,6 +164,7 @@ class OntologyStructure:
         Adds an classification definition to the ontology.
 
         .. code::
+
             structure = ontology_structure.OntologyStructure()
 
             cls = structure.add_classification(feature_node_hash="a39d81c0")
