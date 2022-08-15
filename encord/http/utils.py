@@ -127,9 +127,6 @@ def upload_images_to_encord(signed_urls: List[dict], querier: Querier) -> Images
     return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
 
 
-# def upload_single_image_to_encord(signed_url: dict, querier)
-
-
 def _get_signed_url(file_name: str, is_video: bool, querier: Querier) -> Union[SignedVideoURL, SignedImageURL]:
     if is_video:
         return querier.basic_getter(SignedVideoURL, uid=file_name)
