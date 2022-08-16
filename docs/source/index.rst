@@ -63,6 +63,13 @@ SDK Reference
 
    api
 
+Changelog
+==========
+
+.. toctree::
+
+   Changelog <https://github.com/encord-team/encord-client-python/releases>
+
 Indices and tables
 ==================
 
