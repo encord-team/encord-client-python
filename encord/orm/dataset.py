@@ -431,6 +431,12 @@ class Image(base_orm.BaseORM):
     }
 
 
+class SingleImage(Image):
+    """For native single image upload."""
+
+    success: bool
+
+
 @dataclasses.dataclass(frozen=True)
 class Images:
     """Uploading multiple images in a batch mode."""

@@ -6,7 +6,7 @@ from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset import ImageGroupOCR, StorageLocation
+from encord.orm.dataset import Image, ImageGroupOCR, StorageLocation
 
 
 class Dataset:
@@ -85,7 +85,8 @@ class Dataset:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ):
         """
-        Create an image group in Encord storage.
+        Create an image group in Encord storage. Choose this type of image upload for sequential images. Else, you can
+        choose the :meth:`.Dataset.upload_image` function.
 
         Args:
             self: Encord client object.
@@ -105,13 +106,32 @@ class Dataset:
         """
         return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings)
 
-    def delete_image_group(self, data_hash: str):
+    def upload_image(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ) -> Image:
         """
-        Create an image group in Encord storage.
+        Upload a single image to Encord storage. If your images are sequential we recommend creating an image group via
+        the :meth:`.Dataset.create_image_group` function. For more information please compare
+        https://docs.encord.com/docs/annotate/editor/images and https://docs.encord.com/docs/annotate/editor/videos
 
         Args:
-            self: Encord client object.
-            data_hash: the hash of the image group you'd like to delete
+            file_path: The file path to the image
+            title: The image title. If unspecified, this will be the file name.
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        """
+        return self._client.upload_image(file_path, title, cloud_upload_settings)
+
+    def delete_image_group(self, data_hash: str):
+        """
+        Delete an image group in Encord storage.
+
+        Args:
+            data_hash: the hash of the image group to delete
         """
         return self._client.delete_image_group(data_hash)
 
