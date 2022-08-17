@@ -41,7 +41,7 @@ import typing
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
@@ -83,10 +83,12 @@ from encord.orm.labeling_algorithm import (
 )
 from encord.orm.model import (
     Model,
+    ModelConfiguration,
     ModelInferenceParams,
     ModelOperations,
     ModelRow,
     ModelTrainingParams,
+    TrainingMetadata,
 )
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import (
@@ -243,7 +245,7 @@ class EncordClientDataset(EncordClient):
 
     def create_image_group(
         self,
-        file_paths: typing.Iterable[str],
+        file_paths: Iterable[str],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ):
@@ -489,7 +491,7 @@ class EncordClientProject(EncordClient):
         name: str,
         classification_type: ClassificationType,
         required: bool,
-        options: Optional[typing.Iterable[str]] = None,
+        options: Optional[Iterable[str]] = None,
     ):
         """
         This function is documented in :meth:`encord.project.Project.add_classification`.
@@ -500,6 +502,30 @@ class EncordClientProject(EncordClient):
         ontology = self.get_project_ontology()
         ontology.add_classification(name, classification_type, required, options)
         return self.__set_project_ontology(ontology)
+
+    def list_models(self) -> List[ModelConfiguration]:
+        """
+        This function is documented in :meth:`encord.project.Project.list_models`.
+        """
+        return self._querier.get_multiple(ModelConfiguration)
+
+    def get_training_metadata(
+        self,
+        model_iteration_uids: Iterable[str],
+        get_created_at: bool = False,
+        get_training_final_loss: bool = False,
+        get_model_training_labels: bool = False,
+    ) -> List[TrainingMetadata]:
+        """
+        This function is documented in :meth:`encord.project.Project.get_training_metadata`.
+        """
+        payload = {
+            "model_iteration_uids": list(model_iteration_uids),
+            "get_created_at": get_created_at,
+            "get_training_final_loss": get_training_final_loss,
+            "get_model_training_labels": get_model_training_labels,
+        }
+        return self._querier.get_multiple(TrainingMetadata, payload=payload)
 
     def create_model_row(
         self,

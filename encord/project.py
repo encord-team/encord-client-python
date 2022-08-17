@@ -7,6 +7,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from encord.orm.model import ModelConfiguration, TrainingMetadata
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -68,15 +69,15 @@ class Project:
         """
         Get the ontology of the project.
 
-        BETA: Prefer using the :meth:`encord.objects.ontology.Ontology` class to work with the data.
+        BETA: Prefer using the :class:`encord.objects.ontology_structure.OntologyStructure` class to work with the data.
 
         .. code::
 
-            from encord.object.ontology import Ontology
+            from encord.object.ontology_structure import OntologyStructure
 
             project = user_client.get_project("<project_hash>")
 
-            ontology = Ontology.from_dict(project.ontology)
+            ontology = OntologyStructure.from_dict(project.ontology)
 
         """
         project_instance = self._get_project_instance()
@@ -380,6 +381,46 @@ class Project:
             ValueError: If invalid arguments are supplied in the function call
         """
         return self._client.add_classification(name, classification_type, required, options)
+
+    def list_models(self) -> List[ModelConfiguration]:
+        """
+        List all models that are associated with the project. Use the
+        :meth:`encord.project.Project.get_training_metadata` to get more metadata about each training instance.
+
+        .. code::
+
+            from encord.utilities.project_utilities import get_all_model_iteration_uids
+
+            project = client_instance.get_project(<project_hash>)
+
+            model_configurations = project.list_models()
+            all_model_iteration_uids = get_all_model_iteration_uids(model_configurations)
+            training_metadata = project.get_training_metadata(
+                all_model_iteration_uids,
+                get_model_training_labels=True,
+            )
+        """
+        return self._client.list_models()
+
+    def get_training_metadata(
+        self,
+        model_iteration_uids: Iterable[str],
+        get_created_at: bool = False,
+        get_training_final_loss: bool = False,
+        get_model_training_labels: bool = False,
+    ) -> List[TrainingMetadata]:
+        """
+        Given a list of model_iteration_uids, get some metadata around each model_iteration.
+
+        Args:
+            model_iteration_uids: The model iteration uids
+            get_created_at: Whether the `created_at` field should be retrieved.
+            get_training_final_loss: Whether the `training_final_loss` field should be retrieved.
+            get_model_training_labels: Whether the `model_training_labels` field should be retrieved.
+        """
+        return self._client.get_training_metadata(
+            model_iteration_uids, get_created_at, get_training_final_loss, get_model_training_labels
+        )
 
     def create_model_row(
         self,
