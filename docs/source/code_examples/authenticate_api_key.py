@@ -1,4 +1,4 @@
-from types import Union
+from typing import Union
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 
