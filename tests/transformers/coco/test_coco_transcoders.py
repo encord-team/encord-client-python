@@ -31,7 +31,7 @@ from tests.transformers.coco.data.project_1 import (
 )
 
 ENABLE_INTEGRATION_TESTS = False
-ENABLE_MANUAL_TESTS = True
+ENABLE_MANUAL_TESTS = False
 
 
 @pytest.mark.skipif(not ENABLE_INTEGRATION_TESTS, reason="Integration tests are currently not enabled.")
@@ -156,7 +156,7 @@ def test_coco_transcoder_wrong_ontology():
 
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="This is a manual test")
 def test_project_1_transcoders():
-    labels = [image_group_a2198]
+    labels = [image_group_a2198, existing_image_group, image_group_fded8, cute_cat_mp4]
     ontology = project_1_ontology
 
     coco_format = CocoEncoder(labels, ontology).encode(
