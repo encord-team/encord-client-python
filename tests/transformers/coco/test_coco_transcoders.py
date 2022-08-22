@@ -6,6 +6,10 @@ import pytest
 import torch
 import torchvision
 from deepdiff import DeepDiff
+
+from encord.objects.common import Shape
+from encord.objects.ontology_object import Object
+from encord.objects.ontology_structure import OntologyStructure
 from encord.transformers.coco.coco_encoder import (
     CocoEncoder,
     EncodingError,
@@ -26,12 +30,8 @@ from tests.transformers.coco.data.project_1 import (
     project_1_ontology,
 )
 
-from encord.objects.common import Shape
-from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.ontology_object import Object
-
 ENABLE_INTEGRATION_TESTS = False
-ENABLE_MANUAL_TESTS = False
+ENABLE_MANUAL_TESTS = True
 
 
 @pytest.mark.skipif(not ENABLE_INTEGRATION_TESTS, reason="Integration tests are currently not enabled.")
@@ -156,7 +156,7 @@ def test_coco_transcoder_wrong_ontology():
 
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="This is a manual test")
 def test_project_1_transcoders():
-    labels = [image_group_a2198, existing_image_group, image_group_fded8, cute_cat_mp4]
+    labels = [image_group_a2198]
     ontology = project_1_ontology
 
     coco_format = CocoEncoder(labels, ontology).encode(
