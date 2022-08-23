@@ -366,9 +366,40 @@ class CocoEncoder:
         return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation)
 
     def get_polyline(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
-        raise NotImplementedError(
-            "The get_polyline function will need to be overwritten if you want to convert these objects."
-        )
+        """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
+        polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
+        polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
+        segmentation = [polyline_coordinate]
+        polygon = Polygon(polygon)
+        area = 0
+        x, y, x_max, y_max = polygon.bounds
+        w, h = x_max - x, y_max - y
+
+        bbox = [x, y, w, h]
+        category_id = self.get_category_id(object_)
+        id, iscrowd = self.get_coco_annotation_default_fields()
+
+        return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation)
+
+    @staticmethod
+    def join_polyline_from_polygon(polygon: List[float]) -> List[float]:
+        """
+        Essentially a trick to represent a polyline in coco. We pretend for this to be a polygon and join every
+        coordinate from the end back to the beginning, so it will essentially be an area-less polygon.
+        This function technically changes the input polygon in place.
+        """
+        if len(polygon) % 2 != 0:
+            raise RuntimeError("The polygon has an unaccepted shape.")
+
+        idx = len(polygon) - 2
+        while idx >= 0:
+            y_coordinate = polygon[idx]
+            x_coordinate = polygon[idx + 1]
+            polygon.append(y_coordinate)
+            polygon.append(x_coordinate)
+            idx -= 2
+
+        return polygon
 
     def get_point(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
         x, y = (
@@ -388,6 +419,7 @@ class CocoEncoder:
         return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation, keypoints, num_keypoints)
 
     def get_skeleton(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+        # DENIS: next up: check how this is visualised.
         area = 0
         segmentation = []
         keypoints = []

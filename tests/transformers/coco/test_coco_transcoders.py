@@ -6,6 +6,10 @@ import pytest
 import torch
 import torchvision
 from deepdiff import DeepDiff
+
+from encord.objects.common import Shape
+from encord.objects.ontology_object import Object
+from encord.objects.ontology_structure import OntologyStructure
 from encord.transformers.coco.coco_encoder import (
     CocoEncoder,
     EncodingError,
@@ -25,10 +29,6 @@ from tests.transformers.coco.data.project_1 import (
     output_no_input_labels,
     project_1_ontology,
 )
-
-from encord.objects.common import Shape
-from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.ontology_object import Object
 
 ENABLE_INTEGRATION_TESTS = False
 ENABLE_MANUAL_TESTS = False
