@@ -59,7 +59,12 @@ class Dataset:
         """
         return self._client.get_dataset()
 
-    def upload_video(self, file_path: str, cloud_upload_settings: CloudUploadSettings = CloudUploadSettings()):
+    def upload_video(
+        self,
+        file_path: str,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        title: Optional[str] = None,
+    ):
         """
         Upload video to Encord storage.
 
@@ -68,6 +73,9 @@ class Dataset:
             file_path: path to video e.g. '/home/user/data/video.mp4'
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title:
+                The video title. If unspecified, this will be the file name. This title should include an extension.
+                For example "encord_video.mp4".
 
         Returns:
             Bool.
@@ -76,13 +84,14 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.upload_video(file_path, cloud_upload_settings=cloud_upload_settings)
+        return self._client.upload_video(file_path, cloud_upload_settings=cloud_upload_settings, title=title)
 
     def create_image_group(
         self,
         file_paths: Iterable[str],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        title: Optional[str] = None,
     ):
         """
         Create an image group in Encord storage. Choose this type of image upload for sequential images. Else, you can
@@ -96,6 +105,9 @@ class Dataset:
                 DEPRECATED: This argument will be ignored
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title:
+                The title of the image group. If unspecified this will be randomly generated for you. This title should
+                NOT include an extension. For example "encord_image_group".
 
         Returns:
             Bool.
@@ -104,7 +116,7 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings)
+        return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings, title=title)
 
     def upload_image(
         self,
@@ -119,7 +131,8 @@ class Dataset:
 
         Args:
             file_path: The file path to the image
-            title: The image title. If unspecified, this will be the file name.
+            title: The image title. If unspecified, this will be the file name. This title should include an extension.
+                For example "encord_image.png".
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
 

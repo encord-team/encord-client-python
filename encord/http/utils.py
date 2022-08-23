@@ -119,8 +119,20 @@ def upload_to_signed_url_list(
     return successful_uploads
 
 
-def upload_video_to_encord(signed_url: dict, querier: Querier) -> Video:
-    return querier.basic_put(Video, uid=signed_url.get("data_hash"), payload=signed_url, enable_logging=False)
+def upload_video_to_encord(signed_url: SignedVideoURL, video_title: Optional[str], querier: Querier) -> Video:
+    payload = {
+        "signed_url": signed_url["signed_url"],
+        "data_hash": signed_url["data_hash"],
+        "title": signed_url["title"],
+        "file_link": signed_url["file_link"],
+        "video_title": video_title,
+    }
+    return querier.basic_put(
+        Video,
+        uid=signed_url.get("data_hash"),
+        payload=payload,
+        enable_logging=False,
+    )
 
 
 def upload_images_to_encord(signed_urls: List[dict], querier: Querier) -> Images:

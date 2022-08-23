@@ -227,7 +227,12 @@ class EncordClientDataset(EncordClient):
         """
         return self._querier.basic_getter(OrmDataset)
 
-    def upload_video(self, file_path: str, cloud_upload_settings: CloudUploadSettings = CloudUploadSettings()):
+    def upload_video(
+        self,
+        file_path: str,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        title: Optional[str] = None,
+    ):
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
@@ -235,7 +240,7 @@ class EncordClientDataset(EncordClient):
             signed_urls = upload_to_signed_url_list(
                 [file_path], self._config, self._querier, Video, cloud_upload_settings=cloud_upload_settings
             )
-            res = upload_video_to_encord(signed_urls[0], self._querier)
+            res = upload_video_to_encord(signed_urls[0], title, self._querier)
             if res:
                 logger.info("Upload complete.")
                 return res
@@ -249,6 +254,7 @@ class EncordClientDataset(EncordClient):
         file_paths: Iterable[str],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        title: Optional[str] = None,
     ):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
@@ -265,7 +271,7 @@ class EncordClientDataset(EncordClient):
         upload_images_to_encord(successful_uploads, self._querier)
 
         image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
-        res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={})
+        res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={"image_group_title": title})
 
         if res:
             titles = [video_data.get("title") for video_data in res]
