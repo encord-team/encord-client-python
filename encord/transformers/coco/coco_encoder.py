@@ -371,7 +371,7 @@ class CocoEncoder:
         polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
         segmentation = [polyline_coordinate]
         polygon = Polygon(polygon)
-        area = polygon.area
+        area = 0
         x, y, x_max, y_max = polygon.bounds
         w, h = x_max - x, y_max - y
 
