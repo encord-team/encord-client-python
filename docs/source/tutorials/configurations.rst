@@ -10,7 +10,7 @@ There are some configurations that you can set for working with the |sdk|.
 Network configurations
 ========================
 If you have an unstable connection, sometimes you might want to overwrite the defaults of the :class:`RequestsSettings <encord.http.constants.RequestsSettings>`.
-These settings will propagate to the :class:`~encord.project.Project` and :class:`~encord.dataset.Dataset` objects that are created from this :class:`.EncordUserClient`.
+These settings will propagate to the :class:`~encord.project.Project` and :class:`~encord.dataset.Dataset` objects that are created from the :class:`.EncordUserClient`.
 
 .. tabs::
 
