@@ -141,6 +141,8 @@ class OntologyStructure:
             if self.objects:
                 try:
                     color_index = AVAILABLE_COLORS.index(self.objects[-1].color) + 1
+                    if color_index >= len(AVAILABLE_COLORS):
+                        color_index = 0
                 except ValueError:
                     pass
             color = AVAILABLE_COLORS[color_index]
