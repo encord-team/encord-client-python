@@ -370,16 +370,29 @@ class CocoEncoder:
         polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
         polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
         segmentation = [polyline_coordinate]
-        polygon = Polygon(polygon)
         area = 0
-        x, y, x_max, y_max = polygon.bounds
-        w, h = x_max - x, y_max - y
-
-        bbox = [x, y, w, h]
+        bbox = self.get_bbox_for_polyline(polygon)
         category_id = self.get_category_id(object_)
         id, iscrowd = self.get_coco_annotation_default_fields()
 
         return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation)
+
+    def get_bbox_for_polyline(self, polygon: list):
+        if len(polygon) == 2:
+            # We have the edge case of a single edge polygon.
+            first_point = polygon[0]
+            second_point = polygon[1]
+            x = min(first_point[0], second_point[0])
+            y = min(first_point[1], second_point[1])
+            w = abs(first_point[0] - second_point[0])
+            h = abs(first_point[1] - second_point[1])
+            return [x, y, w, h]
+        else:
+            polygon = Polygon(polygon)
+            x, y, x_max, y_max = polygon.bounds
+            w, h = x_max - x, y_max - y
+
+            return [x, y, w, h]
 
     @staticmethod
     def join_polyline_from_polygon(polygon: List[float]) -> List[float]:
