@@ -209,6 +209,7 @@ class CocoEncoder:
         return {
             "coco_url": data_unit["data_link"],
             "id": image_id,
+            "image_title": data_unit["data_title"],
             "file_name": self.get_file_name_and_download_image(data_unit),
             "height": data_unit["height"],
             "width": data_unit["width"],
@@ -233,6 +234,7 @@ class CocoEncoder:
 
             # raise RuntimeError("If you want to include videos, you also need to enable downloading (for now).")
 
+        video_title = data_unit["data_title"]
         url = data_unit["data_link"]
         data_hash = data_unit["data_hash"]
 
@@ -248,22 +250,23 @@ class CocoEncoder:
         if self._include_unannotated_videos and path_to_video_dir.is_dir():
             # DENIS: log something for transparency?
             for frame_num in range(len(list(path_to_video_dir.iterdir()))):
-                images.append(self.get_video_image(data_hash, coco_url, height, width, int(frame_num)))
+                images.append(self.get_video_image(data_hash, video_title, coco_url, height, width, int(frame_num)))
         else:
             for frame_num in data_unit["labels"].keys():
-                images.append(self.get_video_image(data_hash, coco_url, height, width, int(frame_num)))
+                images.append(self.get_video_image(data_hash, video_title, coco_url, height, width, int(frame_num)))
 
         return images
 
     # def get_frame_numbers(self, data_unit: dict) -> Iterator:  # DENIS: use this to remove the above if/else.
 
-    def get_video_image(self, data_hash: str, coco_url: str, height: int, width: int, frame_num: int):
+    def get_video_image(self, data_hash: str, video_title: str, coco_url: str, height: int, width: int, frame_num: int):
         image_id = len(self._data_hash_to_image_id_map)
         self._data_hash_to_image_id_map[(data_hash, frame_num)] = image_id
 
         return {
             "coco_url": coco_url,
             "id": image_id,
+            "video_title": video_title,
             "file_name": self.get_video_file_path(data_hash, frame_num),
             "height": height,
             "width": width,
