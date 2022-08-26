@@ -28,7 +28,6 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
 from encord.transformers.coco.coco_datastructure import (
     CocoAnnotation,
-    CocoCategory,
     SuperClass,
     as_dict_custom,
 )
@@ -151,20 +150,26 @@ class CocoEncoder:
         else:
             return self._labels_list[0]["data_title"]
 
-    def get_categories(self) -> List[CocoCategory]:
+    def get_categories(self) -> List[dict]:
         """This does not translate classifications as they are not part of the Coco spec."""
         categories = []
         for object_ in self._ontology.objects:
-            categories.append(as_dict_custom(self.get_category(object_)))
+            categories.append(self.get_category(object_))
 
         return categories
 
-    def get_category(self, object_: Object) -> CocoCategory:
-        return CocoCategory(
-            supercategory=self.get_super_category(object_),
-            id_=self.add_to_object_map_and_get_next_id(object_),
-            name=self.get_category_name(object_),
-        )
+    def get_category(self, object_: Object) -> dict:
+        super_category = self.get_super_category(object_)
+        ret = {
+            "supercategory": super_category,
+            "id": self.add_to_object_map_and_get_next_id(object_),
+            "name": self.get_category_name(object_),
+        }
+        if super_category == "point":
+            # TODO: we will have to do something similar for skeletons.
+            ret["keypoints"] = "keypoint"
+            ret["skeleton"] = []
+        return ret
 
     def get_super_category(self, object_: Object) -> str:
         return object_.shape.value
