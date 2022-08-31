@@ -16,7 +16,7 @@ class Dataset:
 
     def __init__(self, client: EncordClientDataset):
         self._client = client
-        self._dataset_instance = None
+        self._dataset_instance: Optional[OrmDataset] = None
 
     @property
     def dataset_hash(self) -> str:
@@ -117,6 +117,33 @@ class Dataset:
                                               datasets (e.g. S3/GPC/Azure)
         """
         return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings, title=title)
+
+    def create_dicom_series(
+        self,
+        file_paths: List[str],
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        title: Optional[str] = None,
+    ):
+        """
+        Upload a DICOM series to Encord storage
+
+        Args:
+            self: Encord client object.
+            file_paths: a list of paths to DICOM files, e.g.
+                ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title:
+                The title of the DICOM series. If unspecified this will be randomly generated for you. This title should
+                NOT include an extension. For example "encord_image_group".
+        Returns:
+            Bool.
+
+        Raises:
+            UploadOperationNotSupportedError: If trying to upload to external
+                                              datasets (e.g. S3/GPC/Azure)
+        """
+        return self._client.create_dicom_series(file_paths, cloud_upload_settings=cloud_upload_settings, title=title)
 
     def upload_image(
         self,

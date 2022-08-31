@@ -2,7 +2,7 @@ import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
-from typing import List, Optional, TypeVar, Union
+from typing import List, Optional, Type, TypeVar, Union
 
 import requests
 from tqdm import tqdm
@@ -12,7 +12,10 @@ from encord.exceptions import CloudUploadError
 from encord.http.helpers import retry_on_network_errors
 from encord.http.querier import Querier
 from encord.orm.dataset import (
+    DicomSeries,
     Images,
+    SignedDicomsURL,
+    SignedDicomURL,
     SignedImagesURL,
     SignedImageURL,
     SignedVideoURL,
@@ -67,24 +70,27 @@ def upload_to_signed_url_list(
     file_paths: List[str],
     config: BaseConfig,
     querier: Querier,
-    orm_class: Union[Images, Video],
+    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]],
     cloud_upload_settings: CloudUploadSettings,
-) -> List[Union[SignedVideoURL, SignedImageURL]]:
-    if orm_class == Images:
-        is_video = False
-    elif orm_class == Video:
-        is_video = True
-    else:
-        raise RuntimeError(f"Currently only `Image` or `Video` orm_class supported. Got type `{orm_class}`")
-
+) -> List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL]]:
     failed_uploads = []
     successful_uploads = []
     total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
     with tqdm(total=total, desc="Files upload progress: ", leave=False) as pbar:
         for i in range(len(file_paths)):
             file_path = file_paths[i]
+
+            if orm_class == Images:
+                content_type = mimetypes.guess_type(file_path)[0]
+            elif orm_class == Video:
+                content_type = "application/octet-stream"
+            elif orm_class == DicomSeries:
+                content_type = "application/dicom"
+            else:
+                raise RuntimeError(f"Unsupported type `{orm_class}`")
+
             file_name = os.path.basename(file_path)
-            signed_url = _get_signed_url(file_name, is_video, querier)
+            signed_url = _get_signed_url(file_name, orm_class, querier)
             assert signed_url.get("title", "") == file_name, "Ordering issue"
 
             try:
@@ -102,7 +108,7 @@ def upload_to_signed_url_list(
                     file_path,
                     signed_url,
                     pbar,
-                    is_video,
+                    content_type,
                     max_retries,
                     backoff_factor,
                 )
@@ -139,24 +145,27 @@ def upload_images_to_encord(signed_urls: List[dict], querier: Querier) -> Images
     return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
 
 
-def _get_signed_url(file_name: str, is_video: bool, querier: Querier) -> Union[SignedVideoURL, SignedImageURL]:
-    if is_video:
+def _get_signed_url(
+    file_name: str, orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]], querier: Querier
+) -> Union[SignedVideoURL, SignedImageURL, SignedDicomURL]:
+    if orm_class == Video:
         return querier.basic_getter(SignedVideoURL, uid=file_name)
-    else:
+    elif orm_class == Images:
         return querier.basic_getter(SignedImagesURL, uid=[file_name])[0]
+    elif orm_class == DicomSeries:
+        return querier.basic_getter(SignedDicomsURL, uid=[file_name])[0]
 
 
 def _upload_single_file(
     file_path: str,
     signed_url: dict,
     pbar,
-    is_video: bool,
+    content_type: str,
     max_retries: int,
     backoff_factor: float,
 ) -> None:
-
     res_upload = _data_upload(
-        file_path, signed_url, pbar, is_video, max_retries=max_retries, backoff_factor=backoff_factor
+        file_path, signed_url, pbar, content_type, max_retries=max_retries, backoff_factor=backoff_factor
     )
 
     if res_upload.status_code != 200:
@@ -178,9 +187,8 @@ def _data_upload(
     file_path: str,
     signed_url: dict,
     pbar,
-    is_video: bool,
+    content_type: str,
 ):
-    content_type = "application/octet-stream" if is_video else mimetypes.guess_type(file_path)[0]
     return requests.put(
         signed_url.get("signed_url"),
         data=read_in_chunks(file_path, pbar),
