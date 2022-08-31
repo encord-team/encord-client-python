@@ -21,8 +21,10 @@ from encord.utilities.project_user import ProjectUserRole
 #%%
 # Authenticating
 # --------------
-# To interact with Encord, you need to authenticate a client. You can find more details
-# :ref:`here <authentication:Authentication>`.
+# .. note::
+#
+#   To interact with Encord, you need to authenticate a client. You can find more details
+#   :ref:`here <authentication:Authentication>`.
 
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     "<your_private_key>"

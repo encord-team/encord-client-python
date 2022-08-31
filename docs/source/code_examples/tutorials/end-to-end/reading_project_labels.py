@@ -19,8 +19,10 @@ from encord.project import Project
 from encord.project_ontology.object_type import ObjectShape
 
 #%%
-# To interact with Encord, you need to authenticate a client. You can find more details
-# :ref:`here <authentication:Authentication>`.
+# .. note::
+#
+#   To interact with Encord, you need to authenticate a client. You can find more details
+#   :ref:`here <authentication:Authentication>`.
 
 # Authenticate
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(

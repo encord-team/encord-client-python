@@ -320,6 +320,12 @@ from encord import EncordUserClient, Project
 from encord.orm.project import Project as OrmProject
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
+#%%
+# .. note::
+#
+#   To interact with Encord, you need to authenticate a client. You can find more details
+#   :ref:`here <authentication:Authentication>`.
+
 # Authenticate
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     "<your_private_key>"
