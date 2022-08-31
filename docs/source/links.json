@@ -62,5 +62,9 @@
   "ssh_public_key_authentication": {
     "user_text": "SSH public key",
     "url": "https://www.ssh.com/academy/ssh/public-key-authentication"
+  },
+  "set_up_public_key_authentication": {
+    "user_text": "Set up public key authentication",
+    "url": "https://docs.encord.com/docs/admins/settings/public-keys/#set-up-public-key-authentication"
   }
 }

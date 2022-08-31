@@ -21,6 +21,10 @@ You can use the client to interact with a :ref:`general_concepts:Dataset` or a :
 * A project admin or project manager of the project that is being accessed
 * A dataset admin of the dataset that is being accessed
 
+.. note::
+
+    To setup public key authentication, follow these instructions in the :ref:`authentication:User authentication` section below.
+
 Resource authentication via API key (supports legacy flows)
 ------------------------------------------------------------------
 You can access a specific project or dataset via API key authentication.
@@ -32,13 +36,18 @@ We only recommend you to use this authentication if
 * You do not have user access rights for a project or dataset
 * You want to access a project or dataset as part of an automated pipeline without using a specific user account
 
+.. note::
+
+    To setup resource authentication, follow these instructions in the :ref:`authentication:Resource authentication` section below.
+
+
 User authentication
 ==========================
 
 Set up authentication keys - user authentication
 --------------------------------------------------------------------
 Public keys are tied to the user so need to be added to your profile.
-To register a public key, please follow the instructions in :xref:`public_keys` of the |sdk| documentation.
+To register a public key, please follow the instructions in :xref:`public_keys` of the |platform| documentation.
 
 
 Authenticate with |company| - user authentication
