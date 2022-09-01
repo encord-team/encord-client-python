@@ -5,7 +5,7 @@ import datetime
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import dateutil
 
@@ -33,7 +33,6 @@ from encord.orm.dataset import (
     DatasetScope,
     DatasetUserRole,
     Images,
-    SignedImagesURL,
     StorageLocation,
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole

@@ -383,6 +383,18 @@ class SignedImagesURL(base_orm.BaseListORM):
     BASE_ORM_TYPE = SignedImageURL
 
 
+class SignedDicomURL(base_orm.BaseORM):
+    """A signed URL object with supporting information."""
+
+    DB_FIELDS = OrderedDict([("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)])
+
+
+class SignedDicomsURL(base_orm.BaseListORM):
+    """A signed URL object with supporting information."""
+
+    BASE_ORM_TYPE = SignedDicomURL
+
+
 class Video(base_orm.BaseORM):
     """A video object with supporting information."""
 
@@ -442,6 +454,12 @@ class Images:
     """Uploading multiple images in a batch mode."""
 
     success: bool
+
+
+@dataclasses.dataclass(frozen=True)
+class DicomSeries:
+    data_hash: str
+    title: str
 
 
 @dataclasses.dataclass(frozen=True)

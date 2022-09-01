@@ -61,6 +61,7 @@ from encord.orm.dataset import AddPrivateDataResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetData,
+    DicomSeries,
     Image,
     ImageGroup,
     ImageGroupOCR,
@@ -251,7 +252,7 @@ class EncordClientDataset(EncordClient):
 
     def create_image_group(
         self,
-        file_paths: Iterable[str],
+        file_paths: List[str],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
@@ -276,6 +277,45 @@ class EncordClientDataset(EncordClient):
         if res:
             titles = [video_data.get("title") for video_data in res]
             logger.info("Upload successful! {} created.".format(titles))
+            return res
+        else:
+            raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
+
+    def create_dicom_series(
+        self,
+        file_paths: List[str],
+        title: Optional[str] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ):
+        """
+        This function is documented in :meth:`encord.dataset.Dataset.create_dicom_series`.
+        """
+        for file_path in file_paths:
+            if not os.path.exists(file_path):
+                raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
+
+        successful_uploads = upload_to_signed_url_list(
+            file_paths=file_paths,
+            config=self._config,
+            querier=self._querier,
+            orm_class=DicomSeries,
+            cloud_upload_settings=cloud_upload_settings,
+        )
+        if not successful_uploads:
+            raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
+
+        dicom_files = [
+            {
+                "id": file["data_hash"],
+                "uri": file["file_link"],
+                "title": file["title"],
+            }
+            for file in successful_uploads
+        ]
+
+        res = self._querier.basic_setter(DicomSeries, uid=dicom_files, payload={"title": title})
+
+        if res:
             return res
         else:
             raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
