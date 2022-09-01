@@ -10,7 +10,7 @@ class LabelLog:
     log_hash: str
     user_hash: str
     user_email: str
-    annotation_hash: str
+    identifier: str
     data_hash: str
     feature_hash: str
     action: Action
