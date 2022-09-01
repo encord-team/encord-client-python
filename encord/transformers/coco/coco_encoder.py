@@ -185,10 +185,29 @@ class CocoEncoder:
         images = []
         for labels in self._labels_list:
             for data_unit in labels["data_units"].values():
-                if "video" not in data_unit["data_type"]:
+                data_type = data_unit["data_type"]
+                if "application/dicom" in data_type:
+                    images.extend(self.get_dicom(data_unit))
+                elif "video" not in data_type:
                     images.append(self.get_image(data_unit))
                 else:
                     images.extend(self.get_video_images(data_unit))
+        return images
+
+    def get_dicom(self, data_unit: dict) -> list:
+        # NOTE: could give an option whether to include dicoms, but this is inferred by which labels we request.
+
+        data_hash = data_unit["data_hash"]
+
+        images = []
+
+        height = data_unit["height"]
+        width = data_unit["width"]
+
+        for frame_num in data_unit["labels"].keys():
+            dicom_image = self.get_dicom_image(data_hash, height, width, int(frame_num))
+            images.append(dicom_image)
+
         return images
 
     def get_image(self, data_unit: dict) -> dict:
@@ -257,7 +276,20 @@ class CocoEncoder:
 
     # def get_frame_numbers(self, data_unit: dict) -> Iterator:  # DENIS: use this to remove the above if/else.
 
-    def get_video_image(self, data_hash: str, coco_url: str, height: int, width: int, frame_num: int):
+    def get_dicom_image(self, data_hash: str, height: int, width: int, frame_num: int) -> dict:
+        image_id = len(self._data_hash_to_image_id_map)
+        self._data_hash_to_image_id_map[(data_hash, frame_num)] = image_id
+
+        return {
+            # DICOM does not have a one to one mapping between a frame and a DICOM series file.
+            "coco_url": "",
+            "id": image_id,
+            "file_name": self.get_dicom_file_path(data_hash, frame_num),
+            "height": height,
+            "width": width,
+        }
+
+    def get_video_image(self, data_hash: str, coco_url: str, height: int, width: int, frame_num: int) -> dict:
         image_id = len(self._data_hash_to_image_id_map)
         self._data_hash_to_image_id_map[(data_hash, frame_num)] = image_id
 
@@ -268,6 +300,10 @@ class CocoEncoder:
             "height": height,
             "width": width,
         }
+
+    def get_dicom_file_path(self, data_hash: str, frame_num: int) -> str:
+        path = Path("dicom") / data_hash / str(frame_num)
+        return str(path)
 
     def get_video_file_path(self, data_hash: str, frame_num: int) -> str:
         frame_file_name = Path(f"{frame_num}.jpg")
@@ -292,17 +328,25 @@ class CocoEncoder:
             for data_unit in labels["data_units"].values():
                 data_hash = data_unit["data_hash"]
 
-                if "video" not in data_unit["data_type"]:
-                    image_id = self.get_image_id(data_hash)
-                    objects = data_unit["labels"]["objects"]
-                    annotations.extend(self.get_annotation(objects, image_id))
-                else:
+                if "video" in data_unit["data_type"]:
                     if not self._include_videos:
                         continue
                     for frame_num, frame_item in data_unit["labels"].items():
                         image_id = self.get_image_id(data_hash, int(frame_num))
                         objects = frame_item["objects"]
                         annotations.extend(self.get_annotation(objects, image_id))
+
+                elif "application/dicom" in data_unit["data_type"]:
+                    # copy pasta:
+                    for frame_num, frame_item in data_unit["labels"].items():
+                        image_id = self.get_image_id(data_hash, int(frame_num))
+                        objects = frame_item["objects"]
+                        annotations.extend(self.get_annotation(objects, image_id))
+
+                else:
+                    image_id = self.get_image_id(data_hash)
+                    objects = data_unit["labels"]["objects"]
+                    annotations.extend(self.get_annotation(objects, image_id))
 
         return annotations
 
