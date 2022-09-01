@@ -28,7 +28,6 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
 from encord.transformers.coco.coco_datastructure import (
     CocoAnnotation,
-    CocoCategory,
     SuperClass,
     as_dict_custom,
 )
@@ -151,20 +150,26 @@ class CocoEncoder:
         else:
             return self._labels_list[0]["data_title"]
 
-    def get_categories(self) -> List[CocoCategory]:
+    def get_categories(self) -> List[dict]:
         """This does not translate classifications as they are not part of the Coco spec."""
         categories = []
         for object_ in self._ontology.objects:
-            categories.append(as_dict_custom(self.get_category(object_)))
+            categories.append(self.get_category(object_))
 
         return categories
 
-    def get_category(self, object_: Object) -> CocoCategory:
-        return CocoCategory(
-            supercategory=self.get_super_category(object_),
-            id_=self.add_to_object_map_and_get_next_id(object_),
-            name=self.get_category_name(object_),
-        )
+    def get_category(self, object_: Object) -> dict:
+        super_category = self.get_super_category(object_)
+        ret = {
+            "supercategory": super_category,
+            "id": self.add_to_object_map_and_get_next_id(object_),
+            "name": self.get_category_name(object_),
+        }
+        if super_category == "point":
+            # TODO: we will have to do something similar for skeletons.
+            ret["keypoints"] = "keypoint"
+            ret["skeleton"] = []
+        return ret
 
     def get_super_category(self, object_: Object) -> str:
         return object_.shape.value
@@ -228,6 +233,7 @@ class CocoEncoder:
         return {
             "coco_url": data_unit["data_link"],
             "id": image_id,
+            "image_title": data_unit["data_title"],
             "file_name": self.get_file_name_and_download_image(data_unit),
             "height": data_unit["height"],
             "width": data_unit["width"],
@@ -252,6 +258,7 @@ class CocoEncoder:
 
             # raise RuntimeError("If you want to include videos, you also need to enable downloading (for now).")
 
+        video_title = data_unit["data_title"]
         url = data_unit["data_link"]
         data_hash = data_unit["data_hash"]
 
@@ -267,10 +274,10 @@ class CocoEncoder:
         if self._include_unannotated_videos and path_to_video_dir.is_dir():
             # DENIS: log something for transparency?
             for frame_num in range(len(list(path_to_video_dir.iterdir()))):
-                images.append(self.get_video_image(data_hash, coco_url, height, width, int(frame_num)))
+                images.append(self.get_video_image(data_hash, video_title, coco_url, height, width, int(frame_num)))
         else:
             for frame_num in data_unit["labels"].keys():
-                images.append(self.get_video_image(data_hash, coco_url, height, width, int(frame_num)))
+                images.append(self.get_video_image(data_hash, video_title, coco_url, height, width, int(frame_num)))
 
         return images
 
@@ -289,13 +296,14 @@ class CocoEncoder:
             "width": width,
         }
 
-    def get_video_image(self, data_hash: str, coco_url: str, height: int, width: int, frame_num: int) -> dict:
+    def get_video_image(self, data_hash: str, video_title: str, coco_url: str, height: int, width: int, frame_num: int):
         image_id = len(self._data_hash_to_image_id_map)
         self._data_hash_to_image_id_map[(data_hash, frame_num)] = image_id
 
         return {
             "coco_url": coco_url,
             "id": image_id,
+            "video_title": video_title,
             "file_name": self.get_video_file_path(data_hash, frame_num),
             "height": height,
             "width": width,
@@ -414,16 +422,29 @@ class CocoEncoder:
         polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
         polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
         segmentation = [polyline_coordinate]
-        polygon = Polygon(polygon)
         area = 0
-        x, y, x_max, y_max = polygon.bounds
-        w, h = x_max - x, y_max - y
-
-        bbox = [x, y, w, h]
+        bbox = self.get_bbox_for_polyline(polygon)
         category_id = self.get_category_id(object_)
         id, iscrowd = self.get_coco_annotation_default_fields()
 
         return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation)
+
+    def get_bbox_for_polyline(self, polygon: list):
+        if len(polygon) == 2:
+            # We have the edge case of a single edge polygon.
+            first_point = polygon[0]
+            second_point = polygon[1]
+            x = min(first_point[0], second_point[0])
+            y = min(first_point[1], second_point[1])
+            w = abs(first_point[0] - second_point[0])
+            h = abs(first_point[1] - second_point[1])
+            return [x, y, w, h]
+        else:
+            polygon = Polygon(polygon)
+            x, y, x_max, y_max = polygon.bounds
+            w, h = x_max - x, y_max - y
+
+            return [x, y, w, h]
 
     @staticmethod
     def join_polyline_from_polygon(polygon: List[float]) -> List[float]:
