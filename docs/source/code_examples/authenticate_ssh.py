@@ -1,8 +1,11 @@
-from os.path import expanduser
+from pathlib import Path
 
 from encord import Dataset, EncordUserClient, Project
 
-with open(expanduser("~/.ssh/private_key"), "r", encoding="utf-8") as f:
+# adapt the following line to your private key path
+private_key_path = Path.home() / ".ssh" / "id_ed25519"
+
+with private_key_path.open() as f:
     private_key = f.read()
 
 user_client = EncordUserClient.create_with_ssh_private_key(private_key)

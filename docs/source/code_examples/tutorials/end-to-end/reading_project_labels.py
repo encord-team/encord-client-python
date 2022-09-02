@@ -11,6 +11,7 @@ Imports and authentication
 # sphinx_gallery_thumbnail_path = 'images/end-to-end-thumbs/product-data.svg'
 from dataclasses import dataclass
 from functools import partial
+from pathlib import Path
 from typing import Callable, Generator, List, Optional
 
 from encord import EncordUserClient
@@ -22,12 +23,15 @@ from encord.project_ontology.object_type import ObjectShape
 # .. note::
 #
 #   To interact with Encord, you need to authenticate a client. You can find more details
-#   :ref:`here <authentication:Authentication>`.
+#   :ref:`here <authentication:User authentication>`.
 
-# Authenticate
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
-    "<your_private_key>"
-)
+# Authentication: adapt the following line to your private key path
+private_key_path = Path.home() / ".ssh" / "id_ed25519"
+
+with private_key_path.open() as f:
+    private_key = f.read()
+
+user_client = EncordUserClient.create_with_ssh_private_key(private_key)
 
 # Find project to work with based on title.
 project_orm: OrmProject = next(
