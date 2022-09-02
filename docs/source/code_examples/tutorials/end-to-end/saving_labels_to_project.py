@@ -17,7 +17,8 @@ ontology. You can safely skip those details.
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pytz
 
@@ -320,10 +321,20 @@ from encord import EncordUserClient, Project
 from encord.orm.project import Project as OrmProject
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
-# Authenticate
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
-    "<your_private_key>"
-)
+#%%
+# .. note::
+#
+#   To interact with Encord, you need to authenticate a client. You can find more details
+#   :ref:`here <authentication:User authentication>`.
+#
+
+# Authentication: adapt the following line to your private key path
+private_key_path = Path.home() / ".ssh" / "id_ed25519"
+
+with private_key_path.open() as f:
+    private_key = f.read()
+
+user_client = EncordUserClient.create_with_ssh_private_key(private_key)
 
 # Find project to work with based on title.
 project_orm: OrmProject = next(

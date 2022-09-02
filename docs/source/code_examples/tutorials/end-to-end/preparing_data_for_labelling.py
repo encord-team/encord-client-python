@@ -21,12 +21,19 @@ from encord.utilities.project_user import ProjectUserRole
 #%%
 # Authenticating
 # --------------
-# To interact with Encord, you need to authenticate a client. You can find more details
-# :ref:`here <authentication:Authentication>`.
+# .. note::
+#
+#   To interact with Encord, you **need to first authenticate a client**. You can find more details
+#   :ref:`here <authentication:User authentication>`.
+#
 
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
-    "<your_private_key>"
-)
+# Authentication: adapt the following line to your private key path
+private_key_path = Path.home() / ".ssh" / "id_ed25519"
+
+with private_key_path.open() as f:
+    private_key = f.read()
+
+user_client = EncordUserClient.create_with_ssh_private_key(private_key)
 
 #%%
 # 1. Creating and populating the dataset
