@@ -861,7 +861,7 @@ class EncordClientProject(EncordClient):
     ) -> List[LabelLog]:
 
         # Flag for backwards compatibility
-        include_user_email = True
+        include_user_email_and_interface_key = True
 
         function_arguments = locals()
 
