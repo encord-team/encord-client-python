@@ -24,6 +24,9 @@ from encord.utilities.project_user import ProjectUserRole
 # .. note::
 #
 #   To interact with Encord, you **need to first authenticate a client**. You can find more details
+#   :ref:`here <authentication:User authentication>`.
+#
+
 # Authentication: adapt the following line to your private key path
 private_key_path = Path.home() / ".ssh" / "id_ed25519"
 

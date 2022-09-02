@@ -325,6 +325,7 @@ from encord.utilities.label_utilities import construct_answer_dictionaries
 # .. note::
 #
 #   To interact with Encord, you need to authenticate a client. You can find more details
+#   :ref:`here <authentication:User authentication>`.
 #
 
 # Authentication: adapt the following line to your private key path

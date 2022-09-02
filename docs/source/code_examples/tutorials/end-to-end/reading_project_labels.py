@@ -24,6 +24,7 @@ from encord.project_ontology.object_type import ObjectShape
 #
 #   To interact with Encord, you need to authenticate a client. You can find more details
 #   :ref:`here <authentication:User authentication>`.
+#
 
 # Authentication: adapt the following line to your private key path
 private_key_path = Path.home() / ".ssh" / "id_ed25519"
