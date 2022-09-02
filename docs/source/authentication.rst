@@ -47,7 +47,7 @@ User authentication
 Set up authentication keys - user authentication
 --------------------------------------------------------------------
 Public keys are tied to the user so need to be added to your profile.
-To register a public key, please follow the instructions in :xref:`public_keys` of the |platform| documentation.
+To **register a public key**, please follow the instructions in :xref:`public_keys` of the |platform| documentation.
 
 
 Authenticate with |company| - user authentication
