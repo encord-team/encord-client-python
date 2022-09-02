@@ -317,7 +317,7 @@ def find_ontology_classification(
 # --------------------------
 # First, import dependencies and authenticate a project manager.
 
-from encord import Project, EncordUserClient
+from encord import EncordUserClient, Project
 from encord.orm.project import Project as OrmProject
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
