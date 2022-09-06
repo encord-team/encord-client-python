@@ -860,6 +860,9 @@ class EncordClientProject(EncordClient):
         self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
     ) -> List[LabelLog]:
 
+        # Flag for backwards compatibility
+        include_user_email_and_interface_key = True
+
         function_arguments = locals()
 
         query_payload = {k: v for (k, v) in function_arguments.items() if k is not "self" and v is not None}
