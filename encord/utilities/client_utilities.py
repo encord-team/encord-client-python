@@ -129,3 +129,36 @@ def parse_datetime(key, val):
         return val.isoformat()
     else:
         raise ValueError(f"Value for {key} should be a datetime")
+
+
+def extract_node_from_json_tree(tree, key, value):
+    """
+    Recursively fetch a node from a nested JSON tree structure.
+    :param tree: the JSON structure
+    :param key: the relevant for the value being searched for
+    :param value: the value of the key being searched for
+    :return: response bool
+    """
+    key_values = []
+    node = []
+
+    def extract(obj, arr, target_key, target_node):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if isinstance(v, (dict, list)):
+                    extract(v, arr, target_key, target_node)
+
+                elif k == target_key:
+                    if target_key in obj:
+                        if obj.get(target_key) == value:
+                            target_node.append(obj)
+                    arr.append(v)
+
+        elif isinstance(obj, list):
+            for item in obj:
+                extract(item, arr, target_key, target_node)
+
+        return arr
+
+    extract(tree, key_values, key, node)
+    return node
