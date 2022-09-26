@@ -224,3 +224,13 @@ class CloudUploadError(EncordException):
     """
 
     pass
+
+
+class MultiLabelLimitError(EncordException):
+    """
+    Too many labels were requested
+    """
+
+    def __init__(self, message, maximum_labels_allowed: int):
+        super().__init__(message=message)
+        self.maximum_labels_allowed = maximum_labels_allowed

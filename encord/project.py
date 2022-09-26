@@ -208,7 +208,8 @@ class Project:
 
     def get_label_row(self, uid: str, get_signed_url: bool = True):
         """
-        Retrieve label row.
+        Retrieve label row. If you need to retrieved multiple label rows, prefer using
+        :meth:`encord.project.Project.get_label_rows` instead.
 
         Args:
             uid: A label_hash   (uid) string.
@@ -231,7 +232,7 @@ class Project:
         """
         Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
 
-        This operation will fail if any of the label_rows are invalid.
+        This operation will fail if any of the uids are invalid.
 
         Args:
              uids: A list of label_hash (uid).
@@ -240,6 +241,15 @@ class Project:
 
         Returns:
             List[LabelRow]
+
+        Raises:
+            MultiLabelLimitError: If too many labels were requested. Check the error's `maximum_labels_allowed` field
+                to read the most up to date error limit.
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
+            UnknownError: If an error occurs while retrieving the label.
+            OperationNotAllowed: If the read operation is not allowed by the API key.
         """
         return self._client.get_label_rows(uids, get_signed_url)
 

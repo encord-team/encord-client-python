@@ -37,6 +37,7 @@ INVALID_DATE_FORMAT_ERROR = ["INVALID_DATE_FORMAT_ERROR"]
 DUPLICATE_SSH_KEY_ERROR = ["DUPLICATE_SSH_KEY_ERROR"]
 SSH_KEY_NOT_FOUND_ERROR = ["SSH_KEY_NOT_FOUND_ERROR"]
 INVALID_ARGUMENTS_ERROR = ["INVALID_ARGUMENTS_ERROR"]
+MULTI_LABEL_LIMIT_ERROR = ["MULTI_LABEL_LIMIT_ERROR"]
 
 
 def check_error_response(response, payload=None):
@@ -121,6 +122,14 @@ def check_error_response(response, payload=None):
         else:
             message = payload
         raise InvalidArgumentsError(message)
+
+    if response == MULTI_LABEL_LIMIT_ERROR:
+        maximum_labels_allowed = payload["maximum_labels_allowed"]
+        raise MultiLabelLimitError(
+            f"Too many labels were requested. The limit is {maximum_labels_allowed}. Please reduce the amount "
+            "of requested labels to stay under the reported limit.",
+            maximum_labels_allowed=maximum_labels_allowed,
+        )
 
     payload_string = ""
     if payload:

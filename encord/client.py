@@ -511,11 +511,11 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
 
-    def get_label_row(self, uid: str, get_signed_url: bool = True):
+    def get_label_row(self, uid: str, get_signed_url: bool = True) -> LabelRow:
         """
         This function is documented in :meth:`encord.project.Project.get_label_row`.
         """
-        payload = {"get_signed_url": get_signed_url}
+        payload = {"get_signed_url": get_signed_url, "multi_request": False}
 
         return self._querier.basic_getter(LabelRow, uid, payload=payload)
 
@@ -523,7 +523,7 @@ class EncordClientProject(EncordClient):
         """
         This function is documented in :meth:`encord.project.Project.get_label_rows`.
         """
-        payload = {"get_signed_url": get_signed_url}
+        payload = {"get_signed_url": get_signed_url, "multi_request": True}
 
         return self._querier.get_multiple(LabelRow, uids, payload=payload)
 
