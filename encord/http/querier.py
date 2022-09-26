@@ -14,9 +14,7 @@
 # under the License.
 import dataclasses
 import logging
-from random import random
 from typing import List, Type, TypeVar
-from urllib.error import URLError
 
 import requests
 import requests.exceptions
@@ -49,12 +47,7 @@ class Querier:
         request = self.request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
         res = self.execute(request)
         if res:
-            if issubclass(db_object_type, Formatter):
-                return db_object_type.from_dict(res)
-            elif dataclasses.is_dataclass(db_object_type):
-                return db_object_type(**res)
-            else:
-                return db_object_type(res)
+            return self._parse_response(db_object_type, res)
         else:
             raise ResourceNotFoundError("Resource not found.")
 
@@ -63,12 +56,18 @@ class Querier:
         result = self.execute(request)
 
         if result is not None:
-            if issubclass(object_type, Formatter):
-                return [object_type.from_dict(item) for item in result]
-            else:
-                return [object_type(**item) for item in result]
+            return [self._parse_response(object_type, item) for item in result]
         else:
             raise ResourceNotFoundError(f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]")
+
+    @staticmethod
+    def _parse_response(object_type: Type[T], item: dict) -> T:
+        if issubclass(object_type, Formatter):
+            return object_type.from_dict(item)
+        elif dataclasses.is_dataclass(object_type):
+            return object_type(**item)
+        else:
+            return object_type(item)
 
     def basic_delete(self, db_object_type: Type[T], uid=None):
         """Single DB object getter."""

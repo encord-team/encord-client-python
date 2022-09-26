@@ -6,7 +6,12 @@ from encord.constants.model import AutomationModels
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
-from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from encord.orm.label_row import (
+    AnnotationTaskStatus,
+    LabelRow,
+    LabelRowMetadata,
+    LabelStatus,
+)
 from encord.orm.model import ModelConfiguration, TrainingMetadata
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
@@ -207,8 +212,8 @@ class Project:
 
         Args:
             uid: A label_hash   (uid) string.
-            get_signed_url: By default the operation returns a signed URL for the underlying data asset. This can be
-            expensive so it can optionally be turned off
+            get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
+                if the signed urls are not used to speed up the request.
 
         Returns:
             LabelRow: A label row instance.
@@ -221,6 +226,22 @@ class Project:
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
         return self._client.get_label_row(uid, get_signed_url)
+
+    def get_label_rows(self, uids: List[str], get_signed_url: bool = True) -> List[LabelRow]:
+        """
+        Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
+
+        This operation will fail if any of the label_rows are invalid.
+
+        Args:
+             uids: A list of label_hash (uid).
+             get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
+                if the signed urls are not used to speed up the request.
+
+        Returns:
+            List[LabelRow]
+        """
+        return self._client.get_label_rows(uids, get_signed_url)
 
     def save_label_row(self, uid, label):
         """

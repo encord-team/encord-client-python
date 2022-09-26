@@ -519,6 +519,14 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_getter(LabelRow, uid, payload=payload)
 
+    def get_label_rows(self, uids: List[str], get_signed_url: bool = True) -> List[LabelRow]:
+        """
+        This function is documented in :meth:`encord.project.Project.get_label_rows`.
+        """
+        payload = {"get_signed_url": get_signed_url}
+
+        return self._querier.get_multiple(LabelRow, uids, payload=payload)
+
     def save_label_row(self, uid, label):
         """
         This function is documented in :meth:`encord.project.Project.save_label_row`.
