@@ -208,7 +208,7 @@ class Project:
         Args:
             uid: A label_hash   (uid) string.
             get_signed_url: By default the operation returns a signed URL for the underlying data asset. This can be
-            expensive so it can optionally be turned off
+                expensive so it can optionally be turned off
 
         Returns:
             LabelRow: A label row instance.

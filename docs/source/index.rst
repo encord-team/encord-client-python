@@ -63,6 +63,12 @@ SDK Reference
 
    api
 
+Main Encord Docs
+=================
+.. toctree::
+
+   Main Encord Docs <https://docs.encord.com/>
+
 Changelog
 ==========
 
