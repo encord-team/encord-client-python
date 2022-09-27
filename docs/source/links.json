@@ -9,7 +9,7 @@
   },
   "add_your_public_ssh_key": {
     "user_text": "add your public ssh key",
-    "url": "https://docs.encord.com/docs/sdk-and-api/sdk/public-key"
+    "url": "https://docs.encord.com/docs/sdk-and-api/api/getting-started#1-set-up-authentication-keys"
   },
   "project": {
     "user_text": "Project",

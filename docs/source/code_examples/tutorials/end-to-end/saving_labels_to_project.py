@@ -182,11 +182,7 @@ def make_classification_dict_and_answer_dict(
         for answer in answers:
             try:
                 attribute = next(
-                    (
-                        attr
-                        for attr in ontology_class["attributes"]
-                        if answer in attr["options"]
-                    )
+                    (attr for attr in ontology_class["attributes"])
                 )
             except StopIteration:
                 raise ValueError(
@@ -202,14 +198,8 @@ def make_classification_dict_and_answer_dict(
 
     else:  # Text attribute
         try:
-            attribute = next(
-                (
-                    attr
-                    for attr in ontology_class["attributes"]
-                    if attr["type"] == "text"
-                )
-            )
-            answers_list = [answers]
+            attribute = ontology_class
+            answers_list = answers
         except StopIteration:
             raise ValueError(
                 f"Couldn't find ontology with type text for the string answer {answers}"
@@ -289,7 +279,7 @@ def find_ontology_classification(
     for classification in ontology["classifications"]:
         for attribute in classification["attributes"]:
             if attribute["name"].lower() == encord_name.lower():
-                top_level_attribute = attribute
+                top_level_attribute = classification
                 break
         if top_level_attribute:
             break
@@ -300,7 +290,7 @@ def find_ontology_classification(
         )
 
     options = {
-        o[0]: __find_option(top_level_attribute, o[1])
+        o[0]: __find_option(top_level_attribute["attributes"][0], o[1])
         for o in local_to_encord_classifications.get("options", [])
     }
     return {"classification": top_level_attribute, "options": options}
@@ -750,7 +740,7 @@ for local_frame_level_classifications in local_classifications:
     # Uncomment this line if you want to overwrite the classifications on the platform
     # encord_frame_labels["classifications"] = []
 
-    for local_class in local_frame_level_classifications["objects"]:
+    for local_class in local_frame_level_classifications["classification"]:
         local_class_type: str = local_class["type"]
 
         # NEW start
@@ -783,8 +773,25 @@ for local_frame_level_classifications in local_classifications:
             answers,
             classification_hash=classification_hash,
         )
-        # Add to existing classifications in this frame.
-        encord_frame_labels["classifications"].append(encord_class_dict)
+
+        # Check if the same annotation already exist, if it exists, replace it with the local annotation
+        frame_classifications = encord_labels[str(frame)]["classifications"]
+        label_already_exist = False
+        for i in range(len(frame_classifications)):
+            if (
+                frame_classifications[i]["name"]
+                == encord_classification["name"]
+            ):
+                classification_answers.pop(
+                    frame_classifications[i]["classificationHash"]
+                )
+                frame_classifications[i] = encord_class_dict
+                label_already_exist = True
+                break
+        if not label_already_exist:
+            encord_labels[str(frame)]["classifications"].append(
+                encord_class_dict
+            )
 
         if classification_hash is None:  # Save answers once for each track id.
             classification_answers[

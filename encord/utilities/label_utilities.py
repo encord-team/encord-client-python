@@ -45,7 +45,7 @@ def construct_answer_dictionaries(label_row):
                 items = labels.get(OBJECTS) + labels.get(CLASSIFICATIONS)
                 add_answers_to_items(items, classification_answers, object_answers)
 
-            elif data_type == DataType.VIDEO.value:
+            elif data_type in (DataType.VIDEO.value, DataType.DICOM.value):
                 for frame in labels:  # Go through frames
                     items = labels[frame].get(OBJECTS) + labels[frame].get(CLASSIFICATIONS)
                     add_answers_to_items(items, classification_answers, object_answers)

@@ -47,9 +47,9 @@ _ENCORD_API_KEY = "ENCORD_API_KEY"
 _ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
 _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
-READ_TIMEOUT = 180  # In seconds
-WRITE_TIMEOUT = 180  # In seconds
-CONNECT_TIMEOUT = 180  # In seconds
+READ_TIMEOUT = 1800  # In seconds
+WRITE_TIMEOUT = 1800  # In seconds
+CONNECT_TIMEOUT = 1800  # In seconds
 
 logger = logging.getLogger(__name__)
 
