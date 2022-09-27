@@ -19,6 +19,12 @@ Dataset
     :members:
     :undoc-members:
 
+Ontology
+--------
+.. automodule:: encord.ontology
+    :members:
+    :undoc-members:
+
 Client
 ------------
 .. automodule:: encord.client
