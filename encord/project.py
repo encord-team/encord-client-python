@@ -206,7 +206,7 @@ class Project:
         """
         return self._client.copy_project(copy_datasets, copy_collaborators, copy_models)
 
-    def get_label_row(self, uid: str, get_signed_url: bool = True):
+    def get_label_row(self, uid: str, get_signed_url: bool = True) -> LabelRow:
         """
         Retrieve label row. If you need to retrieved multiple label rows, prefer using
         :meth:`encord.project.Project.get_label_rows` instead.
