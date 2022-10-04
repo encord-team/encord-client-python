@@ -6,7 +6,12 @@ from encord.constants.model import AutomationModels
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
-from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from encord.orm.label_row import (
+    AnnotationTaskStatus,
+    LabelRow,
+    LabelRowMetadata,
+    LabelStatus,
+)
 from encord.orm.model import ModelConfiguration, TrainingMetadata
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
@@ -201,14 +206,15 @@ class Project:
         """
         return self._client.copy_project(copy_datasets, copy_collaborators, copy_models)
 
-    def get_label_row(self, uid: str, get_signed_url: bool = True):
+    def get_label_row(self, uid: str, get_signed_url: bool = True) -> LabelRow:
         """
-        Retrieve label row.
+        Retrieve label row. If you need to retrieved multiple label rows, prefer using
+        :meth:`encord.project.Project.get_label_rows` instead.
 
         Args:
             uid: A label_hash   (uid) string.
-            get_signed_url: By default the operation returns a signed URL for the underlying data asset. This can be
-                expensive so it can optionally be turned off
+            get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
+                if the signed urls are not used to speed up the request.
 
         Returns:
             LabelRow: A label row instance.
@@ -221,6 +227,40 @@ class Project:
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
         return self._client.get_label_row(uid, get_signed_url)
+
+    def get_label_rows(self, uids: List[str], get_signed_url: bool = True) -> List[LabelRow]:
+        """
+        Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
+
+        This return is undefined behaviour if any of the uids are invalid (i.e. it may randomly fail or randomly
+        succeed and should not be relied upon).
+
+        .. code::
+
+                project = client_instance.get_project(<project_hash>)
+
+                created_label_uids_list = []
+                for label_row in project.label_rows:
+                    if label_row is not None:  # None values will fail the operation
+                        created_label_uids_list.append(label_row["label_hash"])
+
+                label_rows = project.get_label_rows(created_label_uids_list, get_signed_url=False)
+
+        Args:
+             uids: A list of label_hash (uid).
+             get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
+                if the signed urls are not used to speed up the request.
+
+        Raises:
+            MultiLabelLimitError: If too many labels were requested. Check the error's `maximum_labels_allowed` field
+                to read the most up to date error limit.
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
+            UnknownError: If an error occurs while retrieving the label.
+            OperationNotAllowed: If the read operation is not allowed by the API key.
+        """
+        return self._client.get_label_rows(uids, get_signed_url)
 
     def save_label_row(self, uid, label):
         """

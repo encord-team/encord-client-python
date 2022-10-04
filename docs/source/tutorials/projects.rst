@@ -452,7 +452,7 @@ Use the :class:`encord.project.Project` to fetch individual label objects.
 
     label = project.get_label_row("<label_hash>")
 
-Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels.
+Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels. Note that :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` will return `None` values if labelling has not been initiated. To initiate label rows you need to follow the steps under :ref:`tutorials/projects:Creating a label row`.
 
 .. code-block::
 
@@ -460,8 +460,21 @@ Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_
 
     label_rows = []
     for label_hash in project_orm.get_labels_list():
-        lb = project.get_label_row(label_hash)
-        label_rows.append(lb)
+        if label_hash is not None:  # None values will fail the operation
+            label = project.get_label_row(label_hash)
+            label_rows.append(label)
+
+    # or use the bulk `get_label_rows` for faster fetching:
+
+    labels_list = project_orm.get_labels_list()
+    created_labels_list = []
+    for label in labels_list:
+        if label is not None:  # None values will fail the operation
+            created_labels_list.append(label)
+
+    label_rows = project.get_label_rows(created_labels_list, get_signed_url=False)
+    # ^ we optionally disable getting signed urls if we don't need to fetch the data
+    # in our flow. This will further speed up the query.
 
 The label row object contains data units with signed URLs (``<data_link>``) to the labeled data asset.
 
