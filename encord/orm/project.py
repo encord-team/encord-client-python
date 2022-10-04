@@ -15,7 +15,7 @@
 import datetime
 from collections import OrderedDict
 from enum import Enum, IntEnum
-from typing import Optional
+from typing import List, Optional
 
 from encord.orm import base_orm
 
@@ -77,9 +77,24 @@ class Project(base_orm.BaseORM):
 
     NON_UPDATABLE_FIELDS = {"editor_ontology", "datasets", "label_rows"}
 
-    def get_labels_list(self):
+    def get_labels_list(self) -> List[Optional[str]]:
         """
-        Returns a list of all label row IDs (label_hash uid) in a project.
+        Returns a list of all optional label row IDs (label_hash uid) in a project. If no `label_hash` is found,
+        a `None` value is appended. This can be useful for working with fetching additional label row data via
+        :meth:`encord.project.Project.get_label_rows` for example.
+
+        .. code::
+
+                project = client_instance.get_project(<project_hash>)
+                project_orm = project.get_project()
+
+                labels_list = project_orm.get_labels_list()
+                created_labels_list = []
+                for label in labels_list:
+                    if label is not None:  # None values will fail the operation
+                        created_labels_list.append(label)
+
+                label_rows = project.get_label_rows(created_labels_list, get_signed_url=False)
         """
         labels = self.to_dic().get("label_rows")
         res = []

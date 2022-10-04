@@ -232,7 +232,19 @@ class Project:
         """
         Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
 
-        This operation will fail if any of the uids are invalid.
+        This return is undefined behaviour if any of the uids are invalid (i.e. it may randomly fail or randomly
+        succeed and should not be relied upon).
+
+        .. code::
+
+                project = client_instance.get_project(<project_hash>)
+
+                created_label_uids_list = []
+                for label_row in project.label_rows:
+                    if label_row is not None:  # None values will fail the operation
+                        created_label_uids_list.append(label_row["label_hash"])
+
+                label_rows = project.get_label_rows(created_label_uids_list, get_signed_url=False)
 
         Args:
              uids: A list of label_hash (uid).
