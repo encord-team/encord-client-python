@@ -251,9 +251,6 @@ class Project:
              get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
                 if the signed urls are not used to speed up the request.
 
-        Returns:
-            List[LabelRow]
-
         Raises:
             MultiLabelLimitError: If too many labels were requested. Check the error's `maximum_labels_allowed` field
                 to read the most up to date error limit.
