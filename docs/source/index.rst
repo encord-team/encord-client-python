@@ -39,6 +39,7 @@ Here are some resources to get you started with the |sdk|:
 
 .. toctree::
    :maxdepth: 1
+   :caption: Getting Started
 
    quickstart
    general_concepts
@@ -48,18 +49,40 @@ Here are some resources to get you started with the |sdk|:
 
 Tutorials
 =========
-Please find our documentation on how to perform specific actions below.
+The tutorials are separated into those that relate to *datasets* and those that relate to *projects*.
+
+.. note::
+    Throughout the tutorials, we use :class:`user_client <.EncordUserClient>`, :class:`dataset <encord.dataset.Dataset>` and :class:`project <encord.project.Project>` extensively.
+    We refer to the :ref:`authentication:Authentication` page for examples of how to instantiate those.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
+   :caption: Tutorials
 
-   tutorials
+   tutorials/configurations
+   tutorials/datasets
+   tutorials/projects
+
+
+End-to-End Examples
+===================
+
+In the End-to-End examples, you find complete python files will all the code necessary to achieve an end-to-end task like getting a project ready for labelling.
+
+.. toctree::
+   :maxdepth: 1
+   :caption: End-to-End Examples
+
+   tutorials/end-to-end/preparing_data_for_labelling
+   tutorials/end-to-end/reading_project_labels
+   tutorials/end-to-end/saving_labels_to_project
 
 
 SDK Reference
 =============
 .. toctree::
    :maxdepth: 2
+   :caption: References
 
    api
 
