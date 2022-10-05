@@ -25,6 +25,7 @@ class Shape(StringEnum):
     POINT = "point"
     SKELETON = "skeleton"
     POLYLINE = "polyline"
+    ROTATABLE_BOUNDING_BOX = "rotatable_bounding_box"
 
 
 @dataclass
