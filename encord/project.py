@@ -241,7 +241,7 @@ class Project:
 
                 created_label_uids_list = []
                 for label_row in project.label_rows:
-                    if label_row is not None:  # None values will fail the operation
+                    if label_row["label_hash"] is not None:  # None values will fail the operation
                         created_label_uids_list.append(label_row["label_hash"])
 
                 label_rows = project.get_label_rows(created_label_uids_list, get_signed_url=False)
