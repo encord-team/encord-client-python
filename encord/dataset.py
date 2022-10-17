@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, TextIO, Union
 
-from encord.client import DatasetSettings, EncordClientDataset
+from encord.client import EncordClientDataset
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
@@ -207,10 +207,6 @@ class Dataset:
 
         """
         return self._client.add_private_data_to_dataset(integration_id, private_files, ignore_errors)
-
-    # DENIS: filters?? What happens to the data row?
-    def get_data(self, data_hash: str):
-        pass
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """

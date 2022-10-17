@@ -28,7 +28,7 @@ from encord.http.error_utils import check_error_response
 from encord.http.helpers import retry_on_network_errors
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
-from encord.orm.formatter import AliveFormatter, Formatter
+from encord.orm.formatter import Formatter
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +60,9 @@ class Querier:
         else:
             raise ResourceNotFoundError(f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]")
 
-    def _parse_response(self, object_type: Type[T], item: dict) -> T:
-        if issubclass(object_type, AliveFormatter):
-            return object_type.from_dict(item, self)
-        elif issubclass(object_type, Formatter):
+    @staticmethod
+    def _parse_response(object_type: Type[T], item: dict) -> T:
+        if issubclass(object_type, Formatter):
             return object_type.from_dict(item)
         elif dataclasses.is_dataclass(object_type):
             return object_type(**item)

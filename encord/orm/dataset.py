@@ -24,9 +24,8 @@ from typing import Dict, List, Optional
 from dateutil import parser
 
 from encord.constants.enums import DataType
-from encord.http.querier import Querier
 from encord.orm import base_orm
-from encord.orm.formatter import AliveFormatter, Formatter
+from encord.orm.formatter import Formatter
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -41,7 +40,7 @@ class DataClientMetadata:
     payload: dict
 
 
-class DataRow(dict, AliveFormatter):
+class DataRow(dict, Formatter):
     def __init__(
         self,
         uid: str,
@@ -49,7 +48,6 @@ class DataRow(dict, AliveFormatter):
         data_type: DataType,
         created_at: datetime,
         client_metadata: Optional[dict],
-        querier: Querier,  # DENIS: backwards compatibility guarantees?
     ):
         """
         This class has dict-style accessors for backwards compatibility.
@@ -69,7 +67,6 @@ class DataRow(dict, AliveFormatter):
                 "client_metadata": client_metadata,
             }
         )
-        self._querier = querier
 
     @property
     def uid(self) -> str:
@@ -104,33 +101,13 @@ class DataRow(dict, AliveFormatter):
         """Datetime will trim milliseconds for backwards compatibility."""
         self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
-    # DENIS: call this `client_metadata`
     @property
-    def client_metadata(self) -> dict:
-        # DENIS: note: that way we would have to do many calls sequentially if we want to retrieve stuff.
-        # DENIS: think of having a config on the dataset level to check whether to get the metadata or not. But then
-        #  does individual fetching make sense at all? And how would a "refetch" vs initial fetch look like?
-        #  and switching between these two modes?
-
+    def client_metadata(self) -> Optional[dict]:
+        """Custom client metadata. This is null if it is disabled via the :class:`encord.objects."""
         return self["client_metadata"]
 
-        # resp = self._querier.basic_getter(DataClientMetadata, uid=self.uid)
-        # DENIS: Do I want to add a new request, or should this be part of the old request but just with additional
-        #  flags?
-        # return resp.payload
-
-    # DENIS: think if a "refetch data" is needed here with a different set of settings.
-
-    # @metadata.setter
-    # def metadata(self, value: dict) -> None:
-    #     # DENIS: how would bulk setting look like? Maybe have a context manager which allows for setting on the exit
-    #     #  of the context manager. But at which level would this context manager live? Data row is not enough, maybe
-    #     the
-    #     #  ORM dataset?
-    #     return
-
     @classmethod
-    def from_dict(cls, json_dict: Dict, querier: Querier) -> DataRow:
+    def from_dict(cls, json_dict: Dict) -> DataRow:
         data_type = DataType.from_upper_case_string(json_dict["data_type"])
 
         return DataRow(
@@ -140,19 +117,14 @@ class DataRow(dict, AliveFormatter):
             data_type=data_type,
             created_at=parser.parse(json_dict["created_at"]),
             client_metadata=json_dict["client_metadata"],
-            querier=querier,
         )
 
     @classmethod
-    def from_dict_list(cls, json_list: List, querier: Querier) -> List[DataRow]:
+    def from_dict_list(cls, json_list: List) -> List[DataRow]:
         ret: List[DataRow] = list()
         for json_dict in json_list:
-            ret.append(cls.from_dict(json_dict, querier=querier))
+            ret.append(cls.from_dict(json_dict))
         return ret
-
-
-# DENIS: can I have a method on this item which allows me to inspect stuff further? This would mean it has to be
-# stateful with a querier and a config.
 
 
 @dataclasses.dataclass(frozen=True)
@@ -170,7 +142,7 @@ class DatasetInfo:
     last_edited_at: datetime
 
 
-class Dataset(dict, AliveFormatter):
+class Dataset(dict, Formatter):
     def __init__(
         self,
         title: str,
@@ -237,13 +209,13 @@ class Dataset(dict, AliveFormatter):
         self["data_rows"] = value
 
     @classmethod
-    def from_dict(cls, json_dict: Dict, querier: Querier) -> Dataset:
+    def from_dict(cls, json_dict: Dict) -> Dataset:
         return Dataset(
             title=json_dict["title"],
             description=json_dict["description"],
             storage_location=json_dict["dataset_type"],
             dataset_hash=json_dict["dataset_hash"],
-            data_rows=DataRow.from_dict_list(json_dict.get("data_rows", []), querier),
+            data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])),
         )
 
 
