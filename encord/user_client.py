@@ -11,7 +11,13 @@ import dateutil
 
 # add this for backward compatible class comparisons
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
-from encord.client import EncordClient, EncordClientDataset, EncordClientProject
+from encord.client import (
+    DEFAULT_DATASET_SETTINGS,
+    DatasetSettings,
+    EncordClient,
+    EncordClientDataset,
+    EncordClientProject,
+)
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
@@ -62,7 +68,7 @@ class EncordUserClient:
         self.user_config = user_config
         self.querier = querier
 
-    def get_dataset(self, dataset_hash: str) -> Dataset:
+    def get_dataset(self, dataset_hash: str, dataset_settings: DatasetSettings = DEFAULT_DATASET_SETTINGS) -> Dataset:
         """
         Get the Project class to access project fields and manipulate a project.
 
@@ -77,7 +83,9 @@ class EncordUserClient:
         """
         config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         querier = Querier(config)
-        client = EncordClientDataset(querier=querier, config=config)
+        client = EncordClientDataset(
+            querier=querier, config=config, dataset_settings=dataset_settings
+        )  # DENIS: also add in the SSH methods.
         return Dataset(client)
 
     def get_project(self, project_hash: str) -> Project:

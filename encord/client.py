@@ -34,6 +34,7 @@ and obtaining project info:
 from __future__ import annotations
 
 import base64
+import dataclasses
 import json
 import logging
 import os.path
@@ -149,7 +150,9 @@ class EncordClient(object):
         Returns:
             EncordClient: A Encord client instance.
         """
-        config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
+        config = EncordConfig(
+            resource_id, api_key, domain=domain, requests_settings=requests_settings
+        )  # DENIS: add the dataset settings here too??
         return EncordClient.initialise_with_config(config)
 
     @staticmethod
@@ -206,10 +209,24 @@ class EncordClient(object):
 CordClient = EncordClient
 
 
+@dataclasses.dataclass
+class DatasetSettings:
+    fetch_metadata: bool
+
+
+DEFAULT_DATASET_SETTINGS = DatasetSettings(
+    fetch_metadata=False,
+)
+
+
 class EncordClientDataset(EncordClient):
     """
     DEPRECATED - prefer using the :class:`encord.dataset.Dataset` instead
     """
+
+    def __init__(self, querier: Querier, config: Config, dataset_settings: DatasetSettings = DEFAULT_DATASET_SETTINGS):
+        super().__init__(querier, config)
+        self._dataset_settings = dataset_settings
 
     def get_dataset(self) -> OrmDataset:
         """
@@ -226,7 +243,9 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
-        return self._querier.basic_getter(OrmDataset)
+        return self._querier.basic_getter(
+            OrmDataset, payload={"dataset_settings": dataclasses.asdict(self._dataset_settings)}
+        )
 
     def upload_video(
         self,

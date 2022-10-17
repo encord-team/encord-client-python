@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, TextIO, Union
 
-from encord.client import EncordClientDataset
+from encord.client import DatasetSettings, EncordClientDataset
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow

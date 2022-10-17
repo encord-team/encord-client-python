@@ -48,6 +48,7 @@ class DataRow(dict, AliveFormatter):
         title: str,
         data_type: DataType,
         created_at: datetime,
+        client_metadata: Optional[dict],
         querier: Querier,  # DENIS: backwards compatibility guarantees?
     ):
         """
@@ -65,6 +66,7 @@ class DataRow(dict, AliveFormatter):
                 "data_title": title,
                 "data_type": data_type.to_upper_case_string(),
                 "created_at": created_at.strftime(DATETIME_STRING_FORMAT),
+                "client_metadata": client_metadata,
             }
         )
         self._querier = querier
@@ -102,15 +104,30 @@ class DataRow(dict, AliveFormatter):
         """Datetime will trim milliseconds for backwards compatibility."""
         self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
+    # DENIS: call this `client_metadata`
     @property
-    def metadata(self) -> dict:
+    def client_metadata(self) -> dict:
         # DENIS: note: that way we would have to do many calls sequentially if we want to retrieve stuff.
-        resp = self._querier.basic_getter(DataClientMetadata, uid=self.uid)
-        return resp.payload
+        # DENIS: think of having a config on the dataset level to check whether to get the metadata or not. But then
+        #  does individual fetching make sense at all? And how would a "refetch" vs initial fetch look like?
+        #  and switching between these two modes?
 
-    @metadata.setter
-    def metadata(self, value: dict) -> None:
-        return
+        return self["client_metadata"]
+
+        # resp = self._querier.basic_getter(DataClientMetadata, uid=self.uid)
+        # DENIS: Do I want to add a new request, or should this be part of the old request but just with additional
+        #  flags?
+        # return resp.payload
+
+    # DENIS: think if a "refetch data" is needed here with a different set of settings.
+
+    # @metadata.setter
+    # def metadata(self, value: dict) -> None:
+    #     # DENIS: how would bulk setting look like? Maybe have a context manager which allows for setting on the exit
+    #     #  of the context manager. But at which level would this context manager live? Data row is not enough, maybe
+    #     the
+    #     #  ORM dataset?
+    #     return
 
     @classmethod
     def from_dict(cls, json_dict: Dict, querier: Querier) -> DataRow:
@@ -122,6 +139,7 @@ class DataRow(dict, AliveFormatter):
             # The API server currently returns upper cased DataType strings.
             data_type=data_type,
             created_at=parser.parse(json_dict["created_at"]),
+            client_metadata=json_dict["client_metadata"],
             querier=querier,
         )
 
