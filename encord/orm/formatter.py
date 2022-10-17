@@ -7,3 +7,10 @@ class Formatter(ABC):
     @abstractmethod
     def from_dict(cls, json_dict: Union[Dict, List]):
         pass
+
+
+class AliveFormatter(ABC):
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, json_dict: Union[Dict, List], querier):
+        pass

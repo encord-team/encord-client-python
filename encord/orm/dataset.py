@@ -24,8 +24,9 @@ from typing import Dict, List, Optional
 from dateutil import parser
 
 from encord.constants.enums import DataType
+from encord.http.querier import Querier
 from encord.orm import base_orm
-from encord.orm.formatter import Formatter
+from encord.orm.formatter import AliveFormatter, Formatter
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -35,8 +36,20 @@ class DatasetUserRole(IntEnum):
     USER = 1
 
 
-class DataRow(dict, Formatter):
-    def __init__(self, uid: str, title: str, data_type: DataType, created_at: datetime):
+@dataclasses.dataclass
+class DataClientMetadata:
+    payload: dict
+
+
+class DataRow(dict, AliveFormatter):
+    def __init__(
+        self,
+        uid: str,
+        title: str,
+        data_type: DataType,
+        created_at: datetime,
+        querier: Querier,  # DENIS: backwards compatibility guarantees?
+    ):
         """
         This class has dict-style accessors for backwards compatibility.
         Clients who are using this class for the first time are encouraged to use the property accessors and setters
@@ -54,6 +67,7 @@ class DataRow(dict, Formatter):
                 "created_at": created_at.strftime(DATETIME_STRING_FORMAT),
             }
         )
+        self._querier = querier
 
     @property
     def uid(self) -> str:
@@ -88,8 +102,18 @@ class DataRow(dict, Formatter):
         """Datetime will trim milliseconds for backwards compatibility."""
         self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
+    @property
+    def metadata(self) -> dict:
+        # DENIS: note: that way we would have to do many calls sequentially if we want to retrieve stuff.
+        resp = self._querier.basic_getter(DataClientMetadata, uid=self.uid)
+        return resp.payload
+
+    @metadata.setter
+    def metadata(self, value: dict) -> None:
+        return
+
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> DataRow:
+    def from_dict(cls, json_dict: Dict, querier: Querier) -> DataRow:
         data_type = DataType.from_upper_case_string(json_dict["data_type"])
 
         return DataRow(
@@ -98,14 +122,19 @@ class DataRow(dict, Formatter):
             # The API server currently returns upper cased DataType strings.
             data_type=data_type,
             created_at=parser.parse(json_dict["created_at"]),
+            querier=querier,
         )
 
     @classmethod
-    def from_dict_list(cls, json_list: List) -> List[DataRow]:
+    def from_dict_list(cls, json_list: List, querier: Querier) -> List[DataRow]:
         ret: List[DataRow] = list()
         for json_dict in json_list:
-            ret.append(cls.from_dict(json_dict))
+            ret.append(cls.from_dict(json_dict, querier=querier))
         return ret
+
+
+# DENIS: can I have a method on this item which allows me to inspect stuff further? This would mean it has to be
+# stateful with a querier and a config.
 
 
 @dataclasses.dataclass(frozen=True)
@@ -123,7 +152,7 @@ class DatasetInfo:
     last_edited_at: datetime
 
 
-class Dataset(dict, Formatter):
+class Dataset(dict, AliveFormatter):
     def __init__(
         self,
         title: str,
@@ -190,13 +219,13 @@ class Dataset(dict, Formatter):
         self["data_rows"] = value
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> Dataset:
+    def from_dict(cls, json_dict: Dict, querier: Querier) -> Dataset:
         return Dataset(
             title=json_dict["title"],
             description=json_dict["description"],
             storage_location=json_dict["dataset_type"],
             dataset_hash=json_dict["dataset_hash"],
-            data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])),
+            data_rows=DataRow.from_dict_list(json_dict.get("data_rows", []), querier),
         )
 
 
