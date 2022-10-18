@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-DEFAULT_MAX_RETRIES = 5
+DEFAULT_MAX_RETRIES = 0
 DEFAULT_BACKOFF_FACTOR = 0.1
 
 
