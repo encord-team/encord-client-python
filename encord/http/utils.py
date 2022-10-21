@@ -73,6 +73,7 @@ def upload_to_signed_url_list(
     orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]],
     cloud_upload_settings: CloudUploadSettings,
 ) -> List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL]]:
+    """Upload files and return the upload returns in the same order as the file paths supplied."""
     failed_uploads = []
     successful_uploads = []
     total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
