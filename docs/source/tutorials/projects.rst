@@ -1041,6 +1041,8 @@ Once this is downloaded, you can unzip the file to create a directory which cont
 Importing with the |sdk|
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+As imports can take quite some time, we recommend increasing the :class:`.EncordUserClient` request timeouts as described here :ref:`tutorials/configurations:Network configurations`.
+
 .. code-block::
 
     ssh_key = os.environ.get("SSH_KEY")
