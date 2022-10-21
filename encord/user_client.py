@@ -353,10 +353,12 @@ class EncordUserClient:
         with annotations_file_path.open("rb") as f:
             annotations_base64 = base64.b64encode(f.read()).decode("utf-8")
 
-        images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
+        images_paths, used_base_path = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name)
+        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(
+            images_paths, used_base_path, dataset_name
+        )
         log.info("Image upload completed.")
 
         payload = {
@@ -384,7 +386,7 @@ class EncordUserClient:
         else:
             raise ValueError("The api server responded with an invalid payload.")
 
-    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> List[Path]:
+    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> Tuple[List[Path], Path]:
         payload = {"annotations_base64": annotations_base64}
         project_info = self.querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
         if "error" in project_info:
@@ -397,9 +399,13 @@ class EncordUserClient:
             if default_path not in list(images_directory_path.iterdir()):
                 raise ValueError("The expected directory 'default' was not found.")
 
+            used_base_path = default_path
+            # NOTE: it is possible that here we also need to use the __get_recursive_image_paths
             images = list(default_path.iterdir())
+
         elif export_type == CvatExportType.TASK.value:
-            images = list(images_directory_path.iterdir())
+            used_base_path = images_directory_path
+            images = self.__get_recursive_image_paths(images_directory_path)
         else:
             raise ValueError(
                 f"Received an unexpected response `{project_info}` from the server. Project import aborted."
@@ -407,9 +413,20 @@ class EncordUserClient:
 
         if not images:
             raise ValueError(f"No images found in the provided data folder.")
-        return images
+        return images, used_base_path
 
-    def __upload_cvat_images(self, images_paths: List[Path], dataset_name: str) -> Tuple[str, Dict[str, str]]:
+    @staticmethod
+    def __get_recursive_image_paths(images_directory_path: Path) -> List[Path]:
+        """Recursively get all the images in all the sub folders."""
+        ret = []
+        for file in images_directory_path.glob("**/*"):
+            if file.is_file():
+                ret.append(file)
+        return ret
+
+    def __upload_cvat_images(
+        self, images_paths: List[Path], used_base_path: Path, dataset_name: str
+    ) -> Tuple[str, Dict[str, str]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -430,9 +447,15 @@ class EncordUserClient:
         successful_uploads = upload_to_signed_url_list(
             file_path_strings, self.user_config, querier, Images, CloudUploadSettings()
         )
+        if len(images_paths) != len(successful_uploads):
+            raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
+
         upload_images_to_encord(successful_uploads, querier)
 
-        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), successful_uploads))
+        image_title_to_image_hash_map = {}
+        for image_path, successful_upload in zip(images_paths, successful_uploads):
+            trimmed_image_path_str = str(image_path.relative_to(used_base_path))
+            image_title_to_image_hash_map[trimmed_image_path_str] = successful_upload.data_hash
 
         return dataset_hash, image_title_to_image_hash_map
 
