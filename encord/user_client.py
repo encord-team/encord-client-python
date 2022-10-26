@@ -311,6 +311,8 @@ class EncordUserClient:
         dataset_name: str,
         review_mode: ReviewMode = ReviewMode.LABELLED,
         max_workers: Optional[int] = None,
+        *,
+        transform_bounding_boxes_to_polygons=False,
     ) -> Union[CvatImporterSuccess, CvatImporterError]:
         """
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
@@ -327,6 +329,8 @@ class EncordUserClient:
                     See the `ReviewMode` documentation for more details.
             max_workers:
                 DEPRECATED: This argument will be ignored
+            transform_bounding_boxes_to_polygons:
+                All instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
 
         Returns:
             CvatImporterSuccess: If the project was successfully imported.
@@ -368,6 +372,7 @@ class EncordUserClient:
             "dataset_hash": dataset_hash,
             "image_title_to_image_hash_map": image_title_to_image_hash_map,
             "review_mode": review_mode.value,
+            "transform_bounding_boxes_to_polygons": transform_bounding_boxes_to_polygons,
         }
 
         log.info("Starting project import. This may take a few minutes.")
