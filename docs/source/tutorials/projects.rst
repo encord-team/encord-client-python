@@ -1041,27 +1041,43 @@ Once this is downloaded, you can unzip the file to create a directory which cont
 Importing with the |sdk|
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As imports can take quite some time, we recommend increasing the :class:`.EncordUserClient` request timeouts as described here :ref:`tutorials/configurations:Network configurations`.
+.. note::
+    As imports can take quite some time, we recommend increasing the :class:`.EncordUserClient` request timeouts as described here :ref:`tutorials/configurations:Network configurations`.
 
-.. code-block::
 
-    ssh_key = os.environ.get("SSH_KEY")
-    user_client = EncordUserClient.create_with_ssh_private_key(ssh_key)
 
-    # We have placed the unzipped Pizza Project directory into a
-    # `data` folder relative to this script
-    data_folder = "data/Pizza Project"
-    dataset_name = "Pizza Images Dataset"
-    cvat_importer_ret = user_client.create_project_from_cvat(
-        LocalImport(file_path=data_folder),
-        dataset_name
-    )
+.. tabs::
 
-    # Check if the import was a success and inspect the return value
-    if type(cvat_importer_ret) == CvatImporterSuccess:
-        print(f"project_hash = {cvat_importer_ret.project_hash}")
-        print(f"dataset_hash = {cvat_importer_ret.dataset_hash}")
-        print(f"issues = {cvat_importer_ret.issues}")
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/cvat_importer.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            project_hash = 0a5c5a7e-da96-44c1-a355-a53259c0e73e
+            dataset_hash = bd19ef7c-b698-434f-a7cc-d3c01fc5da3e
+            encord.utilities.client_utilities.Issues(
+                errors=[],
+                warnings=[
+                    encord.utilities.client_utilities.Issue(
+                        issue_type='In Encord a specific label can only have one possible shape. If '
+                            'the same label is used for multiple shapes, multiple labels need '
+                            'to be created.',
+                        instances=[
+                            "The label `not_yet_annotated` was used for multiple shapes "
+                            "`[<CvatShape.POLYGON: 'polygon'>, <CvatShape.TAG: 'tag'>]`. "
+                            "Each shape which is translatable to Encord will lead to a "
+                            "distinct editor entry."
+                        ]
+                    )
+                ],
+                infos=[]
+            )
+            issues = None
+
 
 If the return object is a :class:`.CvatImporterSuccess`, you can open the web app and will find that the project was already added.
 
