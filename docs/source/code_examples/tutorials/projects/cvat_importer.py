@@ -12,6 +12,12 @@ with private_key_path.open() as f:
 
 user_client = EncordUserClient.create_with_ssh_private_key(private_key)
 
+# Increase networking timeouts for this long running operation.
+timeout = 1800
+user_client.user_config.read_timeout = timeout
+user_client.user_config.write_timeout = timeout
+user_client.user_config.connect_timeout = timeout
+
 # We have placed the unzipped Pizza Project directory into a
 # `data` folder relative to this script
 data_folder = "data/Pizza Project"
