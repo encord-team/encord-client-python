@@ -109,7 +109,7 @@ class EncordUserClient:
         self,
         dataset_title: str,
         dataset_type: StorageLocation,
-        dataset_description: Optional[str] = None,
+        dataset_description: str = "",
     ) -> CreateDatasetResponse:
         """
         DEPRECATED - please use `create_dataset` instead.
@@ -120,7 +120,7 @@ class EncordUserClient:
         self,
         dataset_title: str,
         dataset_type: StorageLocation,
-        dataset_description: Optional[str] = None,
+        dataset_description: str = "",
     ) -> CreateDatasetResponse:
         """
         Args:
@@ -138,7 +138,7 @@ class EncordUserClient:
             "type": dataset_type,
         }
 
-        if dataset_description:
+        if dataset_description != "":
             dataset["description"] = dataset_description
 
         result = self.querier.basic_setter(OrmDataset, uid=None, payload=dataset)
