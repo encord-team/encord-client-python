@@ -102,7 +102,7 @@ from encord.orm.project import (
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
-from encord.utilities.client_utilities import parse_datetime
+from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 logger = logging.getLogger(__name__)
@@ -511,19 +511,41 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
 
-    def get_label_row(self, uid: str, get_signed_url: bool = True) -> LabelRow:
+    def get_label_row(
+        self,
+        uid: str,
+        get_signed_url: bool = True,
+        include_object_feature_hashes: Optional[typing.Set[str]] = None,
+        include_classification_feature_hashes: Optional[typing.Set[str]] = None,
+    ) -> LabelRow:
         """
         This function is documented in :meth:`encord.project.Project.get_label_row`.
         """
-        payload = {"get_signed_url": get_signed_url, "multi_request": False}
+        payload = {
+            "get_signed_url": get_signed_url,
+            "multi_request": False,
+            "include_object_feature_hashes": optional_set_to_list(include_object_feature_hashes),
+            "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
+        }
 
         return self._querier.basic_getter(LabelRow, uid, payload=payload)
 
-    def get_label_rows(self, uids: List[str], get_signed_url: bool = True) -> List[LabelRow]:
+    def get_label_rows(
+        self,
+        uids: List[str],
+        get_signed_url: bool = True,
+        include_object_feature_hashes: Optional[typing.Set[str]] = None,
+        include_classification_feature_hashes: Optional[typing.Set[str]] = None,
+    ) -> List[LabelRow]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_rows`.
         """
-        payload = {"get_signed_url": get_signed_url, "multi_request": True}
+        payload = {
+            "get_signed_url": get_signed_url,
+            "multi_request": True,
+            "include_object_feature_hashes": optional_set_to_list(include_object_feature_hashes),
+            "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
+        }
 
         return self._querier.get_multiple(LabelRow, uids, payload=payload)
 

@@ -1,5 +1,5 @@
 import datetime
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels
@@ -206,7 +206,13 @@ class Project:
         """
         return self._client.copy_project(copy_datasets, copy_collaborators, copy_models)
 
-    def get_label_row(self, uid: str, get_signed_url: bool = True) -> LabelRow:
+    def get_label_row(
+        self,
+        uid: str,
+        get_signed_url: bool = True,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
+    ) -> LabelRow:
         """
         Retrieve label row. If you need to retrieved multiple label rows, prefer using
         :meth:`encord.project.Project.get_label_rows` instead.
@@ -226,9 +232,17 @@ class Project:
             UnknownError: If an error occurs while retrieving the label.
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
-        return self._client.get_label_row(uid, get_signed_url)
+        return self._client.get_label_row(
+            uid, get_signed_url, include_object_feature_hashes, include_classification_feature_hashes
+        )
 
-    def get_label_rows(self, uids: List[str], get_signed_url: bool = True) -> List[LabelRow]:
+    def get_label_rows(
+        self,
+        uids: List[str],
+        get_signed_url: bool = True,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
+    ) -> List[LabelRow]:
         """
         Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
 
@@ -250,6 +264,8 @@ class Project:
              uids: A list of label_hash (uid).
              get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
                 if the signed urls are not used to speed up the request.
+            include_object_feature_hashes: If None this argument will be ignored and all labels are returned. If this is used
+                only objects and classifications which correspond to one of the feature_hashes will be returned.
 
         Raises:
             MultiLabelLimitError: If too many labels were requested. Check the error's `maximum_labels_allowed` field
@@ -260,7 +276,9 @@ class Project:
             UnknownError: If an error occurs while retrieving the label.
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
-        return self._client.get_label_rows(uids, get_signed_url)
+        return self._client.get_label_rows(
+            uids, get_signed_url, include_object_feature_hashes, include_classification_feature_hashes
+        )
 
     def save_label_row(self, uid, label):
         """

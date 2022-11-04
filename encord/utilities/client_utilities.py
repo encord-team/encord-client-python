@@ -17,7 +17,7 @@ import datetime
 import pprint
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Union
+from typing import List, Optional, Set, TypeVar, Union
 
 import dateutil
 
@@ -129,3 +129,13 @@ def parse_datetime(key, val):
         return val.isoformat()
     else:
         raise ValueError(f"Value for {key} should be a datetime")
+
+
+T = TypeVar("T")
+
+
+def optional_set_to_list(s: Optional[Set[T]]) -> Optional[List[T]]:
+    if s is None:
+        return s
+    else:
+        return list(s)
