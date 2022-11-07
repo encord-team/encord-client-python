@@ -425,32 +425,23 @@ A data unit can have any number of vector labels (e.g. bounding box, polygon, po
 Getting label rows
 ------------------
 
-A project's ``<label_hash>`` is found in the project information ``project``, which also contain information about the ``data_title``, ``data_type`` and ``label_status``.
-
-.. code-block::
-
-    {
-        ...,
-        "label_rows": [{
-            "label_hash": "<label_hash>",
-            "data_hash": "<data_hash>",
-            "dataset_hash": "<dataset_hash>",
-            "dataset_title": "<sample_dataset_title>",
-            "data_title": "example.mp4",
-            "data_type": "VIDEO",
-            "label_status": "LABELLED",
-            "annotation_task_status": "IN_REVIEW"
-        },
-        # ...
-        ]
-    }
-
-
 Use the :class:`encord.project.Project` to fetch individual label objects.
 
-.. code-block::
+.. tabs::
 
-    label = project.get_label_row("<label_hash>")
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/fetching_label_rows.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. literalinclude:: /code_examples/tutorials/projects/fetching_label_rows_response.py
+            :language: python
+
+.. note::
+
+    For an example of getting labels with a filter consult the :meth:`encord.project.Project.get_label_rows` docstrings.
 
 Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels. Note that :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` will return `None` values if labelling has not been initiated. To initiate label rows you need to follow the steps under :ref:`tutorials/projects:Creating a label row`.
 
@@ -1057,8 +1048,8 @@ Importing with the |sdk|
 
         .. code-block:: python
 
-            project_hash = 0a5c5a7e-da96-44c1-a355-a53259c0e73e
-            dataset_hash = bd19ef7c-b698-434f-a7cc-d3c01fc5da3e
+            project_hash = "0a5c5a7e-da96-44c1-a355-a53259c0e73e"
+            dataset_hash = "bd19ef7c-b698-434f-a7cc-d3c01fc5da3e"
             encord.utilities.client_utilities.Issues(
                 errors=[],
                 warnings=[

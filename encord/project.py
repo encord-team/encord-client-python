@@ -78,7 +78,7 @@ class Project:
 
         .. code::
 
-            from encord.object.ontology_structure import OntologyStructure
+            from encord.objects.ontology_structure import OntologyStructure
 
             project = user_client.get_project("<project_hash>")
 
@@ -97,7 +97,7 @@ class Project:
 
         .. code::
 
-            from encord.object.project import ProjectDataset
+            from encord.objects.project import ProjectDataset
 
             project = user_client.get_project("<project_hash>")
 
@@ -210,6 +210,7 @@ class Project:
         self,
         uid: str,
         get_signed_url: bool = True,
+        *,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
     ) -> LabelRow:
@@ -217,10 +218,18 @@ class Project:
         Retrieve label row. If you need to retrieved multiple label rows, prefer using
         :meth:`encord.project.Project.get_label_rows` instead.
 
+        A code example using the `include_object_feature_hashes` and `include_classification_feature_hashes`
+        filters can be found in :meth:`encord.project.Project.get_label_row`.
+
+
         Args:
             uid: A label_hash   (uid) string.
             get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
                 if the signed urls are not used to speed up the request.
+            include_object_feature_hashes: If None all the objects will be included. Otherwise, only objects labels
+                will be included of which the feature_hash has been added.
+            include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
+                classification labels will be included of which the feature_hash has been added.
 
         Returns:
             LabelRow: A label row instance.
@@ -233,13 +242,17 @@ class Project:
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
         return self._client.get_label_row(
-            uid, get_signed_url, include_object_feature_hashes, include_classification_feature_hashes
+            uid,
+            get_signed_url,
+            include_object_feature_hashes=include_object_feature_hashes,
+            include_classification_feature_hashes=include_classification_feature_hashes,
         )
 
     def get_label_rows(
         self,
         uids: List[str],
         get_signed_url: bool = True,
+        *,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
     ) -> List[LabelRow]:
@@ -251,21 +264,44 @@ class Project:
 
         .. code::
 
-                project = client_instance.get_project(<project_hash>)
+                # Code example of using the object filters.
+                from encord.objects.common import Shape
+                from encord.objects.ontology_structure import OntologyStructure
 
-                created_label_uids_list = []
+                project = ... # assuming you already have instantiated this Project object
+
+                # Get all feature hashes of the objects which are of type `Shape.BOUNDING_BOX`
+                ontology = OntologyStructure.from_dict(project.ontology)
+                only_bounding_box_feature_hashes = set()
+                for object_ in ontology.objects:
+                    if object_.shape == Shape.BOUNDING_BOX:
+                        only_bounding_box_feature_hashes.add(object_.feature_node_hash)
+
+                no_classification_feature_hashes = set()  # deliberately left empty
+
+                # Get all labels of tasks that have already been initiated.
+                # Include only labels of bounding boxes and exclude all
+                # classifications
+                label_hashes = []
                 for label_row in project.label_rows:
-                    if label_row["label_hash"] is not None:  # None values will fail the operation
-                        created_label_uids_list.append(label_row["label_hash"])
+                    # Trying to run `get_label_row` on a label_row without a `label_hash` would fail.
+                    if label_row["label_hash"] is not None:
+                        label_hashes.append(label_row["label_hash"])
 
-                label_rows = project.get_label_rows(created_label_uids_list, get_signed_url=False)
+                all_labels = project.get_label_rows(
+                    label_hashes,
+                    include_object_feature_hashes=only_bounding_box_feature_hashes,
+                    include_classification_feature_hashes=no_classification_feature_hashes,
+                )
 
         Args:
              uids: A list of label_hash (uid).
              get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
                 if the signed urls are not used to speed up the request.
-            include_object_feature_hashes: If None this argument will be ignored and all labels are returned. If this is used
-                only objects and classifications which correspond to one of the feature_hashes will be returned.
+            include_object_feature_hashes: If None all the objects will be included. Otherwise, only objects labels
+                will be included of which the feature_hash has been added.
+            include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
+                classification labels will be included of which the feature_hash has been added.
 
         Raises:
             MultiLabelLimitError: If too many labels were requested. Check the error's `maximum_labels_allowed` field
@@ -277,7 +313,10 @@ class Project:
             OperationNotAllowed: If the read operation is not allowed by the API key.
         """
         return self._client.get_label_rows(
-            uids, get_signed_url, include_object_feature_hashes, include_classification_feature_hashes
+            uids,
+            get_signed_url,
+            include_object_feature_hashes=include_object_feature_hashes,
+            include_classification_feature_hashes=include_classification_feature_hashes,
         )
 
     def save_label_row(self, uid, label):

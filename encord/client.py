@@ -515,6 +515,7 @@ class EncordClientProject(EncordClient):
         self,
         uid: str,
         get_signed_url: bool = True,
+        *,
         include_object_feature_hashes: Optional[typing.Set[str]] = None,
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
     ) -> LabelRow:
@@ -534,6 +535,7 @@ class EncordClientProject(EncordClient):
         self,
         uids: List[str],
         get_signed_url: bool = True,
+        *,
         include_object_feature_hashes: Optional[typing.Set[str]] = None,
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
     ) -> List[LabelRow]:
