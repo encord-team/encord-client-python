@@ -92,7 +92,8 @@ def test_coco_transcoder_no_downloads_e2e():
         include_unannotated_videos=False,
     )
 
-    assert not DeepDiff(coco_annotations, output_no_downloads_no_videos)
+    assert coco_annotations == output_no_downloads_no_videos
+    # assert not DeepDiff(coco_annotations, output_no_downloads_no_videos)
 
 
 # DENIS: TODO: next up with a mode where we include the videos, but they are not downloaded, just need

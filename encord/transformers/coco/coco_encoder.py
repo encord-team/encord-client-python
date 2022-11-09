@@ -39,8 +39,8 @@ DOWNLOAD_FILES_DEFAULT = False
 DOWNLOAD_FILE_PATH_DEFAULT = Path(".")
 INCLUDE_VIDEOS_DEFAULT = True
 INCLUDE_UNANNOTATED_VIDEOS_DEFAULT = False
-ADD_TRACK_ID_DEFAULT = False
-ADD_BOUNDING_BOX_ROTATION_DEFAULT = False
+INCLUDE_TRACK_ID_DEFAULT = False
+INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT = False
 
 
 @dataclass
@@ -107,8 +107,8 @@ class CocoEncoder:
         self._download_file_path = DOWNLOAD_FILE_PATH_DEFAULT
         self._include_videos = INCLUDE_VIDEOS_DEFAULT
         self._include_unannotated_videos = INCLUDE_UNANNOTATED_VIDEOS_DEFAULT
-        self._add_track_id = ADD_TRACK_ID_DEFAULT
-        self._add_bounding_box_rotation = ADD_BOUNDING_BOX_ROTATION_DEFAULT
+        self._include_track_id = INCLUDE_TRACK_ID_DEFAULT
+        self._include_bounding_box_rotation = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT
 
     # DENIS: think about the argument names now with "include videos"
     def encode(
@@ -117,8 +117,8 @@ class CocoEncoder:
         download_file_path: Path = DOWNLOAD_FILE_PATH_DEFAULT,
         include_videos: bool = INCLUDE_VIDEOS_DEFAULT,
         include_unannotated_videos: bool = INCLUDE_UNANNOTATED_VIDEOS_DEFAULT,
-        add_track_id: bool = ADD_TRACK_ID_DEFAULT,
-        add_bounding_box_rotation: bool = ADD_BOUNDING_BOX_ROTATION_DEFAULT,
+        add_track_id: bool = INCLUDE_TRACK_ID_DEFAULT,
+        add_bounding_box_rotation: bool = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT,
     ) -> dict:
         """
         Args:
@@ -140,8 +140,8 @@ class CocoEncoder:
         self._download_file_path = download_file_path
         self._include_videos = include_videos
         self._include_unannotated_videos = include_unannotated_videos
-        self._add_track_id = add_track_id
-        self._add_bounding_box_rotation = add_bounding_box_rotation
+        self._include_track_id = add_track_id
+        self._include_bounding_box_rotation = add_bounding_box_rotation
 
         self._coco_json["info"] = self.get_info()
         self._coco_json["categories"] = self.get_categories()
@@ -433,7 +433,7 @@ class CocoEncoder:
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
         id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
-        if self._add_bounding_box_rotation:
+        if self._include_bounding_box_rotation:
             rotation = object_["rotatableBoundingBox"]["theta"]
         else:
             rotation = None
@@ -565,7 +565,7 @@ class CocoEncoder:
     def get_coco_annotation_default_fields(self, object_: dict) -> Tuple[int, int, Optional[str]]:
         id_ = self.next_annotation_id()
         iscrowd = 0
-        if self._add_track_id:
+        if self._include_track_id:
             track_id = object_["track_id"]
         else:
             track_id = None
