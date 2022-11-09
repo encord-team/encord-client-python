@@ -389,6 +389,8 @@ class CocoEncoder:
                 # maybe I can have an `asdict` if this is a dataclass, else just keep the json and have the return type
                 # be a union?!
                 annotations.append(as_dict_custom(self.get_bounding_box(object_, image_id, size)))
+            if shape == Shape.ROTATABLE_BOUNDING_BOX:
+                annotations.append(as_dict_custom(self.get_rotatable_bounding_box(object_, image_id, size)))
             elif shape == Shape.POLYGON:
                 annotations.append(as_dict_custom(self.get_polygon(object_, image_id, size)))
             elif shape == Shape.POLYLINE:
@@ -413,9 +415,32 @@ class CocoEncoder:
         segmentation = [[x, y, x + w, y, x + w, y + h, x, y + h]]
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
 
-        return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation, track_id=track_id)
+        return CocoAnnotation(area, bbox, category_id, id_, image_id, iscrowd, segmentation, track_id=track_id)
+
+    def get_rotatable_bounding_box(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+        x, y = (
+            object_["rotatableBoundingBox"]["x"] * size.width,
+            object_["rotatableBoundingBox"]["y"] * size.height,
+        )
+        w, h = (
+            object_["rotatableBoundingBox"]["w"] * size.width,
+            object_["rotatableBoundingBox"]["h"] * size.height,
+        )
+        area = w * h
+        segmentation = [[x, y, x + w, y, x + w, y + h, x, y + h]]
+        bbox = [x, y, w, h]
+        category_id = self.get_category_id(object_)
+        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        if self._add_bounding_box_rotation:
+            rotation = object_["rotatableBoundingBox"]["theta"]
+        else:
+            rotation = None
+
+        return CocoAnnotation(
+            area, bbox, category_id, id_, image_id, iscrowd, segmentation, track_id=track_id, rotation=rotation
+        )
 
     def get_polygon(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
         polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
@@ -427,9 +452,9 @@ class CocoEncoder:
 
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
 
-        return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation, track_id=track_id)
+        return CocoAnnotation(area, bbox, category_id, id_, image_id, iscrowd, segmentation, track_id=track_id)
 
     def get_polyline(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
         """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
@@ -439,9 +464,9 @@ class CocoEncoder:
         area = 0
         bbox = self.get_bbox_for_polyline(polygon)
         category_id = self.get_category_id(object_)
-        id, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
 
-        return CocoAnnotation(area, bbox, category_id, id, image_id, iscrowd, segmentation, track_id=track_id)
+        return CocoAnnotation(area, bbox, category_id, id_, image_id, iscrowd, segmentation, track_id=track_id)
 
     def get_bbox_for_polyline(self, polygon: list):
         if len(polygon) == 2:
@@ -493,10 +518,10 @@ class CocoEncoder:
 
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
 
         return CocoAnnotation(
-            area, bbox, category_id, id, image_id, iscrowd, segmentation, keypoints, num_keypoints, track_id=track_id
+            area, bbox, category_id, id_, image_id, iscrowd, segmentation, keypoints, num_keypoints, track_id=track_id
         )
 
     def get_skeleton(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
@@ -521,10 +546,10 @@ class CocoEncoder:
         # DENIS: think if the next two lines should be in `get_coco_annotation_default_fields`
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
 
         return CocoAnnotation(
-            area, bbox, category_id, id, image_id, iscrowd, segmentation, keypoints, num_keypoints, track_id=track_id
+            area, bbox, category_id, id_, image_id, iscrowd, segmentation, keypoints, num_keypoints, track_id=track_id
         )
 
     def get_category_id(self, object_: dict) -> int:
@@ -538,14 +563,14 @@ class CocoEncoder:
             )
 
     def get_coco_annotation_default_fields(self, object_: dict) -> Tuple[int, int, Optional[str]]:
-        id = self.next_annotation_id()
+        id_ = self.next_annotation_id()
         iscrowd = 0
         if self._add_track_id:
             track_id = object_["track_id"]
         else:
             track_id = None
 
-        return id, iscrowd, track_id
+        return id_, iscrowd, track_id
 
     def next_annotation_id(self) -> int:
         next_ = self._current_annotation_id
