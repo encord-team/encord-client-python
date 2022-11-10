@@ -91,14 +91,10 @@ def test_coco_transcoder_no_downloads_e2e():
         include_videos=False,
         include_unannotated_videos=False,
     )
+    # DENIS: TODO: for some reason this is not working with my latest changes no more
 
     assert coco_annotations == output_no_downloads_no_videos
     # assert not DeepDiff(coco_annotations, output_no_downloads_no_videos)
-
-
-# DENIS: TODO: next up with a mode where we include the videos, but they are not downloaded, just need
-#   some made up format for that, possibly even exactly the same format as we have now, and scrap the image names.
-#   that would also unblock Javi to not download files every time possibly.
 
 
 def test_coco_transcoder_no_downloads_with_videos_annotated_only():
