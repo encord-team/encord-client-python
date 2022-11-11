@@ -13,7 +13,7 @@ DEV_DOMAIN = "https://dev.api.cord.tech"
 LOCAL_DOMAIN = "http://127.0.0.1:8000"
 STAGING_DOMAIN = "https://staging.api.encord.com"
 
-USED_DOMAIN = STAGING_DOMAIN
+USED_DOMAIN = LOCAL_DOMAIN
 
 # PROJECT_RESOURCE_ID = "11cb4f95-7483-4867-b0c4-0a0fb23464a6"  # Task with 3 PNG
 # PROJECT_RESOURCE_ID = "37d47b8d-c5d9-46ef-8591-5190a4f932f3"  # Polyline example on local dev
@@ -22,7 +22,8 @@ USED_DOMAIN = STAGING_DOMAIN
 # PROJECT_RESOURCE_ID = "73822617-4183-4202-99e9-3bbfd0f9f0ee"  # Inference and training project on local dev
 # PROJECT_RESOURCE_ID = "ee79c249-8b84-4d4c-8528-d73cab7a1ae3"  # Project with many images dataset on local dev
 # PROJECT_RESOURCE_ID = "3bdd05f0-da72-49ec-99b5-4770ecdcfb55"  # Project for COCO exporting on local dev
-PROJECT_RESOURCE_ID = "988825c5-b566-443e-9c09-95cf6c5f4d0d"  # COCO demo - staging
+# PROJECT_RESOURCE_ID = "988825c5-b566-443e-9c09-95cf6c5f4d0d"  # COCO demo - staging
+PROJECT_RESOURCE_ID = "157fe1d0-558b-417e-acb7-b53dc4b8797c"  # Two Pizzas (from CVAT) - local
 
 
 # DATASET_RESOURCE_ID = "f56be19d-4202-46a2-8f40-5e2eef649ffe"  # CVAT dataset
@@ -54,12 +55,6 @@ def test_get_labels():
 
 
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="This is a manual test")
-def test_get_ontology():
-    project = get_project_ssh()
-    print(Ontology.from_dict(project.ontology))
-
-
-@pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="This is a manual test")
 def test_run_torch_full_integration():
     project = get_project_ssh()
     labels = []
@@ -68,14 +63,12 @@ def test_run_torch_full_integration():
             labels.append(project.get_label_row(label_row["label_hash"]))
 
     ontology = OntologyStructure.from_dict(project.ontology)
-
     coco_format = CocoEncoder(labels, ontology).encode(
         download_files=True,
         download_file_path=Path("data/full_test"),
         include_videos=True,
         include_unannotated_videos=False,
     )
-    print(coco_format)
     with open("data/full_test/coco.json", "w") as f:
         json.dump(coco_format, f)
 

@@ -50,7 +50,8 @@ class CocoAnnotation(SuperClass):
     segmentation: List  # DENIS: this is actually some union
     keypoints: Optional[List[int]] = None
     num_keypoints: Optional[int] = None
-    track_id: Optional[str] = None
+    track_id: Optional[int] = None
+    encord_track_uuid: Optional[str] = None
     rotation: Optional[float] = None
 
 
@@ -73,12 +74,15 @@ def as_dict_custom(data_class):
 
     # The track_id and rotation stuff is a huge hack ... don't use this pattern in the future
     add_track_id = None
+    add_encord_track_uuid = None
     add_rotation = None
     for key, value in res.items():
         if key == "id_":
             add_id_value = value
         if key == "track_id":
             add_track_id = value
+        if key == "encord_track_uuid":
+            add_encord_track_uuid = value
         if key == "rotation":
             add_rotation = value
 
@@ -92,6 +96,10 @@ def as_dict_custom(data_class):
     if add_track_id is not None:
         res["attributes"]["track_id"] = add_track_id
     del res["track_id"]
+
+    if add_encord_track_uuid is not None:
+        res["attributes"]["encord_track_uuid"] = add_encord_track_uuid
+    del res["encord_track_uuid"]
 
     if add_rotation is not None:
         res["attributes"]["rotation"] = add_rotation

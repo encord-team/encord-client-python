@@ -96,6 +96,7 @@ class CocoEncoder:
         self._ontology = ontology
         self._coco_json = dict()
         self._current_annotation_id = 0
+        self._object_hash_to_track_id_map = {}
         self._coco_categories_id_to_ontology_object_map = dict()  # DENIS: do we need this?
         self._feature_hash_to_coco_category_id_map = dict()
         self._data_hash_to_image_id_map = dict()
@@ -110,15 +111,15 @@ class CocoEncoder:
         self._include_track_id = INCLUDE_TRACK_ID_DEFAULT
         self._include_bounding_box_rotation = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT
 
-    # DENIS: think about the argument names now with "include videos"
     def encode(
         self,
+        *,
         download_files: bool = DOWNLOAD_FILES_DEFAULT,
         download_file_path: Path = DOWNLOAD_FILE_PATH_DEFAULT,
         include_videos: bool = INCLUDE_VIDEOS_DEFAULT,
         include_unannotated_videos: bool = INCLUDE_UNANNOTATED_VIDEOS_DEFAULT,
-        add_track_id: bool = INCLUDE_TRACK_ID_DEFAULT,
-        add_bounding_box_rotation: bool = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT,
+        include_track_id: bool = INCLUDE_TRACK_ID_DEFAULT,
+        include_bounding_box_rotation: bool = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT,
     ) -> dict:
         """
         Args:
@@ -133,15 +134,17 @@ class CocoEncoder:
                 were already there) in which case it will default to False. The code will assume that the video is
                 downloaded and expanded correctly in the same way that would happen if the video was downloaded via
                 the `download_files = True` argument.
-            add_track_id: Add the object_hash as `attributes: {track_id: x}`
-            add_bounding_box_rotation: Add the bounding box rotation theta as `attributes: {rotation: x}`
+            include_track_id: Add the object_hash as `attributes: {encord_track_uuid: x}` and a numeric tracking
+                id as `attributes: {track_id: y}` (compatible with CVAT to COCO export)
+            include_bounding_box_rotation: Add the bounding box rotation theta as `attributes: {rotation: x}`
+                (compatible with CVAT to COCO export)
         """
         self._download_files = download_files
         self._download_file_path = download_file_path
         self._include_videos = include_videos
         self._include_unannotated_videos = include_unannotated_videos
-        self._include_track_id = add_track_id
-        self._include_bounding_box_rotation = add_bounding_box_rotation
+        self._include_track_id = include_track_id
+        self._include_bounding_box_rotation = include_bounding_box_rotation
 
         self._coco_json["info"] = self.get_info()
         self._coco_json["categories"] = self.get_categories()
@@ -384,20 +387,20 @@ class CocoEncoder:
                     size = Size(width=image_data["width"], height=image_data["height"])
 
             # DENIS: would be nice if this shape was an enum => with the Json support.
-            if shape == Shape.BOUNDING_BOX:
+            if shape == Shape.BOUNDING_BOX.value:
                 # DENIS: how can I make sure this can be extended properly? At what point do I transform this to a JSON?
                 # maybe I can have an `asdict` if this is a dataclass, else just keep the json and have the return type
                 # be a union?!
                 annotations.append(as_dict_custom(self.get_bounding_box(object_, image_id, size)))
-            if shape == Shape.ROTATABLE_BOUNDING_BOX:
+            if shape == Shape.ROTATABLE_BOUNDING_BOX.value:
                 annotations.append(as_dict_custom(self.get_rotatable_bounding_box(object_, image_id, size)))
-            elif shape == Shape.POLYGON:
+            elif shape == Shape.POLYGON.value:
                 annotations.append(as_dict_custom(self.get_polygon(object_, image_id, size)))
-            elif shape == Shape.POLYLINE:
+            elif shape == Shape.POLYLINE.value:
                 annotations.append(as_dict_custom(self.get_polyline(object_, image_id, size)))
-            elif shape == Shape.POINT:
+            elif shape == Shape.POINT.value:
                 annotations.append(as_dict_custom(self.get_point(object_, image_id, size)))
-            elif shape == Shape.SKELETON:
+            elif shape == Shape.SKELETON.value:
                 annotations.append(as_dict_custom(self.get_skeleton(object_, image_id, size)))
 
         return annotations
@@ -415,9 +418,19 @@ class CocoEncoder:
         segmentation = [[x, y, x + w, y, x + w, y + h, x, y + h]]
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
-        return CocoAnnotation(area, bbox, category_id, id_, image_id, iscrowd, segmentation, track_id=track_id)
+        return CocoAnnotation(
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
+        )
 
     def get_rotatable_bounding_box(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
         x, y = (
@@ -432,14 +445,23 @@ class CocoEncoder:
         segmentation = [[x, y, x + w, y, x + w, y + h, x, y + h]]
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
         if self._include_bounding_box_rotation:
             rotation = object_["rotatableBoundingBox"]["theta"]
         else:
             rotation = None
 
         return CocoAnnotation(
-            area, bbox, category_id, id_, image_id, iscrowd, segmentation, track_id=track_id, rotation=rotation
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
+            rotation=rotation,
         )
 
     def get_polygon(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
@@ -452,9 +474,19 @@ class CocoEncoder:
 
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
-        return CocoAnnotation(area, bbox, category_id, id_, image_id, iscrowd, segmentation, track_id=track_id)
+        return CocoAnnotation(
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
+        )
 
     def get_polyline(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
         """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
@@ -464,9 +496,19 @@ class CocoEncoder:
         area = 0
         bbox = self.get_bbox_for_polyline(polygon)
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
-        return CocoAnnotation(area, bbox, category_id, id_, image_id, iscrowd, segmentation, track_id=track_id)
+        return CocoAnnotation(
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
+        )
 
     def get_bbox_for_polyline(self, polygon: list):
         if len(polygon) == 2:
@@ -518,10 +560,20 @@ class CocoEncoder:
 
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
         return CocoAnnotation(
-            area, bbox, category_id, id_, image_id, iscrowd, segmentation, keypoints, num_keypoints, track_id=track_id
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            keypoints,
+            num_keypoints,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
         )
 
     def get_skeleton(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
@@ -546,10 +598,20 @@ class CocoEncoder:
         # DENIS: think if the next two lines should be in `get_coco_annotation_default_fields`
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
         return CocoAnnotation(
-            area, bbox, category_id, id_, image_id, iscrowd, segmentation, keypoints, num_keypoints, track_id=track_id
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            keypoints,
+            num_keypoints,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
         )
 
     def get_category_id(self, object_: dict) -> int:
@@ -566,16 +628,26 @@ class CocoEncoder:
         id_ = self.next_annotation_id()
         iscrowd = 0
         if self._include_track_id:
-            track_id = object_["track_id"]
+            track_id = self.get_and_set_track_id(object_hash=object_["objectHash"])
+            encord_track_uuid = object_["objectHash"]
         else:
             track_id = None
+            encord_track_uuid = None
 
-        return id_, iscrowd, track_id
+        return id_, iscrowd, track_id, encord_track_uuid
 
     def next_annotation_id(self) -> int:
         next_ = self._current_annotation_id
         self._current_annotation_id += 1
         return next_
+
+    def get_and_set_track_id(self, object_hash: str) -> int:
+        if object_hash in self._object_hash_to_track_id_map:
+            return self._object_hash_to_track_id_map[object_hash]
+        else:
+            next_track_id = len(self._object_hash_to_track_id_map)
+            self._object_hash_to_track_id_map[object_hash] = next_track_id
+            return next_track_id
 
     def download_image(self, url: str, path: Path):
         """Check if directory exists, create the directory if needed, download the file, store it into the path."""

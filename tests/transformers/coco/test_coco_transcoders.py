@@ -22,12 +22,18 @@ from tests.transformers.coco.data.project_1 import (
     image_group_a2198,
     image_group_fded8,
     output_download_all_all_video_frames,
+    output_download_all_all_video_frames_and_track_ids,
     output_download_all_no_videos,
     output_download_all_only_annotated_images,
     output_no_downloads_no_videos,
     output_no_downloads_with_annotated_videos,
     output_no_input_labels,
     project_1_ontology,
+)
+from tests.transformers.coco.data.project_rotatable_bboxes import (
+    labels_rotatable_bboxes,
+    ontology_rotatable_bboxes,
+    output_rotatable_bboxes,
 )
 
 ENABLE_INTEGRATION_TESTS = False
@@ -91,10 +97,8 @@ def test_coco_transcoder_no_downloads_e2e():
         include_videos=False,
         include_unannotated_videos=False,
     )
-    # DENIS: TODO: for some reason this is not working with my latest changes no more
 
-    assert coco_annotations == output_no_downloads_no_videos
-    # assert not DeepDiff(coco_annotations, output_no_downloads_no_videos)
+    assert not DeepDiff(coco_annotations, output_no_downloads_no_videos)
 
 
 def test_coco_transcoder_no_downloads_with_videos_annotated_only():
@@ -122,6 +126,37 @@ def test_coco_transcoder_no_downloads_with_videos_all_videos():
     )
 
     assert not DeepDiff(coco_annotations, output_download_all_all_video_frames)
+
+
+def test_coco_transcoder_no_downloads_with_videos_all_videos_and_track_id():
+    labels = [image_group_a2198, existing_image_group, image_group_fded8, cute_cat_mp4]
+    ontology = project_1_ontology
+
+    coco_annotations = CocoEncoder(labels, ontology).encode(
+        download_files=False,
+        download_file_path=Path("data/torch_test"),
+        include_videos=True,
+        include_unannotated_videos=True,
+        include_track_id=True,
+    )
+
+    assert coco_annotations == output_download_all_all_video_frames_and_track_ids
+
+
+def test_coco_transcoder_rotated_bounding_boxes():
+    labels = [labels_rotatable_bboxes]
+    ontology = ontology_rotatable_bboxes
+
+    coco_annotations = CocoEncoder(labels, ontology).encode(
+        download_files=False,
+        download_file_path=Path("data/torch_test"),
+        include_videos=True,
+        include_unannotated_videos=True,
+        include_track_id=True,
+        include_bounding_box_rotation=True,
+    )
+
+    assert coco_annotations == output_rotatable_bboxes
 
 
 def test_coco_transcoder_no_labels():
