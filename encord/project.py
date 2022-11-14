@@ -11,6 +11,7 @@ from encord.orm.label_row import (
     LabelRow,
     LabelRowMetadata,
     LabelStatus,
+    ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, TrainingMetadata
 from encord.orm.project import Project as OrmProject
@@ -144,8 +145,9 @@ class Project:
         edited_before: Optional[Union[str, datetime.datetime]] = None,
         edited_after: Optional[Union[str, datetime.datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        shadow_data_state: Optional[ShadowDataState] = None,
     ) -> List[LabelRowMetadata]:
-        return self._client.list_label_rows(edited_before, edited_after, label_statuses)
+        return self._client.list_label_rows(edited_before, edited_after, label_statuses, shadow_data_state)
 
     def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
         """

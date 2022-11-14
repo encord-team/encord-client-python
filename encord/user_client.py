@@ -260,12 +260,18 @@ class EncordUserClient:
         return [{"project": OrmProject(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
     def create_project(
-        self, project_title: str, dataset_hashes: List[str], project_description: str = "", ontology_hash: str = ""
+        self,
+        project_title: str,
+        dataset_hashes: List[str],
+        project_description: str = "",
+        ontology_hash: str = "",
+        source_projects: List = list(),
     ) -> str:
         project = {
             "title": project_title,
             "description": project_description,
             "dataset_hashes": dataset_hashes,
+            "source_projects": source_projects,
         }
         if ontology_hash and len(ontology_hash):
             project["ontology_hash"] = ontology_hash

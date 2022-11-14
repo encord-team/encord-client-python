@@ -200,6 +200,12 @@ class AnnotationTaskStatus(Enum):
     COMPLETED = "COMPLETED"
 
 
+class ShadowDataState(Enum):
+    ALL_DATA = "ALL_DATA"
+    SHADOW_DATA = "SHADOW_DATA"
+    NOT_SHADOW_DATA = "NOT_SHADOW_DATA"
+
+
 class LabelStatus(Enum):
     NOT_LABELLED = "NOT_LABELLED"
     LABEL_IN_PROGRESS = "LABEL_IN_PROGRESS"
@@ -222,6 +228,7 @@ class LabelRowMetadata(Formatter):
     data_type: str
     label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
+    is_shadow_data: bool
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -233,6 +240,7 @@ class LabelRowMetadata(Formatter):
             json_dict["data_type"],
             LabelStatus(json_dict["label_status"]),
             AnnotationTaskStatus(json_dict["annotation_task_status"]),
+            json_dict.get("is_shadow_data", False),
         )
 
     @classmethod

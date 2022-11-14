@@ -77,6 +77,7 @@ from encord.orm.label_row import (
     LabelRowMetadata,
     LabelStatus,
     Review,
+    ShadowDataState,
 )
 from encord.orm.labeling_algorithm import (
     BoundingBoxFittingParams,
@@ -463,6 +464,7 @@ class EncordClientProject(EncordClient):
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        shadow_data_state: Optional[ShadowDataState] = None,
     ) -> List[LabelRowMetadata]:
         if label_statuses:
             label_statuses = [label_status.value for label_status in label_statuses]
@@ -473,6 +475,7 @@ class EncordClientProject(EncordClient):
             "edited_before": edited_before,
             "edited_after": edited_after,
             "label_statuses": label_statuses,
+            "shadow_data_state": shadow_data_state.value if shadow_data_state else None,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload)
 

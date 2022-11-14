@@ -72,6 +72,7 @@ class Project(base_orm.BaseORM):
             ("datasets", (list, str)),
             ("label_rows", (list, str)),
             ("ontology_hash", str),
+            ("source_projects", list),
         ]
     )
 
@@ -129,6 +130,10 @@ class Project(base_orm.BaseORM):
     @property
     def ontology_hash(self):
         return self["ontology_hash"]
+
+    @property
+    def source_projects(self):
+        return self["source_projects"]
 
 
 class ProjectCopy:
