@@ -103,7 +103,10 @@ class DataRow(dict, Formatter):
 
     @property
     def client_metadata(self) -> Optional[dict]:
-        """Custom client metadata. This is null if it is disabled via the :class:`encord.objects."""
+        """
+        Custom client metadata. This is null if it is disabled via the
+        :class:`encord.orm.constants.DatasetSettings`
+        """
         return self["client_metadata"]
 
     @classmethod

@@ -302,6 +302,9 @@ class EncordClientDataset(EncordClient):
             OrmDataset, payload={"dataset_settings": dataclasses.asdict(self._dataset_settings)}
         )
 
+    def set_settings(self, dataset_settings=DatasetSettings) -> None:
+        self._dataset_settings = dataset_settings
+
     def upload_video(
         self,
         file_path: str,

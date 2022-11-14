@@ -4,6 +4,7 @@ from typing import Dict, Iterable, List, Optional, TextIO, Union
 from encord.client import EncordClientDataset
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.constants import DatasetSettings
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import Image, ImageGroupOCR, StorageLocation
@@ -43,6 +44,18 @@ class Dataset:
 
     @property
     def data_rows(self) -> List[DataRow]:
+        """
+        Part of the response of this function can be configured by the :meth:`encord.dataset.Dataset.set_settings`
+        method.
+
+        Please note that you need to refetch the data every time you change the settings. For example:
+
+        .. code::
+
+            dataset.set_settings(DatasetSettings(fetch_client_metadata=True))
+            dataset.refetch_data()
+            print(dataset.data_rows)
+        """
         dataset_instance = self._get_dataset_instance()
         return dataset_instance.data_rows
 
@@ -58,6 +71,9 @@ class Dataset:
         This function is exposed for convenience. You are encouraged to use the property accessors instead.
         """
         return self._client.get_dataset()
+
+    def set_settings(self, dataset_settings: DatasetSettings) -> None:
+        self._client.set_settings(dataset_settings)
 
     def upload_video(
         self,
