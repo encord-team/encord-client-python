@@ -432,14 +432,14 @@ class Image(base_orm.BaseORM):
 
     DB_FIELDS = OrderedDict(
         [
-            ("data_hash", str),
+            ("image_hash", str),
             ("title", str),
             ("file_link", str),
         ]
     )
 
     NON_UPDATABLE_FIELDS = {
-        "data_hash",
+        "image_hash",
     }
 
 
