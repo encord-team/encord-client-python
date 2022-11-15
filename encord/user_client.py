@@ -25,10 +25,10 @@ from encord.http.utils import (
 from encord.objects.ontology_structure import OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.constants import DEFAULT_DATASET_SETTINGS, DatasetSettings
-from encord.orm.dataset import CreateDatasetResponse
+from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, CreateDatasetResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
+    DatasetAccessSettings,
     DatasetAPIKey,
     DatasetInfo,
     DatasetScope,
@@ -63,7 +63,9 @@ class EncordUserClient:
         self.user_config = user_config
         self.querier = querier
 
-    def get_dataset(self, dataset_hash: str, dataset_settings: DatasetSettings = DEFAULT_DATASET_SETTINGS) -> Dataset:
+    def get_dataset(
+        self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
+    ) -> Dataset:
         """
         Get the Project class to access project fields and manipulate a project.
 
@@ -75,11 +77,11 @@ class EncordUserClient:
 
         Args:
             dataset_hash: The Dataset ID
-            dataset_settings: Set the dataset_settings if you would like to change the defaults.
+            dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
         """
         config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         querier = Querier(config)
-        client = EncordClientDataset(querier=querier, config=config, dataset_settings=dataset_settings)
+        client = EncordClientDataset(querier=querier, config=config, dataset_access_settings=dataset_access_settings)
         return Dataset(client)
 
     def get_project(self, project_hash: str) -> Project:
@@ -290,7 +292,10 @@ class EncordUserClient:
         return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
 
     def get_dataset_client(
-        self, dataset_hash: str, dataset_settings: DatasetSettings = DEFAULT_DATASET_SETTINGS, **kwargs
+        self,
+        dataset_hash: str,
+        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
+        **kwargs,
     ) -> EncordClientDataset:
         """
         DEPRECATED - prefer using :meth:`get_dataset()` instead.
@@ -300,7 +305,7 @@ class EncordUserClient:
             dataset_hash,
             dataset_api_key.api_key,
             requests_settings=self.user_config.requests_settings,
-            dataset_settings=dataset_settings,
+            dataset_access_settings=dataset_access_settings,
         )
 
     def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:

@@ -105,7 +105,7 @@ class DataRow(dict, Formatter):
     def client_metadata(self) -> Optional[dict]:
         """
         Custom client metadata. This is null if it is disabled via the
-        :class:`encord.orm.constants.DatasetSettings`
+        :class:`encord.orm.dataset.DatasetAccessSettings`
         """
         return self["client_metadata"]
 
@@ -515,3 +515,16 @@ class ReEncodeVideoTask(Formatter):
             return ReEncodeVideoTask(json_dict["status"], results)
         else:
             return ReEncodeVideoTask(json_dict["status"])
+
+
+@dataclasses.dataclass
+class DatasetAccessSettings:
+    """Settings for using the dataset object."""
+
+    fetch_client_metadata: bool
+    """Whether client metadata should be retrieved for each `data_row`."""
+
+
+DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
+    fetch_client_metadata=False,
+)

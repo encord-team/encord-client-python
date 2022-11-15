@@ -58,10 +58,10 @@ from encord.http.utils import (
 )
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.constants import DEFAULT_DATASET_SETTINGS, DatasetSettings
-from encord.orm.dataset import AddPrivateDataResponse
+from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, AddPrivateDataResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
+    DatasetAccessSettings,
     DatasetData,
     DicomSeries,
     Image,
@@ -213,9 +213,14 @@ class EncordClientDataset(EncordClient):
     DEPRECATED - prefer using the :class:`encord.dataset.Dataset` instead
     """
 
-    def __init__(self, querier: Querier, config: Config, dataset_settings: DatasetSettings = DEFAULT_DATASET_SETTINGS):
+    def __init__(
+        self,
+        querier: Querier,
+        config: Config,
+        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
+    ):
         super().__init__(querier, config)
-        self._dataset_settings = dataset_settings
+        self._dataset_access_settings = dataset_access_settings
 
     @staticmethod
     def initialise(
@@ -223,7 +228,7 @@ class EncordClientDataset(EncordClient):
         api_key: Optional[str] = None,
         domain: str = ENCORD_DOMAIN,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-        dataset_settings: DatasetSettings = DEFAULT_DATASET_SETTINGS,
+        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
     ) -> EncordClientDataset:
         """
         Create and initialize a Encord client from a resource EntityId and API key.
@@ -245,24 +250,24 @@ class EncordClientDataset(EncordClient):
             domain: The encord api-server domain.
                 If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
             requests_settings: The RequestsSettings from this config
-            dataset_settings: Set the dataset_settings if you would like to change the defaults.
+            dataset_access_settings: Change the default :class:`encord.orm.dataset.DatasetAccessSettings`.
 
         Returns:
             EncordClientDataset: A Encord client dataset instance.
         """
         config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
-        return EncordClientDataset.initialise_with_config(config, dataset_settings=dataset_settings)
+        return EncordClientDataset.initialise_with_config(config, dataset_access_settings=dataset_access_settings)
 
     @staticmethod
     def initialise_with_config(
-        config: ApiKeyConfig, dataset_settings: DatasetSettings = DEFAULT_DATASET_SETTINGS
+        config: ApiKeyConfig, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
     ) -> Union[EncordClientProject, EncordClientDataset]:
         """
         Create and initialize a Encord client from a Encord config instance.
 
         Args:
             config: A Encord config instance.
-            dataset_settings: Set the dataset_settings if you would like to change the defaults.
+            dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
 
         Returns:
             EncordClientDataset: An Encord client dataset instance.
@@ -276,7 +281,7 @@ class EncordClientDataset(EncordClient):
 
         elif resource_type == TYPE_DATASET:
             logger.info("Initialising Encord client for dataset using key: %s", key_type.get("title", ""))
-            return EncordClientDataset(querier, config, dataset_settings=dataset_settings)
+            return EncordClientDataset(querier, config, dataset_access_settings=dataset_access_settings)
 
         else:
             raise encord.exceptions.InitialisationError(
@@ -299,11 +304,11 @@ class EncordClientDataset(EncordClient):
             UnknownError: If an error occurs while retrieving the dataset.
         """
         return self._querier.basic_getter(
-            OrmDataset, payload={"dataset_settings": dataclasses.asdict(self._dataset_settings)}
+            OrmDataset, payload={"dataset_access_settings": dataclasses.asdict(self._dataset_access_settings)}
         )
 
-    def set_settings(self, dataset_settings=DatasetSettings) -> None:
-        self._dataset_settings = dataset_settings
+    def set_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
+        self._dataset_access_settings = dataset_access_settings
 
     def upload_video(
         self,

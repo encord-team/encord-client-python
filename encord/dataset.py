@@ -4,10 +4,14 @@ from typing import Dict, Iterable, List, Optional, TextIO, Union
 from encord.client import EncordClientDataset
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.constants import DatasetSettings
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset import Image, ImageGroupOCR, StorageLocation
+from encord.orm.dataset import (
+    DatasetAccessSettings,
+    Image,
+    ImageGroupOCR,
+    StorageLocation,
+)
 
 
 class Dataset:
@@ -52,7 +56,7 @@ class Dataset:
 
         .. code::
 
-            dataset.set_settings(DatasetSettings(fetch_client_metadata=True))
+            dataset.set_settings(DatasetAccessSettings(fetch_client_metadata=True))
             dataset.refetch_data()
             print(dataset.data_rows)
         """
@@ -72,8 +76,8 @@ class Dataset:
         """
         return self._client.get_dataset()
 
-    def set_settings(self, dataset_settings: DatasetSettings) -> None:
-        self._client.set_settings(dataset_settings)
+    def set_settings(self, dataset_access_settings: DatasetAccessSettings) -> None:
+        self._client.set_settings(dataset_access_settings)
 
     def upload_video(
         self,
