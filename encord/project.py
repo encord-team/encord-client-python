@@ -295,12 +295,16 @@ class Project:
                 )
 
         Args:
-             uids: A list of label_hash (uid).
-             get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
+             uids:
+                A list of label_hash (uid).
+             get_signed_url:
+                Whether to generate signed urls to the data asset. Generating these should be disabled
                 if the signed urls are not used to speed up the request.
-            include_object_feature_hashes: If None all the objects will be included. Otherwise, only objects labels
+            include_object_feature_hashes:
+                If None all the objects will be included. Otherwise, only objects labels
                 will be included of which the feature_hash has been added.
-            include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
+            include_classification_feature_hashes:
+                If None all the classifications will be included. Otherwise, only
                 classification labels will be included of which the feature_hash has been added.
 
         Raises:
