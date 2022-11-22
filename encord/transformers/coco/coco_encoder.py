@@ -5,7 +5,6 @@ ideas
 * a class where the individual parts can be overwritten
 * a class where the individual transformers can be re-assigned
 *
-DENIS: how are we going to document this in Sphinx if this class is independent?
 
 DENIS:
 * parallel downloads with a specific flag
@@ -41,7 +40,9 @@ INCLUDE_VIDEOS_DEFAULT = True
 INCLUDE_UNANNOTATED_VIDEOS_DEFAULT = False
 INCLUDE_TRACK_ID_DEFAULT = False
 INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT = False
+INCLUDE_FLAT_CLASSIFICATIONS = False
 
+RESERVED_CLASSIFICATION_FIELDS = {"encord_track_uuid", "track_id", "rotation"}
 
 @dataclass
 class Size:
@@ -110,6 +111,7 @@ class CocoEncoder:
         self._include_unannotated_videos = INCLUDE_UNANNOTATED_VIDEOS_DEFAULT
         self._include_track_id = INCLUDE_TRACK_ID_DEFAULT
         self._include_bounding_box_rotation = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT
+        self._include_flat_classifications = INCLUDE_FLAT_CLASSIFICATIONS
 
     def encode(
         self,
@@ -120,6 +122,7 @@ class CocoEncoder:
         include_unannotated_videos: bool = INCLUDE_UNANNOTATED_VIDEOS_DEFAULT,
         include_track_id: bool = INCLUDE_TRACK_ID_DEFAULT,
         include_bounding_box_rotation: bool = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT,
+        include_flat_classifications: bool = INCLUDE_FLAT_CLASSIFICATIONS,
     ) -> dict:
         """
         Args:
@@ -138,6 +141,12 @@ class CocoEncoder:
                 id as `attributes: {track_id: y}` (compatible with CVAT to COCO export)
             include_bounding_box_rotation: Add the bounding box rotation theta as `attributes: {rotation: x}`
                 (compatible with CVAT to COCO export)
+            include_flat_classifications: This will include dynamic and non-dynamic classifications as part of
+                every label. The responses will be pasted from the range into every single label, duplicating the
+                payload in cases where the range would usually cover more than one label. these will be added
+                into the `attributes` field. The postfix `_classification` will be added if there is a name
+                clash with one of the RESERVED_CLASSIFICATION_FIELDS. The classifications will only include one level
+                of nesting. Further nesting will not be considered.
         """
         self._download_files = download_files
         self._download_file_path = download_file_path
@@ -145,6 +154,7 @@ class CocoEncoder:
         self._include_unannotated_videos = include_unannotated_videos
         self._include_track_id = include_track_id
         self._include_bounding_box_rotation = include_bounding_box_rotation
+        self._include_flat_classifications = include_flat_classifications
 
         self._coco_json["info"] = self.get_info()
         self._coco_json["categories"] = self.get_categories()
@@ -350,6 +360,9 @@ class CocoEncoder:
 
         # DENIS: need to make sure at least one image
         for labels in self._labels_list:
+            object_answers = labels["object_answers"]
+            object_actions = labels["object_actions"]
+
             for data_unit in labels["data_units"].values():
                 data_hash = data_unit["data_hash"]
 
@@ -359,24 +372,24 @@ class CocoEncoder:
                     for frame_num, frame_item in data_unit["labels"].items():
                         image_id = self.get_image_id(data_hash, int(frame_num))
                         objects = frame_item["objects"]
-                        annotations.extend(self.get_annotation(objects, image_id))
+                        annotations.extend(self.get_annotation(objects, image_id, object_answers, object_actions))
 
                 elif "application/dicom" in data_unit["data_type"]:
                     # copy pasta:
                     for frame_num, frame_item in data_unit["labels"].items():
                         image_id = self.get_image_id(data_hash, int(frame_num))
                         objects = frame_item["objects"]
-                        annotations.extend(self.get_annotation(objects, image_id))
+                        annotations.extend(self.get_annotation(objects, image_id, object_answers, object_actions))
 
                 else:
                     image_id = self.get_image_id(data_hash)
                     objects = data_unit["labels"]["objects"]
-                    annotations.extend(self.get_annotation(objects, image_id))
+                    annotations.extend(self.get_annotation(objects, image_id, object_answers, object_actions))
 
         return annotations
 
     # DENIS: naming with plural/singular
-    def get_annotation(self, objects: List[dict], image_id: int) -> List[dict]:
+    def get_annotation(self, objects: List[dict], image_id: int, object_answers: dict, object_actions: dict) -> List[dict]:
         annotations = []
         for object_ in objects:
             shape = object_["shape"]
@@ -393,7 +406,7 @@ class CocoEncoder:
                 # be a union?!
                 annotations.append(as_dict_custom(self.get_bounding_box(object_, image_id, size)))
             if shape == Shape.ROTATABLE_BOUNDING_BOX.value:
-                annotations.append(as_dict_custom(self.get_rotatable_bounding_box(object_, image_id, size)))
+                annotations.append(as_dict_custom(self.get_rotatable_bounding_box(object_, image_id, size, object_answers, object_actions)))
             elif shape == Shape.POLYGON.value:
                 annotations.append(as_dict_custom(self.get_polygon(object_, image_id, size)))
             elif shape == Shape.POLYLINE.value:
@@ -432,7 +445,7 @@ class CocoEncoder:
             encord_track_uuid=encord_track_uuid,
         )
 
-    def get_rotatable_bounding_box(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+    def get_rotatable_bounding_box(self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict) -> Union[CocoAnnotation, SuperClass]:
         x, y = (
             object_["rotatableBoundingBox"]["x"] * size.width,
             object_["rotatableBoundingBox"]["y"] * size.height,
@@ -451,6 +464,11 @@ class CocoEncoder:
         else:
             rotation = None
 
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(object_)
+        else:
+            classifications = None
+
         return CocoAnnotation(
             area,
             bbox,
@@ -462,7 +480,15 @@ class CocoEncoder:
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
             rotation=rotation,
+            classifications=classifications,
         )
+
+    def get_flat_classifications(self, object_: dict) -> dict:
+        res = {}
+        object_hash = object_["object_hash"]
+
+
+        return res
 
     def get_polygon(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
         polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)

@@ -16,6 +16,7 @@ from encord.transformers.coco.coco_encoder import (
     download_file,
     extract_frames,
 )
+from tests.transformers.coco.data import project_dynamic_attributes
 from tests.transformers.coco.data.project_1 import (
     cute_cat_mp4,
     existing_image_group,
@@ -146,7 +147,6 @@ def test_coco_transcoder_no_downloads_with_videos_all_videos_and_track_id():
 def test_coco_transcoder_rotated_bounding_boxes():
     labels = [labels_rotatable_bboxes]
     ontology = ontology_rotatable_bboxes
-
     coco_annotations = CocoEncoder(labels, ontology).encode(
         download_files=False,
         download_file_path=Path("data/torch_test"),
@@ -157,6 +157,23 @@ def test_coco_transcoder_rotated_bounding_boxes():
     )
 
     assert coco_annotations == output_rotatable_bboxes
+
+
+def test_coco_transcoder_flat_classifications():
+    labels = [project_dynamic_attributes.labels]
+    ontology = project_dynamic_attributes.ontology
+
+    coco_annotations = CocoEncoder(labels, ontology).encode(
+        download_files=False,
+        download_file_path=Path("data/torch_test"),
+        include_videos=True,
+        include_unannotated_videos=True,
+        include_track_id=True,
+        include_bounding_box_rotation=True,
+        include_flat_classifications=True,
+    )
+
+    assert coco_annotations == project_dynamic_attributes.expected_coco_json
 
 
 def test_coco_transcoder_no_labels():

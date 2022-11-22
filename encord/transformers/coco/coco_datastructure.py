@@ -53,7 +53,7 @@ class CocoAnnotation(SuperClass):
     track_id: Optional[int] = None
     encord_track_uuid: Optional[str] = None
     rotation: Optional[float] = None
-
+    classifications: Optional[dict] = None
 
 @dataclass
 class Coco:
@@ -76,6 +76,7 @@ def as_dict_custom(data_class):
     add_track_id = None
     add_encord_track_uuid = None
     add_rotation = None
+    add_classifications = None
     for key, value in res.items():
         if key == "id_":
             add_id_value = value
@@ -85,12 +86,14 @@ def as_dict_custom(data_class):
             add_encord_track_uuid = value
         if key == "rotation":
             add_rotation = value
+        if key == "classifications":
+            add_classifications = value
 
     if add_id_value is not None:
         res["id"] = add_id_value
     del res["id_"]
 
-    if add_track_id is not None or add_rotation is not None:
+    if add_track_id is not None or add_rotation is not None or add_classifications is not None:
         res["attributes"] = {}
 
     if add_track_id is not None:
@@ -104,5 +107,9 @@ def as_dict_custom(data_class):
     if add_rotation is not None:
         res["attributes"]["rotation"] = add_rotation
     del res["rotation"]
+
+    if add_classifications is not None:
+        res["attributes"].update(add_classifications)
+    del res["classifications"]
 
     return res
