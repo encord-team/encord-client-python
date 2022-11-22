@@ -44,6 +44,7 @@ INCLUDE_FLAT_CLASSIFICATIONS = False
 
 RESERVED_CLASSIFICATION_FIELDS = {"encord_track_uuid", "track_id", "rotation"}
 
+
 @dataclass
 class Size:
     width: int
@@ -391,7 +392,9 @@ class CocoEncoder:
         return annotations
 
     # DENIS: naming with plural/singular
-    def get_annotation(self, objects: List[dict], image_id: int, object_answers: dict, object_actions: dict) -> List[dict]:
+    def get_annotation(
+        self, objects: List[dict], image_id: int, object_answers: dict, object_actions: dict
+    ) -> List[dict]:
         annotations = []
         for object_ in objects:
             shape = object_["shape"]
@@ -408,7 +411,11 @@ class CocoEncoder:
                 # be a union?!
                 annotations.append(as_dict_custom(self.get_bounding_box(object_, image_id, size)))
             if shape == Shape.ROTATABLE_BOUNDING_BOX.value:
-                annotations.append(as_dict_custom(self.get_rotatable_bounding_box(object_, image_id, size, object_answers, object_actions)))
+                annotations.append(
+                    as_dict_custom(
+                        self.get_rotatable_bounding_box(object_, image_id, size, object_answers, object_actions)
+                    )
+                )
             elif shape == Shape.POLYGON.value:
                 annotations.append(as_dict_custom(self.get_polygon(object_, image_id, size)))
             elif shape == Shape.POLYLINE.value:
@@ -447,7 +454,9 @@ class CocoEncoder:
             encord_track_uuid=encord_track_uuid,
         )
 
-    def get_rotatable_bounding_box(self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict) -> Union[CocoAnnotation, SuperClass]:
+    def get_rotatable_bounding_box(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
         x, y = (
             object_["rotatableBoundingBox"]["x"] * size.width,
             object_["rotatableBoundingBox"]["y"] * size.height,
@@ -488,7 +497,6 @@ class CocoEncoder:
     def get_flat_classifications(self, object_: dict) -> dict:
         res = {}
         object_hash = object_["object_hash"]
-
 
         return res
 
