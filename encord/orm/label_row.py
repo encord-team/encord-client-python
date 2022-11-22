@@ -15,9 +15,9 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
@@ -50,6 +50,14 @@ class LabelRow(base_orm.BaseORM):
     * ``label_status`` is a string indicating label status. It can take the values
       enumerated in :class:`encord.orm.label_row.LabelStatus`. *Note* that this does
       *not* reflect thes status shown in the Projects->Labels section on the web-app.
+    * ``export_history`` is a list, in reverse chronological order, of the times the
+      labels have been previously exported. Each item is a dictionary that contains
+      a unique ``export_hash``, an ``exported_at`` time, and either (exactly one of)
+      ``key_hash`` of the API key used for export, or ``user_email`` of the user who
+      initiated the export
+    * ``export_hash`` is a unique identifier of the current export. This will be
+      the first item in ``export_history``, and will be present in future exports
+    * ``exported_at`` is the current time, as recorded by Encord servers
 
     A data unit, mentioned for the dictionary entry ``data_units`` above, has in the
     form::
@@ -180,11 +188,17 @@ class LabelRow(base_orm.BaseORM):
             ("classification_answers", dict),
             ("object_actions", dict),
             ("label_status", str),
+            ("export_history", list),
+            ("export_hash", str),
+            ("exported_at", str),
         ]
     )
 
     NON_UPDATABLE_FIELDS = {
         "label_hash",
+        "export_history",
+        "export_hash",
+        "exported_at",
     }
 
 
@@ -210,6 +224,23 @@ class LabelStatus(Enum):
 
 
 @dataclass(frozen=True)
+class LabelRowExportHistory:
+    export_hash: str
+    key_hash: Optional[str]
+    user_email: Optional[str]
+    exported_at: str
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> LabelRowExportHistory:
+        return LabelRowExportHistory(
+            json_dict["export_hash"],
+            json_dict.get("key_hash", None),
+            json_dict.get("user_email", None),
+            json_dict["exported_at"],
+        )
+
+
+@dataclass(frozen=True)
 class LabelRowMetadata(Formatter):
     """
     Contains helpful information about a LabelRow.
@@ -222,6 +253,7 @@ class LabelRowMetadata(Formatter):
     data_type: str
     label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
+    export_history: List[LabelRowExportHistory] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -233,6 +265,7 @@ class LabelRowMetadata(Formatter):
             json_dict["data_type"],
             LabelStatus(json_dict["label_status"]),
             AnnotationTaskStatus(json_dict["annotation_task_status"]),
+            [LabelRowExportHistory.from_dict(history_item) for history_item in json_dict.get("export_history", [])],
         )
 
     @classmethod
