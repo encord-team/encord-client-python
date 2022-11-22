@@ -96,7 +96,9 @@ class CocoEncoder:
         self._labels_list = labels_list
         self._ontology = ontology
         self._coco_json = dict()
-        self._current_annotation_id = 0
+        self._current_annotation_id = 1
+        # ^ Annotation ids start with a 1. Sometimes they are used for bit masks in which case they should never be
+        # exactly `0`
         self._object_hash_to_track_id_map = {}
         self._coco_categories_id_to_ontology_object_map = dict()  # DENIS: do we need this?
         self._feature_hash_to_coco_category_id_map = dict()
