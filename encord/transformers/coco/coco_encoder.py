@@ -204,7 +204,9 @@ class CocoEncoder:
         return object_.shape.value
 
     def add_to_object_map_and_get_next_id(self, object_: Object) -> int:
-        id_ = len(self._coco_categories_id_to_ontology_object_map)
+        id_ = len(self._coco_categories_id_to_ontology_object_map) + 1
+        # Let the category id start at 1, not 0. Segmentation masks that use COCO annotations often create a bit mask
+        # with this category id. The bitmask must be above 0.
         self._coco_categories_id_to_ontology_object_map[id_] = object_
         self._feature_hash_to_coco_category_id_map[object_.feature_node_hash] = id_
         return id_
