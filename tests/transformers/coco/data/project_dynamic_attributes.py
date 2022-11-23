@@ -356,7 +356,6 @@ labels = [
         "label_status": "LABEL_IN_PROGRESS",
     }
 ]
-
 ontology = OntologyStructure(
     objects=[
         Object(
@@ -367,13 +366,18 @@ ontology = OntologyStructure(
             feature_node_hash="eEMJNUol",
             attributes=[
                 TextAttribute(
-                    uid=[1, 1], feature_node_hash="bi4Ri4Qp", name="non dynamic text attribute 1", required=False
+                    uid=[1, 1],
+                    feature_node_hash="bi4Ri4Qp",
+                    name="non dynamic text attribute 1",
+                    required=False,
+                    dynamic=False,
                 ),
                 RadioAttribute(
                     uid=[1, 2],
                     feature_node_hash="FZtCKRXA",
                     name="non dynamic radio attribute 1",
                     required=False,
+                    dynamic=False,
                     options=[
                         NestableOption(
                             uid=[1, 2, 1],
@@ -396,6 +400,7 @@ ontology = OntologyStructure(
                     feature_node_hash="Ps+P5JNt",
                     name="non dynamic checklist attribute 1",
                     required=False,
+                    dynamic=False,
                     options=[
                         FlatOption(
                             uid=[1, 3, 1],
@@ -412,13 +417,18 @@ ontology = OntologyStructure(
                     ],
                 ),
                 TextAttribute(
-                    uid=[1, 4], feature_node_hash="Pt4zRmE8", name="dynamic text attribute 2", required=False
+                    uid=[1, 4],
+                    feature_node_hash="Pt4zRmE8",
+                    name="dynamic text attribute 2",
+                    required=False,
+                    dynamic=True,
                 ),
                 RadioAttribute(
                     uid=[1, 5],
                     feature_node_hash="LPK6qTW6",
                     name="dynamic radio attribute 2",
                     required=False,
+                    dynamic=True,
                     options=[
                         NestableOption(
                             uid=[1, 5, 1],
@@ -426,7 +436,13 @@ ontology = OntologyStructure(
                             label="dynamic radio attribute 2 option 1",
                             value="dynamic_radio_attribute_2_option_1",
                             nested_options=[
-                                TextAttribute(uid=[1, 5, 1, 1], feature_node_hash="oVn7MHh6", name="", required=False)
+                                TextAttribute(
+                                    uid=[1, 5, 1, 1],
+                                    feature_node_hash="oVn7MHh6",
+                                    name="",
+                                    required=False,
+                                    dynamic=False,  # DENIS: this field is technically false.
+                                )
                             ],
                         ),
                         NestableOption(
@@ -443,6 +459,7 @@ ontology = OntologyStructure(
                     feature_node_hash="EyUInCwX",
                     name="dynamic checklist attribute 2",
                     required=False,
+                    dynamic=True,
                     options=[
                         FlatOption(
                             uid=[1, 6, 1],
@@ -472,6 +489,7 @@ ontology = OntologyStructure(
                     feature_node_hash="YmTkzuCu",
                     name="nested radio 1 ",
                     required=False,
+                    dynamic=False,
                     options=[
                         NestableOption(
                             uid=[2, 1, 1],
@@ -484,6 +502,7 @@ ontology = OntologyStructure(
                                     feature_node_hash="l7KMhGAZ",
                                     name="nested radio 1 option 1 1",
                                     required=False,
+                                    dynamic=False,
                                     options=[
                                         NestableOption(
                                             uid=[2, 1, 1, 1, 1],
