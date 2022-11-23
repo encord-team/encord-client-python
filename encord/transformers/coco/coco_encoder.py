@@ -17,13 +17,13 @@ import tempfile
 from dataclasses import asdict, dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import requests
 from shapely.geometry import Polygon
 from tqdm import tqdm
 
-from encord.objects.common import Shape
+from encord.objects.common import Attribute, PropertyType, Shape
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
 from encord.transformers.coco.coco_datastructure import (
@@ -409,7 +409,9 @@ class CocoEncoder:
                 # TODO: how can I make sure this can be extended properly? At what point do I transform this to a JSON?
                 # maybe I can have an `asdict` if this is a dataclass, else just keep the json and have the return type
                 # be a union?!
-                annotations.append(as_dict_custom(self.get_bounding_box(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_bounding_box(object_, image_id, size, object_answers, object_actions))
+                )
             if shape == Shape.ROTATABLE_BOUNDING_BOX.value:
                 annotations.append(
                     as_dict_custom(
@@ -427,7 +429,9 @@ class CocoEncoder:
 
         return annotations
 
-    def get_bounding_box(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+    def get_bounding_box(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
         x, y = (
             object_["boundingBox"]["x"] * size.width,
             object_["boundingBox"]["y"] * size.height,
@@ -442,6 +446,13 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, id_, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
         return CocoAnnotation(
             area,
             bbox,
@@ -452,6 +463,7 @@ class CocoEncoder:
             segmentation,
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
         )
 
     def get_rotatable_bounding_box(
@@ -476,7 +488,7 @@ class CocoEncoder:
             rotation = None
 
         if self._include_flat_classifications:
-            classifications: Optional[dict] = self.get_flat_classifications(object_)
+            classifications: Optional[dict] = self.get_flat_classifications(object_, object_answers, object_actions)
         else:
             classifications = None
 
@@ -494,11 +506,84 @@ class CocoEncoder:
             classifications=classifications,
         )
 
-    def get_flat_classifications(self, object_: dict) -> dict:
-        res = {}
-        object_hash = object_["object_hash"]
+    def get_flat_classifications(self, object_: dict, id_: int, object_answers: dict, object_actions: dict) -> dict:
+        object_hash = object_["objectHash"]
+
+        feature_hash_to_attribute_map: Dict[str, Attribute] = self.feature_hash_to_flat_object_attribute_map()
+
+        # DENIS: make sure that I use the object_answers etc. to get the flat attributes.
+        classifications = self.get_flat_static_classifications(
+            object_hash, object_answers, feature_hash_to_attribute_map
+        )
+        dynamic_classifications = self.get_flat_dynamic_classifications(
+            object_hash, id_, object_answers, feature_hash_to_attribute_map
+        )
+        classifications.update(dynamic_classifications)
+        # ^ deliberately possibly overwriting static classifications and thus giving dynamic classifications a
+        # priority. However, an overwrite should technically not be possible if the label structure is set up correctly.
+
+        return classifications
+
+    def feature_hash_to_flat_object_attribute_map(self) -> Dict[str, Attribute]:
+        res: Dict[str, Attribute] = {}
+
+        for object_ in self._ontology.objects:
+            for attribute in object_.attributes:
+                res[attribute.feature_node_hash] = attribute
 
         return res
+
+    def get_flat_static_classifications(
+        self, object_hash: str, object_answers: dict, feature_hash_to_attribute_map: Dict[str, Attribute]
+    ) -> dict:
+        res = {}
+        classifications = object_answers[object_hash]["classifications"]
+        for classification in classifications:
+            feature_hash = classification["featureHash"]
+            if feature_hash not in feature_hash_to_attribute_map:
+                # This will be a deeply nested attribute
+                continue
+
+            attribute = feature_hash_to_attribute_map[feature_hash]
+            answers = classification["answers"]
+
+            if attribute.get_property_type() == PropertyType.TEXT:
+                res.update(self.get_text_answer(attribute, answers))
+            elif attribute.get_property_type() == PropertyType.RADIO:
+                res.update(self.get_radio_answer(attribute, answers))
+            elif attribute.get_property_type() == PropertyType.CHECKLIST:
+                res.update(self.get_checklist_answer(attribute, answers))
+
+        return res
+
+    def get_flat_dynamic_classifications(
+        self, object_hash: str, id_: int, object_actions: dict, feature_hash_to_attribute_map: Dict[str, Attribute]
+    ) -> dict:
+        # check if the id is within the range
+        pass
+        return {}
+
+    def get_radio_answer(self, attribute: Attribute, answers: dict) -> dict:
+        answer = answers[0]  # radios only have one answer by definition
+        return {attribute.name: answer["name"]}
+
+    def get_checklist_answer(self, attribute: Attribute, answers: dict) -> dict:
+        # DENIS: I think this will require the ontology to see what is "False"
+        #  consider the flattening out of the attributes coming from CVAT. Think what would be good for Elbit but also
+        #  other clients.
+        res = {}
+        found_checklist_answers = set()
+        for answer in answers:
+            found_checklist_answers.add(answer["name"])
+
+        for option in attribute.options:
+            label = option.label
+            res[label] = label in found_checklist_answers
+
+        return res
+
+    def get_text_answer(self, attribute: Attribute, answers: str) -> dict:
+        return {attribute.name: answers}
 
     def get_polygon(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
         polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
@@ -660,7 +745,7 @@ class CocoEncoder:
                 f"ensure that the ontology matches the labels provided."
             )
 
-    def get_coco_annotation_default_fields(self, object_: dict) -> Tuple[int, int, Optional[str]]:
+    def get_coco_annotation_default_fields(self, object_: dict) -> Tuple[int, int, Optional[str], Optional[str]]:
         id_ = self.next_annotation_id()
         iscrowd = 0
         if self._include_track_id:

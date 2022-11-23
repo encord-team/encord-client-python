@@ -518,4 +518,148 @@ ontology = OntologyStructure(
     classifications=[],
 )
 
-expected_coco_json = {}
+expected_coco_json = {
+    "annotations": [
+        {
+            "area": 9113.28768,
+            "attributes": {
+                "encord_track_uuid": "JizLqHk3",
+                "non dynamic checklist attribute 1 option 1": True,
+                "non dynamic checklist attribute 1 option 2": True,
+                "non dynamic radio attribute 1": "non dynamic " "radio " "attribute 1 " "option 1",
+                "non dynamic text attribute 1": "non dynamic " "answer",
+                "track_id": 0,
+            },
+            "bbox": [325.888, 209.66400000000002, 85.12, 107.064],
+            "category_id": 1,
+            "id": 0,
+            "image_id": 0,
+            "iscrowd": 0,
+            "keypoints": None,
+            "num_keypoints": None,
+            "segmentation": [
+                [325.888, 209.66400000000002, 411.008, 209.66400000000002, 411.008, 316.728, 325.888, 316.728]
+            ],
+        },
+        {
+            "area": 16823.070720000003,
+            "attributes": {"encord_track_uuid": "ogYkOiJW", "track_id": 1},
+            "bbox": [725.76, 363.96, 136.96, 122.83200000000001],
+            "category_id": 1,
+            "id": 1,
+            "image_id": 0,
+            "iscrowd": 0,
+            "keypoints": None,
+            "num_keypoints": None,
+            "segmentation": [[725.76, 363.96, 862.72, 363.96, 862.72, 486.792, 725.76, 486.792]],
+        },
+        {
+            "area": 9113.28768,
+            "attributes": {
+                "encord_track_uuid": "JizLqHk3",
+                "non dynamic checklist attribute 1 option 1": True,
+                "non dynamic checklist attribute 1 option 2": True,
+                "non dynamic radio attribute 1": "non dynamic " "radio " "attribute 1 " "option 1",
+                "non dynamic text attribute 1": "non dynamic " "answer",
+                "track_id": 0,
+            },
+            "bbox": [325.888, 209.66400000000002, 85.12, 107.064],
+            "category_id": 1,
+            "id": 2,
+            "image_id": 1,
+            "iscrowd": 0,
+            "keypoints": None,
+            "num_keypoints": None,
+            "segmentation": [
+                [325.888, 209.66400000000002, 411.008, 209.66400000000002, 411.008, 316.728, 325.888, 316.728]
+            ],
+        },
+        {
+            "area": 16823.070720000003,
+            "attributes": {"encord_track_uuid": "ogYkOiJW", "track_id": 1},
+            "bbox": [725.76, 362.376, 136.96, 122.83200000000001],
+            "category_id": 1,
+            "id": 3,
+            "image_id": 1,
+            "iscrowd": 0,
+            "keypoints": None,
+            "num_keypoints": None,
+            "segmentation": [
+                [725.76, 362.376, 862.72, 362.376, 862.72, 485.20799999999997, 725.76, 485.20799999999997]
+            ],
+        },
+        {
+            "area": 9113.28768,
+            "attributes": {
+                "encord_track_uuid": "JizLqHk3",
+                "non dynamic checklist attribute 1 option 1": True,
+                "non dynamic checklist attribute 1 option 2": True,
+                "non dynamic radio attribute 1": "non dynamic " "radio " "attribute 1 " "option 1",
+                "non dynamic text attribute 1": "non dynamic " "answer",
+                "track_id": 0,
+            },
+            "bbox": [325.888, 209.66400000000002, 85.12, 107.064],
+            "category_id": 1,
+            "id": 4,
+            "image_id": 2,
+            "iscrowd": 0,
+            "keypoints": None,
+            "num_keypoints": None,
+            "segmentation": [
+                [325.888, 209.66400000000002, 411.008, 209.66400000000002, 411.008, 316.728, 325.888, 316.728]
+            ],
+        },
+        {
+            "area": 15848.275968000002,
+            "attributes": {"encord_track_uuid": "ogYkOiJW", "track_id": 1},
+            "bbox": [733.696, 362.376, 129.024, 122.83200000000001],
+            "category_id": 1,
+            "id": 5,
+            "image_id": 2,
+            "iscrowd": 0,
+            "keypoints": None,
+            "num_keypoints": None,
+            "segmentation": [
+                [733.696, 362.376, 862.72, 362.376, 862.72, 485.20799999999997, 733.696, 485.20799999999997]
+            ],
+        },
+    ],
+    "categories": [
+        {"id": 1, "name": "Box with attributes", "supercategory": "bounding_box"},
+        {"id": 2, "name": "Box with nested attributes", "supercategory": "bounding_box"},
+    ],
+    "images": [
+        {
+            "coco_url": "cord-videos-dev/lFW59RQ9jcT4vHZeG14m8QWJKug1/a8029f7f-b4fe-4237-96c9-b12a33c5b3d8",
+            "file_name": "videos/a8029f7f-b4fe-4237-96c9-b12a33c5b3d8/0.jpg",
+            "height": 720,
+            "id": 0,
+            "video_title": "horse and dog from sdk",
+            "width": 1280,
+        },
+        {
+            "coco_url": "cord-videos-dev/lFW59RQ9jcT4vHZeG14m8QWJKug1/a8029f7f-b4fe-4237-96c9-b12a33c5b3d8",
+            "file_name": "videos/a8029f7f-b4fe-4237-96c9-b12a33c5b3d8/1.jpg",
+            "height": 720,
+            "id": 1,
+            "video_title": "horse and dog from sdk",
+            "width": 1280,
+        },
+        {
+            "coco_url": "cord-videos-dev/lFW59RQ9jcT4vHZeG14m8QWJKug1/a8029f7f-b4fe-4237-96c9-b12a33c5b3d8",
+            "file_name": "videos/a8029f7f-b4fe-4237-96c9-b12a33c5b3d8/2.jpg",
+            "height": 720,
+            "id": 2,
+            "video_title": "horse and dog from sdk",
+            "width": 1280,
+        },
+    ],
+    "info": {
+        "contributor": None,
+        "date_created": None,
+        "description": "horse and dog from sdk",
+        "url": None,
+        "version": None,
+        "year": None,
+    },
+}
