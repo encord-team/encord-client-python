@@ -14,6 +14,7 @@ TODO:
 import logging
 import subprocess
 import tempfile
+from collections import defaultdict
 from dataclasses import asdict, dataclass
 from itertools import chain
 from pathlib import Path
@@ -448,7 +449,7 @@ class CocoEncoder:
 
         if self._include_flat_classifications:
             classifications: Optional[dict] = self.get_flat_classifications(
-                object_, id_, object_answers, object_actions
+                object_, image_id, object_answers, object_actions
             )
         else:
             classifications = None
@@ -488,7 +489,9 @@ class CocoEncoder:
             rotation = None
 
         if self._include_flat_classifications:
-            classifications: Optional[dict] = self.get_flat_classifications(object_, object_answers, object_actions)
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
         else:
             classifications = None
 
@@ -506,17 +509,23 @@ class CocoEncoder:
             classifications=classifications,
         )
 
-    def get_flat_classifications(self, object_: dict, id_: int, object_answers: dict, object_actions: dict) -> dict:
+    def get_flat_classifications(
+        self, object_: dict, image_id: int, object_answers: dict, object_actions: dict
+    ) -> dict:
         object_hash = object_["objectHash"]
 
         feature_hash_to_attribute_map: Dict[str, Attribute] = self.feature_hash_to_flat_object_attribute_map()
+        id_and_object_hash_to_answers_map = self.get_id_and_object_hash_to_answers_map(
+            object_actions, feature_hash_to_attribute_map
+        )
+        # DENIS: ^ these should happen only once outside of the individual paths.
 
         # DENIS: make sure that I use the object_answers etc. to get the flat attributes.
         classifications = self.get_flat_static_classifications(
             object_hash, object_answers, feature_hash_to_attribute_map
         )
         dynamic_classifications = self.get_flat_dynamic_classifications(
-            object_hash, id_, object_answers, feature_hash_to_attribute_map
+            object_hash, image_id, id_and_object_hash_to_answers_map
         )
         classifications.update(dynamic_classifications)
         # ^ deliberately possibly overwriting static classifications and thus giving dynamic classifications a
@@ -556,12 +565,42 @@ class CocoEncoder:
 
         return res
 
+    def get_id_and_object_hash_to_answers_map(
+        self, object_actions: dict, feature_hash_to_attribute_map: Dict[str, Attribute]
+    ) -> Dict[Tuple[int, str], dict]:
+        res = defaultdict(dict)
+        # DENIS: seems like this is only getting the first???
+        for object_hash, payload in object_actions.items():
+            for action in payload["actions"]:
+                feature_hash = action["featureHash"]
+                if feature_hash not in feature_hash_to_attribute_map:
+                    # This will be a deeply nested attribute
+                    continue
+
+                attribute = feature_hash_to_attribute_map[feature_hash]
+                answers = action["answers"]
+                answers_dict = {}
+                if attribute.get_property_type() == PropertyType.TEXT:
+                    answers_dict.update(self.get_text_answer(attribute, answers))
+                elif attribute.get_property_type() == PropertyType.RADIO:
+                    answers_dict.update(self.get_radio_answer(attribute, answers))
+                elif attribute.get_property_type() == PropertyType.CHECKLIST:
+                    answers_dict.update(self.get_checklist_answer(attribute, answers))
+
+                for sub_range in action["range"]:
+                    for i in range(sub_range[0], sub_range[1] + 1):
+                        res[(i, object_hash)].update(answers_dict)
+
+        return res
+
     def get_flat_dynamic_classifications(
-        self, object_hash: str, id_: int, object_actions: dict, feature_hash_to_attribute_map: Dict[str, Attribute]
+        self, object_hash: str, image_id: int, id_and_object_hash_to_answers_map: Dict[Tuple[int, str], dict]
     ) -> dict:
-        # check if the id is within the range
-        pass
-        return {}
+        id_and_object_hash = (image_id, object_hash)
+        if id_and_object_hash in id_and_object_hash_to_answers_map:
+            return id_and_object_hash_to_answers_map[(image_id, object_hash)]
+        else:
+            return {}
 
     def get_radio_answer(self, attribute: Attribute, answers: dict) -> dict:
         answer = answers[0]  # radios only have one answer by definition
