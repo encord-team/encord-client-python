@@ -569,7 +569,6 @@ class CocoEncoder:
         self, object_actions: dict, feature_hash_to_attribute_map: Dict[str, Attribute]
     ) -> Dict[Tuple[int, str], dict]:
         res = defaultdict(dict)
-        # DENIS: seems like this is only getting the first???
         for object_hash, payload in object_actions.items():
             for action in payload["actions"]:
                 feature_hash = action["featureHash"]
@@ -589,6 +588,8 @@ class CocoEncoder:
 
                 for sub_range in action["range"]:
                     for i in range(sub_range[0], sub_range[1] + 1):
+                        # if there is a classification that supposed to be in a range for an object_hash, but it
+                        # isn't, we need
                         res[(i, object_hash)].update(answers_dict)
 
         return res
