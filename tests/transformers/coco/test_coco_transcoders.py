@@ -262,14 +262,14 @@ def test_run_torch():
 
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="This is a manual test")
 def test_download_video():
-    # DENIS: first download into a temporary directory.
+    # TODO: first download into a temporary directory.
     # download_file(
     #     "https://storage.googleapis.com/encord-local-dev.appspot.com/cord-videos-dev/lFW59RQ9jcT4vHZeG14m8QWJKug1/afe598fa-4bc0-43b2-907e-260dcc8cae7a?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-efw44%40encord-local-dev.iam.gserviceaccount.com%2F20220728%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20220728T165718Z&X-Goog-Expires=604800&X-Goog-SignedHeaders=host&X-Goog-Signature=b05dc93dd2ebfd18b39e246fe0cd2d7201983822684ae577057a293884afe3de4a06b049acca0e85c553603c6e06e68e6eb71d846bb520860f909a6ab13ee08daf856e577730b9e823a74400e293683fa21df19d4f2b1b939ee68995170680ee6c1dc0b1dbd9a51ed7d92fd7e1deb8eda47a61ef06b45185f4058a510bffa813b58766de3f8b333a5e512fb7ab7623801b3588a97046606963d24ba44c33f13df62ccd06d2d3a114d2952fbd1d46344941bfae7b5ac287fe761bd07990c1c3d061005a268af8df04fad19dac85cdbf09b57e45eb20d2948cd2ab834e075ea47ef1f815e18d16cb8e3e31a0dbedf31a669cebcbf0ce169bcc62003b2fbfc40dd5",
     #     Path("cute-cat.mp4"),
     # )
 
-    # DENIS: then extract frames
+    # TODO: then extract frames
     extract_frames(Path("cute-cat.mp4"), Path("cute_cat_images"))
 
-    # DENIS: create as many indexes as there are instances of this:
+    # TODO: create as many indexes as there are instances of this:
     print(len(list(Path("cute_cat_images").iterdir())))

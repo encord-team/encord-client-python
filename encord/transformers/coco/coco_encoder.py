@@ -1,4 +1,4 @@
-"""DENIS: think properly about the structure, the transcoders and how we want to subclass or extend this so people
+"""TODO: think properly about the structure, the transcoders and how we want to subclass or extend this so people
 can plug into the different parts easily.
 
 ideas
@@ -6,7 +6,7 @@ ideas
 * a class where the individual transformers can be re-assigned
 *
 
-DENIS:
+TODO:
 * parallel downloads with a specific flag
 * saving the annotation file with a specific flag
 * labels class for better type support.
@@ -73,7 +73,7 @@ class EncodingError(Exception):
 
 
 def get_size(*args, **kwargs) -> Size:
-    # DENIS: this belongs in a utils folder.
+    # TODO: this belongs in a utils folder.
     return Size(1, 2)  # A stub for now
 
 
@@ -81,10 +81,10 @@ def get_polygon_from_dict(polygon_dict, W, H):
     return [(polygon_dict[str(i)]["x"] * W, polygon_dict[str(i)]["y"] * H) for i in range(len(polygon_dict))]
 
 
-# DENIS: TODO: focus on doing the parser for now for segmentations for images as it was intended. Seems like
+# TODO: TODO: focus on doing the parser for now for segmentations for images as it was intended. Seems like
 #   for other formats I can still add stuff or have the clients extend what we have.
 
-# DENIS: should these labels be the data structure that I've invented for them instead of the encord dict?
+# TODO: should these labels be the data structure that I've invented for them instead of the encord dict?
 class CocoEncoder:
     """This class has been purposefully built in a modular fashion for extensibility in mind. You are encouraged to
     subclass this encoder and change any of the custom functions. The return types are given for convenience, but these
@@ -99,7 +99,7 @@ class CocoEncoder:
         self._coco_json = dict()
         self._current_annotation_id = 0
         self._object_hash_to_track_id_map = {}
-        self._coco_categories_id_to_ontology_object_map = dict()  # DENIS: do we need this?
+        self._coco_categories_id_to_ontology_object_map = dict()  # TODO: do we need this?
         self._feature_hash_to_coco_category_id_map = dict()
         self._data_hash_to_image_id_map = dict()
         """Map of (data_hash, frame_offset) to the image id"""
@@ -128,7 +128,7 @@ class CocoEncoder:
         """
         Args:
             download_files: If set to true, the images are downloaded into a local directory and the `coco_url` of the
-                images will point to the location of the local directory. DENIS: can also maybe have a Path obj here.
+                images will point to the location of the local directory. TODO: can also maybe have a Path obj here.
             download_file_path:
                 Root path to where the images and videos are downloaded or where downloaded images are looked up from.
                 For example, if `include_unannotated_videos = True` then this is the root path of the
@@ -168,7 +168,7 @@ class CocoEncoder:
         return {
             "description": self.get_description(),
             "contributor": None,  # TODO: these fields also need a response
-            "date_created": None,  # DENIS: there is something in the labels, alternatively can start to return more from the SDK
+            "date_created": None,  # TODO: there is something in the labels, alternatively can start to return more from the SDK
             "url": None,
             "version": None,
             "year": None,
@@ -246,10 +246,10 @@ class CocoEncoder:
         return images
 
     def get_image(self, data_unit: dict) -> dict:
-        # DENIS: we probably want a map of this image id to image hash in our DB, including the image_group hash.
+        # TODO: we probably want a map of this image id to image hash in our DB, including the image_group hash.
 
         """
-        DENIS: next up: here we need to branch off and create the videos
+        TODO: next up: here we need to branch off and create the videos
         * coco_url, height, width will be the same
         * id will be continuous
         * file_name will be also continuous according to all the images that are being extracted from the video.
@@ -302,7 +302,7 @@ class CocoEncoder:
 
         path_to_video_dir = self._download_file_path.joinpath(Path("videos"), Path(data_hash))
         if self._include_unannotated_videos and path_to_video_dir.is_dir():
-            # DENIS: log something for transparency?
+            # TODO: log something for transparency?
             for frame_num in range(len(list(path_to_video_dir.iterdir()))):
                 images.append(self.get_video_image(data_hash, video_title, coco_url, height, width, int(frame_num)))
         else:
@@ -311,7 +311,7 @@ class CocoEncoder:
 
         return images
 
-    # def get_frame_numbers(self, data_unit: dict) -> Iterator:  # DENIS: use this to remove the above if/else.
+    # def get_frame_numbers(self, data_unit: dict) -> Iterator:  # TODO: use this to remove the above if/else.
 
     def get_dicom_image(self, data_hash: str, height: int, width: int, frame_num: int) -> dict:
         image_id = len(self._data_hash_to_image_id_map)
@@ -361,7 +361,7 @@ class CocoEncoder:
     def get_annotations(self):
         annotations = []
 
-        # DENIS: need to make sure at least one image
+        # TODO: need to make sure at least one image
         for labels in self._labels_list:
             object_answers = labels["object_answers"]
             object_actions = labels["object_actions"]
@@ -391,7 +391,7 @@ class CocoEncoder:
 
         return annotations
 
-    # DENIS: naming with plural/singular
+    # TODO: naming with plural/singular
     def get_annotation(
         self, objects: List[dict], image_id: int, object_answers: dict, object_actions: dict
     ) -> List[dict]:
@@ -399,14 +399,14 @@ class CocoEncoder:
         for object_ in objects:
             shape = object_["shape"]
 
-            # DENIS: abstract this
+            # TODO: abstract this
             for image_data in self._coco_json["images"]:
                 if image_data["id"] == image_id:
                     size = Size(width=image_data["width"], height=image_data["height"])
 
-            # DENIS: would be nice if this shape was an enum => with the Json support.
+            # TODO: would be nice if this shape was an enum => with the Json support.
             if shape == Shape.BOUNDING_BOX.value:
-                # DENIS: how can I make sure this can be extended properly? At what point do I transform this to a JSON?
+                # TODO: how can I make sure this can be extended properly? At what point do I transform this to a JSON?
                 # maybe I can have an `asdict` if this is a dataclass, else just keep the json and have the return type
                 # be a union?!
                 annotations.append(as_dict_custom(self.get_bounding_box(object_, image_id, size)))
@@ -613,7 +613,7 @@ class CocoEncoder:
         )
 
     def get_skeleton(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
-        # DENIS: next up: check how this is visualised.
+        # TODO: next up: check how this is visualised.
         area = 0
         segmentation = []
         keypoints = []
@@ -631,7 +631,7 @@ class CocoEncoder:
         x, y, x_max, y_max = min(xs), min(ys), max(xs), max(ys)
         w, h = x_max - x, y_max - y
 
-        # DENIS: think if the next two lines should be in `get_coco_annotation_default_fields`
+        # TODO: think if the next two lines should be in `get_coco_annotation_default_fields`
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
         id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
@@ -722,7 +722,7 @@ def download_file(
 def extract_frames(video_file_name: Path, img_dir: Path):
     logger.info(f"Extracting frames from video: {video_file_name}")
 
-    # DENIS: for the rest to work, I will need to throw if the current directory exists and give a nice user warning.
+    # TODO: for the rest to work, I will need to throw if the current directory exists and give a nice user warning.
     img_dir.mkdir(parents=True, exist_ok=True)
     command = f"ffmpeg -i {video_file_name} -start_number 0 {img_dir}/%d.jpg -hide_banner"
     if subprocess.run(command, shell=True, capture_output=True, stdout=None, check=True).returncode != 0:

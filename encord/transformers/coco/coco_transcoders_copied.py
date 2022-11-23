@@ -14,9 +14,9 @@ def get_size(*args, **kwargs) -> Size:
     return Size(1, 2)  # A stub for now
 
 
-# DENIS: rework this next.
+# TODO: rework this next.
 # probably best to load the ontology object to get this instead of trying to infer it from the labels.
-# DENIS: decide what to do with nested objects!
+# TODO: decide what to do with nested objects!
 # probably reasonable to have no reasonable supercategory. Maybe supercategory = category.
 def get_categories(cord_json):
     categories = []
@@ -58,7 +58,7 @@ def get_polygon_from_dict(polygon_dict, W, H):
     return [(polygon_dict[str(i)]["x"] * W, polygon_dict[str(i)]["y"] * H) for i in range(len(polygon_dict))]
 
 
-# DENIS: I probably want this to work from the cord datastructure for frames.
+# TODO: I probably want this to work from the cord datastructure for frames.
 def ConvertFromCordAnnotationFormatToCOCOAnnotationFormat(cord_json, out=None):
     """Serialize cord_json to a dict complying with coco annotation format"""
     coco_json = out if out is not None else {}
@@ -136,7 +136,7 @@ def ConvertFromCordAnnotationFormatToCOCOAnnotationFormat(cord_json, out=None):
                 coco_annotation["segmentation"] = [[x, y]]
                 coco_annotation["keypoints"] = [x, y, 2]
                 coco_annotation["num_keypoints"] = 1
-            # DENIS: support polyline!
+            # TODO: support polyline!
             elif annotation["shape"] == "skeleton":
                 coco_annotation["area"] = 0
                 coco_annotation["segmentation"] = []
