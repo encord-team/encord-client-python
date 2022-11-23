@@ -38,6 +38,7 @@ class _AttributeBase(ABC):
     feature_node_hash: str
     name: str
     required: bool
+    dynamic: bool
 
     @abstractmethod
     def get_property_type(self) -> PropertyType:
@@ -309,6 +310,7 @@ class NestableOption(_OptionBase):
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
+    # DENIS: do I need to ensure that the next level attribute has no `dynamic` field?
     nested_options: List[Attribute] = field(default_factory=list)
 
     def get_option_type(self) -> OptionType:
