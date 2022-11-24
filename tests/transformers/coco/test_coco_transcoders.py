@@ -164,11 +164,6 @@ ENABLE_MANUAL_TESTS = False
 def test_coco_transcoder_flat_classifications():
     labels = project_dynamic_attributes.labels
     ontology = project_dynamic_attributes.ontology
-    # DENIS: continue with this test case. I need to create something that
-    # basically flattens out the radio, the checklist, and the text into one string field.
-    # this is very similar to what CVAT does.
-    # well, floats become floats. ints become ints, boolean (e.g. checklist flags) become boolean
-    # and strings will probably be the same (radio and text answers?)
     coco_annotations = CocoEncoder(labels, ontology).encode(
         download_files=False,
         download_file_path=Path("data/torch_test"),

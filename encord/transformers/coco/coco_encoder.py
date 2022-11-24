@@ -105,7 +105,8 @@ class CocoEncoder:
         self._data_hash_to_image_id_map = dict()
         """Map of (data_hash, frame_offset) to the image id"""
 
-        # self._data_location_to_image_id_map = dict()
+        self._feature_hash_to_attribute_map: Optional[Dict[str, Attribute]] = None
+        self._id_and_object_hash_to_answers_map: Optional[Dict[Tuple[int, str], dict]] = None
 
         self._download_files = DOWNLOAD_FILES_DEFAULT
         self._download_file_path = DOWNLOAD_FILE_PATH_DEFAULT
@@ -515,13 +516,9 @@ class CocoEncoder:
         object_hash = object_["objectHash"]
         feature_hash = object_["featureHash"]
 
-        feature_hash_to_attribute_map: Dict[str, Attribute] = self.feature_hash_to_flat_object_attribute_map()
-        id_and_object_hash_to_answers_map = self.get_id_and_object_hash_to_answers_map(
-            object_actions, feature_hash_to_attribute_map
-        )
-        # DENIS: ^ these should happen only once outside of the individual paths.
+        feature_hash_to_attribute_map: Dict[str, Attribute] = self.get_feature_hash_to_flat_object_attribute_map()
+        id_and_object_hash_to_answers_map = self.get_id_and_object_hash_to_answers_map(object_actions)
 
-        # DENIS: make sure that I use the object_answers etc. to get the flat attributes.
         classifications = self.get_flat_static_classifications(
             object_hash, feature_hash, object_answers, feature_hash_to_attribute_map
         )
@@ -530,21 +527,22 @@ class CocoEncoder:
             feature_hash,
             image_id,
             id_and_object_hash_to_answers_map,
-            feature_hash_to_attribute_map,
         )
         safe_dict_update(classifications, dynamic_classifications)
-        # ^ deliberately possibly overwriting static classifications and thus giving dynamic classifications a
-        # priority. However, an overwrite should technically not be possible if the label structure is set up correctly.
 
         return classifications
 
-    def feature_hash_to_flat_object_attribute_map(self) -> Dict[str, Attribute]:
+    def get_feature_hash_to_flat_object_attribute_map(self) -> Dict[str, Attribute]:
+        if self._feature_hash_to_attribute_map is not None:
+            return self._feature_hash_to_attribute_map
+
         res: Dict[str, Attribute] = {}
 
         for object_ in self._ontology.objects:
             for attribute in object_.attributes:
                 res[attribute.feature_node_hash] = attribute
 
+        self._feature_hash_to_attribute_map = res
         return res
 
     def get_flat_static_classifications(
@@ -576,10 +574,12 @@ class CocoEncoder:
 
         return res
 
-    def get_id_and_object_hash_to_answers_map(
-        self, object_actions: dict, feature_hash_to_attribute_map: Dict[str, Attribute]
-    ) -> Dict[Tuple[int, str], dict]:
+    def get_id_and_object_hash_to_answers_map(self, object_actions: dict) -> Dict[Tuple[int, str], dict]:
+        if self._id_and_object_hash_to_answers_map is not None:
+            return self._id_and_object_hash_to_answers_map
+
         res = defaultdict(dict)
+        feature_hash_to_attribute_map = self.get_feature_hash_to_flat_object_attribute_map()
         for object_hash, payload in object_actions.items():
             for action in payload["actions"]:
                 feature_hash = action["featureHash"]
@@ -599,12 +599,9 @@ class CocoEncoder:
 
                 for sub_range in action["range"]:
                     for i in range(sub_range[0], sub_range[1] + 1):
-                        # if there is a classification that supposed to be in a range for an object_hash, but it
-                        # isn't, we need to add it here.
-                        # DENIS: maybe do the get_checklist_attributes_for_feature_hash business here, to avoid
-                        # uniqueness clashes
                         safe_dict_update(res[(i, object_hash)], answers_dict)
 
+        self._id_and_object_hash_to_answers_map = res
         return res
 
     def get_flat_dynamic_classifications(
@@ -613,9 +610,7 @@ class CocoEncoder:
         feature_hash: str,
         image_id: int,
         id_and_object_hash_to_answers_map: Dict[Tuple[int, str], dict],
-        feature_hash_to_attribute_map: Dict[str, Attribute],
     ) -> dict:
-        # DENIS: am I assuming uniqeness? I am! try to account for if I find the same checkbox more than once.
 
         res = {}
         id_and_object_hash = (image_id, object_hash)
@@ -629,7 +624,8 @@ class CocoEncoder:
     def add_unselected_attributes(self, feature_hash: str, attributes_dict: dict, dynamic: bool) -> None:
         """
         Attributes which have never been selected will not show up in the actions map. They will need to be
-        added separately.
+        added separately. NOTE: this assumes uniqueness of features. Quite an edge case but if it ever comes
+        up it needs to be solved somewhere here.
         """
 
         all_attributes = self.get_attributes_for_feature_hash(feature_hash)
@@ -649,7 +645,6 @@ class CocoEncoder:
         for object_ in self._ontology.objects:
             if object_.feature_node_hash == feature_hash:
                 for attribute in object_.attributes:
-                    # if attribute.get_property_type() == PropertyType.CHECKLIST:
                     res.append(attribute)
                 break
 
@@ -660,9 +655,6 @@ class CocoEncoder:
         return {attribute.name: answer["name"]}
 
     def get_checklist_answer(self, attribute: Attribute, answers: dict) -> dict:
-        # DENIS: I think this will require the ontology to see what is "False"
-        #  consider the flattening out of the attributes coming from CVAT. Think what would be good for Elbit but also
-        #  other clients.
         res = {}
         found_checklist_answers = set()
         for answer in answers:
