@@ -18,7 +18,7 @@ from collections import defaultdict
 from dataclasses import asdict, dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import requests
 from shapely.geometry import Polygon
@@ -532,7 +532,7 @@ class CocoEncoder:
             id_and_object_hash_to_answers_map,
             feature_hash_to_attribute_map,
         )
-        classifications.update(dynamic_classifications)
+        safe_dict_update(classifications, dynamic_classifications)
         # ^ deliberately possibly overwriting static classifications and thus giving dynamic classifications a
         # priority. However, an overwrite should technically not be possible if the label structure is set up correctly.
 
@@ -566,11 +566,11 @@ class CocoEncoder:
             answers = classification["answers"]
 
             if attribute.get_property_type() == PropertyType.TEXT:
-                res.update(self.get_text_answer(attribute, answers))
+                safe_dict_update(res, self.get_text_answer(attribute, answers))
             elif attribute.get_property_type() == PropertyType.RADIO:
-                res.update(self.get_radio_answer(attribute, answers))
+                safe_dict_update(res, self.get_radio_answer(attribute, answers))
             elif attribute.get_property_type() == PropertyType.CHECKLIST:
-                res.update(self.get_checklist_answer(attribute, answers))
+                safe_dict_update(res, self.get_checklist_answer(attribute, answers))
 
         self.add_unselected_attributes(object_feature_hash, res, dynamic=False)
 
@@ -591,11 +591,11 @@ class CocoEncoder:
                 answers = action["answers"]
                 answers_dict = {}
                 if attribute.get_property_type() == PropertyType.TEXT:
-                    answers_dict.update(self.get_text_answer(attribute, answers))
+                    safe_dict_update(answers_dict, self.get_text_answer(attribute, answers))
                 elif attribute.get_property_type() == PropertyType.RADIO:
-                    answers_dict.update(self.get_radio_answer(attribute, answers))
+                    safe_dict_update(answers_dict, self.get_radio_answer(attribute, answers))
                 elif attribute.get_property_type() == PropertyType.CHECKLIST:
-                    answers_dict.update(self.get_checklist_answer(attribute, answers))
+                    safe_dict_update(answers_dict, self.get_checklist_answer(attribute, answers))
 
                 for sub_range in action["range"]:
                     for i in range(sub_range[0], sub_range[1] + 1):
@@ -603,7 +603,7 @@ class CocoEncoder:
                         # isn't, we need to add it here.
                         # DENIS: maybe do the get_checklist_attributes_for_feature_hash business here, to avoid
                         # uniqueness clashes
-                        res[(i, object_hash)].update(answers_dict)
+                        safe_dict_update(res[(i, object_hash)], answers_dict)
 
         return res
 
@@ -634,8 +634,6 @@ class CocoEncoder:
 
         all_attributes = self.get_attributes_for_feature_hash(feature_hash)
         for attribute in all_attributes:
-            # DENIS: at this point I need to know if something is dynamic or not.
-            #  I think the BE will already return this, so just need to change to ontology object.
             if attribute.dynamic is dynamic:
                 if attribute.get_property_type() == PropertyType.CHECKLIST:
                     for option in attribute.options:
@@ -909,6 +907,22 @@ def extract_frames(video_file_name: Path, img_dir: Path):
             "Splitting videos into multiple image files failed. Please ensure that you have FFMPEG "
             f"installed on your machine: https://ffmpeg.org/download.html The comamand that failed was `{command}`."
         )
+
+
+def safe_dict_update(dict_1: Dict[str, Any], dict_2: Dict[str, Any]) -> None:
+    """
+    Update dict_1 with all keys from dict_2, however if there is a key clash append a `_`.
+    Ideally we'd append a `_<feature_hash>` only if needed and keep a map of the clashes to avoid confusions.
+    Maybe something to keep in mind when clients will ask for it. It is unlikely going to be an issue.
+    """
+    for key, value in dict_2.items():
+        used_key = key
+        while True:
+            if used_key in dict_1:
+                used_key += "_"
+            else:
+                dict_1[used_key] = value
+                break
 
 
 #
