@@ -525,7 +525,11 @@ class CocoEncoder:
             object_hash, object_answers, feature_hash_to_attribute_map
         )
         dynamic_classifications = self.get_flat_dynamic_classifications(
-            object_hash, image_id, id_and_object_hash_to_answers_map
+            object_hash,
+            object_["featureHash"],
+            image_id,
+            id_and_object_hash_to_answers_map,
+            feature_hash_to_attribute_map,
         )
         classifications.update(dynamic_classifications)
         # ^ deliberately possibly overwriting static classifications and thus giving dynamic classifications a
@@ -589,19 +593,63 @@ class CocoEncoder:
                 for sub_range in action["range"]:
                     for i in range(sub_range[0], sub_range[1] + 1):
                         # if there is a classification that supposed to be in a range for an object_hash, but it
-                        # isn't, we need
+                        # isn't, we need to add it here.
+                        # DENIS: maybe do the get_checklist_attributes_for_feature_hash business here, to avoid
+                        # uniqueness clashes
                         res[(i, object_hash)].update(answers_dict)
 
         return res
 
     def get_flat_dynamic_classifications(
-        self, object_hash: str, image_id: int, id_and_object_hash_to_answers_map: Dict[Tuple[int, str], dict]
+        self,
+        object_hash: str,
+        feature_hash: str,
+        image_id: int,
+        id_and_object_hash_to_answers_map: Dict[Tuple[int, str], dict],
+        feature_hash_to_attribute_map: Dict[str, Attribute],
     ) -> dict:
+        # DENIS: am I assuming uniqeness? I am! try to account for if I find the same checkbox more than once.
+
+        res = {}
         id_and_object_hash = (image_id, object_hash)
         if id_and_object_hash in id_and_object_hash_to_answers_map:
-            return id_and_object_hash_to_answers_map[(image_id, object_hash)]
-        else:
-            return {}
+            res = id_and_object_hash_to_answers_map[(image_id, object_hash)]
+
+        self.add_unselected_attributes(feature_hash, res)
+
+        return res
+
+    def add_unselected_attributes(self, feature_hash: str, res: dict) -> None:
+        """
+        Attributes which have never been selected will not show up in the actions map. They will need to be
+        added separately.
+        # DENIS: do I need to add something similar for the static classifications?
+        """
+
+        all_attributes = self.get_attributes_for_feature_hash(feature_hash)
+        for attribute in all_attributes:
+            # DENIS: at this point I need to know if something is dynamic or not.
+            #  I think the BE will already return this, so just need to change to ontology object.
+            if attribute.dynamic is True:
+                if attribute.get_property_type() == PropertyType.CHECKLIST:
+                    for option in attribute.options:
+                        if option.label not in res:
+                            # We need to add the default of False.
+                            res[option.label] = False
+                else:
+                    if attribute.name not in res:
+                        res[attribute.name] = None
+
+    def get_attributes_for_feature_hash(self, feature_hash: str) -> List[Attribute]:
+        res = []
+        for object_ in self._ontology.objects:
+            if object_.feature_node_hash == feature_hash:
+                for attribute in object_.attributes:
+                    # if attribute.get_property_type() == PropertyType.CHECKLIST:
+                    res.append(attribute)
+                break
+
+        return res
 
     def get_radio_answer(self, attribute: Attribute, answers: dict) -> dict:
         answer = answers[0]  # radios only have one answer by definition

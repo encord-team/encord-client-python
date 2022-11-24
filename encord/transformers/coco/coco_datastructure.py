@@ -72,6 +72,7 @@ def as_dict_custom(data_class):
     # TODO: this does not work for deeply nested stuff
     res = asdict(data_class)
     add_id_value = None
+    # DENIS: do we want to have a separate key for classificaitons?
 
     # The track_id and rotation stuff is a huge hack ... don't use this pattern in the future
     add_track_id = None

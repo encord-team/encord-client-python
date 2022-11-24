@@ -35,10 +35,10 @@ labels = [
                                 "confidence": 1,
                                 "objectHash": "JizLqHk3",
                                 "featureHash": "eEMJNUol",
-                                "lastEditedAt": "Thu, 17 Nov 2022 14:11:17 GMT",
+                                "lastEditedAt": "Wed, 23 Nov 2022 09:45:31 GMT",
                                 "lastEditedBy": "denis@cord.tech",
                                 "manualAnnotation": True,
-                                "boundingBox": {"h": 0.1487, "w": 0.0665, "x": 0.2546, "y": 0.2912},
+                                "boundingBox": {"h": 0.1487, "w": 0.0739, "x": 0.2472, "y": 0.289},
                                 "reviews": [],
                             },
                             {
@@ -53,6 +53,20 @@ labels = [
                                 "featureHash": "eEMJNUol",
                                 "manualAnnotation": True,
                                 "boundingBox": {"h": 0.1706, "w": 0.107, "x": 0.567, "y": 0.5055},
+                                "reviews": [],
+                            },
+                            {
+                                "name": "Box with attributes",
+                                "color": "#D33115",
+                                "shape": "bounding_box",
+                                "value": "box_with_attributes",
+                                "createdAt": "Wed, 23 Nov 2022 18:15:54 GMT",
+                                "createdBy": "denis@cord.tech",
+                                "confidence": 1,
+                                "objectHash": "ytMmMSO7",
+                                "featureHash": "eEMJNUol",
+                                "manualAnnotation": True,
+                                "boundingBox": {"h": 0.1726, "w": 0.0687, "x": 0.3098, "y": 0.6515},
                                 "reviews": [],
                             },
                         ],
@@ -92,6 +106,21 @@ labels = [
                                 "lastEditedBy": "denis@cord.tech",
                                 "manualAnnotation": True,
                                 "boundingBox": {"h": 0.1706, "w": 0.107, "x": 0.567, "y": 0.5033},
+                                "reviews": [],
+                            },
+                            {
+                                "name": "Box with attributes",
+                                "color": "#D33115",
+                                "shape": "bounding_box",
+                                "value": "box_with_attributes",
+                                "createdAt": "Thu, 24 Nov 2022 10:24:07 GMT",
+                                "createdBy": "denis@cord.tech",
+                                "isDeleted": False,
+                                "confidence": 1,
+                                "objectHash": "ytMmMSO7",
+                                "featureHash": "eEMJNUol",
+                                "manualAnnotation": True,
+                                "boundingBox": {"h": 0.1726, "w": 0.0687, "x": 0.3098, "y": 0.6515},
                                 "reviews": [],
                             },
                         ],
@@ -152,14 +181,14 @@ labels = [
                         "value": "non_dynamic_checklist_attribute_1",
                         "answers": [
                             {
-                                "name": "non dynamic checklist attribute 1 option 1",
-                                "value": "non_dynamic_checklist_attribute_1_option_1",
-                                "featureHash": "egqzCteI",
-                            },
-                            {
                                 "name": "non dynamic checklist attribute 1 option 2",
                                 "value": "non_dynamic_checklist_attribute_1_option_2",
                                 "featureHash": "49bR6HCG",
+                            },
+                            {
+                                "name": "non dynamic checklist attribute 1 option 1",
+                                "value": "non_dynamic_checklist_attribute_1_option_1",
+                                "featureHash": "egqzCteI",
                             },
                         ],
                         "featureHash": "Ps+P5JNt",
@@ -199,6 +228,7 @@ labels = [
                     }
                 ],
             },
+            "ytMmMSO7": {"objectHash": "ytMmMSO7", "classifications": []},
         },
         "classification_answers": {},
         "object_actions": {
@@ -222,7 +252,7 @@ labels = [
                         "value": "dynamic_radio_attribute_2",
                         "answers": [
                             {
-                                "name": "dynamic radio attribute 2 option 2",
+                                "name": "dynamic radio attribute 2",
                                 "value": "dynamic_radio_attribute_2_option_2",
                                 "featureHash": "0RV8h1+k",
                             }
@@ -239,7 +269,7 @@ labels = [
                         "value": "dynamic_checklist_attribute_2",
                         "answers": [
                             {
-                                "name": "dynamic checklist attribute 2 option 1",
+                                "name": "dynamic checklist attribute 2",
                                 "value": "dynamic_checklist_attribute_2_option_1",
                                 "featureHash": "ZurpLJ2o",
                             }
@@ -272,7 +302,7 @@ labels = [
                         "value": "dynamic_radio_attribute_2",
                         "answers": [
                             {
-                                "name": "dynamic radio attribute 2 option 1",
+                                "name": "dynamic radio attribute 2",
                                 "value": "dynamic_radio_attribute_2_option_1",
                                 "featureHash": "fw/E2b1Z",
                             }
@@ -289,7 +319,7 @@ labels = [
                         "value": "dynamic_checklist_attribute_2",
                         "answers": [
                             {
-                                "name": "dynamic checklist attribute 2 option 1",
+                                "name": "dynamic checklist attribute 2",
                                 "value": "dynamic_checklist_attribute_2_option_1",
                                 "featureHash": "ZurpLJ2o",
                             }
@@ -317,7 +347,7 @@ labels = [
                         "value": "dynamic_radio_attribute_2",
                         "answers": [
                             {
-                                "name": "dynamic radio attribute 2 option 2",
+                                "name": "dynamic radio attribute 2",
                                 "value": "dynamic_radio_attribute_2_option_2",
                                 "featureHash": "0RV8h1+k",
                             }
@@ -334,12 +364,12 @@ labels = [
                         "value": "dynamic_checklist_attribute_2",
                         "answers": [
                             {
-                                "name": "dynamic checklist attribute 2 option 2",
+                                "name": "dynamic checklist attribute 2",
                                 "value": "dynamic_checklist_attribute_2_option_2",
                                 "featureHash": "uI0oyE0H",
                             },
                             {
-                                "name": "dynamic checklist attribute 2 option 1",
+                                "name": "dynamic checklist attribute 2",
                                 "value": "dynamic_checklist_attribute_2_option_1",
                                 "featureHash": "ZurpLJ2o",
                             },
@@ -540,8 +570,12 @@ ontology = OntologyStructure(
 expected_coco_json = {
     "annotations": [
         {
-            "area": 9113.28768,
+            "area": 10127.397887999998,
             "attributes": {
+                "dynamic checklist attribute 2 option 1": False,
+                "dynamic checklist attribute 2 option 2": False,
+                "dynamic radio attribute 2": "dynamic radio " "attribute 2",
+                "dynamic text attribute 2": "dynamic answer",
                 "encord_track_uuid": "JizLqHk3",
                 "non dynamic checklist attribute 1 option 1": True,
                 "non dynamic checklist attribute 1 option 2": True,
@@ -549,7 +583,7 @@ expected_coco_json = {
                 "non dynamic text attribute 1": "non dynamic " "answer",
                 "track_id": 0,
             },
-            "bbox": [325.888, 209.66400000000002, 85.12, 107.064],
+            "bbox": [316.416, 208.07999999999998, 94.59199999999998, 107.064],
             "category_id": 1,
             "id": 0,
             "image_id": 0,
@@ -557,12 +591,19 @@ expected_coco_json = {
             "keypoints": None,
             "num_keypoints": None,
             "segmentation": [
-                [325.888, 209.66400000000002, 411.008, 209.66400000000002, 411.008, 316.728, 325.888, 316.728]
+                [316.416, 208.07999999999998, 411.008, 208.07999999999998, 411.008, 315.144, 316.416, 315.144]
             ],
         },
         {
             "area": 16823.070720000003,
-            "attributes": {"encord_track_uuid": "ogYkOiJW", "track_id": 1},
+            "attributes": {
+                "dynamic checklist attribute 2 option 1": False,
+                "dynamic checklist attribute 2 option 2": False,
+                "dynamic radio attribute 2": "dynamic radio " "attribute 2",
+                "dynamic text attribute 2": "dynamic answer " "two",
+                "encord_track_uuid": "ogYkOiJW",
+                "track_id": 1,
+            },
             "bbox": [725.76, 363.96, 136.96, 122.83200000000001],
             "category_id": 1,
             "id": 1,
@@ -573,8 +614,33 @@ expected_coco_json = {
             "segmentation": [[725.76, 363.96, 862.72, 363.96, 862.72, 486.792, 725.76, 486.792]],
         },
         {
+            "area": 10927.982592,
+            "attributes": {
+                "dynamic checklist attribute 2 option 1": False,
+                "dynamic checklist attribute 2 option 2": False,
+                "dynamic radio attribute 2": None,
+                "dynamic text attribute 2": None,
+                "encord_track_uuid": "ytMmMSO7",
+                "track_id": 2,
+            },
+            "bbox": [396.54400000000004, 469.08, 87.93599999999999, 124.272],
+            "category_id": 1,
+            "id": 2,
+            "image_id": 0,
+            "iscrowd": 0,
+            "keypoints": None,
+            "num_keypoints": None,
+            "segmentation": [
+                [396.54400000000004, 469.08, 484.48, 469.08, 484.48, 593.352, 396.54400000000004, 593.352]
+            ],
+        },
+        {
             "area": 9113.28768,
             "attributes": {
+                "dynamic checklist attribute 2 option 1": False,
+                "dynamic checklist attribute 2 option 2": False,
+                "dynamic radio attribute 2": None,
+                "dynamic text attribute 2": "dynamic answer",
                 "encord_track_uuid": "JizLqHk3",
                 "non dynamic checklist attribute 1 option 1": True,
                 "non dynamic checklist attribute 1 option 2": True,
@@ -584,7 +650,7 @@ expected_coco_json = {
             },
             "bbox": [325.888, 209.66400000000002, 85.12, 107.064],
             "category_id": 1,
-            "id": 2,
+            "id": 3,
             "image_id": 1,
             "iscrowd": 0,
             "keypoints": None,
@@ -595,10 +661,17 @@ expected_coco_json = {
         },
         {
             "area": 16823.070720000003,
-            "attributes": {"encord_track_uuid": "ogYkOiJW", "track_id": 1},
+            "attributes": {
+                "dynamic checklist attribute 2 option 1": False,
+                "dynamic checklist attribute 2 option 2": False,
+                "dynamic radio attribute 2": "dynamic radio " "attribute 2",
+                "dynamic text attribute 2": "dynamic answer " "two",
+                "encord_track_uuid": "ogYkOiJW",
+                "track_id": 1,
+            },
             "bbox": [725.76, 362.376, 136.96, 122.83200000000001],
             "category_id": 1,
-            "id": 3,
+            "id": 4,
             "image_id": 1,
             "iscrowd": 0,
             "keypoints": None,
@@ -608,8 +681,33 @@ expected_coco_json = {
             ],
         },
         {
+            "area": 10927.982592,
+            "attributes": {
+                "dynamic checklist attribute 2 option 1": False,
+                "dynamic checklist attribute 2 option 2": False,
+                "dynamic radio attribute 2": None,
+                "dynamic text attribute 2": None,
+                "encord_track_uuid": "ytMmMSO7",
+                "track_id": 2,
+            },
+            "bbox": [396.54400000000004, 469.08, 87.93599999999999, 124.272],
+            "category_id": 1,
+            "id": 5,
+            "image_id": 1,
+            "iscrowd": 0,
+            "keypoints": None,
+            "num_keypoints": None,
+            "segmentation": [
+                [396.54400000000004, 469.08, 484.48, 469.08, 484.48, 593.352, 396.54400000000004, 593.352]
+            ],
+        },
+        {
             "area": 9113.28768,
             "attributes": {
+                "dynamic checklist attribute 2 option 1": False,
+                "dynamic checklist attribute 2 option 2": False,
+                "dynamic radio attribute 2": None,
+                "dynamic text attribute 2": "dynamic answer",
                 "encord_track_uuid": "JizLqHk3",
                 "non dynamic checklist attribute 1 option 1": True,
                 "non dynamic checklist attribute 1 option 2": True,
@@ -619,7 +717,7 @@ expected_coco_json = {
             },
             "bbox": [325.888, 209.66400000000002, 85.12, 107.064],
             "category_id": 1,
-            "id": 4,
+            "id": 6,
             "image_id": 2,
             "iscrowd": 0,
             "keypoints": None,
@@ -630,10 +728,17 @@ expected_coco_json = {
         },
         {
             "area": 15848.275968000002,
-            "attributes": {"encord_track_uuid": "ogYkOiJW", "track_id": 1},
+            "attributes": {
+                "dynamic checklist attribute 2 option 1": False,
+                "dynamic checklist attribute 2 option 2": False,
+                "dynamic radio attribute 2": "dynamic radio " "attribute 2",
+                "dynamic text attribute 2": "dynamic two",
+                "encord_track_uuid": "ogYkOiJW",
+                "track_id": 1,
+            },
             "bbox": [733.696, 362.376, 129.024, 122.83200000000001],
             "category_id": 1,
-            "id": 5,
+            "id": 7,
             "image_id": 2,
             "iscrowd": 0,
             "keypoints": None,

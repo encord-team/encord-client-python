@@ -166,6 +166,7 @@ ontology_rotatable_bboxes = OntologyStructure(
                     feature_node_hash="4ae232f3-89dc-4b39-b9e5-4ac16cdc8cb7",
                     name="Spicy",
                     required=False,
+                    dynamic=False,
                     options=[
                         FlatOption(
                             uid=[1, 1],
