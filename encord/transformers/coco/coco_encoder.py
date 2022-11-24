@@ -768,7 +768,7 @@ class CocoEncoder:
             elif attribute.get_property_type() == PropertyType.CHECKLIST:
                 safe_dict_update(res, self.get_checklist_answer(attribute, answers))
 
-        self.add_unselected_attributes(object_feature_hash, res, dynamic=False)
+        self.add_unselected_attributes(object_feature_hash, res, match_dynamic_attributes=False)
 
         return res
 
@@ -815,11 +815,13 @@ class CocoEncoder:
         if id_and_object_hash in id_and_object_hash_to_answers_map:
             res = id_and_object_hash_to_answers_map[(image_id, object_hash)]
 
-        self.add_unselected_attributes(feature_hash, res, dynamic=True)
+        self.add_unselected_attributes(feature_hash, res, match_dynamic_attributes=True)
 
         return res
 
-    def add_unselected_attributes(self, feature_hash: str, attributes_dict: dict, dynamic: bool) -> None:
+    def add_unselected_attributes(
+        self, feature_hash: str, attributes_dict: dict, match_dynamic_attributes: bool
+    ) -> None:
         """
         Attributes which have never been selected will not show up in the actions map. They will need to be
         added separately. NOTE: this assumes uniqueness of features. Quite an edge case but if it ever comes
@@ -828,7 +830,8 @@ class CocoEncoder:
 
         all_attributes = self.get_attributes_for_feature_hash(feature_hash)
         for attribute in all_attributes:
-            if attribute.dynamic is dynamic:
+            is_matching_attribute = attribute.dynamic == match_dynamic_attributes
+            if is_matching_attribute:
                 if attribute.get_property_type() == PropertyType.CHECKLIST:
                     for option in attribute.options:
                         if option.label not in attributes_dict:
