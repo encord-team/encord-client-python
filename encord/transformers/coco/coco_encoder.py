@@ -15,10 +15,10 @@ import logging
 import subprocess
 import tempfile
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 from shapely.geometry import Polygon
@@ -82,7 +82,7 @@ def get_polygon_from_dict(polygon_dict, W, H):
     return [(polygon_dict[str(i)]["x"] * W, polygon_dict[str(i)]["y"] * H) for i in range(len(polygon_dict))]
 
 
-# TODO: TODO: focus on doing the parser for now for segmentations for images as it was intended. Seems like
+# TODO: focus on doing the parser for now for segmentations for images as it was intended. Seems like
 #   for other formats I can still add stuff or have the clients extend what we have.
 
 # TODO: should these labels be the data structure that I've invented for them instead of the encord dict?
@@ -209,7 +209,8 @@ class CocoEncoder:
     def add_to_object_map_and_get_next_id(self, object_: Object) -> int:
         id_ = len(self._coco_categories_id_to_ontology_object_map) + 1
         # Let the category id start at 1, not 0. Segmentation masks that use COCO annotations often create a bit mask
-        # with this category id. The bitmask must be above 0.
+        # with this category id. The bitmask must be above 0. See this link:
+        # https://cocodataset.org/#stuff-eval
         self._coco_categories_id_to_ontology_object_map[id_] = object_
         self._feature_hash_to_coco_category_id_map[object_.feature_node_hash] = id_
         return id_
