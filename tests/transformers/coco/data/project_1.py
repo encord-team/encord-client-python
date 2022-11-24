@@ -1397,9 +1397,9 @@ output_download_all_only_annotated_images = {
         "year": None,
     },
     "categories": [
-        {"supercategory": "bounding_box", "name": "Box - one", "id": 0},
-        {"supercategory": "polygon", "name": "Polygon", "id": 1},
-        {"supercategory": "bounding_box", "name": "Box - two", "id": 2},
+        {"supercategory": "bounding_box", "name": "Box - one", "id": 1},
+        {"supercategory": "polygon", "name": "Polygon", "id": 2},
+        {"supercategory": "bounding_box", "name": "Box - two", "id": 3},
     ],
     "images": [
         {
@@ -1477,7 +1477,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 929.1414951000002,
             "bbox": [74.3848, 86.31060000000001, 29.292900000000003, 31.719],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [
@@ -1499,7 +1499,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 1083.7534617,
             "bbox": [131.9864, 85.651, 31.8311, 34.047],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [[131.9864, 85.651, 163.8175, 85.651, 163.8175, 119.698, 131.9864, 119.698]],
@@ -1510,7 +1510,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 1625.5716559599994,
             "bbox": [84.6412, 128.8354, 74.7474, 34.047],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [
@@ -1592,7 +1592,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 457.71543454000005,
             "bbox": [113.7269, 114.44059999999999, 22.973300000000002, 19.9238],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -1605,7 +1605,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 467.07098851000006,
             "bbox": [93.52489999999999, 62.953, 16.032100000000014, 35.7154],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -1663,7 +1663,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 556.2799979799997,
             "bbox": [131.72740000000002, 61.013, 15.773099999999971, 39.59539999999999],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -1717,7 +1717,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 521.66744025,
             "bbox": [72.05, 62.2383, 26.8675, 19.4163],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [[72.05, 62.2383, 98.91749999999999, 62.2383, 98.91749999999999, 81.6546, 72.05, 81.6546]],
@@ -1728,7 +1728,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 475.85206350000004,
             "bbox": [127.68249999999999, 62.0004, 22.055, 21.5757],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [
@@ -1750,7 +1750,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 1172.2287802499998,
             "bbox": [73.94749999999999, 90.2922, 63.80000000000001, 30.213300000000004],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [
@@ -1826,7 +1826,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 1.3899765000000315,
             "bbox": [184.25, 68.0028, 12.539999999999992, 14.091000000000008],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 3,
             "iscrowd": 0,
             "segmentation": [[196.79, 68.0028, 190.245, 75.579, 184.25, 82.0938]],
@@ -1837,7 +1837,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 251.68790625,
             "bbox": [82.66499999999999, 65.1297, 19.057500000000005, 20.1117],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 3,
             "iscrowd": 0,
             "segmentation": [
@@ -1883,7 +1883,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 2450.184192,
             "bbox": [794.112, 290.16, 55.424, 44.208000000000006],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 6,
             "iscrowd": 0,
             "segmentation": [
@@ -1896,7 +1896,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "image_id": 6,
             "iscrowd": 0,
             "segmentation": [
@@ -1909,7 +1909,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 6,
             "iscrowd": 0,
             "segmentation": [
@@ -1959,7 +1959,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 1656.06912,
             "bbox": [794.112, 304.488, 55.424, 29.880000000000003],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 7,
             "iscrowd": 0,
             "segmentation": [[794.112, 304.488, 849.536, 304.488, 849.536, 334.368, 794.112, 334.368]],
@@ -1970,7 +1970,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 2034.514944,
             "bbox": [912.256, 291.168, 42.111999999999995, 48.312000000000005],
-            "category_id": 2,
+            "category_id": 3,
             "image_id": 7,
             "iscrowd": 0,
             "segmentation": [
@@ -1983,7 +1983,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 7,
             "iscrowd": 0,
             "segmentation": [
@@ -2033,7 +2033,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 909.840384,
             "bbox": [793.0880000000001, 314.784, 55.424, 16.416],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 8,
             "iscrowd": 0,
             "segmentation": [
@@ -2055,7 +2055,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "image_id": 8,
             "iscrowd": 0,
             "segmentation": [
@@ -2068,7 +2068,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 8,
             "iscrowd": 0,
             "segmentation": [
@@ -2118,7 +2118,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 514.778112,
             "bbox": [794.112, 325.08, 55.424, 9.288],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 9,
             "iscrowd": 0,
             "segmentation": [[794.112, 325.08, 849.536, 325.08, 849.536, 334.368, 794.112, 334.368]],
@@ -2129,7 +2129,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "image_id": 9,
             "iscrowd": 0,
             "segmentation": [
@@ -2142,7 +2142,7 @@ output_download_all_only_annotated_images = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 9,
             "iscrowd": 0,
             "segmentation": [
@@ -2197,7 +2197,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 929.1414951000002,
             "attributes": {"encord_track_uuid": "cd719ba0", "track_id": 0},
             "bbox": [74.3848, 86.31060000000001, 29.292900000000003, 31.719],
-            "category_id": 0,
+            "category_id": 1,
             "id": 0,
             "image_id": 0,
             "iscrowd": 0,
@@ -2220,7 +2220,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 1083.7534617,
             "attributes": {"encord_track_uuid": "8f2b959b", "track_id": 1},
             "bbox": [131.9864, 85.651, 31.8311, 34.047],
-            "category_id": 0,
+            "category_id": 1,
             "id": 1,
             "image_id": 0,
             "iscrowd": 0,
@@ -2232,7 +2232,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 1625.5716559599994,
             "attributes": {"encord_track_uuid": "158ab6de", "track_id": 2},
             "bbox": [84.6412, 128.8354, 74.7474, 34.047],
-            "category_id": 1,
+            "category_id": 2,
             "id": 2,
             "image_id": 0,
             "iscrowd": 0,
@@ -2315,7 +2315,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 457.71543454000005,
             "attributes": {"encord_track_uuid": "1606a489", "track_id": 3},
             "bbox": [113.7269, 114.44059999999999, 22.973300000000002, 19.9238],
-            "category_id": 0,
+            "category_id": 1,
             "id": 3,
             "image_id": 1,
             "iscrowd": 0,
@@ -2329,7 +2329,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 467.07098851000006,
             "attributes": {"encord_track_uuid": "179ab6a8", "track_id": 4},
             "bbox": [93.52489999999999, 62.953, 16.032100000000014, 35.7154],
-            "category_id": 1,
+            "category_id": 2,
             "id": 4,
             "image_id": 1,
             "iscrowd": 0,
@@ -2388,7 +2388,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 556.2799979799997,
             "attributes": {"encord_track_uuid": "8b7c3678", "track_id": 5},
             "bbox": [131.72740000000002, 61.013, 15.773099999999971, 39.59539999999999],
-            "category_id": 1,
+            "category_id": 2,
             "id": 5,
             "image_id": 1,
             "iscrowd": 0,
@@ -2443,7 +2443,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 521.66744025,
             "attributes": {"encord_track_uuid": "fb90b05d", "track_id": 6},
             "bbox": [72.05, 62.2383, 26.8675, 19.4163],
-            "category_id": 0,
+            "category_id": 1,
             "id": 6,
             "image_id": 2,
             "iscrowd": 0,
@@ -2455,7 +2455,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 475.85206350000004,
             "attributes": {"encord_track_uuid": "18e248a1", "track_id": 7},
             "bbox": [127.68249999999999, 62.0004, 22.055, 21.5757],
-            "category_id": 0,
+            "category_id": 1,
             "id": 7,
             "image_id": 2,
             "iscrowd": 0,
@@ -2478,7 +2478,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 1172.2287802499998,
             "attributes": {"encord_track_uuid": "0d562af5", "track_id": 8},
             "bbox": [73.94749999999999, 90.2922, 63.80000000000001, 30.213300000000004],
-            "category_id": 1,
+            "category_id": 2,
             "id": 8,
             "image_id": 2,
             "iscrowd": 0,
@@ -2555,7 +2555,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 1.3899765000000315,
             "attributes": {"encord_track_uuid": "0ee31ba2", "track_id": 9},
             "bbox": [184.25, 68.0028, 12.539999999999992, 14.091000000000008],
-            "category_id": 1,
+            "category_id": 2,
             "id": 9,
             "image_id": 3,
             "iscrowd": 0,
@@ -2567,7 +2567,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 251.68790625,
             "attributes": {"encord_track_uuid": "9289c9f7", "track_id": 10},
             "bbox": [82.66499999999999, 65.1297, 19.057500000000005, 20.1117],
-            "category_id": 1,
+            "category_id": 2,
             "id": 10,
             "image_id": 3,
             "iscrowd": 0,
@@ -2614,7 +2614,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 2450.184192,
             "attributes": {"encord_track_uuid": "56ca5397", "track_id": 11},
             "bbox": [794.112, 290.16, 55.424, 44.208000000000006],
-            "category_id": 0,
+            "category_id": 1,
             "id": 11,
             "image_id": 6,
             "iscrowd": 0,
@@ -2628,7 +2628,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 2161.8616319999996,
             "attributes": {"encord_track_uuid": "627db353", "track_id": 12},
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 12,
             "image_id": 6,
             "iscrowd": 0,
@@ -2642,7 +2642,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 920.7383040000019,
             "attributes": {"encord_track_uuid": "ed76dfba", "track_id": 13},
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 13,
             "image_id": 6,
             "iscrowd": 0,
@@ -2693,7 +2693,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 1656.06912,
             "attributes": {"encord_track_uuid": "56ca5397", "track_id": 11},
             "bbox": [794.112, 304.488, 55.424, 29.880000000000003],
-            "category_id": 0,
+            "category_id": 1,
             "id": 14,
             "image_id": 7,
             "iscrowd": 0,
@@ -2705,7 +2705,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 2034.514944,
             "attributes": {"encord_track_uuid": "627db353", "track_id": 12},
             "bbox": [912.256, 291.168, 42.111999999999995, 48.312000000000005],
-            "category_id": 2,
+            "category_id": 3,
             "id": 15,
             "image_id": 7,
             "iscrowd": 0,
@@ -2719,7 +2719,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 920.7383040000019,
             "attributes": {"encord_track_uuid": "ed76dfba", "track_id": 13},
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 16,
             "image_id": 7,
             "iscrowd": 0,
@@ -2770,7 +2770,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 909.840384,
             "attributes": {"encord_track_uuid": "56ca5397", "track_id": 11},
             "bbox": [793.0880000000001, 314.784, 55.424, 16.416],
-            "category_id": 0,
+            "category_id": 1,
             "id": 17,
             "image_id": 8,
             "iscrowd": 0,
@@ -2793,7 +2793,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 2161.8616319999996,
             "attributes": {"encord_track_uuid": "627db353", "track_id": 12},
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 18,
             "image_id": 8,
             "iscrowd": 0,
@@ -2807,7 +2807,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 920.7383040000019,
             "attributes": {"encord_track_uuid": "ed76dfba", "track_id": 13},
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 19,
             "image_id": 8,
             "iscrowd": 0,
@@ -2858,7 +2858,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 514.778112,
             "attributes": {"encord_track_uuid": "56ca5397", "track_id": 11},
             "bbox": [794.112, 325.08, 55.424, 9.288],
-            "category_id": 0,
+            "category_id": 1,
             "id": 20,
             "image_id": 9,
             "iscrowd": 0,
@@ -2870,7 +2870,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 2161.8616319999996,
             "attributes": {"encord_track_uuid": "627db353", "track_id": 12},
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 21,
             "image_id": 9,
             "iscrowd": 0,
@@ -2884,7 +2884,7 @@ output_download_all_all_video_frames_and_track_ids = {
             "area": 920.7383040000019,
             "attributes": {"encord_track_uuid": "ed76dfba", "track_id": 13},
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 22,
             "image_id": 9,
             "iscrowd": 0,
@@ -2933,9 +2933,9 @@ output_download_all_all_video_frames_and_track_ids = {
         },
     ],
     "categories": [
-        {"id": 0, "name": "Box - one", "supercategory": "bounding_box"},
-        {"id": 1, "name": "Polygon", "supercategory": "polygon"},
-        {"id": 2, "name": "Box - two", "supercategory": "bounding_box"},
+        {"id": 1, "name": "Box - one", "supercategory": "bounding_box"},
+        {"id": 2, "name": "Polygon", "supercategory": "polygon"},
+        {"id": 3, "name": "Box - two", "supercategory": "bounding_box"},
     ],
     "images": [
         {
@@ -3033,7 +3033,7 @@ output_download_all_all_video_frames = {
         {
             "area": 929.1414951000002,
             "bbox": [74.3848, 86.31060000000001, 29.292900000000003, 31.719],
-            "category_id": 0,
+            "category_id": 1,
             "id": 0,
             "image_id": 0,
             "iscrowd": 0,
@@ -3055,7 +3055,7 @@ output_download_all_all_video_frames = {
         {
             "area": 1083.7534617,
             "bbox": [131.9864, 85.651, 31.8311, 34.047],
-            "category_id": 0,
+            "category_id": 1,
             "id": 1,
             "image_id": 0,
             "iscrowd": 0,
@@ -3066,7 +3066,7 @@ output_download_all_all_video_frames = {
         {
             "area": 1625.5716559599994,
             "bbox": [84.6412, 128.8354, 74.7474, 34.047],
-            "category_id": 1,
+            "category_id": 2,
             "id": 2,
             "image_id": 0,
             "iscrowd": 0,
@@ -3148,7 +3148,7 @@ output_download_all_all_video_frames = {
         {
             "area": 457.71543454000005,
             "bbox": [113.7269, 114.44059999999999, 22.973300000000002, 19.9238],
-            "category_id": 0,
+            "category_id": 1,
             "id": 3,
             "image_id": 1,
             "iscrowd": 0,
@@ -3161,7 +3161,7 @@ output_download_all_all_video_frames = {
         {
             "area": 467.07098851000006,
             "bbox": [93.52489999999999, 62.953, 16.032100000000014, 35.7154],
-            "category_id": 1,
+            "category_id": 2,
             "id": 4,
             "image_id": 1,
             "iscrowd": 0,
@@ -3219,7 +3219,7 @@ output_download_all_all_video_frames = {
         {
             "area": 556.2799979799997,
             "bbox": [131.72740000000002, 61.013, 15.773099999999971, 39.59539999999999],
-            "category_id": 1,
+            "category_id": 2,
             "id": 5,
             "image_id": 1,
             "iscrowd": 0,
@@ -3273,7 +3273,7 @@ output_download_all_all_video_frames = {
         {
             "area": 521.66744025,
             "bbox": [72.05, 62.2383, 26.8675, 19.4163],
-            "category_id": 0,
+            "category_id": 1,
             "id": 6,
             "image_id": 2,
             "iscrowd": 0,
@@ -3284,7 +3284,7 @@ output_download_all_all_video_frames = {
         {
             "area": 475.85206350000004,
             "bbox": [127.68249999999999, 62.0004, 22.055, 21.5757],
-            "category_id": 0,
+            "category_id": 1,
             "id": 7,
             "image_id": 2,
             "iscrowd": 0,
@@ -3306,7 +3306,7 @@ output_download_all_all_video_frames = {
         {
             "area": 1172.2287802499998,
             "bbox": [73.94749999999999, 90.2922, 63.80000000000001, 30.213300000000004],
-            "category_id": 1,
+            "category_id": 2,
             "id": 8,
             "image_id": 2,
             "iscrowd": 0,
@@ -3382,7 +3382,7 @@ output_download_all_all_video_frames = {
         {
             "area": 1.3899765000000315,
             "bbox": [184.25, 68.0028, 12.539999999999992, 14.091000000000008],
-            "category_id": 1,
+            "category_id": 2,
             "id": 9,
             "image_id": 3,
             "iscrowd": 0,
@@ -3393,7 +3393,7 @@ output_download_all_all_video_frames = {
         {
             "area": 251.68790625,
             "bbox": [82.66499999999999, 65.1297, 19.057500000000005, 20.1117],
-            "category_id": 1,
+            "category_id": 2,
             "id": 10,
             "image_id": 3,
             "iscrowd": 0,
@@ -3439,7 +3439,7 @@ output_download_all_all_video_frames = {
         {
             "area": 2450.184192,
             "bbox": [794.112, 290.16, 55.424, 44.208000000000006],
-            "category_id": 0,
+            "category_id": 1,
             "id": 11,
             "image_id": 6,
             "iscrowd": 0,
@@ -3452,7 +3452,7 @@ output_download_all_all_video_frames = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 12,
             "image_id": 6,
             "iscrowd": 0,
@@ -3465,7 +3465,7 @@ output_download_all_all_video_frames = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 13,
             "image_id": 6,
             "iscrowd": 0,
@@ -3515,7 +3515,7 @@ output_download_all_all_video_frames = {
         {
             "area": 1656.06912,
             "bbox": [794.112, 304.488, 55.424, 29.880000000000003],
-            "category_id": 0,
+            "category_id": 1,
             "id": 14,
             "image_id": 7,
             "iscrowd": 0,
@@ -3526,7 +3526,7 @@ output_download_all_all_video_frames = {
         {
             "area": 2034.514944,
             "bbox": [912.256, 291.168, 42.111999999999995, 48.312000000000005],
-            "category_id": 2,
+            "category_id": 3,
             "id": 15,
             "image_id": 7,
             "iscrowd": 0,
@@ -3539,7 +3539,7 @@ output_download_all_all_video_frames = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 16,
             "image_id": 7,
             "iscrowd": 0,
@@ -3589,7 +3589,7 @@ output_download_all_all_video_frames = {
         {
             "area": 909.840384,
             "bbox": [793.0880000000001, 314.784, 55.424, 16.416],
-            "category_id": 0,
+            "category_id": 1,
             "id": 17,
             "image_id": 8,
             "iscrowd": 0,
@@ -3611,7 +3611,7 @@ output_download_all_all_video_frames = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 18,
             "image_id": 8,
             "iscrowd": 0,
@@ -3624,7 +3624,7 @@ output_download_all_all_video_frames = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 19,
             "image_id": 8,
             "iscrowd": 0,
@@ -3674,7 +3674,7 @@ output_download_all_all_video_frames = {
         {
             "area": 514.778112,
             "bbox": [794.112, 325.08, 55.424, 9.288],
-            "category_id": 0,
+            "category_id": 1,
             "id": 20,
             "image_id": 9,
             "iscrowd": 0,
@@ -3685,7 +3685,7 @@ output_download_all_all_video_frames = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 21,
             "image_id": 9,
             "iscrowd": 0,
@@ -3698,7 +3698,7 @@ output_download_all_all_video_frames = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 22,
             "image_id": 9,
             "iscrowd": 0,
@@ -3747,9 +3747,9 @@ output_download_all_all_video_frames = {
         },
     ],
     "categories": [
-        {"id": 0, "name": "Box - one", "supercategory": "bounding_box"},
-        {"id": 1, "name": "Polygon", "supercategory": "polygon"},
-        {"id": 2, "name": "Box - two", "supercategory": "bounding_box"},
+        {"id": 1, "name": "Box - one", "supercategory": "bounding_box"},
+        {"id": 2, "name": "Polygon", "supercategory": "polygon"},
+        {"id": 3, "name": "Box - two", "supercategory": "bounding_box"},
     ],
     "images": [
         {
@@ -3853,9 +3853,9 @@ output_download_all_no_videos = {
         "year": None,
     },
     "categories": [
-        {"supercategory": "bounding_box", "name": "Box - one", "id": 0},
-        {"supercategory": "polygon", "name": "Polygon", "id": 1},
-        {"supercategory": "bounding_box", "name": "Box - two", "id": 2},
+        {"supercategory": "bounding_box", "name": "Box - one", "id": 1},
+        {"supercategory": "polygon", "name": "Polygon", "id": 2},
+        {"supercategory": "bounding_box", "name": "Box - two", "id": 3},
     ],
     "images": [
         {
@@ -3905,7 +3905,7 @@ output_download_all_no_videos = {
         {
             "area": 929.1414951000002,
             "bbox": [74.3848, 86.31060000000001, 29.292900000000003, 31.719],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [
@@ -3927,7 +3927,7 @@ output_download_all_no_videos = {
         {
             "area": 1083.7534617,
             "bbox": [131.9864, 85.651, 31.8311, 34.047],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [[131.9864, 85.651, 163.8175, 85.651, 163.8175, 119.698, 131.9864, 119.698]],
@@ -3938,7 +3938,7 @@ output_download_all_no_videos = {
         {
             "area": 1625.5716559599994,
             "bbox": [84.6412, 128.8354, 74.7474, 34.047],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [
@@ -4020,7 +4020,7 @@ output_download_all_no_videos = {
         {
             "area": 457.71543454000005,
             "bbox": [113.7269, 114.44059999999999, 22.973300000000002, 19.9238],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -4033,7 +4033,7 @@ output_download_all_no_videos = {
         {
             "area": 467.07098851000006,
             "bbox": [93.52489999999999, 62.953, 16.032100000000014, 35.7154],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -4091,7 +4091,7 @@ output_download_all_no_videos = {
         {
             "area": 556.2799979799997,
             "bbox": [131.72740000000002, 61.013, 15.773099999999971, 39.59539999999999],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -4145,7 +4145,7 @@ output_download_all_no_videos = {
         {
             "area": 521.66744025,
             "bbox": [72.05, 62.2383, 26.8675, 19.4163],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [[72.05, 62.2383, 98.91749999999999, 62.2383, 98.91749999999999, 81.6546, 72.05, 81.6546]],
@@ -4156,7 +4156,7 @@ output_download_all_no_videos = {
         {
             "area": 475.85206350000004,
             "bbox": [127.68249999999999, 62.0004, 22.055, 21.5757],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [
@@ -4178,7 +4178,7 @@ output_download_all_no_videos = {
         {
             "area": 1172.2287802499998,
             "bbox": [73.94749999999999, 90.2922, 63.80000000000001, 30.213300000000004],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [
@@ -4254,7 +4254,7 @@ output_download_all_no_videos = {
         {
             "area": 1.3899765000000315,
             "bbox": [184.25, 68.0028, 12.539999999999992, 14.091000000000008],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 3,
             "iscrowd": 0,
             "segmentation": [[196.79, 68.0028, 190.245, 75.579, 184.25, 82.0938]],
@@ -4265,7 +4265,7 @@ output_download_all_no_videos = {
         {
             "area": 251.68790625,
             "bbox": [82.66499999999999, 65.1297, 19.057500000000005, 20.1117],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 3,
             "iscrowd": 0,
             "segmentation": [
@@ -4316,7 +4316,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 929.1414951000002,
             "bbox": [74.3848, 86.31060000000001, 29.292900000000003, 31.719],
-            "category_id": 0,
+            "category_id": 1,
             "id": 0,
             "image_id": 0,
             "iscrowd": 0,
@@ -4338,7 +4338,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 1083.7534617,
             "bbox": [131.9864, 85.651, 31.8311, 34.047],
-            "category_id": 0,
+            "category_id": 1,
             "id": 1,
             "image_id": 0,
             "iscrowd": 0,
@@ -4349,7 +4349,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 1625.5716559599994,
             "bbox": [84.6412, 128.8354, 74.7474, 34.047],
-            "category_id": 1,
+            "category_id": 2,
             "id": 2,
             "image_id": 0,
             "iscrowd": 0,
@@ -4431,7 +4431,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 457.71543454000005,
             "bbox": [113.7269, 114.44059999999999, 22.973300000000002, 19.9238],
-            "category_id": 0,
+            "category_id": 1,
             "id": 3,
             "image_id": 1,
             "iscrowd": 0,
@@ -4444,7 +4444,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 467.07098851000006,
             "bbox": [93.52489999999999, 62.953, 16.032100000000014, 35.7154],
-            "category_id": 1,
+            "category_id": 2,
             "id": 4,
             "image_id": 1,
             "iscrowd": 0,
@@ -4502,7 +4502,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 556.2799979799997,
             "bbox": [131.72740000000002, 61.013, 15.773099999999971, 39.59539999999999],
-            "category_id": 1,
+            "category_id": 2,
             "id": 5,
             "image_id": 1,
             "iscrowd": 0,
@@ -4556,7 +4556,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 521.66744025,
             "bbox": [72.05, 62.2383, 26.8675, 19.4163],
-            "category_id": 0,
+            "category_id": 1,
             "id": 6,
             "image_id": 2,
             "iscrowd": 0,
@@ -4567,7 +4567,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 475.85206350000004,
             "bbox": [127.68249999999999, 62.0004, 22.055, 21.5757],
-            "category_id": 0,
+            "category_id": 1,
             "id": 7,
             "image_id": 2,
             "iscrowd": 0,
@@ -4589,7 +4589,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 1172.2287802499998,
             "bbox": [73.94749999999999, 90.2922, 63.80000000000001, 30.213300000000004],
-            "category_id": 1,
+            "category_id": 2,
             "id": 8,
             "image_id": 2,
             "iscrowd": 0,
@@ -4665,7 +4665,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 1.3899765000000315,
             "bbox": [184.25, 68.0028, 12.539999999999992, 14.091000000000008],
-            "category_id": 1,
+            "category_id": 2,
             "id": 9,
             "image_id": 3,
             "iscrowd": 0,
@@ -4676,7 +4676,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 251.68790625,
             "bbox": [82.66499999999999, 65.1297, 19.057500000000005, 20.1117],
-            "category_id": 1,
+            "category_id": 2,
             "id": 10,
             "image_id": 3,
             "iscrowd": 0,
@@ -4722,7 +4722,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 2450.184192,
             "bbox": [794.112, 290.16, 55.424, 44.208000000000006],
-            "category_id": 0,
+            "category_id": 1,
             "id": 11,
             "image_id": 6,
             "iscrowd": 0,
@@ -4735,7 +4735,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 12,
             "image_id": 6,
             "iscrowd": 0,
@@ -4748,7 +4748,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 13,
             "image_id": 6,
             "iscrowd": 0,
@@ -4798,7 +4798,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 1656.06912,
             "bbox": [794.112, 304.488, 55.424, 29.880000000000003],
-            "category_id": 0,
+            "category_id": 1,
             "id": 14,
             "image_id": 7,
             "iscrowd": 0,
@@ -4809,7 +4809,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 2034.514944,
             "bbox": [912.256, 291.168, 42.111999999999995, 48.312000000000005],
-            "category_id": 2,
+            "category_id": 3,
             "id": 15,
             "image_id": 7,
             "iscrowd": 0,
@@ -4822,7 +4822,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 16,
             "image_id": 7,
             "iscrowd": 0,
@@ -4872,7 +4872,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 909.840384,
             "bbox": [793.0880000000001, 314.784, 55.424, 16.416],
-            "category_id": 0,
+            "category_id": 1,
             "id": 17,
             "image_id": 8,
             "iscrowd": 0,
@@ -4894,7 +4894,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 18,
             "image_id": 8,
             "iscrowd": 0,
@@ -4907,7 +4907,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 19,
             "image_id": 8,
             "iscrowd": 0,
@@ -4957,7 +4957,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 514.778112,
             "bbox": [794.112, 325.08, 55.424, 9.288],
-            "category_id": 0,
+            "category_id": 1,
             "id": 20,
             "image_id": 9,
             "iscrowd": 0,
@@ -4968,7 +4968,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 2161.8616319999996,
             "bbox": [912.256, 291.168, 42.111999999999995, 51.336],
-            "category_id": 2,
+            "category_id": 3,
             "id": 21,
             "image_id": 9,
             "iscrowd": 0,
@@ -4981,7 +4981,7 @@ output_no_downloads_with_annotated_videos = {
         {
             "area": 920.7383040000019,
             "bbox": [831.104, 381.6, 89.34399999999994, 38.01599999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 22,
             "image_id": 9,
             "iscrowd": 0,
@@ -5030,9 +5030,9 @@ output_no_downloads_with_annotated_videos = {
         },
     ],
     "categories": [
-        {"id": 0, "name": "Box - one", "supercategory": "bounding_box"},
-        {"id": 1, "name": "Polygon", "supercategory": "polygon"},
-        {"id": 2, "name": "Box - two", "supercategory": "bounding_box"},
+        {"id": 1, "name": "Box - one", "supercategory": "bounding_box"},
+        {"id": 2, "name": "Polygon", "supercategory": "polygon"},
+        {"id": 3, "name": "Box - two", "supercategory": "bounding_box"},
     ],
     "images": [
         {
@@ -5136,9 +5136,9 @@ output_no_input_labels = {
         "year": None,
     },
     "categories": [
-        {"supercategory": "bounding_box", "name": "Box - one", "id": 0},
-        {"supercategory": "polygon", "name": "Polygon", "id": 1},
-        {"supercategory": "bounding_box", "name": "Box - two", "id": 2},
+        {"supercategory": "bounding_box", "name": "Box - one", "id": 1},
+        {"supercategory": "polygon", "name": "Polygon", "id": 2},
+        {"supercategory": "bounding_box", "name": "Box - two", "id": 3},
     ],
     "images": [],
     "annotations": [],
@@ -5154,9 +5154,9 @@ output_no_downloads_no_videos = {
         "year": None,
     },
     "categories": [
-        {"supercategory": "bounding_box", "name": "Box - one", "id": 0},
-        {"supercategory": "polygon", "name": "Polygon", "id": 1},
-        {"supercategory": "bounding_box", "name": "Box - two", "id": 2},
+        {"supercategory": "bounding_box", "name": "Box - one", "id": 1},
+        {"supercategory": "polygon", "name": "Polygon", "id": 2},
+        {"supercategory": "bounding_box", "name": "Box - two", "id": 3},
     ],
     "images": [
         {
@@ -5212,7 +5212,7 @@ output_no_downloads_no_videos = {
         {
             "area": 929.1414951000002,
             "bbox": [74.3848, 86.31060000000001, 29.292900000000003, 31.719],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [
@@ -5234,7 +5234,7 @@ output_no_downloads_no_videos = {
         {
             "area": 1083.7534617,
             "bbox": [131.9864, 85.651, 31.8311, 34.047],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [[131.9864, 85.651, 163.8175, 85.651, 163.8175, 119.698, 131.9864, 119.698]],
@@ -5245,7 +5245,7 @@ output_no_downloads_no_videos = {
         {
             "area": 1625.5716559599994,
             "bbox": [84.6412, 128.8354, 74.7474, 34.047],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 0,
             "iscrowd": 0,
             "segmentation": [
@@ -5327,7 +5327,7 @@ output_no_downloads_no_videos = {
         {
             "area": 457.71543454000005,
             "bbox": [113.7269, 114.44059999999999, 22.973300000000002, 19.9238],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -5340,7 +5340,7 @@ output_no_downloads_no_videos = {
         {
             "area": 467.07098851000006,
             "bbox": [93.52489999999999, 62.953, 16.032100000000014, 35.7154],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -5398,7 +5398,7 @@ output_no_downloads_no_videos = {
         {
             "area": 556.2799979799997,
             "bbox": [131.72740000000002, 61.013, 15.773099999999971, 39.59539999999999],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 1,
             "iscrowd": 0,
             "segmentation": [
@@ -5452,7 +5452,7 @@ output_no_downloads_no_videos = {
         {
             "area": 521.66744025,
             "bbox": [72.05, 62.2383, 26.8675, 19.4163],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [[72.05, 62.2383, 98.91749999999999, 62.2383, 98.91749999999999, 81.6546, 72.05, 81.6546]],
@@ -5463,7 +5463,7 @@ output_no_downloads_no_videos = {
         {
             "area": 475.85206350000004,
             "bbox": [127.68249999999999, 62.0004, 22.055, 21.5757],
-            "category_id": 0,
+            "category_id": 1,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [
@@ -5485,7 +5485,7 @@ output_no_downloads_no_videos = {
         {
             "area": 1172.2287802499998,
             "bbox": [73.94749999999999, 90.2922, 63.80000000000001, 30.213300000000004],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 2,
             "iscrowd": 0,
             "segmentation": [
@@ -5561,7 +5561,7 @@ output_no_downloads_no_videos = {
         {
             "area": 1.3899765000000315,
             "bbox": [184.25, 68.0028, 12.539999999999992, 14.091000000000008],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 3,
             "iscrowd": 0,
             "segmentation": [[196.79, 68.0028, 190.245, 75.579, 184.25, 82.0938]],
@@ -5572,7 +5572,7 @@ output_no_downloads_no_videos = {
         {
             "area": 251.68790625,
             "bbox": [82.66499999999999, 65.1297, 19.057500000000005, 20.1117],
-            "category_id": 1,
+            "category_id": 2,
             "image_id": 3,
             "iscrowd": 0,
             "segmentation": [

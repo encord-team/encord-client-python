@@ -1,13 +1,12 @@
-"""DENIS: think properly about the structure, the transcoders and how we want to subclass or extend this so people
+"""TODO: think properly about the structure, the transcoders and how we want to subclass or extend this so people
 can plug into the different parts easily.
 
 ideas
 * a class where the individual parts can be overwritten
 * a class where the individual transformers can be re-assigned
 *
-DENIS: how are we going to document this in Sphinx if this class is independent?
 
-DENIS:
+TODO:
 * parallel downloads with a specific flag
 * saving the annotation file with a specific flag
 * labels class for better type support.
@@ -15,16 +14,17 @@ DENIS:
 import logging
 import subprocess
 import tempfile
-from dataclasses import asdict, dataclass
+from collections import defaultdict
+from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 from shapely.geometry import Polygon
 from tqdm import tqdm
 
-from encord.objects.common import Shape
+from encord.objects.common import Attribute, PropertyType, Shape
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
 from encord.transformers.coco.coco_datastructure import (
@@ -41,6 +41,9 @@ INCLUDE_VIDEOS_DEFAULT = True
 INCLUDE_UNANNOTATED_VIDEOS_DEFAULT = False
 INCLUDE_TRACK_ID_DEFAULT = False
 INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT = False
+INCLUDE_FLAT_CLASSIFICATIONS = False
+
+RESERVED_CLASSIFICATION_FIELDS = {"encord_track_uuid", "track_id", "rotation"}
 
 
 @dataclass
@@ -71,7 +74,7 @@ class EncodingError(Exception):
 
 
 def get_size(*args, **kwargs) -> Size:
-    # DENIS: this belongs in a utils folder.
+    # TODO: this belongs in a utils folder.
     return Size(1, 2)  # A stub for now
 
 
@@ -79,10 +82,10 @@ def get_polygon_from_dict(polygon_dict, W, H):
     return [(polygon_dict[str(i)]["x"] * W, polygon_dict[str(i)]["y"] * H) for i in range(len(polygon_dict))]
 
 
-# DENIS: TODO: focus on doing the parser for now for segmentations for images as it was intended. Seems like
+# TODO: focus on doing the parser for now for segmentations for images as it was intended. Seems like
 #   for other formats I can still add stuff or have the clients extend what we have.
 
-# DENIS: should these labels be the data structure that I've invented for them instead of the encord dict?
+# TODO: should these labels be the data structure that I've invented for them instead of the encord dict?
 class CocoEncoder:
     """This class has been purposefully built in a modular fashion for extensibility in mind. You are encouraged to
     subclass this encoder and change any of the custom functions. The return types are given for convenience, but these
@@ -97,12 +100,13 @@ class CocoEncoder:
         self._coco_json = dict()
         self._current_annotation_id = 0
         self._object_hash_to_track_id_map = {}
-        self._coco_categories_id_to_ontology_object_map = dict()  # DENIS: do we need this?
+        self._coco_categories_id_to_ontology_object_map = dict()  # TODO: do we need this?
         self._feature_hash_to_coco_category_id_map = dict()
         self._data_hash_to_image_id_map = dict()
         """Map of (data_hash, frame_offset) to the image id"""
 
-        # self._data_location_to_image_id_map = dict()
+        self._feature_hash_to_attribute_map: Optional[Dict[str, Attribute]] = None
+        self._id_and_object_hash_to_answers_map: Optional[Dict[Tuple[int, str], dict]] = None
 
         self._download_files = DOWNLOAD_FILES_DEFAULT
         self._download_file_path = DOWNLOAD_FILE_PATH_DEFAULT
@@ -110,6 +114,7 @@ class CocoEncoder:
         self._include_unannotated_videos = INCLUDE_UNANNOTATED_VIDEOS_DEFAULT
         self._include_track_id = INCLUDE_TRACK_ID_DEFAULT
         self._include_bounding_box_rotation = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT
+        self._include_flat_classifications = INCLUDE_FLAT_CLASSIFICATIONS
 
     def encode(
         self,
@@ -120,11 +125,12 @@ class CocoEncoder:
         include_unannotated_videos: bool = INCLUDE_UNANNOTATED_VIDEOS_DEFAULT,
         include_track_id: bool = INCLUDE_TRACK_ID_DEFAULT,
         include_bounding_box_rotation: bool = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT,
+        include_flat_classifications: bool = INCLUDE_FLAT_CLASSIFICATIONS,
     ) -> dict:
         """
         Args:
             download_files: If set to true, the images are downloaded into a local directory and the `coco_url` of the
-                images will point to the location of the local directory. DENIS: can also maybe have a Path obj here.
+                images will point to the location of the local directory. TODO: can also maybe have a Path obj here.
             download_file_path:
                 Root path to where the images and videos are downloaded or where downloaded images are looked up from.
                 For example, if `include_unannotated_videos = True` then this is the root path of the
@@ -138,6 +144,12 @@ class CocoEncoder:
                 id as `attributes: {track_id: y}` (compatible with CVAT to COCO export)
             include_bounding_box_rotation: Add the bounding box rotation theta as `attributes: {rotation: x}`
                 (compatible with CVAT to COCO export)
+            include_flat_classifications: This will include dynamic and non-dynamic classifications as part of
+                every label. The responses will be pasted from the range into every single label, duplicating the
+                payload in cases where the range would usually cover more than one label. these will be added
+                into the `attributes` field. The postfix `_classification` will be added if there is a name
+                clash with one of the RESERVED_CLASSIFICATION_FIELDS. The classifications will only include one level
+                of nesting. Further nesting will not be considered.
         """
         self._download_files = download_files
         self._download_file_path = download_file_path
@@ -145,6 +157,7 @@ class CocoEncoder:
         self._include_unannotated_videos = include_unannotated_videos
         self._include_track_id = include_track_id
         self._include_bounding_box_rotation = include_bounding_box_rotation
+        self._include_flat_classifications = include_flat_classifications
 
         self._coco_json["info"] = self.get_info()
         self._coco_json["categories"] = self.get_categories()
@@ -157,7 +170,7 @@ class CocoEncoder:
         return {
             "description": self.get_description(),
             "contributor": None,  # TODO: these fields also need a response
-            "date_created": None,  # DENIS: there is something in the labels, alternatively can start to return more from the SDK
+            "date_created": None,  # TODO: there is something in the labels, alternatively can start to return more from the SDK
             "url": None,
             "version": None,
             "year": None,
@@ -194,7 +207,10 @@ class CocoEncoder:
         return object_.shape.value
 
     def add_to_object_map_and_get_next_id(self, object_: Object) -> int:
-        id_ = len(self._coco_categories_id_to_ontology_object_map)
+        id_ = len(self._coco_categories_id_to_ontology_object_map) + 1
+        # Let the category id start at 1, not 0. Segmentation masks that use COCO annotations often create a bit mask
+        # with this category id. The bitmask must be above 0. See this link:
+        # https://cocodataset.org/#stuff-eval
         self._coco_categories_id_to_ontology_object_map[id_] = object_
         self._feature_hash_to_coco_category_id_map[object_.feature_node_hash] = id_
         return id_
@@ -233,10 +249,10 @@ class CocoEncoder:
         return images
 
     def get_image(self, data_unit: dict) -> dict:
-        # DENIS: we probably want a map of this image id to image hash in our DB, including the image_group hash.
+        # TODO: we probably want a map of this image id to image hash in our DB, including the image_group hash.
 
         """
-        DENIS: next up: here we need to branch off and create the videos
+        TODO: next up: here we need to branch off and create the videos
         * coco_url, height, width will be the same
         * id will be continuous
         * file_name will be also continuous according to all the images that are being extracted from the video.
@@ -289,7 +305,7 @@ class CocoEncoder:
 
         path_to_video_dir = self._download_file_path.joinpath(Path("videos"), Path(data_hash))
         if self._include_unannotated_videos and path_to_video_dir.is_dir():
-            # DENIS: log something for transparency?
+            # TODO: log something for transparency?
             for frame_num in range(len(list(path_to_video_dir.iterdir()))):
                 images.append(self.get_video_image(data_hash, video_title, coco_url, height, width, int(frame_num)))
         else:
@@ -298,7 +314,7 @@ class CocoEncoder:
 
         return images
 
-    # def get_frame_numbers(self, data_unit: dict) -> Iterator:  # DENIS: use this to remove the above if/else.
+    # def get_frame_numbers(self, data_unit: dict) -> Iterator:  # TODO: use this to remove the above if/else.
 
     def get_dicom_image(self, data_hash: str, height: int, width: int, frame_num: int) -> dict:
         image_id = len(self._data_hash_to_image_id_map)
@@ -348,8 +364,11 @@ class CocoEncoder:
     def get_annotations(self):
         annotations = []
 
-        # DENIS: need to make sure at least one image
+        # TODO: need to make sure at least one image
         for labels in self._labels_list:
+            object_answers = labels["object_answers"]
+            object_actions = labels["object_actions"]
+
             for data_unit in labels["data_units"].values():
                 data_hash = data_unit["data_hash"]
 
@@ -359,53 +378,70 @@ class CocoEncoder:
                     for frame_num, frame_item in data_unit["labels"].items():
                         image_id = self.get_image_id(data_hash, int(frame_num))
                         objects = frame_item["objects"]
-                        annotations.extend(self.get_annotation(objects, image_id))
+                        annotations.extend(self.get_annotation(objects, image_id, object_answers, object_actions))
 
                 elif "application/dicom" in data_unit["data_type"]:
                     # copy pasta:
                     for frame_num, frame_item in data_unit["labels"].items():
                         image_id = self.get_image_id(data_hash, int(frame_num))
                         objects = frame_item["objects"]
-                        annotations.extend(self.get_annotation(objects, image_id))
+                        annotations.extend(self.get_annotation(objects, image_id, object_answers, object_actions))
 
                 else:
                     image_id = self.get_image_id(data_hash)
                     objects = data_unit["labels"]["objects"]
-                    annotations.extend(self.get_annotation(objects, image_id))
+                    annotations.extend(self.get_annotation(objects, image_id, object_answers, object_actions))
 
         return annotations
 
-    # DENIS: naming with plural/singular
-    def get_annotation(self, objects: List[dict], image_id: int) -> List[dict]:
+    # TODO: naming with plural/singular
+    def get_annotation(
+        self, objects: List[dict], image_id: int, object_answers: dict, object_actions: dict
+    ) -> List[dict]:
         annotations = []
         for object_ in objects:
             shape = object_["shape"]
 
-            # DENIS: abstract this
+            # TODO: abstract this
             for image_data in self._coco_json["images"]:
                 if image_data["id"] == image_id:
                     size = Size(width=image_data["width"], height=image_data["height"])
 
-            # DENIS: would be nice if this shape was an enum => with the Json support.
             if shape == Shape.BOUNDING_BOX.value:
-                # DENIS: how can I make sure this can be extended properly? At what point do I transform this to a JSON?
+                # TODO: how can I make sure this can be extended properly? At what point do I transform this to a JSON?
                 # maybe I can have an `asdict` if this is a dataclass, else just keep the json and have the return type
                 # be a union?!
-                annotations.append(as_dict_custom(self.get_bounding_box(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_bounding_box(object_, image_id, size, object_answers, object_actions))
+                )
             if shape == Shape.ROTATABLE_BOUNDING_BOX.value:
-                annotations.append(as_dict_custom(self.get_rotatable_bounding_box(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(
+                        self.get_rotatable_bounding_box(object_, image_id, size, object_answers, object_actions)
+                    )
+                )
             elif shape == Shape.POLYGON.value:
-                annotations.append(as_dict_custom(self.get_polygon(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_polygon(object_, image_id, size, object_answers, object_actions))
+                )
             elif shape == Shape.POLYLINE.value:
-                annotations.append(as_dict_custom(self.get_polyline(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_polyline(object_, image_id, size, object_answers, object_actions))
+                )
             elif shape == Shape.POINT.value:
-                annotations.append(as_dict_custom(self.get_point(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_point(object_, image_id, size, object_answers, object_actions))
+                )
             elif shape == Shape.SKELETON.value:
-                annotations.append(as_dict_custom(self.get_skeleton(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_skeleton(object_, image_id, size, object_answers, object_actions))
+                )
 
         return annotations
 
-    def get_bounding_box(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+    def get_bounding_box(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
         x, y = (
             object_["boundingBox"]["x"] * size.width,
             object_["boundingBox"]["y"] * size.height,
@@ -420,6 +456,13 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
         return CocoAnnotation(
             area,
             bbox,
@@ -430,9 +473,12 @@ class CocoEncoder:
             segmentation,
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
         )
 
-    def get_rotatable_bounding_box(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+    def get_rotatable_bounding_box(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
         x, y = (
             object_["rotatableBoundingBox"]["x"] * size.width,
             object_["rotatableBoundingBox"]["y"] * size.height,
@@ -451,6 +497,13 @@ class CocoEncoder:
         else:
             rotation = None
 
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
         return CocoAnnotation(
             area,
             bbox,
@@ -462,9 +515,12 @@ class CocoEncoder:
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
             rotation=rotation,
+            classifications=classifications,
         )
 
-    def get_polygon(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+    def get_polygon(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
         polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
         segmentation = [list(chain(*polygon))]
         polygon = Polygon(polygon)
@@ -476,6 +532,13 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
         return CocoAnnotation(
             area,
             bbox,
@@ -486,9 +549,12 @@ class CocoEncoder:
             segmentation,
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
         )
 
-    def get_polyline(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+    def get_polyline(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
         """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
         polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
         polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
@@ -498,6 +564,13 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
         return CocoAnnotation(
             area,
             bbox,
@@ -508,6 +581,7 @@ class CocoEncoder:
             segmentation,
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
         )
 
     def get_bbox_for_polyline(self, polygon: list):
@@ -547,7 +621,9 @@ class CocoEncoder:
 
         return polygon
 
-    def get_point(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
+    def get_point(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
         x, y = (
             object_["point"]["0"]["x"] * size.width,
             object_["point"]["0"]["y"] * size.height,
@@ -562,6 +638,13 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
 
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
         return CocoAnnotation(
             area,
             bbox,
@@ -574,10 +657,13 @@ class CocoEncoder:
             num_keypoints,
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
         )
 
-    def get_skeleton(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
-        # DENIS: next up: check how this is visualised.
+    def get_skeleton(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
+        # TODO: next up: check how this is visualised.
         area = 0
         segmentation = []
         keypoints = []
@@ -595,10 +681,17 @@ class CocoEncoder:
         x, y, x_max, y_max = min(xs), min(ys), max(xs), max(ys)
         w, h = x_max - x, y_max - y
 
-        # DENIS: think if the next two lines should be in `get_coco_annotation_default_fields`
+        # TODO: think if the next two lines should be in `get_coco_annotation_default_fields`
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
         id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
 
         return CocoAnnotation(
             area,
@@ -612,7 +705,170 @@ class CocoEncoder:
             num_keypoints,
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
         )
+
+    def get_flat_classifications(
+        self, object_: dict, image_id: int, object_answers: dict, object_actions: dict
+    ) -> dict:
+        object_hash = object_["objectHash"]
+        feature_hash = object_["featureHash"]
+
+        feature_hash_to_attribute_map: Dict[str, Attribute] = self.get_feature_hash_to_flat_object_attribute_map()
+        id_and_object_hash_to_answers_map = self.get_id_and_object_hash_to_answers_map(object_actions)
+
+        classifications = self.get_flat_static_classifications(
+            object_hash, feature_hash, object_answers, feature_hash_to_attribute_map
+        )
+        dynamic_classifications = self.get_flat_dynamic_classifications(
+            object_hash,
+            feature_hash,
+            image_id,
+            id_and_object_hash_to_answers_map,
+        )
+        safe_dict_update(classifications, dynamic_classifications)
+
+        return classifications
+
+    def get_feature_hash_to_flat_object_attribute_map(self) -> Dict[str, Attribute]:
+        if self._feature_hash_to_attribute_map is not None:
+            return self._feature_hash_to_attribute_map
+
+        ret: Dict[str, Attribute] = {}
+
+        for object_ in self._ontology.objects:
+            for attribute in object_.attributes:
+                ret[attribute.feature_node_hash] = attribute
+
+        self._feature_hash_to_attribute_map = ret
+        return ret
+
+    def get_flat_static_classifications(
+        self,
+        object_hash: str,
+        object_feature_hash: str,
+        object_answers: dict,
+        feature_hash_to_attribute_map: Dict[str, Attribute],
+    ) -> dict:
+        ret = {}
+        classifications = object_answers[object_hash]["classifications"]
+        for classification in classifications:
+            feature_hash = classification["featureHash"]
+            if feature_hash not in feature_hash_to_attribute_map:
+                # This will be a deeply nested attribute
+                continue
+
+            attribute = feature_hash_to_attribute_map[feature_hash]
+            answers = classification["answers"]
+
+            if attribute.get_property_type() == PropertyType.TEXT:
+                safe_dict_update(ret, self.get_text_answer(attribute, answers))
+            elif attribute.get_property_type() == PropertyType.RADIO:
+                safe_dict_update(ret, self.get_radio_answer(attribute, answers))
+            elif attribute.get_property_type() == PropertyType.CHECKLIST:
+                safe_dict_update(ret, self.get_checklist_answer(attribute, answers))
+
+        self.add_unselected_attributes(object_feature_hash, ret, match_dynamic_attributes=False)
+
+        return ret
+
+    def get_id_and_object_hash_to_answers_map(self, object_actions: dict) -> Dict[Tuple[int, str], dict]:
+        if self._id_and_object_hash_to_answers_map is not None:
+            return self._id_and_object_hash_to_answers_map
+
+        ret = defaultdict(dict)
+        feature_hash_to_attribute_map = self.get_feature_hash_to_flat_object_attribute_map()
+        for object_hash, payload in object_actions.items():
+            for action in payload["actions"]:
+                feature_hash = action["featureHash"]
+                if feature_hash not in feature_hash_to_attribute_map:
+                    # This will be a deeply nested attribute
+                    continue
+
+                attribute = feature_hash_to_attribute_map[feature_hash]
+                answers = action["answers"]
+                answers_dict = {}
+                if attribute.get_property_type() == PropertyType.TEXT:
+                    safe_dict_update(answers_dict, self.get_text_answer(attribute, answers))
+                elif attribute.get_property_type() == PropertyType.RADIO:
+                    safe_dict_update(answers_dict, self.get_radio_answer(attribute, answers))
+                elif attribute.get_property_type() == PropertyType.CHECKLIST:
+                    safe_dict_update(answers_dict, self.get_checklist_answer(attribute, answers))
+
+                for sub_range in action["range"]:
+                    for i in range(sub_range[0], sub_range[1] + 1):
+                        safe_dict_update(ret[(i, object_hash)], answers_dict)
+
+        self._id_and_object_hash_to_answers_map = ret
+        return ret
+
+    def get_flat_dynamic_classifications(
+        self,
+        object_hash: str,
+        feature_hash: str,
+        image_id: int,
+        id_and_object_hash_to_answers_map: Dict[Tuple[int, str], dict],
+    ) -> dict:
+
+        ret = {}
+        id_and_object_hash = (image_id, object_hash)
+        if id_and_object_hash in id_and_object_hash_to_answers_map:
+            ret = id_and_object_hash_to_answers_map[(image_id, object_hash)]
+
+        self.add_unselected_attributes(feature_hash, ret, match_dynamic_attributes=True)
+
+        return ret
+
+    def add_unselected_attributes(
+        self, feature_hash: str, attributes_dict: dict, match_dynamic_attributes: bool
+    ) -> None:
+        """
+        Attributes which have never been selected will not show up in the actions map. They will need to be
+        added separately. NOTE: this assumes uniqueness of features. Quite an edge case but if it ever comes
+        up it needs to be solved somewhere here.
+        """
+
+        all_attributes = self.get_attributes_for_feature_hash(feature_hash)
+        for attribute in all_attributes:
+            is_matching_attribute = attribute.dynamic == match_dynamic_attributes
+            if is_matching_attribute:
+                if attribute.get_property_type() == PropertyType.CHECKLIST:
+                    for option in attribute.options:
+                        if option.label not in attributes_dict:
+                            # We need to add the default of False.
+                            attributes_dict[option.label] = False
+                else:
+                    if attribute.name not in attributes_dict:
+                        attributes_dict[attribute.name] = None
+
+    def get_attributes_for_feature_hash(self, feature_hash: str) -> List[Attribute]:
+        ret = []
+        for object_ in self._ontology.objects:
+            if object_.feature_node_hash == feature_hash:
+                for attribute in object_.attributes:
+                    ret.append(attribute)
+                break
+
+        return ret
+
+    def get_radio_answer(self, attribute: Attribute, answers: dict) -> dict:
+        answer = answers[0]  # radios only have one answer by definition
+        return {attribute.name: answer["name"]}
+
+    def get_checklist_answer(self, attribute: Attribute, answers: dict) -> dict:
+        ret = {}
+        found_checklist_answers = set()
+        for answer in answers:
+            found_checklist_answers.add(answer["name"])
+
+        for option in attribute.options:
+            label = option.label
+            ret[label] = label in found_checklist_answers
+
+        return ret
+
+    def get_text_answer(self, attribute: Attribute, answers: str) -> dict:
+        return {attribute.name: answers}
 
     def get_category_id(self, object_: dict) -> int:
         feature_hash = object_["featureHash"]
@@ -624,7 +880,7 @@ class CocoEncoder:
                 f"ensure that the ontology matches the labels provided."
             )
 
-    def get_coco_annotation_default_fields(self, object_: dict) -> Tuple[int, int, Optional[str]]:
+    def get_coco_annotation_default_fields(self, object_: dict) -> Tuple[int, int, Optional[str], Optional[str]]:
         id_ = self.next_annotation_id()
         iscrowd = 0
         if self._include_track_id:
@@ -686,7 +942,7 @@ def download_file(
 def extract_frames(video_file_name: Path, img_dir: Path):
     logger.info(f"Extracting frames from video: {video_file_name}")
 
-    # DENIS: for the rest to work, I will need to throw if the current directory exists and give a nice user warning.
+    # TODO: for the rest to work, I will need to throw if the current directory exists and give a nice user warning.
     img_dir.mkdir(parents=True, exist_ok=True)
     command = f"ffmpeg -i {video_file_name} -start_number 0 {img_dir}/%d.jpg -hide_banner"
     if subprocess.run(command, shell=True, capture_output=True, stdout=None, check=True).returncode != 0:
@@ -694,6 +950,22 @@ def extract_frames(video_file_name: Path, img_dir: Path):
             "Splitting videos into multiple image files failed. Please ensure that you have FFMPEG "
             f"installed on your machine: https://ffmpeg.org/download.html The comamand that failed was `{command}`."
         )
+
+
+def safe_dict_update(dict_1: Dict[str, Any], dict_2: Dict[str, Any]) -> None:
+    """
+    Update dict_1 with all keys from dict_2, however if there is a key clash append a `_`.
+    Ideally we'd append a `_<feature_hash>` only if needed and keep a map of the clashes to avoid confusions.
+    Maybe something to keep in mind when clients will ask for it. It is unlikely going to be an issue.
+    """
+    for key, value in dict_2.items():
+        used_key = key
+        while True:
+            if used_key in dict_1:
+                used_key += "_"
+            else:
+                dict_1[used_key] = value
+                break
 
 
 #

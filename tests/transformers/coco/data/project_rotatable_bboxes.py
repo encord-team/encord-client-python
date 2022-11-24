@@ -166,6 +166,7 @@ ontology_rotatable_bboxes = OntologyStructure(
                     feature_node_hash="4ae232f3-89dc-4b39-b9e5-4ac16cdc8cb7",
                     name="Spicy",
                     required=False,
+                    dynamic=False,
                     options=[
                         FlatOption(
                             uid=[1, 1],
@@ -196,6 +197,7 @@ ontology_rotatable_bboxes = OntologyStructure(
                     feature_node_hash="338931a4-32e2-4f19-aa62-84e12aa410c3",
                     name="Tastiness Level",
                     required=False,
+                    dynamic=False,
                     options=[
                         NestableOption(
                             uid=[1, 1],
@@ -234,7 +236,7 @@ output_rotatable_bboxes = {
                 "track_id": 0,
             },
             "bbox": [318.16799999999995, 48.8621, 77.004, 44.068400000000004],
-            "category_id": 1,
+            "category_id": 2,
             "id": 0,
             "image_id": 0,
             "iscrowd": 0,
@@ -257,7 +259,7 @@ output_rotatable_bboxes = {
             "area": 2778.5193480000003,
             "attributes": {"encord_track_uuid": "ada3228c-2bd3-49cb-b18a-f7433c68b7c0", "rotation": 0, "track_id": 1},
             "bbox": [290.034, 594.587, 35.64, 77.9607],
-            "category_id": 1,
+            "category_id": 2,
             "id": 1,
             "image_id": 0,
             "iscrowd": 0,
@@ -269,7 +271,7 @@ output_rotatable_bboxes = {
             "area": 2132.0783064,
             "attributes": {"encord_track_uuid": "38c6fe5b-dd58-4399-a6cb-74035c2dec58", "rotation": 0, "track_id": 2},
             "bbox": [328.644, 595.3439, 39.36600000000001, 54.160399999999996],
-            "category_id": 1,
+            "category_id": 2,
             "id": 2,
             "image_id": 0,
             "iscrowd": 0,
@@ -285,7 +287,7 @@ output_rotatable_bboxes = {
                 "track_id": 3,
             },
             "bbox": [81.972, 53.908100000000005, 66.258, 52.3943],
-            "category_id": 1,
+            "category_id": 2,
             "id": 3,
             "image_id": 0,
             "iscrowd": 0,
@@ -297,8 +299,8 @@ output_rotatable_bboxes = {
         },
     ],
     "categories": [
-        {"id": 0, "name": "Salami", "supercategory": "rotatable_bounding_box"},
-        {"id": 1, "name": "Pineapple", "supercategory": "rotatable_bounding_box"},
+        {"id": 1, "name": "Salami", "supercategory": "rotatable_bounding_box"},
+        {"id": 2, "name": "Pineapple", "supercategory": "rotatable_bounding_box"},
     ],
     "images": [
         {

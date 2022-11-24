@@ -38,6 +38,11 @@ class _AttributeBase(ABC):
     feature_node_hash: str
     name: str
     required: bool
+    dynamic: bool
+    """
+    The `dynamic` member is part of every attribute. However it can only be true for top level (not nested) attributes
+    that are part of an :class:`encord.objects.ontology_object.Object`.
+    """
 
     @abstractmethod
     def get_property_type(self) -> PropertyType:
@@ -100,6 +105,7 @@ class _AttributeBase(ABC):
         ret["type"] = self.get_property_type().value
         ret["featureNodeHash"] = self.feature_node_hash
         ret["required"] = self.required
+        ret["dynamic"] = self.dynamic
 
         return ret
 
@@ -121,6 +127,7 @@ class _AttributeBase(ABC):
             "feature_node_hash": attribute_dict["featureNodeHash"],
             "name": attribute_dict["name"],
             "required": attribute_dict["required"],
+            "dynamic": attribute_dict.get("dynamic", False),
         }
 
 
@@ -309,6 +316,7 @@ class NestableOption(_OptionBase):
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
+    # DENIS: do I need to ensure that the next level attribute has no `dynamic` field?
     nested_options: List[Attribute] = field(default_factory=list)
 
     def get_option_type(self) -> OptionType:
@@ -396,6 +404,7 @@ def _add_attribute(
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,
     required: bool = False,
+    dynamic: bool = False,
 ) -> T:
     local_uid, feature_node_hash = __build_identifiers(attributes, local_uid, feature_node_hash)
 
@@ -404,6 +413,7 @@ def _add_attribute(
         "uid": parent_uid + [local_uid],
         "feature_node_hash": feature_node_hash,
         "required": required,
+        "dynamic": dynamic,
     }
 
     if cls.has_options_field():

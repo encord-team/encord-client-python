@@ -10,11 +10,11 @@ class SuperClass:
 
 @dataclass
 class CocoInfo:
-    # DENIS: extensibility??
+    # TODO: extensibility??
     contributor: Optional[str]
     date_created: datetime.date
     url: str
-    version: str  # DENIS: figure this out
+    version: str  # TODO: figure this out
     year: str
     description: str
 
@@ -40,19 +40,20 @@ CocoBbox = Tuple[float, float, float, float]
 
 @dataclass
 class CocoAnnotation(SuperClass):
-    #  DENIS: does this depend on the format? Can this be extended?
+    #  TODO: does this depend on the format? Can this be extended?
     area: float
     bbox: CocoBbox
     category_id: int
-    id_: int  # DENIS: how is this translated to the json. => maybe a wrapper around asdict
+    id_: int  # TODO: how is this translated to the json. => maybe a wrapper around asdict
     image_id: int
     iscrowd: int
-    segmentation: List  # DENIS: this is actually some union
+    segmentation: List  # TODO: this is actually some union
     keypoints: Optional[List[int]] = None
     num_keypoints: Optional[int] = None
     track_id: Optional[int] = None
     encord_track_uuid: Optional[str] = None
     rotation: Optional[float] = None
+    classifications: Optional[dict] = None
 
 
 @dataclass
@@ -64,18 +65,20 @@ class Coco:
     annotations: List[CocoAnnotation]
 
 
-# DENIS: inherit from some sort of serialiser class?
+# TODO: inherit from some sort of serialiser class?
 
 
 def as_dict_custom(data_class):
-    # DENIS: this does not work for deeply nested stuff
+    # TODO: this does not work for deeply nested stuff
     res = asdict(data_class)
     add_id_value = None
+    # DENIS: do we want to have a separate key for classificaitons?
 
     # The track_id and rotation stuff is a huge hack ... don't use this pattern in the future
     add_track_id = None
     add_encord_track_uuid = None
     add_rotation = None
+    add_classifications = None
     for key, value in res.items():
         if key == "id_":
             add_id_value = value
@@ -85,12 +88,14 @@ def as_dict_custom(data_class):
             add_encord_track_uuid = value
         if key == "rotation":
             add_rotation = value
+        if key == "classifications":
+            add_classifications = value
 
     if add_id_value is not None:
         res["id"] = add_id_value
     del res["id_"]
 
-    if add_track_id is not None or add_rotation is not None:
+    if add_track_id is not None or add_rotation is not None or add_classifications is not None:
         res["attributes"] = {}
 
     if add_track_id is not None:
@@ -104,5 +109,9 @@ def as_dict_custom(data_class):
     if add_rotation is not None:
         res["attributes"]["rotation"] = add_rotation
     del res["rotation"]
+
+    if add_classifications is not None:
+        res["attributes"]["classifications"] = add_classifications
+    del res["classifications"]
 
     return res
