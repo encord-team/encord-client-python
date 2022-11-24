@@ -111,7 +111,7 @@ def as_dict_custom(data_class):
     del res["rotation"]
 
     if add_classifications is not None:
-        res["attributes"].update(add_classifications)
+        res["attributes"]["classifications"] = add_classifications
     del res["classifications"]
 
     return res
