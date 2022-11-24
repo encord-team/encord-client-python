@@ -19,6 +19,7 @@
           "name": "Additional details about the nose",
           "type": "checklist",
           "required": true,
+          "dynamic": false,
           "featureNodeHash": "1e3e5cad",
           "options": [
             {
@@ -49,6 +50,7 @@
           "name": "Radio with options",
           "type": "radio",
           "required": false,
+          "dynamic": false,
           "featureNodeHash": "cabfedb5",
           "options": [
             {
@@ -62,6 +64,7 @@
                   "name": "Leaf",
                   "type": "radio",
                   "required": false,
+                  "dynamic": false,
                   "featureNodeHash": "59204845"
                 }
               ]
@@ -81,6 +84,7 @@
           "name": "Is the cat standing?",
           "type": "radio",
           "required": true,
+          "dynamic": false,
           "featureNodeHash": "a6136d14",
           "options": [
             {
