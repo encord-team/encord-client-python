@@ -734,14 +734,14 @@ class CocoEncoder:
         if self._feature_hash_to_attribute_map is not None:
             return self._feature_hash_to_attribute_map
 
-        res: Dict[str, Attribute] = {}
+        ret: Dict[str, Attribute] = {}
 
         for object_ in self._ontology.objects:
             for attribute in object_.attributes:
-                res[attribute.feature_node_hash] = attribute
+                ret[attribute.feature_node_hash] = attribute
 
-        self._feature_hash_to_attribute_map = res
-        return res
+        self._feature_hash_to_attribute_map = ret
+        return ret
 
     def get_flat_static_classifications(
         self,
@@ -750,7 +750,7 @@ class CocoEncoder:
         object_answers: dict,
         feature_hash_to_attribute_map: Dict[str, Attribute],
     ) -> dict:
-        res = {}
+        ret = {}
         classifications = object_answers[object_hash]["classifications"]
         for classification in classifications:
             feature_hash = classification["featureHash"]
@@ -762,21 +762,21 @@ class CocoEncoder:
             answers = classification["answers"]
 
             if attribute.get_property_type() == PropertyType.TEXT:
-                safe_dict_update(res, self.get_text_answer(attribute, answers))
+                safe_dict_update(ret, self.get_text_answer(attribute, answers))
             elif attribute.get_property_type() == PropertyType.RADIO:
-                safe_dict_update(res, self.get_radio_answer(attribute, answers))
+                safe_dict_update(ret, self.get_radio_answer(attribute, answers))
             elif attribute.get_property_type() == PropertyType.CHECKLIST:
-                safe_dict_update(res, self.get_checklist_answer(attribute, answers))
+                safe_dict_update(ret, self.get_checklist_answer(attribute, answers))
 
-        self.add_unselected_attributes(object_feature_hash, res, match_dynamic_attributes=False)
+        self.add_unselected_attributes(object_feature_hash, ret, match_dynamic_attributes=False)
 
-        return res
+        return ret
 
     def get_id_and_object_hash_to_answers_map(self, object_actions: dict) -> Dict[Tuple[int, str], dict]:
         if self._id_and_object_hash_to_answers_map is not None:
             return self._id_and_object_hash_to_answers_map
 
-        res = defaultdict(dict)
+        ret = defaultdict(dict)
         feature_hash_to_attribute_map = self.get_feature_hash_to_flat_object_attribute_map()
         for object_hash, payload in object_actions.items():
             for action in payload["actions"]:
@@ -797,10 +797,10 @@ class CocoEncoder:
 
                 for sub_range in action["range"]:
                     for i in range(sub_range[0], sub_range[1] + 1):
-                        safe_dict_update(res[(i, object_hash)], answers_dict)
+                        safe_dict_update(ret[(i, object_hash)], answers_dict)
 
-        self._id_and_object_hash_to_answers_map = res
-        return res
+        self._id_and_object_hash_to_answers_map = ret
+        return ret
 
     def get_flat_dynamic_classifications(
         self,
@@ -810,14 +810,14 @@ class CocoEncoder:
         id_and_object_hash_to_answers_map: Dict[Tuple[int, str], dict],
     ) -> dict:
 
-        res = {}
+        ret = {}
         id_and_object_hash = (image_id, object_hash)
         if id_and_object_hash in id_and_object_hash_to_answers_map:
-            res = id_and_object_hash_to_answers_map[(image_id, object_hash)]
+            ret = id_and_object_hash_to_answers_map[(image_id, object_hash)]
 
-        self.add_unselected_attributes(feature_hash, res, match_dynamic_attributes=True)
+        self.add_unselected_attributes(feature_hash, ret, match_dynamic_attributes=True)
 
-        return res
+        return ret
 
     def add_unselected_attributes(
         self, feature_hash: str, attributes_dict: dict, match_dynamic_attributes: bool
@@ -842,30 +842,30 @@ class CocoEncoder:
                         attributes_dict[attribute.name] = None
 
     def get_attributes_for_feature_hash(self, feature_hash: str) -> List[Attribute]:
-        res = []
+        ret = []
         for object_ in self._ontology.objects:
             if object_.feature_node_hash == feature_hash:
                 for attribute in object_.attributes:
-                    res.append(attribute)
+                    ret.append(attribute)
                 break
 
-        return res
+        return ret
 
     def get_radio_answer(self, attribute: Attribute, answers: dict) -> dict:
         answer = answers[0]  # radios only have one answer by definition
         return {attribute.name: answer["name"]}
 
     def get_checklist_answer(self, attribute: Attribute, answers: dict) -> dict:
-        res = {}
+        ret = {}
         found_checklist_answers = set()
         for answer in answers:
             found_checklist_answers.add(answer["name"])
 
         for option in attribute.options:
             label = option.label
-            res[label] = label in found_checklist_answers
+            ret[label] = label in found_checklist_answers
 
-        return res
+        return ret
 
     def get_text_answer(self, attribute: Attribute, answers: str) -> dict:
         return {attribute.name: answers}
