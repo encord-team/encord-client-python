@@ -127,7 +127,7 @@ class _AttributeBase(ABC):
             "feature_node_hash": attribute_dict["featureNodeHash"],
             "name": attribute_dict["name"],
             "required": attribute_dict["required"],
-            "dynamic": attribute_dict["dynamic"],
+            "dynamic": attribute_dict.get("dynamic", False),
         }
 
 
