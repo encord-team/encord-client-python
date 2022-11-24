@@ -513,6 +513,7 @@ class CocoEncoder:
         self, object_: dict, image_id: int, object_answers: dict, object_actions: dict
     ) -> dict:
         object_hash = object_["objectHash"]
+        feature_hash = object_["featureHash"]
 
         feature_hash_to_attribute_map: Dict[str, Attribute] = self.feature_hash_to_flat_object_attribute_map()
         id_and_object_hash_to_answers_map = self.get_id_and_object_hash_to_answers_map(
@@ -522,11 +523,11 @@ class CocoEncoder:
 
         # DENIS: make sure that I use the object_answers etc. to get the flat attributes.
         classifications = self.get_flat_static_classifications(
-            object_hash, object_answers, feature_hash_to_attribute_map
+            object_hash, feature_hash, object_answers, feature_hash_to_attribute_map
         )
         dynamic_classifications = self.get_flat_dynamic_classifications(
             object_hash,
-            object_["featureHash"],
+            feature_hash,
             image_id,
             id_and_object_hash_to_answers_map,
             feature_hash_to_attribute_map,
@@ -547,7 +548,11 @@ class CocoEncoder:
         return res
 
     def get_flat_static_classifications(
-        self, object_hash: str, object_answers: dict, feature_hash_to_attribute_map: Dict[str, Attribute]
+        self,
+        object_hash: str,
+        object_feature_hash: str,
+        object_answers: dict,
+        feature_hash_to_attribute_map: Dict[str, Attribute],
     ) -> dict:
         res = {}
         classifications = object_answers[object_hash]["classifications"]
@@ -566,6 +571,8 @@ class CocoEncoder:
                 res.update(self.get_radio_answer(attribute, answers))
             elif attribute.get_property_type() == PropertyType.CHECKLIST:
                 res.update(self.get_checklist_answer(attribute, answers))
+
+        self.add_unselected_attributes(object_feature_hash, res, dynamic=False)
 
         return res
 
@@ -615,30 +622,29 @@ class CocoEncoder:
         if id_and_object_hash in id_and_object_hash_to_answers_map:
             res = id_and_object_hash_to_answers_map[(image_id, object_hash)]
 
-        self.add_unselected_attributes(feature_hash, res)
+        self.add_unselected_attributes(feature_hash, res, dynamic=True)
 
         return res
 
-    def add_unselected_attributes(self, feature_hash: str, res: dict) -> None:
+    def add_unselected_attributes(self, feature_hash: str, attributes_dict: dict, dynamic: bool) -> None:
         """
         Attributes which have never been selected will not show up in the actions map. They will need to be
         added separately.
-        # DENIS: do I need to add something similar for the static classifications?
         """
 
         all_attributes = self.get_attributes_for_feature_hash(feature_hash)
         for attribute in all_attributes:
             # DENIS: at this point I need to know if something is dynamic or not.
             #  I think the BE will already return this, so just need to change to ontology object.
-            if attribute.dynamic is True:
+            if attribute.dynamic is dynamic:
                 if attribute.get_property_type() == PropertyType.CHECKLIST:
                     for option in attribute.options:
-                        if option.label not in res:
+                        if option.label not in attributes_dict:
                             # We need to add the default of False.
-                            res[option.label] = False
+                            attributes_dict[option.label] = False
                 else:
-                    if attribute.name not in res:
-                        res[attribute.name] = None
+                    if attribute.name not in attributes_dict:
+                        attributes_dict[attribute.name] = None
 
     def get_attributes_for_feature_hash(self, feature_hash: str) -> List[Attribute]:
         res = []
