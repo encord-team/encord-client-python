@@ -407,7 +407,6 @@ class CocoEncoder:
                 if image_data["id"] == image_id:
                     size = Size(width=image_data["width"], height=image_data["height"])
 
-            # TODO: would be nice if this shape was an enum => with the Json support.
             if shape == Shape.BOUNDING_BOX.value:
                 # TODO: how can I make sure this can be extended properly? At what point do I transform this to a JSON?
                 # maybe I can have an `asdict` if this is a dataclass, else just keep the json and have the return type
@@ -422,13 +421,21 @@ class CocoEncoder:
                     )
                 )
             elif shape == Shape.POLYGON.value:
-                annotations.append(as_dict_custom(self.get_polygon(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_polygon(object_, image_id, size, object_answers, object_actions))
+                )
             elif shape == Shape.POLYLINE.value:
-                annotations.append(as_dict_custom(self.get_polyline(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_polyline(object_, image_id, size, object_answers, object_actions))
+                )
             elif shape == Shape.POINT.value:
-                annotations.append(as_dict_custom(self.get_point(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_point(object_, image_id, size, object_answers, object_actions))
+                )
             elif shape == Shape.SKELETON.value:
-                annotations.append(as_dict_custom(self.get_skeleton(object_, image_id, size)))
+                annotations.append(
+                    as_dict_custom(self.get_skeleton(object_, image_id, size, object_answers, object_actions))
+                )
 
         return annotations
 
@@ -508,6 +515,196 @@ class CocoEncoder:
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
             rotation=rotation,
+            classifications=classifications,
+        )
+
+    def get_polygon(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
+        polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
+        segmentation = [list(chain(*polygon))]
+        polygon = Polygon(polygon)
+        area = polygon.area
+        x, y, x_max, y_max = polygon.bounds
+        w, h = x_max - x, y_max - y
+
+        bbox = [x, y, w, h]
+        category_id = self.get_category_id(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
+        return CocoAnnotation(
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
+        )
+
+    def get_polyline(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
+        """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
+        polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
+        polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
+        segmentation = [polyline_coordinate]
+        area = 0
+        bbox = self.get_bbox_for_polyline(polygon)
+        category_id = self.get_category_id(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
+        return CocoAnnotation(
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
+        )
+
+    def get_bbox_for_polyline(self, polygon: list):
+        if len(polygon) == 2:
+            # We have the edge case of a single edge polygon.
+            first_point = polygon[0]
+            second_point = polygon[1]
+            x = min(first_point[0], second_point[0])
+            y = min(first_point[1], second_point[1])
+            w = abs(first_point[0] - second_point[0])
+            h = abs(first_point[1] - second_point[1])
+            return [x, y, w, h]
+        else:
+            polygon = Polygon(polygon)
+            x, y, x_max, y_max = polygon.bounds
+            w, h = x_max - x, y_max - y
+
+            return [x, y, w, h]
+
+    @staticmethod
+    def join_polyline_from_polygon(polygon: List[float]) -> List[float]:
+        """
+        Essentially a trick to represent a polyline in coco. We pretend for this to be a polygon and join every
+        coordinate from the end back to the beginning, so it will essentially be an area-less polygon.
+        This function technically changes the input polygon in place.
+        """
+        if len(polygon) % 2 != 0:
+            raise RuntimeError("The polygon has an unaccepted shape.")
+
+        idx = len(polygon) - 2
+        while idx >= 0:
+            y_coordinate = polygon[idx]
+            x_coordinate = polygon[idx + 1]
+            polygon.append(y_coordinate)
+            polygon.append(x_coordinate)
+            idx -= 2
+
+        return polygon
+
+    def get_point(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
+        x, y = (
+            object_["point"]["0"]["x"] * size.width,
+            object_["point"]["0"]["y"] * size.height,
+        )
+        w, h = 0, 0
+        area = 0
+        segmentation = [[x, y]]
+        keypoints = [x, y, 2]
+        num_keypoints = 1
+
+        bbox = [x, y, w, h]
+        category_id = self.get_category_id(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
+        return CocoAnnotation(
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            keypoints,
+            num_keypoints,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
+            classifications=classifications,
+        )
+
+    def get_skeleton(
+        self, object_: dict, image_id: int, size: Size, object_answers: dict, object_actions: dict
+    ) -> Union[CocoAnnotation, SuperClass]:
+        # TODO: next up: check how this is visualised.
+        area = 0
+        segmentation = []
+        keypoints = []
+        for point in object_["skeleton"].values():
+            keypoints += [
+                point["x"] * size.width,
+                point["y"] * size.height,
+                2,
+            ]
+        num_keypoints = len(keypoints) // 3
+        xs, ys = (
+            keypoints[::3],
+            keypoints[1::3],
+        )
+        x, y, x_max, y_max = min(xs), min(ys), max(xs), max(ys)
+        w, h = x_max - x, y_max - y
+
+        # TODO: think if the next two lines should be in `get_coco_annotation_default_fields`
+        bbox = [x, y, w, h]
+        category_id = self.get_category_id(object_)
+        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+
+        if self._include_flat_classifications:
+            classifications: Optional[dict] = self.get_flat_classifications(
+                object_, image_id, object_answers, object_actions
+            )
+        else:
+            classifications = None
+
+        return CocoAnnotation(
+            area,
+            bbox,
+            category_id,
+            id_,
+            image_id,
+            iscrowd,
+            segmentation,
+            keypoints,
+            num_keypoints,
+            track_id=track_id,
+            encord_track_uuid=encord_track_uuid,
             classifications=classifications,
         )
 
@@ -669,156 +866,6 @@ class CocoEncoder:
 
     def get_text_answer(self, attribute: Attribute, answers: str) -> dict:
         return {attribute.name: answers}
-
-    def get_polygon(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
-        polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
-        segmentation = [list(chain(*polygon))]
-        polygon = Polygon(polygon)
-        area = polygon.area
-        x, y, x_max, y_max = polygon.bounds
-        w, h = x_max - x, y_max - y
-
-        bbox = [x, y, w, h]
-        category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
-
-        return CocoAnnotation(
-            area,
-            bbox,
-            category_id,
-            id_,
-            image_id,
-            iscrowd,
-            segmentation,
-            track_id=track_id,
-            encord_track_uuid=encord_track_uuid,
-        )
-
-    def get_polyline(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
-        """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
-        polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
-        polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
-        segmentation = [polyline_coordinate]
-        area = 0
-        bbox = self.get_bbox_for_polyline(polygon)
-        category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
-
-        return CocoAnnotation(
-            area,
-            bbox,
-            category_id,
-            id_,
-            image_id,
-            iscrowd,
-            segmentation,
-            track_id=track_id,
-            encord_track_uuid=encord_track_uuid,
-        )
-
-    def get_bbox_for_polyline(self, polygon: list):
-        if len(polygon) == 2:
-            # We have the edge case of a single edge polygon.
-            first_point = polygon[0]
-            second_point = polygon[1]
-            x = min(first_point[0], second_point[0])
-            y = min(first_point[1], second_point[1])
-            w = abs(first_point[0] - second_point[0])
-            h = abs(first_point[1] - second_point[1])
-            return [x, y, w, h]
-        else:
-            polygon = Polygon(polygon)
-            x, y, x_max, y_max = polygon.bounds
-            w, h = x_max - x, y_max - y
-
-            return [x, y, w, h]
-
-    @staticmethod
-    def join_polyline_from_polygon(polygon: List[float]) -> List[float]:
-        """
-        Essentially a trick to represent a polyline in coco. We pretend for this to be a polygon and join every
-        coordinate from the end back to the beginning, so it will essentially be an area-less polygon.
-        This function technically changes the input polygon in place.
-        """
-        if len(polygon) % 2 != 0:
-            raise RuntimeError("The polygon has an unaccepted shape.")
-
-        idx = len(polygon) - 2
-        while idx >= 0:
-            y_coordinate = polygon[idx]
-            x_coordinate = polygon[idx + 1]
-            polygon.append(y_coordinate)
-            polygon.append(x_coordinate)
-            idx -= 2
-
-        return polygon
-
-    def get_point(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
-        x, y = (
-            object_["point"]["0"]["x"] * size.width,
-            object_["point"]["0"]["y"] * size.height,
-        )
-        w, h = 0, 0
-        area = 0
-        segmentation = [[x, y]]
-        keypoints = [x, y, 2]
-        num_keypoints = 1
-
-        bbox = [x, y, w, h]
-        category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
-
-        return CocoAnnotation(
-            area,
-            bbox,
-            category_id,
-            id_,
-            image_id,
-            iscrowd,
-            segmentation,
-            keypoints,
-            num_keypoints,
-            track_id=track_id,
-            encord_track_uuid=encord_track_uuid,
-        )
-
-    def get_skeleton(self, object_: dict, image_id: int, size: Size) -> Union[CocoAnnotation, SuperClass]:
-        # TODO: next up: check how this is visualised.
-        area = 0
-        segmentation = []
-        keypoints = []
-        for point in object_["skeleton"].values():
-            keypoints += [
-                point["x"] * size.width,
-                point["y"] * size.height,
-                2,
-            ]
-        num_keypoints = len(keypoints) // 3
-        xs, ys = (
-            keypoints[::3],
-            keypoints[1::3],
-        )
-        x, y, x_max, y_max = min(xs), min(ys), max(xs), max(ys)
-        w, h = x_max - x, y_max - y
-
-        # TODO: think if the next two lines should be in `get_coco_annotation_default_fields`
-        bbox = [x, y, w, h]
-        category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
-
-        return CocoAnnotation(
-            area,
-            bbox,
-            category_id,
-            id_,
-            image_id,
-            iscrowd,
-            segmentation,
-            keypoints,
-            num_keypoints,
-            track_id=track_id,
-            encord_track_uuid=encord_track_uuid,
-        )
 
     def get_category_id(self, object_: dict) -> int:
         feature_hash = object_["featureHash"]
