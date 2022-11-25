@@ -145,7 +145,7 @@ class OntologyStructure:
                         color_index = 0
                 except ValueError:
                     pass
-            color = AVAILABLE_COLORS[color_index]
+            color = AVAILABLE_COLORS[color_index % len(AVAILABLE_COLORS)]
 
         if feature_node_hash is None:
             feature_node_hash = str(uuid4())[:8]
