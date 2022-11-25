@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from requests.adapters import DEFAULT_POOLSIZE
+
 DEFAULT_MAX_RETRIES = 0
 DEFAULT_BACKOFF_FACTOR = 0.1
 
@@ -15,6 +17,9 @@ class RequestsSettings:
 
     backoff_factor: float = DEFAULT_BACKOFF_FACTOR
     """With each retry, there will be a sleep of backoff_factor * (2 ** retry_number)"""
+
+    pool_maxsize: int = DEFAULT_POOLSIZE
+    """The maximum number of connections to save in the pool."""
 
 
 DEFAULT_REQUESTS_SETTINGS = RequestsSettings()

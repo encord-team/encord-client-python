@@ -14,12 +14,14 @@
 # under the License.
 import dataclasses
 import logging
-from typing import List, Type, TypeVar
+from random import random
+from typing import List, Optional, Type, TypeVar
+from urllib.error import URLError
 
 import requests
 import requests.exceptions
 from requests import Session
-from requests.adapters import HTTPAdapter
+from requests.adapters import DEFAULT_POOLSIZE, HTTPAdapter
 from requests.packages.urllib3.util import Retry
 
 from encord.configs import BaseConfig
@@ -40,7 +42,7 @@ class Querier:
 
     def __init__(self, config: BaseConfig):
         self._config = config
-        self._session: Session = self.create_new_session()
+        self._session: Session = self.create_new_session(config.requests_settings.pool_maxsize)
 
     def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
         """Single DB object getter."""
@@ -158,9 +160,9 @@ class Querier:
         return res_json.get("response")
 
     @staticmethod
-    def create_new_session() -> Session:
+    def create_new_session(pool_maxsize: int = DEFAULT_POOLSIZE) -> Session:
         session = Session()
 
-        session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))
+        session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0), pool_maxsize=pool_maxsize))
 
         return session
