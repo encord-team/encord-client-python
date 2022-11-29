@@ -39,7 +39,12 @@ from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import CvatExportType
 from encord.orm.project import Project as OrmProject
-from encord.orm.project import ProjectImporter, ProjectImporterCvatInfo, ReviewMode
+from encord.orm.project import (
+    ProjectImporter,
+    ProjectImporterCvatInfo,
+    ProjectWorkflowType,
+    ReviewMode,
+)
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.project import Project
@@ -265,12 +270,30 @@ class EncordUserClient:
         dataset_hashes: List[str],
         project_description: str = "",
         ontology_hash: str = "",
-        source_projects: List = list(),
+        workflow_type: ProjectWorkflowType = ProjectWorkflowType.MANUAL_QA,
+        source_projects: List[str] = list(),
     ) -> str:
+        """
+        Creates a new project and returns its uid ('project_hash')
+
+        Args:
+            project_title: the title of the project
+            dataset_hashes: a list of the dataset uids that the project will use
+            project_description: the optional description of the project
+            ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
+            workflow_type: the type of the quality control workflow to use. Currently either `ProjectWorkflowType.MANUAL_QA`
+                of `ProjectWorkflowType.BENCHMARK_QA`
+            source_projects: only for Benchmark QA projects, a list of project ids (project_hash-es)
+                that contain the benchmark source data
+
+        Returns:
+            the uid of the project.
+        """
         project = {
             "title": project_title,
             "description": project_description,
             "dataset_hashes": dataset_hashes,
+            "workflow_type": workflow_type.value,
             "source_projects": source_projects,
         }
         if ontology_hash and len(ontology_hash):

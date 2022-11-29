@@ -14,7 +14,7 @@
 # under the License.
 import datetime
 from collections import OrderedDict
-from enum import Enum, IntEnum
+from enum import Enum
 from typing import List, Optional
 
 from encord.orm import base_orm
@@ -152,6 +152,11 @@ class ProjectCopyOptions(Enum):
     COLLABORATORS = "collaborators"
     DATASETS = "datasets"
     MODELS = "models"
+
+
+class ProjectWorkflowType(Enum):
+    MANUAL_QA = "manual"
+    BENCHMARK_QA = "benchmark"
 
 
 class StringEnum(Enum):
