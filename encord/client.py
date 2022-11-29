@@ -466,6 +466,20 @@ class EncordClientProject(EncordClient):
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
     ) -> List[LabelRowMetadata]:
+        """
+        Args:
+            self: Encord client object.
+            edited_before: Optionally filter to only rows last edited before the specified time
+            edited_after: Optionally filter to only rows last edited after the specified time
+            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
+            shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
+
+        Returns:
+            A list of :class:`~encord.orm.label_row.LabelRowMetadata` instances for all the matching label rows
+
+        Raises:
+            UnknownError: If an error occurs while retrieving the data.
+        """
         if label_statuses:
             label_statuses = [label_status.value for label_status in label_statuses]
         edited_before = parse_datetime("edited_before", edited_before)

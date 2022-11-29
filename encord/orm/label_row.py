@@ -201,9 +201,14 @@ class AnnotationTaskStatus(Enum):
 
 
 class ShadowDataState(Enum):
+    """Specifies the kind of data to fetch when working with a BenchmarkQa project"""
+
     ALL_DATA = "ALL_DATA"
+    """ Fetch all the label rows """
     SHADOW_DATA = "SHADOW_DATA"
+    """ Only fetch the label rows that were submitted against "shadow data": the annotator's view of the benchmark """
     NOT_SHADOW_DATA = "NOT_SHADOW_DATA"
+    """ Only fetch the label rows for "production" data """
 
 
 class LabelStatus(Enum):
