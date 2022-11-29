@@ -42,6 +42,7 @@ INCLUDE_UNANNOTATED_VIDEOS_DEFAULT = False
 INCLUDE_TRACK_ID_DEFAULT = False
 INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT = False
 INCLUDE_FLAT_CLASSIFICATIONS = False
+INCLUDE_MANUAL_ANNOTATION = False
 
 RESERVED_CLASSIFICATION_FIELDS = {"encord_track_uuid", "track_id", "rotation"}
 
@@ -115,6 +116,7 @@ class CocoEncoder:
         self._include_track_id = INCLUDE_TRACK_ID_DEFAULT
         self._include_bounding_box_rotation = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT
         self._include_flat_classifications = INCLUDE_FLAT_CLASSIFICATIONS
+        self._include_manual_annotation = INCLUDE_MANUAL_ANNOTATION
 
     def encode(
         self,
@@ -126,6 +128,7 @@ class CocoEncoder:
         include_track_id: bool = INCLUDE_TRACK_ID_DEFAULT,
         include_bounding_box_rotation: bool = INCLUDE_BOUNDING_BOX_ROTATION_DEFAULT,
         include_flat_classifications: bool = INCLUDE_FLAT_CLASSIFICATIONS,
+        include_manual_annotation: bool = INCLUDE_MANUAL_ANNOTATION,
     ) -> dict:
         """
         Args:
@@ -150,6 +153,9 @@ class CocoEncoder:
                 into the `attributes` field. The postfix `_classification` will be added if there is a name
                 clash with one of the RESERVED_CLASSIFICATION_FIELDS. The classifications will only include one level
                 of nesting. Further nesting will not be considered.
+            include_manual_annotation: Includes the `manual_annotation` field of each individual label. This will only
+                be the `manual_annotation` response in each individual top level label. The `manual_annotation` field
+                in the objects_index will be ignored.
         """
         self._download_files = download_files
         self._download_file_path = download_file_path
@@ -158,6 +164,7 @@ class CocoEncoder:
         self._include_track_id = include_track_id
         self._include_bounding_box_rotation = include_bounding_box_rotation
         self._include_flat_classifications = include_flat_classifications
+        self._include_manual_annotation = include_manual_annotation
 
         self._coco_json["info"] = self.get_info()
         self._coco_json["categories"] = self.get_categories()
@@ -454,7 +461,7 @@ class CocoEncoder:
         segmentation = [[x, y, x + w, y, x + w, y + h, x, y + h]]
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
         if self._include_flat_classifications:
             classifications: Optional[dict] = self.get_flat_classifications(
@@ -474,6 +481,7 @@ class CocoEncoder:
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
             classifications=classifications,
+            manual_annotation=manual_annotation,
         )
 
     def get_rotatable_bounding_box(
@@ -491,7 +499,7 @@ class CocoEncoder:
         segmentation = [[x, y, x + w, y, x + w, y + h, x, y + h]]
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
         if self._include_bounding_box_rotation:
             rotation = object_["rotatableBoundingBox"]["theta"]
         else:
@@ -516,6 +524,7 @@ class CocoEncoder:
             encord_track_uuid=encord_track_uuid,
             rotation=rotation,
             classifications=classifications,
+            manual_annotation=manual_annotation,
         )
 
     def get_polygon(
@@ -530,7 +539,7 @@ class CocoEncoder:
 
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
         if self._include_flat_classifications:
             classifications: Optional[dict] = self.get_flat_classifications(
@@ -550,6 +559,7 @@ class CocoEncoder:
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
             classifications=classifications,
+            manual_annotation=manual_annotation,
         )
 
     def get_polyline(
@@ -562,7 +572,7 @@ class CocoEncoder:
         area = 0
         bbox = self.get_bbox_for_polyline(polygon)
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
         if self._include_flat_classifications:
             classifications: Optional[dict] = self.get_flat_classifications(
@@ -582,6 +592,7 @@ class CocoEncoder:
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
             classifications=classifications,
+            manual_annotation=manual_annotation,
         )
 
     def get_bbox_for_polyline(self, polygon: list):
@@ -636,7 +647,7 @@ class CocoEncoder:
 
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
         if self._include_flat_classifications:
             classifications: Optional[dict] = self.get_flat_classifications(
@@ -658,6 +669,7 @@ class CocoEncoder:
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
             classifications=classifications,
+            manual_annotation=manual_annotation,
         )
 
     def get_skeleton(
@@ -684,7 +696,7 @@ class CocoEncoder:
         # TODO: think if the next two lines should be in `get_coco_annotation_default_fields`
         bbox = [x, y, w, h]
         category_id = self.get_category_id(object_)
-        id_, iscrowd, track_id, encord_track_uuid = self.get_coco_annotation_default_fields(object_)
+        id_, iscrowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
         if self._include_flat_classifications:
             classifications: Optional[dict] = self.get_flat_classifications(
@@ -706,6 +718,7 @@ class CocoEncoder:
             track_id=track_id,
             encord_track_uuid=encord_track_uuid,
             classifications=classifications,
+            manual_annotation=manual_annotation,
         )
 
     def get_flat_classifications(
@@ -880,7 +893,9 @@ class CocoEncoder:
                 f"ensure that the ontology matches the labels provided."
             )
 
-    def get_coco_annotation_default_fields(self, object_: dict) -> Tuple[int, int, Optional[str], Optional[str]]:
+    def get_coco_annotation_default_fields(
+        self, object_: dict
+    ) -> Tuple[int, int, Optional[str], Optional[str], Optional[bool]]:
         id_ = self.next_annotation_id()
         iscrowd = 0
         if self._include_track_id:
@@ -890,7 +905,12 @@ class CocoEncoder:
             track_id = None
             encord_track_uuid = None
 
-        return id_, iscrowd, track_id, encord_track_uuid
+        if self._include_manual_annotation:
+            manual_annotation = object_["manualAnnotation"]
+        else:
+            manual_annotation = None
+
+        return id_, iscrowd, track_id, encord_track_uuid, manual_annotation
 
     def next_annotation_id(self) -> int:
         next_ = self._current_annotation_id
