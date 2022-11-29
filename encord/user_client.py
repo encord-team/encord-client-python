@@ -37,11 +37,16 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.project import CvatExportType
+from encord.orm.project import (
+    BenchmarkQaWorkflowSettings,
+    CvatExportType,
+    ManualReviewWorkflowSettings,
+)
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import (
     ProjectImporter,
     ProjectImporterCvatInfo,
+    ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,
 )
@@ -270,8 +275,7 @@ class EncordUserClient:
         dataset_hashes: List[str],
         project_description: str = "",
         ontology_hash: str = "",
-        workflow_type: ProjectWorkflowType = ProjectWorkflowType.MANUAL_QA,
-        source_projects: List[str] = list(),
+        workflow_settings: ProjectWorkflowSettings = ManualReviewWorkflowSettings(),
     ) -> str:
         """
         Creates a new project and returns its uid ('project_hash')
@@ -281,10 +285,7 @@ class EncordUserClient:
             dataset_hashes: a list of the dataset uids that the project will use
             project_description: the optional description of the project
             ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
-            workflow_type: the type of the quality control workflow to use. Currently either `ProjectWorkflowType.MANUAL_QA`
-                of `ProjectWorkflowType.BENCHMARK_QA`
-            source_projects: only for Benchmark QA projects, a list of project ids (project_hash-es)
-                that contain the benchmark source data
+            workflow_settings: selects and configures the type of the quality control workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
 
         Returns:
             the uid of the project.
@@ -293,9 +294,11 @@ class EncordUserClient:
             "title": project_title,
             "description": project_description,
             "dataset_hashes": dataset_hashes,
-            "workflow_type": workflow_type.value,
-            "source_projects": source_projects,
+            "workflow_type": ProjectWorkflowType.MANUAL_QA.value,
         }
+        if isinstance(workflow_settings, BenchmarkQaWorkflowSettings):
+            project["workflow_type"] = ProjectWorkflowType.BENCHMARK_QA.value
+            project["source_projects"] = workflow_settings.source_projects
         if ontology_hash and len(ontology_hash):
             project["ontology_hash"] = ontology_hash
 

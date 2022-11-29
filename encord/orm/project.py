@@ -14,8 +14,9 @@
 # under the License.
 import datetime
 from collections import OrderedDict
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from encord.orm import base_orm
 
@@ -157,6 +158,34 @@ class ProjectCopyOptions(Enum):
 class ProjectWorkflowType(Enum):
     MANUAL_QA = "manual"
     BENCHMARK_QA = "benchmark"
+
+
+class ManualReviewWorkflowSettings:
+    """Sets the project QA workflow to "manual reviews". There are currently no available settings for this workflow"""
+
+    pass
+
+
+@dataclass
+class BenchmarkQaWorkflowSettings:
+    """Sets the project QA workflow to "Automatic", with benchmark data being presented to all the annotators"""
+
+    source_projects: List[str] = field(default_factory=list)
+    """
+    For Benchmark QA projects, a list of project ids (project_hash-es)
+        that contain the benchmark source data
+    """
+
+
+ProjectWorkflowSettings = Union[ManualReviewWorkflowSettings, BenchmarkQaWorkflowSettings]
+"""
+A variant type that allows you to select the type of quality assurance workflow for the project,
+and configure it.
+
+Currently one of:
+    :class:`ManualReviewWorkflowSettings`: a workflow with optional manual reviews
+    :class:`BenchmarkQaWorkflowSettings`: annotators are presented with "benchmark" or "honeypot" data
+"""
 
 
 class StringEnum(Enum):
