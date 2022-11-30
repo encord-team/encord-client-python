@@ -11,6 +11,7 @@ from encord.orm.label_row import (
     LabelRow,
     LabelRowMetadata,
     LabelStatus,
+    ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, TrainingMetadata
 from encord.orm.project import Project as OrmProject
@@ -144,8 +145,24 @@ class Project:
         edited_before: Optional[Union[str, datetime.datetime]] = None,
         edited_after: Optional[Union[str, datetime.datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        shadow_data_state: Optional[ShadowDataState] = None,
     ) -> List[LabelRowMetadata]:
-        return self._client.list_label_rows(edited_before, edited_after, label_statuses)
+        """
+        Args:
+            self: Encord client object.
+            edited_before: Optionally filter to only rows last edited before the specified time
+            edited_after: Optionally filter to only rows last edited after the specified time
+            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
+            shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
+
+        Returns:
+            A list of :class:`~encord.orm.label_row.LabelRowMetadata` instances for all the matching label rows
+
+        Raises:
+            AuthorisationError: If not a member of the project.
+            UnknownError: If an error occurs while retrieving the data.
+        """
+        return self._client.list_label_rows(edited_before, edited_after, label_statuses, shadow_data_state)
 
     def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
         """

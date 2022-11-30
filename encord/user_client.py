@@ -37,9 +37,19 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.project import CvatExportType
+from encord.orm.project import (
+    BenchmarkQaWorkflowSettings,
+    CvatExportType,
+    ManualReviewWorkflowSettings,
+)
 from encord.orm.project import Project as OrmProject
-from encord.orm.project import ProjectImporter, ProjectImporterCvatInfo, ReviewMode
+from encord.orm.project import (
+    ProjectImporter,
+    ProjectImporterCvatInfo,
+    ProjectWorkflowSettings,
+    ProjectWorkflowType,
+    ReviewMode,
+)
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.project import Project
@@ -260,13 +270,35 @@ class EncordUserClient:
         return [{"project": OrmProject(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
     def create_project(
-        self, project_title: str, dataset_hashes: List[str], project_description: str = "", ontology_hash: str = ""
+        self,
+        project_title: str,
+        dataset_hashes: List[str],
+        project_description: str = "",
+        ontology_hash: str = "",
+        workflow_settings: ProjectWorkflowSettings = ManualReviewWorkflowSettings(),
     ) -> str:
+        """
+        Creates a new project and returns its uid ('project_hash')
+
+        Args:
+            project_title: the title of the project
+            dataset_hashes: a list of the dataset uids that the project will use
+            project_description: the optional description of the project
+            ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
+            workflow_settings: selects and configures the type of the quality control workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
+
+        Returns:
+            the uid of the project.
+        """
         project = {
             "title": project_title,
             "description": project_description,
             "dataset_hashes": dataset_hashes,
+            "workflow_type": ProjectWorkflowType.MANUAL_QA.value,
         }
+        if isinstance(workflow_settings, BenchmarkQaWorkflowSettings):
+            project["workflow_type"] = ProjectWorkflowType.BENCHMARK_QA.value
+            project["source_projects"] = workflow_settings.source_projects
         if ontology_hash and len(ontology_hash):
             project["ontology_hash"] = ontology_hash
 
