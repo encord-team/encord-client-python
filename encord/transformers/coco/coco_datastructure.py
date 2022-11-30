@@ -98,32 +98,29 @@ def as_dict_custom(data_class):
         res["id"] = add_id_value
     del res["id_"]
 
-    if (
-        add_track_id is not None
-        or add_rotation is not None
-        or add_classifications is not None
-        or add_manual_annotation is not None
-    ):
-        res["attributes"] = {}
+    attributes = {}
 
     if add_track_id is not None:
-        res["attributes"]["track_id"] = add_track_id
+        attributes["track_id"] = add_track_id
     del res["track_id"]
 
     if add_encord_track_uuid is not None:
-        res["attributes"]["encord_track_uuid"] = add_encord_track_uuid
+        attributes["encord_track_uuid"] = add_encord_track_uuid
     del res["encord_track_uuid"]
 
     if add_rotation is not None:
-        res["attributes"]["rotation"] = add_rotation
+        attributes["rotation"] = add_rotation
     del res["rotation"]
 
     if add_classifications is not None:
-        res["attributes"]["classifications"] = add_classifications
+        attributes["classifications"] = add_classifications
     del res["classifications"]
 
     if add_manual_annotation is not None:
-        res["attributes"]["manual_annotation"] = add_manual_annotation
+        attributes["manual_annotation"] = add_manual_annotation
     del res["manual_annotation"]
+
+    if attributes != {}:
+        res["attributes"] = attributes
 
     return res
