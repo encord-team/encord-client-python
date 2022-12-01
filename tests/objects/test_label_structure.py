@@ -23,16 +23,6 @@ def test_create_label_object_one_coordinate():
     label_row.add_object(label_object)
 
 
-def test_create_label_object_one_coordinate2():
-    label_row = LabelRow()
-    feature_hash = "34535"
-    label_object = label_row.add_new_object(feature_hash)
-    # The object is invalid at this state, so not great. !!!
-
-    label_object.add_coordinates(coordinates={"x": 5, "y": 6}, frames=1)
-    label_object.is_valid()
-
-
 def test_add_same_answers_to_different_label_objects():
     label_row = LabelRow()
     feature_hash = "34535"

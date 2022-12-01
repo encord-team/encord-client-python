@@ -216,11 +216,14 @@ class LabelRow:
     def add_object(self, label_object: LabelObject):
         """
         Validate that it was initialised well enough by having at least
-        one coordinate.
+        one coordinate. Can also validate that this object hash is not present yet.
 
         Do we want a bulk function? probably not needed as it is local?
         """
         pass
+
+    def remove_object(self, label_object: LabelObject):
+        """Remove the object."""
 
     # def add_new_object(
     #     self,
@@ -228,67 +231,67 @@ class LabelRow:
     # ) -> LabelObject:
     #     """All it does, is getting the new object but also passing in the correct ontology."""
 
-    def add_object_maybe_not(
-        self,
-        feature_hash: str,
-        coordinates: Any,
-        # ^ DENIS: maybe we want to specify this only on the object itself?
-        #     However, do we really want to create a label with a practically invalid
-        #     object? So maybe what we want is to add an object as a whole here?
-        #     then we could validate in this function whether this object actually makes
-        #     sense or not
-        frames: Union[Set[int], Set[str]],
-        # ^ should range be a more intelligent range? Maybe a custom class?
-        answers: Optional[Any] = None,
-        *,
-        created_at: datetime = datetime.now(),
-        created_by: Optional[str] = None,
-        last_edited_at: datetime = datetime.now(),
-        last_edited_by: Optional[str] = None,
-        confidence: float = 1.0,
-        manual_annotation: bool = True,
-        color: Optional[str] = None,
-    ):
-        """
-        * dynamic answers.
+    # def add_object_maybe_not(
+    #     self,
+    #     feature_hash: str,
+    #     coordinates: Any,
+    #     # ^ DENIS: maybe we want to specify this only on the object itself?
+    #     #     However, do we really want to create a label with a practically invalid
+    #     #     object? So maybe what we want is to add an object as a whole here?
+    #     #     then we could validate in this function whether this object actually makes
+    #     #     sense or not
+    #     frames: Union[Set[int], Set[str]],
+    #     # ^ should range be a more intelligent range? Maybe a custom class?
+    #     answers: Optional[Any] = None,
+    #     *,
+    #     created_at: datetime = datetime.now(),
+    #     created_by: Optional[str] = None,
+    #     last_edited_at: datetime = datetime.now(),
+    #     last_edited_by: Optional[str] = None,
+    #     confidence: float = 1.0,
+    #     manual_annotation: bool = True,
+    #     color: Optional[str] = None,
+    # ):
+    #     """
+    #     * dynamic answers.
+    #
+    #     * TODO: do I want to have an `add_bounding_box`, `add_polygon`, ... function instead?
+    #         It can simply complain right away if the wrong coordinate is added.
+    #     * say reviews are read only
+    #
+    #     Args:
+    #         frames: The frames in which this object with the exact same coordinates and answers will be placed.
+    #     """
+    #     pass
 
-        * TODO: do I want to have an `add_bounding_box`, `add_polygon`, ... function instead?
-            It can simply complain right away if the wrong coordinate is added.
-        * say reviews are read only
-
-        Args:
-            frames: The frames in which this object with the exact same coordinates and answers will be placed.
-        """
-        pass
-
-    def add_classification(
-        self,
-        feature_hash: str,
-        frames: Union[Set[int], Set[str]],
-        answer: Any,
-        *,
-        created_at: datetime = datetime.now(),
-        created_by: Optional[str] = None,
-        last_edited_at: datetime = datetime.now(),
-        last_edited_by: Optional[str] = None,
-        confidence: float = 1.0,
-        manual_annotation: bool = True,
-    ):
-        """
-        * Ensure that the client can supply the classification answers.
-        * How does the client add a classification range?
-        * Note: no support for dynamic attributes is needed.
-        * Say somewhere that `reviews` is a read only property that will not be added to the server.
-        TODO: the default should be clear from the signature.
-        """
-        pass
-        x = frames
-        """Frames need to be added intelligently - as in adjacent frames are added intelligently."""
-        y = answer
-        """
-        The answer could be a text, or a specific choice of radio or classification. Likely we'd want
-        to have a separate class for this. 
-        """
+    # def add_classification(
+    #     self,
+    #     feature_hash: str,
+    #     frames: Union[Set[int], Set[str]],
+    #     answer: Any,
+    #     *,
+    #     created_at: datetime = datetime.now(),
+    #     created_by: Optional[str] = None,
+    #     last_edited_at: datetime = datetime.now(),
+    #     last_edited_by: Optional[str] = None,
+    #     confidence: float = 1.0,
+    #     manual_annotation: bool = True,
+    # ):
+    #     """
+    #     * Ensure that the client can supply the classification answers.
+    #     * How does the client add a classification range?
+    #     * Note: no support for dynamic attributes is needed.
+    #     * Say somewhere that `reviews` is a read only property that will not be added to the server.
+    #     TODO: the default should be clear from the signature.
+    #     """
+    #     pass
+    #     x = frames
+    #     """Frames need to be added intelligently - as in adjacent frames are added intelligently."""
+    #     y = answer
+    #     """
+    #     The answer could be a text, or a specific choice of radio or classification. Likely we'd want
+    #     to have a separate class for this.
+    #     """
 
 
 @dataclass
