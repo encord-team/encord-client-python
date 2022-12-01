@@ -7,8 +7,11 @@ from encord.objects.label_structure import (
     LabelObject,
     LabelRow,
     LabelRowReadOnlyData,
+    PointCoordinate,
+    PolygonCoordinates,
     TextAnswer,
 )
+from encord.objects.ontology_structure import OntologyStructure
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group
 
@@ -19,18 +22,20 @@ Iterate over the frames, not only objects/classifications.
 """
 
 
-def get_item_by_hash(feature_node_hash: str):
-    for object_ in all_types_structure.objects:
+def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
+    for object_ in ontology.objects:
         if object_.feature_node_hash == feature_node_hash:
             return object_
-    for classification in all_types_structure.classifications:
+    for classification in ontology.classifications:
         if classification.feature_node_hash == feature_node_hash:
             return classification
 
     raise RuntimeError("Item not found.")
 
 
-box_ontology_item = get_item_by_hash("MjI2NzEy")
+box_ontology_item = get_item_by_hash("MjI2NzEy", all_types_structure)
+polygon_ontology_item = get_item_by_hash("ODkxMzAx", all_types_structure)
+polyline_ontology_item = get_item_by_hash("OTcxMzIy", all_types_structure)
 
 
 def test_create_label_object_one_coordinate():
@@ -106,6 +111,47 @@ def test_add_remove_access_label_objects_in_label_row():
     objects = label_row.get_objects()
     assert len(objects) == 1
     assert objects[0].object_hash == label_object_2.object_hash
+
+
+def test_filter_for_objects():
+    label_row = LabelRow(empty_image_group)
+    label_box = LabelObject(box_ontology_item)
+    label_polygon = LabelObject(polygon_ontology_item)
+
+    box_coordinates = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
+    polygon_coordinates = PolygonCoordinates(
+        values=[
+            PointCoordinate(x=0.2, y=0.1),
+            PointCoordinate(x=0.3, y=0.2),
+            PointCoordinate(x=0.5, y=0.3),
+            PointCoordinate(x=0.6, y=0.5),
+        ]
+    )
+
+    label_box.add_coordinates(box_coordinates, {1, 2})
+    label_polygon.add_coordinates(polygon_coordinates, {2, 3})
+
+    label_row.add_object(label_box)
+    label_row.add_object(label_polygon)
+
+    objects = label_row.get_objects()
+    assert len(objects) == 2
+
+    objects = label_row.get_objects(ontology_object=polygon_ontology_item)
+    assert len(objects) == 1
+    assert objects[0].object_hash == label_polygon.object_hash
+
+    objects = label_row.get_objects(ontology_object=box_ontology_item)
+    assert len(objects) == 1
+    assert objects[0].object_hash == label_box.object_hash
+
+    objects = label_row.get_objects(ontology_object=polyline_ontology_item)
+    assert len(objects) == 0
 
 
 # ==========================================================

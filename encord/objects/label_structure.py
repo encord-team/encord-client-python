@@ -120,8 +120,20 @@ class PointCoordinate:
     y: float
 
 
-PolygonCoordinates = List[PointCoordinate]
+# PolygonCoordinates = List[PointCoordinate]
+
+
+@dataclass
+class PolygonCoordinates:
+    values: List[PointCoordinate]
+
+
 PolylineCoordinates = List[PointCoordinate]
+
+
+@dataclass
+class PolylineCoordinates:
+    values: List[PointCoordinate]
 
 
 class Visibility(Flag):
@@ -155,7 +167,9 @@ class SkeletonCoordinate:
     visibility: Optional[Visibility] = None
 
 
-SkeletonCoordinates = List[SkeletonCoordinate]
+@dataclass
+class SkeletonCoordinates:
+    values: List[SkeletonCoordinate]
 
 
 Coordinates = Union[
@@ -212,6 +226,14 @@ class LabelObject:
         self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
         # DENIS: this also needs a reference to the parent object, to understand what kind of coordinates are allowed?
         self.object_hash = short_uuid_str()
+
+    @property
+    def ontology_item(self) -> Any:
+        return deepcopy(self._ontology_item)
+
+    @ontology_item.setter
+    def ontology_item(self, v: Any) -> None:
+        raise RuntimeError("Cannot set the ontology item of an instantiated LabelObject.")
 
     def add_coordinates(
         self,
@@ -368,8 +390,14 @@ class LabelRow:
 
     def get_objects(self, ontology_object: Optional[Object] = None) -> List[LabelObject]:
         """Returns all the objects with this hash."""
-        ret = deepcopy(self._objects)
-        return ret
+        if ontology_object is None:
+            return deepcopy(self._objects)
+        else:
+            ret: List[LabelObject] = list()
+            for object_ in self._objects:
+                if object_.ontology_item.feature_node_hash == ontology_object.feature_node_hash:
+                    ret.append(deepcopy(object_))
+            return ret
 
     def add_object(self, label_object: LabelObject, force=True):
         """
