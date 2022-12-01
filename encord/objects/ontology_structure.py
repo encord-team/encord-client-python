@@ -48,6 +48,9 @@ class OntologyStructure:
     objects: List[Object] = field(default_factory=list)
     classifications: List[Classification] = field(default_factory=list)
 
+    def get_item_by_hash(self, feature_node_hash: str):
+        pass
+
     @classmethod
     def from_dict(cls, d: dict) -> OntologyStructure:
         """
