@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, List, Tuple
 
+import pytest
+
 from encord import Project
 from encord.objects.label_structure import (
     BoundingBoxCoordinates,
@@ -36,6 +38,15 @@ def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
 box_ontology_item = get_item_by_hash("MjI2NzEy", all_types_structure)
 polygon_ontology_item = get_item_by_hash("ODkxMzAx", all_types_structure)
 polyline_ontology_item = get_item_by_hash("OTcxMzIy", all_types_structure)
+
+POLYGON_COORDINATES = PolygonCoordinates(
+    values=[
+        PointCoordinate(x=0.2, y=0.1),
+        PointCoordinate(x=0.3, y=0.2),
+        PointCoordinate(x=0.5, y=0.3),
+        PointCoordinate(x=0.6, y=0.5),
+    ]
+)
 
 
 def test_create_label_object_one_coordinate():
@@ -152,6 +163,12 @@ def test_filter_for_objects():
 
     objects = label_row.get_objects(ontology_object=polyline_ontology_item)
     assert len(objects) == 0
+
+
+def test_add_wrong_coordinates():
+    label_box = LabelObject(box_ontology_item)
+    with pytest.raises(ValueError):
+        label_box.add_coordinates(POLYGON_COORDINATES, frames={1})
 
 
 # ==========================================================
