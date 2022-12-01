@@ -377,27 +377,28 @@ class LabelRow:
 
         # DENIS: technically the objects/classifications don't need to be in order, but I believe that we're sometimes
         #  relying on them being in order. Can also use a dict which is ordered with an empty key.
-        self._objects: List[LabelObject] = list()
-        self._classifications: List[LabelClassification] = list()
+        # self._objects: List[LabelObject] = list()
+        # self._classifications: List[LabelClassification] = list()
         # DENIS: do not expose those directly! -> copy on the way out, with the option to not copy in some cases.
 
         self._frame_to_items: Dict[int, Set[Union[LabelObject, LabelClassification]]] = dict()
-        self._available_object_hashes: Set[str] = set()
-        self._available_classification_hashes: Set[str] = set()
+        self._objects_map: Dict[str, LabelObject] = dict()
+        # DENIS: if we want to keep things in order, we might want to just make this a dict and then if we
+        #  overwrite we add into the end.
+        self._classifications_map: Dict[str, LabelClassification] = dict()
+        # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
+        # at least at the objects_index level.
 
     def get_image_hash(self, frame_number: int) -> str:
         return "xyz"
 
     def get_objects(self, ontology_object: Optional[Object] = None) -> List[LabelObject]:
         """Returns all the objects with this hash."""
-        if ontology_object is None:
-            return deepcopy(self._objects)
-        else:
-            ret: List[LabelObject] = list()
-            for object_ in self._objects:
-                if object_.ontology_item.feature_node_hash == ontology_object.feature_node_hash:
-                    ret.append(deepcopy(object_))
-            return ret
+        ret: List[LabelObject] = list()
+        for object_ in self._objects_map.values():
+            if ontology_object is None or object_.ontology_item.feature_node_hash == ontology_object.feature_node_hash:
+                ret.append(deepcopy(object_))
+        return ret
 
     def add_object(self, label_object: LabelObject, force=True):
         """
@@ -410,24 +411,24 @@ class LabelRow:
             raise ValueError("The supplied LabelObject is not in a valid format.")
 
         object_hash = label_object.object_hash
-        if object_hash in self._available_object_hashes and not force:
+        if object_hash in self._objects_map and not force:
             raise ValueError("The supplied LabelObject was already previously added. (the object_hash is the same).")
-        elif object_hash in self._available_object_hashes and force:
-            self._delete_object(object_hash)
-        self._available_object_hashes.add(object_hash)
-        self._objects.append(label_object)
+        elif object_hash in self._objects_map and force:
+            self._objects_map.pop(object_hash)
 
-    def _delete_object(self, object_hash: str):
-        # DENIS: do
-        pass
+        self._objects_map[object_hash] = label_object
+
+    def get_classifications(self, ontology_classification: Optional[Object] = None) -> List[LabelObject]:
+        """Returns all the objects with this hash."""
+        # DENIS: Which hash are we referring to here? the attribute one or the non-attribute one?
+        return []
 
     def get_items(self, frame_number: int) -> Set[Union[LabelObject, LabelClassification]]:
         pass
 
     def remove_object(self, label_object: LabelObject):
         """Remove the object."""
-        self._available_object_hashes.remove(label_object.object_hash)
-        self._objects.remove(label_object)
+        self._objects_map.pop(label_object.object_hash)
 
     def _parse_label_row_dict(self, label_row_dict: dict):
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])

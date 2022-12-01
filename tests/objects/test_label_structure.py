@@ -66,8 +66,8 @@ def test_create_label_object_one_coordinate():
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
     label_row = LabelRow(empty_image_group)
 
-    assert label_row._classifications == []
-    assert label_row._objects == []
+    assert label_row.get_classifications() == []
+    assert label_row.get_objects() == []
     read_only_data = label_row.label_row_read_only_data
     assert isinstance(read_only_data, LabelRowReadOnlyData)
     # TODO: do more assertions
@@ -208,7 +208,7 @@ def test_create_label_object_with_dynamic_answers():
 
     label_object.add_coordinates(coordinates={"x": 5, "y": 6}, frames=1)
     """
-    I want to be able to inspect dynamic answers, set them, leave them unanswered, 
+    I want to be able to inspect dynamic answers, set them, leave them unanswered,
     but I would like to not repeat myself across different frames.
     """
     # used_coordinates = label_object.used_coordinates()
