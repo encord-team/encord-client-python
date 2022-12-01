@@ -50,8 +50,8 @@ def test_create_label_object_one_coordinate():
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
     label_row = LabelRow(empty_image_group)
 
-    assert label_row.classifications == []
-    assert label_row.objects == []
+    assert label_row._classifications == []
+    assert label_row._objects == []
     read_only_data = label_row.label_row_read_only_data
     assert isinstance(read_only_data, LabelRowReadOnlyData)
     # TODO: do more assertions
@@ -59,7 +59,7 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
 
 def test_add_label_object_to_label_row():
     label_row = LabelRow(empty_image_group)
-    label_object = LabelObject(box_ontology_item)  # DENIS: takes ontology item
+    label_object = LabelObject(box_ontology_item)
 
     coordinates = BoundingBoxCoordinates(
         height=0.1,
@@ -70,7 +70,42 @@ def test_add_label_object_to_label_row():
 
     label_object.add_coordinates(coordinates=coordinates, frames={1})
     label_row.add_object(label_object)
-    assert label_row.objects[0] == label_object
+    assert label_row.get_objects()[0].object_hash == label_object.object_hash
+
+
+def test_add_remove_access_label_objects_in_label_row():
+    label_row = LabelRow(empty_image_group)
+    label_object_1 = LabelObject(box_ontology_item)
+    label_object_2 = LabelObject(box_ontology_item)
+
+    coordinates_1 = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
+    coordinates_2 = BoundingBoxCoordinates(
+        height=0.2,
+        width=0.1,
+        top_left_x=0.5,
+        top_left_y=0.4,
+    )
+
+    label_object_1.add_coordinates(coordinates=coordinates_1, frames={1})
+    label_object_2.add_coordinates(coordinates=coordinates_2, frames={2, 3})
+
+    label_row.add_object(label_object_1)
+    label_row.add_object(label_object_2)
+
+    objects = label_row.get_objects()
+    assert objects[0].object_hash == label_object_1.object_hash
+    assert objects[1].object_hash == label_object_2.object_hash
+    # The FE may sometimes rely on the order of these.
+
+    label_row.remove_object(label_object_1)
+    objects = label_row.get_objects()
+    assert len(objects) == 1
+    assert objects[0].object_hash == label_object_2.object_hash
 
 
 # ==========================================================

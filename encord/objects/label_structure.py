@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import Field, dataclass, field
 from datetime import datetime
 from enum import Flag, auto
@@ -90,7 +91,7 @@ def get_all_answers(ontology: OntologyStructure):
     pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class BoundingBoxCoordinates:
     """All the values are percentages relative to the total image size."""
 
@@ -216,6 +217,7 @@ class LabelObject:
         self,
         coordinates: Coordinates,
         frames: Iterable[int],
+        # ^ DENIS: this is slightly awkward, do we really need to have multiple?
         *,
         object_frame_instance_info: ObjectFrameInstanceInfo = ObjectFrameInstanceInfo(),
     ):
@@ -353,8 +355,10 @@ class LabelRow:
 
         # DENIS: technically the objects/classifications don't need to be in order, but I believe that we're sometimes
         #  relying on them being in order. Can also use a dict which is ordered with an empty key.
-        self.objects: List[LabelObject] = list()
-        self.classifications: List[LabelClassification] = list()
+        self._objects: List[LabelObject] = list()
+        self._classifications: List[LabelClassification] = list()
+        # DENIS: do not expose those directly! -> copy on the way out, with the option to not copy in some cases.
+
         self._frame_to_items: Dict[int, Set[Union[LabelObject, LabelClassification]]] = dict()
         self._available_object_hashes: Set[str] = set()
         self._available_classification_hashes: Set[str] = set()
@@ -362,9 +366,10 @@ class LabelRow:
     def get_image_hash(self, frame_number: int) -> str:
         return "xyz"
 
-    def get_objects(self, ontology_object: Object):
+    def get_objects(self, ontology_object: Optional[Object] = None) -> List[LabelObject]:
         """Returns all the objects with this hash."""
-        pass
+        ret = deepcopy(self._objects)
+        return ret
 
     def add_object(self, label_object: LabelObject, force=True):
         """
@@ -382,7 +387,7 @@ class LabelRow:
         elif object_hash in self._available_object_hashes and force:
             self._delete_object(object_hash)
         self._available_object_hashes.add(object_hash)
-        self.objects.append(label_object)
+        self._objects.append(label_object)
 
     def _delete_object(self, object_hash: str):
         # DENIS: do
@@ -393,6 +398,8 @@ class LabelRow:
 
     def remove_object(self, label_object: LabelObject):
         """Remove the object."""
+        self._available_object_hashes.remove(label_object.object_hash)
+        self._objects.remove(label_object)
 
     def _parse_label_row_dict(self, label_row_dict: dict):
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
