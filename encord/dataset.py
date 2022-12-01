@@ -49,8 +49,8 @@ class Dataset:
     @property
     def data_rows(self) -> List[DataRow]:
         """
-        Part of the response of this function can be configured by the :meth:`encord.dataset.Dataset.set_access_settings`
-        method.
+        Part of the response of this function can be configured by the
+        :meth:`encord.dataset.Dataset.set_access_settings` method.
 
         .. code::
 
