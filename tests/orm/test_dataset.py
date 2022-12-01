@@ -19,6 +19,7 @@ DATASET_JSON = {
             "data_title": "image-group-12dca",
             "created_at": "2022-01-05 18:51:05",
             "data_type": "IMG_GROUP",
+            "client_metadata": {"key", "value"},
         }
     ],
 }
@@ -45,6 +46,7 @@ def test_dataset_fields():
     assert data_row.title == data_row_json["data_title"]
     assert data_row.created_at == parser.parse(data_row_json["created_at"])
     assert data_row.data_type == DataType.from_upper_case_string(data_row_json["data_type"])
+    assert data_row.client_metadata == data_row_json["client_metadata"]
 
 
 def test_dataset_setters_and_getters():

@@ -6,7 +6,12 @@ from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset import Image, ImageGroupOCR, StorageLocation
+from encord.orm.dataset import (
+    DatasetAccessSettings,
+    Image,
+    ImageGroupOCR,
+    StorageLocation,
+)
 
 
 class Dataset:
@@ -43,6 +48,15 @@ class Dataset:
 
     @property
     def data_rows(self) -> List[DataRow]:
+        """
+        Part of the response of this function can be configured by the
+        :meth:`encord.dataset.Dataset.set_access_settings` method.
+
+        .. code::
+
+            dataset.set_access_settings(DatasetAccessSettings(fetch_client_metadata=True))
+            print(dataset.data_rows)
+        """
         dataset_instance = self._get_dataset_instance()
         return dataset_instance.data_rows
 
@@ -58,6 +72,16 @@ class Dataset:
         This function is exposed for convenience. You are encouraged to use the property accessors instead.
         """
         return self._client.get_dataset()
+
+    def set_access_settings(self, dataset_access_settings: DatasetAccessSettings, *, refetch_data: bool = True) -> None:
+        """
+        Args:
+            dataset_access_settings: The access settings to use going forward
+            refetch_data: Whether a `refetch_data()` call should follow the update of the dataset access settings.
+        """
+        self._client.set_access_settings(dataset_access_settings)
+        if refetch_data:
+            self.refetch_data()
 
     def upload_video(
         self,
