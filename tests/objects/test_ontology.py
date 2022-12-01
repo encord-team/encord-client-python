@@ -261,7 +261,7 @@ def test_add_object_nested_classifications_duplicate_values():
         )
 
 
-def test_add_classification_2():
+def test_add_classification_attribute():
     ontology = ontology_structure.OntologyStructure()
     cls1 = ontology.add_classification()
 
