@@ -70,6 +70,7 @@ class Object:
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
         required: bool = False,
+        dynamic: bool = False,
     ) -> T:
         """
         Adds an attribute to the object.
@@ -82,6 +83,7 @@ class Object:
             feature_node_hash: global identifier of the attribute. Normally auto-generated;
                     omit this unless the aim is to create an exact clone of existing ontology
             required: whether the label editor would mark this attribute as 'required'
+            dynamic: whether the attribute can have a different answer for the same object across different frames.
 
         Returns:
             the created attribute that can be further specified with Options, where appropriate
@@ -89,4 +91,4 @@ class Object:
         Raises:
             ValueError: if specified `local_uid` or `feature_node_hash` violate uniqueness constraints
         """
-        return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required)
+        return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required, dynamic)

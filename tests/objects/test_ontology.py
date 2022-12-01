@@ -37,6 +37,7 @@ EXPECTED_ONTOLOGY: ontology_structure.OntologyStructure = ontology_structure.Ont
                     feature_node_hash="1e3e5cad",
                     name="Additional details about the nose",
                     required=True,
+                    dynamic=False,
                     options=[
                         encord.objects.common.FlatOption(
                             uid=[2, 1, 1],
@@ -66,6 +67,7 @@ EXPECTED_ONTOLOGY: ontology_structure.OntologyStructure = ontology_structure.Ont
                     feature_node_hash="cabfedb5",
                     name="Radio with options",
                     required=False,
+                    dynamic=False,
                     options=[
                         encord.objects.common.NestableOption(
                             uid=[4, 1, 1],
@@ -78,6 +80,7 @@ EXPECTED_ONTOLOGY: ontology_structure.OntologyStructure = ontology_structure.Ont
                                     feature_node_hash="59204845",
                                     name="Leaf",
                                     required=False,
+                                    dynamic=False,
                                 )
                             ],
                         )
@@ -96,6 +99,7 @@ EXPECTED_ONTOLOGY: ontology_structure.OntologyStructure = ontology_structure.Ont
                     feature_node_hash="a6136d14",
                     name="Is the cat standing?",
                     required=True,
+                    dynamic=False,
                     options=[
                         encord.objects.common.NestableOption(
                             uid=[1, 1, 1],
@@ -217,22 +221,30 @@ def test_add_object_nested_classifications():
     assert stripes.feature_node_hash
     assert isinstance(stripes, encord.objects.common.TextAttribute)
     assert not stripes.required
+    assert not stripes.dynamic
     assert not stripes.has_options_field()
 
     ripeness = obj1.add_attribute(
-        encord.objects.common.RadioAttribute, "Ripeness", local_uid=7, feature_node_hash="12345678", required=True
+        encord.objects.common.RadioAttribute,
+        "Ripeness",
+        local_uid=7,
+        feature_node_hash="12345678",
+        required=True,
+        dynamic=True,
     )
     assert ripeness.uid == [1, 7]
     assert ripeness.feature_node_hash
     assert isinstance(ripeness, encord.objects.common.RadioAttribute)
     assert ripeness.required
+    assert ripeness.dynamic
     assert ripeness.has_options_field()
 
-    damage = obj1.add_attribute(encord.objects.common.ChecklistAttribute, "Damage", required=True)
+    damage = obj1.add_attribute(encord.objects.common.ChecklistAttribute, "Damage", required=True, dynamic=True)
     assert damage.uid == [1, 8]
     assert damage.feature_node_hash
     assert isinstance(damage, encord.objects.common.ChecklistAttribute)
     assert damage.required
+    assert damage.dynamic
     assert damage.has_options_field()
 
 
@@ -249,7 +261,7 @@ def test_add_object_nested_classifications_duplicate_values():
         )
 
 
-def test_add_classification():
+def test_add_classification_attribute():
     ontology = ontology_structure.OntologyStructure()
     cls1 = ontology.add_classification()
 
