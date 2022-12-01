@@ -10,6 +10,7 @@ import encord.objects.common
 import encord.objects.ontology_object
 from encord.objects import ontology_structure
 from encord.objects.common import Shape
+from encord.objects.utils import short_uuid_str
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(CURRENT_DIR, "data")
@@ -156,7 +157,7 @@ def test_add_classification():
     assert cls2.uid == 2
     assert cls2.feature_node_hash
 
-    feature_node_hash = str(uuid.uuid4())[:8]
+    feature_node_hash = short_uuid_str()
     cls3 = ontology.add_classification(uid=7, feature_node_hash=feature_node_hash)
     assert cls3.uid == 7
     assert cls3.feature_node_hash == feature_node_hash
@@ -188,7 +189,7 @@ def test_add_object():
     assert obj2.color
     assert obj2.feature_node_hash
 
-    feature_node_hash = str(uuid.uuid4())[:8]
+    feature_node_hash = short_uuid_str()
     obj3 = ontology.add_object("Lemon", Shape.POLYLINE, 7, feature_node_hash=feature_node_hash)
 
     assert obj3.uid == 7

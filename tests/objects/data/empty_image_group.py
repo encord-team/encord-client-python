@@ -1,9 +1,10 @@
-one_image_group = {
+empty_image_group = {
     "label_hash": "f1e6bc82-9f89-4545-8abb-f271bf28cf99",
     "dataset_hash": "d9f19c3c-5cd0-4f8c-b98c-6c0e24676224",
     "dataset_title": "One image group",
     "data_title": "image-group-8375e",
     "data_type": "img_group",
+    "video_link": None,
     "data_units": {
         "f850dfb4-7146-49e0-9afc-2b9434a64a9f": {
             "data_hash": "f850dfb4-7146-49e0-9afc-2b9434a64a9f",

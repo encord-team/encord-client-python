@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import List, Optional, Tuple, Type, TypeVar, Union
 
-from encord.objects.utils import _decode_nested_uid
+from encord.objects.utils import _decode_nested_uid, short_uuid_str
 from encord.orm.project import StringEnum
 
 NestedID = List[int]
@@ -385,7 +385,7 @@ def __build_identifiers(
             raise ValueError(f"Duplicate uid '{local_uid}'")
 
     if feature_node_hash is None:
-        feature_node_hash = str(uuid.uuid4())[:8]
+        feature_node_hash = short_uuid_str()
     elif any([item.feature_node_hash == feature_node_hash for item in existent_items]):
         raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
 

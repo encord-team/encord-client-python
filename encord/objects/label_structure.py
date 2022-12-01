@@ -13,6 +13,7 @@ from encord.objects.common import (
 )
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
+from encord.objects.utils import short_uuid_str
 
 """
 DENIS:
@@ -175,6 +176,25 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.SKELETON: SkeletonCoordinates,
 }
 
+
+@dataclass
+class ObjectFrameInstanceInfo:
+    created_at: datetime = datetime.now()
+    created_by: Optional[str] = None
+    """None defaults to the user of the SDK"""
+    last_edited_at: Optional[datetime] = datetime.now()
+    last_edited_by: Optional[str] = None
+    """None defaults to the user of the SDK"""
+    confidence: float = 1
+    manual_annotation: bool = True
+
+
+@dataclass
+class ObjectFrameInstanceData:
+    coordinates: Coordinates
+    object_frame_instance_info: ObjectFrameInstanceInfo
+
+
 # @dataclass
 class LabelObject:
     """This is per video/image_group/dicom/...
@@ -183,19 +203,27 @@ class LabelObject:
     """
 
     # DENIS: this needs to take an OntologyLabelObject to navigate around.
-    def __init__(self, ontology_item: Object):
+    def __init__(
+        self,
+        ontology_item: Object,
+    ):
         self._ontology_item = ontology_item
-        self._frames_to_coordinates: Dict[int, Coordinates] = dict()
+        self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
         # DENIS: this also needs a reference to the parent object, to understand what kind of coordinates are allowed?
+        self.object_hash = short_uuid_str()
 
     def add_coordinates(
         self,
         coordinates: Coordinates,
         frames: Iterable[int],
+        *,
+        object_frame_instance_info: ObjectFrameInstanceInfo = ObjectFrameInstanceInfo(),
     ):
         """
         DENIS: The client needs to be careful here! If a reference of multiple coordinates is being passed around, they
         might accidentally overwrite specific values.
+
+        DENIS: validate that the coordinates are not out of bounds.
         """
         expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[self._ontology_item.shape]
         if type(coordinates) != expected_coordinate_type:
@@ -204,7 +232,9 @@ class LabelObject:
             )
 
         for frame in frames:
-            self._frames_to_coordinates[frame] = coordinates
+            self._frames_to_instance_data[frame] = ObjectFrameInstanceData(
+                coordinates=coordinates, object_frame_instance_info=object_frame_instance_info
+            )
 
     def set_answer(self, answer: Answer) -> None:
         """
@@ -216,7 +246,7 @@ class LabelObject:
 
     def is_valid(self) -> bool:
         """Check if is valid, could also return some human/computer  messages."""
-        if len(self._frames_to_coordinates) == 0:
+        if len(self._frames_to_instance_data) == 0:
             return False
         return True
 
@@ -277,7 +307,20 @@ class LabelClassification:
         pass
 
 
-@dataclass
+@dataclass(frozen=True)
+class FrameLevelImageGroupData:
+    # DENIS: check which ones here are optional. Can even branch off of different DataType of the LabelRow
+    # This is for now for image groups
+    image_hash: str
+    image_title: str
+    data_link: str
+    file_type: str
+    frame_number: int
+    width: int
+    height: int
+
+
+@dataclass(frozen=True)
 class LabelRowReadOnlyData:
     label_hash: str
     dataset_hash: str
@@ -285,6 +328,7 @@ class LabelRowReadOnlyData:
     data_title: str
     data_type: DataType
     number_of_frames: int
+    frame_level_data: Dict[int, FrameLevelImageGroupData]
     image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
     frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
 
@@ -304,22 +348,16 @@ class LabelRow:
     """
 
     def __init__(self, label_row_dict: dict):
-        # DENIS: try to parse and create the read only data
-        self._label_row_read_only_data = LabelRowReadOnlyData(
-            label_hash="wow",
-            dataset_hash="wow",
-            dataset_title="wow",
-            data_title="wow",
-            data_type=DataType.VIDEO,
-            number_of_frames=float("inf"),  # TODO: make this an int by getting this from the BE.
-            # image_hash_to_frame= "wow",
-            # frame_to_image_hash= "wow",
-        )
+        self.label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
+        # DENIS: next up need to also parse objects and classifications from current label rows.
+
         # DENIS: technically the objects/classifications don't need to be in order, but I believe that we're sometimes
         #  relying on them being in order. Can also use a dict which is ordered with an empty key.
         self.objects: List[LabelObject] = list()
         self.classifications: List[LabelClassification] = list()
         self._frame_to_items: Dict[int, Set[Union[LabelObject, LabelClassification]]] = dict()
+        self._available_object_hashes: Set[str] = set()
+        self._available_classification_hashes: Set[str] = set()
 
     def get_image_hash(self, frame_number: int) -> str:
         return "xyz"
@@ -328,14 +366,26 @@ class LabelRow:
         """Returns all the objects with this hash."""
         pass
 
-    def add_object(self, label_object: LabelObject):
+    def add_object(self, label_object: LabelObject, force=True):
         """
-        Validate that it was initialised well enough by having at least
-        one coordinate. Can also validate that this object hash is not present yet. And that the coordinates are not
-        out of bounds. But ideally this would already be guaranteed with the `.add_coordinate()` call.
+        Do we want a bulk function? probably not needed as it is local? (only for the force option)
 
-        Do we want a bulk function? probably not needed as it is local?
+        Args:
+            force: overwrites current objects, otherwise this will replace the current object.
         """
+        if not label_object.is_valid():
+            raise ValueError("The supplied LabelObject is not in a valid format.")
+
+        object_hash = label_object.object_hash
+        if object_hash in self._available_object_hashes and not force:
+            raise ValueError("The supplied LabelObject was already previously added. (the object_hash is the same).")
+        elif object_hash in self._available_object_hashes and force:
+            self._delete_object(object_hash)
+        self._available_object_hashes.add(object_hash)
+        self.objects.append(label_object)
+
+    def _delete_object(self, object_hash: str):
+        # DENIS: do
         pass
 
     def get_items(self, frame_number: int) -> Set[Union[LabelObject, LabelClassification]]:
@@ -343,6 +393,38 @@ class LabelRow:
 
     def remove_object(self, label_object: LabelObject):
         """Remove the object."""
+
+    def _parse_label_row_dict(self, label_row_dict: dict):
+        frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
+        image_hash_to_frame = {item.image_hash: item.frame_number for item in frame_level_data.values()}
+        frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
+        return LabelRowReadOnlyData(
+            label_hash=label_row_dict["label_hash"],
+            dataset_hash=label_row_dict["dataset_hash"],
+            dataset_title=label_row_dict["dataset_title"],
+            data_title=label_row_dict["data_title"],
+            data_type=label_row_dict["data_type"],  # DENIS: translate this into the enum
+            number_of_frames=float("inf"),  # TODO: make this an int by getting this from the BE.
+            frame_level_data=frame_level_data,
+            image_hash_to_frame=image_hash_to_frame,
+            frame_to_image_hash=frame_to_image_hash,
+        )
+
+    def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
+        frame_level_data: Dict[int, FrameLevelImageGroupData] = dict()
+        for _, payload in label_row_data_units.items():
+            frame_number = payload["data_sequence"]
+            frame_level_image_group_data = FrameLevelImageGroupData(
+                image_hash=payload["data_hash"],
+                image_title=payload["data_title"],
+                data_link=payload["data_link"],  # DENIS: what happens if no URLs requested?
+                file_type=payload["data_type"],
+                frame_number=int(frame_number),
+                width=payload["width"],
+                height=payload["height"],
+            )
+            frame_level_data[frame_number] = frame_level_image_group_data
+        return frame_level_data
 
     # def add_new_object(
     #     self,
@@ -450,7 +532,7 @@ class LabelMaster:
         # Can probably just use the set label row here.
         pass
 
-    def refresh(self, force: bool = False) -> bool:
+    def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
         """
         Grab the labels from the server. Return False if the labels have been changed in the meantime.
 

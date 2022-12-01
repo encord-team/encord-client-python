@@ -6,9 +6,11 @@ from encord.objects.label_structure import (
     BoundingBoxCoordinates,
     LabelObject,
     LabelRow,
+    LabelRowReadOnlyData,
     TextAnswer,
 )
 from tests.objects.data.all_types_ontology_structure import all_types_structure
+from tests.objects.data.empty_image_group import empty_image_group
 
 """
 
@@ -44,9 +46,36 @@ def test_create_label_object_one_coordinate():
     label_object.add_coordinates(coordinates=coordinates, frames={1})
     assert label_object.is_valid()
 
-    # label_row = LabelRow()
-    #
-    # label_row.add_object(label_object)
+
+def test_create_a_label_row_from_empty_image_group_label_row_dict():
+    label_row = LabelRow(empty_image_group)
+
+    assert label_row.classifications == []
+    assert label_row.objects == []
+    read_only_data = label_row.label_row_read_only_data
+    assert isinstance(read_only_data, LabelRowReadOnlyData)
+    # TODO: do more assertions
+
+
+def test_add_label_object_to_label_row():
+    label_row = LabelRow(empty_image_group)
+    label_object = LabelObject(box_ontology_item)  # DENIS: takes ontology item
+
+    coordinates = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
+
+    label_object.add_coordinates(coordinates=coordinates, frames={1})
+    label_row.add_object(label_object)
+    assert label_row.objects[0] == label_object
+
+
+# ==========================================================
+# =========== actually working tests above here ============
+# ==========================================================
 
 
 def test_add_same_answers_to_different_label_objects():

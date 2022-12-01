@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pytz
+from encord.objects.utils import short_uuid_str
 
 GMT_TIMEZONE = pytz.timezone("GMT")
 DATETIME_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
@@ -63,12 +64,12 @@ def make_object_dict(
     :type object_hash: If you want the object to have the same id across frames (for
         videos only), you can specify the object hash, which need to be
         an eight-character hex string (e.g., use
-        ``str(uuid.uuid4())[:8]`` or the ``objectHash`` from an
+        ``short_uuid_str()`` or the ``objectHash`` from an
         associated object.
     :returns: An object dictionary conforming with the Encord label row data format.
     """
     if object_hash is None:
-        object_hash = str(uuid.uuid4())[:8]
+        object_hash = short_uuid_str()
 
     timestamp: str = __get_timestamp()
     shape: str = ontology_object.get("shape")
@@ -172,7 +173,7 @@ def make_classification_dict_and_answer_dict(
               row data format.
     """
     if classification_hash is None:
-        classification_hash = str(uuid.uuid4())[:8]
+        classification_hash = short_uuid_str()
 
     if isinstance(answers, dict):
         answers = [answers]
