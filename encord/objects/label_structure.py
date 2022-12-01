@@ -1,8 +1,11 @@
-from copy import deepcopy
+from __future__ import annotations
+
+from collections import defaultdict
+from copy import copy, deepcopy
 from dataclasses import Field, dataclass, field
 from datetime import datetime
 from enum import Flag, auto
-from typing import Any, Dict, Iterable, List, Optional, Set, Type, Union
+from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Type, Union
 
 from encord.constants.enums import DataType
 from encord.objects.common import (
@@ -101,7 +104,7 @@ class BoundingBoxCoordinates:
     top_left_y: float
 
 
-@dataclass
+@dataclass(frozen=True)
 class RotatableBoundingBoxCoordinates:
     """All the values are percentages relative to the total image size."""
 
@@ -112,7 +115,7 @@ class RotatableBoundingBoxCoordinates:
     theta: float  # angle of rotation originating at center of box
 
 
-@dataclass
+@dataclass(frozen=True)
 class PointCoordinate:
     """All coordinates are a percentage relative to the total image size."""
 
@@ -123,15 +126,12 @@ class PointCoordinate:
 # PolygonCoordinates = List[PointCoordinate]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PolygonCoordinates:
     values: List[PointCoordinate]
 
 
-PolylineCoordinates = List[PointCoordinate]
-
-
-@dataclass
+@dataclass(frozen=True)
 class PolylineCoordinates:
     values: List[PointCoordinate]
 
@@ -148,7 +148,7 @@ class Visibility(Flag):
     OCCLUDED = auto()
 
 
-@dataclass
+@dataclass(frozen=True)
 class SkeletonCoordinate:
     x: float
     y: float
@@ -167,7 +167,7 @@ class SkeletonCoordinate:
     visibility: Optional[Visibility] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class SkeletonCoordinates:
     values: List[SkeletonCoordinate]
 
@@ -192,7 +192,7 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class ObjectFrameInstanceInfo:
     created_at: datetime = datetime.now()
     created_by: Optional[str] = None
@@ -204,7 +204,7 @@ class ObjectFrameInstanceInfo:
     manual_annotation: bool = True
 
 
-@dataclass
+@dataclass(frozen=True)
 class ObjectFrameInstanceData:
     coordinates: Coordinates
     object_frame_instance_info: ObjectFrameInstanceInfo
@@ -225,23 +225,34 @@ class LabelObject:
         self._ontology_item = ontology_item
         self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
         # DENIS: this also needs a reference to the parent object, to understand what kind of coordinates are allowed?
-        self.object_hash = short_uuid_str()
+        self._object_hash = short_uuid_str()
+        self._parent: Optional[LabelRow] = None
+        """This member should only be manipulated by a LabelRow"""
+
+    @property
+    def object_hash(self) -> str:
+        return self._object_hash
+
+    @object_hash.setter
+    def object_hash(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot set the object hash on an instantiated label object.")
 
     @property
     def ontology_item(self) -> Any:
         return deepcopy(self._ontology_item)
 
     @ontology_item.setter
-    def ontology_item(self, v: Any) -> None:
+    def ontology_item(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot set the ontology item of an instantiated LabelObject.")
 
-    def add_coordinates(
+    def set_coordinates(
         self,
         coordinates: Coordinates,
         frames: Iterable[int],
         # ^ DENIS: this is slightly awkward, do we really need to have multiple?
         *,
         object_frame_instance_info: ObjectFrameInstanceInfo = ObjectFrameInstanceInfo(),
+        # DENIS: could have a set/overwrite/force flag
     ):
         """
         DENIS: The client needs to be careful here! If a reference of multiple coordinates is being passed around, they
@@ -260,6 +271,25 @@ class LabelObject:
                 coordinates=coordinates, object_frame_instance_info=object_frame_instance_info
             )
 
+        if self._parent:
+            self._parent._add_to_frame_to_hashes_map(self)
+
+    def copy(self) -> LabelObject:
+        """
+        Creates an exact copy of this LabelObject but with a new object hash and without being associated to any
+        LabelRow. This is useful if you want to add the semantically same LabelObject to multiple `LabelRow`s."""
+        ret = LabelObject(self._ontology_item)
+        ret._frames_to_instance_data = copy(self._frames_to_instance_data)
+        # DENIS: test if a shallow copy is enough
+        return ret
+
+    def frames(self) -> List[int]:
+        return list(self._frames_to_instance_data.keys())
+
+    def remove_from_frames(self, frames: Iterable[int]):
+        """Ensure that it will be removed from all frames."""
+        pass
+
     def set_answer(self, answer: Answer) -> None:
         """
         This thing will throw if the answer is not possibly according to the ontology.
@@ -273,10 +303,6 @@ class LabelObject:
         if len(self._frames_to_instance_data) == 0:
             return False
         return True
-
-    def set_coordinates(self, coordinates: Any, frames: Any):
-        """Instead of adding, this will overwrite current coordinates. Or do we need this?"""
-        pass
 
     def add_dynamic_answers(
         self,
@@ -375,19 +401,12 @@ class LabelRow:
         self.label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
         # DENIS: next up need to also parse objects and classifications from current label rows.
 
-        # DENIS: technically the objects/classifications don't need to be in order, but I believe that we're sometimes
-        #  relying on them being in order. Can also use a dict which is ordered with an empty key.
-        # self._objects: List[LabelObject] = list()
-        # self._classifications: List[LabelClassification] = list()
-        # DENIS: do not expose those directly! -> copy on the way out, with the option to not copy in some cases.
+        self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
 
-        self._frame_to_items: Dict[int, Set[Union[LabelObject, LabelClassification]]] = dict()
         self._objects_map: Dict[str, LabelObject] = dict()
-        # DENIS: if we want to keep things in order, we might want to just make this a dict and then if we
-        #  overwrite we add into the end.
         self._classifications_map: Dict[str, LabelClassification] = dict()
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
-        # at least at the objects_index level.
+        # at least at the final objects_index/classifications_index level.
 
     def get_image_hash(self, frame_number: int) -> str:
         return "xyz"
@@ -397,7 +416,8 @@ class LabelRow:
         ret: List[LabelObject] = list()
         for object_ in self._objects_map.values():
             if ontology_object is None or object_.ontology_item.feature_node_hash == ontology_object.feature_node_hash:
-                ret.append(deepcopy(object_))
+                ret.append(object_)
+                # DENIS: the accessors are protected. Check that no one can do anything stupid.
         return ret
 
     def add_object(self, label_object: LabelObject, force=True):
@@ -410,6 +430,13 @@ class LabelRow:
         if not label_object.is_valid():
             raise ValueError("The supplied LabelObject is not in a valid format.")
 
+        if label_object._parent is not None:
+            raise RuntimeError(
+                "The supplied LabelObject is already part of a LabelRow. You can only add a LabelObject to one "
+                "LabelRow. You can do a LabelObject.copy() to create an identical LabelObject which is not part of "
+                "any LabelRow."
+            )
+
         object_hash = label_object.object_hash
         if object_hash in self._objects_map and not force:
             raise ValueError("The supplied LabelObject was already previously added. (the object_hash is the same).")
@@ -417,18 +444,37 @@ class LabelRow:
             self._objects_map.pop(object_hash)
 
         self._objects_map[object_hash] = label_object
+        label_object._parent = self
+
+        self._add_to_frame_to_hashes_map(label_object)
+
+    def _add_to_frame_to_hashes_map(self, label_object: LabelObject):
+        """This can be called by the LabelObject."""
+        for frame in label_object.frames():
+            self._frame_to_hashes[frame].add(label_object.object_hash)
 
     def get_classifications(self, ontology_classification: Optional[Object] = None) -> List[LabelObject]:
         """Returns all the objects with this hash."""
         # DENIS: Which hash are we referring to here? the attribute one or the non-attribute one?
         return []
 
-    def get_items(self, frame_number: int) -> Set[Union[LabelObject, LabelClassification]]:
-        pass
+    def get_objects_by_frame(self, frames: Set[int]) -> List[LabelObject]:
+        """DENIS: maybe merge this with the getter above."""
+        ret: List[LabelObject] = []
+        for frame in frames:
+            hashes = self._frame_to_hashes[frame]
+            for hash_ in hashes:
+                if hash_ in self._objects_map:
+                    ret.append(self._objects_map[hash_])
+
+        return ret
 
     def remove_object(self, label_object: LabelObject):
         """Remove the object."""
         self._objects_map.pop(label_object.object_hash)
+        for frame in label_object.frames():
+            self._frame_to_hashes[frame].remove(label_object.object_hash)
+        label_object._parent = None
 
     def _parse_label_row_dict(self, label_row_dict: dict):
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
