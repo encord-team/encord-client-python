@@ -1,12 +1,14 @@
-from dataclasses import Field, dataclass
+from dataclasses import Field, dataclass, field
 from datetime import datetime
-from typing import Any, List, Optional, Set, Union
+from enum import Flag, auto
+from typing import Any, Dict, Iterable, List, Optional, Set, Type, Union
 
 from encord.constants.enums import DataType
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
     RadioAttribute,
+    Shape,
     TextAttribute,
 )
 from encord.objects.ontology_object import Object
@@ -88,24 +90,92 @@ def get_all_answers(ontology: OntologyStructure):
 
 
 @dataclass
-class LabelObjectFrameData:
-    """
-    The data per frame of a label object.
-    Choice:
-    * have the coordinates and dynamic answers together => worse grouping of dynamic answers.
-    * if we have them separately, we need to have two containers. One is single frame to single coordinate
-        the other one is a frame range to dynamic answers. => this frame range will need to be carefully constructed
-        and we'll need to be able to support for splitting those frame ranges
-        ==> I actually think this should rather be disjoint.
+class BoundingBoxCoordinates:
+    """All the values are percentages relative to the total image size."""
 
-    For image groups with different size, this will also include a custom size.
-    """
-
-    coordinates: Any
-    frames: Any  # Allow this to
+    height: float
+    width: float
+    top_left_x: float
+    top_left_y: float
 
 
 @dataclass
+class RotatableBoundingBoxCoordinates:
+    """All the values are percentages relative to the total image size."""
+
+    height: float
+    width: float
+    top_left_x: float
+    top_left_y: float
+    theta: float  # angle of rotation originating at center of box
+
+
+@dataclass
+class PointCoordinate:
+    """All coordinates are a percentage relative to the total image size."""
+
+    x: float
+    y: float
+
+
+PolygonCoordinates = List[PointCoordinate]
+PolylineCoordinates = List[PointCoordinate]
+
+
+class Visibility(Flag):
+    """
+    An item is invisible if it is outside the frame. It is occluded
+    if it is covered by something in the frame, but it would otherwise
+    be in the frame. Else it is visible.
+    """
+
+    VISIBLE = auto()
+    INVISIBLE = auto()
+    OCCLUDED = auto()
+
+
+@dataclass
+class SkeletonCoordinate:
+    x: float
+    y: float
+
+    # `name` and `color` can be removed as they are part of the ontology.
+    # The frontend must first be aware of how to merge with ontology.
+    name: str
+    color: str
+
+    # `featureHash` and `value` seem to appear when visibility is
+    # present. They might not have any meaning. Remove if confirmed that
+    # Frontend does not need it.
+    feature_hash: Optional[str] = None
+    value: Optional[str] = None
+
+    visibility: Optional[Visibility] = None
+
+
+SkeletonCoordinates = List[SkeletonCoordinate]
+
+
+Coordinates = Union[
+    BoundingBoxCoordinates,
+    RotatableBoundingBoxCoordinates,
+    PointCoordinate,
+    PolygonCoordinates,
+    PolylineCoordinates,
+    SkeletonCoordinates,
+]
+
+# DENIS: guard this with a unit test.
+ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
+    Shape.BOUNDING_BOX: BoundingBoxCoordinates,
+    Shape.ROTATABLE_BOUNDING_BOX: RotatableBoundingBoxCoordinates,
+    Shape.POINT: PointCoordinate,
+    Shape.POLYGON: PolygonCoordinates,
+    Shape.POLYLINE: PolylineCoordinates,
+    Shape.SKELETON: SkeletonCoordinates,
+}
+
+# @dataclass
 class LabelObject:
     """This is per video/image_group/dicom/...
 
@@ -114,14 +184,27 @@ class LabelObject:
 
     # DENIS: this needs to take an OntologyLabelObject to navigate around.
     def __init__(self, ontology_item: Object):
-        pass
+        self._ontology_item = ontology_item
+        self._frames_to_coordinates: Dict[int, Coordinates] = dict()
+        # DENIS: this also needs a reference to the parent object, to understand what kind of coordinates are allowed?
 
     def add_coordinates(
         self,
-        coordinates: Any,
-        frames: Union[Set[int], Set[str]],
+        coordinates: Coordinates,
+        frames: Iterable[int],
     ):
-        pass
+        """
+        DENIS: The client needs to be careful here! If a reference of multiple coordinates is being passed around, they
+        might accidentally overwrite specific values.
+        """
+        expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[self._ontology_item.shape]
+        if type(coordinates) != expected_coordinate_type:
+            raise ValueError(
+                f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
+            )
+
+        for frame in frames:
+            self._frames_to_coordinates[frame] = coordinates
 
     def set_answer(self, answer: Answer) -> None:
         """
@@ -133,7 +216,9 @@ class LabelObject:
 
     def is_valid(self) -> bool:
         """Check if is valid, could also return some human/computer  messages."""
-        pass
+        if len(self._frames_to_coordinates) == 0:
+            return False
+        return True
 
     def set_coordinates(self, coordinates: Any, frames: Any):
         """Instead of adding, this will overwrite current coordinates. Or do we need this?"""
@@ -167,9 +252,9 @@ class LabelObject:
         """Return the answers that still need to happen"""
         pass
 
-    def get_dynamic_answers_for_frame(self, frame_range, feature_hash: str) -> List[AnswerByFrames]:
-        """Here we could set the answer for a sub range."""
-        pass
+    # def get_dynamic_answers_for_frame(self, frame_range, feature_hash: str) -> List[AnswerByFrames]:
+    #     """Here we could set the answer for a sub range."""
+    #     pass
 
 
 @dataclass
@@ -193,6 +278,17 @@ class LabelClassification:
 
 
 @dataclass
+class LabelRowReadOnlyData:
+    label_hash: str
+    dataset_hash: str
+    dataset_title: str
+    data_title: str
+    data_type: DataType
+    number_of_frames: int
+    image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
+    frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
+
+
 class LabelRow:
     """
     DENIS: the big question here is how we want to see this.
@@ -203,11 +299,30 @@ class LabelRow:
     hash will then separate those.
 
     will also need to be able to keep around possible coordinate sizes and also query those if necessary.
+
+    This is essentially one blob of data_units. For an image_group we need to get all the hashed in.
     """
 
-    objects: List[LabelObject] = Field(default_factory=list)
-    classifications: List[LabelClassification] = Field(default_factory=list)
-    # DENIS: Can I have a view of all the objects/classifications per frame.
+    def __init__(self, label_row_dict: dict):
+        # DENIS: try to parse and create the read only data
+        self._label_row_read_only_data = LabelRowReadOnlyData(
+            label_hash="wow",
+            dataset_hash="wow",
+            dataset_title="wow",
+            data_title="wow",
+            data_type=DataType.VIDEO,
+            number_of_frames=float("inf"),  # TODO: make this an int by getting this from the BE.
+            # image_hash_to_frame= "wow",
+            # frame_to_image_hash= "wow",
+        )
+        # DENIS: technically the objects/classifications don't need to be in order, but I believe that we're sometimes
+        #  relying on them being in order. Can also use a dict which is ordered with an empty key.
+        self.objects: List[LabelObject] = list()
+        self.classifications: List[LabelClassification] = list()
+        self._frame_to_items: Dict[int, Set[Union[LabelObject, LabelClassification]]] = dict()
+
+    def get_image_hash(self, frame_number: int) -> str:
+        return "xyz"
 
     def get_objects(self, ontology_object: Object):
         """Returns all the objects with this hash."""
@@ -216,10 +331,14 @@ class LabelRow:
     def add_object(self, label_object: LabelObject):
         """
         Validate that it was initialised well enough by having at least
-        one coordinate. Can also validate that this object hash is not present yet.
+        one coordinate. Can also validate that this object hash is not present yet. And that the coordinates are not
+        out of bounds. But ideally this would already be guaranteed with the `.add_coordinate()` call.
 
         Do we want a bulk function? probably not needed as it is local?
         """
+        pass
+
+    def get_items(self, frame_number: int) -> Set[Union[LabelObject, LabelClassification]]:
         pass
 
     def remove_object(self, label_object: LabelObject):
@@ -296,16 +415,21 @@ class LabelRow:
 
 @dataclass
 class LabelMaster:
-    """DENIS: this thing probably should take the corresponding ontology, ideally automatically"""
+    """
+    DENIS: this thing probably should take the corresponding ontology, ideally automatically
+    DENIS: there is actually not much difference between this and the `LabelRow` class. Probably we
+        want to merge them together.
+    """
 
-    label_hash: str
-    dataset_hash: str
-    dataset_title: str
-    data_title: str
-    data_type: DataType
-    # DENIS: the above fields could be translated less literally.
-
-    single_label: LabelRow  # Only one label across this multi-label thing.
+    #
+    # label_hash: str
+    # dataset_hash: str
+    # dataset_title: str
+    # data_title: str
+    # data_type: DataType
+    # # DENIS: the above fields could be translated less literally.
+    #
+    # single_label: LabelRow  # Only one label across this multi-label thing.
 
     def get_or_create_label_by_frame(self, frame: Union[int, str]) -> LabelRow:
         """Get it depending on frame number or hash."""

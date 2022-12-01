@@ -2,8 +2,13 @@ from dataclasses import dataclass
 from typing import Any, List, Tuple
 
 from encord import Project
-from encord.objects.label_structure import LabelObject, LabelRow, TextAnswer
-from tests.objects.test_ontology import EXPECTED_ONTOLOGY
+from encord.objects.label_structure import (
+    BoundingBoxCoordinates,
+    LabelObject,
+    LabelRow,
+    TextAnswer,
+)
+from tests.objects.data.all_types_ontology_structure import all_types_structure
 
 """
 
@@ -12,15 +17,36 @@ Iterate over the frames, not only objects/classifications.
 """
 
 
+def get_item_by_hash(feature_node_hash: str):
+    for object_ in all_types_structure.objects:
+        if object_.feature_node_hash == feature_node_hash:
+            return object_
+    for classification in all_types_structure.classifications:
+        if classification.feature_node_hash == feature_node_hash:
+            return classification
+
+    raise RuntimeError("Item not found.")
+
+
+box_ontology_item = get_item_by_hash("MjI2NzEy")
+
+
 def test_create_label_object_one_coordinate():
-    label_object = LabelObject()  # DENIS: takes ontology item
+    label_object = LabelObject(box_ontology_item)  # DENIS: takes ontology item
 
-    label_object.add_coordinates(coordinates={"x": 5, "y": 6}, frames=1)
-    label_object.is_valid()
+    coordinates = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
 
-    label_row = LabelRow()
+    label_object.add_coordinates(coordinates=coordinates, frames={1})
+    assert label_object.is_valid()
 
-    label_row.add_object(label_object)
+    # label_row = LabelRow()
+    #
+    # label_row.add_object(label_object)
 
 
 def test_add_same_answers_to_different_label_objects():
@@ -35,21 +61,6 @@ def test_add_same_answers_to_different_label_objects():
 
     label_object_1.set_answer(answer)
     label_object_2.set_answer(answer)
-
-
-def test_create_label_object_with_answers_maybe_not():
-    label_object = LabelObject()
-
-    label_object.add_coordinates(coordinates={"x": 5, "y": 6}, frames=1)
-    unanswered_objects = label_object.initialise_static_answers()
-    first_unanswered_object = unanswered_objects[0]
-    first_answer = first_unanswered_object.set(value="my text")
-    # DENIS: This will be typed, as the unanswered object knows what to expect for `create_answer`
-    # DENIS: or I want to directly manipulate the answer objects by iterating through them and
-    #  setting an answer
-
-    label_object.set_static_answers(answers=[first_answer])
-    label_object.is_valid()
 
 
 def test_create_label_object_with_answers():
@@ -120,30 +131,31 @@ class FrameThing:
         pass
 
 
-class AnswerByFrames:
-    def __init__(self, frame_range: List[Tuple[int, int]], feature_hash: str):
-        pass
-
-    def get_for_frame(self, frame: int) -> Answer:
-        pass
-
-    def has_consistent_values(self) -> bool:
-        pass
-
-    def get_value(self):
-        """Throws if different values."""
-        pass
-
-    def split_to_consistent(self) -> List[AnswerByFrames]:
-        """Splits to the same value."""
-        pass
-
-    def get_sub_range(self, frame_range) -> AnswerByFrames:
-        pass
-
-    def set_value(self, v: Any):
-        """sets value for all the ranges."""
-        pass
+#
+# class AnswerByFrames:
+#     def __init__(self, frame_range: List[Tuple[int, int]], feature_hash: str):
+#         pass
+#
+#     def get_for_frame(self, frame: int) -> Answer:
+#         pass
+#
+#     def has_consistent_values(self) -> bool:
+#         pass
+#
+#     def get_value(self):
+#         """Throws if different values."""
+#         pass
+#
+#     def split_to_consistent(self) -> List[AnswerByFrames]:
+#         """Splits to the same value."""
+#         pass
+#
+#     def get_sub_range(self, frame_range) -> AnswerByFrames:
+#         pass
+#
+#     def set_value(self, v: Any):
+#         """sets value for all the ranges."""
+#         pass
 
 
 class Answer4:
@@ -159,7 +171,7 @@ class Answer4:
     def copy_to_frames(self, range):
         pass
 
-    def in_ranges(self) -> Range:
+    def in_ranges(self):
         pass
 
 

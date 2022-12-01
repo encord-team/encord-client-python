@@ -51,6 +51,14 @@ class OntologyStructure:
     def get_item_by_hash(self, feature_node_hash: str):
         pass
 
+    def get_item_by_name(self, name: str):
+        """Returns one item by name, throws otherwise."""
+        # DENIS: do I want to return the parents as a list?
+        pass
+
+    def get_items_by_name(self, name: str):
+        """Returns all items by name. Does not throw, even when empty."""
+
     @classmethod
     def from_dict(cls, d: dict) -> OntologyStructure:
         """
