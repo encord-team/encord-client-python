@@ -13,6 +13,7 @@ from encord.objects.common import (
     ChecklistAttribute,
     FlatOption,
     NestableOption,
+    Option,
     OptionType,
     PropertyType,
     RadioAttribute,
@@ -141,17 +142,19 @@ class ChecklistAnswer(_Answer):
         self._ontology_options_feature_hashes: Set[str] = self._initialise_ontology_options_feature_hashes()
         self._feature_hash_to_answer_map: Dict[str, bool] = self._initialise_feature_hash_to_answer_map()
 
-    def check_options(self, values: List[FlatOption]):
+    def check_options(self, values: Iterable[FlatOption]):
+        self._answered = True
         for value in values:
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = True
 
-    def uncheck_options(self, values: List[FlatOption]):
+    def uncheck_options(self, values: Iterable[FlatOption]):
+        self._answered = True
         for value in values:
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = False
 
-    def get_answer(self, value: FlatOption) -> bool:
+    def get_value(self, value: FlatOption) -> bool:
         return self._feature_hash_to_answer_map[value.feature_node_hash]
 
     def copy_from(self, checklist_answer: ChecklistAnswer):
@@ -163,8 +166,10 @@ class ChecklistAnswer(_Answer):
         if not other_is_answered:
             self.unset()
         else:
+            self._answered = True
             for feature_node_hash in self._feature_hash_to_answer_map.keys():
-                other_answer = checklist_answer.get_answer(feature_node_hash)
+                option = _get_option_by_hash(feature_node_hash, self.ontology_attribute.options)
+                other_answer = checklist_answer.get_value(option)
                 self._feature_hash_to_answer_map[feature_node_hash] = other_answer
 
     def _initialise_feature_hash_to_answer_map(self) -> Dict[str, bool]:
@@ -332,10 +337,19 @@ class LabelObject:
 
         self._static_answers: List[Answer] = self._get_static_answers()
 
-    def get_static_answers(self):
+    def get_all_static_answers(
+        self,
+    ) -> List[Answer]:
         ret = copy(self._static_answers)
-        # Returning a copy to make sure no one removes the static answers.
+        # Deliberately always returning a shallow copy to make sure no one removes the static answers.
         return ret
+
+    def get_static_answer(self, attribute: Attribute) -> Answer:
+        # DENIS: can I be smarter about the return type according to the incoming type?
+        for static_answer in self._static_answers:
+            if attribute.feature_node_hash == static_answer.ontology_attribute.feature_node_hash:
+                return static_answer
+        raise ValueError("The attribute was not found in this LabelObject's ontology.")
 
     def _get_static_answers(self) -> List[Answer]:
         attributes = self._ontology_item.attributes
@@ -804,3 +818,44 @@ class LabelMaster:
 
 
 # DENIS: should this LabelStructure be able to be self-updatable? Without the involvement of the project?
+def _get_option_by_hash(feature_node_hash: str, options: List[Option]):
+    for option_ in options:
+        if option_.feature_node_hash == feature_node_hash:
+            return option_
+
+        if option_.get_option_type == OptionType.NESTABLE:
+            found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
+            if found_item is not None:
+                return found_item
+
+    return None
+
+
+def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]):
+    for attribute in attributes:
+        if attribute.feature_node_hash == feature_node_hash:
+            return attribute
+
+        if attribute.has_options_field():
+            found_item = _get_option_by_hash(feature_node_hash, attribute.options)
+            if found_item is not None:
+                return found_item
+    return None
+
+
+def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
+    for object_ in ontology.objects:
+        if object_.feature_node_hash == feature_node_hash:
+            return object_
+        found_item = _get_attribute_by_hash(feature_node_hash, object_.attributes)
+        if found_item is not None:
+            return found_item
+
+    for classification in ontology.classifications:
+        if classification.feature_node_hash == feature_node_hash:
+            return classification
+        found_item = _get_attribute_by_hash(feature_node_hash, classification.attributes)
+        if found_item is not None:
+            return found_item
+
+    raise RuntimeError("Item not found.")

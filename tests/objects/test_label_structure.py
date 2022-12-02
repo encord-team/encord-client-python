@@ -1,12 +1,8 @@
-from dataclasses import dataclass
-from typing import Any, List, Tuple
-
 import pytest
 
-from encord import Project
-from encord.objects.common import Attribute, Option, OptionType
 from encord.objects.label_structure import (
     BoundingBoxCoordinates,
+    ChecklistAnswer,
     LabelObject,
     LabelRow,
     LabelRowReadOnlyData,
@@ -14,54 +10,10 @@ from encord.objects.label_structure import (
     PointCoordinate,
     PolygonCoordinates,
     TextAnswer,
+    get_item_by_hash,
 )
-from encord.objects.ontology_structure import OntologyStructure
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group
-
-
-def _get_option_by_hash(feature_node_hash: str, options: List[Option]):
-    for option_ in options:
-        if option_.feature_node_hash == feature_node_hash:
-            return option_
-
-        if option_.get_option_type == OptionType.NESTABLE:
-            found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
-            if found_item is not None:
-                return found_item
-
-    return None
-
-
-def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]):
-    for attribute in attributes:
-        if attribute.feature_node_hash == feature_node_hash:
-            return attribute
-
-        if attribute.has_options_field():
-            found_item = _get_option_by_hash(feature_node_hash, attribute.options)
-            if found_item is not None:
-                return found_item
-    return None
-
-
-def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
-    for object_ in ontology.objects:
-        if object_.feature_node_hash == feature_node_hash:
-            return object_
-        found_item = _get_attribute_by_hash(feature_node_hash, object_.attributes)
-        if found_item is not None:
-            return found_item
-
-    for classification in ontology.classifications:
-        if classification.feature_node_hash == feature_node_hash:
-            return classification
-        found_item = _get_attribute_by_hash(feature_node_hash, classification.attributes)
-        if found_item is not None:
-            return found_item
-
-    raise RuntimeError("Item not found.")
-
 
 box_ontology_item = get_item_by_hash("MjI2NzEy", all_types_structure)
 polygon_ontology_item = get_item_by_hash("ODkxMzAx", all_types_structure)
@@ -69,6 +21,8 @@ polyline_ontology_item = get_item_by_hash("OTcxMzIy", all_types_structure)
 nested_box_ontology_item = get_item_by_hash("MTA2MjAx", all_types_structure)
 text_attribute_1 = get_item_by_hash("OTkxMjU1", all_types_structure)
 checklist_attribute_1 = get_item_by_hash("ODcxMDAy", all_types_structure)
+checklist_attribute_1_option_1 = get_item_by_hash("MTE5MjQ3", all_types_structure)
+checklist_attribute_1_option_2 = get_item_by_hash("Nzg3MDE3", all_types_structure)
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
@@ -370,7 +324,7 @@ def test_getting_static_answers_from_label_object():
     of references! 
     """
 
-    static_answers = label_box.get_static_answers()
+    static_answers = label_box.get_all_static_answers()
     assert len(static_answers) == 2
 
     expected_ontology_hashes = {checklist_attribute_1.feature_node_hash, text_attribute_1.feature_node_hash}
@@ -379,10 +333,73 @@ def test_getting_static_answers_from_label_object():
         static_answers[1].ontology_attribute.feature_node_hash,
     }
     assert expected_ontology_hashes == actual_ontology_hashes
+    assert not static_answers[0].is_answered()
+    assert not static_answers[1].is_answered()
 
 
-# def test_setting_static_answers():
-#
+def test_setting_static_text_answers():
+    label_box_1 = LabelObject(nested_box_ontology_item)
+    label_box_2 = LabelObject(nested_box_ontology_item)
+
+    text_answer: TextAnswer = label_box_1.get_static_answer(text_attribute_1)
+    assert not text_answer.is_answered()
+    assert text_answer.get_value() is None
+
+    text_answer.set("Zeus")
+    assert text_answer.is_answered()
+    assert text_answer.get_value() == "Zeus"
+
+    refetched_text_answer: TextAnswer = label_box_1.get_static_answer(text_attribute_1)
+    assert refetched_text_answer.is_answered()
+    assert refetched_text_answer.get_value() == "Zeus"
+
+    other_text_answer = label_box_2.get_static_answer(text_attribute_1)
+    assert not other_text_answer.is_answered()
+    assert other_text_answer.get_value() is None
+
+    other_text_answer.copy_from(text_answer)
+    assert refetched_text_answer.is_answered()
+    assert refetched_text_answer.get_value() == "Zeus"
+
+
+def test_setting_static_checklist_answers():
+    label_box_1 = LabelObject(nested_box_ontology_item)
+    label_box_2 = LabelObject(nested_box_ontology_item)
+
+    checklist_answer: ChecklistAnswer = label_box_1.get_static_answer(checklist_attribute_1)
+    assert not checklist_answer.is_answered()
+    assert not checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert not checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    checklist_answer.check_options([checklist_attribute_1_option_1, checklist_attribute_1_option_2])
+    assert checklist_answer.is_answered()
+    assert checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    checklist_answer.uncheck_options([checklist_attribute_1_option_1])
+    assert checklist_answer.is_answered()
+    assert not checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    refetched_checklist_answer: ChecklistAnswer = label_box_1.get_static_answer(checklist_attribute_1)
+    assert refetched_checklist_answer.is_answered()
+    assert not refetched_checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert refetched_checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    other_checklist_answer: ChecklistAnswer = label_box_2.get_static_answer(checklist_attribute_1)
+    assert not other_checklist_answer.is_answered()
+    assert not other_checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert not other_checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    other_checklist_answer.copy_from(checklist_answer)
+    assert other_checklist_answer.is_answered()
+    assert not other_checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert other_checklist_answer.get_value(checklist_attribute_1_option_2)
+
+
+def test_setting_static_radio_answers():
+    pass
+
 
 # ==========================================================
 # =========== actually working tests above here ============
