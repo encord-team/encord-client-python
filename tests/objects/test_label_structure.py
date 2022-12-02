@@ -9,6 +9,7 @@ from encord.objects.label_structure import (
     ObjectFrameInstanceInfo,
     PointCoordinate,
     PolygonCoordinates,
+    RadioAnswer,
     TextAnswer,
     get_item_by_hash,
 )
@@ -18,11 +19,21 @@ from tests.objects.data.empty_image_group import empty_image_group
 box_ontology_item = get_item_by_hash("MjI2NzEy", all_types_structure)
 polygon_ontology_item = get_item_by_hash("ODkxMzAx", all_types_structure)
 polyline_ontology_item = get_item_by_hash("OTcxMzIy", all_types_structure)
+
 nested_box_ontology_item = get_item_by_hash("MTA2MjAx", all_types_structure)
 text_attribute_1 = get_item_by_hash("OTkxMjU1", all_types_structure)
 checklist_attribute_1 = get_item_by_hash("ODcxMDAy", all_types_structure)
 checklist_attribute_1_option_1 = get_item_by_hash("MTE5MjQ3", all_types_structure)
 checklist_attribute_1_option_2 = get_item_by_hash("Nzg3MDE3", all_types_structure)
+
+deeply_nested_polygon_item = get_item_by_hash("MTM1MTQy", all_types_structure)
+radio_attribute_level_1 = get_item_by_hash("MTExMjI3", all_types_structure)
+radio_nested_option_1 = get_item_by_hash("MTExNDQ5", all_types_structure)
+radio_nested_option_2 = get_item_by_hash("MTcxMjAy", all_types_structure)
+
+radio_attribute_level_2 = get_item_by_hash("NDYyMjQx", all_types_structure)
+radio_attribute_2_option_1 = get_item_by_hash("MTY0MzU2", all_types_structure)
+radio_attribute_2_option_2 = get_item_by_hash("MTI4MjQy", all_types_structure)
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
@@ -338,10 +349,10 @@ def test_getting_static_answers_from_label_object():
 
 
 def test_setting_static_text_answers():
-    label_box_1 = LabelObject(nested_box_ontology_item)
-    label_box_2 = LabelObject(nested_box_ontology_item)
+    label_object_1 = LabelObject(nested_box_ontology_item)
+    label_object_2 = LabelObject(nested_box_ontology_item)
 
-    text_answer: TextAnswer = label_box_1.get_static_answer(text_attribute_1)
+    text_answer: TextAnswer = label_object_1.get_static_answer(text_attribute_1)
     assert not text_answer.is_answered()
     assert text_answer.get_value() is None
 
@@ -349,11 +360,11 @@ def test_setting_static_text_answers():
     assert text_answer.is_answered()
     assert text_answer.get_value() == "Zeus"
 
-    refetched_text_answer: TextAnswer = label_box_1.get_static_answer(text_attribute_1)
+    refetched_text_answer: TextAnswer = label_object_1.get_static_answer(text_attribute_1)
     assert refetched_text_answer.is_answered()
     assert refetched_text_answer.get_value() == "Zeus"
 
-    other_text_answer = label_box_2.get_static_answer(text_attribute_1)
+    other_text_answer = label_object_2.get_static_answer(text_attribute_1)
     assert not other_text_answer.is_answered()
     assert other_text_answer.get_value() is None
 
@@ -363,10 +374,10 @@ def test_setting_static_text_answers():
 
 
 def test_setting_static_checklist_answers():
-    label_box_1 = LabelObject(nested_box_ontology_item)
-    label_box_2 = LabelObject(nested_box_ontology_item)
+    label_object_1 = LabelObject(nested_box_ontology_item)
+    label_object_2 = LabelObject(nested_box_ontology_item)
 
-    checklist_answer: ChecklistAnswer = label_box_1.get_static_answer(checklist_attribute_1)
+    checklist_answer: ChecklistAnswer = label_object_1.get_static_answer(checklist_attribute_1)
     assert not checklist_answer.is_answered()
     assert not checklist_answer.get_value(checklist_attribute_1_option_1)
     assert not checklist_answer.get_value(checklist_attribute_1_option_2)
@@ -381,12 +392,12 @@ def test_setting_static_checklist_answers():
     assert not checklist_answer.get_value(checklist_attribute_1_option_1)
     assert checklist_answer.get_value(checklist_attribute_1_option_2)
 
-    refetched_checklist_answer: ChecklistAnswer = label_box_1.get_static_answer(checklist_attribute_1)
+    refetched_checklist_answer: ChecklistAnswer = label_object_1.get_static_answer(checklist_attribute_1)
     assert refetched_checklist_answer.is_answered()
     assert not refetched_checklist_answer.get_value(checklist_attribute_1_option_1)
     assert refetched_checklist_answer.get_value(checklist_attribute_1_option_2)
 
-    other_checklist_answer: ChecklistAnswer = label_box_2.get_static_answer(checklist_attribute_1)
+    other_checklist_answer: ChecklistAnswer = label_object_2.get_static_answer(checklist_attribute_1)
     assert not other_checklist_answer.is_answered()
     assert not other_checklist_answer.get_value(checklist_attribute_1_option_1)
     assert not other_checklist_answer.get_value(checklist_attribute_1_option_2)
@@ -398,7 +409,40 @@ def test_setting_static_checklist_answers():
 
 
 def test_setting_static_radio_answers():
-    pass
+    label_object_1 = LabelObject(deeply_nested_polygon_item)
+    label_object_2 = LabelObject(deeply_nested_polygon_item)
+
+    radio_answer_1: RadioAnswer = label_object_1.get_static_answer(radio_attribute_level_1)
+    radio_answer_2: RadioAnswer = label_object_1.get_static_answer(radio_attribute_level_2)
+
+    assert not radio_answer_1.is_answered()
+    assert not radio_answer_2.is_answered()
+    assert radio_answer_1.get_value() is None
+    assert radio_answer_2.get_value() is None
+
+    radio_answer_1.set(radio_nested_option_1)
+    with pytest.raises(ValueError):
+        radio_answer_2.set(radio_nested_option_1)
+    assert radio_answer_1.is_answered()
+    assert not radio_answer_2.is_answered()
+    assert radio_answer_1.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
+    assert radio_answer_2.get_value() is None
+
+    radio_answer_2.set(radio_attribute_2_option_1)
+    assert radio_answer_2.is_answered()
+    assert radio_answer_2.get_value().feature_node_hash == radio_attribute_2_option_1.feature_node_hash
+
+    refetched_radio_answer: RadioAnswer = label_object_1.get_static_answer(radio_attribute_level_1)
+    assert refetched_radio_answer.is_answered()
+    assert refetched_radio_answer.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
+
+    other_radio_answer: RadioAnswer = label_object_2.get_static_answer(radio_attribute_level_1)
+    assert not other_radio_answer.is_answered()
+    assert other_radio_answer.get_value() is None
+
+    other_radio_answer.copy_from(radio_answer_1)
+    assert other_radio_answer.is_answered()
+    assert other_radio_answer.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
 
 
 # ==========================================================

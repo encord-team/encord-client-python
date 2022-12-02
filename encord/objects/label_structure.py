@@ -104,10 +104,11 @@ class RadioAnswer(_Answer):
             if value.feature_node_hash == child.feature_node_hash:
                 passed = True
         if not passed:
-            raise RuntimeError(
+            raise ValueError(
                 f"The supplied NestableOption `{value}` is not a child of the RadioAttribute that "
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
+        self._answered = True
         self._value = value
 
     def get_value(self) -> Optional[NestableOption]:
@@ -823,7 +824,7 @@ def _get_option_by_hash(feature_node_hash: str, options: List[Option]):
         if option_.feature_node_hash == feature_node_hash:
             return option_
 
-        if option_.get_option_type == OptionType.NESTABLE:
+        if option_.get_option_type() == OptionType.NESTABLE:
             found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
             if found_item is not None:
                 return found_item
