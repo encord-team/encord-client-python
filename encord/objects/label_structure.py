@@ -301,6 +301,14 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
 
 
 @dataclass(frozen=True)
+class ObjectFrameReadOnlyInstanceInfo:
+    """Trying to set this will not have any effects on the data in the Encord servers."""
+
+    reviews: List[dict] = field(default_factory=list)
+    # DENIS: can I type out this reviews thing?
+
+
+@dataclass(frozen=True)
 class ObjectFrameInstanceInfo:
     created_at: datetime = datetime.now()
     created_by: Optional[str] = None
@@ -310,6 +318,7 @@ class ObjectFrameInstanceInfo:
     """None defaults to the user of the SDK"""
     confidence: float = 1
     manual_annotation: bool = True
+    read_only_info: ObjectFrameReadOnlyInstanceInfo = ObjectFrameReadOnlyInstanceInfo()
 
 
 @dataclass(frozen=True)
@@ -331,7 +340,6 @@ class LabelObject:
     ):
         self._ontology_item = ontology_item
         self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
-        # DENIS: this also needs a reference to the parent object, to understand what kind of coordinates are allowed?
         self._object_hash = short_uuid_str()
         self._parent: Optional[LabelRow] = None
         """This member should only be manipulated by a LabelRow"""
