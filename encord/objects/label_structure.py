@@ -44,6 +44,7 @@ class _Answer:
     def __init__(self, ontology_attribute: Attribute):
         self._answered = False
         self._ontology_attribute = ontology_attribute
+        self._answer_uuid = short_uuid_str()
 
     def is_answered(self) -> bool:
         return self._answered
@@ -91,6 +92,9 @@ class TextAnswer(_Answer):
             other_answer = text_answer.get_value()
             self.set(other_answer)
 
+    def __hash__(self):
+        return hash((self._value, type(self).__name__))
+
 
 @dataclass
 class RadioAnswer(_Answer):
@@ -128,6 +132,9 @@ class RadioAnswer(_Answer):
         else:
             other_answer = radio_answer.get_value()
             self.set(other_answer)
+
+    def __hash__(self):
+        return hash((self._value, type(self).__name__))
 
 
 @dataclass
@@ -192,14 +199,70 @@ class ChecklistAnswer(_Answer):
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
 
+    def __hash__(self):
+        flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
+        flat_values.sort()
+        return hash((tuple(flat_values), type(self).__name__))
+
 
 Answer = Union[TextAnswer, RadioAnswer, ChecklistAnswer]
 """These ones are answers for dynamic and static things."""
 
 
-def get_all_answers(ontology: OntologyStructure):
-    """Maybe get all answers needed according to the specific part of the ontology structure???"""
-    pass
+class _DynamicAnswer:
+    """
+    A specialised view of the dynamic answers. Allows convenient interaction with the dynamic properties.
+    """
+
+    def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
+        self._parent = parent
+        self._frame = frame
+        self._attribute = attribute
+
+    @property
+    def frame(self) -> int:
+        return self._frame
+
+    @frame.setter
+    def frame(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot set the frame of an instantiated DynamicAnswer object.")
+
+    def copy_to_frames(self, frames: Iterable[int]):
+        current_answer = self._get_current_answer()
+
+        for frame in frames:
+            answer = self._parent._get_dynamic_answer(frame, self._attribute)
+            self._parent._reset_dynamic_answer_at_frame(current_answer, answer, frame)
+
+    def in_frames(self) -> Set[int]:
+        current_answer = self._get_current_answer()
+        return self._parent._get_frames_for_dynamic_answer(current_answer)
+
+    def _get_current_answer(self) -> Answer:
+        """Get the current answer at the current frame from the parent."""
+        answer = self._parent._get_dynamic_answer(self._frame, self._attribute)
+        return answer
+
+
+class DynamicTextAnswer(_DynamicAnswer):
+    def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
+        super().__init__(parent, frame, attribute)
+
+    def set(self, value: str):
+        current_answer = self._get_current_answer()
+        # DENIS: this cannot be done! This would change the answer for multiple places potentially.
+        new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
+        new_answer.copy_from(current_answer)
+        new_answer.set(value)
+
+        self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
+
+    def get_value(self):
+        current_answer = self._get_current_answer()
+        return current_answer.get_value()
+
+
+DynamicAnswer = Union[DynamicTextAnswer]
 
 
 @dataclass(frozen=True)
@@ -340,11 +403,37 @@ class LabelObject:
     ):
         self._ontology_item = ontology_item
         self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
+        # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
+        # this thing take over the label structure itself (for large ones it would be interesting)
         self._object_hash = short_uuid_str()
         self._parent: Optional[LabelRow] = None
         """This member should only be manipulated by a LabelRow"""
 
         self._static_answers: List[Answer] = self._get_static_answers()
+
+        self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
+        self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
+        # ^ for dynamic answer management
+
+        self._dynamic_uninitialised_answer_options: Set[Answer] = self._get_dynamic_answers()
+        # ^ read only for dynamic answers management.
+
+    def _get_dynamic_answer(self, frame: int, attribute: Attribute) -> Answer:
+        """This should only be called from the DynamicAnswer"""
+        answers = self._frames_to_answers[frame]
+        for answer in answers:
+            if answer.ontology_attribute.feature_node_hash == attribute.feature_node_hash:
+                return answer
+
+        raise RuntimeError("The attribute is not a valid attribute for this LabelObject.")
+
+    def _get_frames_for_dynamic_answer(self, answer: Answer) -> Set[int]:
+        return self._answers_to_frames[answer]
+
+    def _set_dynamic_answer_to_frames(self, frames: Iterable[int], answer: Answer) -> None:
+        self._answers_to_frames[answer].update(set(frames))
+        for frame in frames:
+            self._frames_to_answers[frame].add(answer)
 
     def get_all_static_answers(
         self,
@@ -367,8 +456,10 @@ class LabelObject:
     def _get_default_answers_from_attributes(self, attributes: List[Attribute]) -> List[Answer]:
         ret: List[Answer] = list()
         for attribute in attributes:
-            answer = self._get_default_answer_from_attribute(attribute)
-            ret.append(answer)
+            if not attribute.dynamic:
+                answer = self._get_default_answer_from_attribute(attribute)
+                ret.append(answer)
+            # DENIS: test the weird edge case of dynamic attributes which are nested.
 
             if attribute.has_options_field():
                 for option in attribute.options:
@@ -376,6 +467,14 @@ class LabelObject:
                         other_attributes = self._get_default_answers_from_attributes(option.nested_options)
                         ret.extend(other_attributes)
 
+        return ret
+
+    def _get_dynamic_answers(self) -> Set[Answer]:
+        ret: Set[Answer] = set()
+        for attribute in self._ontology_item.attributes:
+            if attribute.dynamic:
+                answer = self._get_default_answer_from_attribute(attribute)
+                ret.add(answer)
         return ret
 
     def _get_default_answer_from_attribute(self, attribute: Attribute) -> Answer:
@@ -388,6 +487,13 @@ class LabelObject:
             return ChecklistAnswer(attribute)
         else:
             raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
+
+    def get_dynamic_answer(self, frame: int, attribute: Attribute):
+        # DENIS: probably I don't need two classes
+        answer = self._get_dynamic_answer(frame, attribute)
+        if isinstance(answer, TextAnswer):
+            return DynamicTextAnswer(self, frame, answer.ontology_attribute)
+        raise NotImplemented("Need to implement the other answer types")
 
     @property
     def object_hash(self) -> str:
@@ -431,9 +537,18 @@ class LabelObject:
             self._frames_to_instance_data[frame] = ObjectFrameInstanceData(
                 coordinates=coordinates, object_frame_instance_info=object_frame_instance_info
             )
+            self._add_initial_dynamic_answers(frame)
 
         if self._parent:
             self._parent._add_to_frame_to_hashes_map(self)
+
+    def _add_initial_dynamic_answers(self, frame: int) -> None:
+        if frame in self._frames_to_answers:
+            return
+
+        for answer in self._dynamic_uninitialised_answer_options:
+            self._frames_to_answers[frame].add(answer)
+            self._answers_to_frames[answer].add(frame)
 
     def copy(self) -> LabelObject:
         """
@@ -442,6 +557,7 @@ class LabelObject:
         ret = LabelObject(self._ontology_item)
         ret._frames_to_instance_data = copy(self._frames_to_instance_data)
         # DENIS: test if a shallow copy is enough
+        # DENIS: copy the answers stuff as well.
         return ret
 
     def frames(self) -> List[int]:
@@ -460,11 +576,39 @@ class LabelObject:
         # DENIS: probably frames everywhere should be Union[Iterable[int], int]
         for frame in frames:
             self._frames_to_instance_data.pop(frame)
+            self._remove_dynamic_answers_from_frame(frame)
 
         if self._parent:
             self._parent._remove_from_frame_to_hashes_map(frames, self.object_hash)
 
         # DENIS: ensure that dynamic answers are also handled properly.
+
+    def _remove_dynamic_answers_from_frame(self, frame: int) -> None:
+        answers = self._frames_to_answers[frame]
+        for answer in answers:
+            self._remove_dynamic_answer_at_frame(answer, frame)
+
+        self._frames_to_answers.pop(frame)
+
+    def _remove_dynamic_answer_at_frame(self, answer: Answer, frame: int) -> None:
+        default_answer = self._get_default_answer_from_attribute(answer.ontology_attribute)
+
+        if hash(answer) == hash(default_answer):
+            return
+
+        self._answers_to_frames[answer].remove(frame)
+        if len(self._answers_to_frames) == 0:
+            self._answers_to_frames.pop(answer)
+
+        self._frames_to_answers[frame].remove(answer)
+        self._frames_to_answers[frame].add(default_answer)
+
+    def _reset_dynamic_answer_at_frame(self, new_answer: Answer, old_answer: Answer, frame: int) -> None:
+        self._answers_to_frames[old_answer].remove(frame)
+        self._frames_to_answers[frame].remove(old_answer)
+
+        self._answers_to_frames[new_answer].add(frame)
+        self._frames_to_answers[frame].add(new_answer)
 
     def set_answer(self, answer: Answer) -> None:
         """
@@ -479,36 +623,23 @@ class LabelObject:
             return False
         return True
 
-    def add_dynamic_answers(
-        self,
-        frames: Any,
-        answers: Any,
-    ):
-        """
-        For a given range, add the dynamic answers
+    # def add_dynamic_answers(
+    #     self,
+    #     frames: Any,
+    #     answers: Any,
+    # ):
+    #     """
+    #     For a given range, add the dynamic answers
+    #
+    #     Again, do intelligent range merging with the current ranges of the same answers
+    #     """
+    #     pass
 
-        Again, do intelligent range merging with the current ranges of the same answers
-        """
-        pass
-
-    def set_static_answers(
-        self,
-        answers: List[Any],
-    ):
-        """Add or set the static answers"""
-        pass
-
-    def initialise_static_answers(self) -> List[Answer]:
-        """Return the answers that still need to happen"""
-        # DENIS: probably this should just be a member, initialisation can happen at construction.
-        pass
-
-    def get_dynamic_unanswered_objects(self):
-        """Return the answers that still need to happen"""
-        pass
-
-    # def get_dynamic_answers_for_frame(self, frame_range, feature_hash: str) -> List[AnswerByFrames]:
-    #     """Here we could set the answer for a sub range."""
+    # def set_static_answers(
+    #     self,
+    #     answers: List[Any],
+    # ):
+    #     """Add or set the static answers"""
     #     pass
 
 

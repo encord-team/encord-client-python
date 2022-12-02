@@ -1,3 +1,5 @@
+from typing import List
+
 import pytest
 
 from encord.objects.label_structure import (
@@ -35,6 +37,10 @@ radio_attribute_level_2 = get_item_by_hash("NDYyMjQx", all_types_structure)
 radio_attribute_2_option_1 = get_item_by_hash("MTY0MzU2", all_types_structure)
 radio_attribute_2_option_2 = get_item_by_hash("MTI4MjQy", all_types_structure)
 
+keypoint_dynamic = get_item_by_hash("MTY2MTQx", all_types_structure)
+dynamic_text = get_item_by_hash("OTkxMjU1", all_types_structure)
+dynamic_checklist = get_item_by_hash("ODcxMDAy", all_types_structure)
+
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
     width=0.2,
@@ -50,6 +56,8 @@ POLYGON_COORDINATES = PolygonCoordinates(
         PointCoordinate(x=0.6, y=0.5),
     ]
 )
+
+KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
 
 
 def test_create_label_object_one_coordinate():
@@ -443,6 +451,55 @@ def test_setting_static_radio_answers():
     other_radio_answer.copy_from(radio_answer_1)
     assert other_radio_answer.is_answered()
     assert other_radio_answer.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
+    x = {other_radio_answer: 5}
+
+
+def test_adding_dynamic_text_answers():
+    label_object = LabelObject(keypoint_dynamic)
+    label_object.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+
+    dynamic_answer = label_object.get_dynamic_answer(frame=1, attribute=dynamic_text)
+    assert dynamic_answer.frame == 1
+    dynamic_answer.set("Hermes")
+    dynamic_answer.copy_to_frames(frames=[2])
+    # DENIS: ^ It could be that this is making something intelligent where dynamic answers
+    # are being compared to be somehow aggregated. The simple thing right now is to have them
+    # disassociated though, and then the `in_ranges` will look up a map from answers to
+    # the objects.
+    # The current_frame always stays the same. The getter might **not** have a fixed association
+    # with the item.
+
+    assert dynamic_answer.get_value() == "Hermes"
+    assert dynamic_answer.in_frames() == {1, 2}
+
+    dynamic_answer_2 = label_object.get_dynamic_answer(frame=3, attribute=dynamic_text)
+    dynamic_answer_2.set("Aphrodite")
+    dynamic_answer.copy_to_frames(frames=[1])
+
+    assert dynamic_answer.get_value() == "Hermes"
+    assert dynamic_answer_2.get_value() == "Aphrodite"
+
+    dynamic_answer_2.copy_to_frames(frames=[1])
+    assert dynamic_answer_2.get_value() == "Aphrodite"
+    assert dynamic_answer.get_value() == "Aphrodite"
+    assert dynamic_answer.in_frames() == dynamic_answer_2.in_frames()
+
+    with pytest.raises(RuntimeError):
+        dynamic_answer_2.copy_to_frames([100])
+    """
+    Essentially I need some sort of map from frame to real answers. Where these dynamic answers, are just a view
+    of the frame to the real answers. 
+    Additionally, to get the `in_ranges()` thing right, I might need to define a map from the same answers to
+    the frames. However, that means I need to define some sort of comparison operator of a given value
+    to another given value, even for checklists.
+    views:
+        * DONE get dynamic answer for specific frame and attribute
+        * get all dynamic answers for specific frame
+        * DONE get all other frames for which this dynamic answer is set
+        * get all dynamic answers that are unset (either by frame or attribute) (in future)
+    """
+    # DENIS: TODO: next up I want to have all the views of the Dynamic data and implement the DynamicChecklistAnswer,
+    #  and DynamicRadioAnswer
 
 
 # ==========================================================
@@ -450,33 +507,6 @@ def test_setting_static_radio_answers():
 # ==========================================================
 
 
-# def test_add_same_answers_to_different_label_objects():
-#     label_row = LabelRow()
-#     feature_hash = "34535"
-#     label_object_1 = label_row.add_new_object(feature_hash)
-#     label_object_2 = label_row.add_new_object(feature_hash)
-#
-#     text_attribute = 5  # TextAttribute
-#     answer = TextAnswer(text_attribute)
-#     answer.set_value("Alexey")
-#
-#     label_object_1.set_answer(answer)
-#     label_object_2.set_answer(answer)
-#
-#
-# def test_create_label_object_with_answers():
-#     label_object = LabelObject()
-#
-#     label_object.set_coordinates(coordinates={"x": 5, "y": 6}, frames=1)
-#     answer_objects = label_object.answer_objects
-#     for answer_object in answer_objects:
-#         if not answer_object.answered:
-#             answer_object.set(value="my text")
-#
-#     label_object.is_valid()
-#     label_object.are_all_answered()  # maybe within .is_valid()
-#
-#
 # def test_create_label_object_with_dynamic_answers():
 #     label_object = LabelObject()
 #
@@ -509,6 +539,7 @@ def test_setting_static_radio_answers():
 #         answer_object.set_range([[1, 3]])
 #         # ^ throws if invalid.
 #
+
 #
 # class Answer:
 #     def set_value(self, value: Any):
@@ -583,6 +614,12 @@ def test_setting_static_radio_answers():
 #     label_object.set_coordinates(coordinates={"x": 5, "y": 6}, frames=2)
 #     label_object.set_coordinates(coordinates={"x": 5, "y": 6}, frames=3)
 #
+#     """
+#     DENIS: now how do defaults work here? Is this maintained every time with the
+#     addition or removal of frames?
+#
+#     """
+#
 #     answer_4 = label_object.answer_for_frame(frame=1)
 #     answer_4.set_value("1")
 #     answer_4.copy_to_frames(range=[2, 3])
@@ -600,7 +637,8 @@ def test_setting_static_radio_answers():
 #     answer_4.copy_to_frames(3)
 #     assert answer_4.get_value() == answer_5.get_value()
 #     assert answer_4.in_ranges() == answer_5.in_ranges()
-#
+
+
 #
 # def test_dynamic_attributes_3():
 #     label_object = LabelObject()
