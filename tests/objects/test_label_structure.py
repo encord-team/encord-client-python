@@ -9,6 +9,7 @@ from encord.objects.label_structure import (
     LabelObject,
     LabelRow,
     LabelRowReadOnlyData,
+    ObjectFrameInstanceInfo,
     PointCoordinate,
     PolygonCoordinates,
     TextAnswer,
@@ -195,20 +196,20 @@ def test_get_label_objects_by_frames():
     objects = label_row.get_objects_by_frame({4})
     assert len(objects) == 0
 
-    objects = label_row.get_objects_by_frame({1})
+    objects = list(label_row.get_objects_by_frame({1}))
     assert len(objects) == 1
     assert objects[0].object_hash == label_box.object_hash
 
-    objects = label_row.get_objects_by_frame({3})
+    objects = list(label_row.get_objects_by_frame({3}))
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
     label_box.set_coordinates(BOX_COORDINATES, {3})
-    objects = label_row.get_objects_by_frame({3})
+    objects = list(label_row.get_objects_by_frame({3}))
     assert len(objects) == 2
 
     label_row.remove_object(label_box)
-    objects = label_row.get_objects_by_frame({3})
+    objects = list(label_row.get_objects_by_frame({3}))
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
@@ -235,9 +236,85 @@ def test_adding_label_object_to_multiple_frames_fails():
     assert label_box.object_hash != label_box_copy.object_hash
 
 
-def test_overwrite_coordinates():
-    # TODO:
-    pass
+def test_update_remove_label_object_coordinates():
+    label_box = LabelObject(box_ontology_item)
+
+    # Add initial coordinates
+    label_box.set_coordinates(BOX_COORDINATES, {1})
+    frames = label_box.frames()
+    instance_data = label_box.get_instance_data([1])
+    assert sorted(frames) == [1]
+    assert instance_data[0].coordinates == BOX_COORDINATES
+    assert instance_data[0].object_frame_instance_info == ObjectFrameInstanceInfo()
+
+    box_coordinates_2 = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.3,
+        top_left_x=0.4,
+        top_left_y=0.5,
+    )
+
+    # Add new coordinates
+    object_frame_instance_info_2 = ObjectFrameInstanceInfo(confidence=0.5, manual_annotation=False)
+    label_box.set_coordinates(box_coordinates_2, [2, 3, 4], object_frame_instance_info=object_frame_instance_info_2)
+    frames = label_box.frames()
+    instance_data = label_box.get_instance_data(frames)
+    assert sorted(frames) == [1, 2, 3, 4]
+    assert instance_data[0].coordinates == BOX_COORDINATES
+    assert instance_data[0].object_frame_instance_info == ObjectFrameInstanceInfo()
+    assert instance_data[1].coordinates == box_coordinates_2
+    assert instance_data[1].object_frame_instance_info == object_frame_instance_info_2
+    assert instance_data[1] == instance_data[2]
+    assert instance_data[2] == instance_data[3]
+
+    # Remove coordinates
+    label_box.remove_from_frames([2, 3])
+    frames = label_box.frames()
+    instance_data = label_box.get_instance_data(frames)
+    assert sorted(frames) == [1, 4]
+    assert instance_data[0].coordinates == BOX_COORDINATES
+    assert instance_data[0].object_frame_instance_info == ObjectFrameInstanceInfo()
+    assert instance_data[1].coordinates == box_coordinates_2
+    assert instance_data[1].object_frame_instance_info == object_frame_instance_info_2
+
+    # Reset coordinates
+    box_coordinates_3 = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.3,
+        top_left_x=0.6,
+        top_left_y=0.5,
+    )
+    object_frame_instance_info_3 = ObjectFrameInstanceInfo(confidence=0.7, manual_annotation=False)
+
+    label_box.set_coordinates(box_coordinates_3, [4, 5], object_frame_instance_info=object_frame_instance_info_3)
+    frames = label_box.frames()
+    instance_data = label_box.get_instance_data(frames)
+    assert sorted(frames) == [1, 4, 5]
+    assert instance_data[0].coordinates == BOX_COORDINATES
+    assert instance_data[0].object_frame_instance_info == ObjectFrameInstanceInfo()
+    assert instance_data[1].coordinates == box_coordinates_3
+    assert instance_data[1].object_frame_instance_info == object_frame_instance_info_3
+    assert instance_data[1] == instance_data[2]
+
+
+def test_removing_coordinates_from_object_removes_it_from_parent():
+    label_row = LabelRow(empty_image_group)
+    label_box = LabelObject(box_ontology_item)
+    label_box.set_coordinates(BOX_COORDINATES, [1, 2, 3])
+
+    label_row.add_object(label_box)
+
+    objects = label_row.get_objects_by_frame([1, 2, 3])
+    assert len(objects) == 1
+    objects = label_row.get_objects_by_frame([3])
+    assert len(objects) == 1
+
+    label_box.remove_from_frames([3])
+
+    objects = label_row.get_objects_by_frame([1, 2, 3])
+    assert len(objects) == 1
+    objects = label_row.get_objects_by_frame([3])
+    assert len(objects) == 0
 
 
 # ==========================================================

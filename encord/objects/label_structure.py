@@ -246,6 +246,7 @@ class LabelObject:
         raise RuntimeError("Cannot set the ontology item of an instantiated LabelObject.")
 
     def set_coordinates(
+        # DENIS: should this be called `set_instance_data` or something similar?
         self,
         coordinates: Coordinates,
         frames: Iterable[int],
@@ -286,9 +287,22 @@ class LabelObject:
     def frames(self) -> List[int]:
         return list(self._frames_to_instance_data.keys())
 
+    def get_instance_data(self, frames: Iterable[int]) -> List[ObjectFrameInstanceData]:
+        ret = []
+        for frame in frames:
+            if frame not in self._frames_to_instance_data:
+                raise ValueError(f"This object does not exist on frame `{frame}`.")
+            ret.append(self._frames_to_instance_data[frame])
+        return ret
+
     def remove_from_frames(self, frames: Iterable[int]):
         """Ensure that it will be removed from all frames."""
-        pass
+        # DENIS: probably frames everywhere should be Union[Iterable[int], int]
+        for frame in frames:
+            self._frames_to_instance_data.pop(frame)
+
+        if self._parent:
+            self._parent._remove_from_frame_to_hashes_map(frames, self.object_hash)
 
     def set_answer(self, answer: Answer) -> None:
         """
@@ -458,23 +472,26 @@ class LabelRow:
         # DENIS: Which hash are we referring to here? the attribute one or the non-attribute one?
         return []
 
-    def get_objects_by_frame(self, frames: Set[int]) -> List[LabelObject]:
+    def get_objects_by_frame(self, frames: Iterable[int]) -> Set[LabelObject]:
         """DENIS: maybe merge this with the getter above."""
-        ret: List[LabelObject] = []
+        ret: Set[LabelObject] = set()
         for frame in frames:
             hashes = self._frame_to_hashes[frame]
             for hash_ in hashes:
                 if hash_ in self._objects_map:
-                    ret.append(self._objects_map[hash_])
+                    ret.add(self._objects_map[hash_])
 
         return ret
 
     def remove_object(self, label_object: LabelObject):
         """Remove the object."""
         self._objects_map.pop(label_object.object_hash)
-        for frame in label_object.frames():
-            self._frame_to_hashes[frame].remove(label_object.object_hash)
+        self._remove_from_frame_to_hashes_map(label_object.frames(), label_object.object_hash)
         label_object._parent = None
+
+    def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], object_hash: str):
+        for frame in frames:
+            self._frame_to_hashes[frame].remove(object_hash)
 
     def _parse_label_row_dict(self, label_row_dict: dict):
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
