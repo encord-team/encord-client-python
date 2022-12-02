@@ -140,6 +140,13 @@ class Project:
         """
         return self._client.get_project()
 
+    def get_interactive_label_row(self, data_hash: str):
+        """
+        DENIS: probably can either take data_hash or label_hash.
+        Return the label row object.
+        """
+        pass
+
     def list_label_rows(
         self,
         edited_before: Optional[Union[str, datetime.datetime]] = None,
