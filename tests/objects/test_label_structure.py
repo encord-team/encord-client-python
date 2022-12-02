@@ -4,6 +4,7 @@ from typing import Any, List, Tuple
 import pytest
 
 from encord import Project
+from encord.objects.common import Attribute, Option, OptionType
 from encord.objects.label_structure import (
     BoundingBoxCoordinates,
     LabelObject,
@@ -18,20 +19,46 @@ from encord.objects.ontology_structure import OntologyStructure
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group
 
-"""
 
-DENIS: Talk to Alexey
-Iterate over the frames, not only objects/classifications.
-"""
+def _get_option_by_hash(feature_node_hash: str, options: List[Option]):
+    for option_ in options:
+        if option_.feature_node_hash == feature_node_hash:
+            return option_
+
+        if option_.get_option_type == OptionType.NESTABLE:
+            found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
+            if found_item is not None:
+                return found_item
+
+    return None
+
+
+def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]):
+    for attribute in attributes:
+        if attribute.feature_node_hash == feature_node_hash:
+            return attribute
+
+        if attribute.has_options_field():
+            found_item = _get_option_by_hash(feature_node_hash, attribute.options)
+            if found_item is not None:
+                return found_item
+    return None
 
 
 def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
     for object_ in ontology.objects:
         if object_.feature_node_hash == feature_node_hash:
             return object_
+        found_item = _get_attribute_by_hash(feature_node_hash, object_.attributes)
+        if found_item is not None:
+            return found_item
+
     for classification in ontology.classifications:
         if classification.feature_node_hash == feature_node_hash:
             return classification
+        found_item = _get_attribute_by_hash(feature_node_hash, classification.attributes)
+        if found_item is not None:
+            return found_item
 
     raise RuntimeError("Item not found.")
 
@@ -39,6 +66,9 @@ def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
 box_ontology_item = get_item_by_hash("MjI2NzEy", all_types_structure)
 polygon_ontology_item = get_item_by_hash("ODkxMzAx", all_types_structure)
 polyline_ontology_item = get_item_by_hash("OTcxMzIy", all_types_structure)
+nested_box_ontology_item = get_item_by_hash("MTA2MjAx", all_types_structure)
+text_attribute_1 = get_item_by_hash("OTkxMjU1", all_types_structure)
+checklist_attribute_1 = get_item_by_hash("ODcxMDAy", all_types_structure)
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
@@ -316,6 +346,43 @@ def test_removing_coordinates_from_object_removes_it_from_parent():
     objects = label_row.get_objects_by_frame([3])
     assert len(objects) == 0
 
+
+def test_getting_static_answers_from_label_object():
+    label_box = LabelObject(nested_box_ontology_item)
+
+    """
+    DENIS: probably I want some flow where I can get all the empty answers from the label, and then set them.
+    I can also get a specific answer by ontology object and set it. So essentially I'd like to initiate all the answers
+    already, and then be able to add them. 
+    What about having multiple label_boxes and setting the same answers? Can do some sort of copy_all_answers for example,
+    but really it only saves an additional for loop. or copy_answers_for_ontology_objects. 
+    
+    Maybe I want a context manager something like
+    with label_box.modify_answers() as answers:
+        for answer in answers:
+            ...
+        # Throw in exit handler if the answers list was changed.
+        
+    Can also get a read only view which copies the answers out?
+    Or I can make the collection itself something more intelligent that protects itself from people deleting stuff.
+    
+    Or I can just never return the whole reference to the internal list, but always only  specific answers or a new list
+    of references! 
+    """
+
+    static_answers = label_box.get_static_answers()
+    assert len(static_answers) == 2
+
+    expected_ontology_hashes = {checklist_attribute_1.feature_node_hash, text_attribute_1.feature_node_hash}
+    actual_ontology_hashes = {
+        static_answers[0].ontology_attribute.feature_node_hash,
+        static_answers[1].ontology_attribute.feature_node_hash,
+    }
+    assert expected_ontology_hashes == actual_ontology_hashes
+
+
+# def test_setting_static_answers():
+#
 
 # ==========================================================
 # =========== actually working tests above here ============

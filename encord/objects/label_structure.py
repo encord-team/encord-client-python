@@ -11,6 +11,10 @@ from encord.constants.enums import DataType
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
+    FlatOption,
+    NestableOption,
+    OptionType,
+    PropertyType,
     RadioAttribute,
     Shape,
     TextAttribute,
@@ -31,61 +35,159 @@ For writes I need the builder pattern same as the OntologyStructure.
 """
 
 
-@dataclass
 class _Answer:
-    """Common fields amongst all anwers"""
+    """Common fields amongst all answers"""
 
-    feature_hash: str
-    answered: bool
     _ontology_attribute: Attribute
-    # NOTE: no hash is needed here, it will be taken from the LabelObject once it needs to.
 
     def __init__(self, ontology_attribute: Attribute):
-        self.answered = False
+        self._answered = False
         self._ontology_attribute = ontology_attribute
 
+    def is_answered(self) -> bool:
+        return self._answered
 
-@dataclass
+    def unset(self) -> None:
+        """Remove the value from the answer"""
+        self._answered = False
+        # DENIS: might be better to default everything again for more consistent states!
+
+    @property
+    def ontology_attribute(self):
+        return deepcopy(self._ontology_attribute)
+
+    @ontology_attribute.setter
+    def ontology_attribute(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot reset the ontology attribute of an instantiated answer.")
+
+
 class TextAnswer(_Answer):
-    value: str
-    # feature_hash: str
-    # ^ Do I need to add the feature_hash of the specific text feature? I believe so.
-
     def __init__(self, ontology_attribute: TextAttribute):
         super().__init__(ontology_attribute)
+        self._value = None
 
-    def set(self, value: str):
-        self.value = value
+    def set(self, value: str) -> TextAnswer:
+        """Returns the object itself"""
+        self._value = value
+        self._answered = True
+        return self
+
+    def get_value(self) -> Optional[str]:
+        if not self.is_answered():
+            return None
+        else:
+            return self._value
+
+    def copy_from(self, text_answer: TextAnswer):
+        if text_answer.ontology_attribute.feature_node_hash != self.ontology_attribute.feature_node_hash:
+            raise ValueError(
+                "Copying from a TextAnswer which is based on a different ontology Attribute is not possible."
+            )
+        other_is_answered = text_answer.is_answered()
+        if not other_is_answered:
+            self.unset()
+        else:
+            other_answer = text_answer.get_value()
+            self.set(other_answer)
 
 
 @dataclass
 class RadioAnswer(_Answer):
-    value: str
-    # ^ this could be the feature hash
-
     def __init__(self, ontology_attribute: RadioAttribute):
         super().__init__(ontology_attribute)
+        self._value: Optional[NestableOption] = None
 
-    def set(self, value: str):
-        # NOTE: if the value is not in ontology, throw
-        self.value = value
+    def set(self, value: NestableOption):
+        passed = False
+        for child in self._ontology_attribute.options:
+            if value.feature_node_hash == child.feature_node_hash:
+                passed = True
+        if not passed:
+            raise RuntimeError(
+                f"The supplied NestableOption `{value}` is not a child of the RadioAttribute that "
+                f"is associated with this class: `{self._ontology_attribute}`"
+            )
+        self._value = value
+
+    def get_value(self) -> Optional[NestableOption]:
+        if not self.is_answered():
+            return None
+        else:
+            return self._value
+
+    def copy_from(self, radio_answer: RadioAnswer):
+        if radio_answer.ontology_attribute.feature_node_hash != self.ontology_attribute.feature_node_hash:
+            raise ValueError(
+                "Copying from a RadioAnswer which is based on a different ontology Attribute is not possible."
+            )
+        other_is_answered = radio_answer.is_answered()
+        if not other_is_answered:
+            self.unset()
+        else:
+            other_answer = radio_answer.get_value()
+            self.set(other_answer)
 
 
 @dataclass
-class CheckBoxAnswer(_Answer):
-    values: List[str]
-    # ^ A list of feature hashes
-    # on write, this will be initially None. On read, this will always be inferred as all unchecked.
+class ChecklistAnswer(_Answer):
+    """
+    Checkboxes behave slightly different from the other answer types. When the checkbox is unanswered, it will be
+    the equivalent of not having selected any checkbox answer in the Encord platform.
+    The initial state will be every checkbox unchecked.
+    """
 
     def __init__(self, ontology_attribute: ChecklistAttribute):
         super().__init__(ontology_attribute)
+        self._ontology_options_feature_hashes: Set[str] = self._initialise_ontology_options_feature_hashes()
+        self._feature_hash_to_answer_map: Dict[str, bool] = self._initialise_feature_hash_to_answer_map()
 
-    def set(self, values: List[str]):
-        # NOTE: if the values are not in ontology, throw
-        self.values = values
+    def check_options(self, values: List[FlatOption]):
+        for value in values:
+            self._verify_flat_option(value)
+            self._feature_hash_to_answer_map[value.feature_node_hash] = True
+
+    def uncheck_options(self, values: List[FlatOption]):
+        for value in values:
+            self._verify_flat_option(value)
+            self._feature_hash_to_answer_map[value.feature_node_hash] = False
+
+    def get_answer(self, value: FlatOption) -> bool:
+        return self._feature_hash_to_answer_map[value.feature_node_hash]
+
+    def copy_from(self, checklist_answer: ChecklistAnswer):
+        if checklist_answer.ontology_attribute.feature_node_hash != self.ontology_attribute.feature_node_hash:
+            raise ValueError(
+                "Copying from a ChecklistAnswer which is based on a different ontology Attribute is not possible."
+            )
+        other_is_answered = checklist_answer.is_answered()
+        if not other_is_answered:
+            self.unset()
+        else:
+            for feature_node_hash in self._feature_hash_to_answer_map.keys():
+                other_answer = checklist_answer.get_answer(feature_node_hash)
+                self._feature_hash_to_answer_map[feature_node_hash] = other_answer
+
+    def _initialise_feature_hash_to_answer_map(self) -> Dict[str, bool]:
+        ret: Dict[str, bool] = {}
+        for child in self._ontology_attribute.options:
+            ret[child.feature_node_hash] = False
+        return ret
+
+    def _initialise_ontology_options_feature_hashes(self) -> Set[str]:
+        ret: Set[str] = set()
+        for child in self._ontology_attribute.options:
+            ret.add(child.feature_node_hash)
+        return ret
+
+    def _verify_flat_option(self, value: FlatOption) -> None:
+        if value.feature_node_hash not in self._ontology_options_feature_hashes:
+            raise RuntimeError(
+                f"The supplied FlatOption `{value}` is not a child of the ChecklistAttribute that "
+                f"is associated with this class: `{self._ontology_attribute}`"
+            )
 
 
-Answer = Union[TextAnswer, RadioAnswer, CheckBoxAnswer]
+Answer = Union[TextAnswer, RadioAnswer, ChecklistAnswer]
 """These ones are answers for dynamic and static things."""
 
 
@@ -210,7 +312,6 @@ class ObjectFrameInstanceData:
     object_frame_instance_info: ObjectFrameInstanceInfo
 
 
-# @dataclass
 class LabelObject:
     """This is per video/image_group/dicom/...
 
@@ -228,6 +329,42 @@ class LabelObject:
         self._object_hash = short_uuid_str()
         self._parent: Optional[LabelRow] = None
         """This member should only be manipulated by a LabelRow"""
+
+        self._static_answers: List[Answer] = self._get_static_answers()
+
+    def get_static_answers(self):
+        ret = copy(self._static_answers)
+        # Returning a copy to make sure no one removes the static answers.
+        return ret
+
+    def _get_static_answers(self) -> List[Answer]:
+        attributes = self._ontology_item.attributes
+        return self._get_default_answers_from_attributes(attributes)
+
+    def _get_default_answers_from_attributes(self, attributes: List[Attribute]) -> List[Answer]:
+        ret: List[Answer] = list()
+        for attribute in attributes:
+            answer = self._get_default_answer_from_attribute(attribute)
+            ret.append(answer)
+
+            if attribute.has_options_field():
+                for option in attribute.options:
+                    if option.get_option_type() == OptionType.NESTABLE:
+                        other_attributes = self._get_default_answers_from_attributes(option.nested_options)
+                        ret.extend(other_attributes)
+
+        return ret
+
+    def _get_default_answer_from_attribute(self, attribute: Attribute) -> Answer:
+        property_type = attribute.get_property_type()
+        if property_type == PropertyType.TEXT:
+            return TextAnswer(attribute)
+        elif property_type == PropertyType.RADIO:
+            return RadioAnswer(attribute)
+        elif property_type == PropertyType.CHECKLIST:
+            return ChecklistAnswer(attribute)
+        else:
+            raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
 
     @property
     def object_hash(self) -> str:
@@ -304,11 +441,12 @@ class LabelObject:
         if self._parent:
             self._parent._remove_from_frame_to_hashes_map(frames, self.object_hash)
 
+        # DENIS: ensure that dynamic answers are also handled properly.
+
     def set_answer(self, answer: Answer) -> None:
         """
         This thing will throw if the answer is not possibly according to the ontology.
         If the answer is already there, it will actually
-
         """
         pass
 
@@ -412,10 +550,14 @@ class LabelRow:
     """
 
     def __init__(self, label_row_dict: dict):
+        self._ontology_structure = OntologyStructure()
         self.label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
+        # DENIS: ^ this should probably be protected so no one resets it.
+
         # DENIS: next up need to also parse objects and classifications from current label rows.
 
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
+        # ^ frames to object and classification hashes
 
         self._objects_map: Dict[str, LabelObject] = dict()
         self._classifications_map: Dict[str, LabelClassification] = dict()
@@ -423,7 +565,12 @@ class LabelRow:
         # at least at the final objects_index/classifications_index level.
 
     def get_image_hash(self, frame_number: int) -> str:
+        # DENIS: to do
         return "xyz"
+
+    def get_frame_number(self, image_hash: str) -> int:
+        # DENIS: to do
+        return 5
 
     def get_objects(self, ontology_object: Optional[Object] = None) -> List[LabelObject]:
         """Returns all the objects with this hash."""

@@ -23,7 +23,7 @@ all_types_structure = OntologyStructure(
         ),
         Object(
             uid=4,
-            name="Keypoint",
+            name="Keypoint Dynamic Answers",
             color="#FE9200",
             shape=Shape.POINT,
             feature_node_hash="MTY2MTQx",
