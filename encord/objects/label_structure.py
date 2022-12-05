@@ -238,6 +238,10 @@ class _DynamicAnswer:
         current_answer = self._get_current_answer()
         return self._parent._get_frames_for_dynamic_answer(current_answer)
 
+    def is_answered_for_current_frame(self) -> bool:
+        current_answer = self._get_current_answer()
+        return current_answer.is_answered()
+
     def _get_current_answer(self) -> Answer:
         """Get the current answer at the current frame from the parent."""
         answer = self._parent._get_dynamic_answer(self._frame, self._attribute)
@@ -250,19 +254,44 @@ class DynamicTextAnswer(_DynamicAnswer):
 
     def set(self, value: str):
         current_answer = self._get_current_answer()
-        # DENIS: this cannot be done! This would change the answer for multiple places potentially.
         new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
         new_answer.copy_from(current_answer)
         new_answer.set(value)
 
         self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
 
-    def get_value(self):
+    def get_value(self) -> bool:
         current_answer = self._get_current_answer()
         return current_answer.get_value()
 
 
-DynamicAnswer = Union[DynamicTextAnswer]
+class DynamicChecklistAnswer(_DynamicAnswer):
+    def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
+        super().__init__(parent, frame, attribute)
+
+    def check_options(self, values: Iterable[FlatOption]) -> None:
+        current_answer = self._get_current_answer()
+        new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
+        new_answer.copy_from(current_answer)
+        new_answer.check_options(values)
+
+        self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
+
+    def uncheck_options(self, values: Iterable[FlatOption]) -> None:
+        current_answer = self._get_current_answer()
+        new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
+        new_answer.copy_from(current_answer)
+        new_answer.uncheck_options(values)
+
+        self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
+
+    def get_value(self, value: FlatOption) -> bool:
+        # DENIS: maybe call this `is_checked(value)`
+        current_answer = self._get_current_answer()
+        return current_answer.get_value(value)
+
+
+DynamicAnswer = Union[DynamicTextAnswer, DynamicChecklistAnswer]
 
 
 @dataclass(frozen=True)
@@ -413,7 +442,8 @@ class LabelObject:
 
         self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
         self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
-        # ^ for dynamic answer management
+        # ^ for dynamic answer management => DENIS: may be better to have a manager class with the
+        # responsibility to manage this
 
         self._dynamic_uninitialised_answer_options: Set[Answer] = self._get_dynamic_answers()
         # ^ read only for dynamic answers management.
@@ -493,6 +523,8 @@ class LabelObject:
         answer = self._get_dynamic_answer(frame, attribute)
         if isinstance(answer, TextAnswer):
             return DynamicTextAnswer(self, frame, answer.ontology_attribute)
+        elif isinstance(answer, ChecklistAnswer):
+            return DynamicChecklistAnswer(self, frame, answer.ontology_attribute)
         raise NotImplemented("Need to implement the other answer types")
 
     @property

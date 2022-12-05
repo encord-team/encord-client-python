@@ -40,6 +40,8 @@ radio_attribute_2_option_2 = get_item_by_hash("MTI4MjQy", all_types_structure)
 keypoint_dynamic = get_item_by_hash("MTY2MTQx", all_types_structure)
 dynamic_text = get_item_by_hash("OTkxMjU1", all_types_structure)
 dynamic_checklist = get_item_by_hash("ODcxMDAy", all_types_structure)
+dynamic_checklist_option_1 = get_item_by_hash("MTE5MjQ3", all_types_structure)
+dynamic_checklist_option_2 = get_item_by_hash("Nzg3MDE3", all_types_structure)
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
@@ -462,12 +464,6 @@ def test_adding_dynamic_text_answers():
     assert dynamic_answer.frame == 1
     dynamic_answer.set("Hermes")
     dynamic_answer.copy_to_frames(frames=[2])
-    # DENIS: ^ It could be that this is making something intelligent where dynamic answers
-    # are being compared to be somehow aggregated. The simple thing right now is to have them
-    # disassociated though, and then the `in_ranges` will look up a map from answers to
-    # the objects.
-    # The current_frame always stays the same. The getter might **not** have a fixed association
-    # with the item.
 
     assert dynamic_answer.get_value() == "Hermes"
     assert dynamic_answer.in_frames() == {1, 2}
@@ -498,8 +494,51 @@ def test_adding_dynamic_text_answers():
         * DONE get all other frames for which this dynamic answer is set
         * get all dynamic answers that are unset (either by frame or attribute) (in future)
     """
-    # DENIS: TODO: next up I want to have all the views of the Dynamic data and implement the DynamicChecklistAnswer,
+    # DENIS: up I want to have all the views of the Dynamic data and implement the DynamicChecklistAnswer,
     #  and DynamicRadioAnswer
+
+
+def test_adding_dynamic_checklist_answers():
+    label_object = LabelObject(keypoint_dynamic)
+    label_object.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+
+    dynamic_answer = label_object.get_dynamic_answer(frame=1, attribute=dynamic_checklist)
+    assert dynamic_answer.frame == 1
+    assert not dynamic_answer.is_answered_for_current_frame()
+    assert not dynamic_answer.get_value(dynamic_checklist_option_1)
+    assert not dynamic_answer.get_value(dynamic_checklist_option_2)
+
+    dynamic_answer.check_options([dynamic_checklist_option_1])
+    assert dynamic_answer.get_value(dynamic_checklist_option_1)
+    assert not dynamic_answer.get_value(dynamic_checklist_option_2)
+
+    dynamic_answer.copy_to_frames([1, 2])
+    assert dynamic_answer.in_frames() == {1, 2}
+
+    dynamic_answer_2 = label_object.get_dynamic_answer(frame=3, attribute=dynamic_checklist)
+    dynamic_answer_2.check_options([dynamic_checklist_option_1, dynamic_checklist_option_2])
+    dynamic_answer_2.copy_to_frames(frames=[1])
+
+    assert dynamic_answer.get_value(dynamic_checklist_option_1)
+    assert dynamic_answer.get_value(dynamic_checklist_option_1)
+    assert dynamic_answer_2.get_value(dynamic_checklist_option_1)
+    assert dynamic_answer_2.get_value(dynamic_checklist_option_2)
+    assert dynamic_answer.in_frames() == {1, 3}
+    assert dynamic_answer_2.in_frames() == {1, 3}
+
+    # Frame 2 is still answered from before and unchanged.
+    dynamic_answer_3 = label_object.get_dynamic_answer(frame=2, attribute=dynamic_checklist)
+    assert dynamic_answer_3.is_answered_for_current_frame()
+    assert dynamic_answer_3.get_value(dynamic_checklist_option_1)
+    assert not dynamic_answer_3.get_value(dynamic_checklist_option_2)
+
+    with pytest.raises(RuntimeError):
+        dynamic_answer_2.copy_to_frames([100])
+
+
+def test_adding_radio_checklist_answers():
+    """DENIS: think about what to do with non-dynamic nested stuff. What does the UI do?"""
+    pass
 
 
 # ==========================================================
