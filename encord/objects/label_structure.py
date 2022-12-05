@@ -8,6 +8,7 @@ from enum import Flag, auto
 from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Type, Union
 
 from encord.constants.enums import DataType
+from encord.objects.classification import Classification
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
@@ -32,8 +33,8 @@ For reads I needs some associations
 
 For writes I need the builder pattern same as the OntologyStructure.
 
-
 """
+# DENIS: think about better error codes for people to catch.
 
 
 class _Answer:
@@ -254,7 +255,7 @@ class DynamicTextAnswer(_DynamicAnswer):
 
     def set(self, value: str):
         current_answer = self._get_current_answer()
-        new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
+        new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
         new_answer.copy_from(current_answer)
         new_answer.set(value)
 
@@ -271,7 +272,7 @@ class DynamicRadioAnswer(_DynamicAnswer):
 
     def set(self, value: NestableOption):
         current_answer = self._get_current_answer()
-        new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
+        new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
         new_answer.copy_from(current_answer)
         new_answer.set(value)
 
@@ -288,7 +289,7 @@ class DynamicChecklistAnswer(_DynamicAnswer):
 
     def check_options(self, values: Iterable[FlatOption]) -> None:
         current_answer = self._get_current_answer()
-        new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
+        new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
         new_answer.copy_from(current_answer)
         new_answer.check_options(values)
 
@@ -296,7 +297,7 @@ class DynamicChecklistAnswer(_DynamicAnswer):
 
     def uncheck_options(self, values: Iterable[FlatOption]) -> None:
         current_answer = self._get_current_answer()
-        new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
+        new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
         new_answer.copy_from(current_answer)
         new_answer.uncheck_options(values)
 
@@ -309,6 +310,35 @@ class DynamicChecklistAnswer(_DynamicAnswer):
 
 
 DynamicAnswer = Union[DynamicTextAnswer, DynamicChecklistAnswer]
+
+
+def _get_default_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
+    ret: List[Answer] = list()
+    for attribute in attributes:
+        if not attribute.dynamic:
+            answer = _get_default_answer_from_attribute(attribute)
+            ret.append(answer)
+        # DENIS: test the weird edge case of dynamic attributes which are nested.
+
+        if attribute.has_options_field():
+            for option in attribute.options:
+                if option.get_option_type() == OptionType.NESTABLE:
+                    other_attributes = _get_default_answers_from_attributes(option.nested_options)
+                    ret.extend(other_attributes)
+
+    return ret
+
+
+def _get_default_answer_from_attribute(attribute: Attribute) -> Answer:
+    property_type = attribute.get_property_type()
+    if property_type == PropertyType.TEXT:
+        return TextAnswer(attribute)
+    elif property_type == PropertyType.RADIO:
+        return RadioAnswer(attribute)
+    elif property_type == PropertyType.CHECKLIST:
+        return ChecklistAnswer(attribute)
+    else:
+        raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
 
 
 @dataclass(frozen=True)
@@ -445,9 +475,9 @@ class LabelObject:
     # DENIS: this needs to take an OntologyLabelObject to navigate around.
     def __init__(
         self,
-        ontology_item: Object,
+        ontology_object: Object,
     ):
-        self._ontology_item = ontology_item
+        self._ontology_object = ontology_object
         self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
         # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
         # this thing take over the label structure itself (for large ones it would be interesting)
@@ -497,43 +527,16 @@ class LabelObject:
         raise ValueError("The attribute was not found in this LabelObject's ontology.")
 
     def _get_static_answers(self) -> List[Answer]:
-        attributes = self._ontology_item.attributes
-        return self._get_default_answers_from_attributes(attributes)
-
-    def _get_default_answers_from_attributes(self, attributes: List[Attribute]) -> List[Answer]:
-        ret: List[Answer] = list()
-        for attribute in attributes:
-            if not attribute.dynamic:
-                answer = self._get_default_answer_from_attribute(attribute)
-                ret.append(answer)
-            # DENIS: test the weird edge case of dynamic attributes which are nested.
-
-            if attribute.has_options_field():
-                for option in attribute.options:
-                    if option.get_option_type() == OptionType.NESTABLE:
-                        other_attributes = self._get_default_answers_from_attributes(option.nested_options)
-                        ret.extend(other_attributes)
-
-        return ret
+        attributes = self._ontology_object.attributes
+        return _get_default_answers_from_attributes(attributes)
 
     def _get_dynamic_answers(self) -> Set[Answer]:
         ret: Set[Answer] = set()
-        for attribute in self._ontology_item.attributes:
+        for attribute in self._ontology_object.attributes:
             if attribute.dynamic:
-                answer = self._get_default_answer_from_attribute(attribute)
+                answer = _get_default_answer_from_attribute(attribute)
                 ret.add(answer)
         return ret
-
-    def _get_default_answer_from_attribute(self, attribute: Attribute) -> Answer:
-        property_type = attribute.get_property_type()
-        if property_type == PropertyType.TEXT:
-            return TextAnswer(attribute)
-        elif property_type == PropertyType.RADIO:
-            return RadioAnswer(attribute)
-        elif property_type == PropertyType.CHECKLIST:
-            return ChecklistAnswer(attribute)
-        else:
-            raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
 
     def get_dynamic_answer(self, frame: int, attribute: Attribute):
         # DENIS: probably I don't need two classes
@@ -557,7 +560,7 @@ class LabelObject:
 
     @property
     def ontology_item(self) -> Any:
-        return deepcopy(self._ontology_item)
+        return deepcopy(self._ontology_object)
 
     @ontology_item.setter
     def ontology_item(self, v: Any) -> NoReturn:
@@ -579,7 +582,7 @@ class LabelObject:
 
         DENIS: validate that the coordinates are not out of bounds.
         """
-        expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[self._ontology_item.shape]
+        expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[self._ontology_object.shape]
         if type(coordinates) != expected_coordinate_type:
             raise ValueError(
                 f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
@@ -606,13 +609,14 @@ class LabelObject:
         """
         Creates an exact copy of this LabelObject but with a new object hash and without being associated to any
         LabelRow. This is useful if you want to add the semantically same LabelObject to multiple `LabelRow`s."""
-        ret = LabelObject(self._ontology_item)
+        ret = LabelObject(self._ontology_object)
         ret._frames_to_instance_data = copy(self._frames_to_instance_data)
         # DENIS: test if a shallow copy is enough
         # DENIS: copy the answers stuff as well.
         return ret
 
     def frames(self) -> List[int]:
+        # DENIS: this is public - think about if I want to have a condensed version with a run length encoding.
         return list(self._frames_to_instance_data.keys())
 
     def get_instance_data(self, frames: Iterable[int]) -> List[ObjectFrameInstanceData]:
@@ -643,7 +647,7 @@ class LabelObject:
         self._frames_to_answers.pop(frame)
 
     def _remove_dynamic_answer_at_frame(self, answer: Answer, frame: int) -> None:
-        default_answer = self._get_default_answer_from_attribute(answer.ontology_attribute)
+        default_answer = _get_default_answer_from_attribute(answer.ontology_attribute)
 
         if hash(answer) == hash(default_answer):
             return
@@ -662,57 +666,99 @@ class LabelObject:
         self._answers_to_frames[new_answer].add(frame)
         self._frames_to_answers[frame].add(new_answer)
 
-    def set_answer(self, answer: Answer) -> None:
-        """
-        This thing will throw if the answer is not possibly according to the ontology.
-        If the answer is already there, it will actually
-        """
-        pass
-
     def is_valid(self) -> bool:
         """Check if is valid, could also return some human/computer  messages."""
         if len(self._frames_to_instance_data) == 0:
             return False
         return True
 
-    # def add_dynamic_answers(
-    #     self,
-    #     frames: Any,
-    #     answers: Any,
-    # ):
-    #     """
-    #     For a given range, add the dynamic answers
-    #
-    #     Again, do intelligent range merging with the current ranges of the same answers
-    #     """
-    #     pass
 
-    # def set_static_answers(
-    #     self,
-    #     answers: List[Any],
-    # ):
-    #     """Add or set the static answers"""
-    #     pass
-
-
-@dataclass
 class LabelClassification:
-    pass
+    def __init__(self, ontology_classification: Classification):
+        # DENIS: should I also be able to accept the first level attribute? Ideally not, as
+        # I'd need to awkwardly verify whether this is the first level attribute or not.
+        self._ontology_classification = ontology_classification
+        self._parent: Optional[LabelRow] = None
+        self._classification_hash = short_uuid_str()
 
-    def set_range(
+        self._static_answer: Answer = self._get_static_answer()
+        self._frames: Set[int] = set()
+        # DENIS: Ideally there would be a max range check.
+        self._max_frame: int = float("inf")
+
+    @property
+    def classification_hash(self) -> str:
+        return self._classification_hash
+
+    @classification_hash.setter
+    def classification_hash(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot set the object hash on an instantiated label object.")
+
+    @property
+    def ontology_item(self) -> Classification:
+        return deepcopy(self._ontology_classification)
+
+    @ontology_item.setter
+    def ontology_item(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot set the ontology item of an instantiated LabelObject.")
+
+    def set_frames(self, frames: Iterable[int]) -> None:
+        """Overwrites the current frames."""
+        new_frames = set()
+        self._check_classification_already_present(frames)
+        for frame in frames:
+            self._check_within_range(frame)
+            new_frames.add(frame)
+        self._frames = new_frames
+
+    def add_to_frames(
         self,
-        frames: Any,
-    ):
-        # essentially change the range.
-        pass
+        frames: Iterable[int],
+    ) -> None:
+        self._check_classification_already_present(frames)
+        for frame in frames:
+            self._check_within_range(frame)
+            self._frames.add(frame)
 
-    def get_static_unanswered_objects(self):
-        """Return the answers that still need to happen"""
-        pass
+    def remove_from_frames(self, frames: Iterable[int]) -> None:
+        for frame in frames:
+            self._frames.remove(frame)
 
-    def set_answers(self):
-        """"""
-        pass
+        if self._parent is not None:
+            self._parent._remove_frames_from_classification(self.ontology_item, frames)
+
+    def frames(self) -> List[int]:
+        return list(self._frames)
+
+    def get_static_answer(self) -> Answer:
+        return self._static_answer
+
+    def is_valid(self) -> bool:
+        return len(self._frames) > 0
+
+    def _get_static_answer(self) -> Answer:
+        attributes = self._ontology_classification.attributes
+        answers = _get_default_answers_from_attributes(attributes)
+        if len(answers) != 1:
+            raise RuntimeError("The LabelClassification is in an invalid state.")
+        return answers[0]
+
+    def _check_within_range(self, frame: int) -> None:
+        if frame < 0 or frame > self._max_frame:
+            raise ValueError(
+                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._max_frame}`."
+            )
+
+    def _check_classification_already_present(self, frames: Iterable[int]) -> None:
+        if self._parent is None:
+            return
+        already_present_frame = self._parent._is_classification_already_present(self.ontology_item, frames)
+        if already_present_frame is not None:
+            raise ValueError(
+                f"The LabelRow, that this classification is part of, already has a classification of the same type "
+                f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
+                f"frame per LabelRow."
+            )
 
 
 @dataclass(frozen=True)
@@ -765,6 +811,8 @@ class LabelRow:
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
 
+        self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
+
         self._objects_map: Dict[str, LabelObject] = dict()
         self._classifications_map: Dict[str, LabelClassification] = dict()
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
@@ -815,15 +863,87 @@ class LabelRow:
 
         self._add_to_frame_to_hashes_map(label_object)
 
-    def _add_to_frame_to_hashes_map(self, label_object: LabelObject):
-        """This can be called by the LabelObject."""
-        for frame in label_object.frames():
-            self._frame_to_hashes[frame].add(label_object.object_hash)
+    def add_classification(self, label_classification: LabelClassification, force: bool = False):
+        if not label_classification.is_valid():
+            raise ValueError("The supplied LabelClassification is not in a valid format.")
 
-    def get_classifications(self, ontology_classification: Optional[Object] = None) -> List[LabelObject]:
+        # DENIS: probably better to have a member function saying whether a parent is currently set.
+        if label_classification._parent is not None:
+            raise RuntimeError(
+                "The supplied LabelClassification is already part of a LabelRow. You can only add a LabelClassification"
+                " to one LabelRow. You can do a LabelClassification.copy() to create an identical LabelObject which is "
+                "not part of any LabelRow."
+            )
+
+        classification_hash = label_classification.classification_hash
+        already_present_frame = self._is_classification_already_present(
+            label_classification.ontology_item, label_classification.frames()
+        )
+        if classification_hash in self._classifications_map and not force:
+            raise ValueError(
+                "The supplied LabelClassification was already previously added. (the classification_hash is the same)."
+            )
+
+        if already_present_frame is not None and not force:
+            raise ValueError(
+                f"A LabelClassification of the same type was already added and has overlapping frames. One "
+                f"overlapping frame that was found is `{already_present_frame}`. Make sure that you only add "
+                f"classifications which are on frames where the same type of classification does not yet exist."
+            )
+
+        if classification_hash in self._classifications_map and force:
+            self._classifications_map.pop(classification_hash)
+
+        self._classifications_map[classification_hash] = label_classification
+        label_classification._parent = self
+
+        self._classifications_to_frames[label_classification.ontology_item].update(set(label_classification.frames()))
+        self._add_to_frame_to_hashes_map(label_classification)
+
+    def _is_classification_already_present(
+        self, classification: Classification, frames: Iterable[int]
+    ) -> Optional[int]:
+        present_frames = self._classifications_to_frames.get(classification, set())
+        for frame in frames:
+            if frame in present_frames:
+                return frame
+        return None
+
+    def _remove_frames_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
+        present_frames = self._classifications_to_frames.get(classification, set())
+        for frame in frames:
+            present_frames.remove(frame)
+
+    def remove_classification(self, label_classification: LabelClassification):
+        classification_hash = label_classification.classification_hash
+        self._classifications_map.pop(classification_hash)
+        all_frames = self._classifications_to_frames[label_classification.ontology_item]
+        actual_frames = label_classification.frames()
+        for actual_frame in actual_frames:
+            all_frames.remove(actual_frame)
+
+    def _add_to_frame_to_hashes_map(self, label_item: Union[LabelObject, LabelClassification]):
+        """This can be called by the LabelObject."""
+        for frame in label_item.frames():
+            if isinstance(label_item, LabelObject):
+                self._frame_to_hashes[frame].add(label_item.object_hash)
+            elif isinstance(label_item, LabelClassification):
+                self._frame_to_hashes[frame].add(label_item.classification_hash)
+            else:
+                return NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
+
+    def get_classifications(
+        self, ontology_classification: Optional[Classification] = None
+    ) -> List[LabelClassification]:
         """Returns all the objects with this hash."""
-        # DENIS: Which hash are we referring to here? the attribute one or the non-attribute one?
-        return []
+        ret = []
+        for label_classification in self._classifications_map.values():
+            if (
+                ontology_classification is None
+                or ontology_classification.feature_node_hash == label_classification.ontology_item.feature_node_hash
+            ):
+                ret.append(label_classification)
+        return ret
 
     def get_objects_by_frame(self, frames: Iterable[int]) -> Set[LabelObject]:
         """DENIS: maybe merge this with the getter above."""
@@ -878,135 +998,67 @@ class LabelRow:
             frame_level_data[frame_number] = frame_level_image_group_data
         return frame_level_data
 
-    # def add_new_object(
-    #     self,
-    #     feature_hash: str,
-    # ) -> LabelObject:
-    #     """All it does, is getting the new object but also passing in the correct ontology."""
 
-    # def add_object_maybe_not(
-    #     self,
-    #     feature_hash: str,
-    #     coordinates: Any,
-    #     # ^ DENIS: maybe we want to specify this only on the object itself?
-    #     #     However, do we really want to create a label with a practically invalid
-    #     #     object? So maybe what we want is to add an object as a whole here?
-    #     #     then we could validate in this function whether this object actually makes
-    #     #     sense or not
-    #     frames: Union[Set[int], Set[str]],
-    #     # ^ should range be a more intelligent range? Maybe a custom class?
-    #     answers: Optional[Any] = None,
-    #     *,
-    #     created_at: datetime = datetime.now(),
-    #     created_by: Optional[str] = None,
-    #     last_edited_at: datetime = datetime.now(),
-    #     last_edited_by: Optional[str] = None,
-    #     confidence: float = 1.0,
-    #     manual_annotation: bool = True,
-    #     color: Optional[str] = None,
-    # ):
-    #     """
-    #     * dynamic answers.
-    #
-    #     * TODO: do I want to have an `add_bounding_box`, `add_polygon`, ... function instead?
-    #         It can simply complain right away if the wrong coordinate is added.
-    #     * say reviews are read only
-    #
-    #     Args:
-    #         frames: The frames in which this object with the exact same coordinates and answers will be placed.
-    #     """
-    #     pass
-
-    # def add_classification(
-    #     self,
-    #     feature_hash: str,
-    #     frames: Union[Set[int], Set[str]],
-    #     answer: Any,
-    #     *,
-    #     created_at: datetime = datetime.now(),
-    #     created_by: Optional[str] = None,
-    #     last_edited_at: datetime = datetime.now(),
-    #     last_edited_by: Optional[str] = None,
-    #     confidence: float = 1.0,
-    #     manual_annotation: bool = True,
-    # ):
-    #     """
-    #     * Ensure that the client can supply the classification answers.
-    #     * How does the client add a classification range?
-    #     * Note: no support for dynamic attributes is needed.
-    #     * Say somewhere that `reviews` is a read only property that will not be added to the server.
-    #     TODO: the default should be clear from the signature.
-    #     """
-    #     pass
-    #     x = frames
-    #     """Frames need to be added intelligently - as in adjacent frames are added intelligently."""
-    #     y = answer
-    #     """
-    #     The answer could be a text, or a specific choice of radio or classification. Likely we'd want
-    #     to have a separate class for this.
-    #     """
-
-
-@dataclass
-class LabelMaster:
-    """
-    DENIS: this thing probably should take the corresponding ontology, ideally automatically
-    DENIS: there is actually not much difference between this and the `LabelRow` class. Probably we
-        want to merge them together.
-    """
-
-    #
-    # label_hash: str
-    # dataset_hash: str
-    # dataset_title: str
-    # data_title: str
-    # data_type: DataType
-    # # DENIS: the above fields could be translated less literally.
-    #
-    # single_label: LabelRow  # Only one label across this multi-label thing.
-
-    def get_or_create_label_by_frame(self, frame: Union[int, str]) -> LabelRow:
-        """Get it depending on frame number or hash."""
-        pass
-
-    def delete_label_by_frame(self, frame: Union[int, str]) -> bool:
-        """Depending on if there was one, return True or not"""
-        pass
-
-    def get_used_frames(self) -> List[Union[int, str]]:
-        pass
-
-    def reset_labels(self):
-        self.single_labels = list()
-
-    def upload(self):
-        """Do the client request"""
-        # Can probably just use the set label row here.
-        pass
-
-    def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
-        """
-        Grab the labels from the server. Return False if the labels have been changed in the meantime.
-
-        Args:
-            force:
-                If `False`, it will not do the refresh if something has changed on the server.
-                If `True`, it will always overwrite the local changes with what has happened on the server.
-        """
-        # Actually can probably use the get_label_row() here.
-
-    """
-    Now the data units will either be keyed by the video_hash. Unless it is an image group, then it is keyed
-    by the individual image_hashes.
-    
-    for image groups and images we'd have only one label
-    for videos and dicoms we have multiple frames. 
-    
-    It seems like I'd like to create the common "labels" thing first, and then see how I want to glue
-    it together.
-    probably something like "add_label" which goes for a specific frame (data_sequence in img group) or for
-    a specific hash. 
-    """
+# @dataclass
+# class LabelMaster:
+#     """
+#     DENIS: this thing probably should take the corresponding ontology, ideally automatically
+#     DENIS: there is actually not much difference between this and the `LabelRow` class. Probably we
+#         want to merge them together.
+#     """
+#
+#     #
+#     # label_hash: str
+#     # dataset_hash: str
+#     # dataset_title: str
+#     # data_title: str
+#     # data_type: DataType
+#     # # DENIS: the above fields could be translated less literally.
+#     #
+#     # single_label: LabelRow  # Only one label across this multi-label thing.
+#
+#     def get_or_create_label_by_frame(self, frame: Union[int, str]) -> LabelRow:
+#         """Get it depending on frame number or hash."""
+#         pass
+#
+#     def delete_label_by_frame(self, frame: Union[int, str]) -> bool:
+#         """Depending on if there was one, return True or not"""
+#         pass
+#
+#     def get_used_frames(self) -> List[Union[int, str]]:
+#         pass
+#
+#     def reset_labels(self):
+#         self.single_labels = list()
+#
+#     def upload(self):
+#         """Do the client request"""
+#         # Can probably just use the set label row here.
+#         pass
+#
+#     def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
+#         """
+#         Grab the labels from the server. Return False if the labels have been changed in the meantime.
+#
+#         Args:
+#             force:
+#                 If `False`, it will not do the refresh if something has changed on the server.
+#                 If `True`, it will always overwrite the local changes with what has happened on the server.
+#         """
+#         # Actually can probably use the get_label_row() here.
+#
+#     """
+#     Now the data units will either be keyed by the video_hash. Unless it is an image group, then it is keyed
+#     by the individual image_hashes.
+#
+#     for image groups and images we'd have only one label
+#     for videos and dicoms we have multiple frames.
+#
+#     It seems like I'd like to create the common "labels" thing first, and then see how I want to glue
+#     it together.
+#     probably something like "add_label" which goes for a specific frame (data_sequence in img group) or for
+#     a specific hash.
+#     """
 
 
 # DENIS: should this LabelStructure be able to be self-updatable? Without the involvement of the project?

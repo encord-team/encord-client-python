@@ -5,6 +5,7 @@ import pytest
 from encord.objects.label_structure import (
     BoundingBoxCoordinates,
     ChecklistAnswer,
+    LabelClassification,
     LabelObject,
     LabelRow,
     LabelRowReadOnlyData,
@@ -45,6 +46,15 @@ dynamic_checklist_option_2 = get_item_by_hash("Nzg3MDE3", all_types_structure)
 dynamic_radio = get_item_by_hash("MTExM9I3", all_types_structure)
 dynamic_radio_option_1 = get_item_by_hash("MT9xNDQ5", all_types_structure)  # This is dynamic and deeply nested.
 dynamic_radio_option_2 = get_item_by_hash("9TcxMjAy", all_types_structure)  # This is dynamic and deeply nested.
+
+text_classification = get_item_by_hash("jPOcEsbw", all_types_structure)
+radio_classification = get_item_by_hash("NzIxNTU1", all_types_structure)
+radio_classification_option_1 = get_item_by_hash("MTcwMjM5", all_types_structure)
+radio_classification_option_2 = get_item_by_hash("MjUzMTg1", all_types_structure)
+radio_classification_option_2_text = get_item_by_hash("MTg0MjIw", all_types_structure)
+checklist_classification = get_item_by_hash("3DuQbFxo", all_types_structure)
+checklist_classification_option_1 = get_item_by_hash("fvLjF0qZ", all_types_structure)
+checklist_classification_option_2 = get_item_by_hash("a4r7nK9i", all_types_structure)
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
@@ -427,6 +437,10 @@ def test_setting_static_radio_answers():
 
     radio_answer_1: RadioAnswer = label_object_1.get_static_answer(radio_attribute_level_1)
     radio_answer_2: RadioAnswer = label_object_1.get_static_answer(radio_attribute_level_2)
+    # DENIS: This answer only makes sense if the top level option was actually selected!!
+    # DENIS: need to think about an interface where this is cleaner.
+    # Maybe the get_static_answer only return from top level, and that answer object itself returns the next
+    # selectable options and nested stuff.
 
     assert not radio_answer_1.is_answered()
     assert not radio_answer_2.is_answered()
@@ -567,6 +581,69 @@ def test_adding_radio_checklist_answers():
 
     with pytest.raises(RuntimeError):
         dynamic_answer_2.copy_to_frames([100])
+
+
+def test_label_classifications():
+    label_classification_1 = LabelClassification(text_classification)
+    label_classification_2 = LabelClassification(text_classification)
+    assert not label_classification_1.is_valid()
+
+    label_classification_1.add_to_frames([1, 2, 3])
+    assert label_classification_1.is_valid()
+
+    answer_1 = label_classification_1.get_static_answer()
+
+    answer_1.set("Dionysus")
+    assert answer_1.get_value() == "Dionysus"
+
+    answer_2 = label_classification_2.get_static_answer()
+    answer_2.copy_from(answer_1)
+    assert answer_2.get_value() == "Dionysus"
+
+    answer_2.set("Hades")
+    assert answer_2.get_value() == "Hades"
+    assert answer_1.get_value() == "Dionysus"
+
+
+def test_add_and_get_label_classifications_to_label_row():
+    label_row = LabelRow(empty_image_group)
+    label_classification_1 = LabelClassification(text_classification)
+    label_classification_2 = LabelClassification(text_classification)
+    label_classification_3 = LabelClassification(checklist_classification)
+
+    label_classification_1.add_to_frames([1, 2])
+    label_classification_2.add_to_frames([3, 4])
+    label_classification_3.add_to_frames([1, 2, 3, 4])
+
+    label_row.add_classification(label_classification_1)
+    label_row.add_classification(label_classification_2)
+    label_row.add_classification(label_classification_3)
+
+    label_classifications = label_row.get_classifications()
+    assert set(label_classifications) == {label_classification_1, label_classification_2, label_classification_3}
+
+    filtered_label_classifications = label_row.get_classifications(text_classification)
+    assert set(filtered_label_classifications) == {label_classification_1, label_classification_2}
+
+    overlapping_label_classification = LabelClassification(text_classification)
+    overlapping_label_classification.add_to_frames([1])
+    with pytest.raises(ValueError):
+        label_row.add_classification(overlapping_label_classification)
+
+    overlapping_label_classification.set_frames([5])
+    label_row.add_classification(overlapping_label_classification)
+    with pytest.raises(ValueError):
+        overlapping_label_classification.add_to_frames([1])
+    with pytest.raises(ValueError):
+        overlapping_label_classification.set_frames([1])
+
+    label_row.remove_classification(label_classification_1)
+    overlapping_label_classification.add_to_frames([1])
+
+    with pytest.raises(ValueError):
+        overlapping_label_classification.add_to_frames([3])
+    label_classification_2.remove_from_frames([3])
+    overlapping_label_classification.add_to_frames([3])
 
 
 # ==========================================================

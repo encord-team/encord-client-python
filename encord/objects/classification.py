@@ -78,3 +78,6 @@ class Classification:
         if self.attributes:
             raise ValueError("Classification should have exactly one root attribute")
         return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required)
+
+    def __hash__(self):
+        return hash(self.feature_node_hash)
