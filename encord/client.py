@@ -339,6 +339,8 @@ class EncordClientDataset(EncordClient):
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
+        *,
+        video_image_groups: bool = True,
     ):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
@@ -355,7 +357,14 @@ class EncordClientDataset(EncordClient):
         upload_images_to_encord(successful_uploads, self._querier)
 
         image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
-        res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={"image_group_title": title})
+        res = self._querier.basic_setter(
+            ImageGroup,
+            uid=image_hash_list,
+            payload={
+                "image_group_title": title,
+                "video_image_groups": video_image_groups,
+            },
+        )
 
         if res:
             titles = [video_data.get("title") for video_data in res]

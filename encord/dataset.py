@@ -116,6 +116,8 @@ class Dataset:
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
+        *,
+        video_image_groups: bool = True,
     ):
         """
         Create an image group in Encord storage. Choose this type of image upload for sequential images. Else, you can
@@ -132,6 +134,10 @@ class Dataset:
             title:
                 The title of the image group. If unspecified this will be randomly generated for you. This title should
                 NOT include an extension. For example "encord_image_group".
+            video_image_groups:
+                Flag specifying image group representation, if True image group will be created with video
+                representation, images will be concatenated. If False, video will not be created, data will be stored
+                as sequences of images.
 
         Returns:
             Bool.
@@ -140,7 +146,12 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings, title=title)
+        return self._client.create_image_group(
+            file_paths,
+            cloud_upload_settings=cloud_upload_settings,
+            title=title,
+            video_image_groups=video_image_groups,
+        )
 
     def create_dicom_series(
         self,
