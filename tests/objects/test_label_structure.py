@@ -746,3 +746,26 @@ def test_adding_radio_checklist_answers():
 #     # Do the transformations
 #
 #     label_structure.upload()
+
+
+# def test_david_notes():
+#
+#     project = ...
+#
+#     label_class = project.get_label_class(label_hash)
+#
+#     label_object = label_class.get_object(object_hash)
+#     assert label_object.frames() == [1, 2, 3]
+#     assert label_object.coordinates_for_frame(1) == BOX_COORDINATES
+#
+#     new_label_ojbect = LabelObject(...)
+#     new_label_ojbect.set_coordinates(BOX_COORDINATES, frames={3})
+#
+#     label_class.add_object(new_label_ojbect)  # validation
+#
+#     label_class.save()
+#
+#     project.delete_label_rows([...])
+#
+#     save_multiple_label_classes([label_class, ...])  # DENIS: bulk getter and setters are needed by David.
+#     # DENIS: ensure terminology is similar to open source given that it might be used for Encord Active
