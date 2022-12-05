@@ -42,6 +42,9 @@ dynamic_text = get_item_by_hash("OTkxMjU1", all_types_structure)
 dynamic_checklist = get_item_by_hash("ODcxMDAy", all_types_structure)
 dynamic_checklist_option_1 = get_item_by_hash("MTE5MjQ3", all_types_structure)
 dynamic_checklist_option_2 = get_item_by_hash("Nzg3MDE3", all_types_structure)
+dynamic_radio = get_item_by_hash("MTExM9I3", all_types_structure)
+dynamic_radio_option_1 = get_item_by_hash("MT9xNDQ5", all_types_structure)  # This is dynamic and deeply nested.
+dynamic_radio_option_2 = get_item_by_hash("9TcxMjAy", all_types_structure)  # This is dynamic and deeply nested.
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
@@ -63,7 +66,7 @@ KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
 
 
 def test_create_label_object_one_coordinate():
-    label_object = LabelObject(box_ontology_item)  # DENIS: takes ontology item
+    label_object = LabelObject(box_ontology_item)
 
     coordinates = BoundingBoxCoordinates(
         height=0.1,
@@ -538,7 +541,32 @@ def test_adding_dynamic_checklist_answers():
 
 def test_adding_radio_checklist_answers():
     """DENIS: think about what to do with non-dynamic nested stuff. What does the UI do?"""
-    pass
+    label_object = LabelObject(keypoint_dynamic)
+    label_object.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+
+    dynamic_answer = label_object.get_dynamic_answer(frame=1, attribute=dynamic_radio)
+    assert dynamic_answer.frame == 1
+    dynamic_answer.set(dynamic_radio_option_1)
+    dynamic_answer.copy_to_frames(frames=[2])
+
+    assert dynamic_answer.get_value() == dynamic_radio_option_1
+    # DENIS: do I need to have equality comparison of dynamic radios, if they are not the same instance...
+    assert dynamic_answer.in_frames() == {1, 2}
+
+    dynamic_answer_2 = label_object.get_dynamic_answer(frame=3, attribute=dynamic_radio)
+    dynamic_answer_2.set(dynamic_radio_option_2)
+    dynamic_answer.copy_to_frames(frames=[1])
+
+    assert dynamic_answer.get_value() == dynamic_radio_option_1
+    assert dynamic_answer_2.get_value() == dynamic_radio_option_2
+
+    dynamic_answer_2.copy_to_frames(frames=[1])
+    assert dynamic_answer_2.get_value() == dynamic_radio_option_2
+    assert dynamic_answer.get_value() == dynamic_radio_option_2
+    assert dynamic_answer.in_frames() == dynamic_answer_2.in_frames()
+
+    with pytest.raises(RuntimeError):
+        dynamic_answer_2.copy_to_frames([100])
 
 
 # ==========================================================

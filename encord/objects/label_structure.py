@@ -265,6 +265,23 @@ class DynamicTextAnswer(_DynamicAnswer):
         return current_answer.get_value()
 
 
+class DynamicRadioAnswer(_DynamicAnswer):
+    def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
+        super().__init__(parent, frame, attribute)
+
+    def set(self, value: NestableOption):
+        current_answer = self._get_current_answer()
+        new_answer = self._parent._get_default_answer_from_attribute(current_answer.ontology_attribute)
+        new_answer.copy_from(current_answer)
+        new_answer.set(value)
+
+        self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
+
+    def get_value(self) -> Optional[NestableOption]:
+        current_answer = self._get_current_answer()
+        return current_answer.get_value()
+
+
 class DynamicChecklistAnswer(_DynamicAnswer):
     def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
         super().__init__(parent, frame, attribute)
@@ -525,7 +542,10 @@ class LabelObject:
             return DynamicTextAnswer(self, frame, answer.ontology_attribute)
         elif isinstance(answer, ChecklistAnswer):
             return DynamicChecklistAnswer(self, frame, answer.ontology_attribute)
-        raise NotImplemented("Need to implement the other answer types")
+        elif isinstance(answer, RadioAnswer):
+            return DynamicRadioAnswer(self, frame, answer.ontology_attribute)
+        else:
+            raise NotImplemented("Need to implement the other answer types")
 
     @property
     def object_hash(self) -> str:

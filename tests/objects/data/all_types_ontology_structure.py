@@ -44,20 +44,20 @@ all_types_structure = OntologyStructure(
                 ),
                 RadioAttribute(
                     uid=[6, 1],
-                    feature_node_hash="MTExMjI3",
+                    feature_node_hash="MTExM9I3",
                     name="Radio level 1 ",
                     required=False,
                     dynamic=True,
                     options=[
                         NestableOption(
                             uid=[6, 1, 1],
-                            feature_node_hash="MTExNDQ5",
+                            feature_node_hash="MT9xNDQ5",
                             label="1 option 1",
                             value="1_option_1",
                             nested_options=[
                                 TextAttribute(
                                     uid=[6, 1, 1, 1],
-                                    feature_node_hash="MjE2OTE0",
+                                    feature_node_hash="MjE2O9E0",
                                     name="1 1 text",
                                     required=False,
                                     dynamic=False,
@@ -66,27 +66,27 @@ all_types_structure = OntologyStructure(
                         ),
                         NestableOption(
                             uid=[6, 1, 2],
-                            feature_node_hash="MTcxMjAy",
+                            feature_node_hash="9TcxMjAy",
                             label="1 option 2",
                             value="1_option_2",
                             nested_options=[
                                 RadioAttribute(
                                     uid=[6, 1, 2, 1],
-                                    feature_node_hash="NDYyMjQx",
+                                    feature_node_hash="NDYyM9Qx",
                                     name="1 2 radio 1",
                                     required=False,
                                     dynamic=False,
                                     options=[
                                         NestableOption(
                                             uid=[6, 1, 2, 1, 1],
-                                            feature_node_hash="MTY0MzU2",
+                                            feature_node_hash="MTY0M9U2",
                                             label="1 2 1 option 1",
                                             value="1_2_1_option_1",
                                             nested_options=[],
                                         ),
                                         NestableOption(
                                             uid=[6, 1, 2, 1, 2],
-                                            feature_node_hash="MTI4MjQy",
+                                            feature_node_hash="MTI49jQy",
                                             label="1 2 1 option ",
                                             value="1_2_1_option_",
                                             nested_options=[],
