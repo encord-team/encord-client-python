@@ -75,6 +75,42 @@ POLYGON_COORDINATES = PolygonCoordinates(
 KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
 
 
+# =======================================================
+# =========== demonstrative tests below here ============
+# =======================================================
+
+
+@pytest.mark.skip("The functionality is not fully implemented")
+def test_create_one_bounding_box():
+    project = "code that generates a project ..."
+    label_hash = "1234"
+
+    label_row = project.get_label_row_class(label_hash)  # can either take label_hash or data_hash
+
+    # Now create an object and add it to the label row
+    label_object = LabelObject(box_ontology_item)
+    coordinates = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
+    label_object.set_coordinates(coordinates=coordinates, frames={1})
+
+    label_row.add_object(label_object)
+
+    # Create a classification and add it to the label row
+    label_classification = LabelClassification(text_classification)
+    answer = label_classification.get_static_answer()
+    answer.set("Text answer to the classification attribute")
+
+    label_classification.add_to_frames([2, 3])
+
+    label_row.add_classification(label_classification)
+
+    label_row.save()  # The data will be uploaded to our BE.
+
+
 def test_create_label_object_one_coordinate():
     label_object = LabelObject(box_ontology_item)
 
@@ -97,6 +133,11 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
     read_only_data = label_row.label_row_read_only_data
     assert isinstance(read_only_data, LabelRowReadOnlyData)
     # TODO: do more assertions
+
+
+# =======================================================
+# =========== demonstrative tests above here ============
+# =======================================================
 
 
 def test_add_label_object_to_label_row():
