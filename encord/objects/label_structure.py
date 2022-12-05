@@ -789,13 +789,6 @@ class LabelRowReadOnlyData:
 
 class LabelRow:
     """
-    DENIS: the big question here is how we want to see this.
-    I'd argue that we actually want to flatten out the frames and the individual images, and create
-    LabelObjects/LabelClassifications from that. So the range can be chosen across an arbitrary
-    range of images/frames and then the coordinates can be set for multiple different frames.
-    Keep in mind that we might have multiple instances of same object_hash in a given frame soon, but another
-    hash will then separate those.
-
     will also need to be able to keep around possible coordinate sizes and also query those if necessary.
 
     This is essentially one blob of data_units. For an image_group we need to get all the hashed in.
