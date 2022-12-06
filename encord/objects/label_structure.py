@@ -7,6 +7,8 @@ from datetime import datetime
 from enum import Flag, auto
 from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Type, Union
 
+from dateutil.parser import parse
+
 from encord.constants.enums import DataType
 from encord.objects.classification import Classification
 from encord.objects.common import (
@@ -24,6 +26,7 @@ from encord.objects.common import (
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.utils import short_uuid_str
+from encord.orm.ontology import DATETIME_STRING_FORMAT
 
 """
 DENIS:
@@ -352,6 +355,25 @@ class BoundingBoxCoordinates:
     top_left_x: float
     top_left_y: float
 
+    @staticmethod
+    def from_dict(d: dict) -> BoundingBoxCoordinates:
+        """Get BoundingBoxCoordinates from an encord dict"""
+        bounding_box_dict = d["boundingBox"]
+        return BoundingBoxCoordinates(
+            height=bounding_box_dict["h"],
+            width=bounding_box_dict["w"],
+            top_left_x=bounding_box_dict["x"],
+            top_left_y=bounding_box_dict["y"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "h": self.height,
+            "w": self.width,
+            "x": self.top_left_x,
+            "y": self.top_left_y,
+        }
+
 
 @dataclass(frozen=True)
 class RotatableBoundingBoxCoordinates:
@@ -372,12 +394,32 @@ class PointCoordinate:
     y: float
 
 
-# PolygonCoordinates = List[PointCoordinate]
-
-
 @dataclass(frozen=True)
 class PolygonCoordinates:
     values: List[PointCoordinate]
+
+    @staticmethod
+    def from_dict(d: dict) -> PolygonCoordinates:
+        polygon_dict = d["polygon"]
+        values: List[PointCoordinate] = []
+
+        sorted_dict_value_tuples = sorted((key, value) for key, value in polygon_dict.items())
+        sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
+
+        for value in sorted_dict_values:
+            point_coordinate = PointCoordinate(
+                x=value["x"],
+                y=value["y"],
+            )
+            values.append(point_coordinate)
+
+        return PolygonCoordinates(values=values)
+
+    def to_dict(self) -> dict:
+        ret = {}
+        for idx, value in enumerate(self.values):
+            ret[str(idx)] = {"x": value.x, "y": value.y}
+        return ret
 
 
 @dataclass(frozen=True)
@@ -453,13 +495,31 @@ class ObjectFrameReadOnlyInstanceInfo:
 class ObjectFrameInstanceInfo:
     created_at: datetime = datetime.now()
     created_by: Optional[str] = None
-    """None defaults to the user of the SDK"""
-    last_edited_at: Optional[datetime] = datetime.now()
+    """None defaults to the user of the SDK. DENIS: need to add this information somewhere."""
+    last_edited_at: Optional[datetime] = None
     last_edited_by: Optional[str] = None
-    """None defaults to the user of the SDK"""
+    """None defaults to the user of the SDK, DENIS: do we want this to be true for last_edited_by?"""
     confidence: float = 1
     manual_annotation: bool = True
     read_only_info: ObjectFrameReadOnlyInstanceInfo = ObjectFrameReadOnlyInstanceInfo()
+
+    @staticmethod
+    def from_dict(d: dict):
+        read_only_info = ObjectFrameReadOnlyInstanceInfo(reviews=d["reviews"])
+        if "lastEditedAt" in d:
+            last_edited_at = parse(d["lastEditedAt"])
+        else:
+            last_edited_at = None
+
+        return ObjectFrameInstanceInfo(
+            created_at=parse(d["createdAt"]),
+            created_by=d["createdBy"],
+            last_edited_at=last_edited_at,
+            last_edited_by=d.get("lastEditedBy"),
+            confidence=d["confidence"],
+            manual_annotation=d["manualAnnotation"],
+            read_only_info=read_only_info,
+        )
 
 
 @dataclass(frozen=True)
@@ -472,6 +532,8 @@ class LabelObject:
     """This is per video/image_group/dicom/...
 
     should you be able to set the color per object?
+
+    DENIS: I probably want to have a proper __repr__ here for debug-ability.
     """
 
     # DENIS: this needs to take an OntologyLabelObject to navigate around.
@@ -598,6 +660,13 @@ class LabelObject:
 
         if self._parent:
             self._parent._add_to_frame_to_hashes_map(self)
+
+    def get_for_frame(self, frame: int) -> ObjectFrameInstanceData:
+        saved_data = self._frames_to_instance_data[frame]
+        return ObjectFrameInstanceData(
+            coordinates=deepcopy(saved_data.coordinates),
+            object_frame_instance_info=saved_data.object_frame_instance_info,
+        )
 
     def _add_initial_dynamic_answers(self, frame: int) -> None:
         if frame in self._frames_to_answers:
@@ -798,7 +867,7 @@ class LabelRow:
     This is essentially one blob of data_units. For an image_group we need to get all the hashed in.
     """
 
-    def __init__(self, label_row_dict: dict, ontology_structure: dict):
+    def __init__(self, label_row_dict: dict, ontology_structure: dict) -> object:
         self._ontology_structure = OntologyStructure.from_dict(ontology_structure)
         self._label_row_read_only_data: LabelRowReadOnlyData = self._parse_label_row_dict(label_row_dict)
         # DENIS: ^ this should probably be protected so no one resets it.
@@ -814,6 +883,10 @@ class LabelRow:
         self._classifications_map: Dict[str, LabelClassification] = dict()
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
         # at least at the final objects_index/classifications_index level.
+        # DENIS: actually if I have a hash function of LabelObject, this doesn't have to be a map, however the ordering
+        # property would be lost.
+        self._parse_objects_map(label_row_dict)
+        self._parse_classifications_map(label_row_dict)
 
     def get_image_hash(self, frame_number: int) -> str:
         # DENIS: to do
@@ -883,14 +956,60 @@ class LabelRow:
 
         return ret
 
-    def _to_encord_label(self, frame_number: int):
+    def _to_encord_label(self, frame_number: int) -> dict:
         ret = {}
 
         # TODO:
-        ret["objects"] = []
+        ret["objects"] = self._to_encord_objects_list(frame_number)
         ret["classifications"] = []
 
         return ret
+
+    def _to_encord_objects_list(self, frame_number: int) -> list:
+        # Get objects for frame
+        ret: List[dict] = []
+
+        objects = self.get_objects_by_frame([frame_number])
+        for object_ in objects:
+            encord_object = self._to_encord_object(object_, frame_number)
+            ret.append(encord_object)
+        return ret
+
+    def _to_encord_object(
+        self,
+        object_: LabelObject,
+        frame: int,
+    ) -> dict:
+        ret = {}
+
+        object_frame_instance_data = object_.get_for_frame(frame)
+        object_frame_instance_info = object_frame_instance_data.object_frame_instance_info
+        coordinates = object_frame_instance_data.coordinates
+        ontology_hash = object_.ontology_item.feature_node_hash
+        ontology_object = get_item_by_hash(ontology_hash, self._ontology_structure)
+
+        ret["name"] = ontology_object.name
+        ret["color"] = ontology_object.color
+        ret["shape"] = ontology_object.shape.value
+        ret["value"] = _lower_snake_case(ontology_object.name)
+        ret["createdAt"] = object_frame_instance_info.created_at.strftime(DATETIME_STRING_FORMAT)
+        ret["createdBy"] = object_frame_instance_info.created_by or "denis@cord.tech"  # DENIS: fix
+        ret["confidence"] = object_frame_instance_info.confidence
+        ret["objectHash"] = object_.object_hash
+        ret["featureHash"] = ontology_object.feature_node_hash
+        ret["manualAnnotation"] = object_frame_instance_info.manual_annotation
+
+        self._add_coordinates_to_encord_object(coordinates, ret)
+
+        return ret
+
+    def _add_coordinates_to_encord_object(self, coordinates: Coordinates, encord_object: dict) -> None:
+        if isinstance(coordinates, BoundingBoxCoordinates):
+            encord_object["boundingBox"] = coordinates.to_dict()
+        elif isinstance(coordinates, PolygonCoordinates):
+            encord_object["polygon"] = coordinates.to_dict()
+        else:
+            NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
     def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
         """
@@ -1061,6 +1180,63 @@ class LabelRow:
             frame_to_image_hash=frame_to_image_hash,
         )
 
+    def _parse_objects_map(self, label_row_dict: dict):
+        # DENIS: catch and throw at the top level if we couldn't parse, meaning that the dict is invalid.
+        # Iterate over the data_units. Find objects. Start adding them into
+
+        # Think about breaking or not breaking the order of the objects
+        print(label_row_dict)
+        for data_unit in label_row_dict["data_units"].values():
+            frame = int(data_unit["data_sequence"])  # DENIS: change for non-image groups.
+            for frame_object_label in data_unit["labels"]["objects"]:
+                object_hash = frame_object_label["objectHash"]
+                if object_hash not in self._objects_map:
+                    object_instance = self._create_new_object_instance(frame_object_label, frame)
+                    self.add_object(object_instance)
+                else:
+                    self._add_coordinates_to_object_instance(frame_object_label, frame, self._objects_map)
+
+    def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> LabelObject:
+        ontology = self._ontology_structure
+        feature_hash = frame_object_label["featureHash"]
+
+        label_class = get_item_by_hash(feature_hash, ontology)
+        object_instance = LabelObject(label_class)
+
+        coordinates = self._get_coordinates(frame_object_label)
+        object_frame_instance_info = ObjectFrameInstanceInfo.from_dict(frame_object_label)
+
+        object_instance.set_coordinates(
+            coordinates=coordinates, frames={frame}, object_frame_instance_info=object_frame_instance_info
+        )
+        return object_instance
+
+    def _add_coordinates_to_object_instance(
+        self,
+        frame_object_label: dict,
+        frame: int,
+    ) -> None:
+        object_hash = frame_object_label["objectHash"]
+        object_instance = self._objects_map[object_hash]
+
+        coordinates = self._get_coordinates(frame_object_label)
+        object_frame_instance_info = ObjectFrameInstanceInfo.from_dict(frame_object_label)
+
+        object_instance.set_coordinates(
+            coordinates=coordinates, frames={frame}, object_frame_instance_info=object_frame_instance_info
+        )
+
+    def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
+        if "boundingBox" in frame_object_label:
+            return BoundingBoxCoordinates.from_dict(frame_object_label)
+        elif "polygon" in frame_object_label:
+            return PolygonCoordinates.from_dict(frame_object_label)
+        else:
+            raise NotImplementedError("Getting other coordinates is not yet implemented.")
+
+    def _parse_classifications_map(self, label_row_dict: dict) -> Dict[str, LabelClassification]:
+        return dict()
+
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, FrameLevelImageGroupData] = dict()
         for _, payload in label_row_data_units.items():
@@ -1182,3 +1358,7 @@ def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
             return found_item
 
     raise RuntimeError("Item not found.")
+
+
+def _lower_snake_case(s: str):
+    return "_".join(s.lower().split())

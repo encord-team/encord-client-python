@@ -191,6 +191,74 @@ def test_add_remove_access_label_objects_in_label_row():
     assert objects[0].object_hash == label_object_2.object_hash
 
 
+def discussion_with_eloy():
+    x = {
+        "label_1": {
+            1: BOX_COORDINATES,
+            2: BOX_COORDINATES,
+            3: BOX_COORDINATES,
+            4: BOX_COORDINATES,
+        },
+        "label_2": {
+            1: BOX_COORDINATES,
+            2: BOX_COORDINATES,
+            3: BOX_COORDINATES,
+            4: BOX_COORDINATES,
+        },
+    }
+    y = {
+        "frame_1": {
+            "label_1": BOX_COORDINATES,
+            "label_2": BOX_COORDINATES,
+        },
+        "frame_2": {
+            "label_1": BOX_COORDINATES,
+            "label_2": BOX_COORDINATES,
+        },
+        "frame_3": {
+            "label_1": BOX_COORDINATES,
+            "label_2": BOX_COORDINATES,
+        },
+    }
+
+    label_row = LabelRow(empty_image_group_labels)
+
+    # DENIS: think about such a read layer, to be able to iterate over each
+    # individual frame and then get all the objects and read them.
+    frame_unit: FrameUnit = label_row.get_frame(1)
+
+    label_object_1 = LabelObject(BOX_COORDINATES)
+    label_object_2 = LabelObject(BOX_COORDINATES)
+
+    # ======
+    objects_for_frame: List[LabelObject] = LabelRow.objects_by_frame(1)
+
+    x = LabelRow.label_row_read_only_data
+
+    # ===
+    frame_unit: FrameUnit = LabelRow.frame_unit(1)
+    objects_for_frame: List[LabelObject] = frame_unit.get_all_objects()
+
+    # ======
+
+    frame_unit.add_object(
+        coordinates=BOX_COORDINATES,
+        object_=label_object_1,
+    )
+    frame_unit.add_object(
+        coordinates=BOX_COORDINATES,
+        object_=label_object_2,
+    )
+
+    # ########## #
+    label_row = LabelRow(empty_image_group_labels)
+    label_object_1 = BOX_COORDINATES.get_object(label_row)
+    label_object_2 = BOX_COORDINATES.get_object(label_row)
+
+    label_object_1.set_coordinates(coordinates=BOX_COORDINATES, frames={1})
+    label_object_2.set_coordinates(coordinates=BOX_COORDINATES, frames={2})
+
+
 def test_filter_for_objects():
     label_row = LabelRow(empty_image_group_labels)
     label_box = LabelObject(box_ontology_item)

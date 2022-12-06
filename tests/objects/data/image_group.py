@@ -56,7 +56,7 @@ image_group_ontology = {
 }
 
 
-image_group = {
+image_group_labels = {
     "label_hash": "f1e6bc82-9f89-4545-8abb-f271bf28cf99",
     "dataset_hash": "d9f19c3c-5cd0-4f8c-b98c-6c0e24676224",
     "dataset_title": "One image group",
