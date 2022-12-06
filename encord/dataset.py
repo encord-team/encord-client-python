@@ -135,9 +135,9 @@ class Dataset:
                 The title of the image group. If unspecified this will be randomly generated for you. This title should
                 NOT include an extension. For example "encord_image_group".
             video_image_groups:
-                Flag specifying image group representation, if True image group will be created with video
-                representation, images will be concatenated. If False, video will not be created, data will be stored
-                as sequences of images.
+                A flag specifying how image groups are stored. If `True`, a compressed video will be created from
+                the image groups. `True` was the previous default support. If `False`, the images
+                are saved as a sequence of images.
 
         Returns:
             Bool.
