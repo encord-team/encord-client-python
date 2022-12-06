@@ -1,4 +1,62 @@
-empty_image_group = {
+empty_image_group_ontology = {
+    "objects": [
+        {"id": "1", "name": "Cars", "color": "#D33115", "shape": "bounding_box", "featureNodeHash": "r4M5dkj7"},
+        {"id": "2", "name": "Horses", "color": "#E27300", "shape": "bounding_box", "featureNodeHash": "IuyN9D7S"},
+        {"id": "3", "name": "Person", "color": "#16406C", "shape": "bounding_box", "featureNodeHash": "vZSR9ig7"},
+        {"id": "4", "name": "Bin", "color": "#FE9200", "shape": "bounding_box", "featureNodeHash": "oYAJdhR1"},
+        {"id": "5", "name": "Car segmentation", "color": "#FCDC00", "shape": "polygon", "featureNodeHash": "bPAym0bw"},
+        {"id": "6", "name": "Bin", "color": "#DBDF00", "shape": "polygon", "featureNodeHash": "cFwx+HfR"},
+        {"id": "7", "name": "Camel", "color": "#A4DD00", "shape": "bounding_box", "featureNodeHash": "oyEb2JCi"},
+    ],
+    "classifications": [
+        {
+            "id": "1",
+            "featureNodeHash": "6nyvIs5W",
+            "attributes": [
+                {
+                    "id": "1.1",
+                    "name": "Is there a car in the frame? SUSPECTED",
+                    "type": "radio",
+                    "required": False,
+                    "dynamic": False,
+                    "featureNodeHash": "oehdT/Pe",
+                    "options": [
+                        {"id": "1.1.1", "label": "True", "value": "true", "featureNodeHash": "F/rpk4Fo"},
+                        {"id": "1.1.2", "label": "False", "value": "false", "featureNodeHash": "/ILQSY6c"},
+                        {"id": "1.1.3", "label": "Maybe", "value": "maybe", "featureNodeHash": "EDWbo8P8"},
+                        {"id": "1.1.4", "label": "Maybe not", "value": "maybe_not", "featureNodeHash": "Uxzj/Efq"},
+                        {
+                            "id": "1.1.5",
+                            "label": "SUSPECTED this is not the case",
+                            "value": "suspected_this_is_not_the_case",
+                            "featureNodeHash": "ZrRZBwx3",
+                        },
+                    ],
+                }
+            ],
+        },
+        {
+            "id": "2",
+            "featureNodeHash": "R0SMUli5",
+            "attributes": [
+                {
+                    "id": "2.1",
+                    "name": "This is a test",
+                    "type": "radio",
+                    "required": False,
+                    "featureNodeHash": "vDUhRPP0",
+                    "options": [
+                        {"id": "2.1.1", "label": "Test", "value": "test", "featureNodeHash": "P7BwGqM3"},
+                        {"id": "2.1.2", "label": "TEst2", "value": "test2", "featureNodeHash": "+LDYFQp1"},
+                    ],
+                }
+            ],
+        },
+    ],
+}
+
+
+empty_image_group_labels = {
     "label_hash": "f1e6bc82-9f89-4545-8abb-f271bf28cf99",
     "dataset_hash": "d9f19c3c-5cd0-4f8c-b98c-6c0e24676224",
     "dataset_title": "One image group",

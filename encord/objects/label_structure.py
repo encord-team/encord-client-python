@@ -207,7 +207,9 @@ class ChecklistAnswer(_Answer):
 
 
 Answer = Union[TextAnswer, RadioAnswer, ChecklistAnswer]
-"""These ones are answers for dynamic and static things."""
+"""These ones are answers for dynamic and static things.
+DENIS: call these `AttribureAnswer` here.
+"""
 
 
 class _DynamicAnswer:
@@ -637,6 +639,7 @@ class LabelObject:
         if self._parent:
             self._parent._remove_from_frame_to_hashes_map(frames, self.object_hash)
 
+        # DENIS: can we remove to make this invalid?
         # DENIS: ensure that dynamic answers are also handled properly.
 
     def _remove_dynamic_answers_from_frame(self, frame: int) -> None:
@@ -795,8 +798,8 @@ class LabelRow:
     This is essentially one blob of data_units. For an image_group we need to get all the hashed in.
     """
 
-    def __init__(self, label_row_dict: dict):
-        self._ontology_structure = OntologyStructure()
+    def __init__(self, label_row_dict: dict, ontology_structure: dict):
+        self._ontology_structure = OntologyStructure.from_dict(ontology_structure)
         self._label_row_read_only_data: LabelRowReadOnlyData = self._parse_label_row_dict(label_row_dict)
         # DENIS: ^ this should probably be protected so no one resets it.
 

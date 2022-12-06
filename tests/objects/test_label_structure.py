@@ -17,7 +17,7 @@ from encord.objects.label_structure import (
     get_item_by_hash,
 )
 from tests.objects.data.all_types_ontology_structure import all_types_structure
-from tests.objects.data.empty_image_group import empty_image_group
+from tests.objects.data.empty_image_group import empty_image_group_labels
 
 box_ontology_item = get_item_by_hash("MjI2NzEy", all_types_structure)
 polygon_ontology_item = get_item_by_hash("ODkxMzAx", all_types_structure)
@@ -131,7 +131,7 @@ def test_create_label_object_one_coordinate():
 
 
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
-    label_row = LabelRow(empty_image_group)
+    label_row = LabelRow(empty_image_group_labels)
 
     assert label_row.get_classifications() == []
     assert label_row.get_objects() == []
@@ -141,7 +141,7 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
 
 
 def test_add_label_object_to_label_row():
-    label_row = LabelRow(empty_image_group)
+    label_row = LabelRow(empty_image_group_labels)
     label_object = LabelObject(box_ontology_item)
 
     coordinates = BoundingBoxCoordinates(
@@ -157,7 +157,7 @@ def test_add_label_object_to_label_row():
 
 
 def test_add_remove_access_label_objects_in_label_row():
-    label_row = LabelRow(empty_image_group)
+    label_row = LabelRow(empty_image_group_labels)
     label_object_1 = LabelObject(box_ontology_item)
     label_object_2 = LabelObject(box_ontology_item)
 
@@ -192,7 +192,7 @@ def test_add_remove_access_label_objects_in_label_row():
 
 
 def test_filter_for_objects():
-    label_row = LabelRow(empty_image_group)
+    label_row = LabelRow(empty_image_group_labels)
     label_box = LabelObject(box_ontology_item)
     label_polygon = LabelObject(polygon_ontology_item)
 
@@ -239,7 +239,7 @@ def test_add_wrong_coordinates():
 
 
 def test_get_label_objects_by_frames():
-    label_row = LabelRow(empty_image_group)
+    label_row = LabelRow(empty_image_group_labels)
     label_box = LabelObject(box_ontology_item)
     label_polygon = LabelObject(polygon_ontology_item)
 
@@ -274,8 +274,8 @@ def test_get_label_objects_by_frames():
 
 
 def test_adding_label_object_to_multiple_frames_fails():
-    label_row_1 = LabelRow(empty_image_group)
-    label_row_2 = LabelRow(empty_image_group)
+    label_row_1 = LabelRow(empty_image_group_labels)
+    label_row_2 = LabelRow(empty_image_group_labels)
     label_box = LabelObject(box_ontology_item)
 
     label_box.set_coordinates(BOX_COORDINATES, {1})
@@ -357,7 +357,7 @@ def test_update_remove_label_object_coordinates():
 
 
 def test_removing_coordinates_from_object_removes_it_from_parent():
-    label_row = LabelRow(empty_image_group)
+    label_row = LabelRow(empty_image_group_labels)
     label_box = LabelObject(box_ontology_item)
     label_box.set_coordinates(BOX_COORDINATES, [1, 2, 3])
 
@@ -419,6 +419,7 @@ def test_setting_static_text_answers():
     text_answer: TextAnswer = label_object_1.get_static_answer(text_attribute_1)
     assert not text_answer.is_answered()
     assert text_answer.get_value() is None
+    # DENIS: `value.get()` `value.set()`
 
     text_answer.set("Zeus")
     assert text_answer.is_answered()
@@ -647,7 +648,7 @@ def test_label_classifications():
 
 
 def test_add_and_get_label_classifications_to_label_row():
-    label_row = LabelRow(empty_image_group)
+    label_row = LabelRow(empty_image_group_labels)
     label_classification_1 = LabelClassification(text_classification)
     label_classification_2 = LabelClassification(text_classification)
     label_classification_3 = LabelClassification(checklist_classification)
