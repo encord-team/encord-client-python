@@ -81,7 +81,7 @@ KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
 
 
 @pytest.mark.skip("The functionality is not fully implemented")
-def test_create_one_bounding_box():
+def test_upload_simple_data():
     project = "code that generates a project ..."
     label_hash = "1234"
 
@@ -111,6 +111,11 @@ def test_create_one_bounding_box():
     label_row.save()  # The data will be uploaded to our BE.
 
 
+# =======================================================
+# =========== demonstrative tests above here ============
+# =======================================================
+
+
 def test_create_label_object_one_coordinate():
     label_object = LabelObject(box_ontology_item)
 
@@ -133,11 +138,6 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
     read_only_data = label_row.label_row_read_only_data
     assert isinstance(read_only_data, LabelRowReadOnlyData)
     # TODO: do more assertions
-
-
-# =======================================================
-# =========== demonstrative tests above here ============
-# =======================================================
 
 
 def test_add_label_object_to_label_row():

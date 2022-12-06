@@ -781,8 +781,9 @@ class LabelRowReadOnlyData:
     dataset_title: str
     data_title: str
     data_type: DataType
+    label_status: str  # actually some sort of enum
     number_of_frames: int
-    frame_level_data: Dict[int, FrameLevelImageGroupData]
+    frame_level_data: Dict[int, FrameLevelImageGroupData]  # DENIS: this could be an array too.
     image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
     frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
 
@@ -796,7 +797,7 @@ class LabelRow:
 
     def __init__(self, label_row_dict: dict):
         self._ontology_structure = OntologyStructure()
-        self.label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
+        self._label_row_read_only_data: LabelRowReadOnlyData = self._parse_label_row_dict(label_row_dict)
         # DENIS: ^ this should probably be protected so no one resets it.
 
         # DENIS: next up need to also parse objects and classifications from current label rows.
@@ -818,6 +819,86 @@ class LabelRow:
     def get_frame_number(self, image_hash: str) -> int:
         # DENIS: to do
         return 5
+
+    @property
+    def label_row_read_only_data(self) -> LabelRowReadOnlyData:
+        return self._label_row_read_only_data
+
+    @label_row_read_only_data.setter
+    def label_row_read_only_data(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot overwrite the read only data.")
+
+    def upload(self):
+        """Do the client request"""
+        # Can probably just use the set label row here.
+        pass
+
+    def to_encord_dict(self) -> dict:
+        """
+        Client should never need to use this, but they can.
+
+        I think on download it is important to cache whatever we have, because of all the additional data.
+        Or the read only data actually already has all of the information anyways, and we parse it back
+        and forth every single time.
+        """
+        ret = {}
+        read_only_data = self.label_row_read_only_data
+
+        ret["label_hash"] = read_only_data.label_hash
+        ret["dataset_hash"] = read_only_data.dataset_hash
+        ret["dataset_title"] = read_only_data.dataset_title
+        ret["data_title"] = read_only_data.data_title
+        ret["data_type"] = read_only_data.data_type.value
+        ret["object_answers"] = dict()  # TODO:
+        ret["classification_answers"] = dict()  # TODO:
+        ret["object_actions"] = dict()  # TODO:
+        ret["label_status"] = read_only_data.label_status
+        ret["data_units"] = self._to_encord_data_units()
+
+        return ret
+
+    def _to_encord_data_units(self) -> dict:
+        # DENIS: assume an image group for now
+        ret = {}
+        frame_level_data = self.label_row_read_only_data.frame_level_data
+        for value in frame_level_data.values():
+            ret[value.image_hash] = self._to_encord_data_unit(value)
+
+        return ret
+
+    def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> dict:
+        ret = {}
+
+        ret["data_hash"] = frame_level_data.image_hash
+        ret["data_title"] = frame_level_data.image_title
+        ret["data_link"] = frame_level_data.data_link
+        ret["data_type"] = frame_level_data.file_type
+        ret["data_sequence"] = str(frame_level_data.frame_number)
+        ret["width"] = frame_level_data.width
+        ret["height"] = frame_level_data.height
+        ret["labels"] = self._to_encord_label(frame_level_data.frame_number)
+
+        return ret
+
+    def _to_encord_label(self, frame_number: int):
+        ret = {}
+
+        # TODO:
+        ret["objects"] = []
+        ret["classifications"] = []
+
+        return ret
+
+    def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
+        """
+        Grab the labels from the server. Return False if the labels have been changed in the meantime.
+
+        Args:
+            force:
+                If `False`, it will not do the refresh if something has changed on the server.
+                If `True`, it will always overwrite the local changes with what has happened on the server.
+        """
+        # Actually can probably use the get_label_row() here.
 
     def get_objects(self, ontology_object: Optional[Object] = None) -> List[LabelObject]:
         """Returns all the objects with this hash."""
@@ -959,16 +1040,18 @@ class LabelRow:
         for frame in frames:
             self._frame_to_hashes[frame].remove(object_hash)
 
-    def _parse_label_row_dict(self, label_row_dict: dict):
+    def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
         image_hash_to_frame = {item.image_hash: item.frame_number for item in frame_level_data.values()}
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
+        # DENIS: for images/image_groups, we need a per image data row. For videos/dicoms this is not needed.
         return LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
             dataset_hash=label_row_dict["dataset_hash"],
             dataset_title=label_row_dict["dataset_title"],
             data_title=label_row_dict["data_title"],
-            data_type=label_row_dict["data_type"],  # DENIS: translate this into the enum
+            data_type=DataType(label_row_dict["data_type"]),
+            label_status=label_row_dict["label_status"],  # This is some kind of enum.
             number_of_frames=float("inf"),  # TODO: make this an int by getting this from the BE.
             frame_level_data=frame_level_data,
             image_hash_to_frame=image_hash_to_frame,
