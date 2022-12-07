@@ -39,6 +39,9 @@ For writes I need the builder pattern same as the OntologyStructure.
 """
 # DENIS: think about better error codes for people to catch.
 
+DEFAULT_CONFIDENCE = 1
+DEFAULT_MANUAL_ANNOTATION = True
+
 
 class _Answer:
     """Common fields amongst all answers"""
@@ -745,6 +748,26 @@ class LabelObject:
         return True
 
 
+@dataclass(frozen=True)
+class ClassificationInstanceData:
+    created_at: datetime = datetime.now()
+    created_by: str = None
+    confidence: int = DEFAULT_CONFIDENCE
+    manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
+    # DENIS: last_edited_at, last_edited_by
+    reviews: List[dict] = field(default_factory=list)  # DENIS this is some sort of "read only data"
+
+    @staticmethod
+    def from_dict(d: dict) -> ClassificationInstanceData:
+        return ClassificationInstanceData(
+            created_at=parse(d["createdAt"]),
+            created_by=d["createdBy"],
+            confidence=d["confidence"],
+            manual_annotation=d["manualAnnotation"],
+            reviews=d["reviews"],
+        )
+
+
 class LabelClassification:
     def __init__(self, ontology_classification: Classification):
         # DENIS: should I also be able to accept the first level attribute? Ideally not, as
@@ -752,6 +775,8 @@ class LabelClassification:
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRow] = None
         self._classification_hash = short_uuid_str()
+        self._classification_instance_data = ClassificationInstanceData()
+        # DENIS: These are actually somehow per frame! What would that even mean? check this!
 
         self._static_answer: Answer = self._get_static_answer()
         self._frames: Set[int] = set()
@@ -765,6 +790,14 @@ class LabelClassification:
     @classification_hash.setter
     def classification_hash(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot set the object hash on an instantiated label object.")
+
+    def set_classification_instance_data(self, classification_instance_data) -> None:
+        self._classification_instance_data = classification_instance_data
+
+    def get_classification_instance_data(self) -> ClassificationInstanceData:
+        # DENIS: the naming is definitely confusing.
+        # DENIS: this also needs to have a proper setter
+        return self._classification_instance_data
 
     @property
     def ontology_item(self) -> Classification:
@@ -956,22 +989,22 @@ class LabelRow:
 
         return ret
 
-    def _to_encord_label(self, frame_number: int) -> dict:
+    def _to_encord_label(self, frame: int) -> dict:
         ret = {}
 
         # TODO:
-        ret["objects"] = self._to_encord_objects_list(frame_number)
-        ret["classifications"] = []
+        ret["objects"] = self._to_encord_objects_list(frame)
+        ret["classifications"] = self._to_encord_classifications_list(frame)
 
         return ret
 
-    def _to_encord_objects_list(self, frame_number: int) -> list:
+    def _to_encord_objects_list(self, frame: int) -> list:
         # Get objects for frame
         ret: List[dict] = []
 
-        objects = self.get_objects_by_frame([frame_number])
+        objects = self.get_objects_by_frame([frame])
         for object_ in objects:
-            encord_object = self._to_encord_object(object_, frame_number)
+            encord_object = self._to_encord_object(object_, frame)
             ret.append(encord_object)
         return ret
 
@@ -1010,6 +1043,36 @@ class LabelRow:
             encord_object["polygon"] = coordinates.to_dict()
         else:
             NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
+
+    def _to_encord_classifications_list(self, frame: int) -> list:
+        ret: List[dict] = []
+
+        classifications = self.get_classifications_by_frame([frame])
+        for classification in classifications:
+            encord_classification = self._to_encord_classification(classification, frame)
+            ret.append(encord_classification)
+
+        return ret
+
+    def _to_encord_classification(self, classification: LabelClassification, frame: int) -> dict:
+        ret = {}
+
+        classification_instance_data = classification.get_classification_instance_data()
+        classification_feature_hash = classification.ontology_item.feature_node_hash
+        ontology_classification = get_item_by_hash(classification_feature_hash, self._ontology_structure)
+        attribute_hash = classification.ontology_item.attributes[0].feature_node_hash
+        ontology_attribute = get_item_by_hash(attribute_hash, self._ontology_structure)
+
+        ret["name"] = ontology_attribute.name
+        ret["value"] = _lower_snake_case(ontology_attribute.name)
+        ret["createdAt"] = classification_instance_data.created_at
+        ret["createdBy"] = classification_instance_data.created_by
+        ret["confidence"] = classification_instance_data.confidence
+        ret["featureHash"] = ontology_classification.feature_node_hash
+        ret["classificationHash"] = classification.classification_hash
+        ret["manualAnnotation"] = classification_instance_data.manual_annotation
+
+        return ret
 
     def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
         """
@@ -1152,6 +1215,15 @@ class LabelRow:
 
         return ret
 
+    def get_classifications_by_frame(self, frames: Iterable[int]) -> Set[LabelClassification]:
+        ret: Set[LabelClassification] = set()
+        for frame in frames:
+            hashes = self._frame_to_hashes[frame]
+            for hash_ in hashes:
+                if hash_ in self._classifications_map:
+                    ret.add(self._classifications_map[hash_])
+        return ret
+
     def remove_object(self, label_object: LabelObject):
         """Remove the object."""
         self._objects_map.pop(label_object.object_hash)
@@ -1185,7 +1257,6 @@ class LabelRow:
         # Iterate over the data_units. Find objects. Start adding them into
 
         # Think about breaking or not breaking the order of the objects
-        print(label_row_dict)
         for data_unit in label_row_dict["data_units"].values():
             frame = int(data_unit["data_sequence"])  # DENIS: change for non-image groups.
             for frame_object_label in data_unit["labels"]["objects"]:
@@ -1194,7 +1265,7 @@ class LabelRow:
                     object_instance = self._create_new_object_instance(frame_object_label, frame)
                     self.add_object(object_instance)
                 else:
-                    self._add_coordinates_to_object_instance(frame_object_label, frame, self._objects_map)
+                    self._add_coordinates_to_object_instance(frame_object_label, frame)
 
     def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> LabelObject:
         ontology = self._ontology_structure
@@ -1234,8 +1305,18 @@ class LabelRow:
         else:
             raise NotImplementedError("Getting other coordinates is not yet implemented.")
 
-    def _parse_classifications_map(self, label_row_dict: dict) -> Dict[str, LabelClassification]:
-        return dict()
+    def _parse_classifications_map(self, label_row_dict: dict) -> None:
+        for data_unit in label_row_dict["data_units"].values():
+            frame = int(data_unit["data_sequence"])
+            for frame_classification_label in data_unit["labels"]["classifications"]:
+                classification_hash = frame_classification_label["classificationHash"]
+                if classification_hash not in self._classifications_map:
+                    classification_instance = self._create_new_classification_instance(
+                        frame_classification_label, frame
+                    )
+                    self.add_classification(classification_instance)
+                else:
+                    self._add_frames_to_classification_instance(frame_classification_label, frame)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, FrameLevelImageGroupData] = dict()
@@ -1252,6 +1333,25 @@ class LabelRow:
             )
             frame_level_data[frame_number] = frame_level_image_group_data
         return frame_level_data
+
+    def _create_new_classification_instance(self, frame_classification_label: dict, frame: int) -> LabelClassification:
+        ontology = self._ontology_structure
+        feature_hash = frame_classification_label["featureHash"]
+
+        label_class = get_item_by_hash(feature_hash, ontology)
+        classification_instance = LabelClassification(label_class)
+
+        classification_instance.set_frames([frame])
+        classification_frame_instance_info = ClassificationInstanceData.from_dict(frame_classification_label)
+        classification_instance.set_classification_instance_data(classification_frame_instance_info)
+
+        return classification_instance
+
+    def _add_frames_to_classification_instance(self, frame_classification_label: dict, frame: int) -> None:
+        object_hash = frame_classification_label["classificationHash"]
+        classification_instance = self._classifications_map[object_hash]
+
+        classification_instance.add_to_frames([frame])
 
 
 # @dataclass
