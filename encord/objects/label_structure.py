@@ -7,6 +7,7 @@ from datetime import datetime
 from enum import Flag, auto
 from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Type, Union
 
+import pytz
 from dateutil.parser import parse
 
 from encord.constants.enums import DataType
@@ -41,6 +42,9 @@ For writes I need the builder pattern same as the OntologyStructure.
 
 DEFAULT_CONFIDENCE = 1
 DEFAULT_MANUAL_ANNOTATION = True
+
+
+DATETIME_LONG_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
 
 
 class _Answer:
@@ -406,7 +410,7 @@ class PolygonCoordinates:
         polygon_dict = d["polygon"]
         values: List[PointCoordinate] = []
 
-        sorted_dict_value_tuples = sorted((key, value) for key, value in polygon_dict.items())
+        sorted_dict_value_tuples = sorted((int(key), value) for key, value in polygon_dict.items())
         sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
 
         for value in sorted_dict_values:
@@ -496,6 +500,7 @@ class ObjectFrameReadOnlyInstanceInfo:
 
 @dataclass(frozen=True)
 class ObjectFrameInstanceInfo:
+    # DENIS: do we need the isDeleted field?
     created_at: datetime = datetime.now()
     created_by: Optional[str] = None
     """None defaults to the user of the SDK. DENIS: need to add this information somewhere."""
@@ -540,15 +545,12 @@ class LabelObject:
     """
 
     # DENIS: this needs to take an OntologyLabelObject to navigate around.
-    def __init__(
-        self,
-        ontology_object: Object,
-    ):
+    def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
         self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
         # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
         # this thing take over the label structure itself (for large ones it would be interesting)
-        self._object_hash = short_uuid_str()
+        self._object_hash = object_hash or short_uuid_str()
         self._parent: Optional[LabelRow] = None
         """This member should only be manipulated by a LabelRow"""
 
@@ -769,12 +771,12 @@ class ClassificationInstanceData:
 
 
 class LabelClassification:
-    def __init__(self, ontology_classification: Classification):
+    def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
         # DENIS: should I also be able to accept the first level attribute? Ideally not, as
         # I'd need to awkwardly verify whether this is the first level attribute or not.
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRow] = None
-        self._classification_hash = short_uuid_str()
+        self._classification_hash = classification_hash or short_uuid_str()
         self._classification_instance_data = ClassificationInstanceData()
         # DENIS: These are actually somehow per frame! What would that even mean? check this!
 
@@ -824,6 +826,7 @@ class LabelClassification:
         for frame in frames:
             self._check_within_range(frame)
             self._frames.add(frame)
+            self._parent._add_to_frame_to_hashes_map(self)
 
     def remove_from_frames(self, frames: Iterable[int]) -> None:
         for frame in frames:
@@ -831,6 +834,7 @@ class LabelClassification:
 
         if self._parent is not None:
             self._parent._remove_frames_from_classification(self.ontology_item, frames)
+            self._parent._remove_from_frame_to_hashes_map(frames, self.classification_hash)
 
     def frames(self) -> List[int]:
         return list(self._frames)
@@ -1025,12 +1029,17 @@ class LabelRow:
         ret["color"] = ontology_object.color
         ret["shape"] = ontology_object.shape.value
         ret["value"] = _lower_snake_case(ontology_object.name)
-        ret["createdAt"] = object_frame_instance_info.created_at.strftime(DATETIME_STRING_FORMAT)
+        ret["createdAt"] = object_frame_instance_info.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
         ret["createdBy"] = object_frame_instance_info.created_by or "denis@cord.tech"  # DENIS: fix
         ret["confidence"] = object_frame_instance_info.confidence
         ret["objectHash"] = object_.object_hash
         ret["featureHash"] = ontology_object.feature_node_hash
         ret["manualAnnotation"] = object_frame_instance_info.manual_annotation
+
+        if object_frame_instance_info.last_edited_at is not None:
+            ret["lastEditedAt"] = object_frame_instance_info.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        if object_frame_instance_info.last_edited_by is not None:
+            ret["lastEditedBy"] = object_frame_instance_info.last_edited_by
 
         self._add_coordinates_to_encord_object(coordinates, ret)
 
@@ -1065,12 +1074,17 @@ class LabelRow:
 
         ret["name"] = ontology_attribute.name
         ret["value"] = _lower_snake_case(ontology_attribute.name)
-        ret["createdAt"] = classification_instance_data.created_at
+        ret["createdAt"] = classification_instance_data.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
         ret["createdBy"] = classification_instance_data.created_by
         ret["confidence"] = classification_instance_data.confidence
         ret["featureHash"] = ontology_classification.feature_node_hash
         ret["classificationHash"] = classification.classification_hash
         ret["manualAnnotation"] = classification_instance_data.manual_annotation
+
+        # if classification_instance_data.last_edited_at is not None:
+        #     ret["lastEditedAt"] = classification_instance_data.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        # if classification_instance_data.last_edited_by is not None:
+        #     ret["lastEditedBy"] = classification_instance_data.last_edited_by
 
         return ret
 
@@ -1230,9 +1244,9 @@ class LabelRow:
         self._remove_from_frame_to_hashes_map(label_object.frames(), label_object.object_hash)
         label_object._parent = None
 
-    def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], object_hash: str):
+    def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
-            self._frame_to_hashes[frame].remove(object_hash)
+            self._frame_to_hashes[frame].remove(item_hash)
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
@@ -1257,6 +1271,9 @@ class LabelRow:
         # Iterate over the data_units. Find objects. Start adding them into
 
         # Think about breaking or not breaking the order of the objects
+        # DENIS: the only way to really know the order is through the objects_index. In this case, we'd need
+        # additional information from the BE.
+
         for data_unit in label_row_dict["data_units"].values():
             frame = int(data_unit["data_sequence"])  # DENIS: change for non-image groups.
             for frame_object_label in data_unit["labels"]["objects"]:
@@ -1267,12 +1284,31 @@ class LabelRow:
                 else:
                     self._add_coordinates_to_object_instance(frame_object_label, frame)
 
+        self._add_objects_answers(label_row_dict)
+        self._add_action_answers(label_row_dict)
+
+    def _add_objects_answers(self, label_row_dict: dict):
+        # DENIS: deal with dynamic answers at some point.
+        for answer in label_row_dict["object_answers"].values():
+            object_hash = answer["objectHash"]
+            object_instance = self._objects_map[object_hash]
+
+            for classification in answer["classifications"]:
+                pass
+                # DENIS: TODO: parse the classification answers into the object_instance
+                # do the same for classification instances.
+
+    def _add_action_answers(self, label_row_dict: dict):
+        # DENIS: TODO
+        pass
+
     def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> LabelObject:
         ontology = self._ontology_structure
         feature_hash = frame_object_label["featureHash"]
+        object_hash = frame_object_label["objectHash"]
 
         label_class = get_item_by_hash(feature_hash, ontology)
-        object_instance = LabelObject(label_class)
+        object_instance = LabelObject(label_class, object_hash=object_hash)
 
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectFrameInstanceInfo.from_dict(frame_object_label)
@@ -1337,9 +1373,10 @@ class LabelRow:
     def _create_new_classification_instance(self, frame_classification_label: dict, frame: int) -> LabelClassification:
         ontology = self._ontology_structure
         feature_hash = frame_classification_label["featureHash"]
+        classification_hash = frame_classification_label["classificationHash"]
 
         label_class = get_item_by_hash(feature_hash, ontology)
-        classification_instance = LabelClassification(label_class)
+        classification_instance = LabelClassification(label_class, classification_hash=classification_hash)
 
         classification_instance.set_frames([frame])
         classification_frame_instance_info = ClassificationInstanceData.from_dict(frame_classification_label)
