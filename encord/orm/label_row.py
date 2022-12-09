@@ -262,11 +262,11 @@ class LabelRowMetadata(Formatter):
         """
         return dict(
             label_hash=self.label_hash,
-            label_status=self.label_status.value,
             data_hash=self.data_hash,
             dataset_hash=self.dataset_hash,
             data_title=self.data_title,
             data_type=self.data_type,
-            is_shadow_data=self.is_shadow_data,
+            label_status=self.label_status.value,
             annotation_task_status=self.annotation_task_status.value,
+            is_shadow_data=self.is_shadow_data,
         )
