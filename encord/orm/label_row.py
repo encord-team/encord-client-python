@@ -254,3 +254,19 @@ class LabelRowMetadata(Formatter):
         for i in json_list:
             ret.append(cls.from_dict(i))
         return ret
+
+    def to_dict(self) -> dict:
+        """
+        Returns:
+            The dict equivalent of LabelRowMetadata.
+        """
+        return dict(
+            label_hash=self.label_hash,
+            data_hash=self.data_hash,
+            dataset_hash=self.dataset_hash,
+            data_title=self.data_title,
+            data_type=self.data_type,
+            label_status=self.label_status.value,
+            annotation_task_status=self.annotation_task_status.value,
+            is_shadow_data=self.is_shadow_data,
+        )
