@@ -29,7 +29,7 @@ concurrency:
 jobs:
   unit-tests-python-3-7:
     name: Run unit tests for Python 3.7
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -42,7 +42,7 @@ jobs:
 
   unit-tests-python-3-8:
     name: Run unit tests for Python 3.8
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -55,7 +55,7 @@ jobs:
 
   unit-tests-python-3-9:
     name: Run unit tests for Python 3.9
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -68,7 +68,7 @@ jobs:
 
   unit-tests-python-3-10:
     name: Run unit tests for Python 3.10
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -82,7 +82,7 @@ jobs:
 
   integration-tests-python-3-7:
     name: Run integration tests for Python 3.7
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
         uses: actions/checkout@v2
@@ -99,7 +99,7 @@ jobs:
 
   integration-tests-python-3-8:
     name: Run integration tests for Python 3.8
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
         uses: actions/checkout@v2
@@ -116,7 +116,7 @@ jobs:
 
   integration-tests-python-3-9:
     name: Run integration tests for Python 3.9
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
         uses: actions/checkout@v2
@@ -133,7 +133,7 @@ jobs:
 
   integration-tests-python-3-10:
     name: Run integration tests for Python 3.10
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
         uses: actions/checkout@v2
@@ -152,7 +152,7 @@ jobs:
 
   publish-test-reports:
       name: Publish test reports
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-20.04
       needs: [
         unit-tests-python-3-7,
         unit-tests-python-3-8, 
@@ -264,7 +264,7 @@ jobs:
 
   send-slack-notification:
     name: Send notification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: [ publish-test-reports ]
     if: always()
     env:
