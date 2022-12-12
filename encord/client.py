@@ -340,7 +340,7 @@ class EncordClientDataset(EncordClient):
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
         *,
-        video_image_groups: bool = True,
+        create_video: bool = True,
     ):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
@@ -362,7 +362,7 @@ class EncordClientDataset(EncordClient):
             uid=image_hash_list,
             payload={
                 "image_group_title": title,
-                "video_image_groups": video_image_groups,
+                "create_video": create_video,
             },
         )
 
