@@ -16,13 +16,13 @@ concurrency:
 jobs:
   publish-sdk:
     name: Publish SDK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON }}
 
@@ -46,7 +46,7 @@ jobs:
 
   send-slack-notification:
     name: Send notification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: [ publish-sdk ]
     if: always()
     env:
