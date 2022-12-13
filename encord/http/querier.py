@@ -134,7 +134,9 @@ class Querier:
         timeouts = (request.connect_timeout, request.timeout)
 
         req_settings = self._config.requests_settings
-        with create_new_session(max_retries=req_settings.max_retries) as session:
+        with create_new_session(
+            max_retries=req_settings.max_retries, backoff_factor=req_settings.backoff_factor
+        ) as session:
             res = session.send(req, timeout=timeouts)
 
             try:
@@ -151,8 +153,8 @@ class Querier:
 
 
 @contextmanager
-def create_new_session(max_retries: Optional[int] = None) -> Session:
-    retry_policy = Retry(total=None, connect=max_retries, read=max_retries)
+def create_new_session(max_retries: Optional[int] = None, backoff_factor: float = 0) -> Session:
+    retry_policy = Retry(total=None, connect=max_retries, read=max_retries, backoff_factor=backoff_factor)
 
     with Session() as session:
         http_adapter = HTTPAdapter(max_retries=retry_policy)

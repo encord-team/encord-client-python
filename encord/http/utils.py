@@ -98,12 +98,13 @@ def upload_to_signed_url_list(
                 else:
                     max_retries = config.requests_settings.max_retries
 
+                if cloud_upload_settings.backoff_factor is not None:
+                    backoff_factor = cloud_upload_settings.backoff_factor
+                else:
+                    backoff_factor = config.requests_settings.backoff_factor
+
                 _upload_single_file(
-                    file_path,
-                    signed_url,
-                    pbar,
-                    content_type,
-                    max_retries,
+                    file_path, signed_url, pbar, content_type, max_retries=max_retries, backoff_factor=backoff_factor
                 )
                 successful_uploads.append(signed_url)
             except CloudUploadError as e:
@@ -149,8 +150,10 @@ def _get_signed_url(
         return querier.basic_getter(SignedDicomsURL, uid=[file_name])[0]
 
 
-def _upload_single_file(file_path: str, signed_url: dict, pbar, content_type: str, max_retries: int) -> None:
-    with create_new_session(max_retries=max_retries) as session:
+def _upload_single_file(
+    file_path: str, signed_url: dict, pbar, content_type: str, *, max_retries: int, backoff_factor: float
+) -> None:
+    with create_new_session(max_retries=max_retries, backoff_factor=backoff_factor) as session:
         url = signed_url.get("signed_url")
         data_chunks = read_in_chunks(file_path, pbar)
 
