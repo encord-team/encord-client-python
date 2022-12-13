@@ -40,7 +40,6 @@ class Querier:
 
     def __init__(self, config: BaseConfig):
         self._config = config
-        self._session: Session = create_new_session()
 
     def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
         """Single DB object getter."""
@@ -157,6 +156,7 @@ def create_new_session(max_retries: Optional[int] = None) -> Session:
 
     with Session() as session:
         http_adapter = HTTPAdapter(max_retries=retry_policy)
+
         session.mount("http://", http_adapter)
         session.mount("https://", http_adapter)
 
