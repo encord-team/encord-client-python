@@ -14,18 +14,18 @@
 # under the License.
 import dataclasses
 import logging
-from typing import List, Type, TypeVar
+from contextlib import contextmanager
+from typing import List, Type, TypeVar, Any, Optional
 
 import requests
 import requests.exceptions
 from requests import Session
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util import Retry
+from urllib3 import Retry
 
 from encord.configs import BaseConfig
 from encord.exceptions import *
 from encord.http.error_utils import check_error_response
-from encord.http.helpers import retry_on_network_errors
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
 from encord.orm.formatter import Formatter
@@ -120,7 +120,7 @@ class Querier:
         request.headers = self._config.define_headers(request.data)
         return request
 
-    def execute(self, request, enable_logging=True):
+    def execute(self, request, enable_logging=True) -> Any:
         """Execute a request."""
         if enable_logging:
             logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)
@@ -134,21 +134,14 @@ class Querier:
 
         timeouts = (request.connect_timeout, request.timeout)
 
-        @retry_on_network_errors
-        def _do_request(req, timeouts: tuple):
-            return self._session.send(req, timeout=timeouts)
+        req_settings = self._config.requests_settings
+        with create_new_session(max_retries=req_settings.max_retries) as session:
+            res = session.send(req, timeout=timeouts)
 
-        res = _do_request(
-            req,
-            timeouts,
-            max_retries=self._config.requests_settings.max_retries,
-            backoff_factor=self._config.requests_settings.backoff_factor,
-        )
-
-        try:
-            res_json = res.json()
-        except Exception as e:
-            raise EncordException("Error parsing JSON response: %s" % res.text) from e
+            try:
+                res_json = res.json()
+            except Exception as e:
+                raise EncordException("Error parsing JSON response: %s" % res.text) from e
 
         if res_json.get("status") != requests.codes.ok:
             response = res_json.get("response")
@@ -157,10 +150,13 @@ class Querier:
 
         return res_json.get("response")
 
-    @staticmethod
-    def create_new_session() -> Session:
-        session = Session()
 
-        session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))
+@contextmanager
+def create_new_session(max_retries: Optional[int]) -> Session:
+    retry_policy = Retry(total=None, connect=max_retries, read=max_retries)
 
-        return session
+    with Session() as session:
+        session.mount("http://", HTTPAdapter(max_retries=retry_policy))
+        session.mount("https://", HTTPAdapter(max_retries=retry_policy))
+
+        yield session

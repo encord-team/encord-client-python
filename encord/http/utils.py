@@ -4,13 +4,11 @@ import os.path
 from dataclasses import dataclass
 from typing import List, Optional, Type, TypeVar, Union
 
-import requests
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError
-from encord.http.helpers import retry_on_network_errors
-from encord.http.querier import Querier
+from encord.http.querier import Querier, create_new_session
 from encord.orm.dataset import (
     DicomSeries,
     Images,
@@ -100,18 +98,12 @@ def upload_to_signed_url_list(
                 else:
                     max_retries = config.requests_settings.max_retries
 
-                if cloud_upload_settings.backoff_factor is not None:
-                    backoff_factor = cloud_upload_settings.backoff_factor
-                else:
-                    backoff_factor = config.requests_settings.backoff_factor
-
                 _upload_single_file(
                     file_path,
                     signed_url,
                     pbar,
                     content_type,
                     max_retries,
-                    backoff_factor,
                 )
                 successful_uploads.append(signed_url)
             except CloudUploadError as e:
@@ -157,41 +149,26 @@ def _get_signed_url(
         return querier.basic_getter(SignedDicomsURL, uid=[file_name])[0]
 
 
-def _upload_single_file(
-    file_path: str,
-    signed_url: dict,
-    pbar,
-    content_type: str,
-    max_retries: int,
-    backoff_factor: float,
-) -> None:
-    res_upload = _data_upload(
-        file_path, signed_url, pbar, content_type, max_retries=max_retries, backoff_factor=backoff_factor
-    )
+def _upload_single_file(file_path: str, signed_url: dict, pbar, content_type: str, max_retries: int) -> None:
+    with create_new_session(max_retries=max_retries) as session:
+        url = signed_url.get("signed_url")
+        data_chunks = read_in_chunks(file_path, pbar)
 
-    if res_upload.status_code != 200:
-        status_code = res_upload.status_code
-        headers = res_upload.headers
-        res_text = res_upload.text
-        error_string = str(
-            f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
-            f"'{signed_url.get('signed_url')}'.\n"
-            f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
+        res_upload = session.put(
+            url=url,
+            data=data_chunks,
+            headers={"Content-Type": content_type},
         )
 
-        logger.error(error_string)
-        raise RuntimeError(error_string)
+        if res_upload.status_code != 200:
+            status_code = res_upload.status_code
+            headers = res_upload.headers
+            res_text = res_upload.text
+            error_string = str(
+                f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
+                f"'{signed_url.get('signed_url')}'.\n"
+                f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
+            )
 
-
-@retry_on_network_errors
-def _data_upload(
-    file_path: str,
-    signed_url: dict,
-    pbar,
-    content_type: str,
-):
-    return requests.put(
-        signed_url.get("signed_url"),
-        data=read_in_chunks(file_path, pbar),
-        headers={"Content-Type": content_type},
-    )
+            logger.error(error_string)
+            raise RuntimeError(error_string)
