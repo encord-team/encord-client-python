@@ -15,7 +15,7 @@
 import dataclasses
 import logging
 from contextlib import contextmanager
-from typing import List, Type, TypeVar, Any, Optional
+from typing import Any, List, Optional, Type, TypeVar
 
 import requests
 import requests.exceptions
