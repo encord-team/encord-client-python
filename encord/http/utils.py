@@ -36,7 +36,7 @@ class CloudUploadSettings:
     max_retries: Optional[int] = None
     """Number of allowed retries when uploading"""
     backoff_factor: Optional[float] = None
-    """With each retry, there will be a sleep of backoff_factor * (2 ** retry_number)"""
+    """With each retry, there will be a sleep of backoff_factor * (2 ** (retry_number - 1) )"""
     allow_failures: bool = False
     """
     If failures are allowed, the upload will continue even if some items were not successfully uploaded even

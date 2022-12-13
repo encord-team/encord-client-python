@@ -154,7 +154,7 @@ class Querier:
 
 @contextmanager
 def create_new_session(max_retries: Optional[int] = None, backoff_factor: float = 0) -> Session:
-    retry_policy = Retry(total=None, connect=max_retries, read=max_retries, backoff_factor=backoff_factor)
+    retry_policy = Retry(total=max_retries, connect=max_retries, read=max_retries, backoff_factor=backoff_factor)
 
     with Session() as session:
         session.mount("http://", HTTPAdapter(max_retries=retry_policy))
