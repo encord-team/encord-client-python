@@ -156,7 +156,8 @@ def create_new_session(max_retries: Optional[int] = None) -> Session:
     retry_policy = Retry(total=None, connect=max_retries, read=max_retries)
 
     with Session() as session:
-        session.mount("http://", HTTPAdapter(max_retries=retry_policy))
-        session.mount("https://", HTTPAdapter(max_retries=retry_policy))
+        http_adapter = HTTPAdapter(max_retries=retry_policy)
+        session.mount("http://", http_adapter)
+        session.mount("https://", http_adapter)
 
         yield session
