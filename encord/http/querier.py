@@ -40,7 +40,7 @@ class Querier:
 
     def __init__(self, config: BaseConfig):
         self._config = config
-        self._session: Session = self.create_new_session()
+        self._session: Session = create_new_session()
 
     def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
         """Single DB object getter."""
@@ -152,7 +152,7 @@ class Querier:
 
 
 @contextmanager
-def create_new_session(max_retries: Optional[int]) -> Session:
+def create_new_session(max_retries: Optional[int] = None) -> Session:
     retry_policy = Retry(total=None, connect=max_retries, read=max_retries)
 
     with Session() as session:
