@@ -8,6 +8,8 @@ from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetAccessSettings,
+    DatasetUser,
+    DatasetUserRole,
     Image,
     ImageGroupOCR,
     StorageLocation,
@@ -82,6 +84,17 @@ class Dataset:
         self._client.set_access_settings(dataset_access_settings)
         if refetch_data:
             self.refetch_data()
+
+    def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
+        """
+        Add users to dataset. If the user was already added, this operation will succeed but the `user_role` will be
+        unchanged. The existing `user_role` will be reflected in the `DatasetUser` instance.
+
+        Args:
+            user_emails: list of user emails to be added
+            user_role: the user role to assign to all users
+        """
+        return self._client.add_users(user_emails, user_role)
 
     def upload_video(
         self,

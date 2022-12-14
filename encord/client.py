@@ -63,6 +63,9 @@ from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetAccessSettings,
     DatasetData,
+    DatasetUser,
+    DatasetUserRole,
+    DatasetUsers,
     DicomSeries,
     Image,
     ImageGroup,
@@ -310,6 +313,17 @@ class EncordClientDataset(EncordClient):
 
     def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
         self._dataset_access_settings = dataset_access_settings
+
+    def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
+        """
+        This function is documented in :meth:`encord.project.Dataset.add_users`.
+        """
+
+        payload = {"user_emails": user_emails, "user_role": user_role}
+
+        users = self._querier.basic_setter(DatasetUsers, self._config.resource_id, payload=payload)
+
+        return list(map(lambda user: DatasetUser.from_dict(user), users))
 
     def upload_video(
         self,

@@ -35,6 +35,25 @@ class DatasetUserRole(IntEnum):
     USER = 1
 
 
+@dataclasses.dataclass(frozen=True)
+class DatasetUser(Formatter):
+    user_email: str
+    user_role: DatasetUserRole
+    dataset_hash: str
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        return DatasetUser(
+            user_email=json_dict["user_email"],
+            user_role=DatasetUserRole(json_dict["user_role"]),
+            dataset_hash=json_dict["dataset_hash"],
+        )
+
+
+class DatasetUsers:
+    pass
+
+
 @dataclasses.dataclass
 class DataClientMetadata:
     payload: dict
