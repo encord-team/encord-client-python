@@ -1,8 +1,8 @@
 .. include:: ./substitutes.rst
 
-**********
-|sdk| frequently asked questions (FAQ)
-**********
+**************************************
+Frequently asked questions (FAQ)
+**************************************
 
 Calls to ``get_label_rows()`` time out
 =======================================================
