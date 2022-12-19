@@ -45,6 +45,7 @@ Here are some resources to get you started with the |sdk|:
    general_concepts
    installation
    authentication
+   faq
 
 
 Tutorials
