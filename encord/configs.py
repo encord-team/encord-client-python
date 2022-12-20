@@ -103,6 +103,7 @@ class UserConfig(BaseConfig):
 
         return {
             "Accept": "application/json",
+            "Accept-Encoding": "gzip",
             "Content-Type": "application/json",
             "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
         }
@@ -251,6 +252,7 @@ class ApiKeyConfig(Config):
         self.api_key = api_key
         self._headers = {
             "Accept": "application/json",
+            "Accept-Encoding": "gzip",
             "Content-Type": "application/json",
             "ResourceID": resource_id,
             "Authorization": self.api_key,
@@ -295,6 +297,7 @@ class SshConfig(Config):
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "Accept-Encoding": "gzip",
             "ResourceID": self.resource_id,
             "ResourceType": self._resource_type,
             "Authorization": _get_ssh_authorization_header(self._user_config.public_key_hex, signature),
