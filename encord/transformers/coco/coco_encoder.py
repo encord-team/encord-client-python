@@ -396,7 +396,7 @@ class CocoEncoder:
 
                 else:
                     image_id = self.get_image_id(data_hash)
-                    objects = data_unit["labels"]["objects"]
+                    objects = data_unit["labels"].get("objects") or []
                     annotations.extend(self.get_annotation(objects, image_id, object_answers, object_actions))
 
         return annotations
