@@ -788,6 +788,17 @@ class Project:
     def get_label_logs(
         self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
     ) -> List[LabelLog]:
+        """
+        Get label logs, which represent the actions taken in the UI to create labels.
+
+        All arguments can be left as `None` if no filtering should be applied.
+
+        Args:
+            user_hash: Filter the label logs by the user.
+            data_hash: Filter the label logs by the data_hash.
+            from_unix_seconds: Filter the label logs to only include labels after this timestamp.
+            from_unix_seconds: Filter the label logs to only include labels before this timestamp.
+        """
         return self._client.get_label_logs(user_hash, data_hash, from_unix_seconds, to_unix_seconds)
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:

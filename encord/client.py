@@ -990,6 +990,9 @@ class EncordClientProject(EncordClient):
     def get_label_logs(
         self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
     ) -> List[LabelLog]:
+        """
+        This function is documented in :meth:`encord.project.Project.get_label_logs`.
+        """
 
         # Flag for backwards compatibility
         include_user_email_and_interface_key = True
