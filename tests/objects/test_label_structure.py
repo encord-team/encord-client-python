@@ -3,7 +3,7 @@ from typing import List, Union
 
 import pytest
 
-from encord.objects.common import Option
+from encord.objects.common import Attribute, Option, TextAttribute
 from encord.objects.label_structure import (
     BoundingBoxCoordinates,
     ChecklistAnswer,
@@ -50,6 +50,10 @@ dynamic_radio_option_1 = get_item_by_hash("MT9xNDQ5", all_types_structure)  # Th
 dynamic_radio_option_2 = get_item_by_hash("9TcxMjAy", all_types_structure)  # This is dynamic and deeply nested.
 
 text_classification = get_item_by_hash("jPOcEsbw", all_types_structure)
+text_classification_attribute: TextAttribute = get_item_by_hash("OxrtEM+v", all_types_structure)
+# DENIS: probably on the ontology, I should have a get_text_attribute etc. to have the exact type.
+# or I do something like get_item_by_hash("OTkxMjU1", all_types_structure, expected_type: TextAttribute) with
+# overloads that return the correct type.
 radio_classification = get_item_by_hash("NzIxNTU1", all_types_structure)
 radio_classification_option_1 = get_item_by_hash("MTcwMjM5", all_types_structure)
 radio_classification_option_2 = get_item_by_hash("MjUzMTg1", all_types_structure)
@@ -447,6 +451,7 @@ def test_removing_coordinates_from_object_removes_it_from_parent():
     assert len(objects) == 0
 
 
+@pytest.mark.skip("Old way to deal with answers")
 def test_getting_static_answers_from_object_instance():
     label_box = ObjectInstance(nested_box_ontology_item)
 
@@ -483,6 +488,7 @@ def test_getting_static_answers_from_object_instance():
     assert not static_answers[1].is_answered()
 
 
+@pytest.mark.skip("Old way to deal with answers")
 def test_setting_static_text_answers():
     object_instance_1 = ObjectInstance(nested_box_ontology_item)
     object_instance_2 = ObjectInstance(nested_box_ontology_item)
@@ -509,6 +515,7 @@ def test_setting_static_text_answers():
     assert refetched_text_answer.get_value() == "Zeus"
 
 
+@pytest.mark.skip("Old way to deal with answers")
 def test_setting_static_checklist_answers():
     object_instance_1 = ObjectInstance(nested_box_ontology_item)
     object_instance_2 = ObjectInstance(nested_box_ontology_item)
@@ -544,6 +551,7 @@ def test_setting_static_checklist_answers():
     assert other_checklist_answer.get_value(checklist_attribute_1_option_2)
 
 
+@pytest.mark.skip("Old way to deal with answers")
 def test_setting_static_radio_answers():
     object_instance_1 = ObjectInstance(deeply_nested_polygon_item)
     object_instance_2 = ObjectInstance(deeply_nested_polygon_item)
@@ -598,55 +606,71 @@ class AnswerForFrames:
     range: List[Range]  # either [1, 3, 4, 5] or [[1], [3,5]]
 
 
-# def dynamic_vs_static_answer():
-# DENIS: implement these simplifications!
-#     answer: Answer = ...
-#     answer.in_frames()  # for static answers, this equals the entire range.
-#
-#     object_instance = ObjectInstance(box_ontology_item)
-#     object_instance.set_coordinates(BOX_COORDINATES, frames=[0, 1, 2, 3])
-#     dynamic_answer: TextAnswer = object_instance.get_static_answer(text_attribute_1)
-#     dynamic_answer.set("Zeus", frames=[0, 1])  # frames empty => defaults to all
-#     object_instance.get_static_answer(text_attribute_1).set("Zeus", frames=[0, 1])  # frames empty => defaults to all
-#     # if frames is specified for static answer, throw error
-#
-#     dynamic_answer.get(frames=[0, 1])  # returns "Zeus"
-#     # DENIS: this way I cannot use a `get_all_answers` thingie, I'll not get a set of answers
-#     object_instance.set_answer(text_attribute_1, "Zeus", frames=None)
-#     object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, 1))
-#     object_instance.set_answer(text_attribute_1, "Zeus", frames=List[Range(0, 1), Range(3, 5)])
-#     object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, None))
-#     # ^ means from 0 to end of video, even if the object instance comes to new frames. => becomes tricky.
-#     object_instance.set_ansser(text_attribute_1, "Poseidon", frames=Range(2, 3))
-#     answers = object_instance.get_answer(text_attribute_1)
-#     assert answers[0] == AnswerForFrames("Zeus", [Range(0, 1)])
-#     assert answers[1] == AnswerForFrames("Poseidon", [Range(2, 3)])
-#
-#     object_instance.delete_answer(text_attribute_1, frames=Range(0, 1))  # Unsets values to default (i.e. unanswered)
-#
-#     object_instance.set_answer(text_attribute_1, "Poseidon", frames=[2, 3])
-#     object_instance.set_answer(checklist_attribute_1, {checklist_attribute_1}, frames=[0, 1])
-#     # DENIS: maybe I don't need the answer object at all, and just have the object instance handle the answer.
-#     # object_instance.check_option(checklist_attribute_1, checklist_attribute_1, frames=[0,1])
-#
-#     answers: List[AnswerForFrames] = object_instance.get_answer(text_attribute_1, frames=[1, 2], filter_value=None)
-#     assert object_instance.is_answer_dynamic(text_attribute_1)  # true
-#
-#     object_instance.set_answer(radio_attribute_level_2, {radio_attribute_2_option_1})
-#     # ^ throws if the radio level 1 is not selected.
-#
-#     # typing:
-#     object_instance.set_text_answer(text_attribute_1, "Zeus", frames=[0, 1])
-#     object_instance.get_text_answer(text_attribute_1)
-#
-#     # iterating over frames
-#     for frame in object_instance.frames():
-#         assert isinstance(frame, int)
-#         assert object_instance.set_answer(text_attribute_1, "Zeus", frames=frame)
-#         assert object_instance.get_answer(text_attribute_1, frames=[frame]) == "Zeus"
-#
+def dynamic_vs_static_answer():
+    # # DENIS: implement these simplifications!
+    # answer: Answer = ...
+    # answer.in_frames()  # for static answers, this equals the entire range.
+    #
+    object_instance = ObjectInstance(box_ontology_item)
+    # object_instance.set_coordinates(BOX_COORDINATES, frames=[0, 1, 2, 3])
+    # dynamic_answer: TextAnswer = object_instance.get_static_answer(text_attribute_1)
+    # dynamic_answer.set("Zeus", frames=[0, 1])  # frames empty => defaults to all
+    # object_instance.get_static_answer(text_attribute_1).set("Zeus", frames=[0, 1])  # frames empty => defaults to all
+    # # if frames is specified for static answer, throw error
+
+    dynamic_answer.get(frames=[0, 1])  # returns "Zeus"
+    # DENIS: this way I cannot use a `get_all_answers` thingie, I'll not get a set of answers
+    object_instance.set_answer(text_attribute_1, "Zeus", frames=None, overwrite=False)
+    # ^ overwrite is False by default, and it will throw an error if the answer is already set.
+    object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, 1))
+    object_instance.set_answer(text_attribute_1, "Zeus", frames=List[Range(0, 1), Range(3, 5)])
+    object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, None))
+    # ^ means from 0 to end of video, even if the object instance comes to new frames. => becomes tricky.
+    object_instance.set_ansser(text_attribute_1, "Poseidon", frames=Range(2, 3))
+    answers = object_instance.get_answer(text_attribute_1)
+    # ^ throw or return None if trying to access a nested answer that is not reachable.
+    assert answers[0] == AnswerForFrames("Zeus", [Range(0, 1)])
+    assert answers[1] == AnswerForFrames("Poseidon", [Range(2, 3)])
+
+    object_instance.delete_answer(text_attribute_1, frames=Range(0, 1))  # Unsets values to default (i.e. unanswered)
+
+    object_instance.set_answer(text_attribute_1, "Poseidon", frames=[2, 3])
+    object_instance.set_answer(checklist_attribute_1, {checklist_attribute_1}, frames=[0, 1])
+    # DENIS: maybe I don't need the answer object at all, and just have the object instance handle the answer.
+    # object_instance.check_option(checklist_attribute_1, checklist_attribute_1, frames=[0,1])
+
+    answers: List[AnswerForFrames] = object_instance.get_answer(text_attribute_1, frames=[1, 2], filter_value=None)
+    assert object_instance.is_answer_dynamic(text_attribute_1)  # true
+
+    object_instance.set_answer(radio_attribute_level_2, {radio_attribute_2_option_1})
+    # ^ throws if the radio level 1 is not selected.
+
+    # typing:
+    object_instance.set_text_answer(text_attribute_1, "Zeus", frames=[0, 1])
+    object_instance.get_text_answer(text_attribute_1)
+
+    # iterating over frames
+    for frame in object_instance.frames():
+        assert isinstance(frame, int)
+        assert object_instance.set_answer(text_attribute_1, "Zeus", frames=frame)
+        assert object_instance.get_answer(text_attribute_1, frames=[frame]) == "Zeus"
+
+    # getting all unanswered options:
+    possible_attributes: List[Attribute] = object_instance.get_possible_attributes()
+    possible_unanswered_attributes: List[Attribute] = object_instance.get_possible_unanswered_attributes()
+    assert object_instance.can_set_attribute(radio_attribute_level_2)
 
 
+def test_new_classification_index_answers():
+    classification_instance = ClassificationInstance(text_classification)
+    classification_instance.set_answer("Zeus", text_classification_attribute)
+
+    assert classification_instance.get_answer() == "Zeus"
+    # DENIS: because we have nested classifications, we need to be able to set answers for nested classifications.
+    # However, it can default to the top level for sure.
+
+
+@pytest.mark.skip("Old way to deal with answers")
 def test_adding_dynamic_text_answers():
     object_instance = ObjectInstance(keypoint_dynamic)
     object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
@@ -690,6 +714,7 @@ def test_adding_dynamic_text_answers():
     #  and DynamicRadioAnswer
 
 
+@pytest.mark.skip("Old way to deal with answers")
 def test_adding_dynamic_checklist_answers():
     object_instance = ObjectInstance(keypoint_dynamic)
     object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
@@ -728,6 +753,7 @@ def test_adding_dynamic_checklist_answers():
         dynamic_answer_2.copy_to_frames([100])
 
 
+@pytest.mark.skip("Old way to deal with answers")
 def test_adding_radio_checklist_answers():
     """DENIS: think about what to do with non-dynamic nested stuff. What does the UI do?"""
     object_instance = ObjectInstance(keypoint_dynamic)
@@ -766,18 +792,15 @@ def test_classification_instances():
     classification_instance_1.add_to_frames([1, 2, 3])
     assert classification_instance_1.is_valid()
 
-    answer_1 = classification_instance_1.get_static_answer()
+    classification_instance_1.set_answer("Dionysus")
+    assert classification_instance_1.get_answer() == "Dionysus"
 
-    answer_1.set("Dionysus")
-    assert answer_1.get_value() == "Dionysus"
+    classification_instance_2.set_answer(classification_instance_1.get_answer())
+    assert classification_instance_2.get_answer() == "Dionysus"
 
-    answer_2 = classification_instance_2.get_static_answer()
-    answer_2.copy_from(answer_1)
-    assert answer_2.get_value() == "Dionysus"
-
-    answer_2.set("Hades")
-    assert answer_2.get_value() == "Hades"
-    assert answer_1.get_value() == "Dionysus"
+    classification_instance_2.set_answer("Hades")
+    assert classification_instance_2.get_answer() == "Hades"
+    assert classification_instance_1.get_answer() == "Dionysus"
 
 
 def test_add_and_get_classification_instances_to_label_row():

@@ -6,7 +6,18 @@ from copy import copy, deepcopy
 from dataclasses import Field, dataclass, field
 from datetime import datetime
 from enum import Flag, auto
-from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Type, Union
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    NoReturn,
+    Optional,
+    Set,
+    Type,
+    Union,
+    overload,
+)
 
 import pytz
 from dateutil.parser import parse
@@ -46,6 +57,17 @@ DEFAULT_MANUAL_ANNOTATION = True
 
 
 DATETIME_LONG_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
+
+
+@dataclass
+class Range:
+    start: int
+    end: int
+
+
+Ranges = List[Range]
+
+Frames = Union[int, Range, Ranges]
 
 
 class _Answer(ABC):
@@ -246,6 +268,24 @@ class ChecklistAnswer(_Answer):
         for value in values:
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = False
+
+    def set_options(self, values: Iterable[FlatOption]):
+        self._answered = True
+        for key in self._feature_hash_to_answer_map.keys():
+            self._feature_hash_to_answer_map[key] = False
+        for value in values:
+            self._verify_flat_option(value)
+            self._feature_hash_to_answer_map[value.feature_node_hash] = True
+
+    def get_options(self) -> List[FlatOption]:
+        if not self.is_answered():
+            return []
+        else:
+            return [
+                option
+                for option in self._ontology_attribute.options
+                if self._feature_hash_to_answer_map[option.feature_node_hash]
+            ]
 
     def get_value(self, value: FlatOption) -> bool:
         return self._feature_hash_to_answer_map[value.feature_node_hash]
@@ -943,7 +983,8 @@ class ClassificationInstance:
         for frame in frames:
             self._check_within_range(frame)
             self._frames.add(frame)
-            self._parent._add_to_frame_to_hashes_map(self)
+            if self._parent is not None:
+                self._parent._add_to_frame_to_hashes_map(self)
 
     def remove_from_frames(self, frames: Iterable[int]) -> None:
         for frame in frames:
@@ -956,11 +997,89 @@ class ClassificationInstance:
     def frames(self) -> List[int]:
         return list(self._frames)
 
-    def get_static_answer(self) -> Answer:
-        return self._static_answer
+    # def get_static_answer(self) -> Answer:
+    #     return self._static_answer
 
     def is_valid(self) -> bool:
         return len(self._frames) > 0
+
+    @overload
+    def set_answer(self, answer: str, attribute: TextAttribute) -> None:
+        ...
+
+    @overload
+    def set_answer(self, answer: Option, attribute: RadioAttribute) -> None:
+        ...
+
+    @overload
+    def set_answer(self, answer: Iterable[Option], attribute: ChecklistAttribute) -> None:
+        ...
+
+    @overload
+    def set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: None = None) -> None:
+        ...
+
+    def set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Optional[Attribute] = None) -> None:
+        """
+        Args:
+            answer: The answer to set.
+            attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
+        """
+        if attribute is None:
+            attribute = self._ontology_classification.attributes[0]
+        elif not self._is_attribute_valid_child_of_classification(attribute):
+            raise ValueError("The attribute is not a valid child of the classification.")
+
+        static_answer = self._static_answer
+        if isinstance(attribute, TextAttribute):
+            # DENIS: additional hard type checking.
+            static_answer.set(answer)
+        elif isinstance(attribute, RadioAttribute):
+            static_answer.set(answer)
+        elif isinstance(attribute, ChecklistAttribute):
+            static_answer.set_options(answer)
+        else:
+            raise ValueError(f"Unknown attribute type: {type(attribute)}")
+
+    @overload
+    def get_answer(self, attribute: TextAttribute) -> str:
+        ...
+
+    @overload
+    def get_answer(self, attribute: RadioAttribute) -> Option:
+        ...
+
+    @overload
+    def get_answer(self, attribute: ChecklistAttribute) -> List[Option]:
+        ...
+
+    @overload
+    def get_answer(self, attribute: None = None) -> Union[str, Option, List[Option]]:
+        ...
+
+    def get_answer(self, attribute: Optional[Attribute] = None) -> Union[str, Option, Iterable[Option]]:
+        """
+        Args:
+            attribute: The ontology attribute to get the answer for. If not provided, the first level attribute is used.
+        """
+        if attribute is None:
+            attribute = self._ontology_classification.attributes[0]
+        elif not self._is_attribute_valid_child_of_classification(attribute):
+            raise ValueError("The attribute is not a valid child of the classification.")
+
+        static_answer = self._static_answer
+        if isinstance(attribute, TextAttribute):
+            return static_answer.get_value()
+        elif isinstance(attribute, RadioAttribute):
+            return static_answer.get_value()
+        elif isinstance(attribute, ChecklistAttribute):
+            return static_answer.get_options()
+        else:
+            raise ValueError(f"Unknown attribute type: {type(attribute)}")
+
+    def _is_attribute_valid_child_of_classification(self, attribute: Attribute) -> bool:
+        # DENIS: implement this
+        return True
 
     def _get_static_answer(self) -> Answer:
         attributes = self._ontology_classification.attributes
@@ -1021,8 +1140,12 @@ class LabelRow:
     This is essentially one blob of data_units. For an image_group we need to get all the hashed in.
     """
 
-    def __init__(self, label_row_dict: dict, ontology_structure: dict) -> object:
-        self._ontology_structure = OntologyStructure.from_dict(ontology_structure)
+    def __init__(self, label_row_dict: dict, ontology_structure: Union[dict, OntologyStructure]) -> None:
+        if isinstance(ontology_structure, dict):
+            self._ontology_structure = OntologyStructure.from_dict(ontology_structure)
+        else:
+            self._ontology_structure = ontology_structure
+
         self._label_row_read_only_data: LabelRowReadOnlyData = self._parse_label_row_dict(label_row_dict)
         # DENIS: ^ this should probably be protected so no one resets it.
 
