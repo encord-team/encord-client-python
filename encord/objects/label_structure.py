@@ -344,7 +344,7 @@ class _DynamicAnswer:
     A specialised view of the dynamic answers. Allows convenient interaction with the dynamic properties.
     """
 
-    def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
+    def __init__(self, parent: ObjectInstance, frame: int, attribute: Attribute):
         self._parent = parent
         self._frame = frame
         self._attribute = attribute
@@ -379,7 +379,7 @@ class _DynamicAnswer:
 
 
 class DynamicTextAnswer(_DynamicAnswer):
-    def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
+    def __init__(self, parent: ObjectInstance, frame: int, attribute: Attribute):
         super().__init__(parent, frame, attribute)
 
     def set(self, value: str):
@@ -396,7 +396,7 @@ class DynamicTextAnswer(_DynamicAnswer):
 
 
 class DynamicRadioAnswer(_DynamicAnswer):
-    def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
+    def __init__(self, parent: ObjectInstance, frame: int, attribute: Attribute):
         super().__init__(parent, frame, attribute)
 
     def set(self, value: NestableOption):
@@ -413,7 +413,7 @@ class DynamicRadioAnswer(_DynamicAnswer):
 
 
 class DynamicChecklistAnswer(_DynamicAnswer):
-    def __init__(self, parent: LabelObject, frame: int, attribute: Attribute):
+    def __init__(self, parent: ObjectInstance, frame: int, attribute: Attribute):
         super().__init__(parent, frame, attribute)
 
     def check_options(self, values: Iterable[FlatOption]) -> None:
@@ -653,7 +653,7 @@ class ObjectFrameInstanceData:
     object_frame_instance_info: ObjectFrameInstanceInfo
 
 
-class LabelObject:
+class ObjectInstance:
     """This is per video/image_group/dicom/...
 
     should you be able to set the color per object?
@@ -688,7 +688,7 @@ class LabelObject:
             if answer.ontology_attribute.feature_node_hash == attribute.feature_node_hash:
                 return answer
 
-        raise RuntimeError("The attribute is not a valid attribute for this LabelObject.")
+        raise RuntimeError("The attribute is not a valid attribute for this ObjectInstance.")
 
     def _get_frames_for_dynamic_answer(self, answer: Answer) -> Set[int]:
         return self._answers_to_frames[answer]
@@ -710,7 +710,7 @@ class LabelObject:
         for static_answer in self._static_answers:
             if attribute.feature_node_hash == static_answer.ontology_attribute.feature_node_hash:
                 return static_answer
-        raise ValueError("The attribute was not found in this LabelObject's ontology.")
+        raise ValueError("The attribute was not found in this ObjectInstance's ontology.")
 
     def _get_static_answers(self) -> List[Answer]:
         attributes = self._ontology_object.attributes
@@ -750,7 +750,7 @@ class LabelObject:
 
     @ontology_item.setter
     def ontology_item(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the ontology item of an instantiated LabelObject.")
+        raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
     def set_coordinates(
         # DENIS: should this be called `set_instance_data` or something similar?
@@ -798,11 +798,11 @@ class LabelObject:
             self._frames_to_answers[frame].add(answer)
             self._answers_to_frames[answer].add(frame)
 
-    def copy(self) -> LabelObject:
+    def copy(self) -> ObjectInstance:
         """
-        Creates an exact copy of this LabelObject but with a new object hash and without being associated to any
-        LabelRow. This is useful if you want to add the semantically same LabelObject to multiple `LabelRow`s."""
-        ret = LabelObject(self._ontology_object)
+        Creates an exact copy of this ObjectInstance but with a new object hash and without being associated to any
+        LabelRow. This is useful if you want to add the semantically same ObjectInstance to multiple `LabelRow`s."""
+        ret = ObjectInstance(self._ontology_object)
         ret._frames_to_instance_data = copy(self._frames_to_instance_data)
         # DENIS: test if a shallow copy is enough
         # DENIS: copy the answers stuff as well.
@@ -887,7 +887,7 @@ class ClassificationInstanceData:
         )
 
 
-class LabelClassification:
+class ClassificationInstance:
     def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
         # DENIS: should I also be able to accept the first level attribute? Ideally not, as
         # I'd need to awkwardly verify whether this is the first level attribute or not.
@@ -924,7 +924,7 @@ class LabelClassification:
 
     @ontology_item.setter
     def ontology_item(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the ontology item of an instantiated LabelObject.")
+        raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
     def set_frames(self, frames: Iterable[int]) -> None:
         """Overwrites the current frames."""
@@ -966,7 +966,7 @@ class LabelClassification:
         attributes = self._ontology_classification.attributes
         answers = _get_default_answers_from_attributes(attributes)
         if len(answers) != 1:
-            raise RuntimeError("The LabelClassification is in an invalid state.")
+            raise RuntimeError("The ClassificationInstance is in an invalid state.")
         return answers[0]
 
     def _check_within_range(self, frame: int) -> None:
@@ -1033,11 +1033,11 @@ class LabelRow:
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
 
-        self._objects_map: Dict[str, LabelObject] = dict()
-        self._classifications_map: Dict[str, LabelClassification] = dict()
+        self._objects_map: Dict[str, ObjectInstance] = dict()
+        self._classifications_map: Dict[str, ClassificationInstance] = dict()
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
         # at least at the final objects_index/classifications_index level.
-        # DENIS: actually if I have a hash function of LabelObject, this doesn't have to be a map, however the ordering
+        # DENIS: actually if I have a hash function of ObjectInstance, this doesn't have to be a map, however the ordering
         # property would be lost.
         self._parse_objects_map(label_row_dict)
         self._parse_classifications_map(label_row_dict)
@@ -1110,7 +1110,7 @@ class LabelRow:
         return ret
 
     @staticmethod
-    def _get_all_static_answers(item: Union[LabelObject, LabelClassification]) -> List[dict]:
+    def _get_all_static_answers(item: Union[ObjectInstance, ClassificationInstance]) -> List[dict]:
         ret = []
         for answer in item.get_all_static_answers():
             d_opt = answer._to_encord_dict()
@@ -1162,7 +1162,7 @@ class LabelRow:
 
     def _to_encord_object(
         self,
-        object_: LabelObject,
+        object_: ObjectInstance,
         frame: int,
     ) -> dict:
         ret = {}
@@ -1211,7 +1211,7 @@ class LabelRow:
 
         return ret
 
-    def _to_encord_classification(self, classification: LabelClassification, frame: int) -> dict:
+    def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> dict:
         ret = {}
 
         classification_instance_data = classification.get_classification_instance_data()
@@ -1247,67 +1247,67 @@ class LabelRow:
         """
         # Actually can probably use the get_label_row() here.
 
-    def get_objects(self, ontology_object: Optional[Object] = None) -> List[LabelObject]:
+    def get_objects(self, ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
         """Returns all the objects with this hash."""
-        ret: List[LabelObject] = list()
+        ret: List[ObjectInstance] = list()
         for object_ in self._objects_map.values():
             if ontology_object is None or object_.ontology_item.feature_node_hash == ontology_object.feature_node_hash:
                 ret.append(object_)
                 # DENIS: the accessors are protected. Check that no one can do anything stupid.
         return ret
 
-    def add_object(self, label_object: LabelObject, force=True):
+    def add_object(self, object_instance: ObjectInstance, force=True):
         """
         Do we want a bulk function? probably not needed as it is local? (only for the force option)
 
         Args:
             force: overwrites current objects, otherwise this will replace the current object.
         """
-        if not label_object.is_valid():
-            raise ValueError("The supplied LabelObject is not in a valid format.")
+        if not object_instance.is_valid():
+            raise ValueError("The supplied ObjectInstance is not in a valid format.")
 
-        if label_object._parent is not None:
+        if object_instance._parent is not None:
             raise RuntimeError(
-                "The supplied LabelObject is already part of a LabelRow. You can only add a LabelObject to one "
-                "LabelRow. You can do a LabelObject.copy() to create an identical LabelObject which is not part of "
+                "The supplied ObjectInstance is already part of a LabelRow. You can only add a ObjectInstance to one "
+                "LabelRow. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
                 "any LabelRow."
             )
 
-        object_hash = label_object.object_hash
+        object_hash = object_instance.object_hash
         if object_hash in self._objects_map and not force:
-            raise ValueError("The supplied LabelObject was already previously added. (the object_hash is the same).")
+            raise ValueError("The supplied ObjectInstance was already previously added. (the object_hash is the same).")
         elif object_hash in self._objects_map and force:
             self._objects_map.pop(object_hash)
 
-        self._objects_map[object_hash] = label_object
-        label_object._parent = self
+        self._objects_map[object_hash] = object_instance
+        object_instance._parent = self
 
-        self._add_to_frame_to_hashes_map(label_object)
+        self._add_to_frame_to_hashes_map(object_instance)
 
-    def add_classification(self, label_classification: LabelClassification, force: bool = False):
-        if not label_classification.is_valid():
-            raise ValueError("The supplied LabelClassification is not in a valid format.")
+    def add_classification(self, classification_instance: ClassificationInstance, force: bool = False):
+        if not classification_instance.is_valid():
+            raise ValueError("The supplied ClassificationInstance is not in a valid format.")
 
         # DENIS: probably better to have a member function saying whether a parent is currently set.
-        if label_classification._parent is not None:
+        if classification_instance._parent is not None:
             raise RuntimeError(
-                "The supplied LabelClassification is already part of a LabelRow. You can only add a LabelClassification"
-                " to one LabelRow. You can do a LabelClassification.copy() to create an identical LabelObject which is "
+                "The supplied ClassificationInstance is already part of a LabelRow. You can only add a ClassificationInstance"
+                " to one LabelRow. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
                 "not part of any LabelRow."
             )
 
-        classification_hash = label_classification.classification_hash
+        classification_hash = classification_instance.classification_hash
         already_present_frame = self._is_classification_already_present(
-            label_classification.ontology_item, label_classification.frames()
+            classification_instance.ontology_item, classification_instance.frames()
         )
         if classification_hash in self._classifications_map and not force:
             raise ValueError(
-                "The supplied LabelClassification was already previously added. (the classification_hash is the same)."
+                "The supplied ClassificationInstance was already previously added. (the classification_hash is the same)."
             )
 
         if already_present_frame is not None and not force:
             raise ValueError(
-                f"A LabelClassification of the same type was already added and has overlapping frames. One "
+                f"A ClassificationInstance of the same type was already added and has overlapping frames. One "
                 f"overlapping frame that was found is `{already_present_frame}`. Make sure that you only add "
                 f"classifications which are on frames where the same type of classification does not yet exist."
             )
@@ -1315,11 +1315,13 @@ class LabelRow:
         if classification_hash in self._classifications_map and force:
             self._classifications_map.pop(classification_hash)
 
-        self._classifications_map[classification_hash] = label_classification
-        label_classification._parent = self
+        self._classifications_map[classification_hash] = classification_instance
+        classification_instance._parent = self
 
-        self._classifications_to_frames[label_classification.ontology_item].update(set(label_classification.frames()))
-        self._add_to_frame_to_hashes_map(label_classification)
+        self._classifications_to_frames[classification_instance.ontology_item].update(
+            set(classification_instance.frames())
+        )
+        self._add_to_frame_to_hashes_map(classification_instance)
 
     def _is_classification_already_present(
         self, classification: Classification, frames: Iterable[int]
@@ -1335,40 +1337,40 @@ class LabelRow:
         for frame in frames:
             present_frames.remove(frame)
 
-    def remove_classification(self, label_classification: LabelClassification):
-        classification_hash = label_classification.classification_hash
+    def remove_classification(self, classification_instance: ClassificationInstance):
+        classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
-        all_frames = self._classifications_to_frames[label_classification.ontology_item]
-        actual_frames = label_classification.frames()
+        all_frames = self._classifications_to_frames[classification_instance.ontology_item]
+        actual_frames = classification_instance.frames()
         for actual_frame in actual_frames:
             all_frames.remove(actual_frame)
 
-    def _add_to_frame_to_hashes_map(self, label_item: Union[LabelObject, LabelClassification]):
-        """This can be called by the LabelObject."""
+    def _add_to_frame_to_hashes_map(self, label_item: Union[ObjectInstance, ClassificationInstance]):
+        """This can be called by the ObjectInstance."""
         for frame in label_item.frames():
-            if isinstance(label_item, LabelObject):
+            if isinstance(label_item, ObjectInstance):
                 self._frame_to_hashes[frame].add(label_item.object_hash)
-            elif isinstance(label_item, LabelClassification):
+            elif isinstance(label_item, ClassificationInstance):
                 self._frame_to_hashes[frame].add(label_item.classification_hash)
             else:
                 return NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
 
     def get_classifications(
         self, ontology_classification: Optional[Classification] = None
-    ) -> List[LabelClassification]:
+    ) -> List[ClassificationInstance]:
         """Returns all the objects with this hash."""
         ret = []
-        for label_classification in self._classifications_map.values():
+        for classification_instance in self._classifications_map.values():
             if (
                 ontology_classification is None
-                or ontology_classification.feature_node_hash == label_classification.ontology_item.feature_node_hash
+                or ontology_classification.feature_node_hash == classification_instance.ontology_item.feature_node_hash
             ):
-                ret.append(label_classification)
+                ret.append(classification_instance)
         return ret
 
-    def get_objects_by_frame(self, frames: Iterable[int]) -> Set[LabelObject]:
+    def get_objects_by_frame(self, frames: Iterable[int]) -> Set[ObjectInstance]:
         """DENIS: maybe merge this with the getter above."""
-        ret: Set[LabelObject] = set()
+        ret: Set[ObjectInstance] = set()
         for frame in frames:
             hashes = self._frame_to_hashes[frame]
             for hash_ in hashes:
@@ -1377,8 +1379,8 @@ class LabelRow:
 
         return ret
 
-    def get_classifications_by_frame(self, frames: Iterable[int]) -> Set[LabelClassification]:
-        ret: Set[LabelClassification] = set()
+    def get_classifications_by_frame(self, frames: Iterable[int]) -> Set[ClassificationInstance]:
+        ret: Set[ClassificationInstance] = set()
         for frame in frames:
             hashes = self._frame_to_hashes[frame]
             for hash_ in hashes:
@@ -1386,11 +1388,11 @@ class LabelRow:
                     ret.add(self._classifications_map[hash_])
         return ret
 
-    def remove_object(self, label_object: LabelObject):
+    def remove_object(self, object_instance: ObjectInstance):
         """Remove the object."""
-        self._objects_map.pop(label_object.object_hash)
-        self._remove_from_frame_to_hashes_map(label_object.frames(), label_object.object_hash)
-        label_object._parent = None
+        self._objects_map.pop(object_instance.object_hash)
+        self._remove_from_frame_to_hashes_map(object_instance.frames(), object_instance.object_hash)
+        object_instance._parent = None
 
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
@@ -1450,13 +1452,13 @@ class LabelRow:
         # DENIS: TODO
         pass
 
-    def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> LabelObject:
+    def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
         ontology = self._ontology_structure
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
 
         label_class = get_item_by_hash(feature_hash, ontology)
-        object_instance = LabelObject(label_class, object_hash=object_hash)
+        object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectFrameInstanceInfo.from_dict(frame_object_label)
@@ -1520,13 +1522,13 @@ class LabelRow:
 
     def _create_new_classification_instance(
         self, frame_classification_label: dict, frame: int, classification_answers: dict
-    ) -> LabelClassification:
+    ) -> ClassificationInstance:
         ontology = self._ontology_structure
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
 
         label_class = get_item_by_hash(feature_hash, ontology)
-        classification_instance = LabelClassification(label_class, classification_hash=classification_hash)
+        classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         classification_instance.set_frames([frame])
         classification_frame_instance_info = ClassificationInstanceData.from_dict(frame_classification_label)
@@ -1538,7 +1540,7 @@ class LabelRow:
         return classification_instance
 
     def _add_static_answers_from_dict(
-        self, classification_instance: LabelClassification, answers_dict: List[dict]
+        self, classification_instance: ClassificationInstance, answers_dict: List[dict]
     ) -> None:
         if len(answers_dict) == 0:
             return
