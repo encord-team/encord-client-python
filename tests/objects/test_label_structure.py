@@ -1,7 +1,9 @@
-from typing import List
+from dataclasses import dataclass
+from typing import List, Union
 
 import pytest
 
+from encord.objects.common import Option
 from encord.objects.label_structure import (
     BoundingBoxCoordinates,
     ChecklistAnswer,
@@ -131,7 +133,7 @@ def test_create_label_object_one_coordinate():
 
 
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
 
     assert label_row.get_classifications() == []
     assert label_row.get_objects() == []
@@ -141,7 +143,7 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
 
 
 def test_add_label_object_to_label_row():
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
     label_object = LabelObject(box_ontology_item)
 
     coordinates = BoundingBoxCoordinates(
@@ -157,7 +159,8 @@ def test_add_label_object_to_label_row():
 
 
 def test_add_remove_access_label_objects_in_label_row():
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+
     label_object_1 = LabelObject(box_ontology_item)
     label_object_2 = LabelObject(box_ontology_item)
 
@@ -221,7 +224,7 @@ def discussion_with_eloy():
         },
     }
 
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
 
     # DENIS: think about such a read layer, to be able to iterate over each
     # individual frame and then get all the objects and read them.
@@ -251,7 +254,7 @@ def discussion_with_eloy():
     )
 
     # ########## #
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
     label_object_1 = BOX_COORDINATES.get_object(label_row)
     label_object_2 = BOX_COORDINATES.get_object(label_row)
 
@@ -260,7 +263,7 @@ def discussion_with_eloy():
 
 
 def test_filter_for_objects():
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
     label_box = LabelObject(box_ontology_item)
     label_polygon = LabelObject(polygon_ontology_item)
 
@@ -307,7 +310,7 @@ def test_add_wrong_coordinates():
 
 
 def test_get_label_objects_by_frames():
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
     label_box = LabelObject(box_ontology_item)
     label_polygon = LabelObject(polygon_ontology_item)
 
@@ -425,7 +428,7 @@ def test_update_remove_label_object_coordinates():
 
 
 def test_removing_coordinates_from_object_removes_it_from_parent():
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
     label_box = LabelObject(box_ontology_item)
     label_box.set_coordinates(BOX_COORDINATES, [1, 2, 3])
 
@@ -583,6 +586,67 @@ def test_setting_static_radio_answers():
     x = {other_radio_answer: 5}
 
 
+@dataclass
+class Range:
+    start: int
+    end: int
+
+
+@dataclass
+class AnswerForFrames:
+    answer: Union[str, List[Option]]
+    range: List[Range]  # either [1, 3, 4, 5] or [[1], [3,5]]
+
+
+# def dynamic_vs_static_answer():
+# DENIS: implement these simplifications!
+#     answer: Answer = ...
+#     answer.in_frames()  # for static answers, this equals the entire range.
+#
+#     object_instance = LabelObject(box_ontology_item)
+#     object_instance.set_coordinates(BOX_COORDINATES, frames=[0, 1, 2, 3])
+#     dynamic_answer: TextAnswer = object_instance.get_static_answer(text_attribute_1)
+#     dynamic_answer.set("Zeus", frames=[0, 1])  # frames empty => defaults to all
+#     object_instance.get_static_answer(text_attribute_1).set("Zeus", frames=[0, 1])  # frames empty => defaults to all
+#     # if frames is specified for static answer, throw error
+#
+#     dynamic_answer.get(frames=[0, 1])  # returns "Zeus"
+#     # DENIS: this way I cannot use a `get_all_answers` thingie, I'll not get a set of answers
+#     object_instance.set_answer(text_attribute_1, "Zeus", frames=None)
+#     object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, 1))
+#     object_instance.set_answer(text_attribute_1, "Zeus", frames=List[Range(0, 1), Range(3, 5)])
+#     object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, None))
+#     # ^ means from 0 to end of video, even if the object instance comes to new frames. => becomes tricky.
+#     object_instance.set_ansser(text_attribute_1, "Poseidon", frames=Range(2, 3))
+#     answers = object_instance.get_answer(text_attribute_1)
+#     assert answers[0] == AnswerForFrames("Zeus", [Range(0, 1)])
+#     assert answers[1] == AnswerForFrames("Poseidon", [Range(2, 3)])
+#
+#     object_instance.delete_answer(text_attribute_1, frames=Range(0, 1))  # Unsets values to default (i.e. unanswered)
+#
+#     object_instance.set_answer(text_attribute_1, "Poseidon", frames=[2, 3])
+#     object_instance.set_answer(checklist_attribute_1, {checklist_attribute_1}, frames=[0, 1])
+#     # DENIS: maybe I don't need the answer object at all, and just have the object instance handle the answer.
+#     # object_instance.check_option(checklist_attribute_1, checklist_attribute_1, frames=[0,1])
+#
+#     answers: List[AnswerForFrames] = object_instance.get_answer(text_attribute_1, frames=[1, 2], filter_value=None)
+#     assert object_instance.is_answer_dynamic(text_attribute_1)  # true
+#
+#     object_instance.set_answer(radio_attribute_level_2, {radio_attribute_2_option_1})
+#     # ^ throws if the radio level 1 is not selected.
+#
+#     # typing:
+#     object_instance.set_text_answer(text_attribute_1, "Zeus", frames=[0, 1])
+#     object_instance.get_text_answer(text_attribute_1)
+#
+#     # iterating over frames
+#     for frame in object_instance.frames():
+#         assert isinstance(frame, int)
+#         assert object_instance.set_answer(text_attribute_1, "Zeus", frames=frame)
+#         assert object_instance.get_answer(text_attribute_1, frames=[frame]) == "Zeus"
+#
+
+
 def test_adding_dynamic_text_answers():
     label_object = LabelObject(keypoint_dynamic)
     label_object.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
@@ -591,6 +655,7 @@ def test_adding_dynamic_text_answers():
     assert dynamic_answer.frame == 1
     dynamic_answer.set("Hermes")
     dynamic_answer.copy_to_frames(frames=[2])
+    dynamic_answer.propagate_to_last_frame()  # DENIS: implement this?
 
     assert dynamic_answer.get_value() == "Hermes"
     assert dynamic_answer.in_frames() == {1, 2}
@@ -716,7 +781,7 @@ def test_label_classifications():
 
 
 def test_add_and_get_label_classifications_to_label_row():
-    label_row = LabelRow(empty_image_group_labels)
+    label_row = LabelRow(empty_image_group_labels, all_types_structure)
     label_classification_1 = LabelClassification(text_classification)
     label_classification_2 = LabelClassification(text_classification)
     label_classification_3 = LabelClassification(checklist_classification)
@@ -760,7 +825,46 @@ def test_add_and_get_label_classifications_to_label_row():
 # =========== actually working tests above here ============
 # ==========================================================
 
+
+# def test_read_improvements():
+#     label_row = LabelRow(empty_image_group_labels, all_types_structure)
 #
+#     frame_view: FrameView = label_row.get_frame(1)
+#
+#     added_label_object = frame_view.add_label_object(
+#         coordinates=KEYPOINT_COORDINATES,
+#         label_object_type=box_ontology_item,  # optional ontology item.
+#         existing_object=1,  # Optional
+#     )
+#     # DENIS: either create a new one or add the existing one.
+#
+#     # now what about answers?
+#     static_answers = added_label_object.get_static_answers()
+#
+#     ## otherwise how would it look like?
+#     object_ = label_row.new_object(ontology_type=box_ontology_item, coordinates=KEYPOINT_COORDINATES, frames={1})
+#     object_.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+
+
+# def test_frame_view():
+# DENIS: implement this view!
+#     label_row = LabelRow(empty_image_group_labels, all_types_structure)
+#
+#     frame_view: FrameView = label_row.get_frame(1)
+#
+#     object_instance_1: LabelObject = frame_view.create_object(BOX_COORDINATES, box_ontology_item, answer=None)
+#     frame_view.add_object(BOX_COORDINATES, existing_object, answer=None)  # answer is optional
+#
+#     existing_instances: Dict[InternalUuid, LabelObject] = {}
+#
+#     for frame in label_row.frames():
+#         assert frame.number == 1
+#         assert frame.uuid == "abc"
+#         assert frame.has_object(object_instance_1)
+#
+#     assert frame_view.get_objects == [object_instance_1]
+
+
 # def test_read_coordinates():
 #     label_object = LabelObject()
 #     x = label_object.get_coordinates()  # list of frame to coordinates (maybe a map?)

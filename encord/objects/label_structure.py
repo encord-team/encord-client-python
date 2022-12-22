@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import copy, deepcopy
 from dataclasses import Field, dataclass, field
@@ -47,7 +48,7 @@ DEFAULT_MANUAL_ANNOTATION = True
 DATETIME_LONG_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
 
 
-class _Answer:
+class _Answer(ABC):
     """Common fields amongst all answers"""
 
     _ontology_attribute: Attribute
@@ -56,6 +57,7 @@ class _Answer:
         self._answered = False
         self._ontology_attribute = ontology_attribute
         self._answer_uuid = short_uuid_str()
+        self._is_manual_annotation = DEFAULT_MANUAL_ANNOTATION
 
     def is_answered(self) -> bool:
         return self._answered
@@ -66,12 +68,29 @@ class _Answer:
         # DENIS: might be better to default everything again for more consistent states!
 
     @property
+    def is_manual_annotation(self) -> bool:
+        return self._is_manual_annotation
+
+    @is_manual_annotation.setter
+    def is_manual_annotation(self, value: bool) -> None:
+        self._is_manual_annotation = value
+
+    @property
     def ontology_attribute(self):
         return deepcopy(self._ontology_attribute)
 
     @ontology_attribute.setter
     def ontology_attribute(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot reset the ontology attribute of an instantiated answer.")
+
+    @abstractmethod
+    def _to_encord_dict(self) -> Optional[Dict]:
+        """Return None if the answer is not answered"""
+        pass
+
+    @abstractmethod
+    def from_dict(self, d: Dict) -> None:
+        pass
 
 
 class TextAnswer(_Answer):
@@ -102,6 +121,27 @@ class TextAnswer(_Answer):
         else:
             other_answer = text_answer.get_value()
             self.set(other_answer)
+
+    def _to_encord_dict(self) -> Optional[Dict]:
+        if not self.is_answered():
+            return None
+        else:
+            return {
+                "name": self.ontology_attribute.name,
+                "value": _lower_snake_case(self.ontology_attribute.name),
+                # DENIS: ^ this can be part of the ontology_attribute maybe?
+                "answers": self._value,
+                "featureHash": self.ontology_attribute.feature_node_hash,
+                "manualAnnotation": self.is_manual_annotation,
+            }
+
+    def from_dict(self, d: Dict) -> None:
+        if d["featureHash"] != self.ontology_attribute.feature_node_hash:
+            raise ValueError("Cannot set the value of a TextAnswer based on a different ontology attribute.")
+
+        self._answered = True
+        self.set(d["answers"])
+        self.is_manual_annotation = d["manualAnnotation"]
 
     def __hash__(self):
         return hash((self._value, type(self).__name__))
@@ -143,6 +183,40 @@ class RadioAnswer(_Answer):
         else:
             other_answer = radio_answer.get_value()
             self.set(other_answer)
+
+    def _to_encord_dict(self) -> Optional[Dict]:
+        if not self.is_answered():
+            return None
+        else:
+            nestable_option = self._value
+            return {
+                "name": self.ontology_attribute.name,
+                "value": _lower_snake_case(self.ontology_attribute.name),
+                # DENIS: ^ this can be part of the ontology_attribute maybe?
+                "answers": [
+                    {
+                        "name": nestable_option.label,
+                        "value": nestable_option.value,
+                        "featureHash": nestable_option.feature_node_hash,
+                    }
+                ],
+                "featureHash": self.ontology_attribute.feature_node_hash,
+                "manualAnnotation": self.is_manual_annotation,
+            }
+
+    def from_dict(self, d: Dict) -> None:
+        if d["featureHash"] != self.ontology_attribute.feature_node_hash:
+            raise ValueError("Cannot set the value of a TextAnswer based on a different ontology attribute.")
+
+        self._answered = True
+        answers = d["answers"]
+        if len(answers) != 1:
+            raise ValueError("RadioAnswers must have exactly one answer.")
+
+        answer = answers[0]
+        nestable_option = _get_option_by_hash(answer["featureHash"], self.ontology_attribute.options)
+        self.set(nestable_option)
+        self.is_manual_annotation = d["manualAnnotation"]
 
     def __hash__(self):
         return hash((self._value, type(self).__name__))
@@ -209,6 +283,49 @@ class ChecklistAnswer(_Answer):
                 f"The supplied FlatOption `{value}` is not a child of the ChecklistAttribute that "
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
+
+    def _to_encord_dict(self) -> Optional[Dict]:
+        if not self.is_answered():
+            return None
+        else:
+            checked_options = []
+            ontology_attribute: ChecklistAttribute = self._ontology_attribute
+            for option in ontology_attribute.options:
+                if self.get_value(option):
+                    checked_options.append(option)
+
+            answers = []
+            for option in checked_options:
+                answers.append(
+                    {
+                        "name": option.label,
+                        "value": option.value,
+                        "featureHash": option.feature_node_hash,
+                    }
+                )
+            return {
+                "name": self.ontology_attribute.name,
+                "value": _lower_snake_case(self.ontology_attribute.name),
+                # DENIS: ^ this can be part of the ontology_attribute maybe?
+                "answers": answers,
+                "featureHash": self.ontology_attribute.feature_node_hash,
+                "manualAnnotation": self.is_manual_annotation,
+            }
+
+    def from_dict(self, d: Dict) -> None:
+        if d["featureHash"] != self.ontology_attribute.feature_node_hash:
+            raise ValueError("Cannot set the value of a ChecklistAnswer based on a different ontology attribute.")
+
+        answers = d["answers"]
+        if len(answers) == 0:
+            return
+
+        for answer in answers:
+            flat_option = _get_option_by_hash(answer["featureHash"], self.ontology_attribute.options)
+            self.check_options([flat_option])
+
+        self.is_manual_annotation = d["manualAnnotation"]
+        self._answered = True
 
     def __hash__(self):
         flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
@@ -962,12 +1079,43 @@ class LabelRow:
         ret["dataset_title"] = read_only_data.dataset_title
         ret["data_title"] = read_only_data.data_title
         ret["data_type"] = read_only_data.data_type.value
-        ret["object_answers"] = dict()  # TODO:
-        ret["classification_answers"] = dict()  # TODO:
+        ret["object_answers"] = self._to_object_answers()
+        ret["classification_answers"] = self._to_classification_answers()
         ret["object_actions"] = dict()  # TODO:
         ret["label_status"] = read_only_data.label_status
         ret["data_units"] = self._to_encord_data_units()
 
+        return ret
+
+    def _to_object_answers(self) -> dict:
+        ret = {}
+        for obj in self._objects_map.values():
+            all_static_answers = self._get_all_static_answers(obj)
+            ret[obj.object_hash] = {
+                "classifications": all_static_answers,
+                "objectHash": obj.object_hash,
+            }
+        return ret
+
+    def _to_classification_answers(self) -> dict:
+        ret = {}
+        for classification in self._classifications_map.values():
+            static_answer = classification.get_static_answer()
+            d_opt = static_answer._to_encord_dict()
+            classifications = [] if d_opt is None else [d_opt]
+            ret[classification.classification_hash] = {
+                "classifications": classifications,
+                "classificationHash": classification.classification_hash,
+            }
+        return ret
+
+    @staticmethod
+    def _get_all_static_answers(item: Union[LabelObject, LabelClassification]) -> List[dict]:
+        ret = []
+        for answer in item.get_all_static_answers():
+            d_opt = answer._to_encord_dict()
+            if d_opt is not None:
+                ret.append(d_opt)
         return ret
 
     def _to_encord_data_units(self) -> dict:
@@ -1348,7 +1496,7 @@ class LabelRow:
                 classification_hash = frame_classification_label["classificationHash"]
                 if classification_hash not in self._classifications_map:
                     classification_instance = self._create_new_classification_instance(
-                        frame_classification_label, frame
+                        frame_classification_label, frame, label_row_dict["classification_answers"]
                     )
                     self.add_classification(classification_instance)
                 else:
@@ -1370,7 +1518,9 @@ class LabelRow:
             frame_level_data[frame_number] = frame_level_image_group_data
         return frame_level_data
 
-    def _create_new_classification_instance(self, frame_classification_label: dict, frame: int) -> LabelClassification:
+    def _create_new_classification_instance(
+        self, frame_classification_label: dict, frame: int, classification_answers: dict
+    ) -> LabelClassification:
         ontology = self._ontology_structure
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
@@ -1381,8 +1531,24 @@ class LabelRow:
         classification_instance.set_frames([frame])
         classification_frame_instance_info = ClassificationInstanceData.from_dict(frame_classification_label)
         classification_instance.set_classification_instance_data(classification_frame_instance_info)
+        # DENIS: TODO: add the answers to the classification instance.
+        answers_dict = classification_answers[classification_hash]["classifications"]
+        self._add_static_answers_from_dict(classification_instance, answers_dict)
 
         return classification_instance
+
+    def _add_static_answers_from_dict(
+        self, classification_instance: LabelClassification, answers_dict: List[dict]
+    ) -> None:
+        if len(answers_dict) == 0:
+            return
+
+        answer_dict = answers_dict[0]
+
+        answer = classification_instance.get_static_answer()
+        # DENIS: check if the same ontology type etc.
+
+        answer.from_dict(answer_dict)
 
     def _add_frames_to_classification_instance(self, frame_classification_label: dict, frame: int) -> None:
         object_hash = frame_classification_label["classificationHash"]
