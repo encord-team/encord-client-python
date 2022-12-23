@@ -18,8 +18,8 @@ import dataclasses
 import json
 from collections import OrderedDict
 from datetime import datetime
-from enum import Enum, IntEnum
-from typing import Dict, List, Optional
+from enum import Enum, IntEnum, unique
+from typing import Dict, List, Optional, Union
 
 from dateutil import parser
 
@@ -509,6 +509,12 @@ class ImageGroupOCR:
 
 
 @dataclasses.dataclass(frozen=True)
+class VideoMetadata:
+    frames_per_second: int
+    duration: int
+
+
+@dataclasses.dataclass(frozen=True)
 class ReEncodeVideoTaskResult:
     data_hash: str
     # The signed url is only present when using StorageLocation.CORD_STORAGE
@@ -547,3 +553,28 @@ class DatasetAccessSettings:
 DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
     fetch_client_metadata=False,
 )
+
+
+@unique
+class EncordDataType(IntEnum):
+    VIDEO = 0
+    IMG_GROUP = 1
+    DICOM = 2
+    IMAGE = 3
+
+
+@dataclasses.dataclass(frozen=True)
+class DataAssetResult:
+    data_type: EncordDataType
+    data: Union[VideoMetadata]
+
+
+class DataAsset(base_orm.BaseORM):
+    """Data asset with metadata"""
+
+    status: str
+    result: List[DataAssetResult] = None
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        pass

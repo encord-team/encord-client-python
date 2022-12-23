@@ -4,7 +4,7 @@ from typing import Dict, Iterable, List, Optional, TextIO, Union
 from encord.client import EncordClientDataset
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import AddPrivateDataResponse, DataRow
+from encord.orm.dataset import AddPrivateDataResponse, DataRow, VideoMetadata
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetAccessSettings,
@@ -310,6 +310,25 @@ class Dataset:
             found in each frame of the image group
         """
         return self._client.run_ocr(image_group_id)
+
+    def get_bulk_data(self, data_hashes: List[str], get_signed_url: bool = False) -> List[Union[VideoMetadata]]:
+        """
+        Retrieve information about a videos/native images/image groups/DICOM images
+
+        Args:
+            data_hashes: List of the uids of the data objects
+            get_signed_url: Optionally return signed URLs for timed public access to that resource
+                (default False)
+
+        Returns:
+            List of data assets metadata (videos, image groups, native images, DICOM images)
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            UnknownError: If an error occurs while retrieving the object.
+        """
+        return self._client.get_bulk_data(data_hashes, get_signed_url)
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._client.get_cloud_integrations()

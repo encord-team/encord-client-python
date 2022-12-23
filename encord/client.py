@@ -58,7 +58,13 @@ from encord.http.utils import (
 )
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, AddPrivateDataResponse
+from encord.orm.dataset import (
+    DEFAULT_DATASET_ACCESS_SETTINGS,
+    AddPrivateDataResponse,
+    VideoMetadata,
+    DataAsset,
+    EncordDataType,
+)
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetAccessSettings,
@@ -537,6 +543,22 @@ class EncordClientDataset(EncordClient):
         response = self._querier.get_multiple(ImageGroupOCR, payload=payload)
 
         return response
+
+    def get_bulk_data(self, data_hashes: List[str], get_signed_url: bool = False) -> List[Union[VideoMetadata]]:
+        """ """
+
+        payload = {
+            "get_signed_url": get_signed_url,
+            "multi_request": True,
+        }
+        data_assets = self._querier.get_multiple(DataAsset, data_hashes, payload=payload)
+
+        returned_metadata: List[Union[VideoMetadata]] = []
+        for data_asset in data_assets:
+            if data_asset.data_type == EncordDataType.VIDEO.value:
+                returned_metadata.append(data_asset.data)
+
+        return returned_metadata
 
 
 CordClientDataset = EncordClientDataset
