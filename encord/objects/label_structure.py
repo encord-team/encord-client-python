@@ -1130,6 +1130,10 @@ class ClassificationInstance:
             attribute = self._ontology_classification.attributes[0]
         elif not self._is_attribute_valid_child_of_classification(attribute):
             raise ValueError("The attribute is not a valid child of the classification.")
+        elif not self._is_selectable_child_attribute(attribute):
+            raise RuntimeError(
+                "Setting a nested attribute is only possible if all parent attributes have been" "selected."
+            )
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
         if static_answer.is_answered() and overwrite is False:
@@ -1163,7 +1167,7 @@ class ClassificationInstance:
     def get_answer(self, attribute: None = None) -> Union[str, Option, List[Option]]:
         ...
 
-    def get_answer(self, attribute: Optional[Attribute] = None) -> Union[str, Option, Iterable[Option]]:
+    def get_answer(self, attribute: Optional[Attribute] = None) -> Union[str, Option, Iterable[Option], None]:
         """
         Args:
             attribute: The ontology attribute to get the answer for. If not provided, the first level attribute is used.
@@ -1172,6 +1176,8 @@ class ClassificationInstance:
             attribute = self._ontology_classification.attributes[0]
         elif not self._is_attribute_valid_child_of_classification(attribute):
             raise ValueError("The attribute is not a valid child of the classification.")
+        elif not self._is_selectable_child_attribute(attribute):
+            return None
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
 
@@ -1185,9 +1191,35 @@ class ClassificationInstance:
             raise ValueError(f"Unknown attribute type: {type(attribute)}")
 
     def _is_attribute_valid_child_of_classification(self, attribute: Attribute) -> bool:
-        # Essentially traverse the ontology tree to get to this -> actually it is already part of the "static answers",
-        # so I should be able to just check those.
-        return True
+        return attribute.feature_node_hash in self._static_answer_map
+
+    def _is_selectable_child_attribute(self, attribute: Attribute) -> bool:
+        # I have the ontology classification, so I can build the tree from that. Basically do a DFS.
+        ontology_classification = self._ontology_classification
+        top_attribute = ontology_classification.attributes[0]
+        return self._search_child_attributes(attribute, top_attribute)
+
+    def _search_child_attributes(self, passed_attribute: Attribute, search_attribute: Attribute) -> bool:
+        if passed_attribute == search_attribute:
+            return True
+
+        if not isinstance(search_attribute, RadioAttribute):
+            # DENIS: or raise something?
+            return False
+
+        answer = self._static_answer_map[search_attribute.feature_node_hash]
+        value = answer.get_value()
+        if value is None:
+            return False
+
+        for option in search_attribute.options:
+            if value == option:
+                for nested_option in option.nested_options:
+                    # If I have multi nesting here, what then?
+                    if self._search_child_attributes(passed_attribute, nested_option):
+                        return True
+
+        return False
 
     def _get_static_answer_map(self) -> Dict[str, Answer]:
         attributes = self._ontology_classification.attributes

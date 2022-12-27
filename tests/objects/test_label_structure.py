@@ -549,12 +549,44 @@ def test_classification_index_answer_overwrite():
 
 def test_classification_index_answer_nested_attributes():
     classification_instance = ClassificationInstance(radio_classification)
-    # DENIS: something is fishy about the instantiation
     attribute = radio_classification.attributes[0]
 
+    # Setting nested attribute
+    with pytest.raises(RuntimeError):
+        classification_instance.set_answer(answer="Zeus", attribute=radio_classification_option_2_text)
+    assert classification_instance.get_answer(attribute) is None
+
+    # Setting non-nested answer
     classification_instance.set_answer(answer=radio_classification_option_1, attribute=attribute)
 
     assert classification_instance.get_answer(attribute) == radio_classification_option_1
+
+    # Changing to the nested passed_attribute
+    with pytest.raises(RuntimeError):
+        classification_instance.set_answer(answer="Zeus", attribute=radio_classification_option_2_text)
+    assert classification_instance.get_answer(attribute) == radio_classification_option_1
+
+    classification_instance.set_answer(answer=radio_classification_option_2, overwrite=True)
+
+    assert classification_instance.get_answer(radio_classification_option_2_text) is None
+
+    classification_instance.set_answer(answer="Dionysus", attribute=radio_classification_option_2_text)
+
+    assert classification_instance.get_answer(attribute=attribute) == radio_classification_option_2
+    assert classification_instance.get_answer(radio_classification_option_2_text) == "Dionysus"
+
+    # Changing back to the un-nested passed_attribute
+    classification_instance.set_answer(answer=radio_classification_option_1, attribute=attribute, overwrite=True)
+
+    assert classification_instance.get_answer(attribute) == radio_classification_option_1
+    assert classification_instance.get_answer(radio_classification_option_2_text) is None
+
+    # Change again to nested passed_attribute
+    classification_instance.set_answer(answer=radio_classification_option_2, overwrite=True)
+
+    assert classification_instance.get_answer(attribute=attribute) == radio_classification_option_2
+    assert classification_instance.get_answer(radio_classification_option_2_text) == "Dionysus"
+    # ^ this does not necessarily have to be like this, it could also reset from the switch.
 
 
 def test_classification_instances():
@@ -896,10 +928,10 @@ def test_adding_dynamic_text_answers():
     the frames. However, that means I need to define some sort of comparison operator of a given value
     to another given value, even for checklists.
     views:
-        * DONE get dynamic answer for specific frame and attribute
+        * DONE get dynamic answer for specific frame and passed_attribute
         * get all dynamic answers for specific frame
         * DONE get all other frames for which this dynamic answer is set
-        * get all dynamic answers that are unset (either by frame or attribute) (in future)
+        * get all dynamic answers that are unset (either by frame or passed_attribute) (in future)
     """
     # DENIS: up I want to have all the views of the Dynamic data and implement the DynamicChecklistAnswer,
     #  and DynamicRadioAnswer
