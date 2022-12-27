@@ -349,8 +349,8 @@ def test_get_object_instances_by_frames():
 
 
 def test_adding_object_instance_to_multiple_frames_fails():
-    label_row_1 = LabelRow(empty_image_group_labels)
-    label_row_2 = LabelRow(empty_image_group_labels)
+    label_row_1 = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row_2 = LabelRow(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
 
     label_box.set_coordinates(BOX_COORDINATES, {1})
@@ -451,149 +451,6 @@ def test_removing_coordinates_from_object_removes_it_from_parent():
     assert len(objects) == 0
 
 
-@pytest.mark.skip("Old way to deal with answers")
-def test_getting_static_answers_from_object_instance():
-    label_box = ObjectInstance(nested_box_ontology_item)
-
-    """
-    DENIS: probably I want some flow where I can get all the empty answers from the label, and then set them.
-    I can also get a specific answer by ontology object and set it. So essentially I'd like to initiate all the answers
-    already, and then be able to add them. 
-    What about having multiple label_boxes and setting the same answers? Can do some sort of copy_all_answers for example,
-    but really it only saves an additional for loop. or copy_answers_for_ontology_objects. 
-    
-    Maybe I want a context manager something like
-    with label_box.modify_answers() as answers:
-        for answer in answers:
-            ...
-        # Throw in exit handler if the answers list was changed.
-        
-    Can also get a read only view which copies the answers out?
-    Or I can make the collection itself something more intelligent that protects itself from people deleting stuff.
-    
-    Or I can just never return the whole reference to the internal list, but always only  specific answers or a new list
-    of references! 
-    """
-
-    static_answers = label_box.get_all_static_answers()
-    assert len(static_answers) == 2
-
-    expected_ontology_hashes = {checklist_attribute_1.feature_node_hash, text_attribute_1.feature_node_hash}
-    actual_ontology_hashes = {
-        static_answers[0].ontology_attribute.feature_node_hash,
-        static_answers[1].ontology_attribute.feature_node_hash,
-    }
-    assert expected_ontology_hashes == actual_ontology_hashes
-    assert not static_answers[0].is_answered()
-    assert not static_answers[1].is_answered()
-
-
-@pytest.mark.skip("Old way to deal with answers")
-def test_setting_static_text_answers():
-    object_instance_1 = ObjectInstance(nested_box_ontology_item)
-    object_instance_2 = ObjectInstance(nested_box_ontology_item)
-
-    text_answer: TextAnswer = object_instance_1.get_static_answer(text_attribute_1)
-    assert not text_answer.is_answered()
-    assert text_answer.get_value() is None
-    # DENIS: `value.get()` `value.set()`
-
-    text_answer.set("Zeus")
-    assert text_answer.is_answered()
-    assert text_answer.get_value() == "Zeus"
-
-    refetched_text_answer: TextAnswer = object_instance_1.get_static_answer(text_attribute_1)
-    assert refetched_text_answer.is_answered()
-    assert refetched_text_answer.get_value() == "Zeus"
-
-    other_text_answer = object_instance_2.get_static_answer(text_attribute_1)
-    assert not other_text_answer.is_answered()
-    assert other_text_answer.get_value() is None
-
-    other_text_answer.copy_from(text_answer)
-    assert refetched_text_answer.is_answered()
-    assert refetched_text_answer.get_value() == "Zeus"
-
-
-@pytest.mark.skip("Old way to deal with answers")
-def test_setting_static_checklist_answers():
-    object_instance_1 = ObjectInstance(nested_box_ontology_item)
-    object_instance_2 = ObjectInstance(nested_box_ontology_item)
-
-    checklist_answer: ChecklistAnswer = object_instance_1.get_static_answer(checklist_attribute_1)
-    assert not checklist_answer.is_answered()
-    assert not checklist_answer.get_value(checklist_attribute_1_option_1)
-    assert not checklist_answer.get_value(checklist_attribute_1_option_2)
-
-    checklist_answer.check_options([checklist_attribute_1_option_1, checklist_attribute_1_option_2])
-    assert checklist_answer.is_answered()
-    assert checklist_answer.get_value(checklist_attribute_1_option_1)
-    assert checklist_answer.get_value(checklist_attribute_1_option_2)
-
-    checklist_answer.uncheck_options([checklist_attribute_1_option_1])
-    assert checklist_answer.is_answered()
-    assert not checklist_answer.get_value(checklist_attribute_1_option_1)
-    assert checklist_answer.get_value(checklist_attribute_1_option_2)
-
-    refetched_checklist_answer: ChecklistAnswer = object_instance_1.get_static_answer(checklist_attribute_1)
-    assert refetched_checklist_answer.is_answered()
-    assert not refetched_checklist_answer.get_value(checklist_attribute_1_option_1)
-    assert refetched_checklist_answer.get_value(checklist_attribute_1_option_2)
-
-    other_checklist_answer: ChecklistAnswer = object_instance_2.get_static_answer(checklist_attribute_1)
-    assert not other_checklist_answer.is_answered()
-    assert not other_checklist_answer.get_value(checklist_attribute_1_option_1)
-    assert not other_checklist_answer.get_value(checklist_attribute_1_option_2)
-
-    other_checklist_answer.copy_from(checklist_answer)
-    assert other_checklist_answer.is_answered()
-    assert not other_checklist_answer.get_value(checklist_attribute_1_option_1)
-    assert other_checklist_answer.get_value(checklist_attribute_1_option_2)
-
-
-@pytest.mark.skip("Old way to deal with answers")
-def test_setting_static_radio_answers():
-    object_instance_1 = ObjectInstance(deeply_nested_polygon_item)
-    object_instance_2 = ObjectInstance(deeply_nested_polygon_item)
-
-    radio_answer_1: RadioAnswer = object_instance_1.get_static_answer(radio_attribute_level_1)
-    radio_answer_2: RadioAnswer = object_instance_1.get_static_answer(radio_attribute_level_2)
-    # DENIS: This answer only makes sense if the top level option was actually selected!!
-    # DENIS: need to think about an interface where this is cleaner.
-    # Maybe the get_static_answer only return from top level, and that answer object itself returns the next
-    # selectable options and nested stuff.
-
-    assert not radio_answer_1.is_answered()
-    assert not radio_answer_2.is_answered()
-    assert radio_answer_1.get_value() is None
-    assert radio_answer_2.get_value() is None
-
-    radio_answer_1.set(radio_nested_option_1)
-    with pytest.raises(ValueError):
-        radio_answer_2.set(radio_nested_option_1)
-    assert radio_answer_1.is_answered()
-    assert not radio_answer_2.is_answered()
-    assert radio_answer_1.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
-    assert radio_answer_2.get_value() is None
-
-    radio_answer_2.set(radio_attribute_2_option_1)
-    assert radio_answer_2.is_answered()
-    assert radio_answer_2.get_value().feature_node_hash == radio_attribute_2_option_1.feature_node_hash
-
-    refetched_radio_answer: RadioAnswer = object_instance_1.get_static_answer(radio_attribute_level_1)
-    assert refetched_radio_answer.is_answered()
-    assert refetched_radio_answer.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
-
-    other_radio_answer: RadioAnswer = object_instance_2.get_static_answer(radio_attribute_level_1)
-    assert not other_radio_answer.is_answered()
-    assert other_radio_answer.get_value() is None
-
-    other_radio_answer.copy_from(radio_answer_1)
-    assert other_radio_answer.is_answered()
-    assert other_radio_answer.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
-    x = {other_radio_answer: 5}
-
-
 @dataclass
 class Range:
     start: int
@@ -663,125 +520,41 @@ def dynamic_vs_static_answer():
 
 def test_new_classification_index_answers():
     classification_instance = ClassificationInstance(text_classification)
-    classification_instance.set_answer("Zeus", text_classification_attribute)
+    attribute = text_classification.attributes[0]
+    # DENIS: or a nice getter, in which case I'd need to reject any inappropriate `Classification`s.
+    classification_instance.set_answer("Zeus", attribute)
 
     assert classification_instance.get_answer() == "Zeus"
     # DENIS: because we have nested classifications, we need to be able to set answers for nested classifications.
     # However, it can default to the top level for sure.
 
+    # DENIS: do tests with nestedness. Do tests with other classification answers.
 
-@pytest.mark.skip("Old way to deal with answers")
-def test_adding_dynamic_text_answers():
-    object_instance = ObjectInstance(keypoint_dynamic)
-    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
 
-    dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_text)
-    assert dynamic_answer.frame == 1
-    dynamic_answer.set("Hermes")
-    dynamic_answer.copy_to_frames(frames=[2])
-    dynamic_answer.propagate_to_last_frame()  # DENIS: implement this?
+def test_classification_index_answer_overwrite():
+    classification_instance = ClassificationInstance(text_classification)
+    attribute = text_classification.attributes[0]
 
-    assert dynamic_answer.get_value() == "Hermes"
-    assert dynamic_answer.in_frames() == {1, 2}
+    classification_instance.set_answer("Zeus", attribute)
 
-    dynamic_answer_2 = object_instance.get_dynamic_answer(frame=3, attribute=dynamic_text)
-    dynamic_answer_2.set("Aphrodite")
-    dynamic_answer.copy_to_frames(frames=[1])
-
-    assert dynamic_answer.get_value() == "Hermes"
-    assert dynamic_answer_2.get_value() == "Aphrodite"
-
-    dynamic_answer_2.copy_to_frames(frames=[1])
-    assert dynamic_answer_2.get_value() == "Aphrodite"
-    assert dynamic_answer.get_value() == "Aphrodite"
-    assert dynamic_answer.in_frames() == dynamic_answer_2.in_frames()
+    assert classification_instance.get_answer() == "Zeus"
 
     with pytest.raises(RuntimeError):
-        dynamic_answer_2.copy_to_frames([100])
-    """
-    Essentially I need some sort of map from frame to real answers. Where these dynamic answers, are just a view
-    of the frame to the real answers. 
-    Additionally, to get the `in_ranges()` thing right, I might need to define a map from the same answers to
-    the frames. However, that means I need to define some sort of comparison operator of a given value
-    to another given value, even for checklists.
-    views:
-        * DONE get dynamic answer for specific frame and attribute
-        * get all dynamic answers for specific frame
-        * DONE get all other frames for which this dynamic answer is set
-        * get all dynamic answers that are unset (either by frame or attribute) (in future)
-    """
-    # DENIS: up I want to have all the views of the Dynamic data and implement the DynamicChecklistAnswer,
-    #  and DynamicRadioAnswer
+        classification_instance.set_answer("Poseidon")
+    assert classification_instance.get_answer() == "Zeus"
+
+    classification_instance.set_answer("Aphrodite", overwrite=True)
+    assert classification_instance.get_answer() == "Aphrodite"
 
 
-@pytest.mark.skip("Old way to deal with answers")
-def test_adding_dynamic_checklist_answers():
-    object_instance = ObjectInstance(keypoint_dynamic)
-    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+def test_classification_index_answer_nested_attributes():
+    classification_instance = ClassificationInstance(radio_classification)
+    # DENIS: something is fishy about the instantiation
+    attribute = radio_classification.attributes[0]
 
-    dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_checklist)
-    assert dynamic_answer.frame == 1
-    assert not dynamic_answer.is_answered_for_current_frame()
-    assert not dynamic_answer.get_value(dynamic_checklist_option_1)
-    assert not dynamic_answer.get_value(dynamic_checklist_option_2)
+    classification_instance.set_answer(answer=radio_classification_option_1, attribute=attribute)
 
-    dynamic_answer.check_options([dynamic_checklist_option_1])
-    assert dynamic_answer.get_value(dynamic_checklist_option_1)
-    assert not dynamic_answer.get_value(dynamic_checklist_option_2)
-
-    dynamic_answer.copy_to_frames([1, 2])
-    assert dynamic_answer.in_frames() == {1, 2}
-
-    dynamic_answer_2 = object_instance.get_dynamic_answer(frame=3, attribute=dynamic_checklist)
-    dynamic_answer_2.check_options([dynamic_checklist_option_1, dynamic_checklist_option_2])
-    dynamic_answer_2.copy_to_frames(frames=[1])
-
-    assert dynamic_answer.get_value(dynamic_checklist_option_1)
-    assert dynamic_answer.get_value(dynamic_checklist_option_1)
-    assert dynamic_answer_2.get_value(dynamic_checklist_option_1)
-    assert dynamic_answer_2.get_value(dynamic_checklist_option_2)
-    assert dynamic_answer.in_frames() == {1, 3}
-    assert dynamic_answer_2.in_frames() == {1, 3}
-
-    # Frame 2 is still answered from before and unchanged.
-    dynamic_answer_3 = object_instance.get_dynamic_answer(frame=2, attribute=dynamic_checklist)
-    assert dynamic_answer_3.is_answered_for_current_frame()
-    assert dynamic_answer_3.get_value(dynamic_checklist_option_1)
-    assert not dynamic_answer_3.get_value(dynamic_checklist_option_2)
-
-    with pytest.raises(RuntimeError):
-        dynamic_answer_2.copy_to_frames([100])
-
-
-@pytest.mark.skip("Old way to deal with answers")
-def test_adding_radio_checklist_answers():
-    """DENIS: think about what to do with non-dynamic nested stuff. What does the UI do?"""
-    object_instance = ObjectInstance(keypoint_dynamic)
-    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
-
-    dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_radio)
-    assert dynamic_answer.frame == 1
-    dynamic_answer.set(dynamic_radio_option_1)
-    dynamic_answer.copy_to_frames(frames=[2])
-
-    assert dynamic_answer.get_value() == dynamic_radio_option_1
-    # DENIS: do I need to have equality comparison of dynamic radios, if they are not the same instance...
-    assert dynamic_answer.in_frames() == {1, 2}
-
-    dynamic_answer_2 = object_instance.get_dynamic_answer(frame=3, attribute=dynamic_radio)
-    dynamic_answer_2.set(dynamic_radio_option_2)
-    dynamic_answer.copy_to_frames(frames=[1])
-
-    assert dynamic_answer.get_value() == dynamic_radio_option_1
-    assert dynamic_answer_2.get_value() == dynamic_radio_option_2
-
-    dynamic_answer_2.copy_to_frames(frames=[1])
-    assert dynamic_answer_2.get_value() == dynamic_radio_option_2
-    assert dynamic_answer.get_value() == dynamic_radio_option_2
-    assert dynamic_answer.in_frames() == dynamic_answer_2.in_frames()
-
-    with pytest.raises(RuntimeError):
-        dynamic_answer_2.copy_to_frames([100])
+    assert classification_instance.get_answer(attribute) == radio_classification_option_1
 
 
 def test_classification_instances():
@@ -798,7 +571,11 @@ def test_classification_instances():
     classification_instance_2.set_answer(classification_instance_1.get_answer())
     assert classification_instance_2.get_answer() == "Dionysus"
 
-    classification_instance_2.set_answer("Hades")
+    with pytest.raises(RuntimeError) as e:
+        classification_instance_2.set_answer("Hades")
+    assert classification_instance_2.get_answer() == "Dionysus"
+
+    classification_instance_2.set_answer("Hades", overwrite=True)
     assert classification_instance_2.get_answer() == "Hades"
     assert classification_instance_1.get_answer() == "Dionysus"
 
@@ -934,3 +711,265 @@ def test_add_and_get_classification_instances_to_label_row():
 #
 #     save_multiple_label_classes([label_class, ...])  # DENIS: bulk getter and setters are needed by David.
 #     # DENIS: ensure terminology is similar to open source given that it might be used for Encord Active
+
+
+# ==========================================================
+# =========== old apis ============
+# ==========================================================
+
+
+@pytest.mark.skip("Old way to deal with answers")
+def test_getting_static_answers_from_object_instance():
+    label_box = ObjectInstance(nested_box_ontology_item)
+
+    """
+    DENIS: probably I want some flow where I can get all the empty answers from the label, and then set them.
+    I can also get a specific answer by ontology object and set it. So essentially I'd like to initiate all the answers
+    already, and then be able to add them. 
+    What about having multiple label_boxes and setting the same answers? Can do some sort of copy_all_answers for example,
+    but really it only saves an additional for loop. or copy_answers_for_ontology_objects. 
+
+    Maybe I want a context manager something like
+    with label_box.modify_answers() as answers:
+        for answer in answers:
+            ...
+        # Throw in exit handler if the answers list was changed.
+
+    Can also get a read only view which copies the answers out?
+    Or I can make the collection itself something more intelligent that protects itself from people deleting stuff.
+
+    Or I can just never return the whole reference to the internal list, but always only  specific answers or a new list
+    of references! 
+    """
+
+    static_answers = label_box.get_all_static_answers()
+    assert len(static_answers) == 2
+
+    expected_ontology_hashes = {checklist_attribute_1.feature_node_hash, text_attribute_1.feature_node_hash}
+    actual_ontology_hashes = {
+        static_answers[0].ontology_attribute.feature_node_hash,
+        static_answers[1].ontology_attribute.feature_node_hash,
+    }
+    assert expected_ontology_hashes == actual_ontology_hashes
+    assert not static_answers[0].is_answered()
+    assert not static_answers[1].is_answered()
+
+
+@pytest.mark.skip("Old way to deal with answers")
+def test_setting_static_text_answers():
+    object_instance_1 = ObjectInstance(nested_box_ontology_item)
+    object_instance_2 = ObjectInstance(nested_box_ontology_item)
+
+    text_answer: TextAnswer = object_instance_1.get_static_answer(text_attribute_1)
+    assert not text_answer.is_answered()
+    assert text_answer.get_value() is None
+    # DENIS: `value.get()` `value.set()`
+
+    text_answer.set("Zeus")
+    assert text_answer.is_answered()
+    assert text_answer.get_value() == "Zeus"
+
+    refetched_text_answer: TextAnswer = object_instance_1.get_static_answer(text_attribute_1)
+    assert refetched_text_answer.is_answered()
+    assert refetched_text_answer.get_value() == "Zeus"
+
+    other_text_answer = object_instance_2.get_static_answer(text_attribute_1)
+    assert not other_text_answer.is_answered()
+    assert other_text_answer.get_value() is None
+
+    other_text_answer.copy_from(text_answer)
+    assert refetched_text_answer.is_answered()
+    assert refetched_text_answer.get_value() == "Zeus"
+
+
+@pytest.mark.skip("Old way to deal with answers")
+def test_setting_static_checklist_answers():
+    object_instance_1 = ObjectInstance(nested_box_ontology_item)
+    object_instance_2 = ObjectInstance(nested_box_ontology_item)
+
+    checklist_answer: ChecklistAnswer = object_instance_1.get_static_answer(checklist_attribute_1)
+    assert not checklist_answer.is_answered()
+    assert not checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert not checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    checklist_answer.check_options([checklist_attribute_1_option_1, checklist_attribute_1_option_2])
+    assert checklist_answer.is_answered()
+    assert checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    checklist_answer.uncheck_options([checklist_attribute_1_option_1])
+    assert checklist_answer.is_answered()
+    assert not checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    refetched_checklist_answer: ChecklistAnswer = object_instance_1.get_static_answer(checklist_attribute_1)
+    assert refetched_checklist_answer.is_answered()
+    assert not refetched_checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert refetched_checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    other_checklist_answer: ChecklistAnswer = object_instance_2.get_static_answer(checklist_attribute_1)
+    assert not other_checklist_answer.is_answered()
+    assert not other_checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert not other_checklist_answer.get_value(checklist_attribute_1_option_2)
+
+    other_checklist_answer.copy_from(checklist_answer)
+    assert other_checklist_answer.is_answered()
+    assert not other_checklist_answer.get_value(checklist_attribute_1_option_1)
+    assert other_checklist_answer.get_value(checklist_attribute_1_option_2)
+
+
+@pytest.mark.skip("Old way to deal with answers")
+def test_setting_static_radio_answers():
+    object_instance_1 = ObjectInstance(deeply_nested_polygon_item)
+    object_instance_2 = ObjectInstance(deeply_nested_polygon_item)
+
+    radio_answer_1: RadioAnswer = object_instance_1.get_static_answer(radio_attribute_level_1)
+    radio_answer_2: RadioAnswer = object_instance_1.get_static_answer(radio_attribute_level_2)
+    # DENIS: This answer only makes sense if the top level option was actually selected!!
+    # DENIS: need to think about an interface where this is cleaner.
+    # Maybe the get_static_answer only return from top level, and that answer object itself returns the next
+    # selectable options and nested stuff.
+
+    assert not radio_answer_1.is_answered()
+    assert not radio_answer_2.is_answered()
+    assert radio_answer_1.get_value() is None
+    assert radio_answer_2.get_value() is None
+
+    radio_answer_1.set(radio_nested_option_1)
+    with pytest.raises(ValueError):
+        radio_answer_2.set(radio_nested_option_1)
+    assert radio_answer_1.is_answered()
+    assert not radio_answer_2.is_answered()
+    assert radio_answer_1.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
+    assert radio_answer_2.get_value() is None
+
+    radio_answer_2.set(radio_attribute_2_option_1)
+    assert radio_answer_2.is_answered()
+    assert radio_answer_2.get_value().feature_node_hash == radio_attribute_2_option_1.feature_node_hash
+
+    refetched_radio_answer: RadioAnswer = object_instance_1.get_static_answer(radio_attribute_level_1)
+    assert refetched_radio_answer.is_answered()
+    assert refetched_radio_answer.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
+
+    other_radio_answer: RadioAnswer = object_instance_2.get_static_answer(radio_attribute_level_1)
+    assert not other_radio_answer.is_answered()
+    assert other_radio_answer.get_value() is None
+
+    other_radio_answer.copy_from(radio_answer_1)
+    assert other_radio_answer.is_answered()
+    assert other_radio_answer.get_value().feature_node_hash == radio_nested_option_1.feature_node_hash
+    x = {other_radio_answer: 5}
+
+
+@pytest.mark.skip("Old way to deal with answers")
+def test_adding_dynamic_text_answers():
+    object_instance = ObjectInstance(keypoint_dynamic)
+    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+
+    dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_text)
+    assert dynamic_answer.frame == 1
+    dynamic_answer.set("Hermes")
+    dynamic_answer.copy_to_frames(frames=[2])
+    dynamic_answer.propagate_to_last_frame()  # DENIS: implement this?
+
+    assert dynamic_answer.get_value() == "Hermes"
+    assert dynamic_answer.in_frames() == {1, 2}
+
+    dynamic_answer_2 = object_instance.get_dynamic_answer(frame=3, attribute=dynamic_text)
+    dynamic_answer_2.set("Aphrodite")
+    dynamic_answer.copy_to_frames(frames=[1])
+
+    assert dynamic_answer.get_value() == "Hermes"
+    assert dynamic_answer_2.get_value() == "Aphrodite"
+
+    dynamic_answer_2.copy_to_frames(frames=[1])
+    assert dynamic_answer_2.get_value() == "Aphrodite"
+    assert dynamic_answer.get_value() == "Aphrodite"
+    assert dynamic_answer.in_frames() == dynamic_answer_2.in_frames()
+
+    with pytest.raises(RuntimeError):
+        dynamic_answer_2.copy_to_frames([100])
+    """
+    Essentially I need some sort of map from frame to real answers. Where these dynamic answers, are just a view
+    of the frame to the real answers. 
+    Additionally, to get the `in_ranges()` thing right, I might need to define a map from the same answers to
+    the frames. However, that means I need to define some sort of comparison operator of a given value
+    to another given value, even for checklists.
+    views:
+        * DONE get dynamic answer for specific frame and attribute
+        * get all dynamic answers for specific frame
+        * DONE get all other frames for which this dynamic answer is set
+        * get all dynamic answers that are unset (either by frame or attribute) (in future)
+    """
+    # DENIS: up I want to have all the views of the Dynamic data and implement the DynamicChecklistAnswer,
+    #  and DynamicRadioAnswer
+
+
+@pytest.mark.skip("Old way to deal with answers")
+def test_adding_dynamic_checklist_answers():
+    object_instance = ObjectInstance(keypoint_dynamic)
+    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+
+    dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_checklist)
+    assert dynamic_answer.frame == 1
+    assert not dynamic_answer.is_answered_for_current_frame()
+    assert not dynamic_answer.get_value(dynamic_checklist_option_1)
+    assert not dynamic_answer.get_value(dynamic_checklist_option_2)
+
+    dynamic_answer.check_options([dynamic_checklist_option_1])
+    assert dynamic_answer.get_value(dynamic_checklist_option_1)
+    assert not dynamic_answer.get_value(dynamic_checklist_option_2)
+
+    dynamic_answer.copy_to_frames([1, 2])
+    assert dynamic_answer.in_frames() == {1, 2}
+
+    dynamic_answer_2 = object_instance.get_dynamic_answer(frame=3, attribute=dynamic_checklist)
+    dynamic_answer_2.check_options([dynamic_checklist_option_1, dynamic_checklist_option_2])
+    dynamic_answer_2.copy_to_frames(frames=[1])
+
+    assert dynamic_answer.get_value(dynamic_checklist_option_1)
+    assert dynamic_answer.get_value(dynamic_checklist_option_1)
+    assert dynamic_answer_2.get_value(dynamic_checklist_option_1)
+    assert dynamic_answer_2.get_value(dynamic_checklist_option_2)
+    assert dynamic_answer.in_frames() == {1, 3}
+    assert dynamic_answer_2.in_frames() == {1, 3}
+
+    # Frame 2 is still answered from before and unchanged.
+    dynamic_answer_3 = object_instance.get_dynamic_answer(frame=2, attribute=dynamic_checklist)
+    assert dynamic_answer_3.is_answered_for_current_frame()
+    assert dynamic_answer_3.get_value(dynamic_checklist_option_1)
+    assert not dynamic_answer_3.get_value(dynamic_checklist_option_2)
+
+    with pytest.raises(RuntimeError):
+        dynamic_answer_2.copy_to_frames([100])
+
+
+@pytest.mark.skip("Old way to deal with answers")
+def test_adding_radio_checklist_answers():
+    """DENIS: think about what to do with non-dynamic nested stuff. What does the UI do?"""
+    object_instance = ObjectInstance(keypoint_dynamic)
+    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+
+    dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_radio)
+    assert dynamic_answer.frame == 1
+    dynamic_answer.set(dynamic_radio_option_1)
+    dynamic_answer.copy_to_frames(frames=[2])
+
+    assert dynamic_answer.get_value() == dynamic_radio_option_1
+    # DENIS: do I need to have equality comparison of dynamic radios, if they are not the same instance...
+    assert dynamic_answer.in_frames() == {1, 2}
+
+    dynamic_answer_2 = object_instance.get_dynamic_answer(frame=3, attribute=dynamic_radio)
+    dynamic_answer_2.set(dynamic_radio_option_2)
+    dynamic_answer.copy_to_frames(frames=[1])
+
+    assert dynamic_answer.get_value() == dynamic_radio_option_1
+    assert dynamic_answer_2.get_value() == dynamic_radio_option_2
+
+    dynamic_answer_2.copy_to_frames(frames=[1])
+    assert dynamic_answer_2.get_value() == dynamic_radio_option_2
+    assert dynamic_answer.get_value() == dynamic_radio_option_2
+    assert dynamic_answer.in_frames() == dynamic_answer_2.in_frames()
+
+    with pytest.raises(RuntimeError):
+        dynamic_answer_2.copy_to_frames([100])

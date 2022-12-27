@@ -71,7 +71,9 @@ Frames = Union[int, Range, Ranges]
 
 
 class _Answer(ABC):
-    """Common fields amongst all answers"""
+    """Common fields amongst all answers
+    DENIS: use this class instead of the Union below.
+    """
 
     _ontology_attribute: Attribute
 
@@ -88,6 +90,14 @@ class _Answer(ABC):
         """Remove the value from the answer"""
         self._answered = False
         # DENIS: might be better to default everything again for more consistent states!
+
+    @property
+    def is_dynamic(self) -> bool:
+        return self._ontology_attribute.dynamic
+
+    @is_dynamic.setter
+    def is_dynamic(self, value: bool) -> NoReturn:
+        raise RuntimeError("Cannot set the is_dynamic value of the answer.")
 
     @property
     def is_manual_annotation(self) -> bool:
@@ -122,6 +132,8 @@ class TextAnswer(_Answer):
 
     def set(self, value: str) -> TextAnswer:
         """Returns the object itself"""
+        if not isinstance(value, str):
+            raise ValueError("TextAnswer can only be set to a string.")
         self._value = value
         self._answered = True
         return self
@@ -176,6 +188,9 @@ class RadioAnswer(_Answer):
         self._value: Optional[NestableOption] = None
 
     def set(self, value: NestableOption):
+        if not isinstance(value, NestableOption):
+            raise ValueError("RadioAnswer can only be set to a NestableOption.")
+
         passed = False
         for child in self._ontology_attribute.options:
             if value.feature_node_hash == child.feature_node_hash:
@@ -270,6 +285,10 @@ class ChecklistAnswer(_Answer):
             self._feature_hash_to_answer_map[value.feature_node_hash] = False
 
     def set_options(self, values: Iterable[FlatOption]):
+        for value in values:
+            if not isinstance(value, FlatOption):
+                raise ValueError("ChecklistAnswer can only be set to FlatOptions.")
+
         self._answered = True
         for key in self._feature_hash_to_answer_map.keys():
             self._feature_hash_to_answer_map[key] = False
@@ -423,6 +442,7 @@ class DynamicTextAnswer(_DynamicAnswer):
         super().__init__(parent, frame, attribute)
 
     def set(self, value: str):
+
         current_answer = self._get_current_answer()
         new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
         new_answer.copy_from(current_answer)
@@ -738,6 +758,74 @@ class ObjectInstance:
         for frame in frames:
             self._frames_to_answers[frame].add(answer)
 
+    @overload
+    def set_answer(
+        self,
+        answer: str,
+        attribute: TextAttribute,
+        frames: Optional[Frames] = None,
+        overwrite: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def set_answer(
+        self,
+        answer: Option,
+        attribute: RadioAttribute,
+        frames: Optional[Frames] = None,
+        overwrite: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def set_answer(
+        self,
+        answer: Iterable[Option],
+        attribute: ChecklistAttribute,
+        frames: Optional[Frames] = None,
+        overwrite: bool = False,
+    ) -> None:
+        ...
+
+    def set_answer(
+        self,
+        answer: Union[str, Option, Iterable[Option]],
+        attribute: Attribute,
+        frames: Optional[Frames] = None,
+        overwrite: bool = False,
+    ) -> None:
+        """
+        We could make these functions part of a different class which this inherits from.
+
+        Args:
+            answer: The answer to set.
+            attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
+            frames: Only relevant for dynamic attributes. The frames to set the answer for. If not provided, the
+                answer is set for all frames. If this is anything but `None` for non-dynamic attributes, this will
+                throw a ValueError.
+            overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
+                a RuntimeError if the answer already exists.
+        """
+        if not self._is_attribute_valid_child_of_object_instance(attribute):
+            raise ValueError("The attribute is not a valid child of the object.")
+
+        retrieved_answer = ...
+        # DENIS: get the answer corresponding to the attribute.
+
+        if isinstance(attribute, TextAttribute):
+            retrieved_answer.set(answer)
+        elif isinstance(attribute, RadioAttribute):
+            retrieved_answer.set(answer)
+        elif isinstance(attribute, ChecklistAttribute):
+            retrieved_answer.set_options(answer)
+        else:
+            raise ValueError(f"Unknown attribute type: {type(attribute)}")
+
+    def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
+        # DENIS: implement this
+        return True
+
     def get_all_static_answers(
         self,
     ) -> List[Answer]:
@@ -1008,22 +1096,33 @@ class ClassificationInstance:
         ...
 
     @overload
-    def set_answer(self, answer: Option, attribute: RadioAttribute) -> None:
+    def set_answer(self, answer: Option, attribute: RadioAttribute, overwrite: bool = False) -> None:
         ...
 
     @overload
-    def set_answer(self, answer: Iterable[Option], attribute: ChecklistAttribute) -> None:
+    def set_answer(self, answer: Iterable[Option], attribute: ChecklistAttribute, overwrite: bool = False) -> None:
         ...
 
     @overload
-    def set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: None = None) -> None:
+    def set_answer(
+        self, answer: Union[str, Option, Iterable[Option]], attribute: None = None, overwrite: bool = False
+    ) -> None:
         ...
 
-    def set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Optional[Attribute] = None) -> None:
+    def set_answer(
+        self,
+        answer: Union[str, Option, Iterable[Option]],
+        attribute: Optional[Attribute] = None,
+        overwrite: bool = False,
+    ) -> None:
         """
+        We could make these functions part of a different class which this inherits from.
+
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
+            overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
+                a RuntimeError if the answer already exists.
         """
         if attribute is None:
             attribute = self._ontology_classification.attributes[0]
@@ -1031,8 +1130,13 @@ class ClassificationInstance:
             raise ValueError("The attribute is not a valid child of the classification.")
 
         static_answer = self._static_answer
+        if static_answer.is_answered() and overwrite is False:
+            raise RuntimeError(
+                "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
+                "overwrite an existing answer to and attribute."
+            )
+
         if isinstance(attribute, TextAttribute):
-            # DENIS: additional hard type checking.
             static_answer.set(answer)
         elif isinstance(attribute, RadioAttribute):
             static_answer.set(answer)
