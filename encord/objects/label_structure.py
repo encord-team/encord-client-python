@@ -1025,7 +1025,9 @@ class ClassificationInstance:
         self._classification_instance_data = ClassificationInstanceData()
         # DENIS: These are actually somehow per frame! What would that even mean? check this!
 
-        self._static_answer: Answer = self._get_static_answer()
+        self._static_answer_map: Dict[str, Answer] = self._get_static_answer_map()
+        # feature_node_hash of attribute to the answer.
+
         self._frames: Set[int] = set()
         # DENIS: Ideally there would be a max range check.
         self._max_frame: int = float("inf")
@@ -1129,7 +1131,7 @@ class ClassificationInstance:
         elif not self._is_attribute_valid_child_of_classification(attribute):
             raise ValueError("The attribute is not a valid child of the classification.")
 
-        static_answer = self._static_answer
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
         if static_answer.is_answered() and overwrite is False:
             raise RuntimeError(
                 "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
@@ -1171,7 +1173,8 @@ class ClassificationInstance:
         elif not self._is_attribute_valid_child_of_classification(attribute):
             raise ValueError("The attribute is not a valid child of the classification.")
 
-        static_answer = self._static_answer
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+
         if isinstance(attribute, TextAttribute):
             return static_answer.get_value()
         elif isinstance(attribute, RadioAttribute):
@@ -1182,15 +1185,15 @@ class ClassificationInstance:
             raise ValueError(f"Unknown attribute type: {type(attribute)}")
 
     def _is_attribute_valid_child_of_classification(self, attribute: Attribute) -> bool:
-        # DENIS: implement this
+        # Essentially traverse the ontology tree to get to this -> actually it is already part of the "static answers",
+        # so I should be able to just check those.
         return True
 
-    def _get_static_answer(self) -> Answer:
+    def _get_static_answer_map(self) -> Dict[str, Answer]:
         attributes = self._ontology_classification.attributes
         answers = _get_default_answers_from_attributes(attributes)
-        if len(answers) != 1:
-            raise RuntimeError("The ClassificationInstance is in an invalid state.")
-        return answers[0]
+        answer_map = {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
+        return answer_map
 
     def _check_within_range(self, frame: int) -> None:
         if frame < 0 or frame > self._max_frame:
