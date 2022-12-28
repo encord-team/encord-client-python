@@ -129,6 +129,20 @@ all_types_structure = OntologyStructure(
             shape=Shape.POLYGON,
             feature_node_hash="MTM1MTQy",
             attributes=[
+                TextAttribute(
+                    uid=[5, 1], feature_node_hash="OTk555U1", name="First name", required=False, dynamic=False
+                ),
+                ChecklistAttribute(
+                    uid=[5, 2],
+                    feature_node_hash="ODc555Ay",
+                    name="Mood",
+                    required=False,
+                    dynamic=False,
+                    options=[
+                        FlatOption(uid=[5, 2, 1], feature_node_hash="MT5555Q3", label="Angry", value="angry"),
+                        FlatOption(uid=[5, 2, 2], feature_node_hash="Nzg5555E3", label="Sad", value="sad"),
+                    ],
+                ),
                 RadioAttribute(
                     uid=[6, 1],
                     feature_node_hash="MTExMjI3",
@@ -157,33 +171,25 @@ all_types_structure = OntologyStructure(
                             label="1 option 2",
                             value="1_option_2",
                             nested_options=[
-                                RadioAttribute(
-                                    uid=[6, 1, 2, 1],
-                                    feature_node_hash="NDYyMjQx",
-                                    name="1 2 radio 1",
+                                ChecklistAttribute(
+                                    uid=[5, 2],
+                                    feature_node_hash="ODc666Ay",
+                                    name="Mood",
                                     required=False,
                                     dynamic=False,
                                     options=[
-                                        NestableOption(
-                                            uid=[6, 1, 2, 1, 1],
-                                            feature_node_hash="MTY0MzU2",
-                                            label="1 2 1 option 1",
-                                            value="1_2_1_option_1",
-                                            nested_options=[],
+                                        FlatOption(
+                                            uid=[5, 2, 1], feature_node_hash="MT66665Q3", label="Angry", value="angry"
                                         ),
-                                        NestableOption(
-                                            uid=[6, 1, 2, 1, 2],
-                                            feature_node_hash="MTI4MjQy",
-                                            label="1 2 1 option ",
-                                            value="1_2_1_option_",
-                                            nested_options=[],
+                                        FlatOption(
+                                            uid=[5, 2, 2], feature_node_hash="Nzg66665E3", label="Sad", value="sad"
                                         ),
                                     ],
                                 )
                             ],
                         ),
                     ],
-                )
+                ),
             ],
         ),
         Object(

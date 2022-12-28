@@ -502,6 +502,7 @@ DynamicAnswer = Union[DynamicTextAnswer, DynamicChecklistAnswer]
 
 
 def _get_default_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
+    """DENIS: I believe this only works for static answers."""
     ret: List[Answer] = list()
     for attribute in attributes:
         if not attribute.dynamic:
@@ -731,7 +732,9 @@ class ObjectInstance:
         self._parent: Optional[LabelRow] = None
         """This member should only be manipulated by a LabelRow"""
 
-        self._static_answers: List[Answer] = self._get_static_answers()
+        # self._static_answers: List[Answer] = self._get_static_answers()
+        self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
+        # feature_node_hash of attribute to the answer.
 
         self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
         self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
@@ -757,6 +760,47 @@ class ObjectInstance:
         self._answers_to_frames[answer].update(set(frames))
         for frame in frames:
             self._frames_to_answers[frame].add(answer)
+
+    @overload
+    def get_answer(self, attribute: TextAttribute) -> Optional[str]:
+        ...
+
+    @overload
+    def get_answer(self, attribute: RadioAttribute) -> Optional[Option]:
+        ...
+
+    @overload
+    def get_answer(self, attribute: ChecklistAttribute) -> Optional[List[Option]]:
+        """Returns None only if the attribute is nested and the parent is unselected. Otherwise if not
+        yet answered it will return an empty list."""
+        ...
+
+    @overload
+    def get_answer(self, attribute: None = None) -> Union[str, Option, List[Option]]:
+        ...
+
+    def get_answer(self, attribute: Optional[Attribute] = None) -> Union[str, Option, Iterable[Option], None]:
+        """
+        Args:
+            attribute: The ontology attribute to get the answer for. If not provided, the first level attribute is used.
+        """
+        if attribute is None:
+            attribute = self._ontology_object.attributes[0]
+        elif not self._is_attribute_valid_child_of_object_instance(attribute):
+            raise ValueError("The attribute is not a valid child of the classification.")
+        elif not self._is_selectable_child_attribute(attribute):
+            return None
+
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+
+        if isinstance(attribute, TextAttribute):
+            return static_answer.get_value()
+        elif isinstance(attribute, RadioAttribute):
+            return static_answer.get_value()
+        elif isinstance(attribute, ChecklistAttribute):
+            return static_answer.get_options()
+        else:
+            raise ValueError(f"Unknown attribute type: {type(attribute)}")
 
     @overload
     def set_answer(
@@ -809,22 +853,43 @@ class ObjectInstance:
         """
         if not self._is_attribute_valid_child_of_object_instance(attribute):
             raise ValueError("The attribute is not a valid child of the object.")
+        elif not self._is_selectable_child_attribute(attribute):
+            raise RuntimeError(
+                "Setting a nested attribute is only possible if all parent attributes have been" "selected."
+            )
+        elif frames is not None and attribute.dynamic is False:
+            raise ValueError("Setting frames is only possible for dynamic attributes.")
 
-        retrieved_answer = ...
-        # DENIS: get the answer corresponding to the attribute.
+        """
+        For classification index we get all the possible static answers upfront and then iterate over those.
+        Here I could do the same thing for static answers
+        for dynamic ones I can
+        * extend the answers so they can have multiple answers and a range
+        * create a new class which is a manager for one/all of the dynamic answers.  <-- try this
+        * or manage them here somewhere.
+        Essentially all these things are the same actually, I'm only talking about the levels of abstraction. 
+        """
+
+        # DENIS: I can factor this out with the ClassificationIndex class.
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+        if static_answer.is_answered() and overwrite is False:
+            raise RuntimeError(
+                "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
+                "overwrite an existing answer to and attribute."
+            )
 
         if isinstance(attribute, TextAttribute):
-            retrieved_answer.set(answer)
+            static_answer.set(answer)
         elif isinstance(attribute, RadioAttribute):
-            retrieved_answer.set(answer)
+            static_answer.set(answer)
         elif isinstance(attribute, ChecklistAttribute):
-            retrieved_answer.set_options(answer)
+            static_answer.set_options(answer)
         else:
             raise ValueError(f"Unknown attribute type: {type(attribute)}")
 
     def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
-        # DENIS: implement this
-        return True
+        # DENIS: this will fail for dynamic attributes.
+        return attribute.feature_node_hash in self._static_answer_map
 
     def get_all_static_answers(
         self,
@@ -839,10 +904,6 @@ class ObjectInstance:
             if attribute.feature_node_hash == static_answer.ontology_attribute.feature_node_hash:
                 return static_answer
         raise ValueError("The attribute was not found in this ObjectInstance's ontology.")
-
-    def _get_static_answers(self) -> List[Answer]:
-        attributes = self._ontology_object.attributes
-        return _get_default_answers_from_attributes(attributes)
 
     def _get_dynamic_answers(self) -> Set[Answer]:
         ret: Set[Answer] = set()
@@ -994,6 +1055,14 @@ class ObjectInstance:
             return False
         return True
 
+    def _is_selectable_child_attribute(self, attribute: Attribute) -> bool:
+        # I have the ontology classification, so I can build the tree from that. Basically do a DFS.
+        ontology_object = self._ontology_object
+        for search_attribute in ontology_object.attributes:
+            if _search_child_attributes(attribute, search_attribute, self._static_answer_map):
+                return True
+        return False
+
 
 @dataclass(frozen=True)
 class ClassificationInstanceData:
@@ -1025,7 +1094,7 @@ class ClassificationInstance:
         self._classification_instance_data = ClassificationInstanceData()
         # DENIS: These are actually somehow per frame! What would that even mean? check this!
 
-        self._static_answer_map: Dict[str, Answer] = self._get_static_answer_map()
+        self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
 
         self._frames: Set[int] = set()
@@ -1197,35 +1266,7 @@ class ClassificationInstance:
         # I have the ontology classification, so I can build the tree from that. Basically do a DFS.
         ontology_classification = self._ontology_classification
         top_attribute = ontology_classification.attributes[0]
-        return self._search_child_attributes(attribute, top_attribute)
-
-    def _search_child_attributes(self, passed_attribute: Attribute, search_attribute: Attribute) -> bool:
-        if passed_attribute == search_attribute:
-            return True
-
-        if not isinstance(search_attribute, RadioAttribute):
-            # DENIS: or raise something?
-            return False
-
-        answer = self._static_answer_map[search_attribute.feature_node_hash]
-        value = answer.get_value()
-        if value is None:
-            return False
-
-        for option in search_attribute.options:
-            if value == option:
-                for nested_option in option.nested_options:
-                    # If I have multi nesting here, what then?
-                    if self._search_child_attributes(passed_attribute, nested_option):
-                        return True
-
-        return False
-
-    def _get_static_answer_map(self) -> Dict[str, Answer]:
-        attributes = self._ontology_classification.attributes
-        answers = _get_default_answers_from_attributes(attributes)
-        answer_map = {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
-        return answer_map
+        return _search_child_attributes(attribute, top_attribute, self._static_answer_map)
 
     def _check_within_range(self, frame: int) -> None:
         if frame < 0 or frame > self._max_frame:
@@ -1929,3 +1970,34 @@ def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
 
 def _lower_snake_case(s: str):
     return "_".join(s.lower().split())
+
+
+def _get_static_answer_map(attributes: List[Attribute]) -> Dict[str, Answer]:
+    answers = _get_default_answers_from_attributes(attributes)
+    answer_map = {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
+    return answer_map
+
+
+def _search_child_attributes(
+    passed_attribute: Attribute, search_attribute: Attribute, static_answer_map: Dict[str, Answer]
+) -> bool:
+    if passed_attribute == search_attribute:
+        return True
+
+    if not isinstance(search_attribute, RadioAttribute):
+        # DENIS: or raise something?
+        return False
+
+    answer = static_answer_map[search_attribute.feature_node_hash]
+    value = answer.get_value()
+    if value is None:
+        return False
+
+    for option in search_attribute.options:
+        if value == option:
+            for nested_option in option.nested_options:
+                # If I have multi nesting here, what then?
+                if _search_child_attributes(passed_attribute, nested_option, static_answer_map):
+                    return True
+
+    return False

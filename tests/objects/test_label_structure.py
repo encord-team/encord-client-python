@@ -32,13 +32,17 @@ checklist_attribute_1_option_1 = get_item_by_hash("MTE5MjQ3", all_types_structur
 checklist_attribute_1_option_2 = get_item_by_hash("Nzg3MDE3", all_types_structure)
 
 deeply_nested_polygon_item = get_item_by_hash("MTM1MTQy", all_types_structure)
+nested_polygon_text = get_item_by_hash("OTk555U1", all_types_structure)
+nested_polygon_checklist = get_item_by_hash("ODc555Ay", all_types_structure)
+nested_polygon_checklist_option_1 = get_item_by_hash("MT5555Q3", all_types_structure)
+nested_polygon_checklist_option_2 = get_item_by_hash("Nzg5555E3", all_types_structure)
 radio_attribute_level_1 = get_item_by_hash("MTExMjI3", all_types_structure)
 radio_nested_option_1 = get_item_by_hash("MTExNDQ5", all_types_structure)
+radio_nested_option_1_text = get_item_by_hash("MjE2OTE0", all_types_structure)
 radio_nested_option_2 = get_item_by_hash("MTcxMjAy", all_types_structure)
-
-radio_attribute_level_2 = get_item_by_hash("NDYyMjQx", all_types_structure)
-radio_attribute_2_option_1 = get_item_by_hash("MTY0MzU2", all_types_structure)
-radio_attribute_2_option_2 = get_item_by_hash("MTI4MjQy", all_types_structure)
+radio_nested_option_2_checklist = get_item_by_hash("ODc666Ay", all_types_structure)
+radio_nested_option_2_checklist_option_1 = get_item_by_hash("MT66665Q3", all_types_structure)
+radio_nested_option_2_checklist_option_2 = get_item_by_hash("Nzg66665E3", all_types_structure)
 
 keypoint_dynamic = get_item_by_hash("MTY2MTQx", all_types_structure)
 dynamic_text = get_item_by_hash("OTkxMjU1", all_types_structure)
@@ -642,6 +646,107 @@ def test_add_and_get_classification_instances_to_label_row():
         overlapping_classification_instance.add_to_frames([3])
     classification_instance_2.remove_from_frames([3])
     overlapping_classification_instance.add_to_frames([3])
+
+
+def test_object_instance_answer_for_static_attributes():
+    """Be able to check which attributes can be answered. Set multiple answers.
+    NOTE: I'll also need to implement logic for dynamic answers.
+    I need to somehow deal with the dynamic vs non dynamic deep states.
+    * in the UI you can nest, but what happens is that these nested attributes are always static, so they
+        just keep their value. It doesn't really make sense but I need to account for it.
+
+
+    """
+    object_instance = ObjectInstance(deeply_nested_polygon_item)
+
+    assert object_instance.get_answer(nested_polygon_text) is None
+
+    object_instance.set_answer("Zeus", attribute=nested_polygon_text)
+    assert object_instance.get_answer(nested_polygon_text) == "Zeus"
+
+    with pytest.raises(ValueError):
+        # Invalid attribute
+        object_instance.get_answer(dynamic_text)
+
+    # Setting frames for a non-dynamic attribute
+    assert object_instance.get_answer(nested_polygon_checklist) == []
+    with pytest.raises(ValueError):
+        # DENIS: make the option hashable so it can go into a set.
+        object_instance.set_answer(
+            [nested_polygon_checklist_option_1],
+            attribute=nested_polygon_checklist,
+            frames=1,
+        )
+
+    assert object_instance.get_answer(nested_polygon_checklist) == []
+
+    # Overwriting frames
+    with pytest.raises(RuntimeError):
+        object_instance.set_answer("Poseidon", attribute=nested_polygon_text)
+
+    assert object_instance.get_answer(nested_polygon_text) == "Zeus"
+    object_instance.set_answer("Poseidon", attribute=nested_polygon_text, overwrite=True)
+    assert object_instance.get_answer(nested_polygon_text) == "Poseidon"
+
+
+def test_object_instance_answer_static_checklist():
+    object_instance = ObjectInstance(deeply_nested_polygon_item)
+
+    assert object_instance.get_answer(nested_polygon_checklist) == []
+
+    object_instance.set_answer([], attribute=nested_polygon_checklist)
+
+    assert object_instance.get_answer(nested_polygon_checklist) == []
+
+    with pytest.raises(RuntimeError):
+        # Already set the answer
+        object_instance.set_answer([nested_polygon_checklist_option_1], attribute=nested_polygon_checklist)
+
+    object_instance.set_answer([nested_polygon_checklist_option_1], attribute=nested_polygon_checklist, overwrite=True)
+
+    assert object_instance.get_answer(nested_polygon_checklist) == [nested_polygon_checklist_option_1]
+
+    object_instance.set_answer(
+        [nested_polygon_checklist_option_1, nested_polygon_checklist_option_2],
+        attribute=nested_polygon_checklist,
+        overwrite=True,
+    )
+
+    assert object_instance.get_answer(nested_polygon_checklist) == [
+        nested_polygon_checklist_option_1,
+        nested_polygon_checklist_option_2,
+    ]
+
+
+def test_object_instance_answer_static_nested_radio():
+    object_instance = ObjectInstance(deeply_nested_polygon_item)
+
+    assert object_instance.get_answer(radio_attribute_level_1) is None
+
+    with pytest.raises(RuntimeError):
+        object_instance.set_answer("Poseidon", attribute=radio_nested_option_1_text)
+    assert object_instance.get_answer(radio_attribute_level_1) is None
+
+    object_instance.set_answer(radio_nested_option_1, attribute=radio_attribute_level_1)
+    assert object_instance.get_answer(radio_attribute_level_1) == radio_nested_option_1
+
+    object_instance.set_answer("Zeus", attribute=radio_nested_option_1_text)
+    assert object_instance.get_answer(radio_nested_option_1_text) == "Zeus"
+
+    # Switching to a new radio answer
+    assert object_instance.get_answer(radio_nested_option_2_checklist) is None
+
+    object_instance.set_answer(radio_nested_option_2, attribute=radio_attribute_level_1, overwrite=True)
+    assert object_instance.get_answer(radio_nested_option_1_text) is None
+
+    object_instance.set_answer(
+        [radio_nested_option_2_checklist_option_1, radio_nested_option_2_checklist_option_2],
+        radio_nested_option_2_checklist,
+    )
+    assert object_instance.get_answer(radio_nested_option_2_checklist) == [
+        radio_nested_option_2_checklist_option_1,
+        radio_nested_option_2_checklist_option_2,
+    ]
 
 
 # ==========================================================
