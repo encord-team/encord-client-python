@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from typing import List, Union
+from typing import Iterable, List, Union
 
 import pytest
 
 from encord.objects.common import Attribute, Option, TextAttribute
 from encord.objects.label_structure import (
+    AnswerForFrames,
     BoundingBoxCoordinates,
     ChecklistAnswer,
     ClassificationInstance,
@@ -461,10 +462,10 @@ class Range:
     end: int
 
 
-@dataclass
-class AnswerForFrames:
-    answer: Union[str, List[Option]]
-    range: List[Range]  # either [1, 3, 4, 5] or [[1], [3,5]]
+# @dataclass
+# class AnswerForFrames:
+#     answer: Union[str, Option, Iterable[Option]]
+#     range: List[Range]  # either [1, 3, 4, 5] or [[1], [3,5]]
 
 
 def dynamic_vs_static_answer():
@@ -747,6 +748,31 @@ def test_object_instance_answer_static_nested_radio():
         radio_nested_option_2_checklist_option_1,
         radio_nested_option_2_checklist_option_2,
     ]
+
+
+def test_object_instance_answer_dynamic_attributes():
+    object_instance = ObjectInstance(keypoint_dynamic)
+
+    assert object_instance.get_answer(dynamic_text) == []
+
+    object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
+    assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Zeus", range={1})]
+
+    with pytest.raises(ValueError):
+        # Invalid attribute
+        object_instance.get_answer(nested_polygon_text)
+
+    assert object_instance.get_answer(dynamic_checklist) == []
+
+    # Overwriting frames
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=1, overwrite=True)
+    assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Poseidon", range={1})]
+
+    # DENIS: test an is_valid function which checks if there are any dynamic answers for frames
+    # that do not have coordinates.
+    # DENIS: now also try the other accessors that would be useful, try with multiple different frames,
+    # and implement the filtering logic around the specific answer value and the frames.
+    # Then also implement the condensation logic of the frames, so it is run length encoded.
 
 
 # ==========================================================
