@@ -518,19 +518,6 @@ def dynamic_vs_static_answer():
     assert object_instance.can_set_attribute(radio_attribute_level_2)
 
 
-def test_new_classification_index_answers():
-    classification_instance = ClassificationInstance(text_classification)
-    attribute = text_classification.attributes[0]
-    # DENIS: or a nice getter, in which case I'd need to reject any inappropriate `Classification`s.
-    classification_instance.set_answer("Zeus", attribute)
-
-    assert classification_instance.get_answer() == "Zeus"
-    # DENIS: because we have nested classifications, we need to be able to set answers for nested classifications.
-    # However, it can default to the top level for sure.
-
-    # DENIS: do tests with nestedness. Do tests with other classification answers.
-
-
 def test_classification_index_answer_overwrite():
     classification_instance = ClassificationInstance(text_classification)
     attribute = text_classification.attributes[0]
