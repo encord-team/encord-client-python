@@ -70,6 +70,36 @@ Ranges = List[Range]
 Frames = Union[int, Range, Ranges]
 
 
+def frame_to_range(frame: int) -> Range:
+    return Range(frame, frame)
+
+
+def range_to_ranges(range_: Range) -> Ranges:
+    return [range_]
+
+
+def range_to_frames(range_: Range) -> List[int]:
+    return [i for i in range(range_.start, range_.end + 1)]
+
+
+def ranges_to_frames(range_list: Ranges) -> List[int]:
+    frames = set()
+    for range_ in range_list:
+        frames |= set(range_to_frames(range_))
+    return sorted(list(frames))
+
+
+def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
+    if isinstance(frames_class, int):
+        return [frames_class]
+    elif isinstance(frames_class, Range):
+        return range_to_frames(frames_class)
+    elif isinstance(frames_class, list):
+        return ranges_to_frames(frames_class)
+    else:
+        raise RuntimeError("Unexpected type for frames.")
+
+
 class _Answer(ABC):
     """Common fields amongst all answers
     DENIS: use this class instead of the Union below.
@@ -163,7 +193,6 @@ class TextAnswer(_Answer):
             return {
                 "name": self.ontology_attribute.name,
                 "value": _lower_snake_case(self.ontology_attribute.name),
-                # DENIS: ^ this can be part of the ontology_attribute maybe?
                 "answers": self._value,
                 "featureHash": self.ontology_attribute.feature_node_hash,
                 "manualAnnotation": self.is_manual_annotation,
@@ -179,6 +208,12 @@ class TextAnswer(_Answer):
 
     def __hash__(self):
         return hash((self._value, type(self).__name__))
+
+    def __eq__(self, other: TextAnswer) -> bool:
+        if not isinstance(other, TextAnswer):
+            return False
+        else:
+            return self._value == other._value
 
 
 @dataclass
@@ -229,7 +264,6 @@ class RadioAnswer(_Answer):
             return {
                 "name": self.ontology_attribute.name,
                 "value": _lower_snake_case(self.ontology_attribute.name),
-                # DENIS: ^ this can be part of the ontology_attribute maybe?
                 "answers": [
                     {
                         "name": nestable_option.label,
@@ -257,6 +291,12 @@ class RadioAnswer(_Answer):
 
     def __hash__(self):
         return hash((self._value, type(self).__name__))
+
+    def __eq__(self, other: RadioAnswer) -> bool:
+        if not isinstance(other, RadioAnswer):
+            return False
+        else:
+            return self._value == other._value
 
 
 @dataclass
@@ -365,7 +405,6 @@ class ChecklistAnswer(_Answer):
             return {
                 "name": self.ontology_attribute.name,
                 "value": _lower_snake_case(self.ontology_attribute.name),
-                # DENIS: ^ this can be part of the ontology_attribute maybe?
                 "answers": answers,
                 "featureHash": self.ontology_attribute.feature_node_hash,
                 "manualAnnotation": self.is_manual_annotation,
@@ -390,6 +429,14 @@ class ChecklistAnswer(_Answer):
         flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
         flat_values.sort()
         return hash((tuple(flat_values), type(self).__name__))
+
+    def __eq__(self, other: ChecklistAnswer) -> bool:
+        if not isinstance(other, ChecklistAnswer):
+            return False
+        else:
+            flat_values = {(key, value) for key, value in self._feature_hash_to_answer_map.items()}
+            other_flat_values = {(key, value) for key, value in other._feature_hash_to_answer_map.items()}
+            return flat_values == other_flat_values
 
 
 Answer = Union[TextAnswer, RadioAnswer, ChecklistAnswer]
@@ -745,57 +792,61 @@ class _DynamicAnswerManager:
                 return True
         return False
 
-    def remove_answer(self, attribute: Attribute, frame: int) -> None:
+    def delete_answer(self, attribute: Attribute, frames: Frames) -> None:
         to_remove_answer = None
+        frame_list = frames_class_to_frames_list(frames)
 
-        for answer_object in self._frames_to_answers[frame]:
-            # DENIS: ideally this would not be a log(n) operation, however these will not be extremely large.
-            if answer_object.ontology_attribute == attribute:
-                to_remove_answer = answer_object
-                break
+        for frame in frame_list:
+            for answer_object in self._frames_to_answers[frame]:
+                # DENIS: ideally this would not be a log(n) operation, however these will not be extremely large.
+                if answer_object.ontology_attribute == attribute:
+                    to_remove_answer = answer_object
+                    break
 
-        if to_remove_answer is not None:
-            self._frames_to_answers[frame].remove(to_remove_answer)
-            self._answers_to_frames[to_remove_answer].remove(frame)
-            if self._answers_to_frames[to_remove_answer] == set():
-                del self._answers_to_frames[to_remove_answer]
+            if to_remove_answer is not None:
+                self._frames_to_answers[frame].remove(to_remove_answer)
+                self._answers_to_frames[to_remove_answer].remove(frame)
+                if self._answers_to_frames[to_remove_answer] == set():
+                    del self._answers_to_frames[to_remove_answer]
 
     def set_answer(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frame: Optional[int] = None
+        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
     ) -> None:
-        if frame is None:
+        if frames is None:
             for available_frame in self._object_instance.frames():
-                self.set_answer(answer, attribute, available_frame)
+                self._set_answer(answer, attribute, available_frame)
             return
-        self._set_answer(answer, attribute, frame)
+        self._set_answer(answer, attribute, frames)
 
-    def _set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frame: int) -> None:
+    def _set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Frames) -> None:
         """Set the answer for a single frame"""
 
-        self.remove_answer(attribute, frame)
+        self.delete_answer(attribute, frames)
 
         default_answer = _get_default_answer_from_attribute(attribute)
         _set_answer_for_object(default_answer, answer)
 
-        # DENIS: change this to handle type `Frames`.
-        self._frames_to_answers[frame].add(default_answer)
-        self._answers_to_frames[default_answer].add(frame)
+        frame_list = frames_class_to_frames_list(frames)
+        for frame in frame_list:
+            self._frames_to_answers[frame].add(default_answer)
+            self._answers_to_frames[default_answer].add(frame)
 
     def get_answer(
         self,
         attribute: Attribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
+        filter_frames: Optional[Frames] = None,
     ) -> List[AnswerForFrames]:
         """For a given attribute, return all the answers and frames given the filters."""
         ret = []
+        filter_frames_set = None if filter_frames is None else set(frames_class_to_frames_list(filter_frames))
         for answer in self._answers_to_frames:
             if answer.ontology_attribute != attribute:
                 continue
             if not (filter_answer is None or filter_answer == _get_answer_from_object(answer)):
                 continue
-            frame = self._answers_to_frames[answer]
-            if not (filter_frame is None or {filter_frame} == frame):
+            actual_frames = self._answers_to_frames[answer]
+            if not (filter_frames_set is None or len(actual_frames & filter_frames_set) > 0):
                 continue
             ret.append(AnswerForFrames(answer=_get_answer_from_object(answer), range=self._answers_to_frames[answer]))
         return ret
@@ -803,14 +854,6 @@ class _DynamicAnswerManager:
     def frames(self) -> Iterable[int]:
         """Returns all frames that have answers set."""
         return self._frames_to_answers.keys()
-
-    def _get_all_answers_for_attribute(self, attribute: Attribute) -> List[AnswerForFrames]:
-        """Return all the answers for a given attribute."""
-        ret = []
-        all_answers = [answer for answer in self._answers_to_frames if answer.ontology_attribute == attribute]
-        for answer in all_answers:
-            ret.append(AnswerForFrames(answer=_get_answer_from_object(answer), range=self._answers_to_frames[answer]))
-        return ret
 
     def _get_dynamic_answers(self) -> Set[Answer]:
         ret: Set[Answer] = set()
@@ -1011,6 +1054,26 @@ class ObjectInstance:
             )
 
         _set_answer_for_object(static_answer, answer)
+
+    def delete_answer(
+        self,
+        attribute: Attribute,
+        filter_answer: Union[str, Option, Iterable[Option]] = None,
+        frames: Optional[int] = None,
+    ) -> None:
+        """
+        Args:
+            attribute: The attribute to delete the answer for.
+            filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
+            frames: A filter for a specific frame. Only applies to dynamic attributes.
+        """
+        raise NotImplementedError("Needs to be implemented.")
+        if attribute.dynamic:
+            self._dynamic_answer_manager.delete_answer(attribute, frames)
+            return
+
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+        # _set_answer_for_object(static_answer, None)
 
     def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
         # DENIS: this will fail for dynamic attributes.
@@ -1444,6 +1507,10 @@ class LabelRow:
     will also need to be able to keep around possible coordinate sizes and also query those if necessary.
 
     This is essentially one blob of data_units. For an image_group we need to get all the hashed in.
+
+    DENIS: For tracing, it could be an idea to record the function calls that are being done (can be condensed
+    as well) and send them as part of the payload to the server. I could even have this as a more generic solution
+    for the SDK.
     """
 
     def __init__(self, label_row_dict: dict, ontology_structure: Union[dict, OntologyStructure]) -> None:
@@ -2095,6 +2162,7 @@ def get_item_by_hash(feature_node_hash: str, ontology: OntologyStructure):
 
 
 def _lower_snake_case(s: str):
+    # DENIS: ^ this can be part of the ontology_attribute maybe?
     return "_".join(s.lower().split())
 
 
