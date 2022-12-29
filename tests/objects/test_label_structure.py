@@ -4,10 +4,10 @@ from typing import Iterable, List, Union
 import pytest
 
 from encord.objects.common import Attribute, TextAttribute
+from encord.objects.internal_helpers import ChecklistAnswer, RadioAnswer, TextAnswer
 from encord.objects.label_structure import (
     AnswerForFrames,
     BoundingBoxCoordinates,
-    ChecklistAnswer,
     ClassificationInstance,
     LabelRow,
     LabelRowReadOnlyData,
@@ -15,58 +15,56 @@ from encord.objects.label_structure import (
     ObjectInstance,
     PointCoordinate,
     PolygonCoordinates,
-    RadioAnswer,
-    TextAnswer,
-    get_item_by_hash,
 )
+from encord.objects.ontology_object import Object
 from encord.objects.utils import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels
 
-box_ontology_item = get_item_by_hash("MjI2NzEy", all_types_structure)
-polygon_ontology_item = get_item_by_hash("ODkxMzAx", all_types_structure)
-polyline_ontology_item = get_item_by_hash("OTcxMzIy", all_types_structure)
+box_ontology_item = all_types_structure.get_item_by_hash("MjI2NzEy", Object)
+polygon_ontology_item = all_types_structure.get_item_by_hash("ODkxMzAx", Object)
+polyline_ontology_item = all_types_structure.get_item_by_hash("OTcxMzIy", Object)
 
-nested_box_ontology_item = get_item_by_hash("MTA2MjAx", all_types_structure)
-text_attribute_1 = get_item_by_hash("OTkxMjU1", all_types_structure)
-checklist_attribute_1 = get_item_by_hash("ODcxMDAy", all_types_structure)
-checklist_attribute_1_option_1 = get_item_by_hash("MTE5MjQ3", all_types_structure)
-checklist_attribute_1_option_2 = get_item_by_hash("Nzg3MDE3", all_types_structure)
+nested_box_ontology_item = all_types_structure.get_item_by_hash("MTA2MjAx")
+text_attribute_1 = all_types_structure.get_item_by_hash("OTkxMjU1")
+checklist_attribute_1 = all_types_structure.get_item_by_hash("ODcxMDAy")
+checklist_attribute_1_option_1 = all_types_structure.get_item_by_hash("MTE5MjQ3")
+checklist_attribute_1_option_2 = all_types_structure.get_item_by_hash("Nzg3MDE3")
 
-deeply_nested_polygon_item = get_item_by_hash("MTM1MTQy", all_types_structure)
-nested_polygon_text = get_item_by_hash("OTk555U1", all_types_structure)
-nested_polygon_checklist = get_item_by_hash("ODc555Ay", all_types_structure)
-nested_polygon_checklist_option_1 = get_item_by_hash("MT5555Q3", all_types_structure)
-nested_polygon_checklist_option_2 = get_item_by_hash("Nzg5555E3", all_types_structure)
-radio_attribute_level_1 = get_item_by_hash("MTExMjI3", all_types_structure)
-radio_nested_option_1 = get_item_by_hash("MTExNDQ5", all_types_structure)
-radio_nested_option_1_text = get_item_by_hash("MjE2OTE0", all_types_structure)
-radio_nested_option_2 = get_item_by_hash("MTcxMjAy", all_types_structure)
-radio_nested_option_2_checklist = get_item_by_hash("ODc666Ay", all_types_structure)
-radio_nested_option_2_checklist_option_1 = get_item_by_hash("MT66665Q3", all_types_structure)
-radio_nested_option_2_checklist_option_2 = get_item_by_hash("Nzg66665E3", all_types_structure)
+deeply_nested_polygon_item = all_types_structure.get_item_by_hash("MTM1MTQy")
+nested_polygon_text = all_types_structure.get_item_by_hash("OTk555U1")
+nested_polygon_checklist = all_types_structure.get_item_by_hash("ODc555Ay")
+nested_polygon_checklist_option_1 = all_types_structure.get_item_by_hash("MT5555Q3")
+nested_polygon_checklist_option_2 = all_types_structure.get_item_by_hash("Nzg5555E3")
+radio_attribute_level_1 = all_types_structure.get_item_by_hash("MTExMjI3")
+radio_nested_option_1 = all_types_structure.get_item_by_hash("MTExNDQ5")
+radio_nested_option_1_text = all_types_structure.get_item_by_hash("MjE2OTE0")
+radio_nested_option_2 = all_types_structure.get_item_by_hash("MTcxMjAy")
+radio_nested_option_2_checklist = all_types_structure.get_item_by_hash("ODc666Ay")
+radio_nested_option_2_checklist_option_1 = all_types_structure.get_item_by_hash("MT66665Q3")
+radio_nested_option_2_checklist_option_2 = all_types_structure.get_item_by_hash("Nzg66665E3")
 
-keypoint_dynamic = get_item_by_hash("MTY2MTQx", all_types_structure)
-dynamic_text = get_item_by_hash("OTkxMjU1", all_types_structure)
-dynamic_checklist = get_item_by_hash("ODcxMDAy", all_types_structure)
-dynamic_checklist_option_1 = get_item_by_hash("MTE5MjQ3", all_types_structure)
-dynamic_checklist_option_2 = get_item_by_hash("Nzg3MDE3", all_types_structure)
-dynamic_radio = get_item_by_hash("MTExM9I3", all_types_structure)
-dynamic_radio_option_1 = get_item_by_hash("MT9xNDQ5", all_types_structure)  # This is dynamic and deeply nested.
-dynamic_radio_option_2 = get_item_by_hash("9TcxMjAy", all_types_structure)  # This is dynamic and deeply nested.
+keypoint_dynamic = all_types_structure.get_item_by_hash("MTY2MTQx")
+dynamic_text = all_types_structure.get_item_by_hash("OTkxMjU1")
+dynamic_checklist = all_types_structure.get_item_by_hash("ODcxMDAy")
+dynamic_checklist_option_1 = all_types_structure.get_item_by_hash("MTE5MjQ3")
+dynamic_checklist_option_2 = all_types_structure.get_item_by_hash("Nzg3MDE3")
+dynamic_radio = all_types_structure.get_item_by_hash("MTExM9I3")
+dynamic_radio_option_1 = all_types_structure.get_item_by_hash("MT9xNDQ5")  # This is dynamic and deeply nested.
+dynamic_radio_option_2 = all_types_structure.get_item_by_hash("9TcxMjAy")  # This is dynamic and deeply nested.
 
-text_classification = get_item_by_hash("jPOcEsbw", all_types_structure)
-text_classification_attribute: TextAttribute = get_item_by_hash("OxrtEM+v", all_types_structure)
+text_classification = all_types_structure.get_item_by_hash("jPOcEsbw")
+text_classification_attribute: TextAttribute = all_types_structure.get_item_by_hash("OxrtEM+v", TextAttribute)
 # DENIS: probably on the ontology, I should have a get_text_attribute etc. to have the exact type.
 # or I do something like get_item_by_hash("OTkxMjU1", all_types_structure, expected_type: TextAttribute) with
 # overloads that return the correct type.
-radio_classification = get_item_by_hash("NzIxNTU1", all_types_structure)
-radio_classification_option_1 = get_item_by_hash("MTcwMjM5", all_types_structure)
-radio_classification_option_2 = get_item_by_hash("MjUzMTg1", all_types_structure)
-radio_classification_option_2_text = get_item_by_hash("MTg0MjIw", all_types_structure)
-checklist_classification = get_item_by_hash("3DuQbFxo", all_types_structure)
-checklist_classification_option_1 = get_item_by_hash("fvLjF0qZ", all_types_structure)
-checklist_classification_option_2 = get_item_by_hash("a4r7nK9i", all_types_structure)
+radio_classification = all_types_structure.get_item_by_hash("NzIxNTU1")
+radio_classification_option_1 = all_types_structure.get_item_by_hash("MTcwMjM5")
+radio_classification_option_2 = all_types_structure.get_item_by_hash("MjUzMTg1")
+radio_classification_option_2_text = all_types_structure.get_item_by_hash("MTg0MjIw")
+checklist_classification = all_types_structure.get_item_by_hash("3DuQbFxo")
+checklist_classification_option_1 = all_types_structure.get_item_by_hash("fvLjF0qZ")
+checklist_classification_option_2 = all_types_structure.get_item_by_hash("a4r7nK9i")
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,

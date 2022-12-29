@@ -445,3 +445,28 @@ def _add_option(
     option = cls(parent_uid + [local_uid], feature_node_hash, label, value)
     options.append(option)
     return option
+
+
+def _get_option_by_hash(feature_node_hash: str, options: List[Option]):
+    for option_ in options:
+        if option_.feature_node_hash == feature_node_hash:
+            return option_
+
+        if option_.get_option_type() == OptionType.NESTABLE:
+            found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
+            if found_item is not None:
+                return found_item
+
+    return None
+
+
+def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]):
+    for attribute in attributes:
+        if attribute.feature_node_hash == feature_node_hash:
+            return attribute
+
+        if attribute.has_options_field():
+            found_item = _get_option_by_hash(feature_node_hash, attribute.options)
+            if found_item is not None:
+                return found_item
+    return None

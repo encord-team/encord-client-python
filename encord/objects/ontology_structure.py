@@ -1,12 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Type, Union, overload
 from uuid import uuid4
 
 from encord.objects.classification import Classification
-from encord.objects.common import Shape
+from encord.objects.common import (
+    Attribute,
+    ChecklistAttribute,
+    FlatOption,
+    NestableOption,
+    Option,
+    RadioAttribute,
+    Shape,
+    TextAttribute,
+    _get_attribute_by_hash,
+)
 from encord.objects.ontology_object import Object
+from encord.objects.utils import check_type
 
 AVAILABLE_COLORS = (
     "#D33115",
@@ -48,11 +59,85 @@ class OntologyStructure:
     objects: List[Object] = field(default_factory=list)
     classifications: List[Classification] = field(default_factory=list)
 
-    def get_item_by_hash(self, feature_node_hash: str):
-        pass
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[Object]) -> Object:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[Classification]) -> Classification:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[RadioAttribute]) -> RadioAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[ChecklistAttribute]) -> ChecklistAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[TextAttribute]) -> TextAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[NestableOption]) -> NestableOption:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[FlatOption]) -> FlatOption:
+        ...
+
+    @overload
+    def get_item_by_hash(
+        self, feature_node_hash: str, type_: None = None
+    ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        ...
+
+    def get_item_by_hash(
+        self,
+        feature_node_hash: str,
+        type_: Union[
+            Type[Object],
+            Type[Classification],
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns the first found item where the hash matches. If there is more than one item with the same hash in
+        the ontology, then it would be in an invalid state. Throws if nothing is found.
+
+        Args:
+            feature_node_hash: the feature_node_hash to search for
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        for object_ in self.objects:
+            if object_.feature_node_hash == feature_node_hash:
+                check_type(object_, type_)
+                return object_
+            found_item = _get_attribute_by_hash(feature_node_hash, object_.attributes)
+            if found_item is not None:
+                check_type(found_item, type_)
+                return found_item
+
+        for classification in self.classifications:
+            if classification.feature_node_hash == feature_node_hash:
+                check_type(classification, type_)
+                return classification
+            found_item = _get_attribute_by_hash(feature_node_hash, classification.attributes)
+            if found_item is not None:
+                check_type(found_item, type_)
+                return found_item
+
+        raise RuntimeError("Item not found.")
 
     def get_item_by_name(self, name: str):
-        """Returns one item by name, throws otherwise."""
+        """Returns all items that are matching the name."""
         # DENIS: do I want to return the parents as a list?
         pass
 

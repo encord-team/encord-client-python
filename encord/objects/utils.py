@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 import uuid
 from dataclasses import dataclass
-from typing import List, Union
+from typing import Any, List, Union
 
 
 def _decode_nested_uid(nested_uid: list) -> str:
@@ -53,3 +53,15 @@ def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
         return ranges_to_frames(frames_class)
     else:
         raise RuntimeError("Unexpected type for frames.")
+
+
+def _lower_snake_case(s: str):
+    # DENIS: ^ this can be part of the ontology_attribute maybe?
+    return "_".join(s.lower().split())
+
+
+def check_type(obj: object, type_: Any) -> None:
+    if type_ is None:
+        return
+    if not isinstance(obj, type_):
+        raise TypeError(f"Expected {type_}, got {type(obj)}")
