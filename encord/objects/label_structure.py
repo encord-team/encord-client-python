@@ -764,8 +764,8 @@ class ObjectFrameInstanceData:
 @dataclass
 class AnswerForFrames:
     answer: Union[str, Option, Iterable[Option]]
-    range: Set[int]  # either [1, 3, 4, 5] or [[1], [3,5]]
-    # DENIS: change this to a list of `Frames`.
+    range: Set[int]
+    # DENIS: Do I really want to return a set here?
 
 
 class _DynamicAnswerManager:
@@ -793,10 +793,10 @@ class _DynamicAnswerManager:
         return False
 
     def delete_answer(self, attribute: Attribute, frames: Frames) -> None:
-        to_remove_answer = None
         frame_list = frames_class_to_frames_list(frames)
 
         for frame in frame_list:
+            to_remove_answer = None
             for answer_object in self._frames_to_answers[frame]:
                 # DENIS: ideally this would not be a log(n) operation, however these will not be extremely large.
                 if answer_object.ontology_attribute == attribute:

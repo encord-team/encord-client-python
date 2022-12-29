@@ -16,6 +16,7 @@ from encord.objects.label_structure import (
     PointCoordinate,
     PolygonCoordinates,
     RadioAnswer,
+    Range,
     TextAnswer,
     get_item_by_hash,
 )
@@ -456,18 +457,6 @@ def test_removing_coordinates_from_object_removes_it_from_parent():
     assert len(objects) == 0
 
 
-@dataclass
-class Range:
-    start: int
-    end: int
-
-
-# @dataclass
-# class AnswerForFrames:
-#     answer: Union[str, Option, Iterable[Option]]
-#     range: List[Range]  # either [1, 3, 4, 5] or [[1], [3,5]]
-
-
 def test_classification_index_answer_overwrite():
     classification_instance = ClassificationInstance(text_classification)
     attribute = text_classification.attributes[0]
@@ -735,8 +724,7 @@ def test_object_instance_answer_dynamic_no_frames_argument():
         AnswerForFrames(answer="Zeus", range={1, 2, 3}),
     ]
 
-    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=6)
-    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=2)
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=[Range(2, 2), Range(6, 6)])
     # Setting frames does only set the frames you specify.
     assert object_instance.get_answer(dynamic_text) == [
         AnswerForFrames(answer="Zeus", range={1, 3}),
@@ -763,18 +751,17 @@ def test_object_instance_answer_dynamic_getter_filters():
     object_instance = ObjectInstance(keypoint_dynamic)
 
     object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
-    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=2)
-    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=3)
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=Range(2, 4))
     # DENIS: test setting with multi-frames and ranges.
 
     assert object_instance.get_answer(dynamic_text, filter_frame=1) == [
         AnswerForFrames(answer="Zeus", range={1}),
     ]
     assert object_instance.get_answer(dynamic_text, filter_answer="Poseidon") == [
-        AnswerForFrames(answer="Poseidon", range={2, 3}),
+        AnswerForFrames(answer="Poseidon", range={2, 3, 4}),
     ]
     assert object_instance.get_answer(dynamic_text, filter_answer="Poseidon", filter_frame=2) == [
-        AnswerForFrames(answer="Poseidon", range={2, 3}),
+        AnswerForFrames(answer="Poseidon", range={2, 3, 4}),
     ]
 
     # DENIS: now also try the other accessors that would be useful, try with multiple different frames,
