@@ -169,6 +169,9 @@ class TextAnswer(Answer):
         else:
             return self._value == other._value
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self._value})"
+
 
 @dataclass
 class RadioAnswer(Answer):
@@ -251,6 +254,9 @@ class RadioAnswer(Answer):
             return False
         else:
             return self._value == other._value
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self._value})"
 
 
 @dataclass
@@ -391,6 +397,10 @@ class ChecklistAnswer(Answer):
             flat_values = {(key, value) for key, value in self._feature_hash_to_answer_map.items()}
             other_flat_values = {(key, value) for key, value in other._feature_hash_to_answer_map.items()}
             return flat_values == other_flat_values
+
+    def __repr__(self):
+        flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
+        return f"{self.__class__.__name__}({flat_values})"
 
 
 def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
@@ -712,7 +722,8 @@ class ObjectInstance:
 
     should you be able to set the color per object?
 
-    DENIS: I probably want to have a proper __repr__ here for debug-ability.
+
+    DENIS: move this to `ontology_object` and have a my_ontology_object.create_instance() -> ObjectInstance
     """
 
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
@@ -1013,6 +1024,9 @@ class ObjectInstance:
                 return True
         return False
 
+    def __repr__(self):
+        return f"ObjectInstance({self._object_hash})"
+
 
 @dataclass(frozen=True)
 class ClassificationInstanceData:
@@ -1220,6 +1234,9 @@ class ClassificationInstance:
                 f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
                 f"frame per LabelRow."
             )
+
+    def __repr__(self):
+        return f"ClassificationInstance({self.classification_hash})"
 
 
 @dataclass(frozen=True)
