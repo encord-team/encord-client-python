@@ -100,10 +100,7 @@ def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
         raise RuntimeError("Unexpected type for frames.")
 
 
-class _Answer(ABC):
-    """Common fields amongst all answers
-    DENIS: use this class instead of the Union below.
-    """
+class Answer(ABC):
 
     _ontology_attribute: Attribute
 
@@ -155,7 +152,7 @@ class _Answer(ABC):
         pass
 
 
-class TextAnswer(_Answer):
+class TextAnswer(Answer):
     def __init__(self, ontology_attribute: TextAttribute):
         super().__init__(ontology_attribute)
         self._value = None
@@ -217,7 +214,7 @@ class TextAnswer(_Answer):
 
 
 @dataclass
-class RadioAnswer(_Answer):
+class RadioAnswer(Answer):
     def __init__(self, ontology_attribute: RadioAttribute):
         super().__init__(ontology_attribute)
         self._value: Optional[NestableOption] = None
@@ -300,7 +297,7 @@ class RadioAnswer(_Answer):
 
 
 @dataclass
-class ChecklistAnswer(_Answer):
+class ChecklistAnswer(Answer):
     """
     Checkboxes behave slightly different from the other answer types. When the checkbox is unanswered, it will be
     the equivalent of not having selected any checkbox answer in the Encord platform.
@@ -439,10 +436,7 @@ class ChecklistAnswer(_Answer):
             return flat_values == other_flat_values
 
 
-Answer = Union[TextAnswer, RadioAnswer, ChecklistAnswer]
-"""These ones are answers for dynamic and static things.
-DENIS: call these `AttribureAnswer` here.
-"""
+# Answer = Union[TextAnswer, RadioAnswer, ChecklistAnswer]
 
 
 class _DynamicAnswer:

@@ -3,7 +3,7 @@ from typing import Iterable, List, Union
 
 import pytest
 
-from encord.objects.common import Attribute, Option, TextAttribute
+from encord.objects.common import Attribute, TextAttribute
 from encord.objects.label_structure import (
     AnswerForFrames,
     BoundingBoxCoordinates,
