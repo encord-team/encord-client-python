@@ -127,7 +127,7 @@ class ClassificationInstance:
             new_frames.add(frame)
         self._frames = new_frames
 
-    def add_to_frames(
+    def add_frames(
         self,
         frames: Iterable[int],
     ) -> None:
@@ -845,7 +845,7 @@ class LabelRow:
         object_hash = frame_classification_label["classificationHash"]
         classification_instance = self._classifications_map[object_hash]
 
-        classification_instance.add_to_frames([frame])
+        classification_instance.add_frames([frame])
 
 
 # @dataclass
@@ -1176,7 +1176,7 @@ class ObjectInstance:
         self,
         coordinates: Coordinates,
         frames: Iterable[int],
-        # ^ DENIS: this is slightly awkward, do we really need to have multiple?
+        # ^ DENIS: this is slightly awkward, do we really need to have multiple? => Use the range thingie
         *,
         object_frame_instance_info: ObjectFrameInstanceInfo = ObjectFrameInstanceInfo(),
         # DENIS: could have a set/overwrite/force flag

@@ -3,6 +3,7 @@ from typing import Iterable, List, Union
 
 import pytest
 
+from encord.objects.classification import Classification
 from encord.objects.common import Attribute, TextAttribute
 from encord.objects.coordinates import (
     BoundingBoxCoordinates,
@@ -55,7 +56,7 @@ dynamic_radio = all_types_structure.get_item_by_hash("MTExM9I3")
 dynamic_radio_option_1 = all_types_structure.get_item_by_hash("MT9xNDQ5")  # This is dynamic and deeply nested.
 dynamic_radio_option_2 = all_types_structure.get_item_by_hash("9TcxMjAy")  # This is dynamic and deeply nested.
 
-text_classification = all_types_structure.get_item_by_hash("jPOcEsbw")
+text_classification = all_types_structure.get_item_by_hash("jPOcEsbw", ClassificationInstance)
 text_classification_attribute: TextAttribute = all_types_structure.get_item_by_hash("OxrtEM+v", TextAttribute)
 # DENIS: probably on the ontology, I should have a get_text_attribute etc. to have the exact type.
 # or I do something like get_item_by_hash("OTkxMjU1", all_types_structure, expected_type: TextAttribute) with
@@ -100,27 +101,86 @@ def test_upload_simple_data():
     label_row = project.get_label_row_class(label_hash)  # can either take label_hash or data_hash
 
     # Now create an object and add it to the label row
+    box_ontology_item = example_ontology_structure.get_item_by_hash("MjI2NzEy", Object)
+    # ^ The `Object` argument is for properly typing the return value and doing an internal type check which can throw.
+
     object_instance = ObjectInstance(box_ontology_item)
+    # ^ There is an ongoing discussion about making this box_ontology_item.create_instance() instead, which has
+    # other tradeoffs.
+
     coordinates = BoundingBoxCoordinates(
         height=0.1,
         width=0.2,
         top_left_x=0.3,
         top_left_y=0.4,
     )
-    object_instance.set_coordinates(coordinates=coordinates, frames={1})
+    object_instance.set_coordinates(coordinates=coordinates, frames=Range(1, 3))
 
+    # ======== Setting static attributes ========
+    text_attribute_of_box_ontology_item = example_ontology_structure.get_item_by_hash("OTkxMjU1", TextAttribute)
+    object_instance.set_answer(answer="Poseidon", attribute=text_attribute_of_box_ontology_item)
+    # ^ this is how we answer static attributes
+    assert object_instance.get_answer(attribute=text_attribute_of_box_ontology_item) == "Poseidon"
+
+    # Overwritting previous answers
+    object_instance.set_answer(answer="Ulysses", attribute=text_attribute_of_box_ontology_item, overwrite=True)
+    # ^ add overwrite=True to avoid throwing an error.
+    assert object_instance.get_answer(attribute=text_attribute_of_box_ontology_item) == "Ulysses"
+
+    # NOTE: Setting nested answers to attribute where a parent is not selected will throw an error.
+
+    # ======== Setting dynamic attributes ========
+    dynamic_text_attribute_of_box_item = example_ontology_structure.get_item_by_hash("OTkxMj222", TextAttribute)
+    object_instance.set_answer(answer="Zeus", attribute=dynamic_text_attribute_of_box_item)
+    # ^ this sets the answer for all the dynamic attributes that are currently available
+
+    assert object_instance.get_answer(attribute=dynamic_text_attribute_of_box_item) == [
+        AnswerForFrames(answer="Zeus", range={1, 2, 3}),
+    ]
+
+    object_instance.set_answer(answer="Hermes", attribute=dynamic_text_attribute_of_box_item, frames=1)
+    assert object_instance.get_answer(attribute=dynamic_text_attribute_of_box_item) == [
+        AnswerForFrames(answer="Hermes", range={1}),
+        AnswerForFrames(answer="Zeus", range={2, 3}),
+    ]
+
+    # ======== Add the object to the label row ========
     label_row.add_object(object_instance)
 
-    # Create a classification and add it to the label row
-    classification_instance = ClassificationInstance(text_classification)
-    answer = classification_instance.get_static_answer()
-    answer.set("Text answer to the classification attribute")
+    # ======= ClassificationIndex ========
+    # This essentially works very similar to setting one static answer in the ObjectInstance.
+    text_classification = example_ontology_structure.get_item_by_hash("jPOcEsbw", Classification)
+    text_attribute = text_classification.attributes[0]
 
-    classification_instance.add_to_frames([2, 3])
+    classification_instance = ClassificationInstance(text_classification)
+    classification_instance.set_answer("Zeus")  # You can explicitly set the `text_attribute`, but it is implicit.
+
+    assert classification_instance.get_answer() == "Zeus"
+    # ^ Again, the `text_attribute` is implicit here, but you can explicitly set it. If it was a nested attribute,
+    # you would have to set the parent first and then you must specify the nested attribute.
+
+    classification_instance.add_frames([2, 3])
 
     label_row.add_classification(classification_instance)
+    # ======== Radio classification ========
+    # This will work similarly for the ObjectIndex
+    radio_classification = example_ontology_structure.get_item_by_hash("jPOcEswer", Classification)
+    radio_option_1 = radio_classification.attributes[0].options[0]
 
-    label_row.save()  # The data will be uploaded to our BE.
+    radio_classification.set_answer(radio_option_1)
+    assert radio_classification.get_answer() == radio_option_1
+
+    # ======== Checklist classification ========
+    # This will work similarly for the ObjectIndex
+    checklist_classification = example_ontology_structure.get_item_by_hash("jPOcEswer", Classification)
+    checklist_option_1 = checklist_classification.attributes[0].options[0]
+    checklist_option_2 = checklist_classification.attributes[0].options[1]
+
+    checklist_classification.set_answer({checklist_option_1, checklist_option_2})
+    assert checklist_classification.get_answer() == {checklist_option_1, checklist_option_2}
+
+    # ======== Upload to server ========
+    label_row.save()
 
 
 # =======================================================
@@ -520,7 +580,7 @@ def test_classification_instances():
     classification_instance_2 = ClassificationInstance(text_classification)
     assert not classification_instance_1.is_valid()
 
-    classification_instance_1.add_to_frames([1, 2, 3])
+    classification_instance_1.add_frames([1, 2, 3])
     assert classification_instance_1.is_valid()
 
     classification_instance_1.set_answer("Dionysus")
@@ -544,9 +604,9 @@ def test_add_and_get_classification_instances_to_label_row():
     classification_instance_2 = ClassificationInstance(text_classification)
     classification_instance_3 = ClassificationInstance(checklist_classification)
 
-    classification_instance_1.add_to_frames([1, 2])
-    classification_instance_2.add_to_frames([3, 4])
-    classification_instance_3.add_to_frames([1, 2, 3, 4])
+    classification_instance_1.add_frames([1, 2])
+    classification_instance_2.add_frames([3, 4])
+    classification_instance_3.add_frames([1, 2, 3, 4])
 
     label_row.add_classification(classification_instance_1)
     label_row.add_classification(classification_instance_2)
@@ -563,24 +623,24 @@ def test_add_and_get_classification_instances_to_label_row():
     assert set(filtered_classification_instances) == {classification_instance_1, classification_instance_2}
 
     overlapping_classification_instance = ClassificationInstance(text_classification)
-    overlapping_classification_instance.add_to_frames([1])
+    overlapping_classification_instance.add_frames([1])
     with pytest.raises(ValueError):
         label_row.add_classification(overlapping_classification_instance)
 
     overlapping_classification_instance.set_frames([5])
     label_row.add_classification(overlapping_classification_instance)
     with pytest.raises(ValueError):
-        overlapping_classification_instance.add_to_frames([1])
+        overlapping_classification_instance.add_frames([1])
     with pytest.raises(ValueError):
         overlapping_classification_instance.set_frames([1])
 
     label_row.remove_classification(classification_instance_1)
-    overlapping_classification_instance.add_to_frames([1])
+    overlapping_classification_instance.add_frames([1])
 
     with pytest.raises(ValueError):
-        overlapping_classification_instance.add_to_frames([3])
+        overlapping_classification_instance.add_frames([3])
     classification_instance_2.remove_from_frames([3])
-    overlapping_classification_instance.add_to_frames([3])
+    overlapping_classification_instance.add_frames([3])
 
 
 def test_object_instance_answer_for_static_attributes():
