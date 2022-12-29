@@ -760,8 +760,17 @@ class _DynamicAnswerManager:
             if self._answers_to_frames[to_remove_answer] == set():
                 del self._answers_to_frames[to_remove_answer]
 
-    def set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frame: int) -> None:
-        """DENIS: default the frames to all the frames in the object instance."""
+    def set_answer(
+        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frame: Optional[int] = None
+    ) -> None:
+        if frame is None:
+            for available_frame in self._object_instance.frames():
+                self.set_answer(answer, attribute, available_frame)
+            return
+        self._set_answer(answer, attribute, frame)
+
+    def _set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frame: int) -> None:
+        """Set the answer for a single frame"""
 
         self.remove_answer(attribute, frame)
 
@@ -936,8 +945,11 @@ class ObjectInstance:
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
-            frames: Only relevant for dynamic attributes. The frames to set the answer for. If not provided, the
-                answer is set for all frames. If this is anything but `None` for non-dynamic attributes, this will
+            frames: Only relevant for dynamic attributes. The frames to set the answer for. If `None`, the
+                answer is set for all frames that this object currently has set coordinates for (also overwriting
+                current answers). This will not automatically propagate the answer to new frames that are added in the
+                future.
+                If this is anything but `None` for non-dynamic attributes, this will
                 throw a ValueError.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
                 a RuntimeError if the answer already exists. This argument is ignored for dynamic attributes.

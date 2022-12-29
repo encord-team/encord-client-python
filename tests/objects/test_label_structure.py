@@ -768,12 +768,47 @@ def test_object_instance_answer_dynamic_attributes():
     object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=1)
     assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Poseidon", range={1})]
 
+
+def test_object_instance_answer_dynamic_no_frames_argument():
+    object_instance = ObjectInstance(keypoint_dynamic)
+
+    object_instance.set_answer("Zeus", attribute=dynamic_text)
+    assert object_instance.get_answer(dynamic_text) == []
+
+    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+    assert object_instance.get_answer(dynamic_text) == []
+
+    object_instance.set_answer("Zeus", attribute=dynamic_text)
+    # Answers for all coordinates
+    assert object_instance.get_answer(dynamic_text) == [
+        AnswerForFrames(answer="Zeus", range={1}),
+        AnswerForFrames(answer="Zeus", range={2}),
+        AnswerForFrames(answer="Zeus", range={3}),
+    ]
+
+    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[5, 6])
+    # Nothing changes after setting new coordinates
+    assert object_instance.get_answer(dynamic_text) == [
+        AnswerForFrames(answer="Zeus", range={1}),
+        AnswerForFrames(answer="Zeus", range={2}),
+        AnswerForFrames(answer="Zeus", range={3}),
+    ]
+
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=6)
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=2)
+    # Setting frames does only set the frames you specify.
+    assert object_instance.get_answer(dynamic_text) == [
+        AnswerForFrames(answer="Zeus", range={1}),
+        AnswerForFrames(answer="Zeus", range={3}),
+        AnswerForFrames(answer="Poseidon", range={6}),
+        AnswerForFrames(answer="Poseidon", range={2}),
+    ]
+
     # DENIS: test an is_valid function which checks if there are any dynamic answers for frames
     # that do not have coordinates.
     # DENIS: now also try the other accessors that would be useful, try with multiple different frames,
     # and implement the filtering logic around the specific answer value and the frames.
     # Then also implement the condensation logic of the frames, so it is run length encoded.
-    # DENIS: test setting for all frames at once without setting the `frames` argument.
 
 
 # def test_object_instance_answer
