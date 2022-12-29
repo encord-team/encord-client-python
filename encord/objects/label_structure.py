@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import copy, deepcopy
-from dataclasses import Field, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Flag, auto
 from typing import (
@@ -19,7 +19,6 @@ from typing import (
     overload,
 )
 
-import pytz
 from dateutil.parser import parse
 
 from encord.constants.enums import DataType
@@ -38,8 +37,7 @@ from encord.objects.common import (
 )
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.utils import short_uuid_str
-from encord.orm.ontology import DATETIME_STRING_FORMAT
+from encord.objects.utils import Frames, frames_class_to_frames_list, short_uuid_str
 
 """
 DENIS:
@@ -57,47 +55,6 @@ DEFAULT_MANUAL_ANNOTATION = True
 
 
 DATETIME_LONG_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
-
-
-@dataclass
-class Range:
-    start: int
-    end: int
-
-
-Ranges = List[Range]
-
-Frames = Union[int, Range, Ranges]
-
-
-def frame_to_range(frame: int) -> Range:
-    return Range(frame, frame)
-
-
-def range_to_ranges(range_: Range) -> Ranges:
-    return [range_]
-
-
-def range_to_frames(range_: Range) -> List[int]:
-    return [i for i in range(range_.start, range_.end + 1)]
-
-
-def ranges_to_frames(range_list: Ranges) -> List[int]:
-    frames = set()
-    for range_ in range_list:
-        frames |= set(range_to_frames(range_))
-    return sorted(list(frames))
-
-
-def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
-    if isinstance(frames_class, int):
-        return [frames_class]
-    elif isinstance(frames_class, Range):
-        return range_to_frames(frames_class)
-    elif isinstance(frames_class, list):
-        return ranges_to_frames(frames_class)
-    else:
-        raise RuntimeError("Unexpected type for frames.")
 
 
 class Answer(ABC):
@@ -436,19 +393,17 @@ class ChecklistAnswer(Answer):
             return flat_values == other_flat_values
 
 
-def _get_default_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
-    """DENIS: I believe this only works for static answers."""
+def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
     ret: List[Answer] = list()
     for attribute in attributes:
         if not attribute.dynamic:
             answer = _get_default_answer_from_attribute(attribute)
             ret.append(answer)
-        # DENIS: test the weird edge case of dynamic attributes which are nested.
 
         if attribute.has_options_field():
             for option in attribute.options:
                 if option.get_option_type() == OptionType.NESTABLE:
-                    other_attributes = _get_default_answers_from_attributes(option.nested_options)
+                    other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
                     ret.extend(other_attributes)
 
     return ret
@@ -686,7 +641,7 @@ class _DynamicAnswerManager:
         for frame in frame_list:
             to_remove_answer = None
             for answer_object in self._frames_to_answers[frame]:
-                # DENIS: ideally this would not be a log(n) operation, however these will not be extremely large.
+                # ideally this would not be a log(n) operation, however these will not be extremely large.
                 if answer_object.ontology_attribute == attribute:
                     to_remove_answer = answer_object
                     break
@@ -1759,7 +1714,7 @@ class LabelRow:
     def _add_coordinates_to_object_instance(
         self,
         frame_object_label: dict,
-        frame: int,
+        frame: int,  # DENIS: should default to None for the single image case.
     ) -> None:
         object_hash = frame_object_label["objectHash"]
         object_instance = self._objects_map[object_hash]
@@ -1959,7 +1914,7 @@ def _lower_snake_case(s: str):
 
 
 def _get_static_answer_map(attributes: List[Attribute]) -> Dict[str, Answer]:
-    answers = _get_default_answers_from_attributes(attributes)
+    answers = _get_default_static_answers_from_attributes(attributes)
     answer_map = {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
     return answer_map
 

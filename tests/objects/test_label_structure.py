@@ -16,10 +16,10 @@ from encord.objects.label_structure import (
     PointCoordinate,
     PolygonCoordinates,
     RadioAnswer,
-    Range,
     TextAnswer,
     get_item_by_hash,
 )
+from encord.objects.utils import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels
 
@@ -788,7 +788,7 @@ def test_object_instance_answer_dynamic_remove_answer():
 #     # DENIS: either create a new one or add the existing one.
 #
 #     # now what about answers?
-#     static_answers = added_object_instance.get_static_answers()
+#     # static_answers = added_object_instance.get_static_answers()
 #
 #     ## otherwise how would it look like?
 #     object_ = label_row.new_object(ontology_type=box_ontology_item, coordinates=KEYPOINT_COORDINATES, frames={1})
@@ -796,7 +796,7 @@ def test_object_instance_answer_dynamic_remove_answer():
 
 
 # def test_frame_view():
-# DENIS: implement this view!
+#     # DENIS: implement this view!
 #     label_row = LabelRow(empty_image_group_labels, all_types_structure)
 #
 #     frame_view: FrameView = label_row.get_frame(1)
