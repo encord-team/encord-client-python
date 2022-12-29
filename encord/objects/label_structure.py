@@ -784,16 +784,21 @@ class _DynamicAnswerManager:
     def get_answer(
         self,
         attribute: Attribute,
-        answer: Union[str, Option, Iterable[Option], None] = None,
-        frame: Optional[int] = None,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
     ) -> List[AnswerForFrames]:
         """For a given attribute, return all the answers and frames given the filters."""
-        if answer is None and frame is None:
-            return self._get_all_answers_for_attribute(attribute)
-        else:
-            raise NotImplementedError("This is not implemented yet.")
-        default_answer = _get_default_answer_from_attribute(attribute)
-        _set_answer_for_object(default_answer, answer)
+        ret = []
+        for answer in self._answers_to_frames:
+            if answer.ontology_attribute != attribute:
+                continue
+            if not (filter_answer is None or filter_answer == _get_answer_from_object(answer)):
+                continue
+            frame = self._answers_to_frames[answer]
+            if not (filter_frame is None or {filter_frame} == frame):
+                continue
+            ret.append(AnswerForFrames(answer=_get_answer_from_object(answer), range=self._answers_to_frames[answer]))
+        return ret
 
     def frames(self) -> Iterable[int]:
         """Returns all frames that have answers set."""
@@ -866,15 +871,30 @@ class ObjectInstance:
     #         self._frames_to_answers[frame].add(answer)
 
     @overload
-    def get_answer(self, attribute: TextAttribute) -> Optional[str]:
+    def get_answer(
+        self,
+        attribute: TextAttribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
+    ) -> Optional[str]:
         ...
 
     @overload
-    def get_answer(self, attribute: RadioAttribute) -> Optional[Option]:
+    def get_answer(
+        self,
+        attribute: RadioAttribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
+    ) -> Optional[Option]:
         ...
 
     @overload
-    def get_answer(self, attribute: ChecklistAttribute) -> Optional[List[Option]]:
+    def get_answer(
+        self,
+        attribute: ChecklistAttribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
+    ) -> Optional[List[Option]]:
         """Returns None only if the attribute is nested and the parent is unselected. Otherwise, if not
         yet answered it will return an empty list."""
         ...
@@ -882,14 +902,14 @@ class ObjectInstance:
     def get_answer(
         self,
         attribute: Attribute,
-        answer: Union[str, Option, Iterable[Option], None] = None,
-        frame: Optional[int] = None,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
     ) -> Union[str, Option, Iterable[Option], None]:
         """
         Args:
             attribute: The ontology attribute to get the answer for.
-            answer: A filter for a specific answer value. Only applies to dynamic attributes.
-            frame: A filter for a specific frame. Only applies to dynamic attributes.
+            filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
+            filter_frame: A filter for a specific frame. Only applies to dynamic attributes.
             DENIS: overthink the return type. Dynamic answers would have a different return type.
         """
         if attribute is None:
@@ -900,7 +920,7 @@ class ObjectInstance:
             return None
 
         if attribute.dynamic:
-            return self._dynamic_answer_manager.get_answer(attribute, answer, frame)
+            return self._dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frame)
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
 

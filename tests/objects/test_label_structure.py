@@ -468,61 +468,6 @@ class Range:
 #     range: List[Range]  # either [1, 3, 4, 5] or [[1], [3,5]]
 
 
-def dynamic_vs_static_answer():
-    # # DENIS: implement these simplifications!
-    # answer: Answer = ...
-    # answer.in_frames()  # for static answers, this equals the entire range.
-    #
-    object_instance = ObjectInstance(box_ontology_item)
-    # object_instance.set_coordinates(BOX_COORDINATES, frames=[0, 1, 2, 3])
-    # dynamic_answer: TextAnswer = object_instance.get_static_answer(text_attribute_1)
-    # dynamic_answer.set("Zeus", frames=[0, 1])  # frames empty => defaults to all
-    # object_instance.get_static_answer(text_attribute_1).set("Zeus", frames=[0, 1])  # frames empty => defaults to all
-    # # if frames is specified for static answer, throw error
-
-    dynamic_answer.get(frames=[0, 1])  # returns "Zeus"
-    # DENIS: this way I cannot use a `get_all_answers` thingie, I'll not get a set of answers
-    object_instance.set_answer(text_attribute_1, "Zeus", frames=None, overwrite=False)
-    # ^ overwrite is False by default, and it will throw an error if the answer is already set.
-    object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, 1))
-    object_instance.set_answer(text_attribute_1, "Zeus", frames=List[Range(0, 1), Range(3, 5)])
-    object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, None))
-    # ^ means from 0 to end of video, even if the object instance comes to new frames. => becomes tricky.
-    object_instance.set_ansser(text_attribute_1, "Poseidon", frames=Range(2, 3))
-    answers = object_instance.get_answer(text_attribute_1)
-    # ^ throw or return None if trying to access a nested answer that is not reachable.
-    assert answers[0] == AnswerForFrames("Zeus", [Range(0, 1)])
-    assert answers[1] == AnswerForFrames("Poseidon", [Range(2, 3)])
-
-    object_instance.delete_answer(text_attribute_1, frames=Range(0, 1))  # Unsets values to default (i.e. unanswered)
-
-    object_instance.set_answer(text_attribute_1, "Poseidon", frames=[2, 3])
-    object_instance.set_answer(checklist_attribute_1, {checklist_attribute_1}, frames=[0, 1])
-    # DENIS: maybe I don't need the answer object at all, and just have the object instance handle the answer.
-    # object_instance.check_option(checklist_attribute_1, checklist_attribute_1, frames=[0,1])
-
-    answers: List[AnswerForFrames] = object_instance.get_answer(text_attribute_1, frames=[1, 2], filter_value=None)
-    assert object_instance.is_answer_dynamic(text_attribute_1)  # true
-
-    object_instance.set_answer(radio_attribute_level_2, {radio_attribute_2_option_1})
-    # ^ throws if the radio level 1 is not selected.
-
-    # typing:
-    object_instance.set_text_answer(text_attribute_1, "Zeus", frames=[0, 1])
-    object_instance.get_text_answer(text_attribute_1)
-
-    # iterating over frames
-    for frame in object_instance.frames():
-        assert isinstance(frame, int)
-        assert object_instance.set_answer(text_attribute_1, "Zeus", frames=frame)
-        assert object_instance.get_answer(text_attribute_1, frames=[frame]) == "Zeus"
-
-    # getting all unanswered options:
-    possible_attributes: List[Attribute] = object_instance.get_possible_attributes()
-    possible_unanswered_attributes: List[Attribute] = object_instance.get_possible_unanswered_attributes()
-    assert object_instance.can_set_attribute(radio_attribute_level_2)
-
-
 def test_classification_index_answer_overwrite():
     classification_instance = ClassificationInstance(text_classification)
     attribute = text_classification.attributes[0]
@@ -804,10 +749,6 @@ def test_object_instance_answer_dynamic_no_frames_argument():
         AnswerForFrames(answer="Poseidon", range={2}),
     ]
 
-    # DENIS: now also try the other accessors that would be useful, try with multiple different frames,
-    # and implement the filtering logic around the specific answer value and the frames.
-    # Then also implement the condensation logic of the frames, so it is run length encoded.
-
 
 def test_object_instance_answer_dynamic_is_valid():
     object_instance = ObjectInstance(keypoint_dynamic)
@@ -822,6 +763,81 @@ def test_object_instance_answer_dynamic_is_valid():
 
     object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
     assert object_instance.is_valid() is True
+
+
+def dynamic_vs_static_answer():
+    # # DENIS: implement these simplifications!
+    # answer: Answer = ...
+    # answer.in_frames()  # for static answers, this equals the entire range.
+    #
+    object_instance = ObjectInstance(box_ontology_item)
+    # object_instance.set_coordinates(BOX_COORDINATES, frames=[0, 1, 2, 3])
+    # dynamic_answer: TextAnswer = object_instance.get_static_answer(text_attribute_1)
+    # dynamic_answer.set("Zeus", frames=[0, 1])  # frames empty => defaults to all
+    # object_instance.get_static_answer(text_attribute_1).set("Zeus", frames=[0, 1])  # frames empty => defaults to all
+    # # if frames is specified for static answer, throw error
+
+    dynamic_answer.get(frames=[0, 1])  # returns "Zeus"
+    # DENIS: this way I cannot use a `get_all_answers` thingie, I'll not get a set of answers
+    object_instance.set_answer(text_attribute_1, "Zeus", frames=None, overwrite=False)
+    # ^ overwrite is False by default, and it will throw an error if the answer is already set.
+    object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, 1))
+    object_instance.set_answer(text_attribute_1, "Zeus", frames=List[Range(0, 1), Range(3, 5)])
+    object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, None))
+    # ^ means from 0 to end of video, even if the object instance comes to new frames. => becomes tricky.
+    object_instance.set_ansser(text_attribute_1, "Poseidon", frames=Range(2, 3))
+    answers = object_instance.get_answer(text_attribute_1)
+    # ^ throw or return None if trying to access a nested answer that is not reachable.
+    assert answers[0] == AnswerForFrames("Zeus", [Range(0, 1)])
+    assert answers[1] == AnswerForFrames("Poseidon", [Range(2, 3)])
+
+    object_instance.delete_answer(text_attribute_1, frames=Range(0, 1))  # Unsets values to default (i.e. unanswered)
+
+    object_instance.set_answer(text_attribute_1, "Poseidon", frames=[2, 3])
+    object_instance.set_answer(checklist_attribute_1, {checklist_attribute_1}, frames=[0, 1])
+    # DENIS: maybe I don't need the answer object at all, and just have the object instance handle the answer.
+    # object_instance.check_option(checklist_attribute_1, checklist_attribute_1, frames=[0,1])
+
+    answers: List[AnswerForFrames] = object_instance.get_answer(text_attribute_1, frames=[1, 2], filter_value=None)
+    assert object_instance.is_answer_dynamic(text_attribute_1)  # true
+
+    object_instance.set_answer(radio_attribute_level_2, {radio_attribute_2_option_1})
+    # ^ throws if the radio level 1 is not selected.
+
+    # typing:
+    object_instance.set_text_answer(text_attribute_1, "Zeus", frames=[0, 1])
+    object_instance.get_text_answer(text_attribute_1)
+
+    # iterating over frames
+    for frame in object_instance.frames():
+        assert isinstance(frame, int)
+        assert object_instance.set_answer(text_attribute_1, "Zeus", frames=frame)
+        assert object_instance.get_answer(text_attribute_1, frames=[frame]) == "Zeus"
+
+    # getting all unanswered options:
+    possible_attributes: List[Attribute] = object_instance.get_possible_attributes()
+    possible_unanswered_attributes: List[Attribute] = object_instance.get_possible_unanswered_attributes()
+    assert object_instance.can_set_attribute(radio_attribute_level_2)
+
+
+def test_object_instance_answer_dynamic_getter_filters():
+    object_instance = ObjectInstance(keypoint_dynamic)
+
+    object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=2)
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=3)
+
+    assert object_instance.get_answer(dynamic_text, filter_frame=1) == [AnswerForFrames(answer="Zeus", range={1})]
+    assert object_instance.get_answer(dynamic_text, filter_answer="Poseidon") == [
+        AnswerForFrames(answer="Poseidon", range={2}),
+        AnswerForFrames(answer="Poseidon", range={3}),
+    ]
+    assert object_instance.get_answer(dynamic_text, filter_answer="Poseidon", filter_frame=2) == [
+        AnswerForFrames(answer="Poseidon", range={2}),
+    ]
+
+    # DENIS: now also try the other accessors that would be useful, try with multiple different frames,
+    # Then also implement the condensation logic of the frames, so it is run length encoded.
 
 
 # ==========================================================
