@@ -436,112 +436,6 @@ class ChecklistAnswer(Answer):
             return flat_values == other_flat_values
 
 
-# Answer = Union[TextAnswer, RadioAnswer, ChecklistAnswer]
-
-
-class _DynamicAnswer:
-    """
-    A specialised view of the dynamic answers. Allows convenient interaction with the dynamic properties.
-    """
-
-    def __init__(self, parent: ObjectInstance, frame: int, attribute: Attribute):
-        self._parent = parent
-        self._frame = frame
-        self._attribute = attribute
-
-    @property
-    def frame(self) -> int:
-        return self._frame
-
-    @frame.setter
-    def frame(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the frame of an instantiated DynamicAnswer object.")
-
-    def copy_to_frames(self, frames: Iterable[int]):
-        current_answer = self._get_current_answer()
-
-        for frame in frames:
-            answer = self._parent._get_dynamic_answer(frame, self._attribute)
-            self._parent._reset_dynamic_answer_at_frame(current_answer, answer, frame)
-
-    def in_frames(self) -> Set[int]:
-        current_answer = self._get_current_answer()
-        return self._parent._get_frames_for_dynamic_answer(current_answer)
-
-    def is_answered_for_current_frame(self) -> bool:
-        current_answer = self._get_current_answer()
-        return current_answer.is_answered()
-
-    def _get_current_answer(self) -> Answer:
-        """Get the current answer at the current frame from the parent."""
-        answer = self._parent._get_dynamic_answer(self._frame, self._attribute)
-        return answer
-
-
-class DynamicTextAnswer(_DynamicAnswer):
-    def __init__(self, parent: ObjectInstance, frame: int, attribute: Attribute):
-        super().__init__(parent, frame, attribute)
-
-    def set(self, value: str):
-
-        current_answer = self._get_current_answer()
-        new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
-        new_answer.copy_from(current_answer)
-        new_answer.set(value)
-
-        self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
-
-    def get_value(self) -> bool:
-        current_answer = self._get_current_answer()
-        return current_answer.get_value()
-
-
-class DynamicRadioAnswer(_DynamicAnswer):
-    def __init__(self, parent: ObjectInstance, frame: int, attribute: Attribute):
-        super().__init__(parent, frame, attribute)
-
-    def set(self, value: NestableOption):
-        current_answer = self._get_current_answer()
-        new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
-        new_answer.copy_from(current_answer)
-        new_answer.set(value)
-
-        self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
-
-    def get_value(self) -> Optional[NestableOption]:
-        current_answer = self._get_current_answer()
-        return current_answer.get_value()
-
-
-class DynamicChecklistAnswer(_DynamicAnswer):
-    def __init__(self, parent: ObjectInstance, frame: int, attribute: Attribute):
-        super().__init__(parent, frame, attribute)
-
-    def check_options(self, values: Iterable[FlatOption]) -> None:
-        current_answer = self._get_current_answer()
-        new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
-        new_answer.copy_from(current_answer)
-        new_answer.check_options(values)
-
-        self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
-
-    def uncheck_options(self, values: Iterable[FlatOption]) -> None:
-        current_answer = self._get_current_answer()
-        new_answer = _get_default_answer_from_attribute(current_answer.ontology_attribute)
-        new_answer.copy_from(current_answer)
-        new_answer.uncheck_options(values)
-
-        self._parent._reset_dynamic_answer_at_frame(new_answer, current_answer, self._frame)
-
-    def get_value(self, value: FlatOption) -> bool:
-        # DENIS: maybe call this `is_checked(value)`
-        current_answer = self._get_current_answer()
-        return current_answer.get_value(value)
-
-
-DynamicAnswer = Union[DynamicTextAnswer, DynamicChecklistAnswer]
-
-
 def _get_default_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
     """DENIS: I believe this only works for static answers."""
     ret: List[Answer] = list()
@@ -866,7 +760,6 @@ class ObjectInstance:
     DENIS: I probably want to have a proper __repr__ here for debug-ability.
     """
 
-    # DENIS: this needs to take an OntologyLabelObject to navigate around.
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
         self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
@@ -876,36 +769,10 @@ class ObjectInstance:
         self._parent: Optional[LabelRow] = None
         """This member should only be manipulated by a LabelRow"""
 
-        # self._static_answers: List[Answer] = self._get_static_answers()
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
         # feature_node_hash of attribute to the answer.
 
         self._dynamic_answer_manager = _DynamicAnswerManager(self)
-
-        # self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
-        # self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
-        # # ^ for dynamic answer management => DENIS: may be better to have a manager class with the
-        # # responsibility to manage this
-        #
-        # self._dynamic_uninitialised_answer_options: Set[Answer] = self._get_dynamic_answers()
-        # # ^ read only for dynamic answers management.
-
-    # def _get_dynamic_answer(self, frame: int, attribute: Attribute) -> Answer:
-    #     """This should only be called from the DynamicAnswer"""
-    #     answers = self._frames_to_answers[frame]
-    #     for answer in answers:
-    #         if answer.ontology_attribute.feature_node_hash == attribute.feature_node_hash:
-    #             return answer
-    #
-    #     raise RuntimeError("The attribute is not a valid attribute for this ObjectInstance.")
-
-    # def _get_frames_for_dynamic_answer(self, answer: Answer) -> Set[int]:
-    #     return self._answers_to_frames[answer]
-    #
-    # def _set_dynamic_answer_to_frames(self, frames: Iterable[int], answer: Answer) -> None:
-    #     self._answers_to_frames[answer].update(set(frames))
-    #     for frame in frames:
-    #         self._frames_to_answers[frame].add(answer)
 
     @overload
     def get_answer(
@@ -1075,40 +942,6 @@ class ObjectInstance:
         is_dynamic_child = self._dynamic_answer_manager.is_valid_dynamic_attribute(attribute)
         return is_dynamic_child or is_static_child
 
-    # def get_all_static_answers(
-    #     self,
-    # ) -> List[Answer]:
-    #     ret = copy(self._static_answers)
-    #     # Deliberately always returning a shallow copy to make sure no one removes the static answers.
-    #     return ret
-
-    # def get_static_answer(self, attribute: Attribute) -> Answer:
-    #     # DENIS: can I be smarter about the return type according to the incoming type?
-    #     for static_answer in self._static_answers:
-    #         if attribute.feature_node_hash == static_answer.ontology_attribute.feature_node_hash:
-    #             return static_answer
-    #     raise ValueError("The attribute was not found in this ObjectInstance's ontology.")
-
-    # def _get_dynamic_answers(self) -> Set[Answer]:
-    #     ret: Set[Answer] = set()
-    #     for attribute in self._ontology_object.attributes:
-    #         if attribute.dynamic:
-    #             answer = _get_default_answer_from_attribute(attribute)
-    #             ret.add(answer)
-    #     return ret
-
-    # def get_dynamic_answer(self, frame: int, attribute: Attribute):
-    #     # DENIS: probably I don't need two classes
-    #     answer = self._get_dynamic_answer(frame, attribute)
-    #     if isinstance(answer, TextAnswer):
-    #         return DynamicTextAnswer(self, frame, answer.ontology_attribute)
-    #     elif isinstance(answer, ChecklistAnswer):
-    #         return DynamicChecklistAnswer(self, frame, answer.ontology_attribute)
-    #     elif isinstance(answer, RadioAnswer):
-    #         return DynamicRadioAnswer(self, frame, answer.ontology_attribute)
-    #     else:
-    #         raise NotImplemented("Need to implement the other answer types")
-
     @property
     def object_hash(self) -> str:
         return self._object_hash
@@ -1163,14 +996,6 @@ class ObjectInstance:
             object_frame_instance_info=saved_data.object_frame_instance_info,
         )
 
-    # def _add_initial_dynamic_answers(self, frame: int) -> None:
-    #     if frame in self._frames_to_answers:
-    #         return
-    #
-    #     for answer in self._dynamic_uninitialised_answer_options:
-    #         self._frames_to_answers[frame].add(answer)
-    #         self._answers_to_frames[answer].add(frame)
-
     def copy(self) -> ObjectInstance:
         """
         Creates an exact copy of this ObjectInstance but with a new object hash and without being associated to any
@@ -1205,33 +1030,6 @@ class ObjectInstance:
 
         # DENIS: can we remove to make this invalid?
         # DENIS: ensure that dynamic answers are also handled properly.
-
-    # def _remove_dynamic_answers_from_frame(self, frame: int) -> None:
-    #     answers = self._frames_to_answers[frame]
-    #     for answer in answers:
-    #         self._remove_dynamic_answer_at_frame(answer, frame)
-    #
-    #     self._frames_to_answers.pop(frame)
-    #
-    # def _remove_dynamic_answer_at_frame(self, answer: Answer, frame: int) -> None:
-    #     default_answer = _get_default_answer_from_attribute(answer.ontology_attribute)
-    #
-    #     if hash(answer) == hash(default_answer):
-    #         return
-    #
-    #     self._answers_to_frames[answer].remove(frame)
-    #     if len(self._answers_to_frames) == 0:
-    #         self._answers_to_frames.pop(answer)
-    #
-    #     self._frames_to_answers[frame].remove(answer)
-    #     self._frames_to_answers[frame].add(default_answer)
-    #
-    # def _reset_dynamic_answer_at_frame(self, new_answer: Answer, old_answer: Answer, frame: int) -> None:
-    #     self._answers_to_frames[old_answer].remove(frame)
-    #     self._frames_to_answers[frame].remove(old_answer)
-    #
-    #     self._answers_to_frames[new_answer].add(frame)
-    #     self._frames_to_answers[frame].add(new_answer)
 
     def is_valid(self) -> bool:
         """Check if is valid, could also return some human/computer  messages."""
