@@ -795,6 +795,10 @@ class _DynamicAnswerManager:
         default_answer = _get_default_answer_from_attribute(attribute)
         _set_answer_for_object(default_answer, answer)
 
+    def frames(self) -> Iterable[int]:
+        """Returns all frames that have answers set."""
+        return self._frames_to_answers.keys()
+
     def _get_all_answers_for_attribute(self, attribute: Attribute) -> List[AnswerForFrames]:
         """Return all the answers for a given attribute."""
         ret = []
@@ -1156,7 +1160,20 @@ class ObjectInstance:
         """Check if is valid, could also return some human/computer  messages."""
         if len(self._frames_to_instance_data) == 0:
             return False
+
+        if not self.are_dynamic_answers_valid():
+            return False
+
         return True
+
+    def are_dynamic_answers_valid(self) -> bool:
+        """
+        Whether there are any dynamic answers on frames that have no coordinates.
+        """
+        dynamic_frames = set(self._dynamic_answer_manager.frames())
+        local_frames = set(self.frames())
+
+        return len(dynamic_frames - local_frames) == 0
 
     def _is_selectable_child_attribute(self, attribute: Attribute) -> bool:
         # I have the ontology classification, so I can build the tree from that. Basically do a DFS.

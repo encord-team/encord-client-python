@@ -804,14 +804,25 @@ def test_object_instance_answer_dynamic_no_frames_argument():
         AnswerForFrames(answer="Poseidon", range={2}),
     ]
 
-    # DENIS: test an is_valid function which checks if there are any dynamic answers for frames
-    # that do not have coordinates.
     # DENIS: now also try the other accessors that would be useful, try with multiple different frames,
     # and implement the filtering logic around the specific answer value and the frames.
     # Then also implement the condensation logic of the frames, so it is run length encoded.
 
 
-# def test_object_instance_answer
+def test_object_instance_answer_dynamic_is_valid():
+    object_instance = ObjectInstance(keypoint_dynamic)
+
+    assert object_instance.is_valid() is False
+    assert object_instance.are_dynamic_answers_valid() is True
+
+    object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
+    # Dynamic answers without corresponding coordinates.
+    assert object_instance.is_valid() is False
+    assert object_instance.are_dynamic_answers_valid() is False
+
+    object_instance.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
+    assert object_instance.is_valid() is True
+
 
 # ==========================================================
 # =========== actually working tests above here ============
