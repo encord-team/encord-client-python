@@ -4,19 +4,7 @@ from collections import defaultdict
 from copy import copy, deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Flag, auto
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    NoReturn,
-    Optional,
-    Set,
-    Type,
-    Union,
-    overload,
-)
+from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Union, overload
 
 from dateutil.parser import parse
 
@@ -26,10 +14,7 @@ from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
     Option,
-    OptionType,
-    PropertyType,
     RadioAttribute,
-    Shape,
     TextAttribute,
 )
 from encord.objects.constants import (
@@ -37,11 +22,19 @@ from encord.objects.constants import (
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
 )
+from encord.objects.coordinates import (
+    ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    BoundingBoxCoordinates,
+    Coordinates,
+    PolygonCoordinates,
+)
 from encord.objects.internal_helpers import (
     Answer,
-    ChecklistAnswer,
-    RadioAnswer,
-    TextAnswer,
+    _get_static_answer_map,
+    _search_child_attributes,
+    get_answer_from_object,
+    get_default_answer_from_attribute,
+    set_answer_for_object,
 )
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
@@ -62,631 +55,6 @@ For writes I need the builder pattern same as the OntologyStructure.
 
 """
 # DENIS: think about better error codes for people to catch.
-
-
-def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
-    ret: List[Answer] = list()
-    for attribute in attributes:
-        if not attribute.dynamic:
-            answer = _get_default_answer_from_attribute(attribute)
-            ret.append(answer)
-
-        if attribute.has_options_field():
-            for option in attribute.options:
-                if option.get_option_type() == OptionType.NESTABLE:
-                    other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
-                    ret.extend(other_attributes)
-
-    return ret
-
-
-def _get_default_answer_from_attribute(attribute: Attribute) -> Answer:
-    property_type = attribute.get_property_type()
-    if property_type == PropertyType.TEXT:
-        return TextAnswer(attribute)
-    elif property_type == PropertyType.RADIO:
-        return RadioAnswer(attribute)
-    elif property_type == PropertyType.CHECKLIST:
-        return ChecklistAnswer(attribute)
-    else:
-        raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
-
-
-@dataclass(frozen=True)
-class BoundingBoxCoordinates:
-    """All the values are percentages relative to the total image size."""
-
-    height: float
-    width: float
-    top_left_x: float
-    top_left_y: float
-
-    @staticmethod
-    def from_dict(d: dict) -> BoundingBoxCoordinates:
-        """Get BoundingBoxCoordinates from an encord dict"""
-        bounding_box_dict = d["boundingBox"]
-        return BoundingBoxCoordinates(
-            height=bounding_box_dict["h"],
-            width=bounding_box_dict["w"],
-            top_left_x=bounding_box_dict["x"],
-            top_left_y=bounding_box_dict["y"],
-        )
-
-    def to_dict(self) -> dict:
-        return {
-            "h": self.height,
-            "w": self.width,
-            "x": self.top_left_x,
-            "y": self.top_left_y,
-        }
-
-
-@dataclass(frozen=True)
-class RotatableBoundingBoxCoordinates:
-    """All the values are percentages relative to the total image size."""
-
-    height: float
-    width: float
-    top_left_x: float
-    top_left_y: float
-    theta: float  # angle of rotation originating at center of box
-
-
-@dataclass(frozen=True)
-class PointCoordinate:
-    """All coordinates are a percentage relative to the total image size."""
-
-    x: float
-    y: float
-
-
-@dataclass(frozen=True)
-class PolygonCoordinates:
-    values: List[PointCoordinate]
-
-    @staticmethod
-    def from_dict(d: dict) -> PolygonCoordinates:
-        polygon_dict = d["polygon"]
-        values: List[PointCoordinate] = []
-
-        sorted_dict_value_tuples = sorted((int(key), value) for key, value in polygon_dict.items())
-        sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
-
-        for value in sorted_dict_values:
-            point_coordinate = PointCoordinate(
-                x=value["x"],
-                y=value["y"],
-            )
-            values.append(point_coordinate)
-
-        return PolygonCoordinates(values=values)
-
-    def to_dict(self) -> dict:
-        ret = {}
-        for idx, value in enumerate(self.values):
-            ret[str(idx)] = {"x": value.x, "y": value.y}
-        return ret
-
-
-@dataclass(frozen=True)
-class PolylineCoordinates:
-    values: List[PointCoordinate]
-
-
-class Visibility(Flag):
-    """
-    An item is invisible if it is outside the frame. It is occluded
-    if it is covered by something in the frame, but it would otherwise
-    be in the frame. Else it is visible.
-    """
-
-    VISIBLE = auto()
-    INVISIBLE = auto()
-    OCCLUDED = auto()
-
-
-@dataclass(frozen=True)
-class SkeletonCoordinate:
-    x: float
-    y: float
-
-    # `name` and `color` can be removed as they are part of the ontology.
-    # The frontend must first be aware of how to merge with ontology.
-    name: str
-    color: str
-
-    # `featureHash` and `value` seem to appear when visibility is
-    # present. They might not have any meaning. Remove if confirmed that
-    # Frontend does not need it.
-    feature_hash: Optional[str] = None
-    value: Optional[str] = None
-
-    visibility: Optional[Visibility] = None
-
-
-@dataclass(frozen=True)
-class SkeletonCoordinates:
-    values: List[SkeletonCoordinate]
-
-
-Coordinates = Union[
-    BoundingBoxCoordinates,
-    RotatableBoundingBoxCoordinates,
-    PointCoordinate,
-    PolygonCoordinates,
-    PolylineCoordinates,
-    SkeletonCoordinates,
-]
-
-# DENIS: guard this with a unit test.
-ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
-    Shape.BOUNDING_BOX: BoundingBoxCoordinates,
-    Shape.ROTATABLE_BOUNDING_BOX: RotatableBoundingBoxCoordinates,
-    Shape.POINT: PointCoordinate,
-    Shape.POLYGON: PolygonCoordinates,
-    Shape.POLYLINE: PolylineCoordinates,
-    Shape.SKELETON: SkeletonCoordinates,
-}
-
-
-@dataclass(frozen=True)
-class ObjectFrameReadOnlyInstanceInfo:
-    """Trying to set this will not have any effects on the data in the Encord servers."""
-
-    reviews: List[dict] = field(default_factory=list)
-    # DENIS: can I type out this reviews thing?
-
-
-@dataclass(frozen=True)
-class ObjectFrameInstanceInfo:
-    # DENIS: do we need the isDeleted field?
-    created_at: datetime = datetime.now()
-    created_by: Optional[str] = None
-    """None defaults to the user of the SDK. DENIS: need to add this information somewhere."""
-    last_edited_at: Optional[datetime] = None
-    last_edited_by: Optional[str] = None
-    """None defaults to the user of the SDK, DENIS: do we want this to be true for last_edited_by?"""
-    confidence: float = 1
-    manual_annotation: bool = True
-    read_only_info: ObjectFrameReadOnlyInstanceInfo = ObjectFrameReadOnlyInstanceInfo()
-
-    @staticmethod
-    def from_dict(d: dict):
-        read_only_info = ObjectFrameReadOnlyInstanceInfo(reviews=d["reviews"])
-        if "lastEditedAt" in d:
-            last_edited_at = parse(d["lastEditedAt"])
-        else:
-            last_edited_at = None
-
-        return ObjectFrameInstanceInfo(
-            created_at=parse(d["createdAt"]),
-            created_by=d["createdBy"],
-            last_edited_at=last_edited_at,
-            last_edited_by=d.get("lastEditedBy"),
-            confidence=d["confidence"],
-            manual_annotation=d["manualAnnotation"],
-            read_only_info=read_only_info,
-        )
-
-
-@dataclass(frozen=True)
-class ObjectFrameInstanceData:
-    coordinates: Coordinates
-    object_frame_instance_info: ObjectFrameInstanceInfo
-
-
-@dataclass
-class AnswerForFrames:
-    answer: Union[str, Option, Iterable[Option]]
-    range: Set[int]
-    # DENIS: Do I really want to return a set here?
-
-
-class _DynamicAnswerManager:
-    def __init__(self, object_instance: ObjectInstance):
-        """
-        Manages the answers that are set for different frames.
-        This can be part of the ObjectInstance class.
-        """
-        self._object_instance = object_instance
-        # self._ontology_object = ontology_object
-        self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
-        self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
-
-        self._dynamic_uninitialised_answer_options: Set[Answer] = self._get_dynamic_answers()
-        # ^ these are like the static answers. Everything that is possibly an answer. However,
-        # don't forget also nested-ness. In this case nested-ness should be ignored.
-        # ^ I might not need this object but only need the _get_dynamic_answers object.
-
-    def is_valid_dynamic_attribute(self, attribute: Attribute) -> bool:
-        feature_node_hash = attribute.feature_node_hash
-
-        for answer in self._dynamic_uninitialised_answer_options:
-            if answer.ontology_attribute.feature_node_hash == feature_node_hash:
-                return True
-        return False
-
-    def delete_answer(self, attribute: Attribute, frames: Frames) -> None:
-        frame_list = frames_class_to_frames_list(frames)
-
-        for frame in frame_list:
-            to_remove_answer = None
-            for answer_object in self._frames_to_answers[frame]:
-                # ideally this would not be a log(n) operation, however these will not be extremely large.
-                if answer_object.ontology_attribute == attribute:
-                    to_remove_answer = answer_object
-                    break
-
-            if to_remove_answer is not None:
-                self._frames_to_answers[frame].remove(to_remove_answer)
-                self._answers_to_frames[to_remove_answer].remove(frame)
-                if self._answers_to_frames[to_remove_answer] == set():
-                    del self._answers_to_frames[to_remove_answer]
-
-    def set_answer(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
-    ) -> None:
-        if frames is None:
-            for available_frame in self._object_instance.frames():
-                self._set_answer(answer, attribute, available_frame)
-            return
-        self._set_answer(answer, attribute, frames)
-
-    def _set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Frames) -> None:
-        """Set the answer for a single frame"""
-
-        self.delete_answer(attribute, frames)
-
-        default_answer = _get_default_answer_from_attribute(attribute)
-        _set_answer_for_object(default_answer, answer)
-
-        frame_list = frames_class_to_frames_list(frames)
-        for frame in frame_list:
-            self._frames_to_answers[frame].add(default_answer)
-            self._answers_to_frames[default_answer].add(frame)
-
-    def get_answer(
-        self,
-        attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frames: Optional[Frames] = None,
-    ) -> List[AnswerForFrames]:
-        """For a given attribute, return all the answers and frames given the filters."""
-        ret = []
-        filter_frames_set = None if filter_frames is None else set(frames_class_to_frames_list(filter_frames))
-        for answer in self._answers_to_frames:
-            if answer.ontology_attribute != attribute:
-                continue
-            if not (filter_answer is None or filter_answer == _get_answer_from_object(answer)):
-                continue
-            actual_frames = self._answers_to_frames[answer]
-            if not (filter_frames_set is None or len(actual_frames & filter_frames_set) > 0):
-                continue
-            ret.append(AnswerForFrames(answer=_get_answer_from_object(answer), range=self._answers_to_frames[answer]))
-        return ret
-
-    def frames(self) -> Iterable[int]:
-        """Returns all frames that have answers set."""
-        return self._frames_to_answers.keys()
-
-    def _get_dynamic_answers(self) -> Set[Answer]:
-        ret: Set[Answer] = set()
-        for attribute in self._object_instance.ontology_item.attributes:
-            if attribute.dynamic:
-                answer = _get_default_answer_from_attribute(attribute)
-                ret.add(answer)
-        return ret
-
-
-class ObjectInstance:
-    """This is per video/image_group/dicom/...
-
-    should you be able to set the color per object?
-
-
-    DENIS: move this to `ontology_object` and have a my_ontology_object.create_instance() -> ObjectInstance
-    """
-
-    def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
-        self._ontology_object = ontology_object
-        self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
-        # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
-        # this thing take over the label structure itself (for large ones it would be interesting)
-        self._object_hash = object_hash or short_uuid_str()
-        self._parent: Optional[LabelRow] = None
-        """This member should only be manipulated by a LabelRow"""
-
-        self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
-        # feature_node_hash of attribute to the answer.
-
-        self._dynamic_answer_manager = _DynamicAnswerManager(self)
-
-    @overload
-    def get_answer(
-        self,
-        attribute: TextAttribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
-    ) -> Optional[str]:
-        ...
-
-    @overload
-    def get_answer(
-        self,
-        attribute: RadioAttribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
-    ) -> Optional[Option]:
-        ...
-
-    @overload
-    def get_answer(
-        self,
-        attribute: ChecklistAttribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
-    ) -> Optional[List[Option]]:
-        """Returns None only if the attribute is nested and the parent is unselected. Otherwise, if not
-        yet answered it will return an empty list."""
-        ...
-
-    def get_answer(
-        self,
-        attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
-    ) -> Union[str, Option, Iterable[Option], None]:
-        """
-        Args:
-            attribute: The ontology attribute to get the answer for.
-            filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
-            filter_frame: A filter for a specific frame. Only applies to dynamic attributes.
-            DENIS: overthink the return type. Dynamic answers would have a different return type.
-        """
-        if attribute is None:
-            attribute = self._ontology_object.attributes[0]
-        elif not self._is_attribute_valid_child_of_object_instance(attribute):
-            raise ValueError("The attribute is not a valid child of the classification.")
-        elif not self._is_selectable_child_attribute(attribute):
-            return None
-
-        if attribute.dynamic:
-            return self._dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frame)
-
-        static_answer = self._static_answer_map[attribute.feature_node_hash]
-
-        return _get_answer_from_object(static_answer)
-
-    @overload
-    def set_answer(
-        self,
-        answer: str,
-        attribute: TextAttribute,
-        frames: Optional[Frames] = None,
-        overwrite: bool = False,
-    ) -> None:
-        ...
-
-    @overload
-    def set_answer(
-        self,
-        answer: Option,
-        attribute: RadioAttribute,
-        frames: Optional[Frames] = None,
-        overwrite: bool = False,
-    ) -> None:
-        ...
-
-    @overload
-    def set_answer(
-        self,
-        answer: Iterable[Option],
-        attribute: ChecklistAttribute,
-        frames: Optional[Frames] = None,
-        overwrite: bool = False,
-    ) -> None:
-        ...
-
-    def set_answer(
-        self,
-        answer: Union[str, Option, Iterable[Option]],
-        attribute: Attribute,
-        frames: Optional[Frames] = None,
-        overwrite: bool = False,
-    ) -> None:
-        """
-        We could make these functions part of a different class which this inherits from.
-
-        Args:
-            answer: The answer to set.
-            attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
-            frames: Only relevant for dynamic attributes. The frames to set the answer for. If `None`, the
-                answer is set for all frames that this object currently has set coordinates for (also overwriting
-                current answers). This will not automatically propagate the answer to new frames that are added in the
-                future.
-                If this is anything but `None` for non-dynamic attributes, this will
-                throw a ValueError.
-            overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
-                a RuntimeError if the answer already exists. This argument is ignored for dynamic attributes.
-        """
-        if not self._is_attribute_valid_child_of_object_instance(attribute):
-            raise ValueError("The attribute is not a valid child of the object.")
-        elif not self._is_selectable_child_attribute(attribute):
-            raise RuntimeError(
-                "Setting a nested attribute is only possible if all parent attributes have been" "selected."
-            )
-        elif frames is not None and attribute.dynamic is False:
-            raise ValueError("Setting frames is only possible for dynamic attributes.")
-
-        """
-        For classification index we get all the possible static answers upfront and then iterate over those.
-        Here I could do the same thing for static answers
-        for dynamic ones I can
-        * extend the answers so they can have multiple answers and a range
-        * create a new class which is a manager for one/all of the dynamic answers.  <-- try this
-        * or manage them here somewhere.
-        Essentially all these things are the same actually, I'm only talking about the levels of abstraction. 
-        """
-
-        if attribute.dynamic:
-            # DENIS: do I want to do an overwrite?
-            self._dynamic_answer_manager.set_answer(answer, attribute, frames)
-            return
-
-        # DENIS: I can factor this out with the ClassificationIndex class.
-        static_answer = self._static_answer_map[attribute.feature_node_hash]
-        if static_answer.is_answered() and overwrite is False:
-            raise RuntimeError(
-                "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
-                "overwrite an existing answer to and attribute."
-            )
-
-        _set_answer_for_object(static_answer, answer)
-
-    def delete_answer(
-        self,
-        attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option]] = None,
-        frames: Optional[int] = None,
-    ) -> None:
-        """
-        Args:
-            attribute: The attribute to delete the answer for.
-            filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
-            frames: A filter for a specific frame. Only applies to dynamic attributes.
-        """
-        raise NotImplementedError("Needs to be implemented.")
-        if attribute.dynamic:
-            self._dynamic_answer_manager.delete_answer(attribute, frames)
-            return
-
-        static_answer = self._static_answer_map[attribute.feature_node_hash]
-        # _set_answer_for_object(static_answer, None)
-
-    def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
-        # DENIS: this will fail for dynamic attributes.
-        is_static_child = attribute.feature_node_hash in self._static_answer_map
-        is_dynamic_child = self._dynamic_answer_manager.is_valid_dynamic_attribute(attribute)
-        return is_dynamic_child or is_static_child
-
-    @property
-    def object_hash(self) -> str:
-        return self._object_hash
-
-    @object_hash.setter
-    def object_hash(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the object hash on an instantiated label object.")
-
-    @property
-    def ontology_item(self) -> Any:
-        return deepcopy(self._ontology_object)
-
-    @ontology_item.setter
-    def ontology_item(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
-
-    def set_coordinates(
-        # DENIS: should this be called `set_instance_data` or something similar?
-        self,
-        coordinates: Coordinates,
-        frames: Iterable[int],
-        # ^ DENIS: this is slightly awkward, do we really need to have multiple?
-        *,
-        object_frame_instance_info: ObjectFrameInstanceInfo = ObjectFrameInstanceInfo(),
-        # DENIS: could have a set/overwrite/force flag
-    ):
-        """
-        DENIS: The client needs to be careful here! If a reference of multiple coordinates is being passed around, they
-        might accidentally overwrite specific values.
-
-        DENIS: validate that the coordinates are not out of bounds.
-        """
-        expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[self._ontology_object.shape]
-        if type(coordinates) != expected_coordinate_type:
-            raise ValueError(
-                f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
-            )
-
-        for frame in frames:
-            self._frames_to_instance_data[frame] = ObjectFrameInstanceData(
-                coordinates=coordinates, object_frame_instance_info=object_frame_instance_info
-            )
-            # self._add_initial_dynamic_answers(frame)
-
-        if self._parent:
-            self._parent._add_to_frame_to_hashes_map(self)
-
-    def get_for_frame(self, frame: int) -> ObjectFrameInstanceData:
-        saved_data = self._frames_to_instance_data[frame]
-        return ObjectFrameInstanceData(
-            coordinates=deepcopy(saved_data.coordinates),
-            object_frame_instance_info=saved_data.object_frame_instance_info,
-        )
-
-    def copy(self) -> ObjectInstance:
-        """
-        Creates an exact copy of this ObjectInstance but with a new object hash and without being associated to any
-        LabelRow. This is useful if you want to add the semantically same ObjectInstance to multiple `LabelRow`s."""
-        ret = ObjectInstance(self._ontology_object)
-        ret._frames_to_instance_data = copy(self._frames_to_instance_data)
-        # DENIS: test if a shallow copy is enough
-        # DENIS: copy the answers stuff as well.
-        return ret
-
-    def frames(self) -> List[int]:
-        # DENIS: this is public - think about if I want to have a condensed version with a run length encoding.
-        return list(self._frames_to_instance_data.keys())
-
-    def get_instance_data(self, frames: Iterable[int]) -> List[ObjectFrameInstanceData]:
-        ret = []
-        for frame in frames:
-            if frame not in self._frames_to_instance_data:
-                raise ValueError(f"This object does not exist on frame `{frame}`.")
-            ret.append(self._frames_to_instance_data[frame])
-        return ret
-
-    def remove_from_frames(self, frames: Iterable[int]):
-        """Ensure that it will be removed from all frames."""
-        # DENIS: probably frames everywhere should be Union[Iterable[int], int]
-        for frame in frames:
-            self._frames_to_instance_data.pop(frame)
-            # self._remove_dynamic_answers_from_frame(frame)
-
-        if self._parent:
-            self._parent._remove_from_frame_to_hashes_map(frames, self.object_hash)
-
-        # DENIS: can we remove to make this invalid?
-        # DENIS: ensure that dynamic answers are also handled properly.
-
-    def is_valid(self) -> bool:
-        """Check if is valid, could also return some human/computer  messages."""
-        if len(self._frames_to_instance_data) == 0:
-            return False
-
-        if not self.are_dynamic_answers_valid():
-            return False
-
-        return True
-
-    def are_dynamic_answers_valid(self) -> bool:
-        """
-        Whether there are any dynamic answers on frames that have no coordinates.
-        """
-        dynamic_frames = set(self._dynamic_answer_manager.frames())
-        local_frames = set(self.frames())
-
-        return len(dynamic_frames - local_frames) == 0
-
-    def _is_selectable_child_attribute(self, attribute: Attribute) -> bool:
-        # I have the ontology classification, so I can build the tree from that. Basically do a DFS.
-        ontology_object = self._ontology_object
-        for search_attribute in ontology_object.attributes:
-            if _search_child_attributes(attribute, search_attribute, self._static_answer_map):
-                return True
-        return False
-
-    def __repr__(self):
-        return f"ObjectInstance({self._object_hash})"
 
 
 @dataclass(frozen=True)
@@ -836,7 +204,7 @@ class ClassificationInstance:
                 "overwrite an existing answer to and attribute."
             )
 
-        _set_answer_for_object(static_answer, answer)
+        set_answer_for_object(static_answer, answer)
 
     @overload
     def get_answer(self, attribute: TextAttribute) -> str:
@@ -868,7 +236,7 @@ class ClassificationInstance:
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
 
-        return _get_answer_from_object(static_answer)
+        return get_answer_from_object(static_answer)
 
     def _is_attribute_valid_child_of_classification(self, attribute: Attribute) -> bool:
         return attribute.feature_node_hash in self._static_answer_map
@@ -1543,58 +911,461 @@ class LabelRow:
 
 
 # DENIS: should this LabelStructure be able to be self-updatable? Without the involvement of the project?
+@dataclass(frozen=True)
+class ObjectFrameReadOnlyInstanceInfo:
+    """Trying to set this will not have any effects on the data in the Encord servers."""
+
+    reviews: List[dict] = field(default_factory=list)
+    # DENIS: can I type out this reviews thing?
 
 
-def _get_static_answer_map(attributes: List[Attribute]) -> Dict[str, Answer]:
-    answers = _get_default_static_answers_from_attributes(attributes)
-    answer_map = {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
-    return answer_map
+@dataclass(frozen=True)
+class ObjectFrameInstanceInfo:
+    # DENIS: do we need the isDeleted field?
+    created_at: datetime = datetime.now()
+    created_by: Optional[str] = None
+    """None defaults to the user of the SDK. DENIS: need to add this information somewhere."""
+    last_edited_at: Optional[datetime] = None
+    last_edited_by: Optional[str] = None
+    """None defaults to the user of the SDK, DENIS: do we want this to be true for last_edited_by?"""
+    confidence: float = 1
+    manual_annotation: bool = True
+    read_only_info: ObjectFrameReadOnlyInstanceInfo = ObjectFrameReadOnlyInstanceInfo()
+
+    @staticmethod
+    def from_dict(d: dict):
+        read_only_info = ObjectFrameReadOnlyInstanceInfo(reviews=d["reviews"])
+        if "lastEditedAt" in d:
+            last_edited_at = parse(d["lastEditedAt"])
+        else:
+            last_edited_at = None
+
+        return ObjectFrameInstanceInfo(
+            created_at=parse(d["createdAt"]),
+            created_by=d["createdBy"],
+            last_edited_at=last_edited_at,
+            last_edited_by=d.get("lastEditedBy"),
+            confidence=d["confidence"],
+            manual_annotation=d["manualAnnotation"],
+            read_only_info=read_only_info,
+        )
 
 
-def _search_child_attributes(
-    passed_attribute: Attribute, search_attribute: Attribute, static_answer_map: Dict[str, Answer]
-) -> bool:
-    if passed_attribute == search_attribute:
+@dataclass(frozen=True)
+class ObjectFrameInstanceData:
+    coordinates: Coordinates
+    object_frame_instance_info: ObjectFrameInstanceInfo
+
+
+@dataclass
+class AnswerForFrames:
+    answer: Union[str, Option, Iterable[Option]]
+    range: Set[int]
+    # DENIS: Do I really want to return a set here?
+
+
+class ObjectInstance:
+    """This is per video/image_group/dicom/...
+
+    should you be able to set the color per object?
+
+
+    DENIS: move this to `ontology_object` and have a my_ontology_object.create_instance() -> ObjectInstance
+    """
+
+    def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
+        self._ontology_object = ontology_object
+        self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
+        # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
+        # this thing take over the label structure itself (for large ones it would be interesting)
+        self._object_hash = object_hash or short_uuid_str()
+        self._parent: Optional[LabelRow] = None
+        """This member should only be manipulated by a LabelRow"""
+
+        self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
+        # feature_node_hash of attribute to the answer.
+
+        self._dynamic_answer_manager = DynamicAnswerManager(self)
+
+    @overload
+    def get_answer(
+        self,
+        attribute: TextAttribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
+    ) -> Optional[str]:
+        ...
+
+    @overload
+    def get_answer(
+        self,
+        attribute: RadioAttribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
+    ) -> Optional[Option]:
+        ...
+
+    @overload
+    def get_answer(
+        self,
+        attribute: ChecklistAttribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
+    ) -> Optional[List[Option]]:
+        """Returns None only if the attribute is nested and the parent is unselected. Otherwise, if not
+        yet answered it will return an empty list."""
+        ...
+
+    def get_answer(
+        self,
+        attribute: Attribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
+    ) -> Union[str, Option, Iterable[Option], None]:
+        """
+        Args:
+            attribute: The ontology attribute to get the answer for.
+            filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
+            filter_frame: A filter for a specific frame. Only applies to dynamic attributes.
+            DENIS: overthink the return type. Dynamic answers would have a different return type.
+        """
+        if attribute is None:
+            attribute = self._ontology_object.attributes[0]
+        elif not self._is_attribute_valid_child_of_object_instance(attribute):
+            raise ValueError("The attribute is not a valid child of the classification.")
+        elif not self._is_selectable_child_attribute(attribute):
+            return None
+
+        if attribute.dynamic:
+            return self._dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frame)
+
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+
+        return get_answer_from_object(static_answer)
+
+    @overload
+    def set_answer(
+        self,
+        answer: str,
+        attribute: TextAttribute,
+        frames: Optional[Frames] = None,
+        overwrite: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def set_answer(
+        self,
+        answer: Option,
+        attribute: RadioAttribute,
+        frames: Optional[Frames] = None,
+        overwrite: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def set_answer(
+        self,
+        answer: Iterable[Option],
+        attribute: ChecklistAttribute,
+        frames: Optional[Frames] = None,
+        overwrite: bool = False,
+    ) -> None:
+        ...
+
+    def set_answer(
+        self,
+        answer: Union[str, Option, Iterable[Option]],
+        attribute: Attribute,
+        frames: Optional[Frames] = None,
+        overwrite: bool = False,
+    ) -> None:
+        """
+        We could make these functions part of a different class which this inherits from.
+
+        Args:
+            answer: The answer to set.
+            attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
+            frames: Only relevant for dynamic attributes. The frames to set the answer for. If `None`, the
+                answer is set for all frames that this object currently has set coordinates for (also overwriting
+                current answers). This will not automatically propagate the answer to new frames that are added in the
+                future.
+                If this is anything but `None` for non-dynamic attributes, this will
+                throw a ValueError.
+            overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
+                a RuntimeError if the answer already exists. This argument is ignored for dynamic attributes.
+        """
+        if not self._is_attribute_valid_child_of_object_instance(attribute):
+            raise ValueError("The attribute is not a valid child of the object.")
+        elif not self._is_selectable_child_attribute(attribute):
+            raise RuntimeError(
+                "Setting a nested attribute is only possible if all parent attributes have been" "selected."
+            )
+        elif frames is not None and attribute.dynamic is False:
+            raise ValueError("Setting frames is only possible for dynamic attributes.")
+
+        """
+        For classification index we get all the possible static answers upfront and then iterate over those.
+        Here I could do the same thing for static answers
+        for dynamic ones I can
+        * extend the answers so they can have multiple answers and a range
+        * create a new class which is a manager for one/all of the dynamic answers.  <-- try this
+        * or manage them here somewhere.
+        Essentially all these things are the same actually, I'm only talking about the levels of abstraction. 
+        """
+
+        if attribute.dynamic:
+            # DENIS: do I want to do an overwrite?
+            self._dynamic_answer_manager.set_answer(answer, attribute, frames)
+            return
+
+        # DENIS: I can factor this out with the ClassificationIndex class.
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+        if static_answer.is_answered() and overwrite is False:
+            raise RuntimeError(
+                "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
+                "overwrite an existing answer to and attribute."
+            )
+
+        set_answer_for_object(static_answer, answer)
+
+    def delete_answer(
+        self,
+        attribute: Attribute,
+        filter_answer: Union[str, Option, Iterable[Option]] = None,
+        frames: Optional[int] = None,
+    ) -> None:
+        """
+        Args:
+            attribute: The attribute to delete the answer for.
+            filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
+            frames: A filter for a specific frame. Only applies to dynamic attributes.
+        """
+        raise NotImplementedError("Needs to be implemented.")
+        if attribute.dynamic:
+            self._dynamic_answer_manager.delete_answer(attribute, frames)
+            return
+
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+        # _set_answer_for_object(static_answer, None)
+
+    def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
+        # DENIS: this will fail for dynamic attributes.
+        is_static_child = attribute.feature_node_hash in self._static_answer_map
+        is_dynamic_child = self._dynamic_answer_manager.is_valid_dynamic_attribute(attribute)
+        return is_dynamic_child or is_static_child
+
+    @property
+    def object_hash(self) -> str:
+        return self._object_hash
+
+    @object_hash.setter
+    def object_hash(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot set the object hash on an instantiated label object.")
+
+    @property
+    def ontology_item(self) -> Any:
+        return deepcopy(self._ontology_object)
+
+    @ontology_item.setter
+    def ontology_item(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
+
+    def set_coordinates(
+        # DENIS: should this be called `set_instance_data` or something similar?
+        self,
+        coordinates: Coordinates,
+        frames: Iterable[int],
+        # ^ DENIS: this is slightly awkward, do we really need to have multiple?
+        *,
+        object_frame_instance_info: ObjectFrameInstanceInfo = ObjectFrameInstanceInfo(),
+        # DENIS: could have a set/overwrite/force flag
+    ):
+        """
+        DENIS: The client needs to be careful here! If a reference of multiple coordinates is being passed around, they
+        might accidentally overwrite specific values.
+
+        DENIS: validate that the coordinates are not out of bounds.
+        """
+        expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[self._ontology_object.shape]
+        if type(coordinates) != expected_coordinate_type:
+            raise ValueError(
+                f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
+            )
+
+        for frame in frames:
+            self._frames_to_instance_data[frame] = ObjectFrameInstanceData(
+                coordinates=coordinates, object_frame_instance_info=object_frame_instance_info
+            )
+            # self._add_initial_dynamic_answers(frame)
+
+        if self._parent:
+            self._parent._add_to_frame_to_hashes_map(self)
+
+    def get_for_frame(self, frame: int) -> ObjectFrameInstanceData:
+        saved_data = self._frames_to_instance_data[frame]
+        return ObjectFrameInstanceData(
+            coordinates=deepcopy(saved_data.coordinates),
+            object_frame_instance_info=saved_data.object_frame_instance_info,
+        )
+
+    def copy(self) -> ObjectInstance:
+        """
+        Creates an exact copy of this ObjectInstance but with a new object hash and without being associated to any
+        LabelRow. This is useful if you want to add the semantically same ObjectInstance to multiple `LabelRow`s."""
+        ret = ObjectInstance(self._ontology_object)
+        ret._frames_to_instance_data = copy(self._frames_to_instance_data)
+        # DENIS: test if a shallow copy is enough
+        # DENIS: copy the answers stuff as well.
+        return ret
+
+    def frames(self) -> List[int]:
+        # DENIS: this is public - think about if I want to have a condensed version with a run length encoding.
+        return list(self._frames_to_instance_data.keys())
+
+    def get_instance_data(self, frames: Iterable[int]) -> List[ObjectFrameInstanceData]:
+        ret = []
+        for frame in frames:
+            if frame not in self._frames_to_instance_data:
+                raise ValueError(f"This object does not exist on frame `{frame}`.")
+            ret.append(self._frames_to_instance_data[frame])
+        return ret
+
+    def remove_from_frames(self, frames: Iterable[int]):
+        """Ensure that it will be removed from all frames."""
+        # DENIS: probably frames everywhere should be Union[Iterable[int], int]
+        for frame in frames:
+            self._frames_to_instance_data.pop(frame)
+            # self._remove_dynamic_answers_from_frame(frame)
+
+        if self._parent:
+            self._parent._remove_from_frame_to_hashes_map(frames, self.object_hash)
+
+        # DENIS: can we remove to make this invalid?
+        # DENIS: ensure that dynamic answers are also handled properly.
+
+    def is_valid(self) -> bool:
+        """Check if is valid, could also return some human/computer  messages."""
+        if len(self._frames_to_instance_data) == 0:
+            return False
+
+        if not self.are_dynamic_answers_valid():
+            return False
+
         return True
 
-    if not isinstance(search_attribute, RadioAttribute):
-        # DENIS: or raise something?
+    def are_dynamic_answers_valid(self) -> bool:
+        """
+        Whether there are any dynamic answers on frames that have no coordinates.
+        """
+        dynamic_frames = set(self._dynamic_answer_manager.frames())
+        local_frames = set(self.frames())
+
+        return len(dynamic_frames - local_frames) == 0
+
+    def _is_selectable_child_attribute(self, attribute: Attribute) -> bool:
+        # I have the ontology classification, so I can build the tree from that. Basically do a DFS.
+        ontology_object = self._ontology_object
+        for search_attribute in ontology_object.attributes:
+            if _search_child_attributes(attribute, search_attribute, self._static_answer_map):
+                return True
         return False
 
-    answer = static_answer_map[search_attribute.feature_node_hash]
-    value = answer.get_value()
-    if value is None:
+    def __repr__(self):
+        return f"ObjectInstance({self._object_hash})"
+
+
+class DynamicAnswerManager:
+    def __init__(self, object_instance: ObjectInstance):
+        """
+        Manages the answers that are set for different frames.
+        This can be part of the ObjectInstance class.
+        """
+        self._object_instance = object_instance
+        # self._ontology_object = ontology_object
+        self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
+        self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
+
+        self._dynamic_uninitialised_answer_options: Set[Answer] = self._get_dynamic_answers()
+        # ^ these are like the static answers. Everything that is possibly an answer. However,
+        # don't forget also nested-ness. In this case nested-ness should be ignored.
+        # ^ I might not need this object but only need the _get_dynamic_answers object.
+
+    def is_valid_dynamic_attribute(self, attribute: Attribute) -> bool:
+        feature_node_hash = attribute.feature_node_hash
+
+        for answer in self._dynamic_uninitialised_answer_options:
+            if answer.ontology_attribute.feature_node_hash == feature_node_hash:
+                return True
         return False
 
-    for option in search_attribute.options:
-        if value == option:
-            for nested_option in option.nested_options:
-                # If I have multi nesting here, what then?
-                if _search_child_attributes(passed_attribute, nested_option, static_answer_map):
-                    return True
+    def delete_answer(self, attribute: Attribute, frames: Frames) -> None:
+        frame_list = frames_class_to_frames_list(frames)
 
-    return False
+        for frame in frame_list:
+            to_remove_answer = None
+            for answer_object in self._frames_to_answers[frame]:
+                # ideally this would not be a log(n) operation, however these will not be extremely large.
+                if answer_object.ontology_attribute == attribute:
+                    to_remove_answer = answer_object
+                    break
 
+            if to_remove_answer is not None:
+                self._frames_to_answers[frame].remove(to_remove_answer)
+                self._answers_to_frames[to_remove_answer].remove(frame)
+                if self._answers_to_frames[to_remove_answer] == set():
+                    del self._answers_to_frames[to_remove_answer]
 
-def _set_answer_for_object(answer_object: Answer, answer_value: Union[str, Option, Iterable[Option]]) -> None:
-    attribute = answer_object.ontology_attribute
-    if isinstance(attribute, TextAttribute):
-        answer_object.set(answer_value)
-    elif isinstance(attribute, RadioAttribute):
-        answer_object.set(answer_value)
-    elif isinstance(attribute, ChecklistAttribute):
-        answer_object.set_options(answer_value)
-    else:
-        raise ValueError(f"Unknown attribute type: {type(attribute)}")
+    def set_answer(
+        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
+    ) -> None:
+        if frames is None:
+            for available_frame in self._object_instance.frames():
+                self._set_answer(answer, attribute, available_frame)
+            return
+        self._set_answer(answer, attribute, frames)
 
+    def _set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Frames) -> None:
+        """Set the answer for a single frame"""
 
-def _get_answer_from_object(answer_object: Answer) -> Union[str, Option, Iterable[Option], None]:
-    attribute = answer_object.ontology_attribute
-    if isinstance(attribute, TextAttribute):
-        return answer_object.get_value()
-    elif isinstance(attribute, RadioAttribute):
-        return answer_object.get_value()
-    elif isinstance(attribute, ChecklistAttribute):
-        return answer_object.get_options()
-    else:
-        raise ValueError(f"Unknown attribute type: {type(attribute)}")
+        self.delete_answer(attribute, frames)
+
+        default_answer = get_default_answer_from_attribute(attribute)
+        set_answer_for_object(default_answer, answer)
+
+        frame_list = frames_class_to_frames_list(frames)
+        for frame in frame_list:
+            self._frames_to_answers[frame].add(default_answer)
+            self._answers_to_frames[default_answer].add(frame)
+
+    def get_answer(
+        self,
+        attribute: Attribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frames: Optional[Frames] = None,
+    ) -> List[AnswerForFrames]:
+        """For a given attribute, return all the answers and frames given the filters."""
+        ret = []
+        filter_frames_set = None if filter_frames is None else set(frames_class_to_frames_list(filter_frames))
+        for answer in self._answers_to_frames:
+            if answer.ontology_attribute != attribute:
+                continue
+            if not (filter_answer is None or filter_answer == get_answer_from_object(answer)):
+                continue
+            actual_frames = self._answers_to_frames[answer]
+            if not (filter_frames_set is None or len(actual_frames & filter_frames_set) > 0):
+                continue
+            ret.append(AnswerForFrames(answer=get_answer_from_object(answer), range=self._answers_to_frames[answer]))
+        return ret
+
+    def frames(self) -> Iterable[int]:
+        """Returns all frames that have answers set."""
+        return self._frames_to_answers.keys()
+
+    def _get_dynamic_answers(self) -> Set[Answer]:
+        ret: Set[Answer] = set()
+        for attribute in self._object_instance.ontology_item.attributes:
+            if attribute.dynamic:
+                answer = get_default_answer_from_attribute(attribute)
+                ret.add(answer)
+        return ret

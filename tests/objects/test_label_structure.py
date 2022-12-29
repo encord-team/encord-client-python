@@ -4,17 +4,19 @@ from typing import Iterable, List, Union
 import pytest
 
 from encord.objects.common import Attribute, TextAttribute
+from encord.objects.coordinates import (
+    BoundingBoxCoordinates,
+    PointCoordinate,
+    PolygonCoordinates,
+)
 from encord.objects.internal_helpers import ChecklistAnswer, RadioAnswer, TextAnswer
 from encord.objects.label_structure import (
     AnswerForFrames,
-    BoundingBoxCoordinates,
     ClassificationInstance,
     LabelRow,
     LabelRowReadOnlyData,
     ObjectFrameInstanceInfo,
     ObjectInstance,
-    PointCoordinate,
-    PolygonCoordinates,
 )
 from encord.objects.ontology_object import Object
 from encord.objects.utils import Range

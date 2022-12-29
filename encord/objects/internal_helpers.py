@@ -3,13 +3,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set
+from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Union
 
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
     FlatOption,
     NestableOption,
+    Option,
+    OptionType,
+    PropertyType,
     RadioAttribute,
     TextAttribute,
     _get_option_by_hash,
@@ -363,3 +366,86 @@ class ChecklistAnswer(Answer):
     def __repr__(self):
         flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
         return f"{self.__class__.__name__}({flat_values})"
+
+
+def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
+    property_type = attribute.get_property_type()
+    if property_type == PropertyType.TEXT:
+        return TextAnswer(attribute)
+    elif property_type == PropertyType.RADIO:
+        return RadioAnswer(attribute)
+    elif property_type == PropertyType.CHECKLIST:
+        return ChecklistAnswer(attribute)
+    else:
+        raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
+
+
+def set_answer_for_object(answer_object: Answer, answer_value: Union[str, Option, Iterable[Option]]) -> None:
+    attribute = answer_object.ontology_attribute
+    if isinstance(attribute, TextAttribute):
+        answer_object.set(answer_value)
+    elif isinstance(attribute, RadioAttribute):
+        answer_object.set(answer_value)
+    elif isinstance(attribute, ChecklistAttribute):
+        answer_object.set_options(answer_value)
+    else:
+        raise ValueError(f"Unknown attribute type: {type(attribute)}")
+
+
+def get_answer_from_object(answer_object: Answer) -> Union[str, Option, Iterable[Option], None]:
+    attribute = answer_object.ontology_attribute
+    if isinstance(attribute, TextAttribute):
+        return answer_object.get_value()
+    elif isinstance(attribute, RadioAttribute):
+        return answer_object.get_value()
+    elif isinstance(attribute, ChecklistAttribute):
+        return answer_object.get_options()
+    else:
+        raise ValueError(f"Unknown attribute type: {type(attribute)}")
+
+
+def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
+    ret: List[Answer] = list()
+    for attribute in attributes:
+        if not attribute.dynamic:
+            answer = get_default_answer_from_attribute(attribute)
+            ret.append(answer)
+
+        if attribute.has_options_field():
+            for option in attribute.options:
+                if option.get_option_type() == OptionType.NESTABLE:
+                    other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
+                    ret.extend(other_attributes)
+
+    return ret
+
+
+def _get_static_answer_map(attributes: List[Attribute]) -> Dict[str, Answer]:
+    answers = _get_default_static_answers_from_attributes(attributes)
+    answer_map = {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
+    return answer_map
+
+
+def _search_child_attributes(
+    passed_attribute: Attribute, search_attribute: Attribute, static_answer_map: Dict[str, Answer]
+) -> bool:
+    if passed_attribute == search_attribute:
+        return True
+
+    if not isinstance(search_attribute, RadioAttribute):
+        # DENIS: or raise something?
+        return False
+
+    answer = static_answer_map[search_attribute.feature_node_hash]
+    value = answer.get_value()
+    if value is None:
+        return False
+
+    for option in search_attribute.options:
+        if value == option:
+            for nested_option in option.nested_options:
+                # If I have multi nesting here, what then?
+                if _search_child_attributes(passed_attribute, nested_option, static_answer_map):
+                    return True
+
+    return False
