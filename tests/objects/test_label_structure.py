@@ -765,7 +765,7 @@ def test_object_instance_answer_dynamic_attributes():
     assert object_instance.get_answer(dynamic_checklist) == []
 
     # Overwriting frames
-    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=1, overwrite=True)
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=1)
     assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Poseidon", range={1})]
 
     # DENIS: test an is_valid function which checks if there are any dynamic answers for frames
@@ -773,7 +773,10 @@ def test_object_instance_answer_dynamic_attributes():
     # DENIS: now also try the other accessors that would be useful, try with multiple different frames,
     # and implement the filtering logic around the specific answer value and the frames.
     # Then also implement the condensation logic of the frames, so it is run length encoded.
+    # DENIS: test setting for all frames at once without setting the `frames` argument.
 
+
+# def test_object_instance_answer
 
 # ==========================================================
 # =========== actually working tests above here ============

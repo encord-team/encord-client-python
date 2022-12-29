@@ -891,7 +891,7 @@ class ObjectInstance:
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
 
-        _get_answer_from_object(static_answer)
+        return _get_answer_from_object(static_answer)
 
     @overload
     def set_answer(
@@ -940,7 +940,7 @@ class ObjectInstance:
                 answer is set for all frames. If this is anything but `None` for non-dynamic attributes, this will
                 throw a ValueError.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
-                a RuntimeError if the answer already exists.
+                a RuntimeError if the answer already exists. This argument is ignored for dynamic attributes.
         """
         if not self._is_attribute_valid_child_of_object_instance(attribute):
             raise ValueError("The attribute is not a valid child of the object.")
@@ -1105,7 +1105,7 @@ class ObjectInstance:
         # DENIS: probably frames everywhere should be Union[Iterable[int], int]
         for frame in frames:
             self._frames_to_instance_data.pop(frame)
-            self._remove_dynamic_answers_from_frame(frame)
+            # self._remove_dynamic_answers_from_frame(frame)
 
         if self._parent:
             self._parent._remove_from_frame_to_hashes_map(frames, self.object_hash)
