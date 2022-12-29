@@ -752,7 +752,6 @@ def test_object_instance_answer_dynamic_getter_filters():
 
     object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
     object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=Range(2, 4))
-    # DENIS: test setting with multi-frames and ranges.
 
     assert object_instance.get_answer(dynamic_text, filter_frame=1) == [
         AnswerForFrames(answer="Zeus", range={1}),
@@ -764,12 +763,10 @@ def test_object_instance_answer_dynamic_getter_filters():
         AnswerForFrames(answer="Poseidon", range={2, 3, 4}),
     ]
 
-    # DENIS: now also try the other accessors that would be useful, try with multiple different frames,
-    # Then also implement the condensation logic of the frames, so it is run length encoded.
-
 
 def test_object_instance_answer_dynamic_remove_answer():
     # TODO: for static and dynamic answers.
+    """How would this look like for static answers? Is this needed at all?"""
     pass
 
 
