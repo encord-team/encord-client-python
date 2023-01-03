@@ -56,7 +56,7 @@ dynamic_radio = all_types_structure.get_item_by_hash("MTExM9I3")
 dynamic_radio_option_1 = all_types_structure.get_item_by_hash("MT9xNDQ5")  # This is dynamic and deeply nested.
 dynamic_radio_option_2 = all_types_structure.get_item_by_hash("9TcxMjAy")  # This is dynamic and deeply nested.
 
-text_classification = all_types_structure.get_item_by_hash("jPOcEsbw", ClassificationInstance)
+text_classification = all_types_structure.get_item_by_hash("jPOcEsbw", Classification)
 text_classification_attribute: TextAttribute = all_types_structure.get_item_by_hash("OxrtEM+v", TextAttribute)
 # DENIS: probably on the ontology, I should have a get_text_attribute etc. to have the exact type.
 # or I do something like get_item_by_hash("OTkxMjU1", all_types_structure, expected_type: TextAttribute) with
@@ -824,10 +824,73 @@ def test_object_instance_answer_dynamic_getter_filters():
     ]
 
 
-def test_object_instance_answer_dynamic_remove_answer():
-    # TODO: for static and dynamic answers.
-    """How would this look like for static answers? Is this needed at all?"""
-    pass
+def test_object_instance_static_answer_delete():
+    object_instance = ObjectInstance(deeply_nested_polygon_item)
+
+    object_instance.set_answer(radio_nested_option_1, attribute=radio_attribute_level_1)
+    assert object_instance.get_answer(radio_attribute_level_1) == radio_nested_option_1
+
+    object_instance.set_answer("Zeus", attribute=radio_nested_option_1_text)
+    assert object_instance.get_answer(radio_nested_option_1_text) == "Zeus"
+
+    object_instance.delete_answer(radio_attribute_level_1)
+    assert object_instance.get_answer(radio_attribute_level_1) is None
+    assert object_instance.get_answer(radio_nested_option_1_text) is None
+
+
+def test_object_instance_dynamic_answer_delete():
+    object_instance = ObjectInstance(keypoint_dynamic)
+
+    object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
+    object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=Range(2, 4))
+    object_instance.set_answer("Ulysses", attribute=dynamic_text, frames=Range(5, 6))
+
+    assert object_instance.get_answer(dynamic_text) == [
+        AnswerForFrames(answer="Zeus", range={1}),
+        AnswerForFrames(answer="Poseidon", range={2, 3, 4}),
+        AnswerForFrames(answer="Ulysses", range={5, 6}),
+    ]
+    # DENIS: with different overloads could have different flags for the return types and then the
+    # correct types!
+
+    object_instance.delete_answer(dynamic_text, filter_frame=2)
+    assert object_instance.get_answer(dynamic_text) == [
+        AnswerForFrames(answer="Zeus", range={1}),
+        AnswerForFrames(answer="Poseidon", range={3, 4}),
+        AnswerForFrames(answer="Ulysses", range={5, 6}),
+    ]
+
+    object_instance.delete_answer(dynamic_text, filter_answer="Ulysses")
+    assert object_instance.get_answer(dynamic_text) == [
+        AnswerForFrames(answer="Zeus", range={1}),
+        AnswerForFrames(answer="Poseidon", range={3, 4}),
+    ]
+
+    object_instance.delete_answer(dynamic_text)
+    assert object_instance.get_answer(dynamic_text) == []
+
+
+def test_classification_instance_delete():
+    classification_instance = ClassificationInstance(radio_classification)
+    attribute = radio_classification.attributes[0]
+
+    classification_instance.set_answer(answer=radio_classification_option_2, attribute=attribute)
+    classification_instance.set_answer(answer="Dionysus", attribute=radio_classification_option_2_text)
+
+    assert classification_instance.get_answer() == radio_classification_option_2
+    assert classification_instance.get_answer(radio_classification_option_2_text) == "Dionysus"
+
+    # Delete the nested answer only
+    classification_instance.delete_answer(radio_classification_option_2_text)
+    assert classification_instance.get_answer(radio_classification_option_2_text) is None
+
+    classification_instance.set_answer(answer="Poseidon", attribute=radio_classification_option_2_text)
+    assert classification_instance.get_answer(radio_classification_option_2_text) == "Poseidon"
+
+    # Delete the root answer
+    classification_instance.delete_answer()
+    assert classification_instance.get_answer() is None
+    assert classification_instance.get_answer(radio_classification_option_2_text) is None
 
 
 # ==========================================================

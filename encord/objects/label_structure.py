@@ -40,6 +40,7 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.utils import (
     Frames,
+    Range,
     _lower_snake_case,
     frames_class_to_frames_list,
     short_uuid_str,
@@ -237,6 +238,20 @@ class ClassificationInstance:
         static_answer = self._static_answer_map[attribute.feature_node_hash]
 
         return get_answer_from_object(static_answer)
+
+    def delete_answer(self, attribute: Optional[Attribute] = None) -> None:
+        """
+        Args:
+            attribute: The ontology attribute to delete the answer for. If not provided, the first level attribute is
+                used.
+        """
+        if attribute is None:
+            attribute = self._ontology_classification.attributes[0]
+        elif not self._is_attribute_valid_child_of_classification(attribute):
+            raise ValueError("The attribute is not a valid child of the classification.")
+
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+        static_answer.unset()
 
     def _is_attribute_valid_child_of_classification(self, attribute: Attribute) -> bool:
         return attribute.feature_node_hash in self._static_answer_map
@@ -1021,6 +1036,7 @@ class ObjectInstance:
         attribute: Attribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
+        # DENIS: plural for filter_frames with the ranges?
     ) -> Union[str, Option, Iterable[Option], None]:
         """
         Args:
@@ -1133,21 +1149,21 @@ class ObjectInstance:
         self,
         attribute: Attribute,
         filter_answer: Union[str, Option, Iterable[Option]] = None,
-        frames: Optional[int] = None,
+        filter_frame: Optional[int] = None,
     ) -> None:
         """
         Args:
             attribute: The attribute to delete the answer for.
-            filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
-            frames: A filter for a specific frame. Only applies to dynamic attributes.
+            filter_answer: A filter for a specific answer value. Delete only answers with the provided value.
+                Only applies to dynamic attributes.
+            filter_frame: A filter for a specific frame. Only applies to dynamic attributes.
         """
-        raise NotImplementedError("Needs to be implemented.")
         if attribute.dynamic:
-            self._dynamic_answer_manager.delete_answer(attribute, frames)
+            self._dynamic_answer_manager.delete_answer(attribute, filter_frame, filter_answer)
             return
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
-        # _set_answer_for_object(static_answer, None)
+        static_answer.unset()
 
     def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
         # DENIS: this will fail for dynamic attributes.
@@ -1299,12 +1315,24 @@ class DynamicAnswerManager:
                 return True
         return False
 
-    def delete_answer(self, attribute: Attribute, frames: Frames) -> None:
+    def delete_answer(
+        self,
+        attribute: Attribute,
+        frames: Optional[Frames] = None,
+        filter_answer: Union[str, Option, Iterable[Option]] = None,
+    ) -> None:
+        if frames is None:
+            frames = [Range(i, i) for i in self._frames_to_answers.keys()]
         frame_list = frames_class_to_frames_list(frames)
 
         for frame in frame_list:
             to_remove_answer = None
             for answer_object in self._frames_to_answers[frame]:
+                if filter_answer is not None:
+                    answer_value = get_answer_from_object(answer_object)
+                    if answer_value != filter_answer:
+                        continue
+
                 # ideally this would not be a log(n) operation, however these will not be extremely large.
                 if answer_object.ontology_attribute == attribute:
                     to_remove_answer = answer_object
