@@ -46,15 +46,6 @@ from encord.objects.utils import (
     short_uuid_str,
 )
 
-"""
-DENIS:
-I'd like to optimise the reads and writes.
-
-For reads I needs some associations
-
-For writes I need the builder pattern same as the OntologyStructure.
-
-"""
 # DENIS: think about better error codes for people to catch.
 
 
