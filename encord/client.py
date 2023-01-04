@@ -60,14 +60,11 @@ from encord.http.utils import (
 )
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import (
-    DEFAULT_DATASET_ACCESS_SETTINGS,
-    AddPrivateDataResponse,
-    DatasetAsset,
-)
+from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, AddPrivateDataResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetAccessSettings,
+    DatasetAsset,
     DatasetData,
     DatasetUser,
     DatasetUserRole,
