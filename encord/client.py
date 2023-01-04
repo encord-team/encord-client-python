@@ -549,7 +549,7 @@ class EncordClientDataset(EncordClient):
         self, data_hashes: List[str], get_signed_url: bool = False, include_client_metadata: bool = False
     ) -> List[DatasetAsset]:
         """
-        TODO: need to document this function
+        This function is documented in :meth:`encord.dataset.Dataset.get_bulk_data`.
         """
 
         payload = {
@@ -559,9 +559,9 @@ class EncordClientDataset(EncordClient):
         }
 
         res = self._querier.get_multiple(DatasetAsset, data_hashes, payload=payload)
+        # we should not show client metadata if corresponding flag is False
         if not include_client_metadata:
-            # we should not show client metadata if corresponding flag is False
-            for idx, _ in enumerate(res):
+            for idx in range(len(res)):
                 del res[idx].payload["client_metadata"]
                 res[idx] = convert_str_date_to_datetime(res[idx].payload)
         return res
