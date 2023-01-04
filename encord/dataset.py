@@ -8,9 +8,9 @@ from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
     DatasetAccessSettings,
+    DatasetAsset,
     DatasetUser,
     DatasetUserRole,
-    DatasetAsset,
     Image,
     ImageGroupOCR,
     StorageLocation,
