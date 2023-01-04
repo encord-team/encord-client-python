@@ -62,6 +62,7 @@ from encord.utilities.client_utilities import (
     Issues,
     LocalImport,
 )
+from encord.utilities.common import convert_str_date_to_datetime
 from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
 
@@ -214,13 +215,11 @@ class EncordUserClient:
         # a hack to be able to share validation code without too much c&p
         data = self.querier.get_multiple(DatasetWithUserRole, payload={"filter": properties_filter})
 
-        def convert_dates(dataset):
-            dataset["created_at"] = dateutil.parser.isoparse(dataset["created_at"])
-            dataset["last_edited_at"] = dateutil.parser.isoparse(dataset["last_edited_at"])
-            return dataset
-
         return [
-            {"dataset": DatasetInfo(**convert_dates(d.dataset)), "user_role": DatasetUserRole(d.user_role)}
+            {
+                "dataset": DatasetInfo(**convert_str_date_to_datetime(d.dataset)),
+                "user_role": DatasetUserRole(d.user_role),
+            }
             for d in data
         ]
 

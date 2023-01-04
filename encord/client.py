@@ -44,6 +44,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple, Union
 
+import dateutil
+
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels
@@ -61,9 +63,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     AddPrivateDataResponse,
-    VideoMetadata,
-    DataAsset,
-    EncordDataType,
+    DatasetAsset,
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
@@ -115,6 +115,7 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
 from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
+from encord.utilities.common import convert_str_date_to_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 logger = logging.getLogger(__name__)
@@ -544,21 +545,26 @@ class EncordClientDataset(EncordClient):
 
         return response
 
-    def get_bulk_data(self, data_hashes: List[str], get_signed_url: bool = False) -> List[Union[VideoMetadata]]:
-        """ """
+    def get_bulk_data(
+        self, data_hashes: List[str], get_signed_url: bool = False, include_client_metadata: bool = False
+    ) -> List[DatasetAsset]:
+        """
+        TODO: need to document this function
+        """
 
         payload = {
             "get_signed_url": get_signed_url,
             "multi_request": True,
+            "include_client_metadata": include_client_metadata,
         }
-        data_assets = self._querier.get_multiple(DataAsset, data_hashes, payload=payload)
 
-        returned_metadata: List[Union[VideoMetadata]] = []
-        for data_asset in data_assets:
-            if data_asset.data_type == EncordDataType.VIDEO.value:
-                returned_metadata.append(data_asset.data)
-
-        return returned_metadata
+        res = self._querier.get_multiple(DatasetAsset, data_hashes, payload=payload)
+        if not include_client_metadata:
+            # we should not show client metadata if corresponding flag is False
+            for idx, _ in enumerate(res):
+                del res[idx].payload["client_metadata"]
+                res[idx] = convert_str_date_to_datetime(res[idx].payload)
+        return res
 
 
 CordClientDataset = EncordClientDataset

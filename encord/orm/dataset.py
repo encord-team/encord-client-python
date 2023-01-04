@@ -18,7 +18,7 @@ import dataclasses
 import json
 from collections import OrderedDict
 from datetime import datetime
-from enum import Enum, IntEnum, unique
+from enum import Enum, IntEnum
 from typing import Dict, List, Optional, Union
 
 from dateutil import parser
@@ -509,9 +509,20 @@ class ImageGroupOCR:
 
 
 @dataclasses.dataclass(frozen=True)
-class VideoMetadata:
+class VideoDataAsset:
     frames_per_second: int
-    duration: int
+    duration: float
+    width: int
+    height: int
+    client_metadata: Optional[dict]
+    created_at: datetime
+    last_edited_at: datetime
+
+
+@dataclasses.dataclass(frozen=True)
+class DatasetAsset:
+    data_type: DataType
+    payload: Union[VideoDataAsset]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -553,28 +564,3 @@ class DatasetAccessSettings:
 DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
     fetch_client_metadata=False,
 )
-
-
-@unique
-class EncordDataType(IntEnum):
-    VIDEO = 0
-    IMG_GROUP = 1
-    DICOM = 2
-    IMAGE = 3
-
-
-@dataclasses.dataclass(frozen=True)
-class DataAssetResult:
-    data_type: EncordDataType
-    data: Union[VideoMetadata]
-
-
-class DataAsset(base_orm.BaseORM):
-    """Data asset with metadata"""
-
-    status: str
-    result: List[DataAssetResult] = None
-
-    @classmethod
-    def from_dict(cls, json_dict: Dict):
-        pass
