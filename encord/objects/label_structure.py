@@ -71,13 +71,12 @@ class ClassificationInstanceData:
 
 class ClassificationInstance:
     def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
-        # DENIS: should I also be able to accept the first level attribute? Ideally not, as
-        # I'd need to awkwardly verify whether this is the first level attribute or not.
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRow] = None
         self._classification_hash = classification_hash or short_uuid_str()
         self._classification_instance_data = ClassificationInstanceData()
         # DENIS: These are actually somehow per frame! What would that even mean? check this!
+        # Do I need an extra class for the instance data or should it be part of the overall payload?
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
@@ -922,7 +921,7 @@ class ObjectFrameReadOnlyInstanceInfo:
     """Trying to set this will not have any effects on the data in the Encord servers."""
 
     reviews: List[dict] = field(default_factory=list)
-    # DENIS: can I type out this reviews thing?
+    # DENIS: can I type out this reviews thing? -> Hold off to see if I actually need it.
 
 
 @dataclass(frozen=True)
@@ -933,7 +932,13 @@ class ObjectFrameInstanceInfo:
     """None defaults to the user of the SDK. DENIS: need to add this information somewhere."""
     last_edited_at: Optional[datetime] = None
     last_edited_by: Optional[str] = None
-    """None defaults to the user of the SDK, DENIS: do we want this to be true for last_edited_by?"""
+    """None defaults to the user of the SDK, DENIS: do we want this to be true for last_edited_by?
+    !! DENIS: I need to add this for the BE. Basically have a default `last_edited_by`, 
+    `created_by` from the BE. Could have this actually as part of the authentication process, to get back the email
+    address and populate it here. Or we will populate it in the BE.
+    I would also want to have the BE provide the frame count when returning, that way I can check if we run overboard
+    with the number of frames.
+    """
     confidence: float = 1
     manual_annotation: bool = True
     read_only_info: ObjectFrameReadOnlyInstanceInfo = ObjectFrameReadOnlyInstanceInfo()
@@ -961,6 +966,7 @@ class ObjectFrameInstanceInfo:
 class ObjectFrameInstanceData:
     coordinates: Coordinates
     object_frame_instance_info: ObjectFrameInstanceInfo
+    # Probably the above can be flattened out into this class.
 
 
 @dataclass
@@ -977,6 +983,8 @@ class ObjectInstance:
 
 
     DENIS: move this to `ontology_object` and have a my_ontology_object.create_instance() -> ObjectInstance
+
+    DENIS: I probably will need to fix the order of the objects, so that the sorting is not lost.
     """
 
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
