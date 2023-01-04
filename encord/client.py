@@ -96,6 +96,7 @@ from encord.orm.model import (
     ModelOperations,
     ModelRow,
     ModelTrainingParams,
+    ModelTrainingWeights,
     TrainingMetadata,
 )
 from encord.orm.project import Project as OrmProject
@@ -888,7 +889,15 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(Model, uid, payload=model)
 
-    def model_train(self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"):
+    def model_train(
+        self,
+        uid: str,
+        label_rows: Optional[List[str]] = None,
+        epochs: Optional[int] = None,
+        batch_size: int = 24,
+        weights: Optional[ModelTrainingWeights] = None,
+        device: str = "cuda",
+    ):
         """
         This function is documented in :meth:`encord.project.Project.model_train`.
         """

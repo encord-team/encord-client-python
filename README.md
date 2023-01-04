@@ -1,6 +1,6 @@
 <h1 align="center">
   <p align="center">Encord Python API Client</p>
-  <a href="https://encord.com"><img src="https://encord.com/logo512.png" width="150" alt="Cord logo"/></a>
+  <a href="https://encord.com"><img src="./docs/_static/logo.svg" width="100" alt="Cord logo"/></a>
 </h1>
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
