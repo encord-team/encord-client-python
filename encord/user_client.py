@@ -37,7 +37,6 @@ from encord.orm.dataset import (
     Images,
     StorageLocation,
 )
-import encord.exceptions
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
