@@ -33,9 +33,9 @@ from encord.orm.dataset import (
     DatasetInfo,
     DatasetScope,
     DatasetUserRole,
+    DicomDeidentifyTask,
     Images,
     StorageLocation,
-    DicomDeidentifyTask,
 )
 import encord.exceptions
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
