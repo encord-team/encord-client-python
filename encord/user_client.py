@@ -35,7 +35,9 @@ from encord.orm.dataset import (
     DatasetUserRole,
     Images,
     StorageLocation,
+    DicomDeidentifyTask,
 )
+import encord.exceptions
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
@@ -601,6 +603,40 @@ class EncordUserClient:
             ret[clause.value] = val
 
         return ret
+
+    def deidentify_dicom_files(
+        self,
+        dicom_urls: List[str],
+        integration_hash: str,
+    ) -> List[str]:
+        """
+        Deidentify dicom series in external storage.
+
+        Args:
+            self: Encord client object.
+            dicom_urls: a list of urls to DICOM files, e.g.
+                ['https://s3.region-code.amazonaws.com/bucket-name/dicom-file.dcm']
+            integration_hash:
+                integration_hash parameter of Encord platform external storage integration
+        Returns:
+            List[str].
+        """
+
+        res = self.querier.basic_setter(
+            DicomDeidentifyTask,
+            uid=None,
+            payload={
+                "dicom_urls": dicom_urls,
+                "integration_hash": integration_hash,
+            },
+        )
+
+        if res:
+            return res
+        else:
+            raise encord.exceptions.EncordException(
+                message="An error has occurred during dicom files deidentification.",
+            )
 
 
 class ListingFilter(Enum):
