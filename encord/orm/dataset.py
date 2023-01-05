@@ -517,9 +517,14 @@ class VideoDataAsset:
     client_metadata: Optional[dict]
     created_at: datetime
     last_edited_at: datetime
+    title: str
+    file_link: str
+    file_size: int
+    file_type: str
+    storage_location: int
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class DatasetAsset:
     data_type: DataType
     payload: Union[VideoDataAsset]

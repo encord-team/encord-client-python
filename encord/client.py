@@ -48,6 +48,7 @@ import dateutil
 
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
+from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels
 from encord.constants.string_constants import *
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
@@ -551,16 +552,19 @@ class EncordClientDataset(EncordClient):
 
         payload = {
             "get_signed_url": get_signed_url,
-            "multi_request": True,
             "include_client_metadata": include_client_metadata,
         }
 
         res = self._querier.get_multiple(DatasetAsset, data_hashes, payload=payload)
-        # we should not show client metadata if corresponding flag is False
-        if not include_client_metadata:
-            for idx in range(len(res)):
+
+        # data processing
+        for idx in range(len(res)):
+            # we should not show client metadata if corresponding flag is False
+            if not include_client_metadata:
                 del res[idx].payload["client_metadata"]
-                res[idx] = convert_str_date_to_datetime(res[idx].payload)
+            res[idx].data_type = DataType.from_upper_case_string(res[idx].data_type)
+            res[idx].payload = convert_str_date_to_datetime(res[idx].payload)
+
         return res
 
 
