@@ -72,6 +72,7 @@ from encord.orm.dataset import (
     DatasetUsers,
     DicomSeries,
     Image,
+    ImageData,
     ImageGroup,
     ImageGroupOCR,
     Images,
@@ -564,6 +565,8 @@ class EncordClientDataset(EncordClient):
                 del res[idx].payload["client_metadata"]
             res[idx].data_type = DataType.from_upper_case_string(res[idx].data_type)
             res[idx].payload = convert_str_date_to_datetime(res[idx].payload)
+            if res[idx].data_type == DataType.IMG_GROUP:
+                res[idx].payload["images"] = [ImageData.from_dict(image) for image in res[idx].payload["images"]]
 
         return res
 
