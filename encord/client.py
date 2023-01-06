@@ -557,14 +557,15 @@ class EncordClientDataset(EncordClient):
 
         res = self._querier.get_multiple(DatasetAsset, data_hashes, payload=payload)
 
-        # data processing
-        for idx in range(len(res)):
-            # we should not show client metadata if corresponding flag is False
-            if not include_client_metadata:
-                del res[idx].payload["client_metadata"]
-            res[idx].data_type = DataType.from_upper_case_string(res[idx].data_type)
-            res[idx].payload = convert_str_date_to_datetime(res[idx].payload)
+        def process_dataset_asset_metadata(response_row):
+            for idx in range(len(response_row)):
+                # we should not show client metadata if corresponding flag is False
+                if not include_client_metadata:
+                    del response_row[idx].payload["client_metadata"]
+                response_row[idx].data_type = DataType.from_upper_case_string(response_row[idx].data_type)
+                response_row[idx].payload = convert_str_date_to_datetime(response_row[idx].payload)
 
+        process_dataset_asset_metadata(res)
         return res
 
 
