@@ -46,7 +46,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
-from encord.constants.model import AutomationModels
+from encord.constants.model import AutomationModels, Devices
 from encord.constants.string_constants import *
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
@@ -896,7 +896,7 @@ class EncordClientProject(EncordClient):
         epochs: Optional[int] = None,
         batch_size: int = 24,
         weights: Optional[ModelTrainingWeights] = None,
-        device: str = "cuda",
+        device: Union[str, Devices] = Devices.CUDA,
     ):
         """
         This function is documented in :meth:`encord.project.Project.model_train`.
@@ -912,11 +912,15 @@ class EncordClientProject(EncordClient):
         if batch_size is None:
             raise encord.exceptions.EncordException(message="You must set a batch size to train a model.")
 
-        if weights is None:
-            raise encord.exceptions.EncordException(message="You must select model weights to train a model.")
+        if weights is None or not isinstance(weights, ModelTrainingWeights):
+            raise encord.exceptions.EncordException(
+                message="You must pass weights from the `encord.constants.model_weights` module to train a model."
+            )
 
-        if device is None:
-            raise encord.exceptions.EncordException(message="You must set a device (cuda or CPU) train a model.")
+        if device is None or not Devices.has_value(device):  # Backward compatibility with string options
+            raise encord.exceptions.EncordException(
+                message="You must pass a device from the `from encord.constants.model.Devices` Enum to train a model."
+            )
 
         training_params = ModelTrainingParams(
             {

@@ -2,7 +2,7 @@ import datetime
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
-from encord.constants.model import AutomationModels
+from encord.constants.model import AutomationModels, Devices
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
@@ -650,7 +650,7 @@ class Project:
         epochs: Optional[int] = None,
         batch_size: int = 24,
         weights: Optional[ModelTrainingWeights] = None,
-        device: str = "cuda",
+        device: Union[str, Devices] = Devices.CUDA,
     ):
         """
         Train a model created on the platform.
