@@ -322,7 +322,7 @@ class Dataset:
             data_hashes: List of the uids of the data objects
             get_signed_url: Optionally return signed URLs for timed public access to that resource
                 (default False)
-            include_client_metadata: Optionally return asset data without client metadata
+            include_client_metadata: Optionally return client metadata in the asset data
                 (default False)
 
         Returns:
