@@ -20,6 +20,7 @@ from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
 from typing import Dict, List, Optional, Union
+from uuid import UUID
 
 from dateutil import parser
 
@@ -521,13 +522,63 @@ class VideoDataAsset:
     file_link: str
     file_size: int
     file_type: str
-    storage_location: int
+    storage_location: StorageLocation
+
+
+@dataclasses.dataclass(frozen=True)
+class ImageData:
+    frame: int
+    title: str
+    file_link: str
+    file_type: str
+    image_hash: UUID
+    storage_location: StorageLocation
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        return ImageData(
+            json_dict["frame"],
+            json_dict["title"],
+            json_dict["file_link"],
+            json_dict["file_type"],
+            json_dict["image_hash"],
+            json_dict["storage_location"],
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class ImageGroupDataAsset:
+    width: int
+    height: int
+    client_metadata: Optional[dict]
+    created_at: datetime
+    last_edited_at: datetime
+    title: str
+    file_link: str
+    file_size: int
+    file_type: str
+    storage_location: StorageLocation
+    images: List[ImageData]
+
+
+@dataclasses.dataclass(frozen=True)
+class ImageDataAsset:
+    width: int
+    height: int
+    client_metadata: Optional[dict]
+    created_at: datetime
+    last_edited_at: datetime
+    title: str
+    file_link: str
+    file_size: int
+    file_type: str
+    storage_location: StorageLocation
 
 
 @dataclasses.dataclass
 class DatasetAsset:
     data_type: DataType
-    payload: Union[VideoDataAsset]
+    payload: Union[VideoDataAsset, ImageGroupDataAsset, ImageDataAsset]
 
 
 @dataclasses.dataclass(frozen=True)

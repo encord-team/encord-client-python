@@ -72,6 +72,7 @@ from encord.orm.dataset import (
     DatasetUsers,
     DicomSeries,
     Image,
+    ImageData,
     ImageGroup,
     ImageGroupOCR,
     Images,
