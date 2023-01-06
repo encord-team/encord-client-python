@@ -644,10 +644,9 @@ class EncordUserClient:
 
         return self.querier.basic_setter(
             DicomDeidentifyTask,
-            uid=None,
+            uid=integration_hash,
             payload={
                 "dicom_urls": dicom_urls,
-                "integration_hash": integration_hash,
             },
         )
 
