@@ -77,6 +77,7 @@ In the End-to-End examples, you find complete python files will all the code nec
    tutorials/end-to-end/preparing_data_for_labelling
    tutorials/end-to-end/reading_project_labels
    tutorials/end-to-end/saving_labels_to_project
+   tutorials/end-to-end/deidentify_dicom
 
 
 SDK Reference
