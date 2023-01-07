@@ -628,18 +628,19 @@ class EncordUserClient:
             x00281051 WindowWidth
             x00520014 ALinePixelSpacing
 
-        Function returns list of links pointing to deidentified dicom files,
-        those will be saved to the same bucket and the same directory
-        as original files with prefix ( deid_{timestamp}_ ).
-        Example output:
-            [ "https://s3.region-code.amazonaws.com/bucket-name/deid_167294769118005312_dicom-file-input.dcm" ]
-
         Args:
             self: Encord client object.
             dicom_urls: a list of urls to DICOM files, e.g.
                 [ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]
             integration_hash:
                 integration_hash parameter of Encord platform external storage integration
+        Returns:
+            Function returns list of links pointing to deidentified dicom files,
+            those will be saved to the same bucket and the same directory
+            as original files with prefix ( deid_{timestamp}_ ).
+            Example output:
+                [ "https://s3.region-code.amazonaws.com/bucket-name/deid_167294769118005312_dicom-file-input.dcm" ]
+
         """
 
         return self.querier.basic_setter(
