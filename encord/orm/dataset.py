@@ -504,6 +504,12 @@ class DicomSeries:
 
 
 @dataclasses.dataclass(frozen=True)
+class DicomDeidentifyTask:
+    dicom_urls: List[str]
+    integration_hash: str
+
+
+@dataclasses.dataclass(frozen=True)
 class ImageGroupOCR:
     processed_texts: Dict
 

@@ -33,6 +33,7 @@ from encord.orm.dataset import (
     DatasetInfo,
     DatasetScope,
     DatasetUserRole,
+    DicomDeidentifyTask,
     Images,
     StorageLocation,
 )
@@ -601,6 +602,54 @@ class EncordUserClient:
             ret[clause.value] = val
 
         return ret
+
+    def deidentify_dicom_files(
+        self,
+        dicom_urls: List[str],
+        integration_hash: str,
+    ) -> List[str]:
+        """
+        Deidentify dicom files in external storage.
+        Given links to dicom files pointing to AWS, GCP, AZURE or OTC, for example:
+            [ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]
+        Function executes deidentification on those files, it removes all
+        dicom tags (https://dicom.nema.org/medical/Dicom/2017e/output/chtml/part06/chapter_6.html)
+        from metadata except for:
+            x00080018 SOPInstanceUID
+            x00100010 PatientName
+            x00180050 SliceThickness
+            x00180088 SpacingBetweenSlices
+            x0020000d StudyInstanceUID
+            x0020000e SeriesInstanceUID
+            x00200032 ImagePositionPatient
+            x00200037 ImageOrientationPatient
+            x00280008 NumberOfFrames
+            x00281050 WindowCenter
+            x00281051 WindowWidth
+            x00520014 ALinePixelSpacing
+
+        Args:
+            self: Encord client object.
+            dicom_urls: a list of urls to DICOM files, e.g.
+                [ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]
+            integration_hash:
+                integration_hash parameter of Encord platform external storage integration
+        Returns:
+            Function returns list of links pointing to deidentified dicom files,
+            those will be saved to the same bucket and the same directory
+            as original files with prefix ( deid_{timestamp}_ ).
+            Example output:
+                [ "https://s3.region-code.amazonaws.com/bucket-name/deid_167294769118005312_dicom-file-input.dcm" ]
+
+        """
+
+        return self.querier.basic_setter(
+            DicomDeidentifyTask,
+            uid=integration_hash,
+            payload={
+                "dicom_urls": dicom_urls,
+            },
+        )
 
 
 class ListingFilter(Enum):
