@@ -230,6 +230,7 @@ class Project:
         *,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_reviews: bool = False,
     ) -> LabelRow:
         """
         Retrieve label row. If you need to retrieved multiple label rows, prefer using
@@ -247,6 +248,7 @@ class Project:
                 will be included of which the feature_hash has been added.
             include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
                 classification labels will be included of which the feature_hash has been added.
+            include_reviews: Whether to request read only information about the reviews of the label row.
 
         Returns:
             LabelRow: A label row instance.
@@ -263,6 +265,7 @@ class Project:
             get_signed_url,
             include_object_feature_hashes=include_object_feature_hashes,
             include_classification_feature_hashes=include_classification_feature_hashes,
+            include_reviews=include_reviews,
         )
 
     def get_label_rows(
@@ -272,6 +275,7 @@ class Project:
         *,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_reviews: bool = False,
     ) -> List[LabelRow]:
         """
         Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
@@ -323,6 +327,7 @@ class Project:
             include_classification_feature_hashes:
                 If None all the classifications will be included. Otherwise, only
                 classification labels will be included of which the feature_hash has been added.
+            include_reviews: Whether to request read only information about the reviews of the label row.
 
         Raises:
             MultiLabelLimitError: If too many labels were requested. Check the error's `maximum_labels_allowed` field
@@ -338,6 +343,7 @@ class Project:
             get_signed_url,
             include_object_feature_hashes=include_object_feature_hashes,
             include_classification_feature_hashes=include_classification_feature_hashes,
+            include_reviews=include_reviews,
         )
 
     def save_label_row(self, uid, label):
