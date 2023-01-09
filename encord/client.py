@@ -917,6 +917,9 @@ class EncordClientProject(EncordClient):
                 message="You must pass weights from the `encord.constants.model_weights` module to train a model."
             )
 
+        if isinstance(device, Devices):
+            device = device.value
+
         if device is None or not Devices.has_value(device):  # Backward compatibility with string options
             raise encord.exceptions.EncordException(
                 message="You must pass a device from the `from encord.constants.model.Devices` Enum to train a model."
