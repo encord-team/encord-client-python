@@ -296,9 +296,6 @@ class EncordClientDataset(EncordClient):
         """
         Retrieve dataset info (pointers to data, labels).
 
-        Args:
-            self: Encord client object.
-
         Returns:
             OrmDataset: A dataset record instance.
 
@@ -551,9 +548,6 @@ class EncordClientProject(EncordClient):
         """
         Retrieve project info (pointers to data, labels).
 
-        Args:
-            self: Encord client object.
-
         Returns:
             OrmProject: A project record instance.
 
@@ -573,7 +567,6 @@ class EncordClientProject(EncordClient):
     ) -> List[LabelRowMetadata]:
         """
         Args:
-            self: Encord client object.
             edited_before: Optionally filter to only rows last edited before the specified time
             edited_after: Optionally filter to only rows last edited after the specified time
             label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es

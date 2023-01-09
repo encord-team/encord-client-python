@@ -106,7 +106,6 @@ class Dataset:
         Upload video to Encord storage.
 
         Args:
-            self: Encord client object.
             file_path: path to video e.g. '/home/user/data/video.mp4'
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
@@ -137,7 +136,6 @@ class Dataset:
         choose the :meth:`.Dataset.upload_image` function.
 
         Args:
-            self: Encord client object.
             file_paths: a list of paths to images, e.g.
                 ['/home/user/data/img1.png', '/home/user/data/img2.png']
             max_workers:
@@ -176,7 +174,6 @@ class Dataset:
         Upload a DICOM series to Encord storage
 
         Args:
-            self: Encord client object.
             file_paths: a list of paths to DICOM files, e.g.
                 ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
             cloud_upload_settings:
@@ -228,7 +225,6 @@ class Dataset:
         Delete a video/image group from a dataset.
 
         Args:
-            self: Encord client object.
             data_hashes: list of hash of the videos/image_groups you'd like to delete, all should belong to the same
              dataset
         """
@@ -276,7 +272,6 @@ class Dataset:
         Launches an async task that can re-encode a list of videos.
 
         Args:
-            self: Encord client object.
             data_hashes: list of hash of the videos you'd like to re_encode, all should belong to the same
              dataset
         Returns:
@@ -290,7 +285,6 @@ class Dataset:
         Returns the status of an existing async task which is aimed at re-encoding videos.
 
         Args:
-            self: Encord client object.
             job_id: id of the async task that was launched to re-encode the videos
 
         Returns:
