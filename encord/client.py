@@ -640,6 +640,7 @@ class EncordClientProject(EncordClient):
         *,
         include_object_feature_hashes: Optional[typing.Set[str]] = None,
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
+        include_reviews: bool = False,
     ) -> LabelRow:
         """
         This function is documented in :meth:`encord.project.Project.get_label_row`.
@@ -649,6 +650,7 @@ class EncordClientProject(EncordClient):
             "multi_request": False,
             "include_object_feature_hashes": optional_set_to_list(include_object_feature_hashes),
             "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
+            "include_reviews": include_reviews,
         }
 
         return self._querier.basic_getter(LabelRow, uid, payload=payload)
@@ -660,6 +662,7 @@ class EncordClientProject(EncordClient):
         *,
         include_object_feature_hashes: Optional[typing.Set[str]] = None,
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
+        include_reviews: bool = False,
     ) -> List[LabelRow]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_rows`.
@@ -669,6 +672,7 @@ class EncordClientProject(EncordClient):
             "multi_request": True,
             "include_object_feature_hashes": optional_set_to_list(include_object_feature_hashes),
             "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
+            "include_reviews": include_reviews,
         }
 
         return self._querier.get_multiple(LabelRow, uids, payload=payload)
