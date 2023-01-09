@@ -86,7 +86,6 @@ def make_object_dict(
         "lastEditedBy": "robot@encord.com",
         "shape": shape,
         "manualAnnotation": False,
-        "reviews": [],
     }
 
     if shape in ["polygon", "polyline"]:
@@ -213,7 +212,6 @@ def make_classification_dict_and_answer_dict(
         "featureHash": ontology_class["featureNodeHash"],
         "manualAnnotation": False,
         "name": attribute["name"],
-        "reviews": [],
         "value": __lower_snake_case(attribute["name"]),
     }
 
