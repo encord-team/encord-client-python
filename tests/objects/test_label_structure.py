@@ -920,11 +920,24 @@ def test_classification_instance_delete():
 
 # def test_frame_view():
 #     # DENIS: implement this view!
+#     """
+#     I need some notion of "ObjectIndex at frame". That way I can then iterate over the frames.
+#     I could have an extra class of ObjectOnFrame, with all the setters and getters needed.
+#     Or I could just have a FrameView.set_coordinates(object_index) for example, or
+#     FrameView.get_coordinates(object_index) to also read or set/get answers.
+#     Then we'd also have FrameView.get_all_objects for example, which is again only a small
+#     wrapper around LabelRow.get_all_objects_at_frame(frame).
+#
+#     Is this ergonomic enough? Maybe catch up with Alexey after the meeting today.
+#     """
 #     label_row = LabelRow(empty_image_group_labels, all_types_structure)
 #
 #     frame_view: FrameView = label_row.get_frame(1)
 #
 #     object_instance_1: ObjectInstance = frame_view.create_object(BOX_COORDINATES, box_ontology_item, answer=None)
+#     # or do
+#     object_instance_1: ObjectInstance = box_ontology_item.create_object(frame_view, BOX_COORDINATES)
+#     # DENIS: ^ is there a big difference at this point to just adding the frame?
 #     frame_view.add_object(BOX_COORDINATES, existing_object, answer=None)  # answer is optional
 #
 #     existing_instances: Dict[InternalUuid, ObjectInstance] = {}
