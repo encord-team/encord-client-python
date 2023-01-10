@@ -777,16 +777,18 @@ Click on the *Training API details* button to toggle a code snippet with model t
 .. code-block::
 
     from encord.constants.model_weights import *
+    from encord.constants.model import Device
 
     # Run training and print resulting model iteration object
     model_iteration = project.model_train(
-      <model_uid>,
+      "<model_uid>",
       label_rows=["<label_row_1>", "<label_row_2>", ...], # Label row uid's
       epochs=500, # Number of passes through training dataset.
       batch_size=24, # Number of training examples utilized in one iteration.
-      weights=fast_ai, # Model weights.
-      device="cuda" # Device (CPU or CUDA/GPU, default is CUDA).
+      weights=fast_rcnn_R_50_FPN_1x, # Model weights.
+      device=Device.CUDA # (CPU or CUDA/GPU, default is CUDA).
     )
+
     print(model_iteration)
 
 

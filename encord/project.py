@@ -605,6 +605,9 @@ class Project:
         """
         Run inference with model trained on the platform.
 
+        The image(s)/video(s) can be provided either as local file paths, base64 strings, or as data hashes if the
+        data is already uploaded on the Encord platform.
+
         Args:
             uid: A model_iteration_hash (uid) string.
             file_paths: List of local file paths to image(s) or video(s) - if running inference on files.
