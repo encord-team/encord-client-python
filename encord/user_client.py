@@ -609,11 +609,11 @@ class EncordUserClient:
         integration_hash: str,
     ) -> List[str]:
         """
-        Deidentify dicom files in external storage.
-        Given links to dicom files pointing to AWS, GCP, AZURE or OTC, for example:
+        Deidentify DICOM files in external storage.
+        Given links to DICOM files pointing to AWS, GCP, AZURE or OTC, for example:
         [ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]
         Function executes deidentification on those files, it removes all
-        dicom tags (https://dicom.nema.org/medical/Dicom/2017e/output/chtml/part06/chapter_6.html)
+        DICOM tags (https://dicom.nema.org/medical/Dicom/2017e/output/chtml/part06/chapter_6.html)
         from metadata except for:
 
         * x00080018 SOPInstanceUID
@@ -636,7 +636,7 @@ class EncordUserClient:
             integration_hash:
                 integration_hash parameter of Encord platform external storage integration
         Returns:
-            Function returns list of links pointing to deidentified dicom files,
+            Function returns list of links pointing to deidentified DICOM files,
             those will be saved to the same bucket and the same directory
             as original files with prefix ( deid_{timestamp}_ ).
             Example output:

@@ -1,8 +1,8 @@
 """
-Deidentify dicom files
+Deidentify DICOM files
 ======================
 
-Use this script to deidentify dicom files in external storage.
+Use this script to deidentify DICOM files in external storage.
 """
 
 from pathlib import Path
