@@ -22,7 +22,7 @@ from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 
 class Answer(ABC):
-    """An internal helper class for the LabelRow class. This class is not meant to be used directly."""
+    """An internal helper class for the LabelRowClass class. This class is not meant to be used directly."""
 
     _ontology_attribute: Attribute
 

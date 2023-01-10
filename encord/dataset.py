@@ -41,10 +41,7 @@ class Dataset:
         dataset_instance = self._get_dataset_instance()
         return dataset_instance.storage_location
 
-    @property
-    def data_rows(self) -> List[DataRow]:
-        dataset_instance = self._get_dataset_instance()
-        return dataset_instance.data_rows
+
 
     def refetch_data(self) -> None:
         """

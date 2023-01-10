@@ -14,7 +14,7 @@ from encord.objects.internal_helpers import ChecklistAnswer, RadioAnswer, TextAn
 from encord.objects.label_structure import (
     AnswerForFrames,
     ClassificationInstance,
-    LabelRow,
+    LabelRowClass,
     LabelRowReadOnlyData,
     ObjectFrameInstanceInfo,
     ObjectInstance,
@@ -203,7 +203,7 @@ def test_create_object_instance_one_coordinate():
 
 
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
 
     assert label_row.get_classifications() == []
     assert label_row.get_objects() == []
@@ -213,7 +213,7 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
 
 
 def test_add_object_instance_to_label_row():
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
     object_instance = ObjectInstance(box_ontology_item)
 
     coordinates = BoundingBoxCoordinates(
@@ -229,7 +229,7 @@ def test_add_object_instance_to_label_row():
 
 
 def test_add_remove_access_object_instances_in_label_row():
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
 
     object_instance_1 = ObjectInstance(box_ontology_item)
     object_instance_2 = ObjectInstance(box_ontology_item)
@@ -294,7 +294,7 @@ def discussion_with_eloy():
         },
     }
 
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
 
     # DENIS: think about such a read layer, to be able to iterate over each
     # individual frame and then get all the objects and read them.
@@ -304,12 +304,12 @@ def discussion_with_eloy():
     object_instance_2 = ObjectInstance(BOX_COORDINATES)
 
     # ======
-    objects_for_frame: List[ObjectInstance] = LabelRow.objects_by_frame(1)
+    objects_for_frame: List[ObjectInstance] = LabelRowClass.objects_by_frame(1)
 
-    x = LabelRow.label_row_read_only_data
+    x = LabelRowClass.label_row_read_only_data
 
     # ===
-    frame_unit: FrameUnit = LabelRow.frame_unit(1)
+    frame_unit: FrameUnit = LabelRowClass.frame_unit(1)
     objects_for_frame: List[ObjectInstance] = frame_unit.get_all_objects()
 
     # ======
@@ -324,7 +324,7 @@ def discussion_with_eloy():
     )
 
     # ########## #
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
     object_instance_1 = BOX_COORDINATES.get_object(label_row)
     object_instance_2 = BOX_COORDINATES.get_object(label_row)
 
@@ -333,7 +333,7 @@ def discussion_with_eloy():
 
 
 def test_filter_for_objects():
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
 
@@ -380,7 +380,7 @@ def test_add_wrong_coordinates():
 
 
 def test_get_object_instances_by_frames():
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
 
@@ -415,8 +415,8 @@ def test_get_object_instances_by_frames():
 
 
 def test_adding_object_instance_to_multiple_frames_fails():
-    label_row_1 = LabelRow(empty_image_group_labels, all_types_structure)
-    label_row_2 = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row_1 = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row_2 = LabelRowClass(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
 
     label_box.set_coordinates(BOX_COORDINATES, {1})
@@ -498,7 +498,7 @@ def test_update_remove_object_instance_coordinates():
 
 
 def test_removing_coordinates_from_object_removes_it_from_parent():
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
     label_box.set_coordinates(BOX_COORDINATES, [1, 2, 3])
 
@@ -599,7 +599,7 @@ def test_classification_instances():
 
 
 def test_add_and_get_classification_instances_to_label_row():
-    label_row = LabelRow(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
     classification_instance_1 = ClassificationInstance(text_classification)
     classification_instance_2 = ClassificationInstance(text_classification)
     classification_instance_3 = ClassificationInstance(checklist_classification)
@@ -899,7 +899,7 @@ def test_classification_instance_delete():
 
 
 # def test_read_improvements():
-#     label_row = LabelRow(empty_image_group_labels, all_types_structure)
+#     label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
 #
 #     frame_view: FrameView = label_row.get_frame(1)
 #
@@ -918,36 +918,36 @@ def test_classification_instance_delete():
 #     object_.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
 
 
-# def test_frame_view():
-#     # DENIS: implement this view!
-#     """
-#     I need some notion of "ObjectIndex at frame". That way I can then iterate over the frames.
-#     I could have an extra class of ObjectOnFrame, with all the setters and getters needed.
-#     Or I could just have a FrameView.set_coordinates(object_index) for example, or
-#     FrameView.get_coordinates(object_index) to also read or set/get answers.
-#     Then we'd also have FrameView.get_all_objects for example, which is again only a small
-#     wrapper around LabelRow.get_all_objects_at_frame(frame).
-#
-#     Is this ergonomic enough? Maybe catch up with Alexey after the meeting today.
-#     """
-#     label_row = LabelRow(empty_image_group_labels, all_types_structure)
-#
-#     frame_view: FrameView = label_row.get_frame(1)
-#
-#     object_instance_1: ObjectInstance = frame_view.create_object(BOX_COORDINATES, box_ontology_item, answer=None)
-#     # or do
-#     object_instance_1: ObjectInstance = box_ontology_item.create_object(frame_view, BOX_COORDINATES)
-#     # DENIS: ^ is there a big difference at this point to just adding the frame?
-#     frame_view.add_object(BOX_COORDINATES, existing_object, answer=None)  # answer is optional
-#
-#     existing_instances: Dict[InternalUuid, ObjectInstance] = {}
-#
-#     for frame in label_row.frames():
-#         assert frame.number == 1
-#         assert frame.uuid == "abc"
-#         assert frame.has_object(object_instance_1)
-#
-#     assert frame_view.get_objects == [object_instance_1]
+def test_frame_view():
+    # DENIS: implement this view!
+    """
+    I need some notion of "ObjectIndex at frame". That way I can then iterate over the frames.
+    I could have an extra class of ObjectOnFrame, with all the setters and getters needed.
+    Or I could just have a FrameView.set_coordinates(object_index) for example, or
+    FrameView.get_coordinates(object_index) to also read or set/get answers.
+    Then we'd also have FrameView.get_all_objects for example, which is again only a small
+    wrapper around LabelRowClass.get_all_objects_at_frame(frame).
+
+    Is this ergonomic enough? Maybe catch up with Alexey after the meeting today.
+    """
+    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+
+    frame_view: FrameView = label_row.get_frame(1)
+
+    object_instance_1: ObjectInstance = frame_view.create_object(BOX_COORDINATES, box_ontology_item, answer=None)
+    # or do
+    object_instance_1: ObjectInstance = box_ontology_item.create_object(frame_view, BOX_COORDINATES)
+    # DENIS: ^ is there a big difference at this point to just adding the frame?
+    frame_view.add_object(BOX_COORDINATES, existing_object, answer=None)  # answer is optional
+
+    existing_instances: Dict[InternalUuid, ObjectInstance] = {}
+
+    for frame in label_row.frames():
+        assert frame.number == 1
+        assert frame.uuid == "abc"
+        assert frame.has_object(object_instance_1)
+
+    assert frame_view.get_objects == [object_instance_1]
 
 
 # def test_read_coordinates():

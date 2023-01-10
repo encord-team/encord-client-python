@@ -55,6 +55,8 @@ from encord.http.utils import (
     upload_to_signed_url_list,
     upload_video_to_encord,
 )
+from encord.objects.label_structure import LabelRowClass
+from encord.objects.ontology_structure import OntologyStructure
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse
@@ -93,6 +95,7 @@ from encord.orm.model import (
     ModelTrainingParams,
     TrainingMetadata,
 )
+from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import (
     ProjectCopy,
@@ -527,6 +530,25 @@ class EncordClientProject(EncordClient):
             payload["copy_project_options"].append(ProjectCopyOptions.COLLABORATORS.value)
 
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
+
+    def get_label_row_class(self, uid: str) -> LabelRowClass:
+        """
+        This function is documented in :meth:`encord.project.Project.get_label_row_class`.
+        """
+        payload = {
+            "get_signed_url": False,
+            "multi_request": False,
+            "include_object_feature_hashes": None,
+            "include_classification_feature_hashes": None,
+        }
+        labels = self._querier.basic_getter(LabelRow, uid, payload=payload)
+        ontology_hash = self.get_project()["ontology_hash"]
+        ontology = self._querier.basic_getter(OrmOntology, ontology_hash)
+        ontology_structure = OntologyStructure.from_dict(ontology)
+        # DENIS: seems like the BE should be able to return a read only ontology.
+        # I think I'd rather cache this than re-request it multiple times. This cache needs to be invalidated
+        # the first time we fail to parse the labels from the ontology.
+        return LabelRowClass(labels, ontology_structure)
 
     def get_label_row(
         self,

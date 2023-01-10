@@ -3,6 +3,7 @@ from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels
+from encord.objects.label_structure import LabelRowClass
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
@@ -229,6 +230,22 @@ class Project:
             UnknownError: If an error occurs while copying the project.
         """
         return self._client.copy_project(copy_datasets, copy_collaborators, copy_models)
+
+    def get_label_row_class(self, uid: str) -> LabelRowClass:
+        """
+        Get a label by its unique identifier.
+
+        Args:
+            uid: either a data_hash or a label_hash
+
+        Returns:
+            Label
+
+        Raises:
+            AuthorisationError: If the label_hash provided is invalid or not a member of the project.
+            UnknownError: If an error occurs while retrieving the label.
+        """
+        return self._client.get_label_row_class(uid)
 
     def get_label_row(
         self,

@@ -5,7 +5,7 @@ from typing import List, Union
 
 from deepdiff import DeepDiff
 
-from encord.objects.label_structure import LabelRow
+from encord.objects.label_structure import LabelRowClass
 from tests.objects.data.empty_image_group import (
     empty_image_group_labels,
     empty_image_group_ontology,
@@ -29,12 +29,12 @@ def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], e
 
 
 def test_serialise_label_row_class_for_empty_image_group():
-    label_row = LabelRow(empty_image_group_labels, empty_image_group_ontology)
+    label_row = LabelRowClass(empty_image_group_labels, empty_image_group_ontology)
 
     expected = label_row.to_encord_dict()
     assert expected == empty_image_group_labels
 
-    label_row = LabelRow(image_group_labels, image_group_ontology)
+    label_row = LabelRowClass(image_group_labels, image_group_ontology)
 
     expected = label_row.to_encord_dict()
     deep_diff_enhanced(

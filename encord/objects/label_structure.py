@@ -72,7 +72,7 @@ class ClassificationInstanceData:
 class ClassificationInstance:
     def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
         self._ontology_classification = ontology_classification
-        self._parent: Optional[LabelRow] = None
+        self._parent: Optional[LabelRowClass] = None
         self._classification_hash = classification_hash or short_uuid_str()
         self._classification_instance_data = ClassificationInstanceData()
         # DENIS: These are actually somehow per frame! What would that even mean? check this!
@@ -264,9 +264,9 @@ class ClassificationInstance:
         already_present_frame = self._parent._is_classification_already_present(self.ontology_item, frames)
         if already_present_frame is not None:
             raise ValueError(
-                f"The LabelRow, that this classification is part of, already has a classification of the same type "
+                f"The LabelRowClass, that this classification is part of, already has a classification of the same type "
                 f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
-                f"frame per LabelRow."
+                f"frame per LabelRowClass."
             )
 
     def __repr__(self):
@@ -275,7 +275,7 @@ class ClassificationInstance:
 
 @dataclass(frozen=True)
 class FrameLevelImageGroupData:
-    # DENIS: check which ones here are optional. Can even branch off of different DataType of the LabelRow
+    # DENIS: check which ones here are optional. Can even branch off of different DataType of the LabelRowClass
     # This is for now for image groups
     image_hash: str
     image_title: str
@@ -300,7 +300,7 @@ class LabelRowReadOnlyData:
     frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
 
 
-class LabelRow:
+class LabelRowClass:
     """
     will also need to be able to keep around possible coordinate sizes and also query those if necessary.
 
@@ -318,7 +318,6 @@ class LabelRow:
             self._ontology_structure = ontology_structure
 
         self._label_row_read_only_data: LabelRowReadOnlyData = self._parse_label_row_dict(label_row_dict)
-        # DENIS: ^ this should probably be protected so no one resets it.
 
         # DENIS: next up need to also parse objects and classifications from current label rows.
 
@@ -331,8 +330,6 @@ class LabelRow:
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
         # at least at the final objects_index/classifications_index level.
-        # DENIS: actually if I have a hash function of ObjectInstance, this doesn't have to be a map, however the ordering
-        # property would be lost.
         self._parse_objects_map(label_row_dict)
         self._parse_classifications_map(label_row_dict)
 
@@ -562,9 +559,9 @@ class LabelRow:
 
         if object_instance._parent is not None:
             raise RuntimeError(
-                "The supplied ObjectInstance is already part of a LabelRow. You can only add a ObjectInstance to one "
-                "LabelRow. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
-                "any LabelRow."
+                "The supplied ObjectInstance is already part of a LabelRowClass. You can only add a ObjectInstance to one "
+                "LabelRowClass. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
+                "any LabelRowClass."
             )
 
         object_hash = object_instance.object_hash
@@ -585,9 +582,9 @@ class LabelRow:
         # DENIS: probably better to have a member function saying whether a parent is currently set.
         if classification_instance._parent is not None:
             raise RuntimeError(
-                "The supplied ClassificationInstance is already part of a LabelRow. You can only add a ClassificationInstance"
-                " to one LabelRow. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
-                "not part of any LabelRow."
+                "The supplied ClassificationInstance is already part of a LabelRowClass. You can only add a ClassificationInstance"
+                " to one LabelRowClass. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
+                "not part of any LabelRowClass."
             )
 
         classification_hash = classification_instance.classification_hash
@@ -841,7 +838,7 @@ class LabelRow:
 
         answer_dict = answers_dict[0]
 
-        answer = classification_instance.get_static_answer()
+        answer = classification_instance.get_answer()
         # DENIS: check if the same ontology type etc.
 
         answer.from_dict(answer_dict)
@@ -857,7 +854,7 @@ class LabelRow:
 # class LabelMaster:
 #     """
 #     DENIS: this thing probably should take the corresponding ontology, ideally automatically
-#     DENIS: there is actually not much difference between this and the `LabelRow` class. Probably we
+#     DENIS: there is actually not much difference between this and the `LabelRowClass` class. Probably we
 #         want to merge them together.
 #     """
 #
@@ -869,9 +866,9 @@ class LabelRow:
 #     # data_type: DataType
 #     # # DENIS: the above fields could be translated less literally.
 #     #
-#     # single_label: LabelRow  # Only one label across this multi-label thing.
+#     # single_label: LabelRowClass  # Only one label across this multi-label thing.
 #
-#     def get_or_create_label_by_frame(self, frame: Union[int, str]) -> LabelRow:
+#     def get_or_create_label_by_frame(self, frame: Union[int, str]) -> LabelRowClass:
 #         """Get it depending on frame number or hash."""
 #         pass
 #
@@ -929,18 +926,12 @@ class ObjectFrameInstanceInfo:
     # DENIS: do we need the isDeleted field?
     created_at: datetime = datetime.now()
     created_by: Optional[str] = None
-    """None defaults to the user of the SDK. DENIS: need to add this information somewhere."""
-    last_edited_at: Optional[datetime] = None
+    """None defaults to the user of the SDK."""
+    last_edited_at: datetime = datetime.now()
     last_edited_by: Optional[str] = None
-    """None defaults to the user of the SDK, DENIS: do we want this to be true for last_edited_by?
-    !! DENIS: I need to add this for the BE. Basically have a default `last_edited_by`, 
-    `created_by` from the BE. Could have this actually as part of the authentication process, to get back the email
-    address and populate it here. Or we will populate it in the BE.
-    I would also want to have the BE provide the frame count when returning, that way I can check if we run overboard
-    with the number of frames.
-    """
-    confidence: float = 1
-    manual_annotation: bool = True
+    """None defaults to the user of the SDK."""
+    confidence: float = DEFAULT_CONFIDENCE
+    manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
     read_only_info: ObjectFrameReadOnlyInstanceInfo = ObjectFrameReadOnlyInstanceInfo()
 
     @staticmethod
@@ -993,8 +984,8 @@ class ObjectInstance:
         # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
         # this thing take over the label structure itself (for large ones it would be interesting)
         self._object_hash = object_hash or short_uuid_str()
-        self._parent: Optional[LabelRow] = None
-        """This member should only be manipulated by a LabelRow"""
+        self._parent: Optional[LabelRowClass] = None
+        """This member should only be manipulated by a LabelRowClass"""
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
         # feature_node_hash of attribute to the answer.
@@ -1227,7 +1218,7 @@ class ObjectInstance:
     def copy(self) -> ObjectInstance:
         """
         Creates an exact copy of this ObjectInstance but with a new object hash and without being associated to any
-        LabelRow. This is useful if you want to add the semantically same ObjectInstance to multiple `LabelRow`s."""
+        LabelRowClass. This is useful if you want to add the semantically same ObjectInstance to multiple `LabelRowClass`s."""
         ret = ObjectInstance(self._ontology_object)
         ret._frames_to_instance_data = copy(self._frames_to_instance_data)
         # DENIS: test if a shallow copy is enough
