@@ -54,6 +54,17 @@ class PointCoordinate:
     x: float
     y: float
 
+    @staticmethod
+    def from_dict(d: dict) -> PointCoordinate:
+        first_item = d["point"]["0"]
+        return PointCoordinate(
+            x=first_item["x"],
+            y=first_item["y"],
+        )
+
+    def to_dict(self) -> dict:
+        return {"0": {"x": self.x, "y": self.y}}
+
 
 @dataclass(frozen=True)
 class PolygonCoordinates:

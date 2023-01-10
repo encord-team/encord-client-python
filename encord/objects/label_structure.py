@@ -26,6 +26,7 @@ from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
     BoundingBoxCoordinates,
     Coordinates,
+    PointCoordinate,
     PolygonCoordinates,
 )
 from encord.objects.internal_helpers import (
@@ -330,8 +331,7 @@ class LabelRowClass:
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
         # at least at the final objects_index/classifications_index level.
-        self._parse_objects_map(label_row_dict)
-        self._parse_classifications_map(label_row_dict)
+        self._parse_labels_from_dict(label_row_dict)
 
     def get_image_hash(self, frame_number: int) -> str:
         # DENIS: to do
@@ -707,26 +707,47 @@ class LabelRowClass:
             frame_to_image_hash=frame_to_image_hash,
         )
 
-    def _parse_objects_map(self, label_row_dict: dict):
+    def _parse_labels_from_dict(self, label_row_dict: dict):
         # DENIS: catch and throw at the top level if we couldn't parse, meaning that the dict is invalid.
         # Iterate over the data_units. Find objects. Start adding them into
 
         # Think about breaking or not breaking the order of the objects
         # DENIS: the only way to really know the order is through the objects_index. In this case, we'd need
         # additional information from the BE.
+        classification_answers = label_row_dict["classification_answers"]
 
         for data_unit in label_row_dict["data_units"].values():
-            frame = int(data_unit["data_sequence"])  # DENIS: change for non-image groups.
-            for frame_object_label in data_unit["labels"]["objects"]:
-                object_hash = frame_object_label["objectHash"]
-                if object_hash not in self._objects_map:
-                    object_instance = self._create_new_object_instance(frame_object_label, frame)
-                    self.add_object(object_instance)
-                else:
-                    self._add_coordinates_to_object_instance(frame_object_label, frame)
+            data_type = label_row_dict["data_type"]
+            if data_type in {DataType.IMG_GROUP.value, DataType.IMAGE.value}:
+                frame = int(data_unit["data_sequence"])
+                self._add_object_instances_from_objects(data_unit["labels"]["objects"], frame)
+                self._add_classification_instances_from_classifications(
+                    data_unit["labels"]["classifications"], classification_answers, int(frame)
+                )
+            elif data_type in {DataType.VIDEO.value, DataType.DICOM.value}:
+                for frame, frame_data in data_unit["labels"].items():
+                    self._add_object_instances_from_objects(frame_data["objects"], int(frame))
+                    self._add_classification_instances_from_classifications(
+                        frame_data["classifications"], classification_answers, int(frame)
+                    )
+            else:
+                raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
         self._add_objects_answers(label_row_dict)
         self._add_action_answers(label_row_dict)
+
+    def _add_object_instances_from_objects(
+        self,
+        objects_list: List[dict],
+        frame: int,
+    ) -> None:
+        for frame_object_label in objects_list:
+            object_hash = frame_object_label["objectHash"]
+            if object_hash not in self._objects_map:
+                object_instance = self._create_new_object_instance(frame_object_label, frame)
+                self.add_object(object_instance)
+            else:
+                self._add_coordinates_to_object_instance(frame_object_label, frame)
 
     def _add_objects_answers(self, label_row_dict: dict):
         # DENIS: deal with dynamic answers at some point.
@@ -779,21 +800,23 @@ class LabelRowClass:
             return BoundingBoxCoordinates.from_dict(frame_object_label)
         elif "polygon" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
+        elif "point" in frame_object_label:
+            return PointCoordinate.from_dict(frame_object_label)
         else:
             raise NotImplementedError("Getting other coordinates is not yet implemented.")
 
-    def _parse_classifications_map(self, label_row_dict: dict) -> None:
-        for data_unit in label_row_dict["data_units"].values():
-            frame = int(data_unit["data_sequence"])
-            for frame_classification_label in data_unit["labels"]["classifications"]:
-                classification_hash = frame_classification_label["classificationHash"]
-                if classification_hash not in self._classifications_map:
-                    classification_instance = self._create_new_classification_instance(
-                        frame_classification_label, frame, label_row_dict["classification_answers"]
-                    )
-                    self.add_classification(classification_instance)
-                else:
-                    self._add_frames_to_classification_instance(frame_classification_label, frame)
+    def _add_classification_instances_from_classifications(
+        self, classifications_list: List[dict], classification_answers: dict, frame: int
+    ):
+        for frame_classification_label in classifications_list:
+            classification_hash = frame_classification_label["classificationHash"]
+            if classification_hash not in self._classifications_map:
+                classification_instance = self._create_new_classification_instance(
+                    frame_classification_label, frame, classification_answers
+                )
+                self.add_classification(classification_instance)
+            else:
+                self._add_frames_to_classification_instance(frame_classification_label, frame)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, FrameLevelImageGroupData] = dict()
@@ -917,7 +940,7 @@ class LabelRowClass:
 class ObjectFrameReadOnlyInstanceInfo:
     """Trying to set this will not have any effects on the data in the Encord servers."""
 
-    reviews: List[dict] = field(default_factory=list)
+    reviews: Optional[List[dict]] = None
     # DENIS: can I type out this reviews thing? -> Hold off to see if I actually need it.
 
 
@@ -936,7 +959,7 @@ class ObjectFrameInstanceInfo:
 
     @staticmethod
     def from_dict(d: dict):
-        read_only_info = ObjectFrameReadOnlyInstanceInfo(reviews=d["reviews"])
+        read_only_info = ObjectFrameReadOnlyInstanceInfo(reviews=d.get("reviews"))
         if "lastEditedAt" in d:
             last_edited_at = parse(d["lastEditedAt"])
         else:

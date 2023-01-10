@@ -6,6 +6,7 @@ from typing import List, Union
 from deepdiff import DeepDiff
 
 from encord.objects.label_structure import LabelRowClass
+from tests.objects.data import data_1
 from tests.objects.data.empty_image_group import (
     empty_image_group_labels,
     empty_image_group_ontology,
@@ -43,3 +44,19 @@ def test_serialise_label_row_class_for_empty_image_group():
         exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
     )
     # TODO: I'm only not comparing dates because of timezone differences. This should be done properly.
+
+
+def test_serialise_video():
+    label_row = LabelRowClass(data_1.labels, data_1.ontology)
+
+    expected = label_row.to_encord_dict()
+    assert expected == empty_image_group_labels
+
+    label_row = LabelRowClass(image_group_labels, image_group_ontology)
+
+    expected = label_row.to_encord_dict()
+    deep_diff_enhanced(
+        expected,
+        image_group_labels,
+        exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+    )
