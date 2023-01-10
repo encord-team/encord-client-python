@@ -544,10 +544,7 @@ class EncordClientProject(EncordClient):
         labels = self._querier.basic_getter(LabelRow, uid, payload=payload)
         ontology_hash = self.get_project()["ontology_hash"]
         ontology = self._querier.basic_getter(OrmOntology, ontology_hash)
-        ontology_structure = OntologyStructure.from_dict(ontology)
-        # DENIS: seems like the BE should be able to return a read only ontology.
-        # I think I'd rather cache this than re-request it multiple times. This cache needs to be invalidated
-        # the first time we fail to parse the labels from the ontology.
+        ontology_structure = ontology.structure
         return LabelRowClass(labels, ontology_structure)
 
     def get_label_row(
