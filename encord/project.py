@@ -2,7 +2,7 @@ import datetime
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
-from encord.constants.model import AutomationModels, Devices
+from encord.constants.model import AutomationModels, Device
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
@@ -593,10 +593,10 @@ class Project:
         self,
         uid: str,
         file_paths: Optional[List[str]] = None,
-        base64_strings: Optional[List[str]] = None,
+        base64_strings: Optional[List[bytes]] = None,
         conf_thresh: float = 0.6,
         iou_thresh: float = 0.3,
-        device: Union[str, Devices] = Devices.CUDA,
+        device: Device = Device.CUDA,
         detection_frame_range: Optional[List[int]] = None,
         allocation_enabled: bool = False,
         data_hashes: Optional[List[str]] = None,
@@ -650,7 +650,7 @@ class Project:
         epochs: Optional[int] = None,
         batch_size: int = 24,
         weights: Optional[ModelTrainingWeights] = None,
-        device: Union[str, Devices] = Devices.CUDA,
+        device: Device = Device.CUDA,
     ):
         """
         Train a model created on the platform.

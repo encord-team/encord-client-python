@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 
-import encord.exceptions
+from encord.exceptions import AuthenticationError, AuthorisationError, OperationNotAllowed
 from encord.client import EncordClient
 from encord.configs import EncordConfig
 from encord.orm.label_row import LabelRow
@@ -43,7 +43,7 @@ def test_initialise_with_config(keys):
 
 
 def test_missing_key(keys):
-    with pytest.raises(expected_exception=encord.exceptions.AuthenticationError) as excinfo:
+    with pytest.raises(expected_exception=AuthenticationError) as excinfo:
         EncordClient.initialise(resource_id=keys[0])
 
     assert excinfo.value.message == "API key not provided"
@@ -51,7 +51,7 @@ def test_missing_key(keys):
 
 @pytest.mark.skip(reason="test not maintained")
 def test_missing_resource_id(keys):
-    with pytest.raises(expected_exception=encord.exceptions.AuthenticationError) as excinfo:
+    with pytest.raises(expected_exception=AuthenticationError) as excinfo:
         EncordClient.initialise(api_key=keys[1])
 
     assert excinfo.value.message == "Project ID or dataset ID not provided"
@@ -59,13 +59,13 @@ def test_missing_resource_id(keys):
 
 @pytest.mark.skip(reason="test not maintained")
 def test_invalid_key(keys):
-    with pytest.raises(expected_exception=encord.exceptions.AuthenticationError):
+    with pytest.raises(expected_exception=AuthenticationError):
         EncordClient.initialise(keys[0], uuid.uuid4())
 
 
 @pytest.mark.skip(reason="test not maintained")
 def test_invalid_resource_id(keys):
-    with pytest.raises(expected_exception=encord.exceptions.AuthenticationError):
+    with pytest.raises(expected_exception=AuthenticationError):
         EncordClient.initialise(uuid.uuid4(), keys[1])
 
 
@@ -78,7 +78,7 @@ def test_get_label_blurb(keys, client):
 
 
 def test_get_label_with_invalid_id_throws_authorisation_exception(client):
-    with pytest.raises(expected_exception=encord.exceptions.AuthorisationError):
+    with pytest.raises(expected_exception=AuthorisationError):
         client.get_label_row("test")
 
 
@@ -86,7 +86,7 @@ def test_get_label_with_invalid_id_throws_authorisation_exception(client):
 def test_get_label_with_write_key_throws_operation_not_allowed_exception(keys):
     client = EncordClient.initialise(keys[0], LABEL_WRITE_KEY)
 
-    with pytest.raises(expected_exception=encord.exceptions.OperationNotAllowed):
+    with pytest.raises(expected_exception=OperationNotAllowed):
         client.get_label_row(keys[2])
 
 
@@ -104,7 +104,7 @@ def test_save_img_group_label_row(keys, client):
 
 @pytest.mark.skip(reason="test not maintained")
 def test_save_label_with_invalid_id_throws_authorisation_exception(keys, client):
-    with pytest.raises(expected_exception=encord.exceptions.AuthorisationError):
+    with pytest.raises(expected_exception=AuthorisationError):
         client.save_label_row("test", TEST_BLURB)
 
 
@@ -112,7 +112,7 @@ def test_save_label_with_invalid_id_throws_authorisation_exception(keys, client)
 def test_save_label_with_read_key_throws_operation_not_allowed_exception(keys):
     client = EncordClient.initialise(keys[0], LABEL_READ_KEY)
 
-    with pytest.raises(expected_exception=encord.exceptions.OperationNotAllowed):
+    with pytest.raises(expected_exception=OperationNotAllowed):
         client.save_label_row(keys[2], TEST_BLURB)
 
 

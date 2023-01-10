@@ -19,7 +19,7 @@ from enum import Enum
 from typing import Set, cast
 
 
-class Devices(Enum):
+class Device(Enum):
     CUDA = "cuda"
     CPU = "cpu"
 
