@@ -1019,7 +1019,7 @@ class EncordClientProject(EncordClient):
 
         function_arguments = locals()
 
-        query_payload = {k: v for (k, v) in function_arguments.items() if k is not "self" and v is not None}
+        query_payload = {k: v for (k, v) in function_arguments.items() if k != "self" and v is not None}
 
         return self._querier.get_multiple(LabelLog, payload=query_payload)
 
