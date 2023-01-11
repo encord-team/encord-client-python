@@ -19,6 +19,15 @@ from enum import Enum
 from typing import Set, cast
 
 
+class Device(Enum):
+    CUDA = "cuda"
+    CPU = "cpu"
+
+    @classmethod
+    def has_value(cls, value) -> bool:
+        return value in cls._value2member_map_
+
+
 class AutomationModels(Enum):
     FAST_AI = "fast_ai"
     RESNET18 = "resnet18"

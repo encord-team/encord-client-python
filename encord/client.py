@@ -46,7 +46,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
-from encord.constants.model import AutomationModels
+from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import *
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
@@ -96,6 +96,7 @@ from encord.orm.model import (
     ModelOperations,
     ModelRow,
     ModelTrainingParams,
+    ModelTrainingWeights,
     TrainingMetadata,
 )
 from encord.orm.project import Project as OrmProject
@@ -813,16 +814,16 @@ class EncordClientProject(EncordClient):
 
     def model_inference(
         self,
-        uid,
-        file_paths=None,
-        base64_strings=None,
-        conf_thresh=0.6,
-        iou_thresh=0.3,
-        device="cuda",
-        detection_frame_range=None,
-        allocation_enabled=False,
-        data_hashes=None,
-        rdp_thresh=0.005,
+        uid: str,
+        file_paths: Optional[List[str]] = None,
+        base64_strings: Optional[List[bytes]] = None,
+        conf_thresh: float = 0.6,
+        iou_thresh: float = 0.3,
+        device: Device = Device.CUDA,
+        detection_frame_range: Optional[List[int]] = None,
+        allocation_enabled: bool = False,
+        data_hashes: Optional[List[str]] = None,
+        rdp_thresh: float = 0.005,
     ):
         """
         This function is documented in :meth:`encord.project.Project.model_inference`.
@@ -863,6 +864,14 @@ class EncordClientProject(EncordClient):
                     }
                 )
 
+        if isinstance(device, Device):
+            device = device.value
+
+        if device is None or not Device.has_value(device):  # Backward compatibility with string options
+            raise encord.exceptions.EncordException(
+                message="You must pass a device from the `from encord.constants.model.Device` Enum to run inference."
+            )
+
         inference_params = ModelInferenceParams(
             {
                 "files": files,
@@ -885,7 +894,15 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(Model, uid, payload=model)
 
-    def model_train(self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"):
+    def model_train(
+        self,
+        uid: str,
+        label_rows: Optional[List[str]] = None,
+        epochs: Optional[int] = None,
+        batch_size: int = 24,
+        weights: Optional[ModelTrainingWeights] = None,
+        device: Device = Device.CUDA,
+    ):
         """
         This function is documented in :meth:`encord.project.Project.model_train`.
         """
@@ -900,11 +917,18 @@ class EncordClientProject(EncordClient):
         if batch_size is None:
             raise encord.exceptions.EncordException(message="You must set a batch size to train a model.")
 
-        if weights is None:
-            raise encord.exceptions.EncordException(message="You must select model weights to train a model.")
+        if weights is None or not isinstance(weights, ModelTrainingWeights):
+            raise encord.exceptions.EncordException(
+                message="You must pass weights from the `encord.constants.model_weights` module to train a model."
+            )
 
-        if device is None:
-            raise encord.exceptions.EncordException(message="You must set a device (cuda or CPU) train a model.")
+        if isinstance(device, Device):
+            device = device.value
+
+        if device is None or not Device.has_value(device):  # Backward compatibility with string options
+            raise encord.exceptions.EncordException(
+                message="You must pass a device from the `from encord.constants.model.Device` Enum to train a model."
+            )
 
         training_params = ModelTrainingParams(
             {

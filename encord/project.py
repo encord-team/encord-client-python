@@ -2,7 +2,7 @@ import datetime
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
-from encord.constants.model import AutomationModels
+from encord.constants.model import AutomationModels, Device
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
@@ -13,7 +13,7 @@ from encord.orm.label_row import (
     LabelStatus,
     ShadowDataState,
 )
-from encord.orm.model import ModelConfiguration, TrainingMetadata
+from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -597,19 +597,22 @@ class Project:
 
     def model_inference(
         self,
-        uid,
-        file_paths=None,
-        base64_strings=None,
-        conf_thresh=0.6,
-        iou_thresh=0.3,
-        device="cuda",
-        detection_frame_range=None,
-        allocation_enabled=False,
-        data_hashes=None,
-        rdp_thresh=0.005,
+        uid: str,
+        file_paths: Optional[List[str]] = None,
+        base64_strings: Optional[List[bytes]] = None,
+        conf_thresh: float = 0.6,
+        iou_thresh: float = 0.3,
+        device: Device = Device.CUDA,
+        detection_frame_range: Optional[List[int]] = None,
+        allocation_enabled: bool = False,
+        data_hashes: Optional[List[str]] = None,
+        rdp_thresh: float = 0.005,
     ):
         """
         Run inference with model trained on the platform.
+
+        The image(s)/video(s) can be provided either as local file paths, base64 strings, or as data hashes if the
+        data is already uploaded on the Encord platform.
 
         Args:
             uid: A model_iteration_hash (uid) string.
@@ -649,7 +652,15 @@ class Project:
             rdp_thresh,
         )
 
-    def model_train(self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"):
+    def model_train(
+        self,
+        uid: str,
+        label_rows: Optional[List[str]] = None,
+        epochs: Optional[int] = None,
+        batch_size: int = 24,
+        weights: Optional[ModelTrainingWeights] = None,
+        device: Device = Device.CUDA,
+    ):
         """
         Train a model created on the platform.
 
