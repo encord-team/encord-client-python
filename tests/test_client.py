@@ -2,9 +2,13 @@ import uuid
 
 import pytest
 
-from encord.exceptions import AuthenticationError, AuthorisationError, OperationNotAllowed
 from encord.client import EncordClient
 from encord.configs import EncordConfig
+from encord.exceptions import (
+    AuthenticationError,
+    AuthorisationError,
+    OperationNotAllowed,
+)
 from encord.orm.label_row import LabelRow
 from encord.orm.project import Project
 from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB

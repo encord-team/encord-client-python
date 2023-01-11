@@ -1,21 +1,18 @@
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from requests import Session
 
-from encord.constants.model import Device
-from encord.constants.model_weights import fast_rcnn_R_50_FPN_1x
-from encord.exceptions import EncordException
 import encord.exceptions
 from encord.configs import _ENCORD_SSH_KEY, _ENCORD_SSH_KEY_FILE
+from encord.constants.model import Device
+from encord.constants.model_weights import faster_rcnn_R_101_C4_3x
+from encord.exceptions import EncordException
 from encord.project import Project
 from encord.user_client import EncordUserClient
-
-from requests import Session
-from unittest.mock import patch
-
 
 PRIVATE_KEY = (
     Ed25519PrivateKey.generate()
@@ -79,7 +76,7 @@ def test_invalid_device_raises(project: Project, device):
             label_rows=[],
             epochs=500,
             batch_size=24,
-            weights=fast_rcnn_R_50_FPN_1x,
+            weights=faster_rcnn_R_101_C4_3x,
             device=device,
         )
 
@@ -111,7 +108,7 @@ def test_valid_device(mock_send, project: Project, device):
         label_rows=[],
         epochs=500,
         batch_size=24,
-        weights=fast_rcnn_R_50_FPN_1x,
+        weights=faster_rcnn_R_101_C4_3x,
         device=device,
     )
 
