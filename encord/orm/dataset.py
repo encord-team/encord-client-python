@@ -19,11 +19,14 @@ import json
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Union
+from uuid import UUID
 
 from dateutil import parser
 
 from encord.constants.enums import DataType
+from encord.exceptions import EncordException
+from encord.http.querier import Querier
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
 
@@ -54,9 +57,40 @@ class DatasetUsers:
     pass
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class DataClientMetadata:
     payload: dict
+
+
+@dataclasses.dataclass(frozen=True)
+class SignedUrl:
+    signed_url: str
+
+
+@dataclasses.dataclass(frozen=True)
+class ImageData:
+    frame: int
+    title: str
+    file_link: str
+    file_type: str
+    image_hash: UUID
+    storage_location: StorageLocation
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        return ImageData(
+            json_dict["frame"],
+            json_dict["title"],
+            json_dict["file_link"],
+            json_dict["file_type"],
+            json_dict["image_hash"],
+            json_dict["storage_location"],
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class ImagesInGroup:
+    images: List[ImageData]
 
 
 class DataRow(dict, Formatter):
@@ -66,7 +100,16 @@ class DataRow(dict, Formatter):
         title: str,
         data_type: DataType,
         created_at: datetime,
+        last_edited_at: datetime,
+        width: int,
+        height: int,
+        file_link: str,  # file link from db
+        file_size: int,
+        file_type: str,
+        storage_location: StorageLocation,
         client_metadata: Optional[dict],
+        frames_per_second: Optional[int],
+        duration: Optional[int],
     ):
         """
         This class has dict-style accessors for backwards compatibility.
@@ -83,7 +126,21 @@ class DataRow(dict, Formatter):
                 "data_title": title,
                 "data_type": data_type.to_upper_case_string(),
                 "created_at": created_at.strftime(DATETIME_STRING_FORMAT),
+                "last_edited_at": last_edited_at.strftime(DATETIME_STRING_FORMAT),
+                "width": width,
+                "height": height,
+                "file_link": file_link,
+                "file_size": file_size,
+                "file_type": file_type,
+                "storage_location": storage_location,
+                "frames_per_second": frames_per_second,
+                "duration": duration,
                 "client_metadata": client_metadata,
+                "querier": None,
+                "images": None,
+                "get_signed_url": False,
+                "get_signed_url_flag_updated": False,
+                "signed_url": None,
             }
         )
 
@@ -121,12 +178,152 @@ class DataRow(dict, Formatter):
         self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
     @property
+    def querier(self) -> Querier:
+        return self["querier"]
+
+    @querier.setter
+    def querier(self, new_querier: Querier) -> None:
+        self["querier"] = new_querier
+
+    @property
+    def frames_per_second(self) -> int:
+        if self.data_type != DataType.VIDEO:
+            return None
+        return self["frames_per_second"]
+
+    @frames_per_second.setter
+    def frames_per_second(self, new_frames_per_second: int) -> None:
+        self["frames_per_second"] = new_frames_per_second
+
+    @property
+    def duration(self) -> Optional[int]:
+        if self.data_type != DataType.VIDEO:
+            return None
+        return self["duration"]
+
+    @duration.setter
+    def duration(self, new_duration: int) -> None:
+        self["duration"] = new_duration
+
+    @property
     def client_metadata(self) -> Optional[dict]:
         """
         Custom client metadata. This is null if it is disabled via the
         :class:`encord.orm.dataset.DatasetAccessSettings`
         """
+        if self["client_metadata"] is None:
+            if self.querier is not None:
+                res = self.querier.basic_getter(DataClientMetadata, uid=self.uid)
+                self["client_metadata"] = res.payload
         return self["client_metadata"]
+
+    @client_metadata.setter
+    def client_metadata(self, new_client_metadata: dict) -> None:
+        if self.querier is not None:
+            res = self.querier.basic_setter(
+                DataClientMetadata,
+                uid=self.uid,
+                payload={"new_client_metadata": new_client_metadata},
+            )
+            if res:
+                self["client_metadata"] = new_client_metadata
+            else:
+                raise EncordException(f"Could not update client metadata for DataRow with uid: {self.uid}")
+
+    @property
+    def width(self) -> int:
+        return self["width"]
+
+    @width.setter
+    def width(self, new_width: int) -> None:
+        self["width"] = new_width
+
+    @property
+    def height(self) -> int:
+        return self["height"]
+
+    @height.setter
+    def height(self, new_height: int) -> None:
+        self["height"] = new_height
+
+    @property
+    def last_edited_at(self) -> datetime:
+        return parser.parse(self["last_edited_at"])
+
+    @last_edited_at.setter
+    def last_edited_at(self, new_last_edited_at: datetime) -> None:
+        self["last_edited_at"] = new_last_edited_at.strftime(DATETIME_STRING_FORMAT)
+
+    @property
+    def file_link(self) -> str:
+        return self["file_link"]
+
+    @file_link.setter
+    def file_link(self, new_file_link: str) -> None:
+        self["file_link"] = new_file_link
+
+    @property
+    def signed_url(self) -> str:
+        if self.data_type in [DataType.VIDEO, DataType.IMG_GROUP, DataType.IMAGE] and self["signed_url"] is None:
+            payload = {"data_type": self.data_type.value}
+            res = self.querier.basic_getter(SignedUrl, uid=self.uid, payload=payload)
+            self["signed_url"] = res.signed_url
+            self.get_signed_url = True
+        return self["signed_url"]
+
+    @file_link.setter
+    def file_link(self, new_file_link: str) -> None:
+        self["file_link"] = new_file_link
+
+    @property
+    def file_size(self) -> int:
+        return self["file_size"]
+
+    @file_size.setter
+    def file_size(self, new_file_size: int) -> None:
+        self["file_size"] = new_file_size
+
+    @property
+    def file_type(self) -> str:
+        return self["file_type"]
+
+    @file_type.setter
+    def file_type(self, new_file_type: str) -> None:
+        self["file_type"] = new_file_type
+
+    @property
+    def storage_location(self) -> StorageLocation:
+        return self["storage_location"]
+
+    @storage_location.setter
+    def storage_location(self, new_storage_location: StorageLocation) -> None:
+        self["storage_location"] = new_storage_location
+
+    @property
+    def get_signed_url(self):
+        return self["get_signed_url"]
+
+    @get_signed_url.setter
+    def get_signed_url(self, new_get_signed_url):
+        if self["get_signed_url"] != new_get_signed_url:
+            self["get_signed_url_flag_updated"] = True
+        self["get_signed_url"] = new_get_signed_url
+
+    @property
+    def images(self) -> List[ImageData]:
+        # only if get_signed_url flag was updated
+        if self.data_type == DataType.IMG_GROUP and (self["images"] is None or self["get_signed_url_flag_updated"]):
+            payload = {
+                "get_signed_url": self.get_signed_url,
+            }
+            res = self.querier.basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
+            self["images"] = res.images
+            self["get_signed_url_flag_updated"] = False
+        return self["images"]
+
+    @images.setter
+    def images(self, new_images: List[ImageData]) -> None:
+        self["images"] = new_images
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
@@ -139,6 +336,15 @@ class DataRow(dict, Formatter):
             data_type=data_type,
             created_at=parser.parse(json_dict["created_at"]),
             client_metadata=json_dict["client_metadata"],
+            last_edited_at=parser.parse(json_dict["last_edited_at"]),
+            width=json_dict["width"],
+            height=json_dict["height"],
+            file_link=json_dict["file_link"],
+            file_size=json_dict["file_size"],
+            file_type=json_dict["file_type"],
+            storage_location=json_dict["storage_location"],
+            frames_per_second=json_dict["frames_per_second"],
+            duration=json_dict["duration"],
         )
 
     @classmethod

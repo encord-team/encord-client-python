@@ -305,9 +305,16 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
-        return self._querier.basic_getter(
+        res = self._querier.basic_getter(
             OrmDataset, payload={"dataset_access_settings": dataclasses.asdict(self._dataset_access_settings)}
         )
+
+        def add_querier_to_data_rows(response):
+            for idx in range(len(response.data_rows)):
+                response.data_rows[idx].querier = self._querier
+
+        add_querier_to_data_rows(res)
+        return res
 
     def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
         self._dataset_access_settings = dataset_access_settings
