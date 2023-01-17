@@ -4,7 +4,18 @@ from collections import defaultdict
 from copy import copy, deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Union, overload
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    NoReturn,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    overload,
+)
 
 from dateutil.parser import parse
 
@@ -47,6 +58,8 @@ from encord.objects.utils import (
     Ranges,
     _lower_snake_case,
     frames_class_to_frames_list,
+    frames_to_ranges,
+    range_to_ranges,
     ranges_list_to_ranges,
     short_uuid_str,
 )
@@ -515,8 +528,9 @@ class LabelRowClass:
     def _to_object_actions(self) -> dict:
         ret = {}
         for obj in self._objects_map.values():
-            all_static_answers = self._get_all_static_answers(obj)
-            # DENIS: this seems to be returning nothing. Is setting not working properly?
+            all_static_answers = self._dynamic_answers_to_encord_dict(obj)
+            if len(all_static_answers) == 0:
+                continue
             ret[obj.object_hash] = {
                 "actions": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
@@ -540,10 +554,20 @@ class LabelRowClass:
         return ret
 
     @staticmethod
-    def _get_all_static_answers(item: Union[ObjectInstance, ClassificationInstance]) -> List[dict]:
+    def _get_all_static_answers(object_instance: ObjectInstance) -> List[dict]:
+        """Essentially convert to the JSON format of all the static answers."""
         ret = []
-        for answer in item._get_all_static_answers():
+        for answer in object_instance._get_all_static_answers():
             d_opt = answer.to_encord_dict()
+            if d_opt is not None:
+                ret.append(d_opt)
+        return ret
+
+    @staticmethod
+    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> List[dict]:
+        ret = []
+        for answer, ranges in object_instance._get_all_dynamic_answers():
+            d_opt = answer.to_encord_dict(ranges)
             if d_opt is not None:
                 ret.append(d_opt)
         return ret
@@ -1359,10 +1383,11 @@ class ObjectInstance:
         set_answer_for_object(static_answer, answer)
 
     def _set_answer_unsafe(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, ranges: Ranges
+        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, track_hash: str, ranges: Ranges
     ) -> None:
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)
+
         else:
             static_answer = self._static_answer_map[attribute.feature_node_hash]
             set_answer_for_object(static_answer, answer)
@@ -1398,18 +1423,18 @@ class ObjectInstance:
             ranges = None
 
         if isinstance(attribute, TextAttribute):
-            self._set_answer_unsafe(answer_dict["answers"], attribute, ranges)
+            self._set_answer_unsafe(answer_dict["answers"], attribute, track_hash, ranges)
         elif isinstance(attribute, RadioAttribute):
             feature_hash = answer_dict["answers"][0]["featureHash"]
             option = _get_option_by_hash(feature_hash, attribute.options)
-            self._set_answer_unsafe(option, attribute, ranges)
+            self._set_answer_unsafe(option, attribute, track_hash, ranges)
         elif isinstance(attribute, ChecklistAttribute):
             options = []
             for answer in answer_dict["answers"]:
                 feature_hash = answer["featureHash"]
                 option = _get_option_by_hash(feature_hash, attribute.options)
                 options.append(option)
-            self._set_answer_unsafe(options, attribute, ranges)
+            self._set_answer_unsafe(options, attribute, track_hash, ranges)
         else:
             raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
@@ -1558,6 +1583,9 @@ class ObjectInstance:
     def _get_all_static_answers(self) -> List[Answer]:
         return list(self._static_answer_map.values())
 
+    def _get_all_dynamic_answers(self) -> List[Tuple[Answer, Ranges]]:
+        return self._dynamic_answer_manager.get_all_answers()
+
     def __repr__(self):
         return f"ObjectInstance({self._object_hash})"
 
@@ -1660,6 +1688,13 @@ class DynamicAnswerManager:
     def frames(self) -> Iterable[int]:
         """Returns all frames that have answers set."""
         return self._frames_to_answers.keys()
+
+    def get_all_answers(self) -> List[Tuple[Answer, Ranges]]:
+        """Returns all answers that are set."""
+        ret = []
+        for answer, frames in self._answers_to_frames.items():
+            ret.append((answer, frames_to_ranges(frames)))
+        return ret
 
     def _get_dynamic_answers(self) -> Set[Answer]:
         ret: Set[Answer] = set()

@@ -18,7 +18,12 @@ from encord.objects.common import (
     _get_option_by_hash,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
-from encord.objects.utils import _lower_snake_case, short_uuid_str
+from encord.objects.utils import (
+    Ranges,
+    _lower_snake_case,
+    ranges_to_list,
+    short_uuid_str,
+)
 
 
 class Answer(ABC):
@@ -26,11 +31,12 @@ class Answer(ABC):
 
     _ontology_attribute: Attribute
 
-    def __init__(self, ontology_attribute: Attribute, track_hash: Optional[str]):
+    def __init__(self, ontology_attribute: Attribute, track_hash: Optional[str] = None):
         self._answered = False
         self._ontology_attribute = ontology_attribute
         self._track_hash = track_hash or short_uuid_str()
         self._is_manual_annotation = DEFAULT_MANUAL_ANNOTATION
+        self._should_propagate = False  # DENIS: pass from outside.
 
     def is_answered(self) -> bool:
         return self._answered
@@ -64,17 +70,35 @@ class Answer(ABC):
     def ontology_attribute(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot reset the ontology attribute of an instantiated answer.")
 
-    @abstractmethod
-    def to_encord_dict(self) -> Optional[Dict]:
+    def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict]:
         """
         A low level helper to convert to the Encord JSON format.
         For most use cases the `get_answer` function should be used instead.
         """
+        if not self.is_answered():
+            return None
+
+        ret = self._to_encord_dict_impl(self.is_dynamic)
+        if self.is_dynamic:
+            ret.update(self._get_encord_dynamic_fields(ranges))
+
+        return ret
+
+    @abstractmethod
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict:
         pass
 
     @abstractmethod
     def from_dict(self, d: Dict) -> None:
         pass
+
+    def _get_encord_dynamic_fields(self, ranges: Ranges) -> Dict:
+        return {
+            "dynamic": True,
+            "range": ranges_to_list(ranges),
+            "shouldPropagate": self._should_propagate,
+            "trackHash": self._track_hash,
+        }
 
 
 class TextAnswer(Answer):
@@ -108,21 +132,14 @@ class TextAnswer(Answer):
             other_answer = text_answer.get_value()
             self.set(other_answer)
 
-    def to_encord_dict(self) -> Optional[Dict]:
-        """
-        A low level helper to convert to the Encord JSON format.
-        For most use cases the `get_answer` function should be used instead.
-        """
-        if not self.is_answered():
-            return None
-        else:
-            return {
-                "name": self.ontology_attribute.name,
-                "value": _lower_snake_case(self.ontology_attribute.name),
-                "answers": self._value,
-                "featureHash": self.ontology_attribute.feature_node_hash,
-                "manualAnnotation": self.is_manual_annotation,
-            }
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict:
+        return {
+            "name": self.ontology_attribute.name,
+            "value": _lower_snake_case(self.ontology_attribute.name),
+            "answers": self._value,
+            "featureHash": self.ontology_attribute.feature_node_hash,
+            "manualAnnotation": self.is_manual_annotation,
+        }
 
     def from_dict(self, d: Dict) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
@@ -185,28 +202,28 @@ class RadioAnswer(Answer):
             other_answer = radio_answer.get_value()
             self.set(other_answer)
 
-    def to_encord_dict(self) -> Optional[Dict]:
-        """
-        A low level helper to convert to the Encord JSON format.
-        For most use cases the `get_answer` function should be used instead.
-        """
-        if not self.is_answered():
-            return None
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Optional[Dict]:
+        nestable_option = self._value
+
+        if not is_dynamic:
+            # The internal label structure has different ways to represent this answer.
+            answer_name = nestable_option.label
         else:
-            nestable_option = self._value
-            return {
-                "name": self.ontology_attribute.name,
-                "value": _lower_snake_case(self.ontology_attribute.name),
-                "answers": [
-                    {
-                        "name": nestable_option.label,
-                        "value": nestable_option.value,
-                        "featureHash": nestable_option.feature_node_hash,
-                    }
-                ],
-                "featureHash": self.ontology_attribute.feature_node_hash,
-                "manualAnnotation": self.is_manual_annotation,
-            }
+            answer_name = self.ontology_attribute.name
+
+        return {
+            "name": self.ontology_attribute.name,
+            "value": _lower_snake_case(self.ontology_attribute.name),
+            "answers": [
+                {
+                    "name": answer_name,
+                    "value": nestable_option.value,
+                    "featureHash": nestable_option.feature_node_hash,
+                }
+            ],
+            "featureHash": self.ontology_attribute.feature_node_hash,
+            "manualAnnotation": self.is_manual_annotation,
+        }
 
     def from_dict(self, d: Dict) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
@@ -319,36 +336,34 @@ class ChecklistAnswer(Answer):
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
 
-    def to_encord_dict(self) -> Optional[Dict]:
-        """
-        A low level helper to convert to the Encord JSON format.
-        For most use cases the `get_answer` function should be used instead.
-        """
-        if not self.is_answered():
-            return None
-        else:
-            checked_options = []
-            ontology_attribute: ChecklistAttribute = self._ontology_attribute
-            for option in ontology_attribute.options:
-                if self.get_value(option):
-                    checked_options.append(option)
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Optional[Dict]:
+        checked_options = []
+        ontology_attribute: ChecklistAttribute = self._ontology_attribute
+        for option in ontology_attribute.options:
+            if self.get_value(option):
+                checked_options.append(option)
 
-            answers = []
-            for option in checked_options:
-                answers.append(
-                    {
-                        "name": option.label,
-                        "value": option.value,
-                        "featureHash": option.feature_node_hash,
-                    }
-                )
-            return {
-                "name": self.ontology_attribute.name,
-                "value": _lower_snake_case(self.ontology_attribute.name),
-                "answers": answers,
-                "featureHash": self.ontology_attribute.feature_node_hash,
-                "manualAnnotation": self.is_manual_annotation,
-            }
+        answers = []
+        for option in checked_options:
+            if not self.is_dynamic:
+                name = option.label
+            else:
+                name = self.ontology_attribute.name
+
+            answers.append(
+                {
+                    "name": name,
+                    "value": option.value,
+                    "featureHash": option.feature_node_hash,
+                }
+            )
+        return {
+            "name": self.ontology_attribute.name,
+            "value": _lower_snake_case(self.ontology_attribute.name),
+            "answers": answers,
+            "featureHash": self.ontology_attribute.feature_node_hash,
+            "manualAnnotation": self.is_manual_annotation,
+        }
 
     def from_dict(self, d: Dict) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:

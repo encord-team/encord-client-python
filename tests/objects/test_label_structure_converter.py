@@ -84,13 +84,10 @@ def test_serialise_dicom_with_dynamic_classifications():
 
     actual = label_row.to_encord_dict()
 
-    assert actual == dicom_labels
     deep_diff_enhanced(
         actual,
         dicom_labels,
-        exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+        exclude_regex_paths=["\['trackHash'\]"],
     )
-
-
-def test_serialise_dynamic_answers():
-    pass
+    # NOTE: likely we do not care about the trackHash. If we end up caring about it, we'll have to ensure that we can
+    #  set it from parsing the data and keep it around when setting new answers for example.

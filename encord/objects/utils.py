@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 import uuid
 from dataclasses import dataclass
-from typing import Any, List, Union
+from typing import Any, Iterable, List, Union
 
 
 def _decode_nested_uid(nested_uid: list) -> str:
@@ -27,6 +27,33 @@ Frames = Union[int, Range, Ranges]
 
 def frame_to_range(frame: int) -> Range:
     return Range(frame, frame)
+
+
+def frames_to_ranges(frames: Iterable[int]) -> Ranges:
+    if len(frames) == 0:
+        return []
+
+    ret = []
+
+    frames_sorted = sorted(frames)
+    last_value = frames_sorted[0]
+    next_range = Range(start=last_value, end=last_value)
+    idx = 1
+    while idx < len(frames_sorted):
+        if frames_sorted[idx] == last_value + 1:
+            next_range.end = frames_sorted[idx]
+        else:
+            ret.append(next_range)
+            next_range = Range(frames_sorted[idx], frames_sorted[idx])
+        last_value = frames_sorted[idx]
+        idx += 1
+
+    ret.append(next_range)
+    return ret
+
+
+def ranges_to_list(ranges: Ranges) -> List[List[int]]:
+    return [[r.start, r.end] for r in ranges]
 
 
 def range_to_ranges(range_: Range) -> Ranges:
