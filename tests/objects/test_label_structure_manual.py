@@ -29,6 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 PROJECT_RESOURCE_ID = "6ced337c-4330-42b1-b44d-4b367284b30f"  # Third Project - local dev
+PROJECT_RESOURCE_ID = "4ab65a47-293f-4cab-93f5-1ff5ca67038d"  # Project with one single image annotated - local dev
 
 
 def get_user_client() -> EncordUserClient:
@@ -53,7 +54,8 @@ def test_label_structure_manual():
     project = get_project_ssh()
     for label_row in project.label_rows:
         label_hash = label_row["label_hash"]
-        if label_hash is not None and label_row["data_title"] == "failing_video_new.mp4":
+        # if label_hash is not None and label_row["data_title"] == "failing_video_new.mp4":
+        if label_hash is not None:
             label_structure = project.get_label_row_class(label_hash)
             print(label_structure)
             break

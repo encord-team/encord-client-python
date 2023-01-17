@@ -326,6 +326,7 @@ class ClassificationInstance:
 class FrameLevelImageGroupData:
     # DENIS: check which ones here are optional. Can even branch off of different DataType of the LabelRowClass
     # This is for now for image groups
+    # DENIS: If I have a FrameView, this could be the accessors on this frame view. Probably good to keep it there!
     image_hash: str
     image_title: str
     data_link: str
@@ -350,6 +351,10 @@ class LabelRowReadOnlyData:
     frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
     duration: Optional[float] = None
     fps: Optional[float] = None
+    # DENIS: use, fill, and test these fields below.
+    data_link: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
 
 
 class LabelRowClass:
@@ -383,6 +388,41 @@ class LabelRowClass:
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
         # at least at the final objects_index/classifications_index level.
         self._parse_labels_from_dict(label_row_dict)
+
+    @property
+    def label_hash(self) -> str:
+        return self._label_row_read_only_data.label_hash
+
+    @property
+    def dataset_hash(self) -> str:
+        return self._label_row_read_only_data.dataset_hash
+
+    @property
+    def dataset_title(self) -> str:
+        return self._label_row_read_only_data.dataset_title
+
+    @property
+    def data_type(self) -> DataType:
+        return self._label_row_read_only_data.data_type
+
+    @property
+    def label_status(self) -> str:
+        # DENIS: this should be an enum
+        return self._label_row_read_only_data.label_status
+
+    @property
+    def number_of_frames(self) -> int:
+        return self._label_row_read_only_data.number_of_frames
+
+    @property
+    def duration(self) -> Optional[float]:
+        """Only a value for Video data types."""
+        return self._label_row_read_only_data.duration
+
+    @property
+    def fps(self) -> Optional[float]:
+        """Only a value for Video data types."""
+        return self._label_row_read_only_data.fps
 
     def get_image_hash(self, frame_number: int) -> str:
         # DENIS: to do

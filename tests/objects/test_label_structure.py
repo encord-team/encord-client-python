@@ -918,44 +918,44 @@ def test_classification_instance_delete():
 #     object_.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
 
 
-def test_frame_view():
-    # DENIS: implement this view!
-    """
-    I need some notion of "ObjectIndex at frame". That way I can then iterate over the frames.
-    I could have an extra class of ObjectOnFrame, with all the setters and getters needed.
-    Or I could just have a FrameView.set_coordinates(object_index) for example, or
-    FrameView.get_coordinates(object_index) to also read or set/get answers.
-    Then we'd also have FrameView.get_all_objects for example, which is again only a small
-    wrapper around LabelRowClass.get_all_objects_at_frame(frame).
-
-    Is this ergonomic enough? Maybe catch up with Alexey after the meeting today.
-
-    Frederik: for reading, people think "For frame 2, give me all the object coordinates there."
-    for uploading, some sort of "create or get, depending on whether it exists already" is needed.
-
-    DENIS: Frederik also needs to fetch a label_row depending on the last timestamp that has changed.
-
-    When doing `create_label_row`, the annotation status becomes to in progress.
-    Can we have a hash of the label row before it is created so we don't need to create it or wait for it?
-    """
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
-
-    frame_view: FrameView = label_row.get_frame(1)
-
-    object_instance_1: ObjectInstance = frame_view.create_object(BOX_COORDINATES, box_ontology_item, answer=None)
-    # or do
-    object_instance_1: ObjectInstance = box_ontology_item.create_object(frame_view, BOX_COORDINATES)
-    # DENIS: ^ is there a big difference at this point to just adding the frame?
-    frame_view.add_object(BOX_COORDINATES, existing_object, answer=None)  # answer is optional
-
-    existing_instances: Dict[InternalUuid, ObjectInstance] = {}
-
-    for frame in label_row.frames():
-        assert frame.number == 1
-        assert frame.uuid == "abc"
-        assert frame.has_object(object_instance_1)
-
-    assert frame_view.get_objects == [object_instance_1]
+# def test_frame_view():
+#     # DENIS: implement this view!
+#     """
+#     I need some notion of "ObjectIndex at frame". That way I can then iterate over the frames.
+#     I could have an extra class of ObjectOnFrame, with all the setters and getters needed.
+#     Or I could just have a FrameView.set_coordinates(object_index) for example, or
+#     FrameView.get_coordinates(object_index) to also read or set/get answers.
+#     Then we'd also have FrameView.get_all_objects for example, which is again only a small
+#     wrapper around LabelRowClass.get_all_objects_at_frame(frame).
+#
+#     Is this ergonomic enough? Maybe catch up with Alexey after the meeting today.
+#
+#     Frederik: for reading, people think "For frame 2, give me all the object coordinates there."
+#     for uploading, some sort of "create or get, depending on whether it exists already" is needed.
+#
+#     DENIS: Frederik also needs to fetch a label_row depending on the last timestamp that has changed.
+#
+#     When doing `create_label_row`, the annotation status becomes to in progress.
+#     Can we have a hash of the label row before it is created so we don't need to create it or wait for it?
+#     """
+#     label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+#
+#     frame_view: FrameView = label_row.get_frame(1)
+#
+#     object_instance_1: ObjectInstance = frame_view.create_object(BOX_COORDINATES, box_ontology_item, answer=None)
+#     # or do
+#     object_instance_1: ObjectInstance = box_ontology_item.create_object(frame_view, BOX_COORDINATES)
+#     # DENIS: ^ is there a big difference at this point to just adding the frame?
+#     frame_view.add_object(BOX_COORDINATES, existing_object, answer=None)  # answer is optional
+#
+#     existing_instances: Dict[InternalUuid, ObjectInstance] = {}
+#
+#     for frame in label_row.frames():
+#         assert frame.number == 1
+#         assert frame.uuid == "abc"
+#         assert frame.has_object(object_instance_1)
+#
+#     assert frame_view.get_objects == [object_instance_1]
 
 
 # def test_read_coordinates():
