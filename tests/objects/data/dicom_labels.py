@@ -260,7 +260,7 @@ dicom_labels = {
                     "name": "is occluded?",
                     "range": [[86, 86], [88, 88]],
                     "value": "is_occluded?",
-                    "answers": [{"name": "is occluded?", "value": "yes", "featureHash": "25a13ecf"}],
+                    "answers": [{"name": "yes", "value": "yes", "featureHash": "25a13ecf"}],
                     "dynamic": True,
                     "trackHash": "794bd3f1-c60e-4212-9ca8-1a24c3a5e7c4",
                     "featureHash": "f72182d1",

@@ -6,7 +6,12 @@ from typing import List, Union
 from deepdiff import DeepDiff
 
 from encord.objects.label_structure import LabelRowClass
-from tests.objects.data import data_1, native_image_data
+from tests.objects.data import (
+    data_1,
+    native_image_data,
+    ontology_with_many_dynamic_classifications,
+    video_with_dynamic_classifications,
+)
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.dicom_labels import dicom_labels
 from tests.objects.data.dynamic_classifications_ontology import (
@@ -30,7 +35,7 @@ def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], e
         ignore_order=True,
         exclude_regex_paths=exclude_regex_paths,
     ):
-        assert not DeepDiff(expected, actual, ignore_order=True, exclude_regex_paths=exclude_regex_paths)
+        print(DeepDiff(expected, actual, ignore_order=True, exclude_regex_paths=exclude_regex_paths))
         assert expected == actual
 
 
@@ -91,3 +96,18 @@ def test_serialise_dicom_with_dynamic_classifications():
     )
     # NOTE: likely we do not care about the trackHash. If we end up caring about it, we'll have to ensure that we can
     #  set it from parsing the data and keep it around when setting new answers for example.
+
+
+def test_dynamic_classifications():
+    label_row = LabelRowClass(
+        video_with_dynamic_classifications.labels, ontology_with_many_dynamic_classifications.ontology
+    )
+
+    actual = label_row.to_encord_dict()
+
+    # assert actual == video_with_dynamic_classifications.labels
+    deep_diff_enhanced(
+        actual,
+        video_with_dynamic_classifications.labels,
+        exclude_regex_paths=["\['trackHash'\]"],
+    )

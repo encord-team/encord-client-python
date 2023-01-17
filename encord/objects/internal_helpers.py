@@ -205,18 +205,12 @@ class RadioAnswer(Answer):
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Optional[Dict]:
         nestable_option = self._value
 
-        if not is_dynamic:
-            # The internal label structure has different ways to represent this answer.
-            answer_name = nestable_option.label
-        else:
-            answer_name = self.ontology_attribute.name
-
         return {
             "name": self.ontology_attribute.name,
             "value": _lower_snake_case(self.ontology_attribute.name),
             "answers": [
                 {
-                    "name": answer_name,
+                    "name": nestable_option.label,
                     "value": nestable_option.value,
                     "featureHash": nestable_option.feature_node_hash,
                 }
@@ -345,14 +339,9 @@ class ChecklistAnswer(Answer):
 
         answers = []
         for option in checked_options:
-            if not self.is_dynamic:
-                name = option.label
-            else:
-                name = self.ontology_attribute.name
-
             answers.append(
                 {
-                    "name": name,
+                    "name": option.label,
                     "value": option.value,
                     "featureHash": option.feature_node_hash,
                 }

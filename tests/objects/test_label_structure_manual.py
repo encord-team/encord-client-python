@@ -33,6 +33,7 @@ PROJECT_RESOURCE_ID = "4ab65a47-293f-4cab-93f5-1ff5ca67038d"  # Project with one
 PROJECT_RESOURCE_ID = (
     "0db22af4-03eb-448d-92ab-3697c319334c"  # project for DICOM dataset with dynamic classifications - local dev
 )
+PROJECT_RESOURCE_ID = "efbe39ee-d8c5-4bb0-baee-48c7aaed02ec"  # Project with 3 native images in image group and dynamic classifications - local dev
 
 
 def get_user_client() -> EncordUserClient:
@@ -58,7 +59,7 @@ def test_label_structure_manual():
     for label_row in project.label_rows:
         label_hash = label_row["label_hash"]
         # if label_hash is not None and label_row["data_title"] == "failing_video_new.mp4":
-        if label_hash is not None:
+        if label_hash is not None and label_row["data_title"] == "two-frame-video.mp4":
             label_structure = project.get_label_row_class(label_hash)
             print(label_structure)
             break
