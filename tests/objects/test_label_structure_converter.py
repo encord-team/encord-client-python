@@ -1,5 +1,5 @@
 """
-All tests in regards to converting from and to Encord dict to the label row.
+All tests regarding converting from and to Encord dict to the label row.
 """
 from typing import List, Union
 
