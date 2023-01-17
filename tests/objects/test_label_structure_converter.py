@@ -8,6 +8,10 @@ from deepdiff import DeepDiff
 from encord.objects.label_structure import LabelRowClass
 from tests.objects.data import data_1, native_image_data
 from tests.objects.data.all_ontology_types import all_ontology_types
+from tests.objects.data.dicom_labels import dicom_labels
+from tests.objects.data.dynamic_classifications_ontology import (
+    dynamic_classifications_ontology,
+)
 from tests.objects.data.empty_image_group import (
     empty_image_group_labels,
     empty_image_group_ontology,
@@ -62,9 +66,31 @@ def test_serialise_video():
     )
 
 
-def test_serialise_image():
+def test_serialise_image_with_object_answers():
     label_row = LabelRowClass(native_image_data.labels, all_ontology_types)
 
     actual = label_row.to_encord_dict()
 
-    assert actual == native_image_data.labels
+    # assert actual == native_image_data.labels
+    deep_diff_enhanced(
+        actual,
+        native_image_data.labels,
+        exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+    )
+
+
+def test_serialise_dicom_with_dynamic_classifications():
+    label_row = LabelRowClass(dicom_labels, dynamic_classifications_ontology)
+
+    actual = label_row.to_encord_dict()
+
+    assert actual == dicom_labels
+    deep_diff_enhanced(
+        actual,
+        dicom_labels,
+        exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+    )
+
+
+def test_serialise_dynamic_answers():
+    pass

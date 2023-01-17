@@ -30,6 +30,9 @@ logger = logging.getLogger(__name__)
 
 PROJECT_RESOURCE_ID = "6ced337c-4330-42b1-b44d-4b367284b30f"  # Third Project - local dev
 PROJECT_RESOURCE_ID = "4ab65a47-293f-4cab-93f5-1ff5ca67038d"  # Project with one single image annotated - local dev
+PROJECT_RESOURCE_ID = (
+    "0db22af4-03eb-448d-92ab-3697c319334c"  # project for DICOM dataset with dynamic classifications - local dev
+)
 
 
 def get_user_client() -> EncordUserClient:

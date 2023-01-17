@@ -44,6 +44,10 @@ def ranges_to_frames(range_list: Ranges) -> List[int]:
     return sorted(list(frames))
 
 
+def ranges_list_to_ranges(range_list: List[List[int]]) -> Ranges:
+    return [Range(start, end) for start, end in range_list]
+
+
 def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
     if isinstance(frames_class, int):
         return [frames_class]

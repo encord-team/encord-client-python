@@ -44,8 +44,10 @@ from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.utils import (
     Frames,
     Range,
+    Ranges,
     _lower_snake_case,
     frames_class_to_frames_list,
+    ranges_list_to_ranges,
     short_uuid_str,
 )
 
@@ -352,11 +354,11 @@ class FrameLevelImageGroupData:
     # DENIS: If I have a FrameView, this could be the accessors on this frame view. Probably good to keep it there!
     image_hash: str
     image_title: str
-    data_link: str
     file_type: str
     frame_number: int
     width: int
     height: int
+    data_link: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -378,6 +380,7 @@ class LabelRowReadOnlyData:
     data_link: Optional[str] = None
     width: Optional[int] = None
     height: Optional[int] = None
+    dicom_data_links: Optional[List[str]] = None
 
 
 class LabelRowClass:
@@ -447,6 +450,13 @@ class LabelRowClass:
         """Only a value for Video data types."""
         return self._label_row_read_only_data.fps
 
+    @property
+    def dicom_data_links(self) -> Optional[List[str]]:
+        """Only a value for DICOM data types."""
+        if self._label_row_read_only_data.data_type != DataType.DICOM:
+            raise ValueError("This is not a DICOM data type.")
+        return self._label_row_read_only_data.dicom_data_links
+
     def get_image_hash(self, frame_number: int) -> str:
         # DENIS: to do
         return "xyz"
@@ -486,7 +496,7 @@ class LabelRowClass:
         ret["data_type"] = read_only_data.data_type.value
         ret["object_answers"] = self._to_object_answers()
         ret["classification_answers"] = self._to_classification_answers()
-        ret["object_actions"] = dict()  # TODO:
+        ret["object_actions"] = self._to_object_actions()  # TODO:
         ret["label_status"] = read_only_data.label_status
         ret["data_units"] = self._to_encord_data_units()
 
@@ -497,7 +507,18 @@ class LabelRowClass:
         for obj in self._objects_map.values():
             all_static_answers = self._get_all_static_answers(obj)
             ret[obj.object_hash] = {
-                "classifications": all_static_answers,
+                "classifications": list(reversed(all_static_answers)),
+                "objectHash": obj.object_hash,
+            }
+        return ret
+
+    def _to_object_actions(self) -> dict:
+        ret = {}
+        for obj in self._objects_map.values():
+            all_static_answers = self._get_all_static_answers(obj)
+            # DENIS: this seems to be returning nothing. Is setting not working properly?
+            ret[obj.object_hash] = {
+                "actions": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
             }
         return ret
@@ -513,7 +534,7 @@ class LabelRowClass:
                     classifications.append(answer.to_encord_dict())
 
             ret[classification.classification_hash] = {
-                "classifications": classifications,
+                "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
             }
         return ret
@@ -549,7 +570,10 @@ class LabelRowClass:
 
         ret["data_hash"] = frame_level_data.image_hash
         ret["data_title"] = frame_level_data.image_title
-        ret["data_link"] = frame_level_data.data_link
+
+        if data_type != DataType.DICOM:
+            ret["data_link"] = frame_level_data.data_link
+
         ret["data_type"] = frame_level_data.file_type
         ret["data_sequence"] = data_sequence
         ret["width"] = frame_level_data.width
@@ -560,6 +584,8 @@ class LabelRowClass:
             ret["data_duration"] = self._label_row_read_only_data.duration
         if self._label_row_read_only_data.fps is not None:
             ret["data_fps"] = self._label_row_read_only_data.fps
+        if self._label_row_read_only_data.dicom_data_links is not None:
+            ret["data_links"] = self._label_row_read_only_data.dicom_data_links
 
         return ret
 
@@ -623,6 +649,8 @@ class LabelRowClass:
             ret["lastEditedAt"] = object_frame_instance_info.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
         if object_frame_instance_info.last_edited_by is not None:
             ret["lastEditedBy"] = object_frame_instance_info.last_edited_by
+        if object_frame_instance_info.is_deleted is not None:
+            ret["isDeleted"] = object_frame_instance_info.is_deleted
 
         self._add_coordinates_to_encord_object(coordinates, ret)
 
@@ -844,6 +872,7 @@ class LabelRowClass:
 
         duration = None
         fps = None
+        dicom_data_links = None
 
         if data_type == DataType.VIDEO:
             video_dict = list(label_row_dict["data_units"].values())[0]
@@ -852,7 +881,9 @@ class LabelRowClass:
             number_of_frames = int(duration * fps)
 
         elif data_type == DataType.DICOM:
+            dicom_dict = list(label_row_dict["data_units"].values())[0]
             number_of_frames = 0  # DENIS: not sure here
+            dicom_data_links = dicom_dict["data_links"]
 
         elif data_type == DataType.IMAGE:
             number_of_frames = 1
@@ -876,6 +907,7 @@ class LabelRowClass:
             duration=duration,
             fps=fps,
             number_of_frames=number_of_frames,
+            dicom_data_links=dicom_data_links,
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
@@ -921,19 +953,21 @@ class LabelRowClass:
                 self._add_coordinates_to_object_instance(frame_object_label, frame)
 
     def _add_objects_answers(self, label_row_dict: dict):
-        # DENIS: deal with dynamic answers at some point.
         for answer in label_row_dict["object_answers"].values():
             object_hash = answer["objectHash"]
             object_instance = self._objects_map[object_hash]
 
-            for classification in answer["classifications"]:
-                pass
-                # DENIS: TODO: parse the classification answers into the object_instance
-                # do the same for classification instances.
+            answer_list = answer["classifications"]
+            object_instance.set_answer_from_list(answer_list)
 
     def _add_action_answers(self, label_row_dict: dict):
-        # DENIS: TODO
-        pass
+        for answer in label_row_dict["object_actions"].values():
+            object_hash = answer["objectHash"]
+            object_instance = self._objects_map[object_hash]
+
+            answer_list = answer["actions"]
+            # DENIS: also set the track hash
+            object_instance.set_answer_from_list(answer_list)
 
     def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
         ontology = self._ontology_structure
@@ -996,7 +1030,7 @@ class LabelRowClass:
             frame_level_image_group_data = FrameLevelImageGroupData(
                 image_hash=payload["data_hash"],
                 image_title=payload["data_title"],
-                data_link=payload["data_link"],  # DENIS: what happens if no URLs requested?
+                data_link=payload.get("data_link"),
                 file_type=payload["data_type"],
                 frame_number=int(frame_number),
                 width=payload["width"],
@@ -1120,6 +1154,7 @@ class ObjectFrameInstanceInfo:
     confidence: float = DEFAULT_CONFIDENCE
     manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
     read_only_info: ObjectFrameReadOnlyInstanceInfo = ObjectFrameReadOnlyInstanceInfo()
+    is_deleted: Optional[bool] = None
 
     @staticmethod
     def from_dict(d: dict):
@@ -1137,6 +1172,7 @@ class ObjectFrameInstanceInfo:
             confidence=d["confidence"],
             manual_annotation=d["manualAnnotation"],
             read_only_info=read_only_info,
+            is_deleted=d.get("isDeleted"),
         )
 
 
@@ -1321,6 +1357,61 @@ class ObjectInstance:
             )
 
         set_answer_for_object(static_answer, answer)
+
+    def _set_answer_unsafe(
+        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, ranges: Ranges
+    ) -> None:
+        if attribute.dynamic:
+            self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)
+        else:
+            static_answer = self._static_answer_map[attribute.feature_node_hash]
+            set_answer_for_object(static_answer, answer)
+
+    def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
+        """
+        Sets the answer for the classification from a dictionary.
+
+        Args:
+            answer_dict: The dictionary to set the answer from.
+        """
+
+        for answer_dict in answers_list:
+            attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_object.attributes)
+            if attribute is None:
+                raise RuntimeError(
+                    "One of the attributes does not exist in the ontology. Cannot create a valid LabelRow."
+                )
+            if not self._is_attribute_valid_child_of_object_instance(attribute):
+                raise ValueError(
+                    "One of the attributes set for a classification is not a valid child of the classification. "
+                    "Cannot create a valid LabelRow."
+                )
+
+            self._set_answer_from_dict(answer_dict, attribute)
+
+    def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute) -> None:
+        if attribute.dynamic:
+            track_hash = answer_dict["trackHash"]
+            ranges = ranges_list_to_ranges(answer_dict["range"])
+        else:
+            track_hash = None
+            ranges = None
+
+        if isinstance(attribute, TextAttribute):
+            self._set_answer_unsafe(answer_dict["answers"], attribute, ranges)
+        elif isinstance(attribute, RadioAttribute):
+            feature_hash = answer_dict["answers"][0]["featureHash"]
+            option = _get_option_by_hash(feature_hash, attribute.options)
+            self._set_answer_unsafe(option, attribute, ranges)
+        elif isinstance(attribute, ChecklistAttribute):
+            options = []
+            for answer in answer_dict["answers"]:
+                feature_hash = answer["featureHash"]
+                option = _get_option_by_hash(feature_hash, attribute.options)
+                options.append(option)
+            self._set_answer_unsafe(options, attribute, ranges)
+        else:
+            raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
     def delete_answer(
         self,

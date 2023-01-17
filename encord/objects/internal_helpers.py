@@ -26,10 +26,10 @@ class Answer(ABC):
 
     _ontology_attribute: Attribute
 
-    def __init__(self, ontology_attribute: Attribute):
+    def __init__(self, ontology_attribute: Attribute, track_hash: Optional[str]):
         self._answered = False
         self._ontology_attribute = ontology_attribute
-        self._answer_uuid = short_uuid_str()
+        self._track_hash = track_hash or short_uuid_str()
         self._is_manual_annotation = DEFAULT_MANUAL_ANNOTATION
 
     def is_answered(self) -> bool:
