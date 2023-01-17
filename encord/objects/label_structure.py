@@ -59,7 +59,7 @@ class ClassificationInstanceData:
     confidence: int = DEFAULT_CONFIDENCE
     manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
     # DENIS: last_edited_at, last_edited_by
-    reviews: List[dict] = field(default_factory=list)  # DENIS this is some sort of "read only data"
+    reviews: Optional[List[dict]] = None
 
     @staticmethod
     def from_dict(d: dict) -> ClassificationInstanceData:
@@ -68,7 +68,7 @@ class ClassificationInstanceData:
             created_by=d["createdBy"],
             confidence=d["confidence"],
             manual_annotation=d["manualAnnotation"],
-            reviews=d["reviews"],
+            reviews=d.get("reviews"),
         )
 
 
@@ -200,32 +200,46 @@ class ClassificationInstance:
 
         set_answer_for_object(static_answer, answer)
 
-    def set_answer_from_dict(self, answer_dict: Dict[str, Any]) -> None:
+    def _set_answer_unsafe(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute) -> None:
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+        set_answer_for_object(static_answer, answer)
+
+    def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
         Sets the answer for the classification from a dictionary.
 
         Args:
             answer_dict: The dictionary to set the answer from.
         """
-        attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_classification.attributes)
-        if attribute is None:
-            raise RuntimeError("Something unexpected happened")
 
-        if isinstance(attribute, TextAttribute):
-            self.set_answer(answer_dict["answers"], attribute)
-        elif isinstance(attribute, RadioAttribute):
-            feature_hash = answer_dict["answers"][0]["featureHash"]
-            option = _get_option_by_hash(feature_hash, attribute.options)
-            self.set_answer(option, attribute)
-        elif isinstance(attribute, ChecklistAttribute):
-            options = []
-            for answer in answer_dict["answers"]:
-                feature_hash = answer["featureHash"]
+        for answer_dict in answers_list:
+            attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_classification.attributes)
+            if attribute is None:
+                raise RuntimeError(
+                    "One of the attributes does not exist in the ontology. Cannot create a valid LabelRow."
+                )
+
+            if not self._is_attribute_valid_child_of_classification(attribute):
+                raise ValueError(
+                    "One of the attributes set for a classification is not a valid child of the classification. "
+                    "Cannot create a valid LabelRow."
+                )
+
+            if isinstance(attribute, TextAttribute):
+                self._set_answer_unsafe(answer_dict["answers"], attribute)
+            elif isinstance(attribute, RadioAttribute):
+                feature_hash = answer_dict["answers"][0]["featureHash"]
                 option = _get_option_by_hash(feature_hash, attribute.options)
-                options.append(option)
-            self.set_answer(options, attribute)
-        else:
-            raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
+                self._set_answer_unsafe(option, attribute)
+            elif isinstance(attribute, ChecklistAttribute):
+                options = []
+                for answer in answer_dict["answers"]:
+                    feature_hash = answer["featureHash"]
+                    option = _get_option_by_hash(feature_hash, attribute.options)
+                    options.append(option)
+                self._set_answer_unsafe(options, attribute)
+            else:
+                raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
     @overload
     def get_answer(self, attribute: TextAttribute) -> str:
@@ -315,7 +329,8 @@ class ClassificationInstance:
                 f"frame per LabelRowClass."
             )
 
-    def _get_all_static_answers(self) -> List[Answer]:
+    def get_all_static_answers(self) -> List[Answer]:
+        """A low level helper function."""
         return list(self._static_answer_map.values())
 
     def __repr__(self):
@@ -482,10 +497,13 @@ class LabelRowClass:
     def _to_classification_answers(self) -> dict:
         ret = {}
         for classification in self._classifications_map.values():
-            answer_opt = classification.get_answer_dict()
-            # DENIS: I need to ensure that all the nested answers are also being metioned
+            classifications = []
 
-            classifications = [] if answer_opt is None else [answer_opt]
+            all_static_answers = classification.get_all_static_answers()
+            for answer in all_static_answers:
+                if answer.is_answered():
+                    classifications.append(answer.to_encord_dict())
+
             ret[classification.classification_hash] = {
                 "classifications": classifications,
                 "classificationHash": classification.classification_hash,
@@ -999,16 +1017,10 @@ class LabelRowClass:
         return classification_instance
 
     def _add_static_answers_from_dict(
-        self, classification_instance: ClassificationInstance, answers_dict: List[dict]
+        self, classification_instance: ClassificationInstance, answers_list: List[dict]
     ) -> None:
-        if len(answers_dict) == 0:
-            return
 
-        answer_dict = answers_dict[0]
-
-        classification_instance.set_answer_from_dict(answer_dict)
-        # DENIS: check if the same ontology type etc.
-        # return answer
+        classification_instance.set_answer_from_list(answers_list)
 
     def _add_frames_to_classification_instance(self, frame_classification_label: dict, frame: int) -> None:
         object_hash = frame_classification_label["classificationHash"]

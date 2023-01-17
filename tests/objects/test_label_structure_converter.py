@@ -62,7 +62,9 @@ def test_serialise_video():
     )
 
 
-# def test_serialise_image():
-#     label_row = LabelRowClass(native_image_data.labels, all_ontology_types)
-#
-#     expected = label_row.to_encord_dict()
+def test_serialise_image():
+    label_row = LabelRowClass(native_image_data.labels, all_ontology_types)
+
+    actual = label_row.to_encord_dict()
+
+    assert actual == native_image_data.labels
