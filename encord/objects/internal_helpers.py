@@ -65,8 +65,11 @@ class Answer(ABC):
         raise RuntimeError("Cannot reset the ontology attribute of an instantiated answer.")
 
     @abstractmethod
-    def _to_encord_dict(self) -> Optional[Dict]:
-        """Return None if the answer is not answered"""
+    def to_encord_dict(self) -> Optional[Dict]:
+        """
+        A low level helper to convert to the Encord JSON format.
+        For most use cases the `get_answer` function should be used instead.
+        """
         pass
 
     @abstractmethod
@@ -105,7 +108,11 @@ class TextAnswer(Answer):
             other_answer = text_answer.get_value()
             self.set(other_answer)
 
-    def _to_encord_dict(self) -> Optional[Dict]:
+    def to_encord_dict(self) -> Optional[Dict]:
+        """
+        A low level helper to convert to the Encord JSON format.
+        For most use cases the `get_answer` function should be used instead.
+        """
         if not self.is_answered():
             return None
         else:
@@ -178,7 +185,11 @@ class RadioAnswer(Answer):
             other_answer = radio_answer.get_value()
             self.set(other_answer)
 
-    def _to_encord_dict(self) -> Optional[Dict]:
+    def to_encord_dict(self) -> Optional[Dict]:
+        """
+        A low level helper to convert to the Encord JSON format.
+        For most use cases the `get_answer` function should be used instead.
+        """
         if not self.is_answered():
             return None
         else:
@@ -308,7 +319,11 @@ class ChecklistAnswer(Answer):
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
 
-    def _to_encord_dict(self) -> Optional[Dict]:
+    def to_encord_dict(self) -> Optional[Dict]:
+        """
+        A low level helper to convert to the Encord JSON format.
+        For most use cases the `get_answer` function should be used instead.
+        """
         if not self.is_answered():
             return None
         else:

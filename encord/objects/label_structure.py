@@ -16,6 +16,8 @@ from encord.objects.common import (
     Option,
     RadioAttribute,
     TextAttribute,
+    _get_attribute_by_hash,
+    _get_option_by_hash,
 )
 from encord.objects.constants import (
     DATETIME_LONG_STRING_FORMAT,
@@ -198,6 +200,33 @@ class ClassificationInstance:
 
         set_answer_for_object(static_answer, answer)
 
+    def set_answer_from_dict(self, answer_dict: Dict[str, Any]) -> None:
+        """
+        Sets the answer for the classification from a dictionary.
+
+        Args:
+            answer_dict: The dictionary to set the answer from.
+        """
+        attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_classification.attributes)
+        if attribute is None:
+            raise RuntimeError("Something unexpected happened")
+
+        if isinstance(attribute, TextAttribute):
+            self.set_answer(answer_dict["answers"], attribute)
+        elif isinstance(attribute, RadioAttribute):
+            feature_hash = answer_dict["answers"][0]["featureHash"]
+            option = _get_option_by_hash(feature_hash, attribute.options)
+            self.set_answer(option, attribute)
+        elif isinstance(attribute, ChecklistAttribute):
+            options = []
+            for answer in answer_dict["answers"]:
+                feature_hash = answer["featureHash"]
+                option = _get_option_by_hash(feature_hash, attribute.options)
+                options.append(option)
+            self.set_answer(options, attribute)
+        else:
+            raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
+
     @overload
     def get_answer(self, attribute: TextAttribute) -> str:
         ...
@@ -229,6 +258,22 @@ class ClassificationInstance:
         static_answer = self._static_answer_map[attribute.feature_node_hash]
 
         return get_answer_from_object(static_answer)
+
+    def get_answer_dict(self, attribute: Optional[Attribute] = None) -> dict:
+        """
+        A low level helper to convert to the Encord JSON format.
+        For most use cases the `get_answer` function should be used instead.
+        """
+        if attribute is None:
+            attribute = self._ontology_classification.attributes[0]
+        elif not self._is_attribute_valid_child_of_classification(attribute):
+            raise ValueError("The attribute is not a valid child of the classification.")
+        elif not self._is_selectable_child_attribute(attribute):
+            return {}
+
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+
+        return static_answer.to_encord_dict()
 
     def delete_answer(self, attribute: Optional[Attribute] = None) -> None:
         """
@@ -292,6 +337,7 @@ class FrameLevelImageGroupData:
 
 @dataclass(frozen=True)
 class LabelRowReadOnlyData:
+    # DENIS: ^ all this should just be exposed via read-only properties.
     label_hash: str
     dataset_hash: str
     dataset_title: str
@@ -396,9 +442,10 @@ class LabelRowClass:
     def _to_classification_answers(self) -> dict:
         ret = {}
         for classification in self._classifications_map.values():
-            static_answer = classification.get_static_answer()
-            d_opt = static_answer._to_encord_dict()
-            classifications = [] if d_opt is None else [d_opt]
+            answer_opt = classification.get_answer_dict()
+            # DENIS: I need to ensure that all the nested answers are also being metioned
+
+            classifications = [] if answer_opt is None else [answer_opt]
             ret[classification.classification_hash] = {
                 "classifications": classifications,
                 "classificationHash": classification.classification_hash,
@@ -409,7 +456,7 @@ class LabelRowClass:
     def _get_all_static_answers(item: Union[ObjectInstance, ClassificationInstance]) -> List[dict]:
         ret = []
         for answer in item._get_all_static_answers():
-            d_opt = answer._to_encord_dict()
+            d_opt = answer.to_encord_dict()
             if d_opt is not None:
                 ret.append(d_opt)
         return ret
@@ -426,11 +473,19 @@ class LabelRowClass:
     def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> dict:
         ret = {}
 
+        data_type = self._label_row_read_only_data.data_type
+        if data_type in (DataType.IMAGE, DataType.IMG_GROUP):
+            data_sequence = str(frame_level_data.frame_number)
+        elif data_type in (DataType.VIDEO, DataType.DICOM):
+            data_sequence = frame_level_data.frame_number
+        else:
+            raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+
         ret["data_hash"] = frame_level_data.image_hash
         ret["data_title"] = frame_level_data.image_title
         ret["data_link"] = frame_level_data.data_link
         ret["data_type"] = frame_level_data.file_type
-        ret["data_sequence"] = frame_level_data.frame_number  # might be string for image group
+        ret["data_sequence"] = data_sequence
         ret["width"] = frame_level_data.width
         ret["height"] = frame_level_data.height
         ret["labels"] = self._to_encord_labels(frame_level_data)
@@ -448,7 +503,8 @@ class LabelRowClass:
 
         if data_type in [DataType.IMAGE, DataType.IMG_GROUP]:
             frame = frame_level_data.frame_number
-            self._to_encord_label(frame)
+            ret.update(self._to_encord_label(frame))
+
         elif data_type in [DataType.VIDEO, DataType.DICOM]:
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
@@ -511,6 +567,8 @@ class LabelRowClass:
             encord_object["boundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, PolygonCoordinates):
             encord_object["polygon"] = coordinates.to_dict()
+        elif isinstance(coordinates, PointCoordinate):
+            encord_object["point"] = coordinates.to_dict()
         else:
             NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
@@ -908,10 +966,9 @@ class LabelRowClass:
 
         answer_dict = answers_dict[0]
 
-        answer = classification_instance.get_answer()
+        classification_instance.set_answer_from_dict(answer_dict)
         # DENIS: check if the same ontology type etc.
-
-        answer.from_dict(answer_dict)
+        # return answer
 
     def _add_frames_to_classification_instance(self, frame_classification_label: dict, frame: int) -> None:
         object_hash = frame_classification_label["classificationHash"]
