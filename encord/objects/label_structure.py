@@ -58,16 +58,24 @@ class ClassificationInstanceData:
     created_by: str = None
     confidence: int = DEFAULT_CONFIDENCE
     manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-    # DENIS: last_edited_at, last_edited_by
+    last_edited_at: datetime = datetime.now()
+    last_edited_by: Optional[str] = None
     reviews: Optional[List[dict]] = None
 
     @staticmethod
     def from_dict(d: dict) -> ClassificationInstanceData:
+        if "lastEditedAt" in d:
+            last_edited_at = parse(d["lastEditedAt"])
+        else:
+            last_edited_at = None
+
         return ClassificationInstanceData(
             created_at=parse(d["createdAt"]),
             created_by=d["createdBy"],
             confidence=d["confidence"],
             manual_annotation=d["manualAnnotation"],
+            last_edited_at=last_edited_at,
+            last_edited_by=d.get("lastEditedBy"),
             reviews=d.get("reviews"),
         )
 
@@ -532,9 +540,9 @@ class LabelRowClass:
         ret = {}
 
         data_type = self._label_row_read_only_data.data_type
-        if data_type in (DataType.IMAGE, DataType.IMG_GROUP):
+        if data_type == DataType.IMG_GROUP:
             data_sequence = str(frame_level_data.frame_number)
-        elif data_type in (DataType.VIDEO, DataType.DICOM):
+        elif data_type in (DataType.VIDEO, DataType.DICOM, DataType.IMAGE):
             data_sequence = frame_level_data.frame_number
         else:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
@@ -658,10 +666,10 @@ class LabelRowClass:
         ret["classificationHash"] = classification.classification_hash
         ret["manualAnnotation"] = classification_instance_data.manual_annotation
 
-        # if classification_instance_data.last_edited_at is not None:
-        #     ret["lastEditedAt"] = classification_instance_data.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        # if classification_instance_data.last_edited_by is not None:
-        #     ret["lastEditedBy"] = classification_instance_data.last_edited_by
+        if classification_instance_data.last_edited_at is not None:
+            ret["lastEditedAt"] = classification_instance_data.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        if classification_instance_data.last_edited_by is not None:
+            ret["lastEditedBy"] = classification_instance_data.last_edited_by
 
         return ret
 
