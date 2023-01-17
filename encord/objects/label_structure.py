@@ -302,6 +302,8 @@ class LabelRowReadOnlyData:
     frame_level_data: Dict[int, FrameLevelImageGroupData]  # DENIS: this could be an array too.
     image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
     frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
+    duration: Optional[float] = None
+    fps: Optional[float] = None
 
 
 class LabelRowClass:
@@ -432,6 +434,11 @@ class LabelRowClass:
         ret["width"] = frame_level_data.width
         ret["height"] = frame_level_data.height
         ret["labels"] = self._to_encord_labels(frame_level_data)
+
+        if self._label_row_read_only_data.duration is not None:
+            ret["data_duration"] = self._label_row_read_only_data.duration
+        if self._label_row_read_only_data.fps is not None:
+            ret["data_fps"] = self._label_row_read_only_data.fps
 
         return ret
 
@@ -709,17 +716,42 @@ class LabelRowClass:
         image_hash_to_frame = {item.image_hash: item.frame_number for item in frame_level_data.values()}
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
         # DENIS: for images/image_groups, we need a per image data row. For videos/dicoms this is not needed.
+        data_type = DataType(label_row_dict["data_type"])
+
+        duration = None
+        fps = None
+
+        if data_type == DataType.VIDEO:
+            video_dict = list(label_row_dict["data_units"].values())[0]
+            duration = video_dict["data_duration"]
+            fps = video_dict["data_fps"]
+            number_of_frames = int(duration * fps)
+
+        elif data_type == DataType.DICOM:
+            number_of_frames = 0  # DENIS: not sure here
+
+        elif data_type == DataType.IMAGE:
+            number_of_frames = 1
+
+        elif data_type == DataType.IMG_GROUP:
+            number_of_frames = len(label_row_dict["data_units"])
+
+        else:
+            raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+
         return LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
             dataset_hash=label_row_dict["dataset_hash"],
             dataset_title=label_row_dict["dataset_title"],
             data_title=label_row_dict["data_title"],
-            data_type=DataType(label_row_dict["data_type"]),
+            data_type=data_type,
             label_status=label_row_dict["label_status"],  # This is some kind of enum.
-            number_of_frames=float("inf"),  # TODO: make this an int by getting this from the BE.
             frame_level_data=frame_level_data,
             image_hash_to_frame=image_hash_to_frame,
             frame_to_image_hash=frame_to_image_hash,
+            duration=duration,
+            fps=fps,
+            number_of_frames=number_of_frames,
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
