@@ -929,6 +929,14 @@ def test_frame_view():
     wrapper around LabelRowClass.get_all_objects_at_frame(frame).
 
     Is this ergonomic enough? Maybe catch up with Alexey after the meeting today.
+
+    Frederik: for reading, people think "For frame 2, give me all the object coordinates there."
+    for uploading, some sort of "create or get, depending on whether it exists already" is needed.
+
+    DENIS: Frederik also needs to fetch a label_row depending on the last timestamp that has changed.
+
+    When doing `create_label_row`, the annotation status becomes to in progress.
+    Can we have a hash of the label row before it is created so we don't need to create it or wait for it?
     """
     label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
 

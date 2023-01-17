@@ -270,6 +270,9 @@ class ClassificationInstance:
                 f"frame per LabelRowClass."
             )
 
+    def _get_all_static_answers(self) -> List[Answer]:
+        return list(self._static_answer_map.values())
+
     def __repr__(self):
         return f"ClassificationInstance({self.classification_hash})"
 
@@ -403,7 +406,7 @@ class LabelRowClass:
     @staticmethod
     def _get_all_static_answers(item: Union[ObjectInstance, ClassificationInstance]) -> List[dict]:
         ret = []
-        for answer in item.get_all_static_answers():
+        for answer in item._get_all_static_answers():
             d_opt = answer._to_encord_dict()
             if d_opt is not None:
                 ret.append(d_opt)
@@ -425,17 +428,29 @@ class LabelRowClass:
         ret["data_title"] = frame_level_data.image_title
         ret["data_link"] = frame_level_data.data_link
         ret["data_type"] = frame_level_data.file_type
-        ret["data_sequence"] = str(frame_level_data.frame_number)
+        ret["data_sequence"] = frame_level_data.frame_number  # might be string for image group
         ret["width"] = frame_level_data.width
         ret["height"] = frame_level_data.height
-        ret["labels"] = self._to_encord_label(frame_level_data.frame_number)
+        ret["labels"] = self._to_encord_labels(frame_level_data)
+
+        return ret
+
+    def _to_encord_labels(self, frame_level_data: FrameLevelImageGroupData) -> dict:
+        ret = {}
+        data_type = self.label_row_read_only_data.data_type
+
+        if data_type in [DataType.IMAGE, DataType.IMG_GROUP]:
+            frame = frame_level_data.frame_number
+            self._to_encord_label(frame)
+        elif data_type in [DataType.VIDEO, DataType.DICOM]:
+            for frame in self._frame_to_hashes.keys():
+                ret[str(frame)] = self._to_encord_label(frame)
 
         return ret
 
     def _to_encord_label(self, frame: int) -> dict:
         ret = {}
 
-        # TODO:
         ret["objects"] = self._to_encord_objects_list(frame)
         ret["classifications"] = self._to_encord_classifications_list(frame)
 
@@ -1299,6 +1314,9 @@ class ObjectInstance:
             if _search_child_attributes(attribute, search_attribute, self._static_answer_map):
                 return True
         return False
+
+    def _get_all_static_answers(self) -> List[Answer]:
+        return list(self._static_answer_map.values())
 
     def __repr__(self):
         return f"ObjectInstance({self._object_hash})"

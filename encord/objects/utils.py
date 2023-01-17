@@ -57,7 +57,8 @@ def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
 
 def _lower_snake_case(s: str):
     # DENIS: ^ this can be part of the ontology_attribute maybe?
-    return "_".join(s.lower().split())
+    # I need to update the docs actually, as they're slightly off.
+    return s.lower().replace(" ", "_")
 
 
 def check_type(obj: object, type_: Any) -> None:

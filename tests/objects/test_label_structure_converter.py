@@ -50,13 +50,11 @@ def test_serialise_video():
     label_row = LabelRowClass(data_1.labels, data_1.ontology)
 
     expected = label_row.to_encord_dict()
-    assert expected == empty_image_group_labels
-
-    label_row = LabelRowClass(image_group_labels, image_group_ontology)
-
-    expected = label_row.to_encord_dict()
+    assert expected == data_1.labels
+    # DENIS: next up I need to also add the data_fps and data_duration intelligently. Then the
+    # comparison would work pretty well!
     deep_diff_enhanced(
         expected,
-        image_group_labels,
+        data_1.labels,
         exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
     )
