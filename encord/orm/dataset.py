@@ -220,6 +220,8 @@ class DataRow(dict, Formatter):
             if self.querier is not None:
                 res = self.querier.basic_getter(DataClientMetadata, uid=self.uid)
                 self["client_metadata"] = res.payload
+            else:
+                raise EncordException(f"Could not retrieve client metadata for DataRow with uid: {self.uid}")
         return self["client_metadata"]
 
     @client_metadata.setter
@@ -270,11 +272,18 @@ class DataRow(dict, Formatter):
     @property
     def signed_url(self) -> str:
         if self.data_type in [DataType.VIDEO, DataType.IMG_GROUP, DataType.IMAGE] and self["signed_url"] is None:
-            payload = {"data_type": self.data_type.value}
-            res = self.querier.basic_getter(SignedUrl, uid=self.uid, payload=payload)
-            self["signed_url"] = res.signed_url
-            self.get_signed_url = True
+            if self.querier is not None:
+                payload = {"data_type": self.data_type.value}
+                res = self.querier.basic_getter(SignedUrl, uid=self.uid, payload=payload)
+                self["signed_url"] = res.signed_url
+                self.get_signed_url = True
+            else:
+                raise EncordException(f"Could not get signed url for DataRow with uid: {self.uid}")
         return self["signed_url"]
+
+    @signed_url.setter
+    def signed_url(self, new_signed_url: str) -> None:
+        self["signed_url"] = new_signed_url
 
     @file_link.setter
     def file_link(self, new_file_link: str) -> None:
@@ -319,11 +328,14 @@ class DataRow(dict, Formatter):
     def images(self) -> List[ImageData]:
         # only if get_signed_url flag was updated
         if self.data_type == DataType.IMG_GROUP and self["images"] is None:
-            payload = {
-                "get_signed_url": self.get_signed_url,
-            }
-            res = self.querier.basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
-            self["images"] = res.images
+            if self.querier is not None:
+                payload = {
+                    "get_signed_url": self.get_signed_url,
+                }
+                res = self.querier.basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
+                self["images"] = res.images
+            else:
+                raise EncordException(f"Could not get images data for image group with uid: {self.uid}")
         return self["images"]
 
     @images.setter
@@ -333,11 +345,14 @@ class DataRow(dict, Formatter):
     @property
     def dicom_file_links(self) -> List[str]:
         if self.data_type == DataType.DICOM and self["dicom_file_links"] is None:
-            payload = {
-                "get_signed_url": self.get_signed_url,
-            }
-            res = self.querier.basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
-            self["dicom_file_links"] = res.file_links
+            if self.querier is not None:
+                payload = {
+                    "get_signed_url": self.get_signed_url,
+                }
+                res = self.querier.basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
+                self["dicom_file_links"] = res.file_links
+            else:
+                raise EncordException(f"Could not get file links for dicom with uid: {self.uid}")
         return self["dicom_file_links"]
 
     @dicom_file_links.setter
