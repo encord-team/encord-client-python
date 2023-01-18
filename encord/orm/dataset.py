@@ -93,6 +93,11 @@ class ImagesInGroup:
     images: List[ImageData]
 
 
+@dataclasses.dataclass(frozen=True)
+class DicomFileLinks:
+    file_links: List[str]
+
+
 class DataRow(dict, Formatter):
     def __init__(
         self,
@@ -139,8 +144,8 @@ class DataRow(dict, Formatter):
                 "querier": None,
                 "images": None,
                 "get_signed_url": False,
-                "get_signed_url_flag_updated": False,
                 "signed_url": None,
+                "dicom_file_links": None,
             }
         )
 
@@ -306,24 +311,38 @@ class DataRow(dict, Formatter):
     @get_signed_url.setter
     def get_signed_url(self, new_get_signed_url):
         if self["get_signed_url"] != new_get_signed_url:
-            self["get_signed_url_flag_updated"] = True
+            self.images = None
+            self.dicom_file_links = None
         self["get_signed_url"] = new_get_signed_url
 
     @property
     def images(self) -> List[ImageData]:
         # only if get_signed_url flag was updated
-        if self.data_type == DataType.IMG_GROUP and (self["images"] is None or self["get_signed_url_flag_updated"]):
+        if self.data_type == DataType.IMG_GROUP and self["images"] is None:
             payload = {
                 "get_signed_url": self.get_signed_url,
             }
             res = self.querier.basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
             self["images"] = res.images
-            self["get_signed_url_flag_updated"] = False
         return self["images"]
 
     @images.setter
     def images(self, new_images: List[ImageData]) -> None:
         self["images"] = new_images
+
+    @property
+    def dicom_file_links(self) -> List[str]:
+        if self.data_type == DataType.DICOM and self["dicom_file_links"] is None:
+            payload = {
+                "get_signed_url": self.get_signed_url,
+            }
+            res = self.querier.basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
+            self["dicom_file_links"] = res.file_links
+        return self["dicom_file_links"]
+
+    @dicom_file_links.setter
+    def dicom_file_links(self, new_dicom_dile_links: List[str]):
+        self["dicom_file_links"] = new_dicom_dile_links
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
