@@ -276,7 +276,6 @@ class DataRow(dict, Formatter):
                 payload = {"data_type": self.data_type.value}
                 res = self.querier.basic_getter(SignedUrl, uid=self.uid, payload=payload)
                 self["signed_url"] = res.signed_url
-                self.get_signed_url = True
             else:
                 raise EncordException(f"Could not get signed url for DataRow with uid: {self.uid}")
         return self["signed_url"]
@@ -284,10 +283,6 @@ class DataRow(dict, Formatter):
     @signed_url.setter
     def signed_url(self, new_signed_url: str) -> None:
         self["signed_url"] = new_signed_url
-
-    @file_link.setter
-    def file_link(self, new_file_link: str) -> None:
-        self["file_link"] = new_file_link
 
     @property
     def file_size(self) -> int:
