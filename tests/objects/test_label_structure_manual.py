@@ -10,7 +10,7 @@ import pytest
 from encord import EncordUserClient, Project
 from encord.configs import ENCORD_DOMAIN
 
-ENABLE_MANUAL_TESTS = True
+ENABLE_MANUAL_TESTS = False
 
 
 LOCAL_DOMAIN = "http://127.0.0.1:8000"
