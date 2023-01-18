@@ -381,6 +381,7 @@ class LabelRowReadOnlyData:
     dataset_hash: str
     dataset_title: str
     data_title: str
+    # DENIS: probably also want to have the data_hash as part of these types.
     data_type: DataType
     label_status: str  # actually some sort of enum
     number_of_frames: int
@@ -441,6 +442,10 @@ class LabelRowClass:
         return self._label_row_read_only_data.dataset_title
 
     @property
+    def data_title(self) -> str:
+        return self._label_row_read_only_data.data_title
+
+    @property
     def data_type(self) -> DataType:
         return self._label_row_read_only_data.data_type
 
@@ -490,6 +495,9 @@ class LabelRowClass:
         """Do the client request"""
         # Can probably just use the set label row here.
         pass
+
+    def get_frame_view(self, frame: int) -> FrameView:
+        return FrameView(self, frame)
 
     def to_encord_dict(self) -> dict:
         """
@@ -1093,6 +1101,9 @@ class LabelRowClass:
         classification_instance = self._classifications_map[object_hash]
 
         classification_instance.add_frames([frame])
+
+    def __repr__(self) -> str:
+        return f"LabelRowData(label_hash={self.label_hash}, data_title={self.data_title})"
 
 
 # @dataclass
@@ -1703,3 +1714,73 @@ class DynamicAnswerManager:
                 answer = get_default_answer_from_attribute(attribute)
                 ret.add(answer)
         return ret
+
+
+class FrameView:
+    """
+    This class can be used to inspect what object/classification instances are on a given frame or
+    what metadata, such as a image file size, is on a given frame.
+    """
+
+    def __init__(self, label_row: LabelRowClass, label_row_read_only_data: LabelRowReadOnlyData, frame: int):
+
+        self._label_row = label_row
+        self._label_row_read_only_data = label_row_read_only_data
+        self._frame = frame
+
+    @property
+    def image_hash(self) -> str:
+        if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+            raise ValueError("Image hash can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+        return self._frame_level_data().image_hash
+
+    @property
+    def image_title(self) -> str:
+        if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+            raise ValueError("Image title can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+        return self._frame_level_data().image_title
+
+    @property
+    def file_type(self) -> str:
+        if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+            raise ValueError("File type can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+        return self._frame_level_data().file_type
+
+    @property
+    def frame(self) -> int:
+        return self._frame
+
+    @property
+    def width(self) -> int:
+        if self._label_row.data_type in [DataType.IMG_GROUP]:
+            return self._frame_level_data().width
+        else:
+            return self._label_row_read_only_data.width
+
+    @property
+    def height(self) -> int:
+        if self._label_row.data_type in [DataType.IMG_GROUP]:
+            return self._frame_level_data().height
+        else:
+            return self._label_row_read_only_data.height
+
+    @property
+    def data_link(self) -> Optional[str]:
+        if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+            raise ValueError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+        return self._frame_level_data().data_link
+
+    def _frame_level_data(self) -> FrameLevelImageGroupData:
+        return self._label_row_read_only_data.frame_level_data[self._frame]
+
+    # def __getattr__(self, item):
+    #     return self._object_instance.get_answer(item, filter_frames=Range(self._frame, self._frame))
+    #
+    # def __setattr__(self, key, value):
+    #     if key.startswith("_"):
+    #         super().__setattr__(key, value)
+    #         return
+    #     self._object_instance.set_answer(value, key, Range(self._frame, self._frame))
+
+    def __repr__(self):
+        return f"FrameView(label_row={self._label_row}, frame={self._frame})"
