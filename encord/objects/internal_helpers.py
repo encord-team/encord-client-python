@@ -18,6 +18,11 @@ from encord.objects.common import (
     _get_option_by_hash,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
+from encord.objects.coordinates import (
+    ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    Coordinates,
+)
+from encord.objects.ontology_object import Object
 from encord.objects.utils import (
     Ranges,
     _lower_snake_case,
@@ -468,3 +473,11 @@ def _search_child_attributes(
                     return True
 
     return False
+
+
+def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
+    expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
+    if type(coordinates) != expected_coordinate_type:
+        raise ValueError(
+            f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
+        )

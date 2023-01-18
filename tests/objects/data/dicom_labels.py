@@ -21,6 +21,7 @@ dicom_labels = {
                             "createdAt": "Tue, 17 Jan 2023 14:17:47 GMT",
                             "createdBy": "denis@cord.tech",
                             "confidence": 1,
+                            "lastEditedAt": "Tue, 17 Jan 2023 14:18:55 GMT",
                             "objectHash": "ai7DhsOA",
                             "featureHash": "2689db00",
                             "manualAnnotation": True,

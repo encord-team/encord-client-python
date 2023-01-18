@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from copy import copy, deepcopy
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import (
     Any,
@@ -46,6 +46,7 @@ from encord.objects.internal_helpers import (
     Answer,
     _get_static_answer_map,
     _search_child_attributes,
+    check_coordinate_type,
     get_answer_from_object,
     get_default_answer_from_attribute,
     set_answer_for_object,
@@ -103,6 +104,7 @@ class ClassificationInstance:
         self._classification_instance_data = ClassificationInstanceData()
         # DENIS: These are actually somehow per frame! What would that even mean? check this!
         # Do I need an extra class for the instance data or should it be part of the overall payload?
+        # DENIS: createdAt, createdBy, confidence, manual_annotation, is per instance.
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
@@ -497,7 +499,9 @@ class LabelRowClass:
         pass
 
     def get_frame_view(self, frame: int) -> FrameView:
-        return FrameView(self, frame)
+        # DENIS: this should also be able to be instantiated via an image hash or image name maybe.
+        #  or at least have an easy path to get to that.
+        return FrameView(self, self._label_row_read_only_data, frame)
 
     def to_encord_dict(self) -> dict:
         """
@@ -660,9 +664,9 @@ class LabelRowClass:
     ) -> dict:
         ret = {}
 
-        object_frame_instance_data = object_.get_for_frame(frame)
-        object_frame_instance_info = object_frame_instance_data.object_frame_instance_info
-        coordinates = object_frame_instance_data.coordinates
+        object_instance_frame_view = object_.get_view_for_frame(frame)
+        # object_frame_instance_info = object_frame_instance_data.object_frame_instance_info
+        coordinates = object_instance_frame_view.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
         ontology_object = self._ontology_structure.get_item_by_hash(ontology_hash)
 
@@ -670,19 +674,19 @@ class LabelRowClass:
         ret["color"] = ontology_object.color
         ret["shape"] = ontology_object.shape.value
         ret["value"] = _lower_snake_case(ontology_object.name)
-        ret["createdAt"] = object_frame_instance_info.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        ret["createdBy"] = object_frame_instance_info.created_by or "denis@cord.tech"  # DENIS: fix
-        ret["confidence"] = object_frame_instance_info.confidence
+        ret["createdAt"] = object_instance_frame_view.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        ret["createdBy"] = object_instance_frame_view.created_by or "denis@cord.tech"  # DENIS: fix
+        ret["confidence"] = object_instance_frame_view.confidence
         ret["objectHash"] = object_.object_hash
         ret["featureHash"] = ontology_object.feature_node_hash
-        ret["manualAnnotation"] = object_frame_instance_info.manual_annotation
+        ret["manualAnnotation"] = object_instance_frame_view.manual_annotation
 
-        if object_frame_instance_info.last_edited_at is not None:
-            ret["lastEditedAt"] = object_frame_instance_info.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        if object_frame_instance_info.last_edited_by is not None:
-            ret["lastEditedBy"] = object_frame_instance_info.last_edited_by
-        if object_frame_instance_info.is_deleted is not None:
-            ret["isDeleted"] = object_frame_instance_info.is_deleted
+        if object_instance_frame_view.last_edited_at is not None:
+            ret["lastEditedAt"] = object_instance_frame_view.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        if object_instance_frame_view.last_edited_by is not None:
+            ret["lastEditedBy"] = object_instance_frame_view.last_edited_by
+        if object_instance_frame_view.is_deleted is not None:
+            ret["isDeleted"] = object_instance_frame_view.is_deleted
 
         self._add_coordinates_to_encord_object(coordinates, ret)
 
@@ -1010,11 +1014,9 @@ class LabelRowClass:
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
         coordinates = self._get_coordinates(frame_object_label)
-        object_frame_instance_info = ObjectFrameInstanceInfo.from_dict(frame_object_label)
+        object_frame_instance_info = _ObjectFrameInstanceInfo.from_dict(frame_object_label)
 
-        object_instance.set_coordinates(
-            coordinates=coordinates, frames={frame}, object_frame_instance_info=object_frame_instance_info
-        )
+        object_instance.add_to_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
         return object_instance
 
     def _add_coordinates_to_object_instance(
@@ -1026,11 +1028,9 @@ class LabelRowClass:
         object_instance = self._objects_map[object_hash]
 
         coordinates = self._get_coordinates(frame_object_label)
-        object_frame_instance_info = ObjectFrameInstanceInfo.from_dict(frame_object_label)
+        object_frame_instance_info = _ObjectFrameInstanceInfo.from_dict(frame_object_label)
 
-        object_instance.set_coordinates(
-            coordinates=coordinates, frames={frame}, object_frame_instance_info=object_frame_instance_info
-        )
+        object_instance.add_to_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
 
     def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
         if "boundingBox" in frame_object_label:
@@ -1168,18 +1168,9 @@ class LabelRowClass:
 #     """
 
 
-# DENIS: should this LabelStructure be able to be self-updatable? Without the involvement of the project?
-@dataclass(frozen=True)
-class ObjectFrameReadOnlyInstanceInfo:
-    """Trying to set this will not have any effects on the data in the Encord servers."""
-
-    reviews: Optional[List[dict]] = None
-    # DENIS: can I type out this reviews thing? -> Hold off to see if I actually need it.
-
-
-@dataclass(frozen=True)
-class ObjectFrameInstanceInfo:
-    # DENIS: do we need the isDeleted field?
+@dataclass
+class _ObjectFrameInstanceInfo:
+    # DENIS: this could also be a sub class of the ObjectInstance.
     created_at: datetime = datetime.now()
     created_by: Optional[str] = None
     """None defaults to the user of the SDK."""
@@ -1188,33 +1179,59 @@ class ObjectFrameInstanceInfo:
     """None defaults to the user of the SDK."""
     confidence: float = DEFAULT_CONFIDENCE
     manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-    read_only_info: ObjectFrameReadOnlyInstanceInfo = ObjectFrameReadOnlyInstanceInfo()
+    reviews: Optional[List[dict]] = None
     is_deleted: Optional[bool] = None
 
     @staticmethod
     def from_dict(d: dict):
-        read_only_info = ObjectFrameReadOnlyInstanceInfo(reviews=d.get("reviews"))
         if "lastEditedAt" in d:
             last_edited_at = parse(d["lastEditedAt"])
         else:
             last_edited_at = None
 
-        return ObjectFrameInstanceInfo(
+        return _ObjectFrameInstanceInfo(
             created_at=parse(d["createdAt"]),
             created_by=d["createdBy"],
             last_edited_at=last_edited_at,
             last_edited_by=d.get("lastEditedBy"),
             confidence=d["confidence"],
             manual_annotation=d["manualAnnotation"],
-            read_only_info=read_only_info,
+            reviews=d.get("reviews"),
             is_deleted=d.get("isDeleted"),
         )
 
+    def update_from_optional_fields(
+        self,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+        is_deleted: Optional[bool] = None,
+    ) -> None:
+        """Return a new instance with the specified fields updated."""
+        self.created_at = created_at or self.created_at
+        if created_by is not None:
+            self.created_by = created_by
+        self.last_edited_at = last_edited_at or self.last_edited_at
+        if last_edited_by is not None:
+            self.last_edited_by = last_edited_by
+        if confidence is not None:
+            self.confidence = confidence
+        if manual_annotation is not None:
+            self.manual_annotation = manual_annotation
+        if reviews is not None:
+            self.reviews = reviews
+        if is_deleted is not None:
+            self.is_deleted = is_deleted
 
-@dataclass(frozen=True)
-class ObjectFrameInstanceData:
+
+@dataclass
+class _ObjectFrameInstanceData:
     coordinates: Coordinates
-    object_frame_instance_info: ObjectFrameInstanceInfo
+    object_frame_instance_info: _ObjectFrameInstanceInfo
     # Probably the above can be flattened out into this class.
 
 
@@ -1223,6 +1240,11 @@ class AnswerForFrames:
     answer: Union[str, Option, Iterable[Option]]
     range: Set[int]
     # DENIS: Do I really want to return a set here?
+
+
+def check_email(email: str) -> None:
+    # DENIS: TODO:
+    pass
 
 
 class ObjectInstance:
@@ -1236,9 +1258,122 @@ class ObjectInstance:
     DENIS: I probably will need to fix the order of the objects, so that the sorting is not lost.
     """
 
+    class ObjectInstanceFrameView:
+        """
+        This class can be used to set or get data for a specific frame of an ObjectInstance.
+        """
+
+        def __init__(self, object_instance: ObjectInstance, frame: int):
+            self._object_instance = object_instance
+            self._frame = frame
+
+        @property
+        def coordinates(self) -> Coordinates:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().coordinates
+
+        @coordinates.setter
+        def coordinates(self, coordinates: Coordinates) -> None:
+            self._check_if_frame_view_valid()
+            self._object_instance.set_for_frame(self._frame, coordinates)
+
+        @property
+        def created_at(self) -> datetime:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.created_at
+
+        @created_at.setter
+        def created_at(self, created_at: datetime) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().object_frame_instance_info.created_at = created_at
+
+        @property
+        def created_by(self) -> Optional[str]:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.created_by
+
+        @created_by.setter
+        def created_by(self, created_by: Optional[str]) -> None:
+            """
+            Set the created_by field with a user email or None if it should default to the current user of the SDK.
+            """
+            self._check_if_frame_view_valid()
+            if created_by is not None:
+                check_email(created_by)
+            self._get_object_frame_instance_data().object_frame_instance_info.created_by = created_by
+
+        @property
+        def last_edited_at(self) -> datetime:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at
+
+        @last_edited_at.setter
+        def last_edited_at(self, last_edited_at: datetime) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at = last_edited_at
+
+        @property
+        def last_edited_by(self) -> Optional[str]:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by
+
+        @last_edited_by.setter
+        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
+            """
+            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
+            """
+            self._check_if_frame_view_valid()
+            if last_edited_by is not None:
+                check_email(last_edited_by)
+            self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by = last_edited_by
+
+        @property
+        def confidence(self) -> float:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.confidence
+
+        @confidence.setter
+        def confidence(self, confidence: float) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().object_frame_instance_info.confidence = confidence
+
+        @property
+        def manual_annotation(self) -> bool:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation
+
+        @manual_annotation.setter
+        def manual_annotation(self, manual_annotation: bool) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation = manual_annotation
+
+        @property
+        def reviews(self) -> List[dict]:
+            """
+            A read only property about the reviews that happened for this object on this frame.
+            DENIS: probably want to type this out
+            """
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.reviews
+
+        @property
+        def is_deleted(self) -> bool:
+            """This property is only relevant for internal use."""
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
+
+        def _get_object_frame_instance_data(self) -> _ObjectFrameInstanceData:
+            return self._object_instance._frames_to_instance_data[self._frame]
+
+        def _check_if_frame_view_valid(self) -> None:
+            if self._frame not in self._object_instance._frames_to_instance_data:
+                raise RuntimeError(
+                    "Trying to use an ObjectInstanceFrameView for an ObjectInstance that is not on the frame."
+                )
+
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
-        self._frames_to_instance_data: Dict[int, ObjectFrameInstanceData] = dict()
+        self._frames_to_instance_data: Dict[int, _ObjectFrameInstanceData] = dict()
         # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
         # this thing take over the label structure itself (for large ones it would be interesting)
         self._object_hash = object_hash or short_uuid_str()
@@ -1491,43 +1626,76 @@ class ObjectInstance:
     def ontology_item(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
-    def set_coordinates(
+    def add_to_frame(
         # DENIS: should this be called `set_instance_data` or something similar?
         self,
         coordinates: Coordinates,
-        frames: Iterable[int],
-        # ^ DENIS: this is slightly awkward, do we really need to have multiple? => Use the range thingie
+        frame: int,
         *,
-        object_frame_instance_info: ObjectFrameInstanceInfo = ObjectFrameInstanceInfo(),
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+        is_deleted: Optional[bool] = None,
         # DENIS: could have a set/overwrite/force flag
     ):
         """
         DENIS: The client needs to be careful here! If a reference of multiple coordinates is being passed around, they
         might accidentally overwrite specific values.
 
-        DENIS: validate that the coordinates are not out of bounds.
-        """
-        expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[self._ontology_object.shape]
-        if type(coordinates) != expected_coordinate_type:
-            raise ValueError(
-                f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
-            )
 
-        for frame in frames:
-            self._frames_to_instance_data[frame] = ObjectFrameInstanceData(
-                coordinates=coordinates, object_frame_instance_info=object_frame_instance_info
+
+        Args:
+            overwrite:
+                If `True`, overwrite existing data for the given frames. This will not reset all the
+                non-specified values. If `False` and data already exists for the given frames,
+                raises an error.
+            reviews: Should only be set by internal functions
+            is_deleted: Should only be set by internal functions
+        """
+        existing_frame_data = self._frames_to_instance_data.get(frame)
+
+        if overwrite is False and existing_frame_data is not None:
+            raise ValueError("Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite.")
+
+        check_coordinate_type(coordinates, self._ontology_object)
+        # DENIS: validate that the coordinates are not out of bounds.
+
+        if existing_frame_data is None:
+            existing_frame_data = _ObjectFrameInstanceData(
+                coordinates=coordinates, object_frame_instance_info=_ObjectFrameInstanceInfo()
             )
-            # self._add_initial_dynamic_answers(frame)
+            self._frames_to_instance_data[frame] = existing_frame_data
+
+        existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            reviews=reviews,
+            is_deleted=is_deleted,
+        )
+        existing_frame_data.coordinates = coordinates
 
         if self._parent:
+            # DENIS: this is somewhat inefficient given the loop over all frames that it is currently part of.
             self._parent._add_to_frame_to_hashes_map(self)
 
-    def get_for_frame(self, frame: int) -> ObjectFrameInstanceData:
-        saved_data = self._frames_to_instance_data[frame]
-        return ObjectFrameInstanceData(
-            coordinates=deepcopy(saved_data.coordinates),
-            object_frame_instance_info=saved_data.object_frame_instance_info,
-        )
+    # def get_for_frame(self, frame: int) -> _ObjectFrameInstanceData:
+    #     saved_data = self._frames_to_instance_data[frame]
+    #     return _ObjectFrameInstanceData(
+    #         coordinates=deepcopy(saved_data.coordinates),
+    #         object_frame_instance_info=saved_data.object_frame_instance_info,
+    #     )
+
+    def get_view_for_frame(self, frame: int) -> ObjectInstanceFrameView:
+        return self.ObjectInstanceFrameView(self, frame)
 
     def copy(self) -> ObjectInstance:
         """
@@ -1543,13 +1711,14 @@ class ObjectInstance:
         # DENIS: this is public - think about if I want to have a condensed version with a run length encoding.
         return list(self._frames_to_instance_data.keys())
 
-    def get_instance_data(self, frames: Iterable[int]) -> List[ObjectFrameInstanceData]:
-        ret = []
-        for frame in frames:
-            if frame not in self._frames_to_instance_data:
-                raise ValueError(f"This object does not exist on frame `{frame}`.")
-            ret.append(self._frames_to_instance_data[frame])
-        return ret
+    # def get_instance_data(self, frames: Iterable[int]) -> List[_ObjectFrameInstanceData]:
+    #     # DENIS: fix this frame type
+    #     ret = []
+    #     for frame in frames:
+    #         if frame not in self._frames_to_instance_data:
+    #             raise ValueError(f"This object does not exist on frame `{frame}`.")
+    #         ret.append(self._frames_to_instance_data[frame])
+    #     return ret
 
     def remove_from_frames(self, frames: Iterable[int]):
         """Ensure that it will be removed from all frames."""
@@ -1769,6 +1938,44 @@ class FrameView:
         if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
             raise ValueError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
         return self._frame_level_data().data_link
+
+    def add_object(
+        self,
+        object_instance: ObjectInstance,
+        coordinates: Coordinates,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+    ) -> None:
+        """
+        DENIS: Good to add, but can we have some sort of property accessors also here for the object instance per frame?
+        """
+        pass
+
+    # def get_object_data(self, object_instance: ObjectInstance) -> _ObjectFrameInstanceData:
+    #     """
+    #     DENIS: Good to add, but can we have some sort of property accessors also here for the object instance per frame?
+    #     Actually, do we want to expose things like `is_deleted`? Probably not. Maybe it should then really be a view
+    #     with accessors.
+    #     Something like an ObjectInstanceFrameView with read and write access.
+    #     """
+    #     return object_instance.get_instance_data([self._frame])[0]
+
+    def add_classification(
+        self,
+        classification_instance: ClassificationInstance,
+        *,
+        optionals: Any = None,
+    ) -> None:
+        """
+        Need to add the optionals per frame and make sure that these are really per frame.
+        """
+        pass
 
     def _frame_level_data(self) -> FrameLevelImageGroupData:
         return self._label_row_read_only_data.frame_level_data[self._frame]
