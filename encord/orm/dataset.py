@@ -143,7 +143,6 @@ class DataRow(dict, Formatter):
                 "client_metadata": client_metadata,
                 "querier": None,
                 "images": None,
-                "get_signed_url": False,
                 "signed_url": None,
                 "dicom_file_links": None,
             }
@@ -237,6 +236,12 @@ class DataRow(dict, Formatter):
             else:
                 raise EncordException(f"Could not update client metadata for DataRow with uid: {self.uid}")
 
+    def get_client_metadata(self):
+        """
+        This method lazily retrieves custom client metadat and returns cached data.
+        """
+        return self.client_metadata
+
     @property
     def width(self) -> int:
         return self["width"]
@@ -284,6 +289,12 @@ class DataRow(dict, Formatter):
     def signed_url(self, new_signed_url: str) -> None:
         self["signed_url"] = new_signed_url
 
+    def get_signed_url(self):
+        """
+        This method lazily generates and returns cached a signed url for the given DataRow.
+        """
+        return self.signed_url
+
     @property
     def file_size(self) -> int:
         return self["file_size"]
@@ -308,24 +319,15 @@ class DataRow(dict, Formatter):
     def storage_location(self, new_storage_location: StorageLocation) -> None:
         self["storage_location"] = new_storage_location
 
-    @property
-    def get_signed_url(self):
-        return self["get_signed_url"]
-
-    @get_signed_url.setter
-    def get_signed_url(self, new_get_signed_url):
-        if self["get_signed_url"] != new_get_signed_url:
-            self.images = None
-            self.dicom_file_links = None
-        self["get_signed_url"] = new_get_signed_url
-
-    @property
-    def images(self) -> List[ImageData]:
-        # only if get_signed_url flag was updated
-        if self.data_type == DataType.IMG_GROUP and self["images"] is None:
+    def get_images(self, get_signed_url: bool = False) -> List[ImageData]:
+        """
+        This method lazily retrieves and returns cached list of images for the given DataRow image group.
+        If the given DataRow is not an image group then this method simply returns None.
+        """
+        if self.data_type == DataType.IMG_GROUP:
             if self.querier is not None:
                 payload = {
-                    "get_signed_url": self.get_signed_url,
+                    "get_signed_url": get_signed_url,
                 }
                 res = self.querier.basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
                 self["images"] = res.images
@@ -333,26 +335,21 @@ class DataRow(dict, Formatter):
                 raise EncordException(f"Could not get images data for image group with uid: {self.uid}")
         return self["images"]
 
-    @images.setter
-    def images(self, new_images: List[ImageData]) -> None:
-        self["images"] = new_images
-
-    @property
-    def dicom_file_links(self) -> List[str]:
-        if self.data_type == DataType.DICOM and self["dicom_file_links"] is None:
+    def get_dicom_file_links(self, get_signed_url: bool = False) -> List[str]:
+        """
+        This method lazily retrieves and returns cached list of dicom file links for the given dicom DataRow.
+        If the given DataRow is not a dicom then this method simply returns None.
+        """
+        if self.data_type == DataType.DICOM:
             if self.querier is not None:
                 payload = {
-                    "get_signed_url": self.get_signed_url,
+                    "get_signed_url": get_signed_url,
                 }
                 res = self.querier.basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
                 self["dicom_file_links"] = res.file_links
             else:
                 raise EncordException(f"Could not get file links for dicom with uid: {self.uid}")
         return self["dicom_file_links"]
-
-    @dicom_file_links.setter
-    def dicom_file_links(self, new_dicom_dile_links: List[str]):
-        self["dicom_file_links"] = new_dicom_dile_links
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
