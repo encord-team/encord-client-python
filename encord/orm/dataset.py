@@ -238,7 +238,7 @@ class DataRow(dict, Formatter):
 
     def get_client_metadata(self):
         """
-        This method lazily retrieves custom client metadat and returns cached data.
+        This method lazily retrieves custom client metadata and returns cached data.
         """
         return self.client_metadata
 
@@ -291,7 +291,7 @@ class DataRow(dict, Formatter):
 
     def get_signed_url(self):
         """
-        This method lazily generates and returns cached a signed url for the given DataRow.
+        This method lazily generates and returns cached signed url for the given DataRow.
         """
         return self.signed_url
 
