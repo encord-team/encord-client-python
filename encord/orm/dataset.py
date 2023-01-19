@@ -268,7 +268,7 @@ class DataRow(dict, Formatter):
 
     def get_client_metadata(self):
         """
-        This method lazily retrieves custom client metadata and returns cached data.
+        This method lazily retrieves custom client metadata and cache it.
         """
         return self.client_metadata
 
