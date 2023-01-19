@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import re
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
@@ -69,33 +70,62 @@ class SignedUrl:
 
 @dataclasses.dataclass(frozen=True)
 class ImageData:
-    frame: int
+    id: int
     title: str
+    user_hash: UUID
     file_link: str
     file_type: str
+    file_size: float
     image_hash: UUID
     storage_location: StorageLocation
+    created_at: datetime
+    last_edited_at: datetime
+    height: int
+    width: int
 
     @classmethod
     def from_dict(cls, json_dict: Dict):
         return ImageData(
-            json_dict["frame"],
+            json_dict["id"],
+            json_dict["user_hash"],
             json_dict["title"],
             json_dict["file_link"],
             json_dict["file_type"],
+            json_dict["file_size"],
             json_dict["image_hash"],
             json_dict["storage_location"],
+            parser.parse(json_dict["created_at"]),
+            parser.parse(json_dict["last_edited_at"]),
+            json_dict["height"],
+            json_dict["width"],
         )
 
 
 @dataclasses.dataclass(frozen=True)
 class ImagesInGroup:
-    images: List[ImageData]
+    images: List[Dict]
 
 
 @dataclasses.dataclass(frozen=True)
 class DicomFileLinks:
     file_links: List[str]
+
+
+def is_signed_url(string: str) -> bool:
+    pattern = re.compile(r"^https://.*")
+    return pattern.match(string) is not None
+
+
+def check_if_images_have_signed_url(images: List[ImageData]) -> bool:
+    if len(images) == 0:
+        return False
+    return is_signed_url(images[0].file_link)
+
+
+def check_if_file_links_are_signed_urls(file_links: List[str]) -> bool:
+    if len(file_links) == 0:
+        return False
+    return is_signed_url(file_links[0])
 
 
 class DataRow(dict, Formatter):
@@ -326,11 +356,12 @@ class DataRow(dict, Formatter):
         """
         if self.data_type == DataType.IMG_GROUP:
             if self.querier is not None:
-                payload = {
-                    "get_signed_url": get_signed_url,
-                }
-                res = self.querier.basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
-                self["images"] = res.images
+                if self["images"] is None or get_signed_url != check_if_images_have_signed_url(self["images"]):
+                    payload = {
+                        "get_signed_url": get_signed_url,
+                    }
+                    res = self.querier.basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
+                    self["images"] = [ImageData.from_dict(image) for image in res.images]
             else:
                 raise EncordException(f"Could not get images data for image group with uid: {self.uid}")
         return self["images"]
@@ -342,11 +373,14 @@ class DataRow(dict, Formatter):
         """
         if self.data_type == DataType.DICOM:
             if self.querier is not None:
-                payload = {
-                    "get_signed_url": get_signed_url,
-                }
-                res = self.querier.basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
-                self["dicom_file_links"] = res.file_links
+                if self["dicom_file_links"] is None or get_signed_url != check_if_file_links_are_signed_urls(
+                    self["dicom_file_links"]
+                ):
+                    payload = {
+                        "get_signed_url": get_signed_url,
+                    }
+                    res = self.querier.basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
+                    self["dicom_file_links"] = res.file_links
             else:
                 raise EncordException(f"Could not get file links for dicom with uid: {self.uid}")
         return self["dicom_file_links"]
