@@ -16,11 +16,8 @@ from encord.objects.internal_helpers import ChecklistAnswer, RadioAnswer, TextAn
 from encord.objects.label_structure import (
     AnswerForFrames,
     ClassificationInstance,
-    FrameView,
     LabelRowClass,
-    LabelRowReadOnlyData,
     ObjectInstance,
-    _ObjectFrameInstanceInfo,
 )
 from encord.objects.ontology_object import Object
 from encord.objects.utils import Range
@@ -210,8 +207,6 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
 
     assert label_row.get_classifications() == []
     assert label_row.get_objects() == []
-    read_only_data = label_row.label_row_read_only_data
-    assert isinstance(read_only_data, LabelRowReadOnlyData)
     # TODO: do more assertions
 
 

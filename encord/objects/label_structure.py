@@ -515,43 +515,6 @@ class ClassificationInstance:
         return f"ClassificationInstance({self.classification_hash})"
 
 
-@dataclass(frozen=True)
-class FrameLevelImageGroupData:
-    # DENIS: check which ones here are optional. Can even branch off of different DataType of the LabelRowClass
-    # This is for now for image groups
-    # DENIS: If I have a FrameView, this could be the accessors on this frame view. Probably good to keep it there!
-    image_hash: str
-    image_title: str
-    file_type: str
-    frame_number: int
-    width: int
-    height: int
-    data_link: Optional[str] = None
-
-
-@dataclass(frozen=True)
-class LabelRowReadOnlyData:
-    # DENIS: ^ all this should just be exposed via read-only properties.
-    label_hash: str
-    dataset_hash: str
-    dataset_title: str
-    data_title: str
-    # DENIS: probably also want to have the data_hash as part of these types.
-    data_type: DataType
-    label_status: str  # actually some sort of enum
-    number_of_frames: int
-    frame_level_data: Dict[int, FrameLevelImageGroupData]  # DENIS: this could be an array too.
-    image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
-    frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
-    duration: Optional[float] = None
-    fps: Optional[float] = None
-    # DENIS: use, fill, and test these fields below.
-    data_link: Optional[str] = None
-    width: Optional[int] = None
-    height: Optional[int] = None
-    dicom_data_links: Optional[List[str]] = None
-
-
 class LabelRowClass:
     """
     will also need to be able to keep around possible coordinate sizes and also query those if necessary.
@@ -561,7 +524,143 @@ class LabelRowClass:
     DENIS: For tracing, it could be an idea to record the function calls that are being done (can be condensed
     as well) and send them as part of the payload to the server. I could even have this as a more generic solution
     for the SDK.
+
+    Optionally add: `reset_labels` to delete all the current labels.
+    `get_user_frames` -> see all the frames where there are labels.
     """
+
+    class FrameView:
+        """
+        This class can be used to inspect what object/classification instances are on a given frame or
+        what metadata, such as a image file size, is on a given frame.
+        DENIS: this can be a sub class of the LabelRow.
+        """
+
+        def __init__(
+            self, label_row: LabelRowClass, label_row_read_only_data: LabelRowClass.LabelRowReadOnlyData, frame: int
+        ):
+
+            self._label_row = label_row
+            self._label_row_read_only_data = label_row_read_only_data
+            self._frame = frame
+
+        @property
+        def image_hash(self) -> str:
+            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+                raise ValueError("Image hash can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+            return self._frame_level_data().image_hash
+
+        @property
+        def image_title(self) -> str:
+            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+                raise ValueError("Image title can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+            return self._frame_level_data().image_title
+
+        @property
+        def file_type(self) -> str:
+            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+                raise ValueError("File type can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+            return self._frame_level_data().file_type
+
+        @property
+        def frame(self) -> int:
+            return self._frame
+
+        @property
+        def width(self) -> int:
+            if self._label_row.data_type in [DataType.IMG_GROUP]:
+                return self._frame_level_data().width
+            else:
+                return self._label_row_read_only_data.width
+
+        @property
+        def height(self) -> int:
+            if self._label_row.data_type in [DataType.IMG_GROUP]:
+                return self._frame_level_data().height
+            else:
+                return self._label_row_read_only_data.height
+
+        @property
+        def data_link(self) -> Optional[str]:
+            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+                raise ValueError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+            return self._frame_level_data().data_link
+
+        def add_object(
+            self,
+            object_instance: ObjectInstance,
+            coordinates: Coordinates,
+            *,
+            overwrite: bool = False,
+            created_at: Optional[datetime] = None,
+            created_by: Optional[str] = None,
+            last_edited_at: Optional[datetime] = None,
+            last_edited_by: Optional[str] = None,
+            confidence: Optional[float] = None,
+            manual_annotation: Optional[bool] = None,
+        ) -> None:
+            """
+            DENIS: Good to add, but can we have some sort of property accessors also here for the object instance per frame?
+            """
+            object_instance.add_to_frame(
+                coordinates,
+                self._frame,
+                overwrite=overwrite,
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+            )
+
+        def add_classification(
+            self,
+            classification_instance: ClassificationInstance,
+            *,
+            optionals: Any = None,
+        ) -> None:
+            """
+            Need to add the optionals per frame and make sure that these are really per frame.
+            """
+            pass
+
+        def _frame_level_data(self) -> self.FrameLevelImageGroupData:
+            return self._label_row_read_only_data.frame_level_data[self._frame]
+
+        def __repr__(self):
+            return f"FrameView(label_row={self._label_row}, frame={self._frame})"
+
+    @dataclass(frozen=True)
+    class FrameLevelImageGroupData:
+        image_hash: str
+        image_title: str
+        file_type: str
+        frame_number: int
+        width: int
+        height: int
+        data_link: Optional[str] = None
+
+    @dataclass(frozen=True)
+    class LabelRowReadOnlyData:
+        label_hash: str
+        dataset_hash: str
+        dataset_title: str
+        data_title: str
+        # DENIS: probably also want to have the data_hash as part of these types.
+        data_type: DataType
+        label_status: str  # actually some sort of enum
+        number_of_frames: int
+        frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData]  # DENIS: this could be an array too.
+        image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
+        frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
+        duration: Optional[float] = None
+        fps: Optional[float] = None
+        # DENIS: use, fill, and test these fields below.
+        data_link: Optional[str] = None
+        width: Optional[int] = None
+        height: Optional[int] = None
+        dicom_data_links: Optional[List[str]] = None
 
     def __init__(self, label_row_dict: dict, ontology_structure: Union[dict, OntologyStructure]) -> None:
         if isinstance(ontology_structure, dict):
@@ -569,9 +668,7 @@ class LabelRowClass:
         else:
             self._ontology_structure = ontology_structure
 
-        self._label_row_read_only_data: LabelRowReadOnlyData = self._parse_label_row_dict(label_row_dict)
-
-        # DENIS: next up need to also parse objects and classifications from current label rows.
+        self._label_row_read_only_data: LabelRowClass.LabelRowReadOnlyData = self._parse_label_row_dict(label_row_dict)
 
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
@@ -638,14 +735,6 @@ class LabelRowClass:
         # DENIS: to do
         return 5
 
-    @property
-    def label_row_read_only_data(self) -> LabelRowReadOnlyData:
-        return self._label_row_read_only_data
-
-    @label_row_read_only_data.setter
-    def label_row_read_only_data(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot overwrite the read only data.")
-
     def upload(self):
         """Do the client request"""
         # Can probably just use the set label row here.
@@ -654,7 +743,7 @@ class LabelRowClass:
     def get_frame_view(self, frame: int) -> FrameView:
         # DENIS: this should also be able to be instantiated via an image hash or image name maybe.
         #  or at least have an easy path to get to that.
-        return FrameView(self, self._label_row_read_only_data, frame)
+        return self.FrameView(self, self._label_row_read_only_data, frame)
 
     def to_encord_dict(self) -> dict:
         """
@@ -665,7 +754,7 @@ class LabelRowClass:
         and forth every single time.
         """
         ret = {}
-        read_only_data = self.label_row_read_only_data
+        read_only_data = self._label_row_read_only_data
 
         ret["label_hash"] = read_only_data.label_hash
         ret["dataset_hash"] = read_only_data.dataset_hash
@@ -738,9 +827,8 @@ class LabelRowClass:
         return ret
 
     def _to_encord_data_units(self) -> dict:
-        # DENIS: assume an image group for now
         ret = {}
-        frame_level_data = self.label_row_read_only_data.frame_level_data
+        frame_level_data = self._label_row_read_only_data.frame_level_data
         for value in frame_level_data.values():
             ret[value.image_hash] = self._to_encord_data_unit(value)
 
@@ -780,7 +868,7 @@ class LabelRowClass:
 
     def _to_encord_labels(self, frame_level_data: FrameLevelImageGroupData) -> dict:
         ret = {}
-        data_type = self.label_row_read_only_data.data_type
+        data_type = self._label_row_read_only_data.data_type
 
         if data_type in [DataType.IMAGE, DataType.IMG_GROUP]:
             frame = frame_level_data.frame_number
@@ -818,7 +906,6 @@ class LabelRowClass:
         ret = {}
 
         object_instance_frame_view = object_.get_view_for_frame(frame)
-        # object_frame_instance_info = object_frame_instance_data.object_frame_instance_info
         coordinates = object_instance_frame_view.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
         ontology_object = self._ontology_structure.get_item_by_hash(ontology_hash)
@@ -1083,7 +1170,7 @@ class LabelRowClass:
         else:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
-        return LabelRowReadOnlyData(
+        return self.LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
             dataset_hash=label_row_dict["dataset_hash"],
             dataset_title=label_row_dict["dataset_title"],
@@ -1175,7 +1262,7 @@ class LabelRowClass:
     def _add_coordinates_to_object_instance(
         self,
         frame_object_label: dict,
-        frame: int,  # DENIS: should default to None for the single image case.
+        frame: int = 0,
     ) -> None:
         object_hash = frame_object_label["objectHash"]
         object_instance = self._objects_map[object_hash]
@@ -1209,10 +1296,10 @@ class LabelRowClass:
                 self._add_frames_to_classification_instance(frame_classification_label, frame)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
-        frame_level_data: Dict[int, FrameLevelImageGroupData] = dict()
+        frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData] = dict()
         for _, payload in label_row_data_units.items():
             frame_number = payload["data_sequence"]
-            frame_level_image_group_data = FrameLevelImageGroupData(
+            frame_level_image_group_data = self.FrameLevelImageGroupData(
                 image_hash=payload["data_hash"],
                 image_title=payload["data_title"],
                 data_link=payload.get("data_link"),
@@ -1256,68 +1343,6 @@ class LabelRowClass:
 
     def __repr__(self) -> str:
         return f"LabelRowData(label_hash={self.label_hash}, data_title={self.data_title})"
-
-
-# @dataclass
-# class LabelMaster:
-#     """
-#     DENIS: this thing probably should take the corresponding ontology, ideally automatically
-#     DENIS: there is actually not much difference between this and the `LabelRowClass` class. Probably we
-#         want to merge them together.
-#     """
-#
-#     #
-#     # label_hash: str
-#     # dataset_hash: str
-#     # dataset_title: str
-#     # data_title: str
-#     # data_type: DataType
-#     # # DENIS: the above fields could be translated less literally.
-#     #
-#     # single_label: LabelRowClass  # Only one label across this multi-label thing.
-#
-#     def get_or_create_label_by_frame(self, frame: Union[int, str]) -> LabelRowClass:
-#         """Get it depending on frame number or hash."""
-#         pass
-#
-#     def delete_label_by_frame(self, frame: Union[int, str]) -> bool:
-#         """Depending on if there was one, return True or not"""
-#         pass
-#
-#     def get_used_frames(self) -> List[Union[int, str]]:
-#         pass
-#
-#     def reset_labels(self):
-#         self.single_labels = list()
-#
-#     def upload(self):
-#         """Do the client request"""
-#         # Can probably just use the set label row here.
-#         pass
-#
-#     def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
-#         """
-#         Grab the labels from the server. Return False if the labels have been changed in the meantime.
-#
-#         Args:
-#             force:
-#                 If `False`, it will not do the refresh if something has changed on the server.
-#                 If `True`, it will always overwrite the local changes with what has happened on the server.
-#         """
-#         # Actually can probably use the get_label_row() here.
-#
-#     """
-#     Now the data units will either be keyed by the video_hash. Unless it is an image group, then it is keyed
-#     by the individual image_hashes.
-#
-#     for image groups and images we'd have only one label
-#     for videos and dicoms we have multiple frames.
-#
-#     It seems like I'd like to create the common "labels" thing first, and then see how I want to glue
-#     it together.
-#     probably something like "add_label" which goes for a specific frame (data_sequence in img group) or for
-#     a specific hash.
-#     """
 
 
 @dataclass
@@ -1793,12 +1818,8 @@ class ObjectInstance:
         manual_annotation: Optional[bool] = None,
         reviews: Optional[List[dict]] = None,
         is_deleted: Optional[bool] = None,
-        # DENIS: could have a set/overwrite/force flag
     ):
         """
-        DENIS: The client needs to be careful here! If a reference of multiple coordinates is being passed around, they
-        might accidentally overwrite specific values.
-
 
 
         Args:
@@ -2035,122 +2056,3 @@ class DynamicAnswerManager:
                 answer = get_default_answer_from_attribute(attribute)
                 ret.add(answer)
         return ret
-
-
-class FrameView:
-    """
-    This class can be used to inspect what object/classification instances are on a given frame or
-    what metadata, such as a image file size, is on a given frame.
-    DENIS: this can be a sub class of the LabelRow.
-    """
-
-    def __init__(self, label_row: LabelRowClass, label_row_read_only_data: LabelRowReadOnlyData, frame: int):
-
-        self._label_row = label_row
-        self._label_row_read_only_data = label_row_read_only_data
-        self._frame = frame
-
-    @property
-    def image_hash(self) -> str:
-        if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-            raise ValueError("Image hash can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
-        return self._frame_level_data().image_hash
-
-    @property
-    def image_title(self) -> str:
-        if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-            raise ValueError("Image title can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
-        return self._frame_level_data().image_title
-
-    @property
-    def file_type(self) -> str:
-        if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-            raise ValueError("File type can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
-        return self._frame_level_data().file_type
-
-    @property
-    def frame(self) -> int:
-        return self._frame
-
-    @property
-    def width(self) -> int:
-        if self._label_row.data_type in [DataType.IMG_GROUP]:
-            return self._frame_level_data().width
-        else:
-            return self._label_row_read_only_data.width
-
-    @property
-    def height(self) -> int:
-        if self._label_row.data_type in [DataType.IMG_GROUP]:
-            return self._frame_level_data().height
-        else:
-            return self._label_row_read_only_data.height
-
-    @property
-    def data_link(self) -> Optional[str]:
-        if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-            raise ValueError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
-        return self._frame_level_data().data_link
-
-    def add_object(
-        self,
-        object_instance: ObjectInstance,
-        coordinates: Coordinates,
-        *,
-        overwrite: bool = False,
-        created_at: Optional[datetime] = None,
-        created_by: Optional[str] = None,
-        last_edited_at: Optional[datetime] = None,
-        last_edited_by: Optional[str] = None,
-        confidence: Optional[float] = None,
-        manual_annotation: Optional[bool] = None,
-    ) -> None:
-        """
-        DENIS: Good to add, but can we have some sort of property accessors also here for the object instance per frame?
-        """
-        object_instance.add_to_frame(
-            coordinates,
-            self._frame,
-            overwrite=overwrite,
-            created_at=created_at,
-            created_by=created_by,
-            last_edited_at=last_edited_at,
-            last_edited_by=last_edited_by,
-            confidence=confidence,
-            manual_annotation=manual_annotation,
-        )
-
-    # def get_object_data(self, object_instance: ObjectInstance) -> _ObjectFrameInstanceData:
-    #     """
-    #     DENIS: Good to add, but can we have some sort of property accessors also here for the object instance per frame?
-    #     Actually, do we want to expose things like `is_deleted`? Probably not. Maybe it should then really be a view
-    #     with accessors.
-    #     Something like an ObjectInstanc.FrameView with read and write access.
-    #     """
-    #     return object_instance.get_instance_data([self._frame])[0]
-
-    def add_classification(
-        self,
-        classification_instance: ClassificationInstance,
-        *,
-        optionals: Any = None,
-    ) -> None:
-        """
-        Need to add the optionals per frame and make sure that these are really per frame.
-        """
-        pass
-
-    def _frame_level_data(self) -> FrameLevelImageGroupData:
-        return self._label_row_read_only_data.frame_level_data[self._frame]
-
-    # def __getattr__(self, item):
-    #     return self._object_instance.get_answer(item, filter_frames=Range(self._frame, self._frame))
-    #
-    # def __setattr__(self, key, value):
-    #     if key.startswith("_"):
-    #         super().__setattr__(key, value)
-    #         return
-    #     self._object_instance.set_answer(value, key, Range(self._frame, self._frame))
-
-    def __repr__(self):
-        return f"FrameView(label_row={self._label_row}, frame={self._frame})"
