@@ -42,16 +42,15 @@ def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], e
 def test_serialise_image_group_with_classifications():
     label_row = LabelRowClass(empty_image_group_labels, empty_image_group_ontology)
 
-    expected = label_row.to_encord_dict()
-    assert expected == empty_image_group_labels
+    actual = label_row.to_encord_dict()
+    assert empty_image_group_labels == actual
 
     label_row = LabelRowClass(image_group_labels, image_group_ontology)
 
-    expected = label_row.to_encord_dict()
-    # assert expected == image_group_labels
+    actual = label_row.to_encord_dict()
     deep_diff_enhanced(
-        expected,
         image_group_labels,
+        actual,
         exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
     )
     # TODO: I'm only not comparing dates because of timezone differences. This should be done properly.

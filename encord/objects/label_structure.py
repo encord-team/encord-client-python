@@ -148,7 +148,7 @@ class ClassificationInstance:
         def reviews(self) -> List[dict]:
             """
             A read only property about the reviews that happened for this object on this frame.
-            DENIS: probably want to type this out
+            DENIS: probably want to type this out - or call this `get_reviews` to pass in the different modes.
             """
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().reviews
@@ -159,11 +159,11 @@ class ClassificationInstance:
                     "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
                 )
 
-        def _get_object_frame_instance_data(self) -> ClassificationInstance._FrameData:
+        def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
             return self._classification_instance._frames_to_data[self._frame]
 
     @dataclass
-    class _FrameData:
+    class FrameData:
         created_at: datetime = datetime.now()
         created_by: str = None
         confidence: int = DEFAULT_CONFIDENCE
@@ -173,13 +173,13 @@ class ClassificationInstance:
         reviews: Optional[List[dict]] = None
 
         @staticmethod
-        def from_dict(d: dict) -> ClassificationInstance._FrameData:
+        def from_dict(d: dict) -> ClassificationInstance.FrameData:
             if "lastEditedAt" in d:
                 last_edited_at = parse(d["lastEditedAt"])
             else:
                 last_edited_at = None
 
-            return ClassificationInstance._FrameData(
+            return ClassificationInstance.FrameData(
                 created_at=parse(d["createdAt"]),
                 created_by=d["createdBy"],
                 confidence=d["confidence"],
@@ -212,17 +212,16 @@ class ClassificationInstance:
             if reviews is not None:
                 self.reviews = reviews
 
-    # DENIS: TODO: next up - add a FrameView here as well.
     def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowClass] = None
         self._classification_hash = classification_hash or short_uuid_str()
-        self._classification_instance_data = self._FrameData()
+        self._classification_instance_data = self.FrameData()
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
 
-        self._frames_to_data: Dict[int, ClassificationInstance._FrameData] = defaultdict(self._FrameData)
+        self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
 
         # DENIS: Ideally there would be a max range check.
         self._max_frame: int = float("inf")
@@ -234,15 +233,6 @@ class ClassificationInstance:
     @classification_hash.setter
     def classification_hash(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot set the object hash on an instantiated label object.")
-
-    def set_classification_instance_data(self, classification_instance_data) -> None:
-        self._classification_instance_data = classification_instance_data
-
-    def get_classification_instance_data(self) -> ClassificationInstance._FrameData:
-        # DENIS: change this interface similar to what the ObjectInstance does.
-        # DENIS: the naming is definitely confusing.
-        # DENIS: this also needs to have a proper setter
-        return self._classification_instance_data
 
     @property
     def ontology_item(self) -> Classification:
@@ -263,8 +253,14 @@ class ClassificationInstance:
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
         last_edited_at: datetime = datetime.now(),
         last_edited_by: Optional[str] = None,
+        reviews: Optional[List[dict]] = None,
     ) -> None:
-        """Overwrites the current frames."""
+        """
+        Overwrites the current frames.
+        Args:
+            reviews: Should only be set by internal functions
+
+        """
         if isinstance(frames, int):
             frames = [frames]
 
@@ -281,6 +277,7 @@ class ClassificationInstance:
                 manual_annotation=manual_annotation,
                 last_edited_at=last_edited_at,
                 last_edited_by=last_edited_by,
+                reviews=reviews,
             )
 
     def get_view_for_frame(self, frame: int) -> ClassificationInstance.FrameView:
@@ -297,6 +294,7 @@ class ClassificationInstance:
         manual_annotation: Optional[bool] = None,
         last_edited_at: Optional[datetime] = None,
         last_edited_by: Optional[str] = None,
+        reviews: Optional[List[dict]] = None,
     ):
         existing_frame_data = self._frames_to_data.get(frame)
         if overwrite is False and existing_frame_data is not None:
@@ -305,11 +303,11 @@ class ClassificationInstance:
             )
 
         if existing_frame_data is None:
-            existing_frame_data = self._FrameData()
+            existing_frame_data = self.FrameData()
             self._frames_to_data[frame] = existing_frame_data
 
         existing_frame_data.update_from_optional_fields(
-            created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by
+            created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
         )
 
         if self._parent is not None:
@@ -870,7 +868,7 @@ class LabelRowClass:
     def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> dict:
         ret = {}
 
-        classification_instance_data = classification.get_classification_instance_data()
+        frame_view = classification.get_view_for_frame(frame)
         classification_feature_hash = classification.ontology_item.feature_node_hash
         ontology_classification = self._ontology_structure.get_item_by_hash(classification_feature_hash)
         attribute_hash = classification.ontology_item.attributes[0].feature_node_hash
@@ -878,17 +876,17 @@ class LabelRowClass:
 
         ret["name"] = ontology_attribute.name
         ret["value"] = _lower_snake_case(ontology_attribute.name)
-        ret["createdAt"] = classification_instance_data.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        ret["createdBy"] = classification_instance_data.created_by
-        ret["confidence"] = classification_instance_data.confidence
+        ret["createdAt"] = frame_view.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        ret["createdBy"] = frame_view.created_by
+        ret["confidence"] = frame_view.confidence
         ret["featureHash"] = ontology_classification.feature_node_hash
         ret["classificationHash"] = classification.classification_hash
-        ret["manualAnnotation"] = classification_instance_data.manual_annotation
+        ret["manualAnnotation"] = frame_view.manual_annotation
 
-        if classification_instance_data.last_edited_at is not None:
-            ret["lastEditedAt"] = classification_instance_data.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        if classification_instance_data.last_edited_by is not None:
-            ret["lastEditedBy"] = classification_instance_data.last_edited_by
+        if frame_view.last_edited_at is not None:
+            ret["lastEditedAt"] = frame_view.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        if frame_view.last_edited_by is not None:
+            ret["lastEditedBy"] = frame_view.last_edited_by
 
         return ret
 
@@ -1236,10 +1234,8 @@ class LabelRowClass:
         label_class = ontology.get_item_by_hash(feature_hash)
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
-        classification_instance.add_to_frame([frame])
-        classification_frame_instance_info = ClassificationInstance.FrameData.from_dict(frame_classification_label)
-        classification_instance.set_classification_instance_data(classification_frame_instance_info)
-        # DENIS: TODO: add the answers to the classification instance.
+        frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
+        classification_instance.add_to_frame([frame], **asdict(frame_view))
         answers_dict = classification_answers[classification_hash]["classifications"]
         self._add_static_answers_from_dict(classification_instance, answers_dict)
 
@@ -1254,8 +1250,9 @@ class LabelRowClass:
     def _add_frames_to_classification_instance(self, frame_classification_label: dict, frame: int) -> None:
         object_hash = frame_classification_label["classificationHash"]
         classification_instance = self._classifications_map[object_hash]
+        frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
 
-        classification_instance.add_to_frame([frame])
+        classification_instance.add_to_frame([frame], **asdict(frame_view))
 
     def __repr__(self) -> str:
         return f"LabelRowData(label_hash={self.label_hash}, data_title={self.data_title})"
