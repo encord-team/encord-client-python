@@ -99,6 +99,7 @@ from encord.orm.model import (
     ModelTrainingWeights,
     TrainingMetadata,
 )
+from encord.orm.project import CopyLabelsOptions, CopyProjectPayload
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import (
     ProjectCopy,
@@ -612,18 +613,29 @@ class EncordClientProject(EncordClient):
 
         return list(map(lambda user: ProjectUser.from_dict(user), users))
 
-    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False) -> str:
+    def copy_project(
+        self,
+        copy_datasets=False,
+        copy_collaborators=False,
+        copy_models=False,
+        copy_labels=False,
+        copy_labels_options: Optional[CopyLabelsOptions] = None,
+    ) -> str:
         """
         This function is documented in :meth:`encord.project.Project.copy_project`.
         """
 
-        payload = {"copy_project_options": []}
+        copy_project_options: List[ProjectCopyOptions] = []
         if copy_datasets:
-            payload["copy_project_options"].append(ProjectCopyOptions.DATASETS.value)
+            copy_project_options.append(ProjectCopyOptions.DATASETS)
         if copy_models:
-            payload["copy_project_options"].append(ProjectCopyOptions.MODELS.value)
+            copy_project_options.append(ProjectCopyOptions.MODELS)
         if copy_collaborators:
-            payload["copy_project_options"].append(ProjectCopyOptions.COLLABORATORS.value)
+            copy_project_options.append(ProjectCopyOptions.COLLABORATORS)
+        if copy_labels:
+            copy_project_options.append(ProjectCopyOptions.LABELS)
+
+        payload = CopyProjectPayload(copy_project_options=copy_project_options, copy_labels_options=copy_labels_options)
 
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
 

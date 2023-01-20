@@ -14,6 +14,7 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
+from encord.orm.project import CopyLabelsOptions
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -200,7 +201,14 @@ class Project:
         """
         return self._client.add_users(user_emails, user_role)
 
-    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False) -> str:
+    def copy_project(
+        self,
+        copy_datasets=False,
+        copy_collaborators=False,
+        copy_models=False,
+        copy_labels=False,
+        copy_labels_options: Optional[CopyLabelsOptions] = None,
+    ) -> str:
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
         Labels and models are optional.
@@ -221,7 +229,9 @@ class Project:
             ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while copying the project.
         """
-        return self._client.copy_project(copy_datasets, copy_collaborators, copy_models)
+        return self._client.copy_project(
+            copy_datasets, copy_collaborators, copy_models, copy_labels, copy_labels_options
+        )
 
     def get_label_row(
         self,

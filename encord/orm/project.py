@@ -16,7 +16,7 @@ import datetime
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, TypedDict, Union
 
 from encord.orm import base_orm
 
@@ -149,10 +149,37 @@ class ProjectDataset:
     pass
 
 
-class ProjectCopyOptions(Enum):
+class ProjectCopyOptions(str, Enum):
     COLLABORATORS = "collaborators"
     DATASETS = "datasets"
     MODELS = "models"
+    LABELS = "labels"
+
+
+class ReviewApprovalState(str, Enum):
+    APPROVED = "APPROVED"
+    PENDING = "PENDING"
+    REJECTED = "REJECTED"
+    DELETED = "DELETED"
+    NOT_SELECTED_FOR_REVIEW = "NOT_SELECTED_FOR_REVIEW"
+
+
+class CopyReviewTasksOptions(TypedDict):
+    copy_review_tasks: bool
+    review_status_list: List
+
+
+class CopyLabelsOptions(TypedDict):
+    datasets_to_data_hashes_map: Dict[str, List[str]]
+    accepted_label_statuses: Optional[List[ReviewApprovalState]]
+    accpeted_label_hashes: Optional[List[str]]
+    copy_review_tasks_options: Optional[CopyReviewTasksOptions]
+    create_new_dataset: Optional[bool]
+
+
+class CopyProjectPayload(TypedDict):
+    copy_project_options: List[ProjectCopyOptions]
+    copy_labels_options: Optional[CopyLabelsOptions]
 
 
 class ProjectWorkflowType(Enum):
