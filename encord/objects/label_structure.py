@@ -68,48 +68,69 @@ from encord.objects.utils import (
 # DENIS: think about better error codes for people to catch.
 
 
-@dataclass(frozen=True)
-class ClassificationInstanceData:
-    created_at: datetime = datetime.now()
-    created_by: str = None
-    confidence: int = DEFAULT_CONFIDENCE
-    manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-    last_edited_at: datetime = datetime.now()
-    last_edited_by: Optional[str] = None
-    reviews: Optional[List[dict]] = None
-
-    @staticmethod
-    def from_dict(d: dict) -> ClassificationInstanceData:
-        if "lastEditedAt" in d:
-            last_edited_at = parse(d["lastEditedAt"])
-        else:
-            last_edited_at = None
-
-        return ClassificationInstanceData(
-            created_at=parse(d["createdAt"]),
-            created_by=d["createdBy"],
-            confidence=d["confidence"],
-            manual_annotation=d["manualAnnotation"],
-            last_edited_at=last_edited_at,
-            last_edited_by=d.get("lastEditedBy"),
-            reviews=d.get("reviews"),
-        )
-
-
 class ClassificationInstance:
+    @dataclass
+    class _FrameData:
+        created_at: datetime = datetime.now()
+        created_by: str = None
+        confidence: int = DEFAULT_CONFIDENCE
+        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
+        last_edited_at: datetime = datetime.now()
+        last_edited_by: Optional[str] = None
+        reviews: Optional[List[dict]] = None
+
+        @staticmethod
+        def from_dict(d: dict) -> ClassificationInstance._FrameData:
+            if "lastEditedAt" in d:
+                last_edited_at = parse(d["lastEditedAt"])
+            else:
+                last_edited_at = None
+
+            return ClassificationInstance._FrameData(
+                created_at=parse(d["createdAt"]),
+                created_by=d["createdBy"],
+                confidence=d["confidence"],
+                manual_annotation=d["manualAnnotation"],
+                last_edited_at=last_edited_at,
+                last_edited_by=d.get("lastEditedBy"),
+                reviews=d.get("reviews"),
+            )
+
+        def update_from_optional_fields(
+            self,
+            created_at: Optional[datetime] = None,
+            created_by: Optional[str] = None,
+            confidence: Optional[int] = None,
+            manual_annotation: Optional[bool] = None,
+            last_edited_at: Optional[datetime] = None,
+            last_edited_by: Optional[str] = None,
+            reviews: Optional[List[dict]] = None,
+        ) -> None:
+            self.created_at = created_at or self.created_at
+            if created_by is not None:
+                self.created_by = created_by
+            self.last_edited_at = last_edited_at or self.last_edited_at
+            if last_edited_by is not None:
+                self.last_edited_by = last_edited_by
+            if confidence is not None:
+                self.confidence = confidence
+            if manual_annotation is not None:
+                self.manual_annotation = manual_annotation
+            if reviews is not None:
+                self.reviews = reviews
+
+    # DENIS: TODO: next up - add a FrameView here as well.
     def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowClass] = None
         self._classification_hash = classification_hash or short_uuid_str()
-        self._classification_instance_data = ClassificationInstanceData()
-        # DENIS: These are actually somehow per frame! What would that even mean? check this!
-        # Do I need an extra class for the instance data or should it be part of the overall payload?
-        # DENIS: createdAt, createdBy, confidence, manual_annotation, is per instance.
+        self._classification_instance_data = self._FrameData()
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
 
-        self._frames: Set[int] = set()
+        self._frames_to_data: Dict[int, ClassificationInstance._FrameData] = defaultdict(self._FrameData)
+
         # DENIS: Ideally there would be a max range check.
         self._max_frame: int = float("inf")
 
@@ -124,7 +145,8 @@ class ClassificationInstance:
     def set_classification_instance_data(self, classification_instance_data) -> None:
         self._classification_instance_data = classification_instance_data
 
-    def get_classification_instance_data(self) -> ClassificationInstanceData:
+    def get_classification_instance_data(self) -> ClassificationInstance._FrameData:
+        # DENIS: change this interface similar to what the ObjectInstance does.
         # DENIS: the naming is definitely confusing.
         # DENIS: this also needs to have a proper setter
         return self._classification_instance_data
@@ -137,42 +159,80 @@ class ClassificationInstance:
     def ontology_item(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
-    def set_frames(self, frames: Iterable[int]) -> None:
-        """Overwrites the current frames."""
-        new_frames = set()
-        self._check_classification_already_present(frames)
-        for frame in frames:
-            self._check_within_range(frame)
-            new_frames.add(frame)
-        self._frames = new_frames
-
-    def add_frames(
+    def add_to_frame(
         self,
-        frames: Iterable[int],
+        frames: Union[int, Iterable[int]],
+        *,
+        overwrite: bool = False,
+        created_at: datetime = datetime.now(),
+        created_by: str = None,
+        confidence: int = DEFAULT_CONFIDENCE,
+        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
+        last_edited_at: datetime = datetime.now(),
+        last_edited_by: Optional[str] = None,
     ) -> None:
+        """Overwrites the current frames."""
+        # new_frames = set()
+        if isinstance(frames, int):
+            frames = [frames]
+
         self._check_classification_already_present(frames)
+
         for frame in frames:
             self._check_within_range(frame)
-            self._frames.add(frame)
-            if self._parent is not None:
-                self._parent._add_to_frame_to_hashes_map(self)
+            self._set_frame_and_frame_data(
+                frame,
+                overwrite=overwrite,
+                created_at=created_at,
+                created_by=created_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+            )
+
+    def _set_frame_and_frame_data(
+        self,
+        frame,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        confidence: Optional[int] = None,
+        manual_annotation: Optional[bool] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+    ):
+        existing_frame_data = self._frames_to_data.get(frame)
+        if overwrite is False and existing_frame_data is not None:
+            raise ValueError(
+                f"Cannot overwrite existing data for frame `{frame}`. Set `overwrite` to `True` to overwrite."
+            )
+
+        if existing_frame_data is None:
+            existing_frame_data = self._FrameData()
+            self._frames_to_data[frame] = existing_frame_data
+
+        existing_frame_data.update_from_optional_fields(
+            created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by
+        )
+
+        if self._parent is not None:
+            self._parent._add_to_frame_to_hashes_map(self)
 
     def remove_from_frames(self, frames: Iterable[int]) -> None:
         for frame in frames:
-            self._frames.remove(frame)
+            self._frames_to_data.pop(frame)
 
         if self._parent is not None:
             self._parent._remove_frames_from_classification(self.ontology_item, frames)
             self._parent._remove_from_frame_to_hashes_map(frames, self.classification_hash)
 
     def frames(self) -> List[int]:
-        return list(self._frames)
-
-    # def get_static_answer(self) -> Answer:
-    #     return self._static_answer
+        return list(self._frames_to_data.keys())
 
     def is_valid(self) -> bool:
-        return len(self._frames) > 0
+        return len(self._frames_to_data) > 0
 
     @overload
     def set_answer(self, answer: str, attribute: TextAttribute) -> None:
@@ -1081,8 +1141,8 @@ class LabelRowClass:
         label_class = ontology.get_item_by_hash(feature_hash)
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
-        classification_instance.set_frames([frame])
-        classification_frame_instance_info = ClassificationInstanceData.from_dict(frame_classification_label)
+        classification_instance.add_to_frame([frame])
+        classification_frame_instance_info = ClassificationInstance.FrameData.from_dict(frame_classification_label)
         classification_instance.set_classification_instance_data(classification_frame_instance_info)
         # DENIS: TODO: add the answers to the classification instance.
         answers_dict = classification_answers[classification_hash]["classifications"]
@@ -1100,7 +1160,7 @@ class LabelRowClass:
         object_hash = frame_classification_label["classificationHash"]
         classification_instance = self._classifications_map[object_hash]
 
-        classification_instance.add_frames([frame])
+        classification_instance.add_to_frame([frame])
 
     def __repr__(self) -> str:
         return f"LabelRowData(label_hash={self.label_hash}, data_title={self.data_title})"
@@ -1258,7 +1318,7 @@ class ObjectInstance:
     DENIS: I probably will need to fix the order of the objects, so that the sorting is not lost.
     """
 
-    class ObjectInstanceFrameView:
+    class FrameView:
         """
         This class can be used to set or get data for a specific frame of an ObjectInstance.
         """
@@ -1275,7 +1335,7 @@ class ObjectInstance:
         @coordinates.setter
         def coordinates(self, coordinates: Coordinates) -> None:
             self._check_if_frame_view_valid()
-            self._object_instance.set_for_frame(self._frame, coordinates)
+            self._object_instance.add_to_frame(coordinates, self._frame)
 
         @property
         def created_at(self) -> datetime:
@@ -1368,7 +1428,7 @@ class ObjectInstance:
         def _check_if_frame_view_valid(self) -> None:
             if self._frame not in self._object_instance._frames_to_instance_data:
                 raise RuntimeError(
-                    "Trying to use an ObjectInstanceFrameView for an ObjectInstance that is not on the frame."
+                    "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
                 )
 
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
@@ -1694,8 +1754,8 @@ class ObjectInstance:
     #         object_frame_instance_info=saved_data.object_frame_instance_info,
     #     )
 
-    def get_view_for_frame(self, frame: int) -> ObjectInstanceFrameView:
-        return self.ObjectInstanceFrameView(self, frame)
+    def get_view_for_frame(self, frame: int) -> ObjectInstance.FrameView:
+        return self.FrameView(self, frame)
 
     def copy(self) -> ObjectInstance:
         """
@@ -1889,6 +1949,7 @@ class FrameView:
     """
     This class can be used to inspect what object/classification instances are on a given frame or
     what metadata, such as a image file size, is on a given frame.
+    DENIS: this can be a sub class of the LabelRow.
     """
 
     def __init__(self, label_row: LabelRowClass, label_row_read_only_data: LabelRowReadOnlyData, frame: int):
@@ -1955,14 +2016,24 @@ class FrameView:
         """
         DENIS: Good to add, but can we have some sort of property accessors also here for the object instance per frame?
         """
-        pass
+        object_instance.add_to_frame(
+            coordinates,
+            self._frame,
+            overwrite=overwrite,
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+        )
 
     # def get_object_data(self, object_instance: ObjectInstance) -> _ObjectFrameInstanceData:
     #     """
     #     DENIS: Good to add, but can we have some sort of property accessors also here for the object instance per frame?
     #     Actually, do we want to expose things like `is_deleted`? Probably not. Maybe it should then really be a view
     #     with accessors.
-    #     Something like an ObjectInstanceFrameView with read and write access.
+    #     Something like an ObjectInstanc.FrameView with read and write access.
     #     """
     #     return object_instance.get_instance_data([self._frame])[0]
 

@@ -615,7 +615,7 @@ def test_classification_instances():
     classification_instance_2 = ClassificationInstance(text_classification)
     assert not classification_instance_1.is_valid()
 
-    classification_instance_1.add_frames([1, 2, 3])
+    classification_instance_1.add_to_frame([1, 2, 3])
     assert classification_instance_1.is_valid()
 
     classification_instance_1.set_answer("Dionysus")
@@ -639,9 +639,9 @@ def test_add_and_get_classification_instances_to_label_row():
     classification_instance_2 = ClassificationInstance(text_classification)
     classification_instance_3 = ClassificationInstance(checklist_classification)
 
-    classification_instance_1.add_frames([1, 2])
-    classification_instance_2.add_frames([3, 4])
-    classification_instance_3.add_frames([1, 2, 3, 4])
+    classification_instance_1.add_to_frame([1, 2])
+    classification_instance_2.add_to_frame([3, 4])
+    classification_instance_3.add_to_frame([1, 2, 3, 4])
 
     label_row.add_classification(classification_instance_1)
     label_row.add_classification(classification_instance_2)
@@ -658,24 +658,25 @@ def test_add_and_get_classification_instances_to_label_row():
     assert set(filtered_classification_instances) == {classification_instance_1, classification_instance_2}
 
     overlapping_classification_instance = ClassificationInstance(text_classification)
-    overlapping_classification_instance.add_frames([1])
+    overlapping_classification_instance.add_to_frame([1])
     with pytest.raises(ValueError):
         label_row.add_classification(overlapping_classification_instance)
 
-    overlapping_classification_instance.set_frames([5])
+    overlapping_classification_instance.remove_from_frames([1])
+    overlapping_classification_instance.add_to_frame(5)
     label_row.add_classification(overlapping_classification_instance)
     with pytest.raises(ValueError):
-        overlapping_classification_instance.add_frames([1])
+        overlapping_classification_instance.add_to_frame([1])
     with pytest.raises(ValueError):
-        overlapping_classification_instance.set_frames([1])
+        overlapping_classification_instance.add_to_frame([1], overwrite=True)
 
     label_row.remove_classification(classification_instance_1)
-    overlapping_classification_instance.add_frames([1])
+    overlapping_classification_instance.add_to_frame([1])
 
     with pytest.raises(ValueError):
-        overlapping_classification_instance.add_frames([3])
+        overlapping_classification_instance.add_to_frame([3])
     classification_instance_2.remove_from_frames([3])
-    overlapping_classification_instance.add_frames([3])
+    overlapping_classification_instance.add_to_frame([3])
 
 
 def test_object_instance_answer_for_static_attributes():
