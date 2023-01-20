@@ -69,6 +69,99 @@ from encord.objects.utils import (
 
 
 class ClassificationInstance:
+    class FrameView:
+        def __init__(self, classification_instance: ClassificationInstance, frame: int):
+            self._classification_instance = classification_instance
+            self._frame = frame
+
+        @property
+        def created_at(self) -> datetime:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().created_at
+
+        @created_at.setter
+        def created_at(self, created_at: datetime) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().created_at = created_at
+
+        @property
+        def created_by(self) -> Optional[str]:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().created_by
+
+        @created_by.setter
+        def created_by(self, created_by: Optional[str]) -> None:
+            """
+            Set the created_by field with a user email or None if it should default to the current user of the SDK.
+            """
+            self._check_if_frame_view_valid()
+            if created_by is not None:
+                check_email(created_by)
+            self._get_object_frame_instance_data().created_by = created_by
+
+        @property
+        def last_edited_at(self) -> datetime:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().last_edited_at
+
+        @last_edited_at.setter
+        def last_edited_at(self, last_edited_at: datetime) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().last_edited_at = last_edited_at
+
+        @property
+        def last_edited_by(self) -> Optional[str]:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().last_edited_by
+
+        @last_edited_by.setter
+        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
+            """
+            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
+            """
+            self._check_if_frame_view_valid()
+            if last_edited_by is not None:
+                check_email(last_edited_by)
+            self._get_object_frame_instance_data().last_edited_by = last_edited_by
+
+        @property
+        def confidence(self) -> float:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().confidence
+
+        @confidence.setter
+        def confidence(self, confidence: float) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().confidence = confidence
+
+        @property
+        def manual_annotation(self) -> bool:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().manual_annotation
+
+        @manual_annotation.setter
+        def manual_annotation(self, manual_annotation: bool) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().manual_annotation = manual_annotation
+
+        @property
+        def reviews(self) -> List[dict]:
+            """
+            A read only property about the reviews that happened for this object on this frame.
+            DENIS: probably want to type this out
+            """
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().reviews
+
+        def _check_if_frame_view_valid(self) -> None:
+            if self._frame not in self._classification_instance._frames_to_data:
+                raise RuntimeError(
+                    "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
+                )
+
+        def _get_object_frame_instance_data(self) -> ClassificationInstance._FrameData:
+            return self._classification_instance._frames_to_data[self._frame]
+
     @dataclass
     class _FrameData:
         created_at: datetime = datetime.now()
@@ -172,7 +265,6 @@ class ClassificationInstance:
         last_edited_by: Optional[str] = None,
     ) -> None:
         """Overwrites the current frames."""
-        # new_frames = set()
         if isinstance(frames, int):
             frames = [frames]
 
@@ -190,6 +282,9 @@ class ClassificationInstance:
                 last_edited_at=last_edited_at,
                 last_edited_by=last_edited_by,
             )
+
+    def get_view_for_frame(self, frame: int) -> ClassificationInstance.FrameView:
+        return self.FrameView(self, frame)
 
     def _set_frame_and_frame_data(
         self,
@@ -220,7 +315,7 @@ class ClassificationInstance:
         if self._parent is not None:
             self._parent._add_to_frame_to_hashes_map(self)
 
-    def remove_from_frames(self, frames: Iterable[int]) -> None:
+    def remove_from_frames(self, frames: Union[int, Iterable[int]]) -> None:
         for frame in frames:
             self._frames_to_data.pop(frame)
 

@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass
 from typing import Iterable, List, Union
 
@@ -631,6 +632,50 @@ def test_classification_instances():
     classification_instance_2.set_answer("Hades", overwrite=True)
     assert classification_instance_2.get_answer() == "Hades"
     assert classification_instance_1.get_answer() == "Dionysus"
+
+
+def assert_datetime_is_recent(datetime_: datetime.datetime):
+    now = datetime.datetime.now()
+    assert datetime_ > now - datetime.timedelta(seconds=5)
+
+
+def test_classification_instances_frame_view():
+    classification_instance_1 = ClassificationInstance(text_classification)
+
+    classification_instance_1.add_to_frame([1, 2, 3])
+
+    # Test defaults
+    frame_view_1 = classification_instance_1.get_view_for_frame(1)
+    assert frame_view_1.created_by is None
+    assert_datetime_is_recent(frame_view_1.created_at)
+    assert frame_view_1.last_edited_by is None
+    assert_datetime_is_recent(frame_view_1.last_edited_at)
+    assert frame_view_1.confidence is 1
+    assert frame_view_1.manual_annotation is True
+    assert frame_view_1.reviews is None
+
+    specific_time = datetime.datetime.now() - datetime.timedelta(days=1)
+    frame_view_1.created_by = "Zeus"
+    frame_view_1.created_at = specific_time
+    frame_view_1.last_edited_by = "Poseidon"
+    frame_view_1.last_edited_at = specific_time
+    frame_view_1.confidence = 0.5
+    frame_view_1.manual_annotation = False
+
+    assert frame_view_1.created_by == "Zeus"
+    assert frame_view_1.created_at == specific_time
+    assert frame_view_1.last_edited_by == "Poseidon"
+    assert frame_view_1.last_edited_at == specific_time
+    assert frame_view_1.confidence == 0.5
+    assert frame_view_1.manual_annotation == False
+
+    classification_instance_1.remove_from_frames([1])
+
+    # Using invalid frame view.
+    with pytest.raises(RuntimeError):
+        x = frame_view_1.created_by
+    with pytest.raises(RuntimeError):
+        frame_view_1.created_by = "Aphrodite"
 
 
 def test_add_and_get_classification_instances_to_label_row():
