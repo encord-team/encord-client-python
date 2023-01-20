@@ -242,6 +242,9 @@ class ClassificationInstance:
     def ontology_item(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
+    def is_assigned_to_parent(self) -> bool:
+        return self._parent is not None
+
     def add_to_frame(
         self,
         frames: Union[int, Iterable[int]],
@@ -310,14 +313,14 @@ class ClassificationInstance:
             created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
         )
 
-        if self._parent is not None:
+        if self.is_assigned_to_parent():
             self._parent._add_to_frame_to_hashes_map(self)
 
     def remove_from_frames(self, frames: Union[int, Iterable[int]]) -> None:
         for frame in frames:
             self._frames_to_data.pop(frame)
 
-        if self._parent is not None:
+        if self.is_assigned_to_parent():
             self._parent._remove_frames_from_classification(self.ontology_item, frames)
             self._parent._remove_from_frame_to_hashes_map(frames, self.classification_hash)
 
@@ -533,7 +536,6 @@ class LabelRowClass:
         """
         This class can be used to inspect what object/classification instances are on a given frame or
         what metadata, such as a image file size, is on a given frame.
-        DENIS: this can be a sub class of the LabelRow.
         """
 
         def __init__(
@@ -599,9 +601,6 @@ class LabelRowClass:
             confidence: Optional[float] = None,
             manual_annotation: Optional[bool] = None,
         ) -> None:
-            """
-            DENIS: Good to add, but can we have some sort of property accessors also here for the object instance per frame?
-            """
             object_instance.add_to_frame(
                 coordinates,
                 self._frame,
@@ -727,22 +726,39 @@ class LabelRowClass:
             raise ValueError("This is not a DICOM data type.")
         return self._label_row_read_only_data.dicom_data_links
 
-    def get_image_hash(self, frame_number: int) -> str:
-        # DENIS: to do
-        return "xyz"
+    def get_image_hash(self, frame_number: int) -> Optional[str]:
+        """
+        Get the corresponding image hash of the frame number. Return `None` if the frame number is out of bounds.
+        Raise an error if this function is used for non-image data types.
+        """
+        if self.data_type not in (DataType.IMAGE, DataType.IMG_GROUP):
+            raise RuntimeError("This function is only supported for label rows of image or image group data types.")
 
-    def get_frame_number(self, image_hash: str) -> int:
-        # DENIS: to do
-        return 5
+        return self._label_row_read_only_data.frame_to_image_hash.get(frame_number)
+
+    def get_frame_number(self, image_hash: str) -> Optional[int]:
+        """
+        Get the corresponding image hash of the frame number. Return `None` if the image hash was not found with an
+        associated frame number.
+        Raise an error if this function is used for non-image data types.
+        """
+        if self.data_type not in (DataType.IMAGE, DataType.IMG_GROUP):
+            raise RuntimeError("This function is only supported for label rows of image or image group data types.")
+        return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
     def upload(self):
         """Do the client request"""
         # Can probably just use the set label row here.
         pass
 
-    def get_frame_view(self, frame: int) -> FrameView:
-        # DENIS: this should also be able to be instantiated via an image hash or image name maybe.
-        #  or at least have an easy path to get to that.
+    def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
+        """
+        Args:
+            frame: Either the frame number or the image hash if the data type is an image or image group.
+                Defaults to the first frame.
+        """
+        if isinstance(frame, str):
+            frame = self.get_frame_number(frame)
         return self.FrameView(self, self._label_row_read_only_data, frame)
 
     def to_encord_dict(self) -> dict:
@@ -763,7 +779,7 @@ class LabelRowClass:
         ret["data_type"] = read_only_data.data_type.value
         ret["object_answers"] = self._to_object_answers()
         ret["classification_answers"] = self._to_classification_answers()
-        ret["object_actions"] = self._to_object_actions()  # TODO:
+        ret["object_actions"] = self._to_object_actions()
         ret["label_status"] = read_only_data.label_status
         ret["data_units"] = self._to_encord_data_units()
 
@@ -915,7 +931,7 @@ class LabelRowClass:
         ret["shape"] = ontology_object.shape.value
         ret["value"] = _lower_snake_case(ontology_object.name)
         ret["createdAt"] = object_instance_frame_view.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        ret["createdBy"] = object_instance_frame_view.created_by or "denis@cord.tech"  # DENIS: fix
+        ret["createdBy"] = object_instance_frame_view.created_by
         ret["confidence"] = object_instance_frame_view.confidence
         ret["objectHash"] = object_.object_hash
         ret["featureHash"] = ontology_object.feature_node_hash
@@ -994,7 +1010,6 @@ class LabelRowClass:
         for object_ in self._objects_map.values():
             if ontology_object is None or object_.ontology_item.feature_node_hash == ontology_object.feature_node_hash:
                 ret.append(object_)
-                # DENIS: the accessors are protected. Check that no one can do anything stupid.
         return ret
 
     def add_object(self, object_instance: ObjectInstance, force=True):
@@ -1007,7 +1022,7 @@ class LabelRowClass:
         if not object_instance.is_valid():
             raise ValueError("The supplied ObjectInstance is not in a valid format.")
 
-        if object_instance._parent is not None:
+        if object_instance.is_assigned_to_parent():
             raise RuntimeError(
                 "The supplied ObjectInstance is already part of a LabelRowClass. You can only add a ObjectInstance to one "
                 "LabelRowClass. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
@@ -1029,8 +1044,7 @@ class LabelRowClass:
         if not classification_instance.is_valid():
             raise ValueError("The supplied ClassificationInstance is not in a valid format.")
 
-        # DENIS: probably better to have a member function saying whether a parent is currently set.
-        if classification_instance._parent is not None:
+        if classification_instance.is_assigned_to_parent():
             raise RuntimeError(
                 "The supplied ClassificationInstance is already part of a LabelRowClass. You can only add a ClassificationInstance"
                 " to one LabelRowClass. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
@@ -1143,7 +1157,6 @@ class LabelRowClass:
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
         image_hash_to_frame = {item.image_hash: item.frame_number for item in frame_level_data.values()}
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
-        # DENIS: for images/image_groups, we need a per image data row. For videos/dicoms this is not needed.
         data_type = DataType(label_row_dict["data_type"])
 
         duration = None
@@ -1158,7 +1171,7 @@ class LabelRowClass:
 
         elif data_type == DataType.DICOM:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
-            number_of_frames = 0  # DENIS: not sure here
+            number_of_frames = 0
             dicom_data_links = dicom_dict["data_links"]
 
         elif data_type == DataType.IMAGE:
@@ -1192,7 +1205,7 @@ class LabelRowClass:
 
         # Think about breaking or not breaking the order of the objects
         # DENIS: the only way to really know the order is through the objects_index. In this case, we'd need
-        # additional information from the BE.
+        # additional information from the BE. Probably the object id.
         classification_answers = label_row_dict["classification_answers"]
 
         for data_unit in label_row_dict["data_units"].values():
@@ -1254,7 +1267,7 @@ class LabelRowClass:
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
         coordinates = self._get_coordinates(frame_object_label)
-        object_frame_instance_info = _ObjectFrameInstanceInfo.from_dict(frame_object_label)
+        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
         object_instance.add_to_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
         return object_instance
@@ -1268,7 +1281,7 @@ class LabelRowClass:
         object_instance = self._objects_map[object_hash]
 
         coordinates = self._get_coordinates(frame_object_label)
-        object_frame_instance_info = _ObjectFrameInstanceInfo.from_dict(frame_object_label)
+        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
         object_instance.add_to_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
 
@@ -1343,73 +1356,6 @@ class LabelRowClass:
 
     def __repr__(self) -> str:
         return f"LabelRowData(label_hash={self.label_hash}, data_title={self.data_title})"
-
-
-@dataclass
-class _ObjectFrameInstanceInfo:
-    # DENIS: this could also be a sub class of the ObjectInstance.
-    created_at: datetime = datetime.now()
-    created_by: Optional[str] = None
-    """None defaults to the user of the SDK."""
-    last_edited_at: datetime = datetime.now()
-    last_edited_by: Optional[str] = None
-    """None defaults to the user of the SDK."""
-    confidence: float = DEFAULT_CONFIDENCE
-    manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-    reviews: Optional[List[dict]] = None
-    is_deleted: Optional[bool] = None
-
-    @staticmethod
-    def from_dict(d: dict):
-        if "lastEditedAt" in d:
-            last_edited_at = parse(d["lastEditedAt"])
-        else:
-            last_edited_at = None
-
-        return _ObjectFrameInstanceInfo(
-            created_at=parse(d["createdAt"]),
-            created_by=d["createdBy"],
-            last_edited_at=last_edited_at,
-            last_edited_by=d.get("lastEditedBy"),
-            confidence=d["confidence"],
-            manual_annotation=d["manualAnnotation"],
-            reviews=d.get("reviews"),
-            is_deleted=d.get("isDeleted"),
-        )
-
-    def update_from_optional_fields(
-        self,
-        created_at: Optional[datetime] = None,
-        created_by: Optional[str] = None,
-        last_edited_at: Optional[datetime] = None,
-        last_edited_by: Optional[str] = None,
-        confidence: Optional[float] = None,
-        manual_annotation: Optional[bool] = None,
-        reviews: Optional[List[dict]] = None,
-        is_deleted: Optional[bool] = None,
-    ) -> None:
-        """Return a new instance with the specified fields updated."""
-        self.created_at = created_at or self.created_at
-        if created_by is not None:
-            self.created_by = created_by
-        self.last_edited_at = last_edited_at or self.last_edited_at
-        if last_edited_by is not None:
-            self.last_edited_by = last_edited_by
-        if confidence is not None:
-            self.confidence = confidence
-        if manual_annotation is not None:
-            self.manual_annotation = manual_annotation
-        if reviews is not None:
-            self.reviews = reviews
-        if is_deleted is not None:
-            self.is_deleted = is_deleted
-
-
-@dataclass
-class _ObjectFrameInstanceData:
-    coordinates: Coordinates
-    object_frame_instance_info: _ObjectFrameInstanceInfo
-    # Probably the above can be flattened out into this class.
 
 
 @dataclass
@@ -1539,7 +1485,7 @@ class ObjectInstance:
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
 
-        def _get_object_frame_instance_data(self) -> _ObjectFrameInstanceData:
+        def _get_object_frame_instance_data(self) -> ObjectInstance.FrameData:
             return self._object_instance._frames_to_instance_data[self._frame]
 
         def _check_if_frame_view_valid(self) -> None:
@@ -1548,9 +1494,73 @@ class ObjectInstance:
                     "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
                 )
 
+    @dataclass
+    class FrameInfo:
+        created_at: datetime = datetime.now()
+        created_by: Optional[str] = None
+        """None defaults to the user of the SDK."""
+        last_edited_at: datetime = datetime.now()
+        last_edited_by: Optional[str] = None
+        """None defaults to the user of the SDK."""
+        confidence: float = DEFAULT_CONFIDENCE
+        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
+        reviews: Optional[List[dict]] = None
+        is_deleted: Optional[bool] = None
+
+        @staticmethod
+        def from_dict(d: dict):
+            if "lastEditedAt" in d:
+                last_edited_at = parse(d["lastEditedAt"])
+            else:
+                last_edited_at = None
+
+            return ObjectInstance.FrameInfo(
+                created_at=parse(d["createdAt"]),
+                created_by=d["createdBy"],
+                last_edited_at=last_edited_at,
+                last_edited_by=d.get("lastEditedBy"),
+                confidence=d["confidence"],
+                manual_annotation=d["manualAnnotation"],
+                reviews=d.get("reviews"),
+                is_deleted=d.get("isDeleted"),
+            )
+
+        def update_from_optional_fields(
+            self,
+            created_at: Optional[datetime] = None,
+            created_by: Optional[str] = None,
+            last_edited_at: Optional[datetime] = None,
+            last_edited_by: Optional[str] = None,
+            confidence: Optional[float] = None,
+            manual_annotation: Optional[bool] = None,
+            reviews: Optional[List[dict]] = None,
+            is_deleted: Optional[bool] = None,
+        ) -> None:
+            """Return a new instance with the specified fields updated."""
+            self.created_at = created_at or self.created_at
+            if created_by is not None:
+                self.created_by = created_by
+            self.last_edited_at = last_edited_at or self.last_edited_at
+            if last_edited_by is not None:
+                self.last_edited_by = last_edited_by
+            if confidence is not None:
+                self.confidence = confidence
+            if manual_annotation is not None:
+                self.manual_annotation = manual_annotation
+            if reviews is not None:
+                self.reviews = reviews
+            if is_deleted is not None:
+                self.is_deleted = is_deleted
+
+    @dataclass
+    class FrameData:
+        coordinates: Coordinates
+        object_frame_instance_info: ObjectInstance.FrameInfo
+        # Probably the above can be flattened out into this class.
+
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
-        self._frames_to_instance_data: Dict[int, _ObjectFrameInstanceData] = dict()
+        self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = dict()
         # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
         # this thing take over the label structure itself (for large ones it would be interesting)
         self._object_hash = object_hash or short_uuid_str()
@@ -1561,6 +1571,9 @@ class ObjectInstance:
         # feature_node_hash of attribute to the answer.
 
         self._dynamic_answer_manager = DynamicAnswerManager(self)
+
+    def is_assigned_to_parent(self) -> bool:
+        return self._parent is not None
 
     @overload
     def get_answer(
@@ -1839,8 +1852,8 @@ class ObjectInstance:
         # DENIS: validate that the coordinates are not out of bounds.
 
         if existing_frame_data is None:
-            existing_frame_data = _ObjectFrameInstanceData(
-                coordinates=coordinates, object_frame_instance_info=_ObjectFrameInstanceInfo()
+            existing_frame_data = ObjectInstance.FrameData(
+                coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
             )
             self._frames_to_instance_data[frame] = existing_frame_data
 
@@ -1860,9 +1873,9 @@ class ObjectInstance:
             # DENIS: this is somewhat inefficient given the loop over all frames that it is currently part of.
             self._parent._add_to_frame_to_hashes_map(self)
 
-    # def get_for_frame(self, frame: int) -> _ObjectFrameInstanceData:
+    # def get_for_frame(self, frame: int) -> ObjectInstance.FrameData:
     #     saved_data = self._frames_to_instance_data[frame]
-    #     return _ObjectFrameInstanceData(
+    #     return ObjectInstance.FrameData(
     #         coordinates=deepcopy(saved_data.coordinates),
     #         object_frame_instance_info=saved_data.object_frame_instance_info,
     #     )
@@ -1884,7 +1897,7 @@ class ObjectInstance:
         # DENIS: this is public - think about if I want to have a condensed version with a run length encoding.
         return list(self._frames_to_instance_data.keys())
 
-    # def get_instance_data(self, frames: Iterable[int]) -> List[_ObjectFrameInstanceData]:
+    # def get_instance_data(self, frames: Iterable[int]) -> List[ObjectInstance.FrameData]:
     #     # DENIS: fix this frame type
     #     ret = []
     #     for frame in frames:
