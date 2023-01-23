@@ -313,7 +313,7 @@ class ClassificationInstance:
         )
 
         if self.is_assigned_to_parent():
-            self._parent._add_to_frame_to_hashes_map(self)
+            self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
     def remove_from_frames(self, frames: Union[int, Iterable[int]]) -> None:
         for frame in frames:
@@ -1099,15 +1099,21 @@ class LabelRowClass:
         for actual_frame in actual_frames:
             all_frames.remove(actual_frame)
 
-    def _add_to_frame_to_hashes_map(self, label_item: Union[ObjectInstance, ClassificationInstance]):
+    def _add_to_frame_to_hashes_map(self, label_item: Union[ObjectInstance, ClassificationInstance]) -> None:
         """This can be called by the ObjectInstance."""
         for frame in label_item.frames():
-            if isinstance(label_item, ObjectInstance):
-                self._frame_to_hashes[frame].add(label_item.object_hash)
-            elif isinstance(label_item, ClassificationInstance):
-                self._frame_to_hashes[frame].add(label_item.classification_hash)
-            else:
-                return NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
+            self.add_to_single_frame_to_hashes_map(label_item, frame)
+
+    def add_to_single_frame_to_hashes_map(
+        self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
+    ) -> None:
+        """This is an internal function, it is not meant to be called by the SDK user."""
+        if isinstance(label_item, ObjectInstance):
+            self._frame_to_hashes[frame].add(label_item.object_hash)
+        elif isinstance(label_item, ClassificationInstance):
+            self._frame_to_hashes[frame].add(label_item.classification_hash)
+        else:
+            raise NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
 
     def get_classifications(
         self, ontology_classification: Optional[Classification] = None
@@ -1830,7 +1836,6 @@ class ObjectInstance:
         frame: int,
         *,
         overwrite: bool = False,
-        skip_coordinate_validation: bool = False,
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -1898,8 +1903,7 @@ class ObjectInstance:
         existing_frame_data.coordinates = coordinates
 
         if self._parent:
-            # DENIS: this is somewhat inefficient given the loop over all frames that it is currently part of.
-            self._parent._add_to_frame_to_hashes_map(self)
+            self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
     def get_view_for_frame(self, frame: int) -> ObjectInstance.FrameView:
         return self.FrameView(self, frame)
