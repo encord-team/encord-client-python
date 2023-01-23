@@ -637,7 +637,7 @@ class EncordClientProject(EncordClient):
 
         payload = CopyProjectPayload(copy_project_options=copy_project_options, copy_labels_options=copy_labels_options)
 
-        return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
+        return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=dataclasses.asdict(payload))
 
     def get_label_row(
         self,

@@ -16,7 +16,7 @@ import datetime
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, TypedDict, Union
+from typing import Dict, List, Optional, Union
 
 from encord.orm import base_orm
 
@@ -164,22 +164,25 @@ class ReviewApprovalState(str, Enum):
     NOT_SELECTED_FOR_REVIEW = "NOT_SELECTED_FOR_REVIEW"
 
 
-class CopyReviewTasksOptions(TypedDict):
-    copy_review_tasks: bool
-    review_status_list: List
+@dataclass
+class CopyReviewTasksOptions:
+    copy_review_tasks: bool = False
+    review_status_list: List = field(default_factory=list)
 
 
-class CopyLabelsOptions(TypedDict):
-    datasets_to_data_hashes_map: Dict[str, List[str]]
-    accepted_label_statuses: Optional[List[ReviewApprovalState]]
-    accpeted_label_hashes: Optional[List[str]]
-    copy_review_tasks_options: Optional[CopyReviewTasksOptions]
-    create_new_dataset: Optional[bool]
+@dataclass
+class CopyLabelsOptions:
+    datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
+    copy_review_tasks_options: CopyReviewTasksOptions = CopyReviewTasksOptions()
+    accpeted_label_hashes: Optional[List[str]] = None
+    accepted_label_statuses: Optional[List[ReviewApprovalState]] = None
+    create_new_dataset: Optional[bool] = None
 
 
-class CopyProjectPayload(TypedDict):
-    copy_project_options: List[ProjectCopyOptions]
-    copy_labels_options: Optional[CopyLabelsOptions]
+@dataclass
+class CopyProjectPayload:
+    copy_project_options: List[ProjectCopyOptions] = field(default_factory=list)
+    copy_labels_options: Optional[CopyLabelsOptions] = None
 
 
 class ProjectWorkflowType(Enum):
