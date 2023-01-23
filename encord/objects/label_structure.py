@@ -680,7 +680,6 @@ class LabelRowClass:
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
         duration: Optional[float] = None
         fps: Optional[float] = None
-        # DENIS: use, fill, and test these fields below.
         data_link: Optional[str] = None
         width: Optional[int] = None
         height: Optional[int] = None
@@ -742,6 +741,18 @@ class LabelRowClass:
     def fps(self) -> Optional[float]:
         """Only a value for Video data types."""
         return self._label_row_read_only_data.fps
+
+    @property
+    def data_link(self) -> Optional[str]:
+        return self._label_row_read_only_data.data_link
+
+    @property
+    def width(self) -> Optional[int]:
+        return self._label_row_read_only_data.width
+
+    @property
+    def height(self) -> Optional[int]:
+        return self._label_row_read_only_data.height
 
     @property
     def dicom_data_links(self) -> Optional[List[str]]:
@@ -1234,17 +1245,29 @@ class LabelRowClass:
             duration = video_dict["data_duration"]
             fps = video_dict["data_fps"]
             number_of_frames = int(duration * fps)
+            data_link = video_dict["data_link"]
+            height = video_dict["height"]
+            width = video_dict["width"]
 
         elif data_type == DataType.DICOM:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
             number_of_frames = 0
             dicom_data_links = dicom_dict["data_links"]
+            data_link = None
+            height = dicom_dict["height"]
+            width = dicom_dict["width"]
 
         elif data_type == DataType.IMAGE:
             number_of_frames = 1
+            data_link = label_row_dict["data_link"]
+            height = label_row_dict["height"]
+            width = label_row_dict["width"]
 
         elif data_type == DataType.IMG_GROUP:
             number_of_frames = len(label_row_dict["data_units"])
+            data_link = label_row_dict["data_link"]
+            height = label_row_dict["height"]
+            width = label_row_dict["width"]
 
         else:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
@@ -1262,6 +1285,9 @@ class LabelRowClass:
             duration=duration,
             fps=fps,
             number_of_frames=number_of_frames,
+            data_link=data_link,
+            height=height,
+            width=width,
             dicom_data_links=dicom_data_links,
         )
 
