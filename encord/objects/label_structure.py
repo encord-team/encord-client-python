@@ -215,7 +215,6 @@ class ClassificationInstance:
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowClass] = None
         self._classification_hash = classification_hash or short_uuid_str()
-        self._classification_instance_data = self.FrameData()
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
@@ -236,10 +235,6 @@ class ClassificationInstance:
     @property
     def ontology_item(self) -> Classification:
         return deepcopy(self._ontology_classification)
-
-    @ontology_item.setter
-    def ontology_item(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
     def is_assigned_to_parent(self) -> bool:
         return self._parent is not None
@@ -482,6 +477,17 @@ class ClassificationInstance:
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
         static_answer.unset()
+
+    def copy(self) -> ClassificationInstance:
+        """
+        Creates an exact copy of this ClassificationINstance but with a new classification hash and without being
+        associated to any LabelRowClass. This is useful if you want to add the semantically same
+        ClassificationInstance to multiple `LabelRowClass`s.
+        """
+        ret = ClassificationInstance(self._ontology_object)
+        ret._static_answer_map = deepcopy(self._static_answer_map)
+        ret._frames_to_data = deepcopy(self._frames_to_data)
+        return ret
 
     def _is_attribute_valid_child_of_classification(self, attribute: Attribute) -> bool:
         return attribute.feature_node_hash in self._static_answer_map
@@ -1911,25 +1917,18 @@ class ObjectInstance:
     def copy(self) -> ObjectInstance:
         """
         Creates an exact copy of this ObjectInstance but with a new object hash and without being associated to any
-        LabelRowClass. This is useful if you want to add the semantically same ObjectInstance to multiple `LabelRowClass`s."""
+        LabelRowClass. This is useful if you want to add the semantically same ObjectInstance to multiple
+        `LabelRowClass`s.
+        """
         ret = ObjectInstance(self._ontology_object)
-        ret._frames_to_instance_data = copy(self._frames_to_instance_data)
-        # DENIS: test if a shallow copy is enough
-        # DENIS: copy the answers stuff as well.
+        ret._frames_to_instance_data = deepcopy(self._frames_to_instance_data)
+        ret._static_answer_map = deepcopy(self._static_answer_map)
+        ret._dynamic_answer_manager = self._dynamic_answer_manager.copy()
         return ret
 
     def frames(self) -> List[int]:
-        # DENIS: this is public - think about if I want to have a condensed version with a run length encoding.
+        """ """
         return list(self._frames_to_instance_data.keys())
-
-    # def get_instance_data(self, frames: Iterable[int]) -> List[ObjectInstance.FrameData]:
-    #     # DENIS: fix this frame type
-    #     ret = []
-    #     for frame in frames:
-    #         if frame not in self._frames_to_instance_data:
-    #             raise ValueError(f"This object does not exist on frame `{frame}`.")
-    #         ret.append(self._frames_to_instance_data[frame])
-    #     return ret
 
     def remove_from_frames(self, frames: Iterable[int]):
         """Ensure that it will be removed from all frames."""
@@ -2087,6 +2086,12 @@ class DynamicAnswerManager:
         ret = []
         for answer, frames in self._answers_to_frames.items():
             ret.append((answer, frames_to_ranges(frames)))
+        return ret
+
+    def copy(self) -> DynamicAnswerManager:
+        ret = DynamicAnswerManager(self._object_instance)
+        ret._frames_to_answers = deepcopy(self._frames_to_answers)
+        ret._answers_to_frames = deepcopy(self._answers_to_frames)
         return ret
 
     def _get_dynamic_answers(self) -> Set[Answer]:
