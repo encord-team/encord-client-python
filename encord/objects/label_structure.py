@@ -4,6 +4,7 @@ from collections import defaultdict
 from copy import copy, deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import (
     Any,
     Dict,
@@ -65,6 +66,25 @@ from encord.objects.utils import (
 )
 
 # DENIS: think about better error codes for people to catch.
+
+
+class LabelStatus(Enum):
+    NOT_LABELLED = "NOT_LABELLED"
+    LABEL_IN_PROGRESS = "LABEL_IN_PROGRESS"
+    LABELLED = "LABELLED"
+    REVIEW_IN_PROGRESS = "REVIEW_IN_PROGRESS"
+    REVIEWED = "REVIEWED"
+    REVIEWED_TWICE = "REVIEWED_TWICE"
+
+    MISSING_LABEL_STATUS = "MISSING_LABEL_STATUS"
+    """
+    This value will be displayed if the Encord platform has a new label status and your SDK version does not understand
+    it yet. Please update your SDK to the latest version. 
+    """
+
+    @classmethod
+    def _missing_(cls, value):
+        return cls.MISSING_LABEL_STATUS
 
 
 class ClassificationInstance:
@@ -533,9 +553,6 @@ class LabelRowClass:
 
     This is essentially one blob of data_units. For an image_group we need to get all the hashed in.
 
-    DENIS: For tracing, it could be an idea to record the function calls that are being done (can be condensed
-    as well) and send them as part of the payload to the server. I could even have this as a more generic solution
-    for the SDK.
 
     Optionally add: `reset_labels` to delete all the current labels.
     `get_user_frames` -> see all the frames where there are labels.
@@ -655,11 +672,10 @@ class LabelRowClass:
         dataset_hash: str
         dataset_title: str
         data_title: str
-        # DENIS: probably also want to have the data_hash as part of these types.
         data_type: DataType
-        label_status: str  # actually some sort of enum
+        label_status: LabelStatus
         number_of_frames: int
-        frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData]  # DENIS: this could be an array too.
+        frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData]
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
         duration: Optional[float] = None
@@ -710,8 +726,7 @@ class LabelRowClass:
         return self._label_row_read_only_data.data_type
 
     @property
-    def label_status(self) -> str:
-        # DENIS: this should be an enum
+    def label_status(self) -> LabelStatus:
         return self._label_row_read_only_data.label_status
 
     @property
@@ -789,7 +804,7 @@ class LabelRowClass:
         ret["object_answers"] = self._to_object_answers()
         ret["classification_answers"] = self._to_classification_answers()
         ret["object_actions"] = self._to_object_actions()
-        ret["label_status"] = read_only_data.label_status
+        ret["label_status"] = read_only_data.label_status.value
         ret["data_units"] = self._to_encord_data_units()
 
         return ret
@@ -1204,7 +1219,7 @@ class LabelRowClass:
             dataset_title=label_row_dict["dataset_title"],
             data_title=label_row_dict["data_title"],
             data_type=data_type,
-            label_status=label_row_dict["label_status"],  # This is some kind of enum.
+            label_status=LabelStatus(label_row_dict["label_status"]),
             frame_level_data=frame_level_data,
             image_hash_to_frame=image_hash_to_frame,
             frame_to_image_hash=frame_to_image_hash,

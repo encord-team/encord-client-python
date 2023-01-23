@@ -16,6 +16,7 @@ from encord.objects.label_structure import (
     AnswerForFrames,
     ClassificationInstance,
     LabelRowClass,
+    LabelStatus,
     ObjectInstance,
 )
 from encord.objects.ontology_object import Object
@@ -971,6 +972,12 @@ def test_classification_instance_delete():
     classification_instance.delete_answer()
     assert classification_instance.get_answer() is None
     assert classification_instance.get_answer(radio_classification_option_2_text) is None
+
+
+def test_label_status_forwards_compatibility():
+    assert LabelStatus("NOT_LABELLED") == LabelStatus.NOT_LABELLED
+    assert LabelStatus("new-unknown-status") == LabelStatus.MISSING_LABEL_STATUS
+    assert LabelStatus("new-unknown-status").value == "MISSING_LABEL_STATUS"
 
 
 # ==========================================================
