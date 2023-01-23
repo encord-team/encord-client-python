@@ -996,7 +996,7 @@ class LabelRowClass:
     def _to_encord_classifications_list(self, frame: int) -> list:
         ret: List[dict] = []
 
-        classifications = self.get_classifications_by_frame([frame])
+        classifications = self.get_classifications(filter_frames=frame)
         for classification in classifications:
             encord_classification = self._to_encord_classification(classification, frame)
             ret.append(encord_classification)
@@ -1045,7 +1045,7 @@ class LabelRowClass:
         """
         Args:
             filter_ontology_object:
-                Optionally filter by specific ontology objects.
+                Optionally filter by a specific ontology object.
             filter_frames:
                 Optionally filter by specific frames.
 
@@ -1188,36 +1188,46 @@ class LabelRowClass:
             raise NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
 
     def get_classifications(
-        self, ontology_classification: Optional[Classification] = None
+        self, filter_ontology_classification: Optional[Classification] = None, filter_frames: Optional[Frames] = None
     ) -> List[ClassificationInstance]:
-        """Returns all the objects with this hash."""
-        ret = []
-        for classification_instance in self._classifications_map.values():
-            if (
-                ontology_classification is None
-                or ontology_classification.feature_node_hash == classification_instance.ontology_item.feature_node_hash
+        """
+        Args:
+            filter_ontology_classification:
+                Optionally filter by a specific ontology classification.
+            filter_frames:
+                Optionally filter by specific frames.
+
+        Returns:
+            All the `ObjectInstance`s that match the filter.
+        """
+        ret: List[ClassificationInstance] = list()
+
+        if filter_frames is not None:
+            filtered_frames_list = frames_class_to_frames_list(filter_frames)
+        else:
+            filtered_frames_list = list()
+
+        for classification in self._classifications_map.values():
+            # filter by ontology object
+            if not (
+                filter_ontology_classification is None
+                or classification.ontology_item.feature_node_hash == filter_ontology_classification.feature_node_hash
             ):
-                ret.append(classification_instance)
-        return ret
+                continue
 
-    # def get_objects_by_frame(self, frames: Iterable[int]) -> Set[ObjectInstance]:
-    #     """DENIS: maybe merge this with the getter above."""
-    #     ret: Set[ObjectInstance] = set()
-    #     for frame in frames:
-    #         hashes = self._frame_to_hashes[frame]
-    #         for hash_ in hashes:
-    #             if hash_ in self._objects_map:
-    #                 ret.add(self._objects_map[hash_])
-    #
-    #     return ret
+            # filter by frame
+            if filter_frames is None:
+                append = True
+            else:
+                append = False
+            for frame in filtered_frames_list:
+                hashes = self._frame_to_hashes.get(frame, set())
+                if classification.classification_hash in hashes:
+                    append = True
+                    break
 
-    def get_classifications_by_frame(self, frames: Iterable[int]) -> Set[ClassificationInstance]:
-        ret: Set[ClassificationInstance] = set()
-        for frame in frames:
-            hashes = self._frame_to_hashes[frame]
-            for hash_ in hashes:
-                if hash_ in self._classifications_map:
-                    ret.add(self._classifications_map[hash_])
+            if append:
+                ret.append(classification)
         return ret
 
     def remove_object(self, object_instance: ObjectInstance):
@@ -1258,16 +1268,17 @@ class LabelRowClass:
             width = dicom_dict["width"]
 
         elif data_type == DataType.IMAGE:
+            image_dict = list(label_row_dict["data_units"].values())[0]
             number_of_frames = 1
-            data_link = label_row_dict["data_link"]
-            height = label_row_dict["height"]
-            width = label_row_dict["width"]
+            data_link = image_dict["data_link"]
+            height = image_dict["height"]
+            width = image_dict["width"]
 
         elif data_type == DataType.IMG_GROUP:
             number_of_frames = len(label_row_dict["data_units"])
-            data_link = label_row_dict["data_link"]
-            height = label_row_dict["height"]
-            width = label_row_dict["width"]
+            data_link = None
+            height = None
+            width = None
 
         else:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
