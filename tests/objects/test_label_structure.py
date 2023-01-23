@@ -1,6 +1,5 @@
 import datetime
-from dataclasses import dataclass
-from typing import Iterable, List, Union
+from typing import List
 
 import pytest
 
@@ -135,13 +134,13 @@ def test_upload_simple_data():
     # ^ this sets the answer for all the dynamic attributes that are currently available
 
     assert object_instance.get_answer(attribute=dynamic_text_attribute_of_box_item) == [
-        AnswerForFrames(answer="Zeus", range={1, 2, 3}),
+        AnswerForFrames(answer="Zeus", ranges=[Range(1, 3)]),
     ]
 
     object_instance.set_answer(answer="Hermes", attribute=dynamic_text_attribute_of_box_item, frames=1)
     assert object_instance.get_answer(attribute=dynamic_text_attribute_of_box_item) == [
-        AnswerForFrames(answer="Hermes", range={1}),
-        AnswerForFrames(answer="Zeus", range={2, 3}),
+        AnswerForFrames(answer="Hermes", ranges=[Range(1, 1)]),
+        AnswerForFrames(answer="Zeus", ranges=[Range(2, 3)]),
     ]
 
     # ======== Add the object to the label row ========
@@ -650,16 +649,16 @@ def test_classification_instances_frame_view():
     assert frame_view_1.reviews is None
 
     specific_time = datetime.datetime.now() - datetime.timedelta(days=1)
-    frame_view_1.created_by = "Zeus"
+    frame_view_1.created_by = "zeus@gmail.com"
     frame_view_1.created_at = specific_time
-    frame_view_1.last_edited_by = "Poseidon"
+    frame_view_1.last_edited_by = "poseidon@gmail.com"
     frame_view_1.last_edited_at = specific_time
     frame_view_1.confidence = 0.5
     frame_view_1.manual_annotation = False
 
-    assert frame_view_1.created_by == "Zeus"
+    assert frame_view_1.created_by == "zeus@gmail.com"
     assert frame_view_1.created_at == specific_time
-    assert frame_view_1.last_edited_by == "Poseidon"
+    assert frame_view_1.last_edited_by == "poseidon@gmail.com"
     assert frame_view_1.last_edited_at == specific_time
     assert frame_view_1.confidence == 0.5
     assert frame_view_1.manual_annotation == False
@@ -670,7 +669,7 @@ def test_classification_instances_frame_view():
     with pytest.raises(RuntimeError):
         x = frame_view_1.created_by
     with pytest.raises(RuntimeError):
-        frame_view_1.created_by = "Aphrodite"
+        frame_view_1.created_by = "aphrodite@gmail.com"
 
 
 def test_add_and_get_classification_instances_to_label_row():
@@ -826,7 +825,7 @@ def test_object_instance_answer_dynamic_attributes():
     assert object_instance.get_answer(dynamic_text) == []
 
     object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
-    assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Zeus", range={1})]
+    assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Zeus", ranges=[Range(1, 1)])]
 
     with pytest.raises(ValueError):
         # Invalid attribute
@@ -836,7 +835,7 @@ def test_object_instance_answer_dynamic_attributes():
 
     # Overwriting frames
     object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=1)
-    assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Poseidon", range={1})]
+    assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Poseidon", ranges=[Range(1, 1)])]
 
 
 def test_object_instance_answer_dynamic_no_frames_argument():
@@ -853,21 +852,21 @@ def test_object_instance_answer_dynamic_no_frames_argument():
     object_instance.set_answer("Zeus", attribute=dynamic_text)
     # Answers for all coordinates
     assert object_instance.get_answer(dynamic_text) == [
-        AnswerForFrames(answer="Zeus", range={1, 2, 3}),
+        AnswerForFrames(answer="Zeus", ranges=[Range(1, 3)]),
     ]
 
     object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=5)
     object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=6)
     # Nothing changes after setting new coordinates
     assert object_instance.get_answer(dynamic_text) == [
-        AnswerForFrames(answer="Zeus", range={1, 2, 3}),
+        AnswerForFrames(answer="Zeus", ranges=[Range(1, 3)]),
     ]
 
     object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=[Range(2, 2), Range(6, 6)])
     # Setting frames does only set the frames you specify.
     assert object_instance.get_answer(dynamic_text) == [
-        AnswerForFrames(answer="Zeus", range={1, 3}),
-        AnswerForFrames(answer="Poseidon", range={2, 6}),
+        AnswerForFrames(answer="Zeus", ranges=[Range(1, 1), Range(3, 3)]),
+        AnswerForFrames(answer="Poseidon", ranges=[Range(2, 2), Range(6, 6)]),
     ]
 
 
@@ -895,13 +894,13 @@ def test_object_instance_answer_dynamic_getter_filters():
     object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=Range(2, 4))
 
     assert object_instance.get_answer(dynamic_text, filter_frame=1) == [
-        AnswerForFrames(answer="Zeus", range={1}),
+        AnswerForFrames(answer="Zeus", ranges=[Range(1, 1)]),
     ]
     assert object_instance.get_answer(dynamic_text, filter_answer="Poseidon") == [
-        AnswerForFrames(answer="Poseidon", range={2, 3, 4}),
+        AnswerForFrames(answer="Poseidon", ranges=[Range(2, 4)]),
     ]
     assert object_instance.get_answer(dynamic_text, filter_answer="Poseidon", filter_frame=2) == [
-        AnswerForFrames(answer="Poseidon", range={2, 3, 4}),
+        AnswerForFrames(answer="Poseidon", ranges=[Range(2, 4)]),
     ]
 
 
@@ -927,24 +926,24 @@ def test_object_instance_dynamic_answer_delete():
     object_instance.set_answer("Ulysses", attribute=dynamic_text, frames=Range(5, 6))
 
     assert object_instance.get_answer(dynamic_text) == [
-        AnswerForFrames(answer="Zeus", range={1}),
-        AnswerForFrames(answer="Poseidon", range={2, 3, 4}),
-        AnswerForFrames(answer="Ulysses", range={5, 6}),
+        AnswerForFrames(answer="Zeus", ranges=[Range(1, 1)]),
+        AnswerForFrames(answer="Poseidon", ranges=[Range(2, 4)]),
+        AnswerForFrames(answer="Ulysses", ranges=[Range(5, 6)]),
     ]
     # DENIS: with different overloads could have different flags for the return types and then the
     # correct types!
 
     object_instance.delete_answer(dynamic_text, filter_frame=2)
     assert object_instance.get_answer(dynamic_text) == [
-        AnswerForFrames(answer="Zeus", range={1}),
-        AnswerForFrames(answer="Poseidon", range={3, 4}),
-        AnswerForFrames(answer="Ulysses", range={5, 6}),
+        AnswerForFrames(answer="Zeus", ranges=[Range(1, 1)]),
+        AnswerForFrames(answer="Poseidon", ranges=[Range(3, 4)]),
+        AnswerForFrames(answer="Ulysses", ranges=[Range(5, 6)]),
     ]
 
     object_instance.delete_answer(dynamic_text, filter_answer="Ulysses")
     assert object_instance.get_answer(dynamic_text) == [
-        AnswerForFrames(answer="Zeus", range={1}),
-        AnswerForFrames(answer="Poseidon", range={3, 4}),
+        AnswerForFrames(answer="Zeus", ranges=[Range(1, 1)]),
+        AnswerForFrames(answer="Poseidon", ranges=[Range(3, 4)]),
     ]
 
     object_instance.delete_answer(dynamic_text)

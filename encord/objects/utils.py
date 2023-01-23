@@ -31,6 +31,10 @@ def frame_to_range(frame: int) -> Range:
 
 
 def frames_to_ranges(frames: Iterable[int]) -> Ranges:
+    """
+    Create a sorted list (in ascending order) of run length encoded ranges of the frames. The Ranges will not
+    be overlapping.
+    """
     if len(frames) == 0:
         return []
 

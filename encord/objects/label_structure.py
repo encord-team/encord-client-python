@@ -1360,8 +1360,17 @@ class LabelRowClass:
 @dataclass
 class AnswerForFrames:
     answer: Union[str, Option, Iterable[Option]]
-    range: Set[int]
-    # DENIS: Do I really want to return a set here?
+    ranges: Ranges
+    """
+    The ranges are essentially a run length encoding of the frames where the unique answer is set.
+    They are sorted in ascending order.
+    """
+
+
+AnswersForFrames = List[AnswerForFrames]
+"""
+A list of answer values on a given frame range. Unique answers will not be repeated in this list.
+"""
 
 
 class ObjectInstance:
@@ -1468,7 +1477,7 @@ class ObjectInstance:
         def reviews(self) -> List[dict]:
             """
             A read only property about the reviews that happened for this object on this frame.
-            DENIS: probably want to type this out
+            DENIS: probably want to type this out - actually, this might need to be lazy loaded.
             """
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.reviews
@@ -1555,8 +1564,6 @@ class ObjectInstance:
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = dict()
-        # DENIS: do I need to make tests for memory requirements? As in, how much more memory does
-        # this thing take over the label structure itself (for large ones it would be interesting)
         self._object_hash = object_hash or short_uuid_str()
         self._parent: Optional[LabelRowClass] = None
         """This member should only be manipulated by a LabelRowClass"""
@@ -1575,7 +1582,7 @@ class ObjectInstance:
         attribute: TextAttribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
-    ) -> Optional[str]:
+    ) -> Union[Optional[str], AnswersForFrames]:
         ...
 
     @overload
@@ -1584,7 +1591,7 @@ class ObjectInstance:
         attribute: RadioAttribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
-    ) -> Optional[Option]:
+    ) -> Union[Optional[Option], AnswersForFrames]:
         ...
 
     @overload
@@ -1593,7 +1600,7 @@ class ObjectInstance:
         attribute: ChecklistAttribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
-    ) -> Optional[List[Option]]:
+    ) -> Union[Optional[List[Option]], AnswersForFrames]:
         """Returns None only if the attribute is nested and the parent is unselected. Otherwise, if not
         yet answered it will return an empty list."""
         ...
@@ -1603,14 +1610,16 @@ class ObjectInstance:
         attribute: Attribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
-        # DENIS: plural for filter_frames with the ranges?
-    ) -> Union[str, Option, Iterable[Option], None]:
+    ) -> Union[str, Option, Iterable[Option], AnswersForFrames, None]:
         """
         Args:
             attribute: The ontology attribute to get the answer for.
             filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
             filter_frame: A filter for a specific frame. Only applies to dynamic attributes.
-            DENIS: overthink the return type. Dynamic answers would have a different return type.
+
+        Returns:
+            If the attribute is static, then the answer value is returned, assuming an answer value has already been
+            set. If the attribute is dynamic, the AnswersForFrames object is returned.
         """
         if attribute is None:
             attribute = self._ontology_object.attributes[0]
@@ -2030,7 +2039,7 @@ class DynamicAnswerManager:
         attribute: Attribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frames: Optional[Frames] = None,
-    ) -> List[AnswerForFrames]:
+    ) -> AnswersForFrames:
         """For a given attribute, return all the answers and frames given the filters."""
         ret = []
         filter_frames_set = None if filter_frames is None else set(frames_class_to_frames_list(filter_frames))
@@ -2042,7 +2051,9 @@ class DynamicAnswerManager:
             actual_frames = self._answers_to_frames[answer]
             if not (filter_frames_set is None or len(actual_frames & filter_frames_set) > 0):
                 continue
-            ret.append(AnswerForFrames(answer=get_answer_from_object(answer), range=self._answers_to_frames[answer]))
+
+            ranges = frames_to_ranges(self._answers_to_frames[answer])
+            ret.append(AnswerForFrames(answer=get_answer_from_object(answer), ranges=ranges))
         return ret
 
     def frames(self) -> Iterable[int]:
