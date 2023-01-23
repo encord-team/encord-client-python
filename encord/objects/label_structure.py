@@ -221,9 +221,6 @@ class ClassificationInstance:
 
         self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
 
-        # DENIS: Ideally there would be a max range check.
-        self._max_frame: int = float("inf")
-
     @property
     def classification_hash(self) -> str:
         return self._classification_hash
@@ -236,10 +233,17 @@ class ClassificationInstance:
     def ontology_item(self) -> Classification:
         return deepcopy(self._ontology_classification)
 
-    def is_assigned_to_parent(self) -> bool:
+    @property
+    def _last_frame(self) -> Union[int, float]:
+        if self._parent is None or self._parent.data_type is DataType.DICOM:
+            return float("inf")
+        else:
+            return self._parent.number_of_frames
+
+    def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
 
-    def add_to_frame(
+    def set_for_frame(
         self,
         frames: Union[int, Iterable[int]],
         *,
@@ -307,14 +311,14 @@ class ClassificationInstance:
             created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
         )
 
-        if self.is_assigned_to_parent():
+        if self.is_assigned_to_label_row():
             self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
     def remove_from_frames(self, frames: Union[int, Iterable[int]]) -> None:
         for frame in frames:
             self._frames_to_data.pop(frame)
 
-        if self.is_assigned_to_parent():
+        if self.is_assigned_to_label_row():
             self._parent._remove_frames_from_classification(self.ontology_item, frames)
             self._parent._remove_from_frame_to_hashes_map(frames, self.classification_hash)
 
@@ -484,7 +488,7 @@ class ClassificationInstance:
         associated to any LabelRowClass. This is useful if you want to add the semantically same
         ClassificationInstance to multiple `LabelRowClass`s.
         """
-        ret = ClassificationInstance(self._ontology_object)
+        ret = ClassificationInstance(self._ontology_classification)
         ret._static_answer_map = deepcopy(self._static_answer_map)
         ret._frames_to_data = deepcopy(self._frames_to_data)
         return ret
@@ -499,9 +503,9 @@ class ClassificationInstance:
         return _search_child_attributes(attribute, top_attribute, self._static_answer_map)
 
     def _check_within_range(self, frame: int) -> None:
-        if frame < 0 or frame > self._max_frame:
+        if frame < 0 or frame >= self._last_frame:
             raise ValueError(
-                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._max_frame}`."
+                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
     def _check_classification_already_present(self, frames: Iterable[int]) -> None:
@@ -1027,7 +1031,7 @@ class LabelRowClass:
         if not object_instance.is_valid():
             raise ValueError("The supplied ObjectInstance is not in a valid format.")
 
-        if object_instance.is_assigned_to_parent():
+        if object_instance.is_assigned_to_label_row():
             raise RuntimeError(
                 "The supplied ObjectInstance is already part of a LabelRowClass. You can only add a ObjectInstance to one "
                 "LabelRowClass. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
@@ -1049,7 +1053,7 @@ class LabelRowClass:
         if not classification_instance.is_valid():
             raise ValueError("The supplied ClassificationInstance is not in a valid format.")
 
-        if classification_instance.is_assigned_to_parent():
+        if classification_instance.is_assigned_to_label_row():
             raise RuntimeError(
                 "The supplied ClassificationInstance is already part of a LabelRowClass. You can only add a ClassificationInstance"
                 " to one LabelRowClass. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
@@ -1346,7 +1350,7 @@ class LabelRowClass:
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
-        classification_instance.add_to_frame([frame], **asdict(frame_view))
+        classification_instance.set_for_frame([frame], **asdict(frame_view))
         answers_dict = classification_answers[classification_hash]["classifications"]
         self._add_static_answers_from_dict(classification_instance, answers_dict)
 
@@ -1363,7 +1367,7 @@ class LabelRowClass:
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
 
-        classification_instance.add_to_frame([frame], **asdict(frame_view))
+        classification_instance.set_for_frame([frame], **asdict(frame_view))
 
     def __repr__(self) -> str:
         return f"LabelRowData(label_hash={self.label_hash}, data_title={self.data_title})"
@@ -1581,8 +1585,31 @@ class ObjectInstance:
 
         self._dynamic_answer_manager = DynamicAnswerManager(self)
 
-    def is_assigned_to_parent(self) -> bool:
+    def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
+
+    @property
+    def object_hash(self) -> str:
+        return self._object_hash
+
+    @object_hash.setter
+    def object_hash(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot set the object hash on an instantiated label object.")
+
+    @property
+    def ontology_item(self) -> Any:
+        return deepcopy(self._ontology_object)
+
+    @ontology_item.setter
+    def ontology_item(self, v: Any) -> NoReturn:
+        raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
+
+    @property
+    def _last_frame(self) -> Union[int, float]:
+        if self._parent is None or self._parent.data_type is DataType.DICOM:
+            return float("inf")
+        else:
+            return self._parent.number_of_frames
 
     @overload
     def get_answer(
@@ -1815,26 +1842,16 @@ class ObjectInstance:
         static_answer = self._static_answer_map[attribute.feature_node_hash]
         static_answer.unset()
 
+    def check_within_range(self, frame: int) -> None:
+        if frame < 0 or frame >= self._last_frame:
+            raise ValueError(
+                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
+            )
+
     def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
         is_static_child = attribute.feature_node_hash in self._static_answer_map
         is_dynamic_child = self._dynamic_answer_manager.is_valid_dynamic_attribute(attribute)
         return is_dynamic_child or is_static_child
-
-    @property
-    def object_hash(self) -> str:
-        return self._object_hash
-
-    @object_hash.setter
-    def object_hash(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the object hash on an instantiated label object.")
-
-    @property
-    def ontology_item(self) -> Any:
-        return deepcopy(self._ontology_object)
-
-    @ontology_item.setter
-    def ontology_item(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
     def set_for_frame(
         self,
@@ -1889,6 +1906,7 @@ class ObjectInstance:
             raise ValueError("Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite.")
 
         check_coordinate_type(coordinates, self._ontology_object)
+        self.check_within_range(frame)
 
         if existing_frame_data is None:
             existing_frame_data = ObjectInstance.FrameData(
@@ -2044,6 +2062,10 @@ class DynamicAnswerManager:
 
     def _set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Frames) -> None:
         """Set the answer for a single frame"""
+
+        frame_list = frames_class_to_frames_list(frames)
+        for frame in frame_list:
+            self._object_instance.check_within_range(frame)
 
         self.delete_answer(attribute, frames)
 
