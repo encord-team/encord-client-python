@@ -362,15 +362,15 @@ def test_filter_for_objects():
     objects = label_row.get_objects()
     assert len(objects) == 2
 
-    objects = label_row.get_objects(ontology_object=polygon_ontology_item)
+    objects = label_row.get_objects(filter_ontology_object=polygon_ontology_item)
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
-    objects = label_row.get_objects(ontology_object=box_ontology_item)
+    objects = label_row.get_objects(filter_ontology_object=box_ontology_item)
     assert len(objects) == 1
     assert objects[0].object_hash == label_box.object_hash
 
-    objects = label_row.get_objects(ontology_object=polyline_ontology_item)
+    objects = label_row.get_objects(filter_ontology_object=polyline_ontology_item)
     assert len(objects) == 0
 
 
@@ -393,26 +393,26 @@ def test_get_object_instances_by_frames():
     label_row.add_object(label_box)
     label_row.add_object(label_polygon)
 
-    objects = label_row.get_objects_by_frame({2})
+    objects = label_row.get_objects(filter_frames=2)
     assert len(objects) == 2
 
-    objects = label_row.get_objects_by_frame({4})
+    objects = label_row.get_objects(filter_frames=4)
     assert len(objects) == 0
 
-    objects = list(label_row.get_objects_by_frame({1}))
+    objects = list(label_row.get_objects(filter_frames=1))
     assert len(objects) == 1
     assert objects[0].object_hash == label_box.object_hash
 
-    objects = list(label_row.get_objects_by_frame({3}))
+    objects = list(label_row.get_objects(filter_frames=3))
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
     label_box.set_for_frame(BOX_COORDINATES, 3)
-    objects = list(label_row.get_objects_by_frame({3}))
+    objects = list(label_row.get_objects(filter_frames=3))
     assert len(objects) == 2
 
     label_row.remove_object(label_box)
-    objects = list(label_row.get_objects_by_frame({3}))
+    objects = list(label_row.get_objects(filter_frames=3))
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
@@ -535,16 +535,16 @@ def test_removing_coordinates_from_object_removes_it_from_parent():
 
     label_row.add_object(label_box)
 
-    objects = label_row.get_objects_by_frame([1, 2, 3])
+    objects = label_row.get_objects(filter_frames=Range(1, 3))
     assert len(objects) == 1
-    objects = label_row.get_objects_by_frame([3])
+    objects = label_row.get_objects(filter_frames=3)
     assert len(objects) == 1
 
     label_box.remove_from_frames([3])
 
-    objects = label_row.get_objects_by_frame([1, 2, 3])
+    objects = label_row.get_objects(filter_frames=Range(1, 3))
     assert len(objects) == 1
-    objects = label_row.get_objects_by_frame([3])
+    objects = label_row.get_objects(filter_frames=3)
     assert len(objects) == 0
 
 

@@ -932,7 +932,7 @@ class LabelRowClass:
         # Get objects for frame
         ret: List[dict] = []
 
-        objects = self.get_objects_by_frame([frame])
+        objects = self.get_objects(filter_frames=frame)
         for object_ in objects:
             encord_object = self._to_encord_object(object_, frame)
             ret.append(encord_object)
@@ -1028,12 +1028,48 @@ class LabelRowClass:
         """
         # Actually can probably use the get_label_row() here.
 
-    def get_objects(self, ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
-        """Returns all the objects with this hash."""
+    def get_objects(
+        self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
+    ) -> List[ObjectInstance]:
+        """
+        Args:
+            filter_ontology_object:
+                Optionally filter by specific ontology objects.
+            filter_frames:
+                Optionally filter by specific frames.
+
+        Returns:
+            All the `ObjectInstance`s that match the filter.
+        """
         ret: List[ObjectInstance] = list()
+
+        if filter_frames is not None:
+            filtered_frames_list = frames_class_to_frames_list(filter_frames)
+        else:
+            filtered_frames_list = list()
+
         for object_ in self._objects_map.values():
-            if ontology_object is None or object_.ontology_item.feature_node_hash == ontology_object.feature_node_hash:
+            # filter by ontology object
+            if not (
+                filter_ontology_object is None
+                or object_.ontology_item.feature_node_hash == filter_ontology_object.feature_node_hash
+            ):
+                continue
+
+            # filter by frame
+            if filter_frames is None:
+                append = True
+            else:
+                append = False
+            for frame in filtered_frames_list:
+                hashes = self._frame_to_hashes.get(frame, set())
+                if object_.object_hash in hashes:
+                    append = True
+                    break
+
+            if append:
                 ret.append(object_)
+
         return ret
 
     def add_object(self, object_instance: ObjectInstance, force=True):
@@ -1153,16 +1189,16 @@ class LabelRowClass:
                 ret.append(classification_instance)
         return ret
 
-    def get_objects_by_frame(self, frames: Iterable[int]) -> Set[ObjectInstance]:
-        """DENIS: maybe merge this with the getter above."""
-        ret: Set[ObjectInstance] = set()
-        for frame in frames:
-            hashes = self._frame_to_hashes[frame]
-            for hash_ in hashes:
-                if hash_ in self._objects_map:
-                    ret.add(self._objects_map[hash_])
-
-        return ret
+    # def get_objects_by_frame(self, frames: Iterable[int]) -> Set[ObjectInstance]:
+    #     """DENIS: maybe merge this with the getter above."""
+    #     ret: Set[ObjectInstance] = set()
+    #     for frame in frames:
+    #         hashes = self._frame_to_hashes[frame]
+    #         for hash_ in hashes:
+    #             if hash_ in self._objects_map:
+    #                 ret.add(self._objects_map[hash_])
+    #
+    #     return ret
 
     def get_classifications_by_frame(self, frames: Iterable[int]) -> Set[ClassificationInstance]:
         ret: Set[ClassificationInstance] = set()
