@@ -600,7 +600,7 @@ class LabelRowClass:
             confidence: Optional[float] = None,
             manual_annotation: Optional[bool] = None,
         ) -> None:
-            object_instance.add_to_frame(
+            object_instance.set_for_frame(
                 coordinates,
                 self._frame,
                 overwrite=overwrite,
@@ -1268,7 +1268,7 @@ class LabelRowClass:
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
-        object_instance.add_to_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
+        object_instance.set_for_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
         return object_instance
 
     def _add_coordinates_to_object_instance(
@@ -1282,7 +1282,7 @@ class LabelRowClass:
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
-        object_instance.add_to_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
+        object_instance.set_for_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
 
     def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
         if "boundingBox" in frame_object_label:
@@ -1374,11 +1374,7 @@ A list of answer values on a given frame range. Unique answers will not be repea
 
 
 class ObjectInstance:
-    """This is per video/image_group/dicom/...
-
-    should you be able to set the color per object?
-
-
+    """
     DENIS: move this to `ontology_object` and have a my_ontology_object.create_instance() -> ObjectInstance
 
     DENIS: I probably will need to fix the order of the objects, so that the sorting is not lost.
@@ -1401,7 +1397,7 @@ class ObjectInstance:
         @coordinates.setter
         def coordinates(self, coordinates: Coordinates) -> None:
             self._check_if_frame_view_valid()
-            self._object_instance.add_to_frame(coordinates, self._frame)
+            self._object_instance.set_for_frame(coordinates, self._frame)
 
         @property
         def created_at(self) -> datetime:
@@ -1718,26 +1714,15 @@ class ObjectInstance:
         elif frames is not None and attribute.dynamic is False:
             raise ValueError("Setting frames is only possible for dynamic attributes.")
 
-        """
-        For classification index we get all the possible static answers upfront and then iterate over those.
-        Here I could do the same thing for static answers
-        for dynamic ones I can
-        * extend the answers so they can have multiple answers and a range
-        * create a new class which is a manager for one/all of the dynamic answers.  <-- try this
-        * or manage them here somewhere.
-        Essentially all these things are the same actually, I'm only talking about the levels of abstraction. 
-        """
-
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames)
             return
 
-        # DENIS: I can factor this out with the ClassificationIndex class.
         static_answer = self._static_answer_map[attribute.feature_node_hash]
         if static_answer.is_answered() and overwrite is False:
             raise RuntimeError(
                 "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
-                "overwrite an existing answer to and attribute."
+                "overwrite an existing answer to an attribute."
             )
 
         set_answer_for_object(static_answer, answer)
@@ -1819,7 +1804,6 @@ class ObjectInstance:
         static_answer.unset()
 
     def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
-        # DENIS: this will fail for dynamic attributes.
         is_static_child = attribute.feature_node_hash in self._static_answer_map
         is_dynamic_child = self._dynamic_answer_manager.is_valid_dynamic_attribute(attribute)
         return is_dynamic_child or is_static_child
@@ -1840,13 +1824,13 @@ class ObjectInstance:
     def ontology_item(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
-    def add_to_frame(
-        # DENIS: should this be called `set_instance_data` or something similar?
+    def set_for_frame(
         self,
         coordinates: Coordinates,
         frame: int,
         *,
         overwrite: bool = False,
+        skip_coordinate_validation: bool = False,
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -1855,17 +1839,38 @@ class ObjectInstance:
         manual_annotation: Optional[bool] = None,
         reviews: Optional[List[dict]] = None,
         is_deleted: Optional[bool] = None,
-    ):
+    ) -> None:
         """
-
+        Places the object onto the specified frame. If the object already exists on the frame and overwrite is set to
+        `True`, the currently specified values will be overwritten.
 
         Args:
+            coordinates:
+                The coordinates of the object in the frame. This will throw an error if the type of the coordinates
+                does not match the type of the attribute in the object instance.
+            frame:
+                The frame to add the object instance to.
             overwrite:
                 If `True`, overwrite existing data for the given frames. This will not reset all the
                 non-specified values. If `False` and data already exists for the given frames,
                 raises an error.
-            reviews: Should only be set by internal functions
-            is_deleted: Should only be set by internal functions
+            created_at:
+                Optionally specify the creation time of the object instance on this frame. Defaults to `datetime.now()`.
+            created_by:
+                Optionally specify the creator of the object instance on this frame. Defaults to the current SDK user.
+            last_edited_at:
+                Optionally specify the last edit time of the object instance on this frame. Defaults to `datetime.now()`.
+            last_edited_by:
+                Optionally specify the last editor of the object instance on this frame. Defaults to the current SDK
+                user.
+            confidence:
+                Optionally specify the confidence of the object instance on this frame. Defaults to `1.0`.
+            manual_annotation:
+                Optionally specify whether the object instance on this frame was manually annotated. Defaults to `True`.
+            reviews:
+                Should only be set by internal functions.
+            is_deleted:
+                Should only be set by internal functions.
         """
         existing_frame_data = self._frames_to_instance_data.get(frame)
 
@@ -1873,7 +1878,6 @@ class ObjectInstance:
             raise ValueError("Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite.")
 
         check_coordinate_type(coordinates, self._ontology_object)
-        # DENIS: validate that the coordinates are not out of bounds.
 
         if existing_frame_data is None:
             existing_frame_data = ObjectInstance.FrameData(
@@ -1896,13 +1900,6 @@ class ObjectInstance:
         if self._parent:
             # DENIS: this is somewhat inefficient given the loop over all frames that it is currently part of.
             self._parent._add_to_frame_to_hashes_map(self)
-
-    # def get_for_frame(self, frame: int) -> ObjectInstance.FrameData:
-    #     saved_data = self._frames_to_instance_data[frame]
-    #     return ObjectInstance.FrameData(
-    #         coordinates=deepcopy(saved_data.coordinates),
-    #         object_frame_instance_info=saved_data.object_frame_instance_info,
-    #     )
 
     def get_view_for_frame(self, frame: int) -> ObjectInstance.FrameView:
         return self.FrameView(self, frame)

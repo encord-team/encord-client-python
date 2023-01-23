@@ -113,7 +113,7 @@ def test_upload_simple_data():
         top_left_x=0.3,
         top_left_y=0.4,
     )
-    object_instance.add_to_frame(coordinates=coordinates, frames=Range(1, 3))
+    object_instance.set_for_frame(coordinates=coordinates, frames=Range(1, 3))
 
     # ======== Setting static attributes ========
     text_attribute_of_box_ontology_item = example_ontology_structure.get_item_by_hash("OTkxMjU1", TextAttribute)
@@ -197,7 +197,7 @@ def test_create_object_instance_one_coordinate():
         top_left_y=0.4,
     )
 
-    object_instance.add_to_frame(coordinates=coordinates, frame=1)
+    object_instance.set_for_frame(coordinates=coordinates, frame=1)
     assert object_instance.is_valid()
 
 
@@ -220,7 +220,7 @@ def test_add_object_instance_to_label_row():
         top_left_y=0.4,
     )
 
-    object_instance.add_to_frame(coordinates=coordinates, frame=1)
+    object_instance.set_for_frame(coordinates=coordinates, frame=1)
     label_row.add_object(object_instance)
     assert label_row.get_objects()[0].object_hash == object_instance.object_hash
 
@@ -244,9 +244,9 @@ def test_add_remove_access_object_instances_in_label_row():
         top_left_y=0.4,
     )
 
-    object_instance_1.add_to_frame(coordinates=coordinates_1, frame=1)
-    object_instance_2.add_to_frame(coordinates=coordinates_2, frame=2)
-    object_instance_2.add_to_frame(coordinates=coordinates_2, frame=3)
+    object_instance_1.set_for_frame(coordinates=coordinates_1, frame=1)
+    object_instance_2.set_for_frame(coordinates=coordinates_2, frame=2)
+    object_instance_2.set_for_frame(coordinates=coordinates_2, frame=3)
 
     label_row.add_object(object_instance_1)
     label_row.add_object(object_instance_2)
@@ -326,8 +326,8 @@ def discussion_with_eloy():
     object_instance_1 = BOX_COORDINATES.get_object(label_row)
     object_instance_2 = BOX_COORDINATES.get_object(label_row)
 
-    object_instance_1.add_to_frame(coordinates=BOX_COORDINATES, frame=1)
-    object_instance_2.add_to_frame(coordinates=BOX_COORDINATES, frame=2)
+    object_instance_1.set_for_frame(coordinates=BOX_COORDINATES, frame=1)
+    object_instance_2.set_for_frame(coordinates=BOX_COORDINATES, frame=2)
 
 
 def test_filter_for_objects():
@@ -350,10 +350,10 @@ def test_filter_for_objects():
         ]
     )
 
-    label_box.add_to_frame(box_coordinates, 1)
-    label_box.add_to_frame(box_coordinates, 2)
-    label_polygon.add_to_frame(polygon_coordinates, 2)
-    label_polygon.add_to_frame(polygon_coordinates, 3)
+    label_box.set_for_frame(box_coordinates, 1)
+    label_box.set_for_frame(box_coordinates, 2)
+    label_polygon.set_for_frame(polygon_coordinates, 2)
+    label_polygon.set_for_frame(polygon_coordinates, 3)
 
     label_row.add_object(label_box)
     label_row.add_object(label_polygon)
@@ -376,7 +376,7 @@ def test_filter_for_objects():
 def test_add_wrong_coordinates():
     label_box = ObjectInstance(box_ontology_item)
     with pytest.raises(ValueError):
-        label_box.add_to_frame(POLYGON_COORDINATES, frame=1)
+        label_box.set_for_frame(POLYGON_COORDINATES, frame=1)
 
 
 def test_get_object_instances_by_frames():
@@ -384,10 +384,10 @@ def test_get_object_instances_by_frames():
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
 
-    label_box.add_to_frame(BOX_COORDINATES, 1)
-    label_box.add_to_frame(BOX_COORDINATES, 2)
-    label_polygon.add_to_frame(POLYGON_COORDINATES, 2)
-    label_polygon.add_to_frame(POLYGON_COORDINATES, 3)
+    label_box.set_for_frame(BOX_COORDINATES, 1)
+    label_box.set_for_frame(BOX_COORDINATES, 2)
+    label_polygon.set_for_frame(POLYGON_COORDINATES, 2)
+    label_polygon.set_for_frame(POLYGON_COORDINATES, 3)
 
     label_row.add_object(label_box)
     label_row.add_object(label_polygon)
@@ -406,7 +406,7 @@ def test_get_object_instances_by_frames():
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
-    label_box.add_to_frame(BOX_COORDINATES, 3)
+    label_box.set_for_frame(BOX_COORDINATES, 3)
     objects = list(label_row.get_objects_by_frame({3}))
     assert len(objects) == 2
 
@@ -421,7 +421,7 @@ def test_adding_object_instance_to_multiple_frames_fails():
     label_row_2 = LabelRowClass(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
 
-    label_box.add_to_frame(BOX_COORDINATES, 1)
+    label_box.set_for_frame(BOX_COORDINATES, 1)
 
     label_row_1.add_object(label_box)
     with pytest.raises(RuntimeError):
@@ -442,7 +442,7 @@ def test_update_remove_object_instance_coordinates():
     label_box = ObjectInstance(box_ontology_item)
 
     # Add initial coordinates
-    label_box.add_to_frame(BOX_COORDINATES, 1)
+    label_box.set_for_frame(BOX_COORDINATES, 1)
     frames = label_box.frames()
     frame_1_view = label_box.get_view_for_frame(1)
     assert sorted(frames) == [1]
@@ -461,9 +461,9 @@ def test_update_remove_object_instance_coordinates():
     manual_annotation = False
 
     # Add new coordinates
-    label_box.add_to_frame(box_coordinates_2, 2, confidence=confidence, manual_annotation=manual_annotation)
-    label_box.add_to_frame(box_coordinates_2, 3, confidence=confidence, manual_annotation=manual_annotation)
-    label_box.add_to_frame(box_coordinates_2, 4, confidence=confidence, manual_annotation=manual_annotation)
+    label_box.set_for_frame(box_coordinates_2, 2, confidence=confidence, manual_annotation=manual_annotation)
+    label_box.set_for_frame(box_coordinates_2, 3, confidence=confidence, manual_annotation=manual_annotation)
+    label_box.set_for_frame(box_coordinates_2, 4, confidence=confidence, manual_annotation=manual_annotation)
     frames = label_box.frames()
     # instance_data = label_box.get_instance_data(frames)
     assert sorted(frames) == [1, 2, 3, 4]
@@ -504,12 +504,12 @@ def test_update_remove_object_instance_coordinates():
     new_confidence = 0.7
 
     with pytest.raises(ValueError):
-        label_box.add_to_frame(box_coordinates_3, 4, confidence=new_confidence, manual_annotation=manual_annotation)
+        label_box.set_for_frame(box_coordinates_3, 4, confidence=new_confidence, manual_annotation=manual_annotation)
 
-    label_box.add_to_frame(
+    label_box.set_for_frame(
         box_coordinates_3, 4, overwrite=True, confidence=new_confidence, manual_annotation=manual_annotation
     )
-    label_box.add_to_frame(box_coordinates_3, 5, confidence=new_confidence, manual_annotation=manual_annotation)
+    label_box.set_for_frame(box_coordinates_3, 5, confidence=new_confidence, manual_annotation=manual_annotation)
 
     frames = label_box.frames()
     assert sorted(frames) == [1, 4, 5]
@@ -528,9 +528,9 @@ def test_update_remove_object_instance_coordinates():
 def test_removing_coordinates_from_object_removes_it_from_parent():
     label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
-    label_box.add_to_frame(BOX_COORDINATES, 1)
-    label_box.add_to_frame(BOX_COORDINATES, 2)
-    label_box.add_to_frame(BOX_COORDINATES, 3)
+    label_box.set_for_frame(BOX_COORDINATES, 1)
+    label_box.set_for_frame(BOX_COORDINATES, 2)
+    label_box.set_for_frame(BOX_COORDINATES, 3)
 
     label_row.add_object(label_box)
 
@@ -844,9 +844,9 @@ def test_object_instance_answer_dynamic_no_frames_argument():
     object_instance.set_answer("Zeus", attribute=dynamic_text)
     assert object_instance.get_answer(dynamic_text) == []
 
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=1)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=2)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=3)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=1)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=2)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=3)
     assert object_instance.get_answer(dynamic_text) == []
 
     object_instance.set_answer("Zeus", attribute=dynamic_text)
@@ -855,8 +855,8 @@ def test_object_instance_answer_dynamic_no_frames_argument():
         AnswerForFrames(answer="Zeus", ranges=[Range(1, 3)]),
     ]
 
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=5)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=6)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=5)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=6)
     # Nothing changes after setting new coordinates
     assert object_instance.get_answer(dynamic_text) == [
         AnswerForFrames(answer="Zeus", ranges=[Range(1, 3)]),
@@ -881,9 +881,9 @@ def test_object_instance_answer_dynamic_is_valid():
     assert object_instance.is_valid() is False
     assert object_instance.are_dynamic_answers_valid() is False
 
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=1)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=2)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=3)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=1)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=2)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=3)
     assert object_instance.is_valid() is True
 
 
@@ -1290,9 +1290,9 @@ def test_setting_static_radio_answers():
 @pytest.mark.skip("Old way to deal with answers")
 def test_adding_dynamic_text_answers():
     object_instance = ObjectInstance(keypoint_dynamic)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=1)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=2)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=3)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=1)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=2)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=3)
 
     dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_text)
     assert dynamic_answer.frame == 1
@@ -1336,9 +1336,9 @@ def test_adding_dynamic_text_answers():
 @pytest.mark.skip("Old way to deal with answers")
 def test_adding_dynamic_checklist_answers():
     object_instance = ObjectInstance(keypoint_dynamic)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=1)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=2)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=3)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=1)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=2)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=3)
 
     dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_checklist)
     assert dynamic_answer.frame == 1
@@ -1378,9 +1378,9 @@ def test_adding_dynamic_checklist_answers():
 def test_adding_radio_checklist_answers():
     """DENIS: think about what to do with non-dynamic nested stuff. What does the UI do?"""
     object_instance = ObjectInstance(keypoint_dynamic)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=1)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=2)
-    object_instance.add_to_frame(KEYPOINT_COORDINATES, frame=3)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=1)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=2)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=3)
 
     dynamic_answer = object_instance.get_dynamic_answer(frame=1, attribute=dynamic_radio)
     assert dynamic_answer.frame == 1
