@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import re
 import uuid
 from dataclasses import dataclass
 from typing import Any, Iterable, List, Union
@@ -97,3 +98,16 @@ def check_type(obj: object, type_: Any) -> None:
         return
     if not isinstance(obj, type_):
         raise TypeError(f"Expected {type_}, got {type(obj)}")
+
+
+def is_valid_email(email: str) -> bool:
+    """
+    Validate that an email is a valid one
+    """
+    regex = r"[^@]+@[^@]+\.[^@]+"
+    return bool(re.match(regex, email))
+
+
+def check_email(email: str) -> None:
+    if not is_valid_email(email):
+        raise ValueError("Invalid email address")

@@ -36,7 +36,6 @@ from encord.objects.constants import (
     DEFAULT_MANUAL_ANNOTATION,
 )
 from encord.objects.coordinates import (
-    ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
     BoundingBoxCoordinates,
     Coordinates,
     PointCoordinate,
@@ -58,9 +57,9 @@ from encord.objects.utils import (
     Range,
     Ranges,
     _lower_snake_case,
+    check_email,
     frames_class_to_frames_list,
     frames_to_ranges,
-    range_to_ranges,
     ranges_list_to_ranges,
     short_uuid_str,
 )
@@ -1363,11 +1362,6 @@ class AnswerForFrames:
     answer: Union[str, Option, Iterable[Option]]
     range: Set[int]
     # DENIS: Do I really want to return a set here?
-
-
-def check_email(email: str) -> None:
-    # DENIS: TODO:
-    pass
 
 
 class ObjectInstance:
