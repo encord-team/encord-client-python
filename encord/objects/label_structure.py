@@ -1729,7 +1729,6 @@ class ObjectInstance:
         """
 
         if attribute.dynamic:
-            # DENIS: do I want to do an overwrite?
             self._dynamic_answer_manager.set_answer(answer, attribute, frames)
             return
 
