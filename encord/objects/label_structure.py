@@ -1582,7 +1582,8 @@ class ObjectInstance:
         attribute: TextAttribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
-    ) -> Union[Optional[str], AnswersForFrames]:
+        is_dynamic: Optional[bool] = False,
+    ) -> Optional[str]:
         ...
 
     @overload
@@ -1591,7 +1592,8 @@ class ObjectInstance:
         attribute: RadioAttribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
-    ) -> Union[Optional[Option], AnswersForFrames]:
+        is_dynamic: Optional[bool] = False,
+    ) -> Optional[Option]:
         ...
 
     @overload
@@ -1600,9 +1602,20 @@ class ObjectInstance:
         attribute: ChecklistAttribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
-    ) -> Union[Optional[List[Option]], AnswersForFrames]:
+        is_dynamic: Optional[bool] = False,
+    ) -> Optional[List[Option]]:
         """Returns None only if the attribute is nested and the parent is unselected. Otherwise, if not
         yet answered it will return an empty list."""
+        ...
+
+    @overload
+    def get_answer(
+        self,
+        attribute: Attribute,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_frame: Optional[int] = None,
+        is_dynamic: Optional[bool] = True,
+    ) -> AnswersForFrames:
         ...
 
     def get_answer(
@@ -1610,12 +1623,15 @@ class ObjectInstance:
         attribute: Attribute,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
+        is_dynamic: Optional[bool] = None,
     ) -> Union[str, Option, Iterable[Option], AnswersForFrames, None]:
         """
         Args:
             attribute: The ontology attribute to get the answer for.
             filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
             filter_frame: A filter for a specific frame. Only applies to dynamic attributes.
+            is_dynamic: Optionally specify whether a dynamic answer is expected or not. This will throw if it is
+                set incorrectly according to the attribute. Set this to narrow down the return type.
 
         Returns:
             If the attribute is static, then the answer value is returned, assuming an answer value has already been
@@ -1627,6 +1643,12 @@ class ObjectInstance:
             raise ValueError("The attribute is not a valid child of the classification.")
         elif not self._is_selectable_child_attribute(attribute):
             return None
+
+        if is_dynamic is not None and is_dynamic is not attribute.dynamic:
+            raise ValueError(
+                f"The attribute is {'dynamic' if attribute.dynamic else 'static'}, but is_dynamic is set to "
+                f"{is_dynamic}."
+            )
 
         if attribute.dynamic:
             return self._dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frame)

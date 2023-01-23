@@ -47,7 +47,7 @@ radio_nested_option_2_checklist_option_1 = all_types_structure.get_item_by_hash(
 radio_nested_option_2_checklist_option_2 = all_types_structure.get_item_by_hash("Nzg66665E3")
 
 keypoint_dynamic = all_types_structure.get_item_by_hash("MTY2MTQx")
-dynamic_text = all_types_structure.get_item_by_hash("OTkxMjU1")
+dynamic_text: TextAttribute = all_types_structure.get_item_by_hash("OTkxMjU1")
 dynamic_checklist = all_types_structure.get_item_by_hash("ODcxMDAy")
 dynamic_checklist_option_1 = all_types_structure.get_item_by_hash("MTE5MjQ3")
 dynamic_checklist_option_2 = all_types_structure.get_item_by_hash("Nzg3MDE3")
