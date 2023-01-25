@@ -29,7 +29,7 @@ DATASET_JSON = {
             "storage_location": StorageLocation.CORD_STORAGE.value,
             "frames_per_second": None,
             "duration": None,
-            'querier': None,
+            '_querier': None,
             'images': None,
             'signed_url': None,
             'dicom_file_links': None

@@ -98,6 +98,7 @@ class ImageData:
             last_edited_at=parser.parse(json_dict["last_edited_at"]),
             height=json_dict["height"],
             width=json_dict["width"],
+            signed_url=json_dict["signed_url"] if "signed_url" in json_dict else None,
         )
 
 
