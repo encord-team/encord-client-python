@@ -120,7 +120,10 @@ def is_signed_url(string: str) -> bool:
 def check_if_images_have_signed_url(images: List[ImageData]) -> bool:
     if len(images) == 0:
         return False
-    return is_signed_url(images[0].file_link)
+    for image in images:
+        if image.signed_url is None:
+            return False
+    return True
 
 
 def check_if_file_links_are_signed_urls(file_links: List[str]) -> bool:
@@ -183,6 +186,10 @@ class DataRow(dict, Formatter):
     def uid(self) -> str:
         return self["data_hash"]
 
+    @uid.setter
+    def uid(self, value: str) -> None:
+        self["data_hash"] = value
+
     @property
     def title(self) -> str:
         return self["data_title"]
@@ -195,9 +202,18 @@ class DataRow(dict, Formatter):
     def data_type(self) -> DataType:
         return DataType.from_upper_case_string(self["data_type"])
 
+    @data_type.setter
+    def data_type(self, value: DataType) -> None:
+        self["data_type"] = value.to_upper_case_string()
+
     @property
     def created_at(self) -> datetime:
         return parser.parse(self["created_at"])
+
+    @created_at.setter
+    def created_at(self, value: datetime) -> None:
+        """Datetime will trim milliseconds for backwards compatibility."""
+        self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
     @property
     def frames_per_second(self) -> Optional[int]:
