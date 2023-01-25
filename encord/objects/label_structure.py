@@ -1303,12 +1303,6 @@ class LabelRowClass:
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
-        # DENIS: catch and throw at the top level if we couldn't parse, meaning that the dict is invalid.
-        # Iterate over the data_units. Find objects. Start adding them into
-
-        # Think about breaking or not breaking the order of the objects
-        # DENIS: the only way to really know the order is through the objects_index. In this case, we'd need
-        # additional information from the BE. Probably the object id.
         classification_answers = label_row_dict["classification_answers"]
 
         for data_unit in label_row_dict["data_units"].values():
@@ -1358,7 +1352,6 @@ class LabelRowClass:
             object_instance = self._objects_map[object_hash]
 
             answer_list = answer["actions"]
-            # DENIS: also set the track hash
             object_instance.set_answer_from_list(answer_list)
 
     def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
@@ -1481,7 +1474,6 @@ class ObjectInstance:
     """
     DENIS: move this to `ontology_object` and have a my_ontology_object.create_instance() -> ObjectInstance
 
-    DENIS: I probably will need to fix the order of the objects, so that the sorting is not lost.
     """
 
     class FrameView:
@@ -2036,18 +2028,14 @@ class ObjectInstance:
         """ """
         return list(self._frames_to_instance_data.keys())
 
-    def remove_from_frames(self, frames: Iterable[int]):
+    def remove_from_frames(self, frames: Frames):
         """Ensure that it will be removed from all frames."""
-        # DENIS: probably frames everywhere should be Union[Iterable[int], int]
-        for frame in frames:
+        frames_list = frames_class_to_frames_list(frames)
+        for frame in frames_list:
             self._frames_to_instance_data.pop(frame)
-            # self._remove_dynamic_answers_from_frame(frame)
 
         if self._parent:
-            self._parent._remove_from_frame_to_hashes_map(frames, self.object_hash)
-
-        # DENIS: can we remove to make this invalid?
-        # DENIS: ensure that dynamic answers are also handled properly.
+            self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
 
     def is_valid(self) -> bool:
         """Check if is valid, could also return some human/computer  messages."""

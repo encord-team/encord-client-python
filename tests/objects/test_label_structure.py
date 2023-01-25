@@ -871,6 +871,7 @@ def test_object_instance_answer_dynamic_no_frames_argument():
     ]
 
 
+# TODO: check if everything is handled correctly when running `remove_from_frames` with dynamic answers.
 def test_object_instance_answer_dynamic_is_valid():
     object_instance = ObjectInstance(keypoint_dynamic)
 
