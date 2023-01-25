@@ -73,6 +73,7 @@ class ImageData:
     title: str
     user_hash: UUID
     file_link: str
+    signed_url: str
     file_type: str
     file_size: float
     image_hash: UUID
@@ -346,8 +347,14 @@ class DataRow(dict, Formatter):
 
     def get_images(self, get_signed_url: bool = False) -> List[ImageData]:
         """
-        This method lazily retrieves list of images and cache it for the given DataRow image group.
-        If the given DataRow is not an image group then this method simply returns `None`.
+        Args:
+            get_signed_url: optional flag which is responsible for generating signed urls for returned
+            images data (`False` by default)
+        Returns:
+            This method lazily retrieves list of images, cache and returns it for the given DataRow image group.
+            If the data type is not `DataType.IMG_GROUP` then this method simply returns `None`.
+            If `get_signed_url` is `False` then `signed_url' of each image data in the returned array is None.
+            Otherwise, `signed_url` for each image is a generated signed url link.
         """
         if self.data_type == DataType.IMG_GROUP:
             if self["_querier"] is not None:
@@ -366,8 +373,13 @@ class DataRow(dict, Formatter):
 
     def get_dicom_file_links(self, get_signed_url: bool = False) -> List[str]:
         """
-        This method lazily retrieves and returns list of dicom file links for the given dicom DataRow and cache it.
-        If the given DataRow is not a dicom then this method simply returns None.
+        Args:
+            get_signed_url: optional flag which is responsible for generating signed urls dicom file links (`False` by default)
+        Returns:
+            This method lazily retrieves and returns list of file links for the given dicom DataRow and cache it.
+            If the data type is not `DataType.DICOM` then this method simply returns `None`.
+            If the `get_signed_url` is `True` then the method returns array of generated signed url file links.
+            Otherwise, this returns permanent file links.
         """
         if self.data_type == DataType.DICOM:
             if self["_querier"] is not None:
