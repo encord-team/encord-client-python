@@ -237,7 +237,11 @@ class Dataset:
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
         """
-        Append data hosted on private clouds to existing dataset
+        Append data hosted on private clouds to existing dataset.
+
+        For a more complete example of safe uploads, please follow the guide found in our docs under
+        :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud
+        <tutorials/datasets:Adding data from a private cloud>`
 
         Args:
             integration_id: str
