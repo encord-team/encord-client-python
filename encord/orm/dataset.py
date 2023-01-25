@@ -20,14 +20,13 @@ import re
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
-from typing import Callable, Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from dateutil import parser
 
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
-from encord.http.querier import Querier
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
 
@@ -86,18 +85,18 @@ class ImageData:
     @classmethod
     def from_dict(cls, json_dict: Dict):
         return ImageData(
-            json_dict["id"],
-            json_dict["user_hash"],
-            json_dict["title"],
-            json_dict["file_link"],
-            json_dict["file_type"],
-            json_dict["file_size"],
-            json_dict["image_hash"],
-            json_dict["storage_location"],
-            parser.parse(json_dict["created_at"]),
-            parser.parse(json_dict["last_edited_at"]),
-            json_dict["height"],
-            json_dict["width"],
+            id=json_dict["id"],
+            user_hash=json_dict["user_hash"],
+            title=json_dict["title"],
+            file_link=json_dict["file_link"],
+            file_type=json_dict["file_type"],
+            file_size=json_dict["file_size"],
+            image_hash=json_dict["image_hash"],
+            storage_location=json_dict["storage_location"],
+            created_at=parser.parse(json_dict["created_at"]),
+            last_edited_at=parser.parse(json_dict["last_edited_at"]),
+            height=json_dict["height"],
+            width=json_dict["width"],
         )
 
 
@@ -138,7 +137,7 @@ class DataRow(dict, Formatter):
         last_edited_at: datetime,
         width: int,
         height: int,
-        file_link: str,  # file link from db
+        file_link: str,
         file_size: int,
         file_type: str,
         storage_location: StorageLocation,
@@ -171,7 +170,7 @@ class DataRow(dict, Formatter):
                 "frames_per_second": frames_per_second,
                 "duration": duration,
                 "client_metadata": client_metadata,
-                "querier": None,
+                "_querier": None,
                 "images": None,
                 "signed_url": None,
                 "dicom_file_links": None,
@@ -181,10 +180,6 @@ class DataRow(dict, Formatter):
     @property
     def uid(self) -> str:
         return self["data_hash"]
-
-    @uid.setter
-    def uid(self, value: str) -> None:
-        self["data_hash"] = value
 
     @property
     def title(self) -> str:
@@ -198,65 +193,57 @@ class DataRow(dict, Formatter):
     def data_type(self) -> DataType:
         return DataType.from_upper_case_string(self["data_type"])
 
-    @data_type.setter
-    def data_type(self, value: DataType) -> None:
-        self["data_type"] = value.to_upper_case_string()
-
     @property
     def created_at(self) -> datetime:
         return parser.parse(self["created_at"])
 
-    @created_at.setter
-    def created_at(self, value: datetime) -> None:
-        """Datetime will trim milliseconds for backwards compatibility."""
-        self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
-
     @property
-    def querier(self) -> Querier:
-        return self["querier"]
-
-    @querier.setter
-    def querier(self, new_querier: Querier) -> None:
-        self["querier"] = new_querier
-
-    @property
-    def frames_per_second(self) -> int:
+    def frames_per_second(self) -> Optional[int]:
+        """
+        Returns:
+        If the data type is `DataType.VIDEO` this returns the actual number of frames per second for the video.
+        Otherwise, it returns None as a `frames_per_second` field is not applicable.
+        """
         if self.data_type != DataType.VIDEO:
             return None
         return self["frames_per_second"]
 
-    @frames_per_second.setter
-    def frames_per_second(self, new_frames_per_second: int) -> None:
-        self["frames_per_second"] = new_frames_per_second
-
     @property
     def duration(self) -> Optional[int]:
+        """
+        Returns:
+        If the data type is `DataType.VIDEO` this returns the actual video duration.
+        Otherwise, it returns None as a `duration` field is not applicable.
+        """
         if self.data_type != DataType.VIDEO:
             return None
         return self["duration"]
 
-    @duration.setter
-    def duration(self, new_duration: int) -> None:
-        self["duration"] = new_duration
-
     @property
     def client_metadata(self) -> Optional[dict]:
         """
-        Custom client metadata. This is null if it is disabled via the
-        :class:`encord.orm.dataset.DatasetAccessSettings`
+        DEPRECATED - please use `get_client_metadata` instead.
+        Returns:
+        If `client_metadata` is disabled via the :class:`encord.orm.dataset.DatasetAccessSettings
+        then this returns `null`.
+        Otherwise, this returns custom client metadata.
         """
         if self["client_metadata"] is None:
-            if self.querier is not None:
-                res = self.querier.basic_getter(DataClientMetadata, uid=self.uid)
+            if self["_querier"] is not None:
+                res = self["_querier"].basic_getter(DataClientMetadata, uid=self.uid)
                 self["client_metadata"] = res.payload
             else:
                 raise EncordException(f"Could not retrieve client metadata for DataRow with uid: {self.uid}")
         return self["client_metadata"]
 
     @client_metadata.setter
-    def client_metadata(self, new_client_metadata: dict) -> None:
-        if self.querier is not None:
-            res = self.querier.basic_setter(
+    def client_metadata(self, new_client_metadata: [Dict, List, int, float, bool, str]) -> None:
+        """
+        DEPRECATED - please use `set_client_metadata` instead.
+        This updates custom client metadata with the new given data.
+        """
+        if self["_querier"] is not None:
+            res = self["_querier"].basic_setter(
                 DataClientMetadata,
                 uid=self.uid,
                 payload={"new_client_metadata": new_client_metadata},
@@ -268,121 +255,135 @@ class DataRow(dict, Formatter):
 
     def get_client_metadata(self):
         """
-        This method lazily retrieves custom client metadata and cache it.
+        Returns:
+        If `client_metadata` is disabled via the :class:`encord.orm.dataset.DatasetAccessSettings
+        then this returns `null`.
+        Otherwise, this returns custom client metadata.
         """
         return self.client_metadata
 
+    def set_client_metadata(self, new_client_metadata: [Dict, List, int, float, bool, str]) -> None:
+        """
+        DEPRECATED - please use `set_client_metadata` instead.
+        This method updates custom client metadata with the new given data.
+        """
+        self.client_metadata = new_client_metadata
+
     @property
     def width(self) -> int:
+        """
+        Returns:
+        This returns an actual width of the data asset.
+        """
         return self["width"]
-
-    @width.setter
-    def width(self, new_width: int) -> None:
-        self["width"] = new_width
 
     @property
     def height(self) -> int:
+        """
+        Returns:
+        This returns an actual height of the data asset.
+        """
         return self["height"]
-
-    @height.setter
-    def height(self, new_height: int) -> None:
-        self["height"] = new_height
 
     @property
     def last_edited_at(self) -> datetime:
+        """
+        Returns:
+        This returns a datetime when the given data asset was last edited.
+        """
         return parser.parse(self["last_edited_at"])
-
-    @last_edited_at.setter
-    def last_edited_at(self, new_last_edited_at: datetime) -> None:
-        self["last_edited_at"] = new_last_edited_at.strftime(DATETIME_STRING_FORMAT)
 
     @property
     def file_link(self) -> str:
+        """
+        Returns:
+        This returns a permanent file link of the given data asset.
+        If the data type is `DataType.DICOM` then this returns an empty string.
+        """
         return self["file_link"]
-
-    @file_link.setter
-    def file_link(self, new_file_link: str) -> None:
-        self["file_link"] = new_file_link
-
-    @property
-    def signed_url(self) -> str:
-        if self.data_type in [DataType.VIDEO, DataType.IMG_GROUP, DataType.IMAGE] and self["signed_url"] is None:
-            if self.querier is not None:
-                payload = {"data_type": self.data_type.value}
-                res = self.querier.basic_getter(SignedUrl, uid=self.uid, payload=payload)
-                self["signed_url"] = res.signed_url
-            else:
-                raise EncordException(f"Could not get signed url for DataRow with uid: {self.uid}")
-        return self["signed_url"]
-
-    @signed_url.setter
-    def signed_url(self, new_signed_url: str) -> None:
-        self["signed_url"] = new_signed_url
 
     def get_signed_url(self):
         """
-        This method lazily generates and returns cached signed url for the given DataRow.
+        Returns:
+        This returns a generated cached signed url link of the given data asset.
         """
-        return self.signed_url
+        if self.data_type in [DataType.VIDEO, DataType.IMG_GROUP, DataType.IMAGE] and self["signed_url"] is None:
+            if self["_querier"] is not None:
+                payload = {"data_type": self.data_type.value}
+                res = self["_querier"].basic_getter(SignedUrl, uid=self.uid, payload=payload)
+                self["signed_url"] = res.signed_url
+            else:
+                raise EncordException(
+                    f"Could not get signed url for DataRow with uid: {self.uid}."
+                    f"This could be because the given DataRow was initialised incorrectly."
+                )
+        return self["signed_url"]
 
     @property
     def file_size(self) -> int:
+        """
+        Returns:
+        This returns an actual file size of the given data asset.
+        """
         return self["file_size"]
-
-    @file_size.setter
-    def file_size(self, new_file_size: int) -> None:
-        self["file_size"] = new_file_size
 
     @property
     def file_type(self) -> str:
+        """
+        Returns:
+        This returns a MIME file type of the given data asset.
+        """
         return self["file_type"]
-
-    @file_type.setter
-    def file_type(self, new_file_type: str) -> None:
-        self["file_type"] = new_file_type
 
     @property
     def storage_location(self) -> StorageLocation:
+        """
+        Returns:
+        This returns a storage location of the given data asset.
+        The returned type is `StorageLocation`.
+        """
         return self["storage_location"]
-
-    @storage_location.setter
-    def storage_location(self, new_storage_location: StorageLocation) -> None:
-        self["storage_location"] = new_storage_location
 
     def get_images(self, get_signed_url: bool = False) -> List[ImageData]:
         """
-        This method lazily retrieves and returns cached list of images for the given DataRow image group.
-        If the given DataRow is not an image group then this method simply returns None.
+        This method lazily retrieves list of images and cache it for the given DataRow image group.
+        If the given DataRow is not an image group then this method simply returns `None`.
         """
         if self.data_type == DataType.IMG_GROUP:
-            if self.querier is not None:
+            if self["_querier"] is not None:
                 if self["images"] is None or get_signed_url != check_if_images_have_signed_url(self["images"]):
                     payload = {
                         "get_signed_url": get_signed_url,
                     }
-                    res = self.querier.basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
+                    res = self["_querier"].basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
                     self["images"] = [ImageData.from_dict(image) for image in res.images]
             else:
-                raise EncordException(f"Could not get images data for image group with uid: {self.uid}")
+                raise EncordException(
+                    f"Could not get images data for image group with uid: {self.uid}. "
+                    f"This could be because the given DataRow was initialised incorrectly."
+                )
         return self["images"]
 
     def get_dicom_file_links(self, get_signed_url: bool = False) -> List[str]:
         """
-        This method lazily retrieves and returns cached list of dicom file links for the given dicom DataRow.
+        This method lazily retrieves and returns list of dicom file links for the given dicom DataRow and cache it.
         If the given DataRow is not a dicom then this method simply returns None.
         """
         if self.data_type == DataType.DICOM:
-            if self.querier is not None:
+            if self["_querier"] is not None:
                 if self["dicom_file_links"] is None or get_signed_url != check_if_file_links_are_signed_urls(
                     self["dicom_file_links"]
                 ):
                     payload = {
                         "get_signed_url": get_signed_url,
                     }
-                    res = self.querier.basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
+                    res = self["_querier"].basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
                     self["dicom_file_links"] = res.file_links
             else:
-                raise EncordException(f"Could not get file links for dicom with uid: {self.uid}")
+                raise EncordException(
+                    f"Could not get file links for dicom with uid: {self.uid}."
+                    f"This could be because the given DataRow was initialised incorrectly."
+                )
         return self["dicom_file_links"]
 
     @classmethod

@@ -311,7 +311,7 @@ class EncordClientDataset(EncordClient):
 
         def add_querier_to_data_rows(response):
             for idx in range(len(response.data_rows)):
-                response.data_rows[idx].querier = self._querier
+                response.data_rows[idx]["_querier"] = self._querier
 
         add_querier_to_data_rows(res)
         return res
