@@ -374,7 +374,7 @@ class DataRow(dict, Formatter):
     def get_dicom_file_links(self, get_signed_url: bool = False) -> List[str]:
         """
         Args:
-            get_signed_url: optional flag which is responsible for generating signed urls dicom file links (`False` by default)
+            get_signed_url: optional flag which is responsible for generating signed urls(`False` by default)
         Returns:
             This method lazily retrieves and returns list of file links for the given dicom DataRow and cache it.
             If the data type is not `DataType.DICOM` then this method simply returns `None`.
