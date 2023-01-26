@@ -227,7 +227,7 @@ Adding data from a private cloud
 
 .. note::
 
-    We strongly encourage you to follow and adapt the below script for a safe way to upload data to your dataset.
+    We strongly encourage you to follow and adapt the below script for an idiomatic way to upload data to your dataset.
 
 .. tabs::
 
