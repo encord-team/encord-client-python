@@ -174,7 +174,7 @@ class CopyReviewTasksOptions:
 class CopyLabelsOptions:
     datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
     copy_review_tasks_options: CopyReviewTasksOptions = CopyReviewTasksOptions()
-    accpeted_label_hashes: Optional[List[str]] = None
+    accepted_label_hashes: Optional[List[str]] = None
     accepted_label_statuses: Optional[List[ReviewApprovalState]] = None
     create_new_dataset: Optional[bool] = None
 
