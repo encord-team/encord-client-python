@@ -165,6 +165,14 @@ class ReviewApprovalState(str, Enum):
 
 
 @dataclass
+class CopyProjectMetadata:
+    project_title: str
+    project_description: str
+    dataset_title: Optional[str] = None
+    dataset_description: Optional[str] = None
+
+
+@dataclass
 class CopyReviewTasksOptions:
     copy_review_tasks: bool = False
     review_status_list: List = field(default_factory=list)

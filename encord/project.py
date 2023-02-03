@@ -14,7 +14,7 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
-from encord.orm.project import CopyLabelsOptions
+from encord.orm.project import CopyLabelsOptions, CopyProjectMetadata
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -208,6 +208,7 @@ class Project:
         copy_models=False,
         copy_labels=False,
         copy_labels_options: Optional[CopyLabelsOptions] = None,
+        copy_project_metadata: Optional[CopyProjectMetadata] = None,
     ) -> str:
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
