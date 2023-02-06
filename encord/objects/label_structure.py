@@ -627,6 +627,13 @@ class LabelRowClass:
             confidence: Optional[float] = None,
             manual_annotation: Optional[bool] = None,
         ) -> None:
+            label_row = object_instance.is_assigned_to_label_row()
+            if label_row and self._label_row != label_row:
+                raise RuntimeError(
+                    "This object instance is already assigned to a different label row. It can not be "
+                    "added to multiple label rows at once."
+                )
+
             object_instance.set_for_frame(
                 coordinates,
                 self._frame,
@@ -639,18 +646,69 @@ class LabelRowClass:
                 manual_annotation=manual_annotation,
             )
 
+            if not label_row:
+                self._label_row.add_object(object_instance)
+
         def add_classification(
             self,
             classification_instance: ClassificationInstance,
             *,
-            optionals: Any = None,
+            overwrite: bool = False,
+            created_at: datetime = datetime.now(),
+            created_by: str = None,
+            confidence: int = DEFAULT_CONFIDENCE,
+            manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
+            last_edited_at: datetime = datetime.now(),
+            last_edited_by: Optional[str] = None,
         ) -> None:
-            """
-            Need to add the optionals per frame and make sure that these are really per frame.
-            """
-            pass
+            label_row = classification_instance.is_assigned_to_label_row()
+            if label_row and self._label_row != label_row:
+                raise RuntimeError(
+                    "This object instance is already assigned to a different label row. It can not be "
+                    "added to multiple label rows at once."
+                )
 
-        def _frame_level_data(self) -> self.FrameLevelImageGroupData:
+            classification_instance.set_for_frame(
+                self._frame,
+                overwrite=overwrite,
+                created_at=created_at,
+                created_by=created_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+            )
+
+            if not label_row:
+                self._label_row.add_classification(classification_instance)
+
+        def get_objects(self, filter_ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
+            """
+            Args:
+                filter_ontology_object:
+                    Optionally filter by a specific ontology object.
+
+            Returns:
+                All the `ObjectInstance`s that match the filter.
+            """
+            return self._label_row.get_objects(filter_ontology_object=filter_ontology_object, filter_frames=self._frame)
+
+        def get_classifications(
+            self, filter_ontology_classification: Optional[Classification] = None
+        ) -> List[ClassificationInstance]:
+            """
+            Args:
+                filter_ontology_classification:
+                    Optionally filter by a specific ontology object.
+
+            Returns:
+                All the `ObjectInstance`s that match the filter.
+            """
+            return self._label_row.get_classifications(
+                filter_ontology_classification=filter_ontology_classification, filter_frames=self._frame
+            )
+
+        def _frame_level_data(self) -> LabelRowClass.FrameLevelImageGroupData:
             return self._label_row_read_only_data.frame_level_data[self._frame]
 
         def __repr__(self):
@@ -795,6 +853,16 @@ class LabelRowClass:
         if isinstance(frame, str):
             frame = self.get_frame_number(frame)
         return self.FrameView(self, self._label_row_read_only_data, frame)
+
+    def frames(self) -> List[FrameView]:
+        """
+        Returns:
+            A list of frame views in order of available frames.
+        """
+        ret = []
+        for frame in range(self.number_of_frames):
+            ret.append(self.get_frame_view(frame))
+        return ret
 
     def to_encord_dict(self) -> dict:
         """
@@ -1407,13 +1475,13 @@ class LabelRowClass:
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData] = dict()
         for _, payload in label_row_data_units.items():
-            frame_number = payload["data_sequence"]
+            frame_number = int(payload["data_sequence"])
             frame_level_image_group_data = self.FrameLevelImageGroupData(
                 image_hash=payload["data_hash"],
                 image_title=payload["data_title"],
                 data_link=payload.get("data_link"),
                 file_type=payload["data_type"],
-                frame_number=int(frame_number),
+                frame_number=frame_number,
                 width=payload["width"],
                 height=payload["height"],
             )
@@ -1665,8 +1733,8 @@ class ObjectInstance:
 
         self._dynamic_answer_manager = DynamicAnswerManager(self)
 
-    def is_assigned_to_label_row(self) -> bool:
-        return self._parent is not None
+    def is_assigned_to_label_row(self) -> Optional[LabelRowClass]:
+        return self._parent
 
     @property
     def object_hash(self) -> str:

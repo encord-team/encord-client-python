@@ -479,7 +479,7 @@ def test_update_remove_object_instance_coordinates():
     assert frame_2_view.manual_annotation == manual_annotation
 
     # Remove coordinates
-    label_box.remove_from_frames([2, 3])
+    label_box.remove_from_frames(Range(2, 3))
     with pytest.raises(RuntimeError):
         frame_2_view.coordinates
 
@@ -540,7 +540,7 @@ def test_removing_coordinates_from_object_removes_it_from_parent():
     objects = label_row.get_objects(filter_frames=3)
     assert len(objects) == 1
 
-    label_box.remove_from_frames([3])
+    label_box.remove_from_frames(3)
 
     objects = label_row.get_objects(filter_frames=Range(1, 3))
     assert len(objects) == 1
@@ -1007,45 +1007,39 @@ def test_label_status_forwards_compatibility():
 
 
 def test_frame_view():
-    # DENIS: implement this view!
-    """
-    I need some notion of "ObjectIndex at frame". That way I can then iterate over the frames.
-    I could have an extra class of ObjectOnFrame, with all the setters and getters needed.
-    Or I could just have a FrameView.set_coordinates(object_index) for example, or
-    FrameView.get_coordinates(object_index) to also read or set/get answers.
-    Then we'd also have FrameView.get_all_objects for example, which is again only a small
-    wrapper around LabelRowClass.get_all_objects_at_frame(frame).
-
-    Is this ergonomic enough? Maybe catch up with Alexey after the meeting today.
-
-    Frederik: for reading, people think "For frame 2, give me all the object coordinates there."
-    for uploading, some sort of "create or get, depending on whether it exists already" is needed.
-        -> for the "create or get", do we then need something like "get by coordinates"?
-
-    DENIS: Frederik also needs to fetch a label_row depending on the last timestamp that has changed.
-
-    When doing `create_label_row`, the annotation status becomes to in progress.
-    Can we have a hash of the label row before it is created so we don't need to create it or wait for it?
-    """
     label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
 
-    frame_view: FrameView = label_row.get_frame_view(1)
-    # NOTE: this FrameView can also have the per frame information. Like width and height of the image.
+    frame_view: LabelRowClass.FrameView = label_row.get_frame_view(1)
 
-    object_instance_1: ObjectInstance = frame_view.create_object(BOX_COORDINATES, box_ontology_item, answer=None)
-    # or do
-    object_instance_1: ObjectInstance = box_ontology_item.create_object(frame_view, BOX_COORDINATES)
-    # DENIS: ^ is there a big difference at this point to just adding the frame?
-    frame_view.add_object(BOX_COORDINATES, existing_object, answer=None)  # answer is optional
+    assert frame_view.get_objects() == []
+    assert frame_view.get_classifications() == []
 
-    existing_instances: Dict[InternalUuid, ObjectInstance] = {}
+    object_instance = ObjectInstance(box_ontology_item)
+    classification_instance = ClassificationInstance(text_classification)
 
+    frame_view.add_object(object_instance, BOX_COORDINATES)
+    frame_view.add_classification(classification_instance)
+
+    frames = label_row.frames()
+    assert len(frames) == 5
+
+    frame_num = 0
     for frame in label_row.frames():
-        assert frame.number == 1
-        assert frame.uuid == "abc"
-        assert frame.has_object(object_instance_1)
+        assert frame.frame == frame_num
+        frame_num += 1
 
-    assert frame_view.get_objects == [object_instance_1]
+    assert frames[0].image_hash == "f850dfb4-7146-49e0-9afc-2b9434a64a9f"
+    assert frames[0].image_title == "Screenshot 2021-11-24 at 18.35.57.png"
+    assert frames[0].file_type == "image/png"
+    assert frames[0].width == 952
+    assert frames[0].height == 678
+    assert (
+        frames[0].data_link
+        == "https://storage.googleapis.com/cord-ai-platform.appspot.com/cord-images-prod/yiA5JxmLEGSoEcJAuxr3AJdDDXE2/f850dfb4-7146-49e0-9afc-2b9434a64a9f?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-64w1p%40cord-ai-platform.iam.gserviceaccount.com%2F20221201%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20221201T133838Z&X-Goog-Expires=604800&X-Goog-SignedHeaders=host&X-Goog-Signature=94c66d85014ff52a99fec1cf671ccc1b859ebead4308ca82c4d810e13ac285d2afa8cfa4bfcbd09f615b243b95d9b1d5d1d779e7a4ba5832a2207b4f3b99dbe405ded373f03f06abe4e24098e70568c269899f2f397c7a4392a1c3090bff2b8c98f2177f5db36f0884a83033f404354bdfda0506bf162e25ff6186fc54104e8273e86959b0296958a03359514660528a54ba94e25c59e59534ce5102f9c87ff7cb03a591606b3a191123af4a30fa4296a788a9433f0c8c1dc7d3f80a022cc42f8716ba44d09ecd04118dc6e4ee5977ffbadcc8d635cc4e906f024dba26e520cfc304fc0f3458a3e3b2422c196956fd3024a6eba0512d557683487b10a1a381b4"
+    )
+
+    assert frame_view.get_objects() == [object_instance]
+    assert frame_view.get_classifications() == [classification_instance]
 
 
 # def test_read_coordinates():
