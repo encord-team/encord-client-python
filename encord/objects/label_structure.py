@@ -28,7 +28,6 @@ from encord.objects.common import (
     ChecklistAttribute,
     Option,
     RadioAttribute,
-    Shape,
     TextAttribute,
     _get_attribute_by_hash,
     _get_option_by_hash,
@@ -85,28 +84,6 @@ class LabelStatus(Enum):
     @classmethod
     def _missing_(cls, value):
         return cls.MISSING_LABEL_STATUS
-
-
-@dataclass(frozen=True)
-class LabelReviewInstance:
-    name: str
-    ranges: Ranges
-    shape: Shape
-    object_hash: str
-    feature_hash: str
-    classifications: List[dict]  # look up
-
-
-@dataclass(frozen=True)
-class LabelReview:
-    # look this up and verify the shape.
-    exists: bool
-    comment: Optional[str]
-    approved: bool
-    instance: LabelReviewInstance
-    created_at: datetime
-    created_by: datetime
-    rejections: Optional[dict]  # look up
 
 
 class ClassificationInstance:
