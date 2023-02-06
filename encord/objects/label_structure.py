@@ -21,6 +21,7 @@ from typing import (
 from dateutil.parser import parse
 
 from encord.constants.enums import DataType
+from encord.exceptions import LabelRowError
 from encord.objects.classification import Classification
 from encord.objects.common import (
     Attribute,
@@ -64,8 +65,6 @@ from encord.objects.utils import (
     ranges_list_to_ranges,
     short_uuid_str,
 )
-
-# DENIS: think about better error codes for people to catch.
 
 
 class LabelStatus(Enum):
@@ -173,7 +172,7 @@ class ClassificationInstance:
 
         def _check_if_frame_view_valid(self) -> None:
             if self._frame not in self._classification_instance._frames_to_data:
-                raise RuntimeError(
+                raise LabelRowError(
                     "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
                 )
 
@@ -246,7 +245,7 @@ class ClassificationInstance:
 
     @classification_hash.setter
     def classification_hash(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the object hash on an instantiated label object.")
+        raise LabelRowError("Cannot set the object hash on an instantiated label object.")
 
     @property
     def ontology_item(self) -> Classification:
@@ -318,7 +317,7 @@ class ClassificationInstance:
     ):
         existing_frame_data = self._frames_to_data.get(frame)
         if overwrite is False and existing_frame_data is not None:
-            raise ValueError(
+            raise LabelRowError(
                 f"Cannot overwrite existing data for frame `{frame}`. Set `overwrite` to `True` to overwrite."
             )
 
@@ -383,15 +382,15 @@ class ClassificationInstance:
         if attribute is None:
             attribute = self._ontology_classification.attributes[0]
         elif not self._is_attribute_valid_child_of_classification(attribute):
-            raise ValueError("The attribute is not a valid child of the classification.")
+            raise LabelRowError("The attribute is not a valid child of the classification.")
         elif not self._is_selectable_child_attribute(attribute):
-            raise RuntimeError(
-                "Setting a nested attribute is only possible if all parent attributes have been" "selected."
+            raise LabelRowError(
+                "Setting a nested attribute is only possible if all parent attributes have been selected."
             )
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
         if static_answer.is_answered() and overwrite is False:
-            raise RuntimeError(
+            raise LabelRowError(
                 "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
                 "overwrite an existing answer to and attribute."
             )
@@ -413,12 +412,12 @@ class ClassificationInstance:
         for answer_dict in answers_list:
             attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_classification.attributes)
             if attribute is None:
-                raise RuntimeError(
+                raise LabelRowError(
                     "One of the attributes does not exist in the ontology. Cannot create a valid LabelRow."
                 )
 
             if not self._is_attribute_valid_child_of_classification(attribute):
-                raise ValueError(
+                raise LabelRowError(
                     "One of the attributes set for a classification is not a valid child of the classification. "
                     "Cannot create a valid LabelRow."
                 )
@@ -463,7 +462,7 @@ class ClassificationInstance:
         if attribute is None:
             attribute = self._ontology_classification.attributes[0]
         elif not self._is_attribute_valid_child_of_classification(attribute):
-            raise ValueError("The attribute is not a valid child of the classification.")
+            raise LabelRowError("The attribute is not a valid child of the classification.")
         elif not self._is_selectable_child_attribute(attribute):
             return None
 
@@ -479,7 +478,7 @@ class ClassificationInstance:
         if attribute is None:
             attribute = self._ontology_classification.attributes[0]
         elif not self._is_attribute_valid_child_of_classification(attribute):
-            raise ValueError("The attribute is not a valid child of the classification.")
+            raise LabelRowError("The attribute is not a valid child of the classification.")
         elif not self._is_selectable_child_attribute(attribute):
             return {}
 
@@ -496,7 +495,7 @@ class ClassificationInstance:
         if attribute is None:
             attribute = self._ontology_classification.attributes[0]
         elif not self._is_attribute_valid_child_of_classification(attribute):
-            raise ValueError("The attribute is not a valid child of the classification.")
+            raise LabelRowError("The attribute is not a valid child of the classification.")
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
         static_answer.unset()
@@ -523,7 +522,7 @@ class ClassificationInstance:
 
     def _check_within_range(self, frame: int) -> None:
         if frame < 0 or frame >= self._last_frame:
-            raise ValueError(
+            raise LabelRowError(
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
@@ -532,7 +531,7 @@ class ClassificationInstance:
             return
         already_present_frame = self._parent._is_classification_already_present(self.ontology_item, frames)
         if already_present_frame is not None:
-            raise ValueError(
+            raise LabelRowError(
                 f"The LabelRowClass, that this classification is part of, already has a classification of the same type "
                 f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
                 f"frame per LabelRowClass."
@@ -574,19 +573,19 @@ class LabelRowClass:
         @property
         def image_hash(self) -> str:
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-                raise ValueError("Image hash can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+                raise LabelRowError("Image hash can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
             return self._frame_level_data().image_hash
 
         @property
         def image_title(self) -> str:
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-                raise ValueError("Image title can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+                raise LabelRowError("Image title can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
             return self._frame_level_data().image_title
 
         @property
         def file_type(self) -> str:
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-                raise ValueError("File type can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+                raise LabelRowError("File type can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
             return self._frame_level_data().file_type
 
         @property
@@ -610,7 +609,7 @@ class LabelRowClass:
         @property
         def data_link(self) -> Optional[str]:
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-                raise ValueError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+                raise LabelRowError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
             return self._frame_level_data().data_link
 
         def add_object(
@@ -628,7 +627,7 @@ class LabelRowClass:
         ) -> None:
             label_row = object_instance.is_assigned_to_label_row()
             if label_row and self._label_row != label_row:
-                raise RuntimeError(
+                raise LabelRowError(
                     "This object instance is already assigned to a different label row. It can not be "
                     "added to multiple label rows at once."
                 )
@@ -662,7 +661,7 @@ class LabelRowClass:
         ) -> None:
             label_row = classification_instance.is_assigned_to_label_row()
             if label_row and self._label_row != label_row:
-                raise RuntimeError(
+                raise LabelRowError(
                     "This object instance is already assigned to a different label row. It can not be "
                     "added to multiple label rows at once."
                 )
@@ -815,7 +814,7 @@ class LabelRowClass:
     def dicom_data_links(self) -> Optional[List[str]]:
         """Only a value for DICOM data types."""
         if self._label_row_read_only_data.data_type != DataType.DICOM:
-            raise ValueError("This is not a DICOM data type.")
+            raise LabelRowError("DICOM data links can only be retrieved for DICOM files.")
         return self._label_row_read_only_data.dicom_data_links
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
@@ -824,7 +823,7 @@ class LabelRowClass:
         Raise an error if this function is used for non-image data types.
         """
         if self.data_type not in (DataType.IMAGE, DataType.IMG_GROUP):
-            raise RuntimeError("This function is only supported for label rows of image or image group data types.")
+            raise LabelRowError("This function is only supported for label rows of image or image group data types.")
 
         return self._label_row_read_only_data.frame_to_image_hash.get(frame_number)
 
@@ -835,7 +834,7 @@ class LabelRowClass:
         Raise an error if this function is used for non-image data types.
         """
         if self.data_type not in (DataType.IMAGE, DataType.IMG_GROUP):
-            raise RuntimeError("This function is only supported for label rows of image or image group data types.")
+            raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
     def upload(self):
@@ -1158,10 +1157,10 @@ class LabelRowClass:
             force: overwrites current objects, otherwise this will replace the current object.
         """
         if not object_instance.is_valid():
-            raise ValueError("The supplied ObjectInstance is not in a valid format.")
+            raise LabelRowError("The supplied ObjectInstance is not in a valid format.")
 
         if object_instance.is_assigned_to_label_row():
-            raise RuntimeError(
+            raise LabelRowError(
                 "The supplied ObjectInstance is already part of a LabelRowClass. You can only add a ObjectInstance to one "
                 "LabelRowClass. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
                 "any LabelRowClass."
@@ -1169,7 +1168,9 @@ class LabelRowClass:
 
         object_hash = object_instance.object_hash
         if object_hash in self._objects_map and not force:
-            raise ValueError("The supplied ObjectInstance was already previously added. (the object_hash is the same).")
+            raise LabelRowError(
+                "The supplied ObjectInstance was already previously added. (the object_hash is the same)."
+            )
         elif object_hash in self._objects_map and force:
             self._objects_map.pop(object_hash)
 
@@ -1180,10 +1181,10 @@ class LabelRowClass:
 
     def add_classification(self, classification_instance: ClassificationInstance, force: bool = False):
         if not classification_instance.is_valid():
-            raise ValueError("The supplied ClassificationInstance is not in a valid format.")
+            raise LabelRowError("The supplied ClassificationInstance is not in a valid format.")
 
         if classification_instance.is_assigned_to_label_row():
-            raise RuntimeError(
+            raise LabelRowError(
                 "The supplied ClassificationInstance is already part of a LabelRowClass. You can only add a ClassificationInstance"
                 " to one LabelRowClass. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
                 "not part of any LabelRowClass."
@@ -1194,12 +1195,12 @@ class LabelRowClass:
             classification_instance.ontology_item, classification_instance.frames()
         )
         if classification_hash in self._classifications_map and not force:
-            raise ValueError(
+            raise LabelRowError(
                 "The supplied ClassificationInstance was already previously added. (the classification_hash is the same)."
             )
 
         if already_present_frame is not None and not force:
-            raise ValueError(
+            raise LabelRowError(
                 f"A ClassificationInstance of the same type was already added and has overlapping frames. One "
                 f"overlapping frame that was found is `{already_present_frame}`. Make sure that you only add "
                 f"classifications which are on frames where the same type of classification does not yet exist."
@@ -1652,7 +1653,7 @@ class ObjectInstance:
 
         def _check_if_frame_view_valid(self) -> None:
             if self._frame not in self._object_instance._frames_to_instance_data:
-                raise RuntimeError(
+                raise LabelRowError(
                     "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
                 )
 
@@ -1741,7 +1742,7 @@ class ObjectInstance:
 
     @object_hash.setter
     def object_hash(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the object hash on an instantiated label object.")
+        raise LabelRowError("Cannot set the object hash on an instantiated label object.")
 
     @property
     def ontology_item(self) -> Any:
@@ -1749,7 +1750,7 @@ class ObjectInstance:
 
     @ontology_item.setter
     def ontology_item(self, v: Any) -> NoReturn:
-        raise RuntimeError("Cannot set the ontology item of an instantiated ObjectInstance.")
+        raise LabelRowError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
     @property
     def _last_frame(self) -> Union[int, float]:
@@ -1822,12 +1823,12 @@ class ObjectInstance:
         if attribute is None:
             attribute = self._ontology_object.attributes[0]
         elif not self._is_attribute_valid_child_of_object_instance(attribute):
-            raise ValueError("The attribute is not a valid child of the classification.")
+            raise LabelRowError("The attribute is not a valid child of the classification.")
         elif not self._is_selectable_child_attribute(attribute):
             return None
 
         if is_dynamic is not None and is_dynamic is not attribute.dynamic:
-            raise ValueError(
+            raise LabelRowError(
                 f"The attribute is {'dynamic' if attribute.dynamic else 'static'}, but is_dynamic is set to "
                 f"{is_dynamic}."
             )
@@ -1892,13 +1893,13 @@ class ObjectInstance:
                 a RuntimeError if the answer already exists. This argument is ignored for dynamic attributes.
         """
         if not self._is_attribute_valid_child_of_object_instance(attribute):
-            raise ValueError("The attribute is not a valid child of the object.")
+            raise LabelRowError("The attribute is not a valid child of the object.")
         elif not self._is_selectable_child_attribute(attribute):
-            raise RuntimeError(
+            raise LabelRowError(
                 "Setting a nested attribute is only possible if all parent attributes have been" "selected."
             )
         elif frames is not None and attribute.dynamic is False:
-            raise ValueError("Setting frames is only possible for dynamic attributes.")
+            raise LabelRowError("Setting frames is only possible for dynamic attributes.")
 
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames)
@@ -1906,7 +1907,7 @@ class ObjectInstance:
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
         if static_answer.is_answered() and overwrite is False:
-            raise RuntimeError(
+            raise LabelRowError(
                 "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
                 "overwrite an existing answer to an attribute."
             )
@@ -1934,11 +1935,11 @@ class ObjectInstance:
         for answer_dict in answers_list:
             attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_object.attributes)
             if attribute is None:
-                raise RuntimeError(
+                raise LabelRowError(
                     "One of the attributes does not exist in the ontology. Cannot create a valid LabelRow."
                 )
             if not self._is_attribute_valid_child_of_object_instance(attribute):
-                raise ValueError(
+                raise LabelRowError(
                     "One of the attributes set for a classification is not a valid child of the classification. "
                     "Cannot create a valid LabelRow."
                 )
@@ -1991,7 +1992,7 @@ class ObjectInstance:
 
     def check_within_range(self, frame: int) -> None:
         if frame < 0 or frame >= self._last_frame:
-            raise ValueError(
+            raise LabelRowError(
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
@@ -2050,7 +2051,7 @@ class ObjectInstance:
         existing_frame_data = self._frames_to_instance_data.get(frame)
 
         if overwrite is False and existing_frame_data is not None:
-            raise ValueError("Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite.")
+            raise LabelRowError("Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite.")
 
         check_coordinate_type(coordinates, self._ontology_object)
         self.check_within_range(frame)
