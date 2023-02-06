@@ -76,7 +76,7 @@ class LabelStatus(Enum):
     REVIEWED = "REVIEWED"
     REVIEWED_TWICE = "REVIEWED_TWICE"
 
-    MISSING_LABEL_STATUS = "MISSING_LABEL_STATUS"
+    MISSING_LABEL_STATUS = "_MISSING_LABEL_STATUS_"
     """
     This value will be displayed if the Encord platform has a new label status and your SDK version does not understand
     it yet. Please update your SDK to the latest version. 
@@ -167,7 +167,6 @@ class ClassificationInstance:
         def reviews(self) -> List[dict]:
             """
             A read only property about the reviews that happened for this object on this frame.
-            DENIS: probably want to type this out - or call this `get_reviews` to pass in the different modes.
             """
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().reviews
@@ -1637,7 +1636,7 @@ class ObjectInstance:
         def reviews(self) -> List[dict]:
             """
             A read only property about the reviews that happened for this object on this frame.
-            DENIS: probably want to type this out - actually, this might need to be lazy loaded.
+            DENIS: TODO: probably want to type this out and possibly lazy load this.
             """
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.reviews
