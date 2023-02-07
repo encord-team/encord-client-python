@@ -294,7 +294,7 @@ class Classification:
             Type[NestableOption],
             Type[FlatOption],
             None,
-        ],
+        ] = None,
     ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
         """
         Returns the first found item where the hash matches. If there is more than one item with the same hash in

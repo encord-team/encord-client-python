@@ -4,11 +4,7 @@ import os
 
 import pytest
 
-import encord.objects.classification
-import encord.objects.common
-import encord.objects.ontology_labels_impl
-import encord.objects.ontology_object
-from encord.objects import ontology_structure
+import encord.objects
 from encord.objects.common import Shape
 from encord.objects.utils import short_uuid_str
 
@@ -17,110 +13,117 @@ DATA_DIR = os.path.join(CURRENT_DIR, "data")
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-EXPECTED_ONTOLOGY: encord.objects.ontology_labels_impl.OntologyStructure = (
-    encord.objects.ontology_labels_impl.OntologyStructure(
-        objects=[
-            encord.objects.ontology_labels_impl.Object(
-                uid=1,
-                name="Eye",
-                color="#D33115",
-                shape=encord.objects.common.Shape.BOUNDING_BOX,
-                feature_node_hash="a55abbeb",
-            ),
-            encord.objects.ontology_labels_impl.Object(
-                uid=2,
-                name="Nose",
-                color="#E27300",
-                shape=encord.objects.common.Shape.POLYGON,
-                feature_node_hash="86648f32",
-                attributes=[
-                    encord.objects.common.ChecklistAttribute(
-                        uid=[2, 1],
-                        feature_node_hash="1e3e5cad",
-                        name="Additional details about the nose",
-                        required=True,
-                        dynamic=False,
-                        options=[
-                            encord.objects.common.FlatOption(
-                                uid=[2, 1, 1],
-                                feature_node_hash="2bc17c88",
-                                label="Is it a cute nose?",
-                                value="is_it_a_cute_nose?",
-                            ),
-                            encord.objects.common.FlatOption(
-                                uid=[2, 1, 2],
-                                feature_node_hash="86eaa4f2",
-                                label="Is it a wet nose? ",
-                                value="is_it_a_wet_nose?_",
-                            ),
-                        ],
-                    )
-                ],
-            ),
-            encord.objects.ontology_labels_impl.Object(
-                uid=3,
-                name="Example",
-                color="#FE9200",
-                shape=encord.objects.common.Shape.POLYLINE,
-                feature_node_hash="6eeba59b",
-                attributes=[
-                    encord.objects.common.RadioAttribute(
-                        uid=[4, 1],
-                        feature_node_hash="cabfedb5",
-                        name="Radio with options",
-                        required=False,
-                        dynamic=False,
-                        options=[
-                            encord.objects.common.NestableOption(
-                                uid=[4, 1, 1],
-                                feature_node_hash="5d102ce6",
-                                label="Nested Option",
-                                value="nested_option",
-                                nested_options=[
-                                    encord.objects.common.RadioAttribute(
-                                        uid=[4, 1, 1, 1],
-                                        feature_node_hash="59204845",
-                                        name="Leaf",
-                                        required=False,
-                                        dynamic=False,
-                                    )
-                                ],
-                            )
-                        ],
-                    )
-                ],
-            ),
-        ],
-        classifications=[
-            encord.objects.ontology_labels_impl.Classification(
-                uid=1,
-                feature_node_hash="a39d81c0",
-                attributes=[
-                    encord.objects.common.RadioAttribute(
-                        uid=[1, 1],
-                        feature_node_hash="a6136d14",
-                        name="Is the cat standing?",
-                        required=True,
-                        dynamic=False,
-                        options=[
-                            encord.objects.common.NestableOption(
-                                uid=[1, 1, 1],
-                                feature_node_hash="a3aeb48d",
-                                label="Yes",
-                                value="yes",
-                            ),
-                            encord.objects.common.NestableOption(
-                                uid=[1, 1, 2],
-                                feature_node_hash="d0a4b373",
-                                label="No",
-                                value="no",
-                            ),
-                        ],
-                    )
-                ],
-            )
-        ],
-    )
+OBJECT_1 = encord.objects.Object(
+    uid=1,
+    name="Eye",
+    color="#D33115",
+    shape=encord.objects.Shape.BOUNDING_BOX,
+    feature_node_hash="a55abbeb",
+)
+
+FLAT_OPTION_1 = encord.objects.FlatOption(
+    uid=[2, 1, 1],
+    feature_node_hash="2bc17c88",
+    label="Is it a cute nose?",
+    value="is_it_a_cute_nose?",
+)
+
+FLAT_OPTION_2 = encord.objects.FlatOption(
+    uid=[2, 1, 2],
+    feature_node_hash="86eaa4f2",
+    label="Is it a wet nose? ",
+    value="is_it_a_wet_nose?_",
+)
+
+CHECKLIST_ATTRIBUTE = encord.objects.ChecklistAttribute(
+    uid=[2, 1],
+    feature_node_hash="1e3e5cad",
+    name="Additional details about the nose",
+    required=True,
+    dynamic=False,
+    options=[FLAT_OPTION_1, FLAT_OPTION_2],
+)
+
+
+OBJECT_2 = encord.objects.Object(
+    uid=2,
+    name="Nose",
+    color="#E27300",
+    shape=encord.objects.Shape.POLYGON,
+    feature_node_hash="86648f32",
+    attributes=[CHECKLIST_ATTRIBUTE],
+)
+
+RADIO_ATTRIBUTE_1 = encord.objects.RadioAttribute(
+    uid=[4, 1, 1, 1],
+    feature_node_hash="59204845",
+    name="Leaf",
+    required=False,
+    dynamic=False,
+)
+
+NESTABLE_OPTION_3 = encord.objects.NestableOption(
+    uid=[4, 1, 1],
+    feature_node_hash="5d102ce6",
+    label="Nested Option",
+    value="nested_option",
+    nested_options=[RADIO_ATTRIBUTE_1],
+)
+
+RADIO_ATTRIBUTE_2 = encord.objects.RadioAttribute(
+    uid=[4, 1],
+    feature_node_hash="cabfedb5",
+    name="Radio with options",
+    required=False,
+    dynamic=False,
+    options=[NESTABLE_OPTION_3],
+)
+OBJECT_3 = encord.objects.Object(
+    uid=3,
+    name="Example",
+    color="#FE9200",
+    shape=encord.objects.Shape.POLYLINE,
+    feature_node_hash="6eeba59b",
+    attributes=[RADIO_ATTRIBUTE_2],
+)
+
+NESTABLE_OPTION_1 = encord.objects.NestableOption(
+    uid=[1, 1, 1],
+    feature_node_hash="a3aeb48d",
+    label="Yes",
+    value="yes",
+)
+
+NESTABLE_OPTION_2 = encord.objects.NestableOption(
+    uid=[1, 1, 2],
+    feature_node_hash="d0a4b373",
+    label="No",
+    value="no",
+)
+
+RADIO_ATTRIBUTE_3 = encord.objects.RadioAttribute(
+    uid=[1, 1],
+    feature_node_hash="a6136d14",
+    name="Is the cat standing?",
+    required=True,
+    dynamic=False,
+    options=[NESTABLE_OPTION_1, NESTABLE_OPTION_2],
+)
+
+CLASSIFICATION_1 = encord.objects.Classification(
+    uid=1,
+    feature_node_hash="a39d81c0",
+    attributes=[RADIO_ATTRIBUTE_3],
+)
+
+
+EXPECTED_ONTOLOGY: encord.objects.OntologyStructure = encord.objects.OntologyStructure(
+    objects=[
+        OBJECT_1,
+        OBJECT_2,
+        OBJECT_3,
+    ],
+    classifications=[CLASSIFICATION_1],
 )
 
 
@@ -131,7 +134,7 @@ def test_json_to_ontology():
         editor_dict = json.load(f)
 
     # WHEN
-    actual = encord.objects.ontology_labels_impl.OntologyStructure.from_dict(editor_dict)
+    actual = encord.objects.OntologyStructure.from_dict(editor_dict)
 
     # THEN
     assert EXPECTED_ONTOLOGY == actual
@@ -151,7 +154,7 @@ def test_ontology_to_json():
 
 
 def test_add_classification():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     cls1 = ontology.add_classification()
     assert cls1.uid == 1
     assert cls1.feature_node_hash
@@ -170,7 +173,7 @@ def test_add_classification():
 
 
 def test_add_classification_duplicate_values():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_classification(1, "12345678")
     with pytest.raises(ValueError):
         obj2 = ontology.add_classification(1)
@@ -181,7 +184,7 @@ def test_add_classification_duplicate_values():
 
 
 def test_add_object():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX)
     assert obj1.uid == 1
     assert obj1.color
@@ -205,7 +208,7 @@ def test_add_object():
 
 
 def test_add_object_duplicate_values():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
     with pytest.raises(ValueError):
         obj2 = ontology.add_object("Orange", Shape.BOUNDING_BOX, 1)
@@ -216,19 +219,19 @@ def test_add_object_duplicate_values():
 
 
 def test_add_object_nested_classifications():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
 
-    stripes = obj1.add_attribute(encord.objects.common.TextAttribute, "Stripes")
+    stripes = obj1.add_attribute(encord.objects.TextAttribute, "Stripes")
     assert stripes.uid == [1, 1]
     assert stripes.feature_node_hash
-    assert isinstance(stripes, encord.objects.common.TextAttribute)
+    assert isinstance(stripes, encord.objects.TextAttribute)
     assert not stripes.required
     assert not stripes.dynamic
     assert not stripes.has_options_field()
 
     ripeness = obj1.add_attribute(
-        encord.objects.common.RadioAttribute,
+        encord.objects.RadioAttribute,
         "Ripeness",
         local_uid=7,
         feature_node_hash="12345678",
@@ -237,53 +240,53 @@ def test_add_object_nested_classifications():
     )
     assert ripeness.uid == [1, 7]
     assert ripeness.feature_node_hash
-    assert isinstance(ripeness, encord.objects.common.RadioAttribute)
+    assert isinstance(ripeness, encord.objects.RadioAttribute)
     assert ripeness.required
     assert ripeness.dynamic
     assert ripeness.has_options_field()
 
-    damage = obj1.add_attribute(encord.objects.common.ChecklistAttribute, "Damage", required=True, dynamic=True)
+    damage = obj1.add_attribute(encord.objects.ChecklistAttribute, "Damage", required=True, dynamic=True)
     assert damage.uid == [1, 8]
     assert damage.feature_node_hash
-    assert isinstance(damage, encord.objects.common.ChecklistAttribute)
+    assert isinstance(damage, encord.objects.ChecklistAttribute)
     assert damage.required
     assert damage.dynamic
     assert damage.has_options_field()
 
 
 def test_add_object_nested_classifications_duplicate_values():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
 
-    attr1 = obj1.add_attribute(encord.objects.common.TextAttribute, "Stripes")
+    attr1 = obj1.add_attribute(encord.objects.TextAttribute, "Stripes")
     with pytest.raises(ValueError):
-        obj1.add_attribute(encord.objects.common.ChecklistAttribute, "Stars, I guess?", local_uid=1)
+        obj1.add_attribute(encord.objects.ChecklistAttribute, "Stars, I guess?", local_uid=1)
     with pytest.raises(ValueError):
         obj1.add_attribute(
-            encord.objects.common.ChecklistAttribute, "Stars, I guess?", feature_node_hash=attr1.feature_node_hash
+            encord.objects.ChecklistAttribute, "Stars, I guess?", feature_node_hash=attr1.feature_node_hash
         )
 
 
 def test_add_classification_attribute():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     cls1 = ontology.add_classification()
 
-    clouds = cls1.add_attribute(encord.objects.common.RadioAttribute, "Cloud cover")
+    clouds = cls1.add_attribute(encord.objects.RadioAttribute, "Cloud cover")
     assert clouds.uid == [1, 1]
     assert clouds.feature_node_hash
-    assert isinstance(clouds, encord.objects.common.RadioAttribute)
+    assert isinstance(clouds, encord.objects.RadioAttribute)
     assert not clouds.required
     assert clouds.has_options_field()
 
     with pytest.raises(ValueError):  # only one root attribute per classification is allowed
-        cls1.add_attribute(encord.objects.common.TextAttribute, "metadata")
+        cls1.add_attribute(encord.objects.TextAttribute, "metadata")
 
 
 def test_build_checkbox_options():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     cls1 = ontology.add_classification()
 
-    clouds = cls1.add_attribute(encord.objects.common.ChecklistAttribute, "Cloud cover")
+    clouds = cls1.add_attribute(encord.objects.ChecklistAttribute, "Cloud cover")
     one = clouds.add_option("Type One")
     assert one.value == "type_one"
     two = clouds.add_option("Type Two", value="two", local_uid=6)
@@ -294,46 +297,46 @@ def test_build_checkbox_options():
     assert len({opt.feature_node_hash for opt in clouds.options}) == 3  # all different
     assert three.uid == [1, 1, 7]
 
-    assert isinstance(one, encord.objects.common.FlatOption)
+    assert isinstance(one, encord.objects.FlatOption)
 
 
 def test_build_nested_options():
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     cls1 = ontology.add_classification()
 
-    clouds = cls1.add_attribute(encord.objects.common.RadioAttribute, "Cloud cover")
+    clouds = cls1.add_attribute(encord.objects.RadioAttribute, "Cloud cover")
     one = clouds.add_option("Type One")
     two = clouds.add_option("Type Two", value="two", local_uid=6)
 
-    assert isinstance(one, encord.objects.common.NestableOption)
-    assert isinstance(two, encord.objects.common.NestableOption)
+    assert isinstance(one, encord.objects.NestableOption)
+    assert isinstance(two, encord.objects.NestableOption)
 
-    detail1 = one.add_nested_option(encord.objects.common.RadioAttribute, "detail one")
-    detail2 = one.add_nested_option(encord.objects.common.TextAttribute, "detail two")
+    detail1 = one.add_nested_option(encord.objects.RadioAttribute, "detail one")
+    detail2 = one.add_nested_option(encord.objects.TextAttribute, "detail two")
 
     detail1value1 = detail1.add_option("value 1")
-    assert isinstance(detail1value1, encord.objects.common.NestableOption)
+    assert isinstance(detail1value1, encord.objects.NestableOption)
     assert detail1value1.uid == [1, 1, 1, 1, 1]  # five levels: root, 'clouds', 'type one', 'detail one', 'value 1'
 
 
 def build_expected_ontology():
 
-    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
 
     eye = ontology.add_object(
         name="Eye",
         color="#D33115",
-        shape=encord.objects.common.Shape.BOUNDING_BOX,
+        shape=encord.objects.Shape.BOUNDING_BOX,
         feature_node_hash="a55abbeb",
     )
     nose = ontology.add_object(
         name="Nose",
         color="#E27300",
-        shape=encord.objects.common.Shape.POLYGON,
+        shape=encord.objects.Shape.POLYGON,
         feature_node_hash="86648f32",
     )
     nose_detail = nose.add_attribute(
-        encord.objects.common.ChecklistAttribute,
+        encord.objects.ChecklistAttribute,
         feature_node_hash="1e3e5cad",
         name="Additional details about the nose",
         required=True,
@@ -343,17 +346,17 @@ def build_expected_ontology():
     example = ontology.add_object(
         name="Example",
         color="#FE9200",
-        shape=encord.objects.common.Shape.POLYLINE,
+        shape=encord.objects.Shape.POLYLINE,
         feature_node_hash="6eeba59b",
     )
     radio = example.add_attribute(
-        encord.objects.common.RadioAttribute, feature_node_hash="cabfedb5", name="Radio with options"
+        encord.objects.RadioAttribute, feature_node_hash="cabfedb5", name="Radio with options"
     )
     nested = radio.add_option(feature_node_hash="5d102ce6", label="Nested Option")
-    leaf = nested.add_nested_option(encord.objects.common.RadioAttribute, feature_node_hash="59204845", name="Leaf")
+    leaf = nested.add_nested_option(encord.objects.RadioAttribute, feature_node_hash="59204845", name="Leaf")
     cls = ontology.add_classification(feature_node_hash="a39d81c0")
     cat_standing = cls.add_attribute(
-        encord.objects.common.RadioAttribute,
+        encord.objects.RadioAttribute,
         feature_node_hash="a6136d14",
         name="Is the cat standing?",
         required=True,
@@ -362,3 +365,136 @@ def build_expected_ontology():
     cat_standing.add_option(feature_node_hash="d0a4b373", label="No")
 
     assert ontology.to_dict() == EXPECTED_ONTOLOGY.to_dict()
+
+
+def test_ontology_getters():
+    # Object
+    assert EXPECTED_ONTOLOGY.get_item_by_hash(OBJECT_1.feature_node_hash) == OBJECT_1
+    assert EXPECTED_ONTOLOGY.get_item_by_hash(OBJECT_1.feature_node_hash, encord.objects.Object)
+    with pytest.raises(TypeError):
+        EXPECTED_ONTOLOGY.get_item_by_hash(OBJECT_1.feature_node_hash, encord.objects.TextAttribute)
+
+    assert EXPECTED_ONTOLOGY.get_items_by_title(OBJECT_1.name) == [OBJECT_1]
+    assert EXPECTED_ONTOLOGY.get_items_by_title(OBJECT_1.name, encord.objects.Object) == [OBJECT_1]
+    assert EXPECTED_ONTOLOGY.get_items_by_title(OBJECT_1.name, encord.objects.Classification) == []
+
+    # Option
+    assert EXPECTED_ONTOLOGY.get_item_by_hash(FLAT_OPTION_1.feature_node_hash) == FLAT_OPTION_1
+    assert EXPECTED_ONTOLOGY.get_item_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.FlatOption)
+    with pytest.raises(TypeError):
+        EXPECTED_ONTOLOGY.get_item_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.TextAttribute)
+
+    assert EXPECTED_ONTOLOGY.get_items_by_title(FLAT_OPTION_1.label) == [FLAT_OPTION_1]
+    assert EXPECTED_ONTOLOGY.get_items_by_title(FLAT_OPTION_1.label, encord.objects.FlatOption) == [FLAT_OPTION_1]
+    assert EXPECTED_ONTOLOGY.get_items_by_title(FLAT_OPTION_1.label, encord.objects.Classification) == []
+
+    # Attribute
+    assert EXPECTED_ONTOLOGY.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash) == CHECKLIST_ATTRIBUTE
+    assert EXPECTED_ONTOLOGY.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.ChecklistAttribute)
+    with pytest.raises(TypeError):
+        EXPECTED_ONTOLOGY.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.TextAttribute)
+
+    assert EXPECTED_ONTOLOGY.get_items_by_title(CHECKLIST_ATTRIBUTE.name) == [CHECKLIST_ATTRIBUTE]
+    assert EXPECTED_ONTOLOGY.get_items_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.ChecklistAttribute) == [
+        CHECKLIST_ATTRIBUTE
+    ]
+    assert EXPECTED_ONTOLOGY.get_items_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.Classification) == []
+
+    # Classification
+    assert EXPECTED_ONTOLOGY.get_item_by_hash(CLASSIFICATION_1.feature_node_hash) == CLASSIFICATION_1
+    assert EXPECTED_ONTOLOGY.get_item_by_hash(CLASSIFICATION_1.feature_node_hash, encord.objects.Classification)
+    with pytest.raises(TypeError):
+        EXPECTED_ONTOLOGY.get_item_by_hash(CLASSIFICATION_1.feature_node_hash, encord.objects.TextAttribute)
+    # NOTE: getting by name does not work. The classification has no name, just its attribute
+
+
+def test_object_getters():
+
+    # Option
+    assert OBJECT_2.get_item_by_hash(FLAT_OPTION_1.feature_node_hash) == FLAT_OPTION_1
+    assert OBJECT_2.get_item_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.FlatOption)
+    with pytest.raises(TypeError):
+        OBJECT_2.get_item_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.TextAttribute)
+
+    assert OBJECT_2.get_items_by_title(FLAT_OPTION_1.label) == [FLAT_OPTION_1]
+    assert OBJECT_2.get_items_by_title(FLAT_OPTION_1.label, encord.objects.FlatOption) == [FLAT_OPTION_1]
+    assert OBJECT_2.get_items_by_title(FLAT_OPTION_1.label, encord.objects.ChecklistAttribute) == []
+
+    # Attribute
+    assert OBJECT_2.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash) == CHECKLIST_ATTRIBUTE
+    assert OBJECT_2.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.ChecklistAttribute)
+    with pytest.raises(TypeError):
+        OBJECT_2.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.TextAttribute)
+
+    assert OBJECT_2.get_items_by_title(CHECKLIST_ATTRIBUTE.name) == [CHECKLIST_ATTRIBUTE]
+    assert OBJECT_2.get_items_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.ChecklistAttribute) == [
+        CHECKLIST_ATTRIBUTE
+    ]
+    assert OBJECT_2.get_items_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.TextAttribute) == []
+
+
+def test_classification_getters():
+    # Option
+    assert CLASSIFICATION_1.get_item_by_hash(NESTABLE_OPTION_2.feature_node_hash) == NESTABLE_OPTION_2
+    assert CLASSIFICATION_1.get_item_by_hash(NESTABLE_OPTION_2.feature_node_hash, encord.objects.NestableOption)
+    with pytest.raises(TypeError):
+        CLASSIFICATION_1.get_item_by_hash(NESTABLE_OPTION_2.feature_node_hash, encord.objects.TextAttribute)
+
+    assert CLASSIFICATION_1.get_items_by_title(NESTABLE_OPTION_2.label) == [NESTABLE_OPTION_2]
+    assert CLASSIFICATION_1.get_items_by_title(NESTABLE_OPTION_2.label, encord.objects.NestableOption) == [
+        NESTABLE_OPTION_2
+    ]
+    assert CLASSIFICATION_1.get_items_by_title(NESTABLE_OPTION_2.label, encord.objects.ChecklistAttribute) == []
+
+    # Attribute
+    assert CLASSIFICATION_1.get_item_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash) == RADIO_ATTRIBUTE_3
+    assert CLASSIFICATION_1.get_item_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash, encord.objects.RadioAttribute)
+    with pytest.raises(TypeError):
+        CLASSIFICATION_1.get_item_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash, encord.objects.TextAttribute)
+
+    assert CLASSIFICATION_1.get_items_by_title(RADIO_ATTRIBUTE_3.name) == [RADIO_ATTRIBUTE_3]
+    assert CLASSIFICATION_1.get_items_by_title(RADIO_ATTRIBUTE_3.name, encord.objects.RadioAttribute) == [
+        RADIO_ATTRIBUTE_3
+    ]
+    assert CLASSIFICATION_1.get_items_by_title(RADIO_ATTRIBUTE_3.name, encord.objects.TextAttribute) == []
+
+
+def test_attribute_getters():
+    # Option
+    assert RADIO_ATTRIBUTE_2.get_item_by_hash(NESTABLE_OPTION_3.feature_node_hash) == NESTABLE_OPTION_3
+    assert RADIO_ATTRIBUTE_2.get_item_by_hash(NESTABLE_OPTION_3.feature_node_hash, encord.objects.NestableOption)
+    with pytest.raises(TypeError):
+        RADIO_ATTRIBUTE_2.get_item_by_hash(NESTABLE_OPTION_3.feature_node_hash, encord.objects.TextAttribute)
+
+    assert RADIO_ATTRIBUTE_2.get_items_by_title(NESTABLE_OPTION_3.label) == [NESTABLE_OPTION_3]
+    assert RADIO_ATTRIBUTE_2.get_items_by_title(NESTABLE_OPTION_3.label, encord.objects.NestableOption) == [
+        NESTABLE_OPTION_3
+    ]
+    assert RADIO_ATTRIBUTE_2.get_items_by_title(NESTABLE_OPTION_3.label, encord.objects.ChecklistAttribute) == []
+
+    # Attribute
+    assert RADIO_ATTRIBUTE_2.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash) == RADIO_ATTRIBUTE_1
+    assert RADIO_ATTRIBUTE_2.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.RadioAttribute)
+    with pytest.raises(TypeError):
+        RADIO_ATTRIBUTE_2.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.TextAttribute)
+
+    assert RADIO_ATTRIBUTE_2.get_items_by_title(RADIO_ATTRIBUTE_1.name) == [RADIO_ATTRIBUTE_1]
+    assert RADIO_ATTRIBUTE_2.get_items_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.RadioAttribute) == [
+        RADIO_ATTRIBUTE_1
+    ]
+    assert RADIO_ATTRIBUTE_2.get_items_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.TextAttribute) == []
+
+
+def test_option_getters():
+
+    # Attribute
+    assert NESTABLE_OPTION_3.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash) == RADIO_ATTRIBUTE_1
+    assert NESTABLE_OPTION_3.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.RadioAttribute)
+    with pytest.raises(TypeError):
+        NESTABLE_OPTION_3.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.TextAttribute)
+
+    assert NESTABLE_OPTION_3.get_items_by_title(RADIO_ATTRIBUTE_1.name) == [RADIO_ATTRIBUTE_1]
+    assert NESTABLE_OPTION_3.get_items_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.RadioAttribute) == [
+        RADIO_ATTRIBUTE_1
+    ]
+    assert NESTABLE_OPTION_3.get_items_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.TextAttribute) == []
