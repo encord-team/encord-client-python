@@ -92,6 +92,59 @@ class Object:
         # DENIS: do I want to pass sth to create the first parameters.
         return ObjectInstance(self)
 
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[RadioAttribute]) -> RadioAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[ChecklistAttribute]) -> ChecklistAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[TextAttribute]) -> TextAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[NestableOption]) -> NestableOption:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[FlatOption]) -> FlatOption:
+        ...
+
+    @overload
+    def get_item_by_hash(
+        self, feature_node_hash: str, type_: None = None
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        ...
+
+    def get_item_by_hash(
+        self,
+        feature_node_hash: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ],
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns the first found item where the hash matches. If there is more than one item with the same hash in
+        the Object, then the Object would be in an invalid state. Throws if nothing is found.
+
+        Args:
+            feature_node_hash: the feature_node_hash to search for
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
+        if found_item is None:
+            raise RuntimeError("Item not found.")  # DENIS: change these error types?
+        check_type(found_item, type_)
+        return found_item
+
     @classmethod
     def from_dict(cls, d: dict) -> Object:
         shape_opt = Shape.from_string(d["shape"])
@@ -177,6 +230,59 @@ class Classification:
     def create_instance(self) -> ClassificationInstance:
         """Create a :class:`encord.objects.ClassificationInstance` to be used with a label row."""
         return ClassificationInstance(self)
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[RadioAttribute]) -> RadioAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[ChecklistAttribute]) -> ChecklistAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[TextAttribute]) -> TextAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[NestableOption]) -> NestableOption:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[FlatOption]) -> FlatOption:
+        ...
+
+    @overload
+    def get_item_by_hash(
+        self, feature_node_hash: str, type_: None = None
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        ...
+
+    def get_item_by_hash(
+        self,
+        feature_node_hash: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ],
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns the first found item where the hash matches. If there is more than one item with the same hash in
+        the Object, then the Object would be in an invalid state. Throws if nothing is found.
+
+        Args:
+            feature_node_hash: the feature_node_hash to search for
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
+        if found_item is None:
+            raise RuntimeError("Item not found.")
+        check_type(found_item, type_)
+        return found_item
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
@@ -2510,7 +2616,7 @@ class OntologyStructure:
     ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
         """
         Returns the first found item where the hash matches. If there is more than one item with the same hash in
-        the ontology, then it would be in an invalid state. Throws if nothing is found.
+        the ontology, then the ontology would be in an invalid state. Throws if nothing is found.
 
         Args:
             feature_node_hash: the feature_node_hash to search for

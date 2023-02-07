@@ -53,6 +53,12 @@ class _AttributeBase(ABC):
     def has_options_field(self) -> bool:
         pass
 
+    @abstractmethod
+    def get_item_by_hash(
+        self, feature_node_hash: str
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        pass
+
     def to_dict(self) -> dict:
         ret = self._encode_base()
 
@@ -146,6 +152,15 @@ class RadioAttribute(_AttributeBase):
     def has_options_field(self) -> bool:
         return True
 
+    def get_item_by_hash(
+        self, feature_node_hash: str
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        found_item = _get_option_by_hash(feature_node_hash, self.options)
+        if found_item is None:
+            raise RuntimeError("Item not found.")
+        # check_type(found_item, type_)
+        return found_item
+
     def add_option(
         self,
         label: str,
@@ -183,6 +198,15 @@ class ChecklistAttribute(_AttributeBase):
     def has_options_field(self) -> bool:
         return True
 
+    def get_item_by_hash(
+        self, feature_node_hash: str
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        found_item = _get_option_by_hash(feature_node_hash, self.options)
+        if found_item is None:
+            raise RuntimeError("Item not found.")
+        # check_type(found_item, type_)
+        return found_item
+
     def add_option(
         self,
         label: str,
@@ -216,6 +240,11 @@ class TextAttribute(_AttributeBase):
     @classmethod
     def has_options_field(self) -> bool:
         return False
+
+    def get_item_by_hash(
+        self, feature_node_hash: str
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        raise RuntimeError("No nested options available for text attributes.")
 
 
 Attribute = Union[RadioAttribute, ChecklistAttribute, TextAttribute]
@@ -266,6 +295,12 @@ class _OptionBase(ABC):
     def get_option_type(self) -> OptionType:
         pass
 
+    @abstractmethod
+    def get_item_by_hash(
+        self, feature_node_hash: str
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        pass
+
     def to_dict(self) -> dict:
         ret = dict()
         ret["id"] = _decode_nested_uid(self.uid)
@@ -302,6 +337,12 @@ class FlatOption(_OptionBase):
     def get_option_type(self) -> OptionType:
         return OptionType.FLAT
 
+    @abstractmethod
+    def get_item_by_hash(
+        self, feature_node_hash: str
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        raise RuntimeError("No nested attributes for flat options.")
+
     @classmethod
     def from_dict(cls, d: dict) -> FlatOption:
         return FlatOption(**cls._decode_common_option_fields(d))
@@ -320,6 +361,15 @@ class NestableOption(_OptionBase):
 
     def get_option_type(self) -> OptionType:
         return OptionType.NESTABLE
+
+    def get_item_by_hash(
+        self, feature_node_hash: str
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        found_item = _get_attribute_by_hash(feature_node_hash, self.nested_options)
+        if found_item is None:
+            raise RuntimeError("Item not found.")
+        # check_type(found_item, type_)
+        return found_item
 
     def _encode_nested_options(self) -> list:
         return attributes_to_list_dict(self.nested_options)
