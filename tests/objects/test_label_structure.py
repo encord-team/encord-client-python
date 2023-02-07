@@ -5,20 +5,24 @@ import pytest
 
 from encord.exceptions import LabelRowError
 from encord.objects.common import Attribute, TextAttribute
-from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
+from encord.objects.constants import (
+    DEFAULT_CONFIDENCE,
+    DEFAULT_MANUAL_ANNOTATION,
+    LabelStatus,
+)
 from encord.objects.coordinates import (
     BoundingBoxCoordinates,
     PointCoordinate,
     PolygonCoordinates,
 )
-from encord.objects.label_structure import (
+from encord.objects.ontology_labels_impl import (
     AnswerForFrames,
+    Classification,
     ClassificationInstance,
     LabelRowClass,
-    LabelStatus,
+    Object,
     ObjectInstance,
 )
-from encord.objects.ontology_object import Object
 from encord.objects.utils import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels

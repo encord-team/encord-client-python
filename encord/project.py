@@ -3,7 +3,7 @@ from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels
-from encord.objects.label_structure import LabelRowClass
+from encord.objects.ontology_labels_impl import LabelRowClass
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog

@@ -3,7 +3,7 @@ from typing import Optional
 
 from encord.configs import SshConfig
 from encord.http.querier import Querier
-from encord.objects.ontology_structure import OntologyStructure
+from encord.objects.ontology_labels_impl import OntologyStructure
 from encord.orm.ontology import Ontology as OrmOntology
 
 

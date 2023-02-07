@@ -55,8 +55,7 @@ from encord.http.utils import (
     upload_to_signed_url_list,
     upload_video_to_encord,
 )
-from encord.objects.label_structure import LabelRowClass
-from encord.objects.ontology_structure import OntologyStructure
+from encord.objects.ontology_labels_impl import LabelRowClass, OntologyStructure
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse

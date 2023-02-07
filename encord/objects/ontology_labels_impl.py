@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from copy import copy, deepcopy
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import (
     Any,
     Dict,
@@ -14,30 +13,40 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Type,
+    TypeVar,
     Union,
     overload,
 )
+from uuid import uuid4
 
 from dateutil.parser import parse
 
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
-from encord.objects.classification import Classification
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
+    FlatOption,
+    NestableOption,
     Option,
     RadioAttribute,
+    Shape,
     TextAttribute,
+    _add_attribute,
     _get_attribute_by_hash,
     _get_option_by_hash,
+    attribute_from_dict,
+    attributes_to_list_dict,
 )
 from encord.objects.constants import (
     DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
+    LabelStatus,
 )
 from encord.objects.coordinates import (
+    ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
     BoundingBoxCoordinates,
     Coordinates,
     PointCoordinate,
@@ -47,19 +56,17 @@ from encord.objects.internal_helpers import (
     Answer,
     _get_static_answer_map,
     _search_child_attributes,
-    check_coordinate_type,
     get_answer_from_object,
     get_default_answer_from_attribute,
     set_answer_for_object,
 )
-from encord.objects.ontology_object import Object
-from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.utils import (
     Frames,
     Range,
     Ranges,
     _lower_snake_case,
     check_email,
+    check_type,
     frames_class_to_frames_list,
     frames_to_ranges,
     ranges_list_to_ranges,
@@ -67,23 +74,158 @@ from encord.objects.utils import (
 )
 
 
-class LabelStatus(Enum):
-    NOT_LABELLED = "NOT_LABELLED"
-    LABEL_IN_PROGRESS = "LABEL_IN_PROGRESS"
-    LABELLED = "LABELLED"
-    REVIEW_IN_PROGRESS = "REVIEW_IN_PROGRESS"
-    REVIEWED = "REVIEWED"
-    REVIEWED_TWICE = "REVIEWED_TWICE"
+@dataclass
+class Object:
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
 
-    MISSING_LABEL_STATUS = "_MISSING_LABEL_STATUS_"
-    """
-    This value will be displayed if the Encord platform has a new label status and your SDK version does not understand
-    it yet. Please update your SDK to the latest version. 
-    """
+    uid: int
+    name: str
+    color: str
+    shape: Shape
+    feature_node_hash: str
+    attributes: List[Attribute] = field(default_factory=list)
 
     @classmethod
-    def _missing_(cls, value):
-        return cls.MISSING_LABEL_STATUS
+    def from_dict(cls, d: dict) -> Object:
+        shape_opt = Shape.from_string(d["shape"])
+        if shape_opt is None:
+            raise TypeError(f"The shape '{d['shape']}' of the object '{d}' is not recognised")
+
+        attributes_ret: List[Attribute] = list()
+        if "attributes" in d:
+            for attribute_dict in d["attributes"]:
+                attributes_ret.append(attribute_from_dict(attribute_dict))
+
+        object_ret = Object(
+            uid=int(d["id"]),
+            name=d["name"],
+            color=d["color"],
+            shape=shape_opt,
+            feature_node_hash=d["featureNodeHash"],
+            attributes=attributes_ret,
+        )
+
+        return object_ret
+
+    def to_dict(self) -> dict:
+        ret = dict()
+        ret["id"] = str(self.uid)
+        ret["name"] = self.name
+        ret["color"] = self.color
+        ret["shape"] = self.shape.value
+        ret["featureNodeHash"] = self.feature_node_hash
+
+        attributes_list = attributes_to_list_dict(self.attributes)
+        if attributes_list:
+            ret["attributes"] = attributes_list
+
+        return ret
+
+    T = TypeVar("T", bound=Attribute)
+
+    def add_attribute(
+        self,
+        cls: Type[T],
+        name: str,
+        local_uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+        required: bool = False,
+        dynamic: bool = False,
+    ) -> T:
+        """
+        Adds an attribute to the object.
+
+        Args:
+            cls: attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`
+            name: the user-visible name of the attribute
+            local_uid: integer identifier of the attribute. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the attribute. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            required: whether the label editor would mark this attribute as 'required'
+            dynamic: whether the attribute can have a different answer for the same object across different frames.
+
+        Returns:
+            the created attribute that can be further specified with Options, where appropriate
+
+        Raises:
+            ValueError: if specified `local_uid` or `feature_node_hash` violate uniqueness constraints
+        """
+        return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required, dynamic)
+
+
+@dataclass
+class Classification:
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+
+    Represents a whole-image classification as part of Ontology structure. Wraps a single Attribute that describes
+    the image in general rather then individual object.
+    """
+
+    uid: int
+    feature_node_hash: str
+    attributes: List[Attribute]
+
+    @classmethod
+    def from_dict(cls, d: dict) -> Classification:
+        attributes_ret: List[Attribute] = list()
+        for attribute_dict in d["attributes"]:
+            attributes_ret.append(attribute_from_dict(attribute_dict))
+
+        return Classification(
+            uid=int(d["id"]),
+            feature_node_hash=d["featureNodeHash"],
+            attributes=attributes_ret,
+        )
+
+    def to_dict(self) -> dict:
+        ret = dict()
+        ret["id"] = str(self.uid)
+        ret["featureNodeHash"] = self.feature_node_hash
+
+        attributes_list = attributes_to_list_dict(self.attributes)
+        if attributes_list:
+            ret["attributes"] = attributes_list
+
+        return ret
+
+    T = TypeVar("T", bound=Attribute)
+
+    def add_attribute(
+        self,
+        cls: Type[T],
+        name: str,
+        local_uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+        required: bool = False,
+    ) -> T:
+        """
+        Adds an attribute to the classification.
+
+        Args:
+            cls: attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`
+            name: the user-visible name of the attribute
+            local_uid: integer identifier of the attribute. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            feature_node_hash: global identifier of the attribute. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing ontology
+            required: whether the label editor would mark this attribute as 'required'
+
+        Returns:
+            the created attribute that can be further specified with Options, where appropriate
+
+        Raises:
+            ValueError: if the classification already has an attribute assigned
+        """
+        if self.attributes:
+            raise ValueError("Classification should have exactly one root attribute")
+        return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required)
+
+    def __hash__(self):
+        return hash(self.feature_node_hash)
 
 
 class ClassificationInstance:
@@ -1533,17 +1675,9 @@ class AnswerForFrames:
 
 
 AnswersForFrames = List[AnswerForFrames]
-"""
-A list of answer values on a given frame range. Unique answers will not be repeated in this list.
-"""
 
 
 class ObjectInstance:
-    """
-    DENIS: move this to `ontology_object` and have a my_ontology_object.create_instance() -> ObjectInstance
-
-    """
-
     class FrameView:
         """
         This class can be used to set or get data for a specific frame of an ObjectInstance.
@@ -2267,3 +2401,296 @@ class DynamicAnswerManager:
                 answer = get_default_answer_from_attribute(attribute)
                 ret.add(answer)
         return ret
+
+
+def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
+    expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
+    if type(coordinates) != expected_coordinate_type:
+        raise LabelRowError(
+            f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
+        )
+
+
+AVAILABLE_COLORS = (
+    "#D33115",
+    "#E27300",
+    "#16406C",
+    "#FE9200",
+    "#FCDC00",
+    "#DBDF00",
+    "#A4DD00",
+    "#68CCCA",
+    "#73D8FF",
+    "#AEA1FF",
+    "#FCC400",
+    "#B0BC00",
+    "#68BC00",
+    "#16A5A5",
+    "#009CE0",
+    "#7B64FF",
+    "#FA28FF",
+    "#B3B3B3",
+    "#9F0500",
+    "#C45100",
+    "#FB9E00",
+    "#808900",
+    "#194D33",
+    "#0C797D",
+    "#0062B1",
+    "#653294",
+    "#AB149E",
+)
+
+
+@dataclass
+class OntologyStructure:
+    """
+    This class is currently in BETA. Its API might change in future minor version releases.
+    """
+
+    objects: List[Object] = field(default_factory=list)
+    classifications: List[Classification] = field(default_factory=list)
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[Object]) -> Object:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[Classification]) -> Classification:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[RadioAttribute]) -> RadioAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[ChecklistAttribute]) -> ChecklistAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[TextAttribute]) -> TextAttribute:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[NestableOption]) -> NestableOption:
+        ...
+
+    @overload
+    def get_item_by_hash(self, feature_node_hash: str, type_: Type[FlatOption]) -> FlatOption:
+        ...
+
+    @overload
+    def get_item_by_hash(
+        self, feature_node_hash: str, type_: None = None
+    ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        ...
+
+    def get_item_by_hash(
+        self,
+        feature_node_hash: str,
+        type_: Union[
+            Type[Object],
+            Type[Classification],
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns the first found item where the hash matches. If there is more than one item with the same hash in
+        the ontology, then it would be in an invalid state. Throws if nothing is found.
+
+        Args:
+            feature_node_hash: the feature_node_hash to search for
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        for object_ in self.objects:
+            if object_.feature_node_hash == feature_node_hash:
+                check_type(object_, type_)
+                return object_
+            found_item = _get_attribute_by_hash(feature_node_hash, object_.attributes)
+            if found_item is not None:
+                check_type(found_item, type_)
+                return found_item
+
+        for classification in self.classifications:
+            if classification.feature_node_hash == feature_node_hash:
+                check_type(classification, type_)
+                return classification
+            found_item = _get_attribute_by_hash(feature_node_hash, classification.attributes)
+            if found_item is not None:
+                check_type(found_item, type_)
+                return found_item
+
+        raise RuntimeError("Item not found.")
+
+    def get_item_by_name(self, name: str):
+        """Returns all items that are matching the name."""
+        # DENIS: do I want to return the parents as a list?
+        pass
+
+    def get_items_by_name(self, name: str):
+        """Returns all items by name. Does not throw, even when empty."""
+
+    @classmethod
+    def from_dict(cls, d: dict) -> OntologyStructure:
+        """
+        Args:
+            d: a JSON blob of an "ontology structure" (e.g. from Encord web app)
+
+        Raises:
+            KeyError: If the dict is missing a required field.
+        """
+        objects_ret: List[Object] = list()
+        for object_dict in d["objects"]:
+            objects_ret.append(Object.from_dict(object_dict))
+
+        classifications_ret: List[Classification] = list()
+        for classification_dict in d["classifications"]:
+            classifications_ret.append(Classification.from_dict(classification_dict))
+
+        return OntologyStructure(objects=objects_ret, classifications=classifications_ret)
+
+    def to_dict(self) -> dict:
+        """
+        Returns:
+            The dict equivalent to the ontology.
+
+        Raises:
+            KeyError: If the dict is missing a required field.
+        """
+        ret = dict()
+        ontology_objects = list()
+        ret["objects"] = ontology_objects
+        for ontology_object in self.objects:
+            ontology_objects.append(ontology_object.to_dict())
+
+        ontology_classifications = list()
+        ret["classifications"] = ontology_classifications
+        for ontology_classification in self.classifications:
+            ontology_classifications.append(ontology_classification.to_dict())
+
+        return ret
+
+    def add_object(
+        self,
+        name: str,
+        shape: Shape,
+        uid: Optional[int] = None,
+        color: Optional[str] = None,
+        feature_node_hash: Optional[str] = None,
+    ) -> Object:
+        """
+        Adds an object class definition to the structure.
+
+        .. code::
+
+            structure = ontology_structure.OntologyStructure()
+
+            eye = structure.add_object(
+                name="Eye",
+            )
+            nose = structure.add_object(
+                name="Nose",
+            )
+            nose_detail = nose.add_attribute(
+                encord.objects.common.ChecklistAttribute,
+            )
+            nose_detail.add_option(feature_node_hash="2bc17c88", label="Is it a cute nose?")
+            nose_detail.add_option(feature_node_hash="86eaa4f2", label="Is it a wet nose? ")
+
+        Args:
+            name: the user-visible name of the object
+            shape: the kind of object (bounding box, polygon, etc). See :py:class:`encord.objects.common.Shape` enum for possible values
+            uid: integer identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing structure
+            color: the color of the object in the label editor. Normally auto-assigned, should be in '#1A2B3F' syntax.
+            feature_node_hash: global identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing structure
+
+        Returns:
+            the created object class that can be further customised with attributes.
+        """
+        if uid is None:
+            if self.objects:
+                uid = max([obj.uid for obj in self.objects]) + 1
+            else:
+                uid = 1
+        else:
+            if any([obj.uid == uid for obj in self.objects]):
+                raise ValueError(f"Duplicate uid '{uid}'")
+
+        if color is None:
+            color_index = 0
+            if self.objects:
+                try:
+                    color_index = AVAILABLE_COLORS.index(self.objects[-1].color) + 1
+                    if color_index >= len(AVAILABLE_COLORS):
+                        color_index = 0
+                except ValueError:
+                    pass
+            color = AVAILABLE_COLORS[color_index]
+
+        if feature_node_hash is None:
+            feature_node_hash = str(uuid4())[:8]
+
+        if any([obj.feature_node_hash == feature_node_hash for obj in self.objects]):
+            raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+        obj = Object(uid, name, color, shape, feature_node_hash)
+        self.objects.append(obj)
+        return obj
+
+    def add_classification(
+        self,
+        uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+    ) -> Classification:
+        """
+        Adds an classification definition to the ontology.
+
+        .. code::
+
+            structure = ontology_structure.OntologyStructure()
+
+            cls = structure.add_classification(feature_node_hash="a39d81c0")
+            cat_standing = cls.add_attribute(
+                encord.objects.common.RadioAttribute,
+                feature_node_hash="a6136d14",
+                name="Is the cat standing?",
+                required=True,
+            )
+            cat_standing.add_option(feature_node_hash="a3aeb48d", label="Yes")
+            cat_standing.add_option(feature_node_hash="d0a4b373", label="No")
+
+        Args:
+            uid: integer identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing structure
+            feature_node_hash: global identifier of the object. Normally auto-generated;
+                    omit this unless the aim is to create an exact clone of existing structure
+
+        Returns:
+            the created classification node. Note that classification attribute should be further specified by calling its `add_attribute()` method.
+        """
+        if uid is None:
+            if self.classifications:
+                uid = max([cls.uid for cls in self.classifications]) + 1
+            else:
+                uid = 1
+        else:
+            if any([cls.uid == uid for cls in self.classifications]):
+                raise ValueError(f"Duplicate uid '{uid}'")
+
+        if feature_node_hash is None:
+            feature_node_hash = str(uuid4())[:8]
+
+        if any([cls.feature_node_hash == feature_node_hash for cls in self.classifications]):
+            raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+        cls = Classification(uid, feature_node_hash, list())
+        self.classifications.append(cls)
+        return cls

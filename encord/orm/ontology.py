@@ -16,7 +16,7 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Dict, Optional
 
-from encord.objects.ontology_structure import OntologyStructure
+from encord.objects.ontology_labels_impl import OntologyStructure
 from encord.orm.formatter import Formatter
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"

@@ -5,7 +5,7 @@ from typing import List, Union
 
 from deepdiff import DeepDiff
 
-from encord.objects.label_structure import LabelRowClass
+from encord.objects.ontology_labels_impl import LabelRowClass
 from tests.objects.data import (
     data_1,
     native_image_data,

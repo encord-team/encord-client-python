@@ -1,12 +1,12 @@
 import json
 import logging
 import os
-import uuid
 
 import pytest
 
 import encord.objects.classification
 import encord.objects.common
+import encord.objects.ontology_labels_impl
 import encord.objects.ontology_object
 from encord.objects import ontology_structure
 from encord.objects.common import Shape
@@ -17,108 +17,110 @@ DATA_DIR = os.path.join(CURRENT_DIR, "data")
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-EXPECTED_ONTOLOGY: ontology_structure.OntologyStructure = ontology_structure.OntologyStructure(
-    objects=[
-        encord.objects.ontology_object.Object(
-            uid=1,
-            name="Eye",
-            color="#D33115",
-            shape=encord.objects.common.Shape.BOUNDING_BOX,
-            feature_node_hash="a55abbeb",
-        ),
-        encord.objects.ontology_object.Object(
-            uid=2,
-            name="Nose",
-            color="#E27300",
-            shape=encord.objects.common.Shape.POLYGON,
-            feature_node_hash="86648f32",
-            attributes=[
-                encord.objects.common.ChecklistAttribute(
-                    uid=[2, 1],
-                    feature_node_hash="1e3e5cad",
-                    name="Additional details about the nose",
-                    required=True,
-                    dynamic=False,
-                    options=[
-                        encord.objects.common.FlatOption(
-                            uid=[2, 1, 1],
-                            feature_node_hash="2bc17c88",
-                            label="Is it a cute nose?",
-                            value="is_it_a_cute_nose?",
-                        ),
-                        encord.objects.common.FlatOption(
-                            uid=[2, 1, 2],
-                            feature_node_hash="86eaa4f2",
-                            label="Is it a wet nose? ",
-                            value="is_it_a_wet_nose?_",
-                        ),
-                    ],
-                )
-            ],
-        ),
-        encord.objects.ontology_object.Object(
-            uid=3,
-            name="Example",
-            color="#FE9200",
-            shape=encord.objects.common.Shape.POLYLINE,
-            feature_node_hash="6eeba59b",
-            attributes=[
-                encord.objects.common.RadioAttribute(
-                    uid=[4, 1],
-                    feature_node_hash="cabfedb5",
-                    name="Radio with options",
-                    required=False,
-                    dynamic=False,
-                    options=[
-                        encord.objects.common.NestableOption(
-                            uid=[4, 1, 1],
-                            feature_node_hash="5d102ce6",
-                            label="Nested Option",
-                            value="nested_option",
-                            nested_options=[
-                                encord.objects.common.RadioAttribute(
-                                    uid=[4, 1, 1, 1],
-                                    feature_node_hash="59204845",
-                                    name="Leaf",
-                                    required=False,
-                                    dynamic=False,
-                                )
-                            ],
-                        )
-                    ],
-                )
-            ],
-        ),
-    ],
-    classifications=[
-        encord.objects.classification.Classification(
-            uid=1,
-            feature_node_hash="a39d81c0",
-            attributes=[
-                encord.objects.common.RadioAttribute(
-                    uid=[1, 1],
-                    feature_node_hash="a6136d14",
-                    name="Is the cat standing?",
-                    required=True,
-                    dynamic=False,
-                    options=[
-                        encord.objects.common.NestableOption(
-                            uid=[1, 1, 1],
-                            feature_node_hash="a3aeb48d",
-                            label="Yes",
-                            value="yes",
-                        ),
-                        encord.objects.common.NestableOption(
-                            uid=[1, 1, 2],
-                            feature_node_hash="d0a4b373",
-                            label="No",
-                            value="no",
-                        ),
-                    ],
-                )
-            ],
-        )
-    ],
+EXPECTED_ONTOLOGY: encord.objects.ontology_labels_impl.OntologyStructure = (
+    encord.objects.ontology_labels_impl.OntologyStructure(
+        objects=[
+            encord.objects.ontology_labels_impl.Object(
+                uid=1,
+                name="Eye",
+                color="#D33115",
+                shape=encord.objects.common.Shape.BOUNDING_BOX,
+                feature_node_hash="a55abbeb",
+            ),
+            encord.objects.ontology_labels_impl.Object(
+                uid=2,
+                name="Nose",
+                color="#E27300",
+                shape=encord.objects.common.Shape.POLYGON,
+                feature_node_hash="86648f32",
+                attributes=[
+                    encord.objects.common.ChecklistAttribute(
+                        uid=[2, 1],
+                        feature_node_hash="1e3e5cad",
+                        name="Additional details about the nose",
+                        required=True,
+                        dynamic=False,
+                        options=[
+                            encord.objects.common.FlatOption(
+                                uid=[2, 1, 1],
+                                feature_node_hash="2bc17c88",
+                                label="Is it a cute nose?",
+                                value="is_it_a_cute_nose?",
+                            ),
+                            encord.objects.common.FlatOption(
+                                uid=[2, 1, 2],
+                                feature_node_hash="86eaa4f2",
+                                label="Is it a wet nose? ",
+                                value="is_it_a_wet_nose?_",
+                            ),
+                        ],
+                    )
+                ],
+            ),
+            encord.objects.ontology_labels_impl.Object(
+                uid=3,
+                name="Example",
+                color="#FE9200",
+                shape=encord.objects.common.Shape.POLYLINE,
+                feature_node_hash="6eeba59b",
+                attributes=[
+                    encord.objects.common.RadioAttribute(
+                        uid=[4, 1],
+                        feature_node_hash="cabfedb5",
+                        name="Radio with options",
+                        required=False,
+                        dynamic=False,
+                        options=[
+                            encord.objects.common.NestableOption(
+                                uid=[4, 1, 1],
+                                feature_node_hash="5d102ce6",
+                                label="Nested Option",
+                                value="nested_option",
+                                nested_options=[
+                                    encord.objects.common.RadioAttribute(
+                                        uid=[4, 1, 1, 1],
+                                        feature_node_hash="59204845",
+                                        name="Leaf",
+                                        required=False,
+                                        dynamic=False,
+                                    )
+                                ],
+                            )
+                        ],
+                    )
+                ],
+            ),
+        ],
+        classifications=[
+            encord.objects.ontology_labels_impl.Classification(
+                uid=1,
+                feature_node_hash="a39d81c0",
+                attributes=[
+                    encord.objects.common.RadioAttribute(
+                        uid=[1, 1],
+                        feature_node_hash="a6136d14",
+                        name="Is the cat standing?",
+                        required=True,
+                        dynamic=False,
+                        options=[
+                            encord.objects.common.NestableOption(
+                                uid=[1, 1, 1],
+                                feature_node_hash="a3aeb48d",
+                                label="Yes",
+                                value="yes",
+                            ),
+                            encord.objects.common.NestableOption(
+                                uid=[1, 1, 2],
+                                feature_node_hash="d0a4b373",
+                                label="No",
+                                value="no",
+                            ),
+                        ],
+                    )
+                ],
+            )
+        ],
+    )
 )
 
 
@@ -129,7 +131,7 @@ def test_json_to_ontology():
         editor_dict = json.load(f)
 
     # WHEN
-    actual = ontology_structure.OntologyStructure.from_dict(editor_dict)
+    actual = encord.objects.ontology_labels_impl.OntologyStructure.from_dict(editor_dict)
 
     # THEN
     assert EXPECTED_ONTOLOGY == actual
@@ -149,7 +151,7 @@ def test_ontology_to_json():
 
 
 def test_add_classification():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     cls1 = ontology.add_classification()
     assert cls1.uid == 1
     assert cls1.feature_node_hash
@@ -168,7 +170,7 @@ def test_add_classification():
 
 
 def test_add_classification_duplicate_values():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     obj1 = ontology.add_classification(1, "12345678")
     with pytest.raises(ValueError):
         obj2 = ontology.add_classification(1)
@@ -179,7 +181,7 @@ def test_add_classification_duplicate_values():
 
 
 def test_add_object():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX)
     assert obj1.uid == 1
     assert obj1.color
@@ -203,7 +205,7 @@ def test_add_object():
 
 
 def test_add_object_duplicate_values():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
     with pytest.raises(ValueError):
         obj2 = ontology.add_object("Orange", Shape.BOUNDING_BOX, 1)
@@ -214,7 +216,7 @@ def test_add_object_duplicate_values():
 
 
 def test_add_object_nested_classifications():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
 
     stripes = obj1.add_attribute(encord.objects.common.TextAttribute, "Stripes")
@@ -250,7 +252,7 @@ def test_add_object_nested_classifications():
 
 
 def test_add_object_nested_classifications_duplicate_values():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
 
     attr1 = obj1.add_attribute(encord.objects.common.TextAttribute, "Stripes")
@@ -263,7 +265,7 @@ def test_add_object_nested_classifications_duplicate_values():
 
 
 def test_add_classification_attribute():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     cls1 = ontology.add_classification()
 
     clouds = cls1.add_attribute(encord.objects.common.RadioAttribute, "Cloud cover")
@@ -278,7 +280,7 @@ def test_add_classification_attribute():
 
 
 def test_build_checkbox_options():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     cls1 = ontology.add_classification()
 
     clouds = cls1.add_attribute(encord.objects.common.ChecklistAttribute, "Cloud cover")
@@ -296,7 +298,7 @@ def test_build_checkbox_options():
 
 
 def test_build_nested_options():
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
     cls1 = ontology.add_classification()
 
     clouds = cls1.add_attribute(encord.objects.common.RadioAttribute, "Cloud cover")
@@ -316,7 +318,7 @@ def test_build_nested_options():
 
 def build_expected_ontology():
 
-    ontology = ontology_structure.OntologyStructure()
+    ontology = encord.objects.ontology_labels_impl.OntologyStructure()
 
     eye = ontology.add_object(
         name="Eye",

@@ -22,7 +22,7 @@ from encord.http.utils import (
     upload_images_to_encord,
     upload_to_signed_url_list,
 )
-from encord.objects.ontology_structure import OntologyStructure
+from encord.objects.ontology_labels_impl import OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import CreateDatasetResponse
