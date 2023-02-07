@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 
-from encord.objects.classification import Classification
+from encord.exceptions import LabelRowError
 from encord.objects.common import Attribute, TextAttribute
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
@@ -11,7 +11,6 @@ from encord.objects.coordinates import (
     PointCoordinate,
     PolygonCoordinates,
 )
-from encord.objects.internal_helpers import ChecklistAnswer, RadioAnswer, TextAnswer
 from encord.objects.label_structure import (
     AnswerForFrames,
     ClassificationInstance,
@@ -376,7 +375,7 @@ def test_filter_for_objects():
 
 def test_add_wrong_coordinates():
     label_box = ObjectInstance(box_ontology_item)
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         label_box.set_for_frame(POLYGON_COORDINATES, frame=1)
 
 
@@ -425,13 +424,13 @@ def test_adding_object_instance_to_multiple_frames_fails():
     label_box.set_for_frame(BOX_COORDINATES, 1)
 
     label_row_1.add_object(label_box)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         label_row_2.add_object(label_box)
 
     label_row_1.remove_object(label_box)
     label_row_2.add_object(label_box)
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         label_row_1.add_object(label_box)
 
     label_box_copy = label_box.copy()
@@ -480,7 +479,7 @@ def test_update_remove_object_instance_coordinates():
 
     # Remove coordinates
     label_box.remove_from_frames(Range(2, 3))
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         frame_2_view.coordinates
 
     frames = label_box.frames()
@@ -504,7 +503,7 @@ def test_update_remove_object_instance_coordinates():
     )
     new_confidence = 0.7
 
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         label_box.set_for_frame(box_coordinates_3, 4, confidence=new_confidence, manual_annotation=manual_annotation)
 
     label_box.set_for_frame(
@@ -556,7 +555,7 @@ def test_classification_index_answer_overwrite():
 
     assert classification_instance.get_answer() == "Zeus"
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         classification_instance.set_answer("Poseidon")
     assert classification_instance.get_answer() == "Zeus"
 
@@ -569,7 +568,7 @@ def test_classification_index_answer_nested_attributes():
     attribute = radio_classification.attributes[0]
 
     # Setting nested attribute
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         classification_instance.set_answer(answer="Zeus", attribute=radio_classification_option_2_text)
     assert classification_instance.get_answer(attribute) is None
 
@@ -579,7 +578,7 @@ def test_classification_index_answer_nested_attributes():
     assert classification_instance.get_answer(attribute) == radio_classification_option_1
 
     # Changing to the nested passed_attribute
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         classification_instance.set_answer(answer="Zeus", attribute=radio_classification_option_2_text)
     assert classification_instance.get_answer(attribute) == radio_classification_option_1
 
@@ -620,7 +619,7 @@ def test_classification_instances():
     classification_instance_2.set_answer(classification_instance_1.get_answer())
     assert classification_instance_2.get_answer() == "Dionysus"
 
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(LabelRowError) as e:
         classification_instance_2.set_answer("Hades")
     assert classification_instance_2.get_answer() == "Dionysus"
 
@@ -667,9 +666,9 @@ def test_classification_instances_frame_view():
     classification_instance_1.remove_from_frames([1])
 
     # Using invalid frame view.
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         x = frame_view_1.created_by
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         frame_view_1.created_by = "aphrodite@gmail.com"
 
 
@@ -699,21 +698,21 @@ def test_add_and_get_classification_instances_to_label_row():
 
     overlapping_classification_instance = ClassificationInstance(text_classification)
     overlapping_classification_instance.set_for_frame([1])
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         label_row.add_classification(overlapping_classification_instance)
 
     overlapping_classification_instance.remove_from_frames([1])
     overlapping_classification_instance.set_for_frame(5)
     label_row.add_classification(overlapping_classification_instance)
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         overlapping_classification_instance.set_for_frame([1])
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         overlapping_classification_instance.set_for_frame([1], overwrite=True)
 
     label_row.remove_classification(classification_instance_1)
     overlapping_classification_instance.set_for_frame([1])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         overlapping_classification_instance.set_for_frame([3])
     classification_instance_2.remove_from_frames([3])
     overlapping_classification_instance.set_for_frame([3])
@@ -735,13 +734,13 @@ def test_object_instance_answer_for_static_attributes():
     object_instance.set_answer("Zeus", attribute=nested_polygon_text)
     assert object_instance.get_answer(nested_polygon_text) == "Zeus"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         # Invalid attribute
         object_instance.get_answer(dynamic_text)
 
     # Setting frames for a non-dynamic attribute
     assert object_instance.get_answer(nested_polygon_checklist) == []
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         # DENIS: make the option hashable so it can go into a set.
         object_instance.set_answer(
             [nested_polygon_checklist_option_1],
@@ -752,7 +751,7 @@ def test_object_instance_answer_for_static_attributes():
     assert object_instance.get_answer(nested_polygon_checklist) == []
 
     # Overwriting frames
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         object_instance.set_answer("Poseidon", attribute=nested_polygon_text)
 
     assert object_instance.get_answer(nested_polygon_text) == "Zeus"
@@ -769,7 +768,7 @@ def test_object_instance_answer_static_checklist():
 
     assert object_instance.get_answer(nested_polygon_checklist) == []
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         # Already set the answer
         object_instance.set_answer([nested_polygon_checklist_option_1], attribute=nested_polygon_checklist)
 
@@ -794,7 +793,7 @@ def test_object_instance_answer_static_nested_radio():
 
     assert object_instance.get_answer(radio_attribute_level_1) is None
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(LabelRowError):
         object_instance.set_answer("Poseidon", attribute=radio_nested_option_1_text)
     assert object_instance.get_answer(radio_attribute_level_1) is None
 
@@ -828,7 +827,7 @@ def test_object_instance_answer_dynamic_attributes():
     object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
     assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Zeus", ranges=[Range(1, 1)])]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(LabelRowError):
         # Invalid attribute
         object_instance.get_answer(nested_polygon_text)
 
@@ -978,7 +977,7 @@ def test_classification_instance_delete():
 def test_label_status_forwards_compatibility():
     assert LabelStatus("NOT_LABELLED") == LabelStatus.NOT_LABELLED
     assert LabelStatus("new-unknown-status") == LabelStatus.MISSING_LABEL_STATUS
-    assert LabelStatus("new-unknown-status").value == "MISSING_LABEL_STATUS"
+    assert LabelStatus("new-unknown-status").value == "_MISSING_LABEL_STATUS_"
 
 
 # ==========================================================

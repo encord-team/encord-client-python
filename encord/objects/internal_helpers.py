@@ -5,6 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Union
 
+from encord.exceptions import LabelRowError
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
@@ -478,6 +479,6 @@ def _search_child_attributes(
 def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
     expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
     if type(coordinates) != expected_coordinate_type:
-        raise ValueError(
+        raise LabelRowError(
             f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
         )
