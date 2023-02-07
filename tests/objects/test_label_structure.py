@@ -192,7 +192,7 @@ def test_upload_simple_data():
 
 
 def test_create_object_instance_one_coordinate():
-    object_instance = ObjectInstance(box_ontology_item)
+    object_instance = box_ontology_item.create_instance()
 
     coordinates = BoundingBoxCoordinates(
         height=0.1,
@@ -552,7 +552,7 @@ def test_removing_coordinates_from_object_removes_it_from_parent():
 
 
 def test_classification_index_answer_overwrite():
-    classification_instance = ClassificationInstance(text_classification)
+    classification_instance = text_classification.create_instance()
     attribute = text_classification.attributes[0]
 
     classification_instance.set_answer("Zeus", attribute)

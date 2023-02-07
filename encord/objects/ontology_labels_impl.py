@@ -87,6 +87,11 @@ class Object:
     feature_node_hash: str
     attributes: List[Attribute] = field(default_factory=list)
 
+    def create_instance(self) -> ObjectInstance:
+        """Create a :class:`encord.objects.ObjectInstance` to be used with a label row."""
+        # DENIS: do I want to pass sth to create the first parameters.
+        return ObjectInstance(self)
+
     @classmethod
     def from_dict(cls, d: dict) -> Object:
         shape_opt = Shape.from_string(d["shape"])
@@ -168,6 +173,10 @@ class Classification:
     uid: int
     feature_node_hash: str
     attributes: List[Attribute]
+
+    def create_instance(self) -> ClassificationInstance:
+        """Create a :class:`encord.objects.ClassificationInstance` to be used with a label row."""
+        return ClassificationInstance(self)
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
