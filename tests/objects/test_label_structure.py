@@ -4,6 +4,14 @@ from typing import List
 import pytest
 
 from encord.exceptions import LabelRowError
+from encord.objects import (
+    AnswerForFrames,
+    Classification,
+    ClassificationInstance,
+    LabelRowClass,
+    Object,
+    ObjectInstance,
+)
 from encord.objects.common import Attribute, TextAttribute
 from encord.objects.constants import (
     DEFAULT_CONFIDENCE,
@@ -14,14 +22,6 @@ from encord.objects.coordinates import (
     BoundingBoxCoordinates,
     PointCoordinate,
     PolygonCoordinates,
-)
-from encord.objects.ontology_labels_impl import (
-    AnswerForFrames,
-    Classification,
-    ClassificationInstance,
-    LabelRowClass,
-    Object,
-    ObjectInstance,
 )
 from encord.objects.utils import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
