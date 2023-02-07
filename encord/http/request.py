@@ -36,11 +36,11 @@ class Request(object):
         self.http_method = QueryMethods.POST
         self.data: str = json.dumps(
             {
-                "query_type": db_object_type.__name__.lower(),
-                "query_method": query_method,
+                "query_type": db_object_type.__name__.lower(),  # "ontology"
+                "query_method": query_method,  # "GET"
                 "values": {
-                    "uid": uid,
-                    "payload": payload,
+                    "uid": uid,  # <ontology_hash>
+                    "payload": payload,  # `None`
                 },
             }
         )

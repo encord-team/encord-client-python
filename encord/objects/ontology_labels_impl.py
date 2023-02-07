@@ -35,6 +35,7 @@ from encord.objects.common import (
     TextAttribute,
     _add_attribute,
     _get_attribute_by_hash,
+    _get_attributes_by_title,
     _get_option_by_hash,
     attribute_from_dict,
     attributes_to_list_dict,
@@ -67,6 +68,8 @@ from encord.objects.utils import (
     _lower_snake_case,
     check_email,
     check_type,
+    does_type_match,
+    filter_by_type,
     frames_class_to_frames_list,
     frames_to_ranges,
     ranges_list_to_ranges,
@@ -128,7 +131,7 @@ class Object:
             Type[NestableOption],
             Type[FlatOption],
             None,
-        ],
+        ] = None,
     ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
         """
         Returns the first found item where the hash matches. If there is more than one item with the same hash in
@@ -144,6 +147,30 @@ class Object:
             raise RuntimeError("Item not found.")  # DENIS: change these error types?
         check_type(found_item, type_)
         return found_item
+
+    def get_items_by_title(
+        self,
+        title: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        """
+        Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
+        to be unique, however, we recommend unique titles when creating ontologies.
+
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_items = _get_attributes_by_title(title, self.attributes)
+        return filter_by_type(found_items, type_)  # noqa
 
     @classmethod
     def from_dict(cls, d: dict) -> Object:
@@ -283,6 +310,30 @@ class Classification:
             raise RuntimeError("Item not found.")
         check_type(found_item, type_)
         return found_item
+
+    def get_items_by_title(
+        self,
+        title: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        """
+        Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
+        to be unique, however, we recommend unique titles when creating ontologies.
+
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_items = _get_attributes_by_title(title, self.attributes)
+        return filter_by_type(found_items, type_)  # noqa
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
@@ -2643,13 +2694,57 @@ class OntologyStructure:
 
         raise RuntimeError("Item not found.")
 
-    def get_item_by_name(self, name: str):
-        """Returns all items that are matching the name."""
-        # DENIS: do I want to return the parents as a list?
-        pass
+    def get_items_by_title(
+        self,
+        title: str,
+        type_: Union[
+            Type[Object],
+            Type[Classification],
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> List[
+        Union[
+            Object,
+            Classification,
+            RadioAttribute,
+            ChecklistAttribute,
+            TextAttribute,
+            NestableOption,
+            FlatOption,
+        ]
+    ]:
+        """
+        Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
+        to be unique, however, we recommend unique titles when creating ontologies.
 
-    def get_items_by_name(self, name: str):
-        """Returns all items by name. Does not throw, even when empty."""
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        ret = []
+        for object_ in self.objects:
+            if object_.name == title:
+                if does_type_match(object_, type_):
+                    ret.append(object_)
+            found_items = _get_attributes_by_title(title, object_.attributes)
+            filtered_items = filter_by_type(found_items, type_)
+            ret.extend(filtered_items)
+
+        for classification in self.classifications:
+            if classification.attributes[0].name == title:
+                if does_type_match(classification, type_):
+                    ret.append(classification)
+            found_items = _get_attributes_by_title(title, classification.attributes)
+            filtered_items = filter_by_type(found_items, type_)
+            ret.extend(filtered_items)
+
+        return ret
 
     @classmethod
     def from_dict(cls, d: dict) -> OntologyStructure:

@@ -4,7 +4,7 @@ import base64
 import re
 import uuid
 from dataclasses import dataclass
-from typing import Any, Iterable, List, Union
+from typing import Any, Iterable, List, Optional, TypeVar, Union
 
 
 def _decode_nested_uid(nested_uid: list) -> str:
@@ -98,10 +98,23 @@ def _lower_snake_case(s: str):
 
 
 def check_type(obj: object, type_: Any) -> None:
-    if type_ is None:
-        return
-    if not isinstance(obj, type_):
+    if not does_type_match(obj, type_):
         raise TypeError(f"Expected {type_}, got {type(obj)}")
+
+
+def does_type_match(obj: object, type_: Any) -> bool:
+    if type_ is None:
+        return True
+    if not isinstance(obj, type_):
+        return False
+    return True
+
+
+T = TypeVar("T")
+
+
+def filter_by_type(objects: List[object], type_: Optional[T]) -> List[T]:
+    return [object_ for object_ in objects if does_type_match(object_, type_)]
 
 
 def is_valid_email(email: str) -> bool:
