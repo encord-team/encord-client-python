@@ -610,36 +610,6 @@ class ClassificationInstance:
     def get_view_for_frame(self, frame: int) -> ClassificationInstance.FrameView:
         return self.FrameView(self, frame)
 
-    def _set_frame_and_frame_data(
-        self,
-        frame,
-        *,
-        overwrite: bool = False,
-        created_at: Optional[datetime] = None,
-        created_by: Optional[str] = None,
-        confidence: Optional[int] = None,
-        manual_annotation: Optional[bool] = None,
-        last_edited_at: Optional[datetime] = None,
-        last_edited_by: Optional[str] = None,
-        reviews: Optional[List[dict]] = None,
-    ):
-        existing_frame_data = self._frames_to_data.get(frame)
-        if overwrite is False and existing_frame_data is not None:
-            raise LabelRowError(
-                f"Cannot overwrite existing data for frame `{frame}`. Set `overwrite` to `True` to overwrite."
-            )
-
-        if existing_frame_data is None:
-            existing_frame_data = self.FrameData()
-            self._frames_to_data[frame] = existing_frame_data
-
-        existing_frame_data.update_from_optional_fields(
-            created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
-        )
-
-        if self.is_assigned_to_label_row():
-            self._parent.add_to_single_frame_to_hashes_map(self, frame)
-
     def remove_from_frames(self, frames: Union[int, Iterable[int]]) -> None:
         for frame in frames:
             self._frames_to_data.pop(frame)
@@ -703,10 +673,6 @@ class ClassificationInstance:
                 "overwrite an existing answer to and attribute."
             )
 
-        set_answer_for_object(static_answer, answer)
-
-    def _set_answer_unsafe(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute) -> None:
-        static_answer = self._static_answer_map[attribute.feature_node_hash]
         set_answer_for_object(static_answer, answer)
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
@@ -819,6 +785,44 @@ class ClassificationInstance:
         ret._frames_to_data = deepcopy(self._frames_to_data)
         return ret
 
+    def get_all_static_answers(self) -> List[Answer]:
+        """A low level helper function."""
+        return list(self._static_answer_map.values())
+
+    def _set_frame_and_frame_data(
+        self,
+        frame,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        confidence: Optional[int] = None,
+        manual_annotation: Optional[bool] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        reviews: Optional[List[dict]] = None,
+    ):
+        existing_frame_data = self._frames_to_data.get(frame)
+        if overwrite is False and existing_frame_data is not None:
+            raise LabelRowError(
+                f"Cannot overwrite existing data for frame `{frame}`. Set `overwrite` to `True` to overwrite."
+            )
+
+        if existing_frame_data is None:
+            existing_frame_data = self.FrameData()
+            self._frames_to_data[frame] = existing_frame_data
+
+        existing_frame_data.update_from_optional_fields(
+            created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
+        )
+
+        if self.is_assigned_to_label_row():
+            self._parent.add_to_single_frame_to_hashes_map(self, frame)
+
+    def _set_answer_unsafe(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute) -> None:
+        static_answer = self._static_answer_map[attribute.feature_node_hash]
+        set_answer_for_object(static_answer, answer)
+
     def _is_attribute_valid_child_of_classification(self, attribute: Attribute) -> bool:
         return attribute.feature_node_hash in self._static_answer_map
 
@@ -844,10 +848,6 @@ class ClassificationInstance:
                 f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
                 f"frame per LabelRowClass."
             )
-
-    def get_all_static_answers(self) -> List[Answer]:
-        """A low level helper function."""
-        return list(self._static_answer_map.values())
 
     def __repr__(self):
         return f"ClassificationInstance({self.classification_hash})"
@@ -1170,6 +1170,197 @@ class LabelRowClass:
             ret.append(self.get_frame_view(frame))
         return ret
 
+    def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
+        """
+        Grab the labels from the server. Return False if the labels have been changed in the meantime.
+
+        Args:
+            force:
+                If `False`, it will not do the refresh if something has changed on the server.
+                If `True`, it will always overwrite the local changes with what has happened on the server.
+        """
+        # Actually can probably use the get_label_row() here.
+
+    def get_objects(
+        self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
+    ) -> List[ObjectInstance]:
+        """
+        Args:
+            filter_ontology_object:
+                Optionally filter by a specific ontology object.
+            filter_frames:
+                Optionally filter by specific frames.
+
+        Returns:
+            All the `ObjectInstance`s that match the filter.
+        """
+        ret: List[ObjectInstance] = list()
+
+        if filter_frames is not None:
+            filtered_frames_list = frames_class_to_frames_list(filter_frames)
+        else:
+            filtered_frames_list = list()
+
+        for object_ in self._objects_map.values():
+            # filter by ontology object
+            if not (
+                filter_ontology_object is None
+                or object_.ontology_item.feature_node_hash == filter_ontology_object.feature_node_hash
+            ):
+                continue
+
+            # filter by frame
+            if filter_frames is None:
+                append = True
+            else:
+                append = False
+            for frame in filtered_frames_list:
+                hashes = self._frame_to_hashes.get(frame, set())
+                if object_.object_hash in hashes:
+                    append = True
+                    break
+
+            if append:
+                ret.append(object_)
+
+        return ret
+
+    def add_object(self, object_instance: ObjectInstance, force=True):
+        """
+        Do we want a bulk function? probably not needed as it is local? (only for the force option)
+
+        Args:
+            force: overwrites current objects, otherwise this will replace the current object.
+        """
+        if not object_instance.is_valid():
+            raise LabelRowError("The supplied ObjectInstance is not in a valid format.")
+
+        if object_instance.is_assigned_to_label_row():
+            raise LabelRowError(
+                "The supplied ObjectInstance is already part of a LabelRowClass. You can only add a ObjectInstance to one "
+                "LabelRowClass. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
+                "any LabelRowClass."
+            )
+
+        object_hash = object_instance.object_hash
+        if object_hash in self._objects_map and not force:
+            raise LabelRowError(
+                "The supplied ObjectInstance was already previously added. (the object_hash is the same)."
+            )
+        elif object_hash in self._objects_map and force:
+            self._objects_map.pop(object_hash)
+
+        self._objects_map[object_hash] = object_instance
+        object_instance._parent = self
+
+        self._add_to_frame_to_hashes_map(object_instance)
+
+    def add_classification(self, classification_instance: ClassificationInstance, force: bool = False):
+        if not classification_instance.is_valid():
+            raise LabelRowError("The supplied ClassificationInstance is not in a valid format.")
+
+        if classification_instance.is_assigned_to_label_row():
+            raise LabelRowError(
+                "The supplied ClassificationInstance is already part of a LabelRowClass. You can only add a ClassificationInstance"
+                " to one LabelRowClass. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
+                "not part of any LabelRowClass."
+            )
+
+        classification_hash = classification_instance.classification_hash
+        already_present_frame = self._is_classification_already_present(
+            classification_instance.ontology_item, classification_instance.frames()
+        )
+        if classification_hash in self._classifications_map and not force:
+            raise LabelRowError(
+                "The supplied ClassificationInstance was already previously added. (the classification_hash is the same)."
+            )
+
+        if already_present_frame is not None and not force:
+            raise LabelRowError(
+                f"A ClassificationInstance of the same type was already added and has overlapping frames. One "
+                f"overlapping frame that was found is `{already_present_frame}`. Make sure that you only add "
+                f"classifications which are on frames where the same type of classification does not yet exist."
+            )
+
+        if classification_hash in self._classifications_map and force:
+            self._classifications_map.pop(classification_hash)
+
+        self._classifications_map[classification_hash] = classification_instance
+        classification_instance._parent = self
+
+        self._classifications_to_frames[classification_instance.ontology_item].update(
+            set(classification_instance.frames())
+        )
+        self._add_to_frame_to_hashes_map(classification_instance)
+
+    def remove_classification(self, classification_instance: ClassificationInstance):
+        classification_hash = classification_instance.classification_hash
+        self._classifications_map.pop(classification_hash)
+        all_frames = self._classifications_to_frames[classification_instance.ontology_item]
+        actual_frames = classification_instance.frames()
+        for actual_frame in actual_frames:
+            all_frames.remove(actual_frame)
+
+    def add_to_single_frame_to_hashes_map(
+        self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
+    ) -> None:
+        """This is an internal function, it is not meant to be called by the SDK user."""
+        if isinstance(label_item, ObjectInstance):
+            self._frame_to_hashes[frame].add(label_item.object_hash)
+        elif isinstance(label_item, ClassificationInstance):
+            self._frame_to_hashes[frame].add(label_item.classification_hash)
+        else:
+            raise NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
+
+    def get_classifications(
+        self, filter_ontology_classification: Optional[Classification] = None, filter_frames: Optional[Frames] = None
+    ) -> List[ClassificationInstance]:
+        """
+        Args:
+            filter_ontology_classification:
+                Optionally filter by a specific ontology classification.
+            filter_frames:
+                Optionally filter by specific frames.
+
+        Returns:
+            All the `ObjectInstance`s that match the filter.
+        """
+        ret: List[ClassificationInstance] = list()
+
+        if filter_frames is not None:
+            filtered_frames_list = frames_class_to_frames_list(filter_frames)
+        else:
+            filtered_frames_list = list()
+
+        for classification in self._classifications_map.values():
+            # filter by ontology object
+            if not (
+                filter_ontology_classification is None
+                or classification.ontology_item.feature_node_hash == filter_ontology_classification.feature_node_hash
+            ):
+                continue
+
+            # filter by frame
+            if filter_frames is None:
+                append = True
+            else:
+                append = False
+            for frame in filtered_frames_list:
+                hashes = self._frame_to_hashes.get(frame, set())
+                if classification.classification_hash in hashes:
+                    append = True
+                    break
+
+            if append:
+                ret.append(classification)
+        return ret
+
+    def remove_object(self, object_instance: ObjectInstance):
+        """Remove the object."""
+        self._objects_map.pop(object_instance.object_hash)
+        self._remove_from_frame_to_hashes_map(object_instance.frames(), object_instance.object_hash)
+        object_instance._parent = None
+
     def to_encord_dict(self) -> dict:
         """
         Client should never need to use this, but they can.
@@ -1402,129 +1593,6 @@ class LabelRowClass:
 
         return ret
 
-    def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
-        """
-        Grab the labels from the server. Return False if the labels have been changed in the meantime.
-
-        Args:
-            force:
-                If `False`, it will not do the refresh if something has changed on the server.
-                If `True`, it will always overwrite the local changes with what has happened on the server.
-        """
-        # Actually can probably use the get_label_row() here.
-
-    def get_objects(
-        self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
-    ) -> List[ObjectInstance]:
-        """
-        Args:
-            filter_ontology_object:
-                Optionally filter by a specific ontology object.
-            filter_frames:
-                Optionally filter by specific frames.
-
-        Returns:
-            All the `ObjectInstance`s that match the filter.
-        """
-        ret: List[ObjectInstance] = list()
-
-        if filter_frames is not None:
-            filtered_frames_list = frames_class_to_frames_list(filter_frames)
-        else:
-            filtered_frames_list = list()
-
-        for object_ in self._objects_map.values():
-            # filter by ontology object
-            if not (
-                filter_ontology_object is None
-                or object_.ontology_item.feature_node_hash == filter_ontology_object.feature_node_hash
-            ):
-                continue
-
-            # filter by frame
-            if filter_frames is None:
-                append = True
-            else:
-                append = False
-            for frame in filtered_frames_list:
-                hashes = self._frame_to_hashes.get(frame, set())
-                if object_.object_hash in hashes:
-                    append = True
-                    break
-
-            if append:
-                ret.append(object_)
-
-        return ret
-
-    def add_object(self, object_instance: ObjectInstance, force=True):
-        """
-        Do we want a bulk function? probably not needed as it is local? (only for the force option)
-
-        Args:
-            force: overwrites current objects, otherwise this will replace the current object.
-        """
-        if not object_instance.is_valid():
-            raise LabelRowError("The supplied ObjectInstance is not in a valid format.")
-
-        if object_instance.is_assigned_to_label_row():
-            raise LabelRowError(
-                "The supplied ObjectInstance is already part of a LabelRowClass. You can only add a ObjectInstance to one "
-                "LabelRowClass. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
-                "any LabelRowClass."
-            )
-
-        object_hash = object_instance.object_hash
-        if object_hash in self._objects_map and not force:
-            raise LabelRowError(
-                "The supplied ObjectInstance was already previously added. (the object_hash is the same)."
-            )
-        elif object_hash in self._objects_map and force:
-            self._objects_map.pop(object_hash)
-
-        self._objects_map[object_hash] = object_instance
-        object_instance._parent = self
-
-        self._add_to_frame_to_hashes_map(object_instance)
-
-    def add_classification(self, classification_instance: ClassificationInstance, force: bool = False):
-        if not classification_instance.is_valid():
-            raise LabelRowError("The supplied ClassificationInstance is not in a valid format.")
-
-        if classification_instance.is_assigned_to_label_row():
-            raise LabelRowError(
-                "The supplied ClassificationInstance is already part of a LabelRowClass. You can only add a ClassificationInstance"
-                " to one LabelRowClass. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
-                "not part of any LabelRowClass."
-            )
-
-        classification_hash = classification_instance.classification_hash
-        already_present_frame = self._is_classification_already_present(
-            classification_instance.ontology_item, classification_instance.frames()
-        )
-        if classification_hash in self._classifications_map and not force:
-            raise LabelRowError(
-                "The supplied ClassificationInstance was already previously added. (the classification_hash is the same)."
-            )
-
-        if already_present_frame is not None and not force:
-            raise LabelRowError(
-                f"A ClassificationInstance of the same type was already added and has overlapping frames. One "
-                f"overlapping frame that was found is `{already_present_frame}`. Make sure that you only add "
-                f"classifications which are on frames where the same type of classification does not yet exist."
-            )
-
-        if classification_hash in self._classifications_map and force:
-            self._classifications_map.pop(classification_hash)
-
-        self._classifications_map[classification_hash] = classification_instance
-        classification_instance._parent = self
-
-        self._classifications_to_frames[classification_instance.ontology_item].update(
-            set(classification_instance.frames())
-        )
-        self._add_to_frame_to_hashes_map(classification_instance)
-
     def _is_classification_already_present(
         self, classification: Classification, frames: Iterable[int]
     ) -> Optional[int]:
@@ -1539,78 +1607,10 @@ class LabelRowClass:
         for frame in frames:
             present_frames.remove(frame)
 
-    def remove_classification(self, classification_instance: ClassificationInstance):
-        classification_hash = classification_instance.classification_hash
-        self._classifications_map.pop(classification_hash)
-        all_frames = self._classifications_to_frames[classification_instance.ontology_item]
-        actual_frames = classification_instance.frames()
-        for actual_frame in actual_frames:
-            all_frames.remove(actual_frame)
-
     def _add_to_frame_to_hashes_map(self, label_item: Union[ObjectInstance, ClassificationInstance]) -> None:
         """This can be called by the ObjectInstance."""
         for frame in label_item.frames():
             self.add_to_single_frame_to_hashes_map(label_item, frame)
-
-    def add_to_single_frame_to_hashes_map(
-        self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
-    ) -> None:
-        """This is an internal function, it is not meant to be called by the SDK user."""
-        if isinstance(label_item, ObjectInstance):
-            self._frame_to_hashes[frame].add(label_item.object_hash)
-        elif isinstance(label_item, ClassificationInstance):
-            self._frame_to_hashes[frame].add(label_item.classification_hash)
-        else:
-            raise NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
-
-    def get_classifications(
-        self, filter_ontology_classification: Optional[Classification] = None, filter_frames: Optional[Frames] = None
-    ) -> List[ClassificationInstance]:
-        """
-        Args:
-            filter_ontology_classification:
-                Optionally filter by a specific ontology classification.
-            filter_frames:
-                Optionally filter by specific frames.
-
-        Returns:
-            All the `ObjectInstance`s that match the filter.
-        """
-        ret: List[ClassificationInstance] = list()
-
-        if filter_frames is not None:
-            filtered_frames_list = frames_class_to_frames_list(filter_frames)
-        else:
-            filtered_frames_list = list()
-
-        for classification in self._classifications_map.values():
-            # filter by ontology object
-            if not (
-                filter_ontology_classification is None
-                or classification.ontology_item.feature_node_hash == filter_ontology_classification.feature_node_hash
-            ):
-                continue
-
-            # filter by frame
-            if filter_frames is None:
-                append = True
-            else:
-                append = False
-            for frame in filtered_frames_list:
-                hashes = self._frame_to_hashes.get(frame, set())
-                if classification.classification_hash in hashes:
-                    append = True
-                    break
-
-            if append:
-                ret.append(classification)
-        return ret
-
-    def remove_object(self, object_instance: ObjectInstance):
-        """Remove the object."""
-        self._objects_map.pop(object_instance.object_hash)
-        self._remove_from_frame_to_hashes_map(object_instance.frames(), object_instance.object_hash)
-        object_instance._parent = None
 
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
@@ -2214,16 +2214,6 @@ class ObjectInstance:
 
         set_answer_for_object(static_answer, answer)
 
-    def _set_answer_unsafe(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, track_hash: str, ranges: Ranges
-    ) -> None:
-        if attribute.dynamic:
-            self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)
-
-        else:
-            static_answer = self._static_answer_map[attribute.feature_node_hash]
-            set_answer_for_object(static_answer, answer)
-
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
         Sets the answer for the classification from a dictionary.
@@ -2245,30 +2235,6 @@ class ObjectInstance:
                 )
 
             self._set_answer_from_dict(answer_dict, attribute)
-
-    def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute) -> None:
-        if attribute.dynamic:
-            track_hash = answer_dict["trackHash"]
-            ranges = ranges_list_to_ranges(answer_dict["range"])
-        else:
-            track_hash = None
-            ranges = None
-
-        if isinstance(attribute, TextAttribute):
-            self._set_answer_unsafe(answer_dict["answers"], attribute, track_hash, ranges)
-        elif isinstance(attribute, RadioAttribute):
-            feature_hash = answer_dict["answers"][0]["featureHash"]
-            option = _get_option_by_hash(feature_hash, attribute.options)
-            self._set_answer_unsafe(option, attribute, track_hash, ranges)
-        elif isinstance(attribute, ChecklistAttribute):
-            options = []
-            for answer in answer_dict["answers"]:
-                feature_hash = answer["featureHash"]
-                option = _get_option_by_hash(feature_hash, attribute.options)
-                options.append(option)
-            self._set_answer_unsafe(options, attribute, track_hash, ranges)
-        else:
-            raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
     def delete_answer(
         self,
@@ -2295,11 +2261,6 @@ class ObjectInstance:
             raise LabelRowError(
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
-
-    def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
-        is_static_child = attribute.feature_node_hash in self._static_answer_map
-        is_dynamic_child = self._dynamic_answer_manager.is_valid_dynamic_attribute(attribute)
-        return is_dynamic_child or is_static_child
 
     def set_for_frame(
         self,
@@ -2423,6 +2384,45 @@ class ObjectInstance:
         local_frames = set(self.frames())
 
         return len(dynamic_frames - local_frames) == 0
+
+    def _set_answer_unsafe(
+        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, track_hash: str, ranges: Ranges
+    ) -> None:
+        if attribute.dynamic:
+            self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)
+
+        else:
+            static_answer = self._static_answer_map[attribute.feature_node_hash]
+            set_answer_for_object(static_answer, answer)
+
+    def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute) -> None:
+        if attribute.dynamic:
+            track_hash = answer_dict["trackHash"]
+            ranges = ranges_list_to_ranges(answer_dict["range"])
+        else:
+            track_hash = None
+            ranges = None
+
+        if isinstance(attribute, TextAttribute):
+            self._set_answer_unsafe(answer_dict["answers"], attribute, track_hash, ranges)
+        elif isinstance(attribute, RadioAttribute):
+            feature_hash = answer_dict["answers"][0]["featureHash"]
+            option = _get_option_by_hash(feature_hash, attribute.options)
+            self._set_answer_unsafe(option, attribute, track_hash, ranges)
+        elif isinstance(attribute, ChecklistAttribute):
+            options = []
+            for answer in answer_dict["answers"]:
+                feature_hash = answer["featureHash"]
+                option = _get_option_by_hash(feature_hash, attribute.options)
+                options.append(option)
+            self._set_answer_unsafe(options, attribute, track_hash, ranges)
+        else:
+            raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
+
+    def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
+        is_static_child = attribute.feature_node_hash in self._static_answer_map
+        is_dynamic_child = self._dynamic_answer_manager.is_valid_dynamic_attribute(attribute)
+        return is_dynamic_child or is_static_child
 
     def _is_selectable_child_attribute(self, attribute: Attribute) -> bool:
         # I have the ontology classification, so I can build the tree from that. Basically do a DFS.
