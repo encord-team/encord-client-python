@@ -1057,7 +1057,6 @@ class LabelRowV2:
         self._project_client = project_client
         self._querier = project_client._querier
 
-        # DENIS: this needs to be parsed as well - it is the minimum data that is always initialised with the label row.
         self._label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData = self._parse_label_row_metadata(
             label_row_metadata
         )

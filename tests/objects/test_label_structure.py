@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import Mock
 
 import pytest
 
@@ -23,6 +24,7 @@ from encord.objects.coordinates import (
     PolygonCoordinates,
 )
 from encord.objects.utils import Range
+from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels
 
@@ -86,6 +88,16 @@ POLYGON_COORDINATES = PolygonCoordinates(
 
 KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
 
+FAKE_LABEL_ROW_METADATA = LabelRowMetadata(
+    label_hash="",
+    data_hash="",
+    dataset_hash="",
+    data_title="",
+    data_type="IMG_GROUP",
+    label_status=LabelStatus.NOT_LABELLED,
+    annotation_task_status=AnnotationTaskStatus.QUEUED,
+    is_shadow_data=False,
+)
 
 # =======================================================
 # =========== demonstrative tests below here ============
@@ -202,7 +214,7 @@ def test_create_object_instance_one_coordinate():
 
 
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
-    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
 
     assert label_row.get_classifications() == []
     assert label_row.get_objects() == []
