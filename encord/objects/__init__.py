@@ -10,7 +10,7 @@ from encord.objects.ontology_labels_impl import (
     AnswerForFrames,
     Classification,
     ClassificationInstance,
-    LabelRowClass,
+    LabelRowV2,
     Object,
     ObjectInstance,
     OntologyStructure,

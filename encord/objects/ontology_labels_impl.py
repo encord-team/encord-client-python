@@ -544,7 +544,7 @@ class ClassificationInstance:
 
     def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
         self._ontology_classification = ontology_classification
-        self._parent: Optional[LabelRowClass] = None
+        self._parent: Optional[LabelRowV2] = None
         self._classification_hash = classification_hash or short_uuid_str()
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
@@ -782,8 +782,8 @@ class ClassificationInstance:
     def copy(self) -> ClassificationInstance:
         """
         Creates an exact copy of this ClassificationINstance but with a new classification hash and without being
-        associated to any LabelRowClass. This is useful if you want to add the semantically same
-        ClassificationInstance to multiple `LabelRowClass`s.
+        associated to any LabelRowV2. This is useful if you want to add the semantically same
+        ClassificationInstance to multiple `LabelRowV2`s.
         """
         ret = ClassificationInstance(self._ontology_classification)
         ret._static_answer_map = deepcopy(self._static_answer_map)
@@ -849,16 +849,16 @@ class ClassificationInstance:
         already_present_frame = self._parent._is_classification_already_present(self.ontology_item, frames)
         if already_present_frame is not None:
             raise LabelRowError(
-                f"The LabelRowClass, that this classification is part of, already has a classification of the same type "
+                f"The LabelRowV2, that this classification is part of, already has a classification of the same type "
                 f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
-                f"frame per LabelRowClass."
+                f"frame per LabelRowV2."
             )
 
     def __repr__(self):
         return f"ClassificationInstance({self.classification_hash})"
 
 
-class LabelRowClass:
+class LabelRowV2:
     class FrameView:
         """
         This class can be used to inspect what object/classification instances are on a given frame or
@@ -866,7 +866,7 @@ class LabelRowClass:
         """
 
         def __init__(
-            self, label_row: LabelRowClass, label_row_read_only_data: LabelRowClass.LabelRowReadOnlyData, frame: int
+            self, label_row: LabelRowV2, label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData, frame: int
         ):
 
             self._label_row = label_row
@@ -1009,7 +1009,7 @@ class LabelRowClass:
                 filter_ontology_classification=filter_ontology_classification, filter_frames=self._frame
             )
 
-        def _frame_level_data(self) -> LabelRowClass.FrameLevelImageGroupData:
+        def _frame_level_data(self) -> LabelRowV2.FrameLevelImageGroupData:
             return self._label_row_read_only_data.frame_level_data[self._frame]
 
         def __repr__(self):
@@ -1037,7 +1037,7 @@ class LabelRowClass:
         dataset_title: Optional[str] = None  # probably in DataRow
         data_hash: Optional[str] = None  # DENIS: this is needed
         data_title: Optional[str] = None  # probably in DataRow
-        frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData] = field(default_factory=dict)
+        frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
         duration: Optional[float] = None
@@ -1058,7 +1058,7 @@ class LabelRowClass:
         self._querier = project_client._querier
 
         # DENIS: this needs to be parsed as well - it is the minimum data that is always initialised with the label row.
-        self._label_row_read_only_data: LabelRowClass.LabelRowReadOnlyData = self._parse_label_row_metadata(
+        self._label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData = self._parse_label_row_metadata(
             label_row_metadata
         )
 
@@ -1315,9 +1315,9 @@ class LabelRowClass:
 
         if object_instance.is_assigned_to_label_row():
             raise LabelRowError(
-                "The supplied ObjectInstance is already part of a LabelRowClass. You can only add a ObjectInstance to one "
-                "LabelRowClass. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
-                "any LabelRowClass."
+                "The supplied ObjectInstance is already part of a LabelRowV2. You can only add a ObjectInstance to one "
+                "LabelRowV2. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
+                "any LabelRowV2."
             )
 
         object_hash = object_instance.object_hash
@@ -1339,9 +1339,9 @@ class LabelRowClass:
 
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
-                "The supplied ClassificationInstance is already part of a LabelRowClass. You can only add a ClassificationInstance"
-                " to one LabelRowClass. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
-                "not part of any LabelRowClass."
+                "The supplied ClassificationInstance is already part of a LabelRowV2. You can only add a ClassificationInstance"
+                " to one LabelRowV2. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
+                "not part of any LabelRowV2."
             )
 
         classification_hash = classification_instance.classification_hash
@@ -1694,8 +1694,8 @@ class LabelRowClass:
         for frame in frames:
             self._frame_to_hashes[frame].remove(item_hash)
 
-    def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowClass.LabelRowReadOnlyData:
-        return LabelRowClass.LabelRowReadOnlyData(
+    def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowV2.LabelRowReadOnlyData:
+        return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_metadata.label_hash,
             dataset_hash=label_row_metadata.dataset_hash,
             data_type=DataType.from_upper_case_string(label_row_metadata.data_type),
@@ -1872,7 +1872,7 @@ class LabelRowClass:
                 self._add_frames_to_classification_instance(frame_classification_label, frame)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
-        frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData] = dict()
+        frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = dict()
         for _, payload in label_row_data_units.items():
             frame_number = int(payload["data_sequence"])
             frame_level_image_group_data = self.FrameLevelImageGroupData(
@@ -2116,15 +2116,15 @@ class ObjectInstance:
         self._ontology_object = ontology_object
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = dict()
         self._object_hash = object_hash or short_uuid_str()
-        self._parent: Optional[LabelRowClass] = None
-        """This member should only be manipulated by a LabelRowClass"""
+        self._parent: Optional[LabelRowV2] = None
+        """This member should only be manipulated by a LabelRowV2"""
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
         # feature_node_hash of attribute to the answer.
 
         self._dynamic_answer_manager = DynamicAnswerManager(self)
 
-    def is_assigned_to_label_row(self) -> Optional[LabelRowClass]:
+    def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
         return self._parent
 
     @property
@@ -2435,8 +2435,8 @@ class ObjectInstance:
     def copy(self) -> ObjectInstance:
         """
         Creates an exact copy of this ObjectInstance but with a new object hash and without being associated to any
-        LabelRowClass. This is useful if you want to add the semantically same ObjectInstance to multiple
-        `LabelRowClass`s.
+        LabelRowV2. This is useful if you want to add the semantically same ObjectInstance to multiple
+        `LabelRowV2`s.
         """
         ret = ObjectInstance(self._ontology_object)
         ret._frames_to_instance_data = deepcopy(self._frames_to_instance_data)

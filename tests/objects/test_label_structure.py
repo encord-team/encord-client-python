@@ -7,7 +7,7 @@ from encord.objects import (
     AnswerForFrames,
     Classification,
     ClassificationInstance,
-    LabelRowClass,
+    LabelRowV2,
     Object,
     ObjectInstance,
 )
@@ -202,7 +202,7 @@ def test_create_object_instance_one_coordinate():
 
 
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
 
     assert label_row.get_classifications() == []
     assert label_row.get_objects() == []
@@ -210,7 +210,7 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
 
 
 def test_add_object_instance_to_label_row():
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
     object_instance = ObjectInstance(box_ontology_item)
 
     coordinates = BoundingBoxCoordinates(
@@ -226,7 +226,7 @@ def test_add_object_instance_to_label_row():
 
 
 def test_add_remove_access_object_instances_in_label_row():
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
 
     object_instance_1 = ObjectInstance(box_ontology_item)
     object_instance_2 = ObjectInstance(box_ontology_item)
@@ -263,7 +263,7 @@ def test_add_remove_access_object_instances_in_label_row():
 
 
 def test_filter_for_objects():
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
 
@@ -312,7 +312,7 @@ def test_add_wrong_coordinates():
 
 
 def test_get_object_instances_by_frames():
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
 
@@ -349,8 +349,8 @@ def test_get_object_instances_by_frames():
 
 
 def test_adding_object_instance_to_multiple_frames_fails():
-    label_row_1 = LabelRowClass(empty_image_group_labels, all_types_structure)
-    label_row_2 = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row_1 = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row_2 = LabelRowV2(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
 
     label_box.set_for_frame(BOX_COORDINATES, 1)
@@ -458,7 +458,7 @@ def test_update_remove_object_instance_coordinates():
 
 
 def test_removing_coordinates_from_object_removes_it_from_parent():
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
     label_box = ObjectInstance(box_ontology_item)
     label_box.set_for_frame(BOX_COORDINATES, 1)
     label_box.set_for_frame(BOX_COORDINATES, 2)
@@ -605,7 +605,7 @@ def test_classification_instances_frame_view():
 
 
 def test_add_and_get_classification_instances_to_label_row():
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
     classification_instance_1 = ClassificationInstance(text_classification)
     classification_instance_2 = ClassificationInstance(text_classification)
     classification_instance_3 = ClassificationInstance(checklist_classification)
@@ -913,9 +913,9 @@ def test_label_status_forwards_compatibility():
 
 
 def test_frame_view():
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
 
-    frame_view: LabelRowClass.FrameView = label_row.get_frame_view(1)
+    frame_view: LabelRowV2.FrameView = label_row.get_frame_view(1)
 
     assert frame_view.get_objects() == []
     assert frame_view.get_classifications() == []

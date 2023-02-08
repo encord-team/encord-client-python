@@ -627,7 +627,7 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
 
-    # def get_label_row_class(self, uid: str) -> LabelRowClass:
+    # def get_label_row_class(self, uid: str) -> LabelRowV2:
     #     """
     #     This function is documented in :meth:`encord.project.Project.get_label_row_class`.
     #     """
@@ -641,7 +641,7 @@ class EncordClientProject(EncordClient):
     #     ontology_hash = self.get_project()["ontology_hash"]
     #     ontology = self._querier.basic_getter(OrmOntology, ontology_hash)
     #     ontology_structure = ontology.structure
-    #     return LabelRowClass(labels, ontology_structure)
+    #     return LabelRowV2(labels, ontology_structure)
 
     def get_label_row(
         self,

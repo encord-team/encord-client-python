@@ -5,7 +5,7 @@ from typing import List, Union
 
 from deepdiff import DeepDiff
 
-from encord.objects.ontology_labels_impl import LabelRowClass
+from encord.objects.ontology_labels_impl import LabelRowV2
 from tests.objects.data import (
     data_1,
     native_image_data,
@@ -40,12 +40,12 @@ def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], e
 
 
 def test_serialise_image_group_with_classifications():
-    label_row = LabelRowClass(empty_image_group_labels, empty_image_group_ontology)
+    label_row = LabelRowV2(empty_image_group_labels, empty_image_group_ontology)
 
     actual = label_row.to_encord_dict()
     assert empty_image_group_labels == actual
 
-    label_row = LabelRowClass(image_group_labels, image_group_ontology)
+    label_row = LabelRowV2(image_group_labels, image_group_ontology)
 
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
@@ -58,7 +58,7 @@ def test_serialise_image_group_with_classifications():
 
 
 def test_serialise_video():
-    label_row = LabelRowClass(data_1.labels, data_1.ontology)
+    label_row = LabelRowV2(data_1.labels, data_1.ontology)
 
     # TODO: also check at this point whether the internal data is correct.
 
@@ -71,7 +71,7 @@ def test_serialise_video():
 
 
 def test_serialise_image_with_object_answers():
-    label_row = LabelRowClass(native_image_data.labels, all_ontology_types)
+    label_row = LabelRowV2(native_image_data.labels, all_ontology_types)
 
     actual = label_row.to_encord_dict()
 
@@ -84,7 +84,7 @@ def test_serialise_image_with_object_answers():
 
 
 def test_serialise_dicom_with_dynamic_classifications():
-    label_row = LabelRowClass(dicom_labels, dynamic_classifications_ontology)
+    label_row = LabelRowV2(dicom_labels, dynamic_classifications_ontology)
 
     assert label_row.data_link is None
     assert label_row.height == 256
@@ -104,7 +104,7 @@ def test_serialise_dicom_with_dynamic_classifications():
 
 
 def test_dynamic_classifications():
-    label_row = LabelRowClass(
+    label_row = LabelRowV2(
         video_with_dynamic_classifications.labels, ontology_with_many_dynamic_classifications.ontology
     )
 

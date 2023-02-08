@@ -27,7 +27,7 @@ from encord.objects.utils import (
 
 
 class Answer(ABC):
-    """An internal helper class for the LabelRowClass class. This class is not meant to be used directly."""
+    """An internal helper class for the LabelRowV2 class. This class is not meant to be used directly."""
 
     _ontology_attribute: Attribute
 
