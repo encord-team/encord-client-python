@@ -141,13 +141,6 @@ class Project:
         """
         return self._client.get_project()
 
-    def get_interactive_label_row(self, data_hash: str):
-        """
-        DENIS: probably can either take data_hash or label_hash.
-        Return the label row object.
-        """
-        pass
-
     def list_label_rows(
         self,
         edited_before: Optional[Union[str, datetime.datetime]] = None,
@@ -256,7 +249,7 @@ class Project:
         include_classification_feature_hashes: Optional[Set[str]] = None,
     ) -> LabelRow:
         """
-        Retrieve label row. If you need to retrieved multiple label rows, prefer using
+        Retrieve label row. If you need to retrieve multiple label rows, prefer using
         :meth:`encord.project.Project.get_label_rows` instead.
 
         A code example using the `include_object_feature_hashes` and `include_classification_feature_hashes`

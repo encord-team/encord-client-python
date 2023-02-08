@@ -1,5 +1,4 @@
 import datetime
-from typing import List
 
 import pytest
 
@@ -12,7 +11,7 @@ from encord.objects import (
     Object,
     ObjectInstance,
 )
-from encord.objects.common import Attribute, TextAttribute
+from encord.objects.common import TextAttribute
 from encord.objects.constants import (
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
@@ -61,9 +60,6 @@ dynamic_radio_option_2 = all_types_structure.get_item_by_hash("9TcxMjAy")  # Thi
 
 text_classification = all_types_structure.get_item_by_hash("jPOcEsbw", Classification)
 text_classification_attribute: TextAttribute = all_types_structure.get_item_by_hash("OxrtEM+v", TextAttribute)
-# DENIS: probably on the ontology, I should have a get_text_attribute etc. to have the exact type.
-# or I do something like get_item_by_hash("OTkxMjU1", all_types_structure, expected_type: TextAttribute) with
-# overloads that return the correct type.
 radio_classification = all_types_structure.get_item_by_hash("NzIxNTU1")
 radio_classification_option_1 = all_types_structure.get_item_by_hash("MTcwMjM5")
 radio_classification_option_2 = all_types_structure.get_item_by_hash("MjUzMTg1")
@@ -264,74 +260,6 @@ def test_add_remove_access_object_instances_in_label_row():
     objects = label_row.get_objects()
     assert len(objects) == 1
     assert objects[0].object_hash == object_instance_2.object_hash
-
-
-def discussion_with_eloy():
-    x = {
-        "label_1": {
-            1: BOX_COORDINATES,
-            2: BOX_COORDINATES,
-            3: BOX_COORDINATES,
-            4: BOX_COORDINATES,
-        },
-        "label_2": {
-            1: BOX_COORDINATES,
-            2: BOX_COORDINATES,
-            3: BOX_COORDINATES,
-            4: BOX_COORDINATES,
-        },
-    }
-    y = {
-        "frame_1": {
-            "label_1": BOX_COORDINATES,
-            "label_2": BOX_COORDINATES,
-        },
-        "frame_2": {
-            "label_1": BOX_COORDINATES,
-            "label_2": BOX_COORDINATES,
-        },
-        "frame_3": {
-            "label_1": BOX_COORDINATES,
-            "label_2": BOX_COORDINATES,
-        },
-    }
-
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
-
-    # DENIS: think about such a read layer, to be able to iterate over each
-    # individual frame and then get all the objects and read them.
-    frame_unit: FrameUnit = label_row.get_frame(1)
-
-    object_instance_1 = ObjectInstance(BOX_COORDINATES)
-    object_instance_2 = ObjectInstance(BOX_COORDINATES)
-
-    # ======
-    objects_for_frame: List[ObjectInstance] = LabelRowClass.objects_by_frame(1)
-
-    x = LabelRowClass.label_row_read_only_data
-
-    # ===
-    frame_unit: FrameUnit = LabelRowClass.frame_unit(1)
-    objects_for_frame: List[ObjectInstance] = frame_unit.get_all_objects()
-
-    # ======
-
-    frame_unit.add_object(
-        coordinates=BOX_COORDINATES,
-        object_=object_instance_1,
-    )
-    frame_unit.add_object(
-        coordinates=BOX_COORDINATES,
-        object_=object_instance_2,
-    )
-
-    # ########## #
-    label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
-    object_instance_1 = BOX_COORDINATES.get_object(label_row)
-    object_instance_2 = BOX_COORDINATES.get_object(label_row)
-
-    object_instance_1.set_for_frame(coordinates=BOX_COORDINATES, frame=1)
-    object_instance_2.set_for_frame(coordinates=BOX_COORDINATES, frame=2)
 
 
 def test_filter_for_objects():
@@ -984,31 +912,6 @@ def test_label_status_forwards_compatibility():
     assert LabelStatus("new-unknown-status").value == "_MISSING_LABEL_STATUS_"
 
 
-# ==========================================================
-# =========== actually working tests above here ============
-# ==========================================================
-
-
-# def test_read_improvements():
-#     label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
-#
-#     frame_view: FrameView = label_row.get_frame(1)
-#
-#     added_object_instance = frame_view.add_object_instance(
-#         coordinates=KEYPOINT_COORDINATES,
-#         object_instance_type=box_ontology_item,  # optional ontology item.
-#         existing_object=1,  # Optional
-#     )
-#     # DENIS: either create a new one or add the existing one.
-#
-#     # now what about answers?
-#     # static_answers = added_object_instance.get_static_answers()
-#
-#     ## otherwise how would it look like?
-#     object_ = label_row.new_object(ontology_type=box_ontology_item, coordinates=KEYPOINT_COORDINATES, frames={1})
-#     object_.set_coordinates(KEYPOINT_COORDINATES, frames=[1, 2, 3])
-
-
 def test_frame_view():
     label_row = LabelRowClass(empty_image_group_labels, all_types_structure)
 
@@ -1043,102 +946,3 @@ def test_frame_view():
 
     assert frame_view.get_objects() == [object_instance]
     assert frame_view.get_classifications() == [classification_instance]
-
-
-# def test_read_coordinates():
-#     object_instance = ObjectInstance()
-#     x = object_instance.get_coordinates()  # list of frame to coordinates (maybe a map?)
-#     x = object_instance.get_coordinates_for_frame()
-#     x = object_instance.dynamic_answers()  # list of dynamic answers. (maybe a map from the frame?)
-#     x = object_instance.dynamic_answer_for_frame()
-#     x = object_instance.answer_objects
-#
-#
-# def test_workflow_with_label_structure():
-#     project = Project()
-#     label_structure = project.get_label_structure()
-#
-#     used_frames = label_structure.get_used_frames()
-#     label_row = label_structure.get_or_create_label_by_frame(used_frames[0])
-#
-#     # Do the transformations
-#
-#     label_structure.upload()
-
-
-# def test_david_notes():
-#
-#     project = ...
-#
-#     label_class = project.get_label_class(label_hash)
-#
-#     object_instance = label_class.get_object(object_hash)
-#     assert object_instance.frames() == [1, 2, 3]
-#     assert object_instance.coordinates_for_frame(1) == BOX_COORDINATES
-#
-#     new_label_ojbect = ObjectInstance(...)
-#     new_label_ojbect.set_coordinates(BOX_COORDINATES, frames={3})
-#
-#     label_class.add_object(new_label_ojbect)  # validation
-#
-#     label_class.save()
-#
-#     project.delete_label_rows([...])
-#
-#     save_multiple_label_classes([label_class, ...])  # DENIS: bulk getter and setters are needed by David.
-#     # DENIS: ensure terminology is similar to open source given that it might be used for Encord Active
-
-
-def dynamic_vs_static_answer():
-    # # DENIS: implement these simplifications!
-    # answer: Answer = ...
-    # answer.in_frames()  # for static answers, this equals the entire range.
-    #
-    object_instance = ObjectInstance(box_ontology_item)
-    # object_instance.set_coordinates(BOX_COORDINATES, frames=[0, 1, 2, 3])
-    # dynamic_answer: TextAnswer = object_instance.get_static_answer(text_attribute_1)
-    # dynamic_answer.set("Zeus", frames=[0, 1])  # frames empty => defaults to all
-    # object_instance.get_static_answer(text_attribute_1).set("Zeus", frames=[0, 1])  # frames empty => defaults to all
-    # # if frames is specified for static answer, throw error
-
-    dynamic_answer.get(frames=[0, 1])  # returns "Zeus"
-    # DENIS: this way I cannot use a `get_all_answers` thingie, I'll not get a set of answers
-    object_instance.set_answer(text_attribute_1, "Zeus", frames=None, overwrite=False)
-    # ^ overwrite is False by default, and it will throw an error if the answer is already set.
-    object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, 1))
-    object_instance.set_answer(text_attribute_1, "Zeus", frames=List[Range(0, 1), Range(3, 5)])
-    object_instance.set_answer(text_attribute_1, "Zeus", frames=Range(0, None))
-    # ^ means from 0 to end of video, even if the object instance comes to new frames. => becomes tricky.
-    object_instance.set_ansser(text_attribute_1, "Poseidon", frames=Range(2, 3))
-    answers = object_instance.get_answer(text_attribute_1)
-    # ^ throw or return None if trying to access a nested answer that is not reachable.
-    assert answers[0] == AnswerForFrames("Zeus", [Range(0, 1)])
-    assert answers[1] == AnswerForFrames("Poseidon", [Range(2, 3)])
-
-    object_instance.delete_answer(text_attribute_1, frames=Range(0, 1))  # Unsets values to default (i.e. unanswered)
-
-    object_instance.set_answer(text_attribute_1, "Poseidon", frames=[2, 3])
-    object_instance.set_answer(checklist_attribute_1, {checklist_attribute_1}, frames=[0, 1])
-    # DENIS: maybe I don't need the answer object at all, and just have the object instance handle the answer.
-    # object_instance.check_option(checklist_attribute_1, checklist_attribute_1, frames=[0,1])
-
-    answers: List[AnswerForFrames] = object_instance.get_answer(text_attribute_1, frames=[1, 2], filter_value=None)
-    assert object_instance.is_answer_dynamic(text_attribute_1)  # true
-
-    object_instance.set_answer(radio_attribute_level_2, {radio_attribute_2_option_1})
-    # ^ throws if the radio level 1 is not selected.
-
-    # typing:
-    object_instance.set_text_answer(text_attribute_1, "Zeus", frames=[0, 1])
-    object_instance.get_text_answer(text_attribute_1)
-
-    # iterating over frames
-    for frame in object_instance.frames():
-        assert isinstance(frame, int)
-        assert object_instance.set_answer(text_attribute_1, "Zeus", frames=frame)
-        assert object_instance.get_answer(text_attribute_1, frames=[frame]) == "Zeus"
-
-    # getting all unanswered options:
-    possible_attributes: List[Attribute] = object_instance.get_possible_attributes()
-    possible_unanswered_attributes: List[Attribute] = object_instance.get_possible_unanswered_attributes()
-    assert object_instance.can_set_attribute(radio_attribute_level_2)

@@ -22,7 +22,7 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pytz
 
-from encord.objects.utils import short_uuid_str
+from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 GMT_TIMEZONE = pytz.timezone("GMT")
 DATETIME_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
@@ -34,10 +34,6 @@ def __get_timestamp():
     now = datetime.now()
     new_timezone_timestamp = now.astimezone(GMT_TIMEZONE)
     return new_timezone_timestamp.strftime(DATETIME_STRING_FORMAT)
-
-
-def __lower_snake_case(s: str):
-    return s.lower().replace(" ", "_")
 
 
 def make_object_dict(
@@ -78,7 +74,7 @@ def make_object_dict(
     object_dict = {
         "name": ontology_object["name"],
         "color": ontology_object["color"],
-        "value": __lower_snake_case(ontology_object["name"]),
+        "value": _lower_snake_case(ontology_object["name"]),
         "createdAt": timestamp,
         "createdBy": "robot@cord.tech",
         "confidence": 1,
