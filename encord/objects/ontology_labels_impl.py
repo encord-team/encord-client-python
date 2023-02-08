@@ -4,6 +4,7 @@ from collections import defaultdict
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from enum import IntEnum
 from typing import (
     Any,
     Dict,
@@ -22,8 +23,10 @@ from uuid import uuid4
 
 from dateutil.parser import parse
 
+from encord.client import EncordClientProject
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
+from encord.http.querier import Querier
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
@@ -75,6 +78,8 @@ from encord.objects.utils import (
     ranges_list_to_ranges,
     short_uuid_str,
 )
+from encord.orm.formatter import Formatter
+from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata
 
 
 @dataclass
@@ -1023,13 +1028,16 @@ class LabelRowClass:
     @dataclass(frozen=True)
     class LabelRowReadOnlyData:
         label_hash: str
-        dataset_hash: str
-        dataset_title: str
-        data_title: str
         data_type: DataType
         label_status: LabelStatus
-        number_of_frames: int
-        frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData]
+        annotation_task_status: AnnotationTaskStatus
+        is_shadow_data: bool
+        number_of_frames: Optional[int] = None  # DENIS: return this from BE, or get it from DataRow.
+        dataset_hash: Optional[str] = None  # probably in DataRow
+        dataset_title: Optional[str] = None  # probably in DataRow
+        data_hash: Optional[str] = None  # DENIS: this is needed
+        data_title: Optional[str] = None  # probably in DataRow
+        frame_level_data: Dict[int, LabelRowClass.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
         duration: Optional[float] = None
@@ -1039,13 +1047,20 @@ class LabelRowClass:
         height: Optional[int] = None
         dicom_data_links: Optional[List[str]] = None
 
-    def __init__(self, label_row_dict: dict, ontology_structure: Union[dict, OntologyStructure]) -> None:
-        if isinstance(ontology_structure, dict):
-            self._ontology_structure = OntologyStructure.from_dict(ontology_structure)
-        else:
-            self._ontology_structure = ontology_structure
+    def __init__(
+        self,
+        label_row_metadata: LabelRowMetadata,
+        project_client: EncordClientProject,
+    ) -> None:
+        self._ontology_structure = None
 
-        self._label_row_read_only_data: LabelRowClass.LabelRowReadOnlyData = self._parse_label_row_dict(label_row_dict)
+        self._project_client = project_client
+        self._querier = project_client._querier
+
+        # DENIS: this needs to be parsed as well - it is the minimum data that is always initialised with the label row.
+        self._label_row_read_only_data: LabelRowClass.LabelRowReadOnlyData = self._parse_label_row_metadata(
+            label_row_metadata
+        )
 
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
@@ -1056,7 +1071,6 @@ class LabelRowClass:
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
         # at least at the final objects_index/classifications_index level.
-        self._parse_labels_from_dict(label_row_dict)
 
     @property
     def label_hash(self) -> str:
@@ -1083,7 +1097,16 @@ class LabelRowClass:
         return self._label_row_read_only_data.label_status
 
     @property
-    def number_of_frames(self) -> int:
+    def annotation_task_status(self) -> AnnotationTaskStatus:
+        return self._label_row_read_only_data.annotation_task_status
+
+    @property
+    def is_shadow_data(self) -> bool:
+        return self._label_row_read_only_data.is_shadow_data
+
+    # START: fields that are not returned right now from the get label row.
+    @property
+    def number_of_frames(self) -> Optional[int]:
         return self._label_row_read_only_data.number_of_frames
 
     @property
@@ -1098,6 +1121,7 @@ class LabelRowClass:
 
     @property
     def data_link(self) -> Optional[str]:
+        # DENIS: not actually needed
         return self._label_row_read_only_data.data_link
 
     @property
@@ -1111,9 +1135,73 @@ class LabelRowClass:
     @property
     def dicom_data_links(self) -> Optional[List[str]]:
         """Only a value for DICOM data types."""
+        # DENIS: this could be deprecated in favour of the DataRow class.
         if self._label_row_read_only_data.data_type != DataType.DICOM:
             raise LabelRowError("DICOM data links can only be retrieved for DICOM files.")
         return self._label_row_read_only_data.dicom_data_links
+
+    # END: fields that are not returned right now from the get label row.
+
+    def fetch_labels(
+        self,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_reviews: bool = False,
+    ) -> None:
+        """
+        Fetch the labels that are currently stored in the Encord server. If the label was not yet in progress, this will
+        set the label status to "IN_PROGRESS". DENIS: proper link
+
+        Calling this function will reset all the labels that are currently stored within this class.
+
+        Args:
+            include_object_feature_hashes: If None all the objects will be included. Otherwise, only objects labels
+                will be included of which the feature_hash has been added.
+            include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
+                classification labels will be included of which the feature_hash has been added.
+            include_reviews: Whether to request read only information about the reviews of the label row.
+        """
+        if self._ontology_structure is None:
+            self._refresh_ontology_structure()
+
+        get_signed_url = False
+        label_row_dict = self._project_client.get_label_row(
+            uid=self.label_hash,
+            get_signed_url=get_signed_url,
+            include_object_feature_hashes=include_object_feature_hashes,
+            include_classification_feature_hashes=include_classification_feature_hashes,
+            include_reviews=include_reviews,
+        )
+
+        self.from_labels_dict(label_row_dict)
+
+    def _refresh_ontology_structure(self):
+        ontology_hash = self._project_client.get_project()["ontology_hash"]
+        ontology = self._querier.basic_getter(Ontology, ontology_hash)
+        self._ontology_structure = ontology.structure
+
+    def from_labels_dict(self, label_row_dict: dict) -> None:
+        """
+        If you have a label row dictionary in the same format that the Encord servers produce, you can initialise the
+        LabelRow from that directly. In most cases you should prefer using the `fetch_labels` method.
+
+        Calling this function will reset all the labels that are currently stored within this class.
+
+        Args:
+            label_row_dict: The dictionary of all labels as expected by the Encord format.
+        """
+        if self._ontology_structure is None:
+            self._refresh_ontology_structure()
+
+        self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
+        self._frame_to_hashes = defaultdict(set)
+        self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
+
+        self._objects_map: Dict[str, ObjectInstance] = dict()
+        self._classifications_map: Dict[str, ClassificationInstance] = dict()
+        self._parse_labels_from_dict(label_row_dict)
+
+    # DENIS: getting signed urls will not be supported at all, as this needs to be fetched via the DataRow.
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
         """
@@ -1606,6 +1694,16 @@ class LabelRowClass:
         for frame in frames:
             self._frame_to_hashes[frame].remove(item_hash)
 
+    def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowClass.LabelRowReadOnlyData:
+        return LabelRowClass.LabelRowReadOnlyData(
+            label_hash=label_row_metadata.label_hash,
+            dataset_hash=label_row_metadata.dataset_hash,
+            data_type=DataType.from_upper_case_string(label_row_metadata.data_type),
+            label_status=label_row_metadata.label_status,
+            annotation_task_status=label_row_metadata.annotation_task_status,
+            is_shadow_data=label_row_metadata.is_shadow_data,
+        )
+
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
         image_hash_to_frame = {item.image_hash: item.frame_number for item in frame_level_data.values()}
@@ -1654,8 +1752,11 @@ class LabelRowClass:
             dataset_hash=label_row_dict["dataset_hash"],
             dataset_title=label_row_dict["dataset_title"],
             data_title=label_row_dict["data_title"],
+            data_hash=label_row_dict["data_hash"],
             data_type=data_type,
             label_status=LabelStatus(label_row_dict["label_status"]),
+            annotation_task_status=label_row_dict["annotation_task_status"],
+            is_shadow_data=self.is_shadow_data,
             frame_level_data=frame_level_data,
             image_hash_to_frame=image_hash_to_frame,
             frame_to_image_hash=frame_to_image_hash,
@@ -2894,3 +2995,77 @@ class OntologyStructure:
         cls = Classification(uid, feature_node_hash, list())
         self.classifications.append(cls)
         return cls
+
+
+DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+class OntologyUserRole(IntEnum):
+    ADMIN = 0
+    USER = 1
+
+
+class Ontology(dict, Formatter):
+    def __init__(
+        self,
+        title: str,
+        structure: OntologyStructure,
+        ontology_hash: str,
+        description: Optional[str] = None,
+    ):
+        """
+        DEPRECATED - prefer using the :class:`encord.ontology.Ontology` class instead.
+
+        This class has dict-style accessors for backwards compatibility.
+        Clients who are using this class for the first time are encouraged to use the property accessors and setters
+        instead of the underlying dictionary.
+        The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
+
+        WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
+        datastructure.
+        """
+        super().__init__(
+            {
+                "ontology_hash": ontology_hash,
+                "title": title,
+                "description": description,
+                "structure": structure,
+            }
+        )
+
+    @property
+    def ontology_hash(self) -> str:
+        return self["ontology_hash"]
+
+    @property
+    def title(self) -> str:
+        return self["title"]
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self["title"] = value
+
+    @property
+    def description(self) -> str:
+        return self["description"]
+
+    @description.setter
+    def description(self, value: str) -> None:
+        self["description"] = value
+
+    @property
+    def structure(self) -> OntologyStructure:
+        return self["structure"]
+
+    @structure.setter
+    def structure(self, value: OntologyStructure) -> None:
+        self["structure"] = value
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> Ontology:
+        return Ontology(
+            title=json_dict["title"],
+            description=json_dict["description"],
+            ontology_hash=json_dict["ontology_hash"],
+            structure=OntologyStructure.from_dict(json_dict["editor"]),
+        )

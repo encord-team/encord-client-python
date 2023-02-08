@@ -174,12 +174,14 @@ class LabelRow(base_orm.BaseORM):
             ("dataset_hash", str),
             ("dataset_title", str),
             ("data_title", str),
+            ("data_hash", str),
             ("data_type", str),
             ("data_units", dict),
             ("object_answers", dict),
             ("classification_answers", dict),
             ("object_actions", dict),
             ("label_status", str),
+            ("annotation_task_status", str),
         ]
     )
 

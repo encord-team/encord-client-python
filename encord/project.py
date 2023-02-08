@@ -149,6 +149,8 @@ class Project:
         shadow_data_state: Optional[ShadowDataState] = None,
     ) -> List[LabelRowMetadata]:
         """
+        DEPRECATED - use `list_label_rows_v2` to manage label rows instead.
+
         Args:
             self: Encord client object.
             edited_before: Optionally filter to only rows last edited before the specified time
@@ -164,6 +166,37 @@ class Project:
             UnknownError: If an error occurs while retrieving the data.
         """
         return self._client.list_label_rows(edited_before, edited_after, label_statuses, shadow_data_state)
+
+    def list_label_rows_v2(
+        self,
+        data_hashes: Optional[List[str]] = None,
+        label_hashes: Optional[List[str]] = None,
+        edited_before: Optional[Union[str, datetime.datetime]] = None,
+        edited_after: Optional[Union[str, datetime.datetime]] = None,
+        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        shadow_data_state: Optional[ShadowDataState] = None,
+    ) -> List[LabelRowClass]:
+        """
+        Args:
+            self: Encord client object.
+            edited_before: Optionally filter to only rows last edited before the specified time
+            edited_after: Optionally filter to only rows last edited after the specified time
+            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
+            shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
+
+        Returns:
+            A list of :class:`~encord.objects.LabelRowClass` instances for all the matching label rows
+        """
+        """
+        Fetch the label rows according to the filters, then translate to "empty" LabelRowClass. 
+        Then user can do .fetch_labels() to get all the labels with filters.
+        """
+        label_row_metadatas = self._client.list_label_rows(
+            edited_before, edited_after, label_statuses, shadow_data_state
+        )
+
+        label_rows = [LabelRowClass(label_row_metadata, self._client) for label_row_metadata in label_row_metadatas]
+        return label_rows
 
     def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
         """

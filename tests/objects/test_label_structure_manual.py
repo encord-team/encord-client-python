@@ -10,7 +10,7 @@ import pytest
 from encord import EncordUserClient, Project
 from encord.configs import ENCORD_DOMAIN
 
-ENABLE_MANUAL_TESTS = False
+ENABLE_MANUAL_TESTS = True
 
 
 LOCAL_DOMAIN = "http://127.0.0.1:8000"
@@ -54,7 +54,7 @@ def get_project_ssh() -> Project:
 
 
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="Manual tests are disabled")
-def test_label_structure_manual():
+def test_label_structure_manual_v1():
     project = get_project_ssh()
     for label_row in project.label_rows:
         label_hash = label_row["label_hash"]
@@ -63,3 +63,11 @@ def test_label_structure_manual():
             label_structure = project.get_label_row_class(label_hash)
             print(label_structure)
             break
+
+
+@pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="Manual tests are disabled")
+def test_label_structure_manual_v2():
+    project = get_project_ssh()
+    for label_row in project.list_label_rows_v2():
+        print(label_row)
+        label_row.fetch_labels()
