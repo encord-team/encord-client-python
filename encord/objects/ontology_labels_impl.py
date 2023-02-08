@@ -854,16 +854,6 @@ class ClassificationInstance:
 
 
 class LabelRowClass:
-    """
-    will also need to be able to keep around possible coordinate sizes and also query those if necessary.
-
-    This is essentially one blob of data_units. For an image_group we need to get all the hashed in.
-
-
-    Optionally add: `reset_labels` to delete all the current labels.
-    `get_user_frames` -> see all the frames where there are labels.
-    """
-
     class FrameView:
         """
         This class can be used to inspect what object/classification instances are on a given frame or
