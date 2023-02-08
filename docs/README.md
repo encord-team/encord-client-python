@@ -21,7 +21,8 @@ Instead of `make html`, you can run
 ```shell
 > ./build_docs
 ```
-This will run `black`, `isort`, and `make html` with appropriate configurations. 
+This will run `black`, `isort`, and `make html` with appropriate configurations.
+This will also remove some local caches, so after changing the folder structure, this will rebuild the docs appropriately.
 
 
 If you are adding a new module which should be documented, follow the examples within `api.rst` to add this new module.

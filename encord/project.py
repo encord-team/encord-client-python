@@ -2,8 +2,8 @@ import datetime
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
-from encord.constants.model import AutomationModels
-from encord.objects.ontology_labels_impl import LabelRowClass
+from encord.constants.model import AutomationModels, Device
+from encord.objects import LabelRowClass
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
@@ -14,7 +14,7 @@ from encord.orm.label_row import (
     LabelStatus,
     ShadowDataState,
 )
-from encord.orm.model import ModelConfiguration, TrainingMetadata
+from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -247,6 +247,7 @@ class Project:
         *,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_reviews: bool = False,
     ) -> LabelRow:
         """
         Retrieve label row. If you need to retrieve multiple label rows, prefer using
@@ -264,6 +265,7 @@ class Project:
                 will be included of which the feature_hash has been added.
             include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
                 classification labels will be included of which the feature_hash has been added.
+            include_reviews: Whether to request read only information about the reviews of the label row.
 
         Returns:
             LabelRow: A label row instance.
@@ -280,6 +282,7 @@ class Project:
             get_signed_url,
             include_object_feature_hashes=include_object_feature_hashes,
             include_classification_feature_hashes=include_classification_feature_hashes,
+            include_reviews=include_reviews,
         )
 
     def get_label_rows(
@@ -289,6 +292,7 @@ class Project:
         *,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_reviews: bool = False,
     ) -> List[LabelRow]:
         """
         Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
@@ -340,6 +344,7 @@ class Project:
             include_classification_feature_hashes:
                 If None all the classifications will be included. Otherwise, only
                 classification labels will be included of which the feature_hash has been added.
+            include_reviews: Whether to request read only information about the reviews of the label row.
 
         Raises:
             MultiLabelLimitError: If too many labels were requested. Check the error's `maximum_labels_allowed` field
@@ -355,6 +360,7 @@ class Project:
             get_signed_url,
             include_object_feature_hashes=include_object_feature_hashes,
             include_classification_feature_hashes=include_classification_feature_hashes,
+            include_reviews=include_reviews,
         )
 
     def save_label_row(self, uid, label):
@@ -608,19 +614,22 @@ class Project:
 
     def model_inference(
         self,
-        uid,
-        file_paths=None,
-        base64_strings=None,
-        conf_thresh=0.6,
-        iou_thresh=0.3,
-        device="cuda",
-        detection_frame_range=None,
-        allocation_enabled=False,
-        data_hashes=None,
-        rdp_thresh=0.005,
+        uid: str,
+        file_paths: Optional[List[str]] = None,
+        base64_strings: Optional[List[bytes]] = None,
+        conf_thresh: float = 0.6,
+        iou_thresh: float = 0.3,
+        device: Device = Device.CUDA,
+        detection_frame_range: Optional[List[int]] = None,
+        allocation_enabled: bool = False,
+        data_hashes: Optional[List[str]] = None,
+        rdp_thresh: float = 0.005,
     ):
         """
         Run inference with model trained on the platform.
+
+        The image(s)/video(s) can be provided either as local file paths, base64 strings, or as data hashes if the
+        data is already uploaded on the Encord platform.
 
         Args:
             uid: A model_iteration_hash (uid) string.
@@ -660,7 +669,15 @@ class Project:
             rdp_thresh,
         )
 
-    def model_train(self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"):
+    def model_train(
+        self,
+        uid: str,
+        label_rows: Optional[List[str]] = None,
+        epochs: Optional[int] = None,
+        batch_size: int = 24,
+        weights: Optional[ModelTrainingWeights] = None,
+        device: Device = Device.CUDA,
+    ):
         """
         Train a model created on the platform.
 
@@ -805,6 +822,17 @@ class Project:
     def get_label_logs(
         self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
     ) -> List[LabelLog]:
+        """
+        Get label logs, which represent the actions taken in the UI to create labels.
+
+        All arguments can be left as `None` if no filtering should be applied.
+
+        Args:
+            user_hash: Filter the label logs by the user.
+            data_hash: Filter the label logs by the data_hash.
+            from_unix_seconds: Filter the label logs to only include labels after this timestamp.
+            from_unix_seconds: Filter the label logs to only include labels before this timestamp.
+        """
         return self._client.get_label_logs(user_hash, data_hash, from_unix_seconds, to_unix_seconds)
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:

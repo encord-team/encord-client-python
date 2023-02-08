@@ -184,7 +184,10 @@ for label_row in project.label_rows:
     if not label_row["label_hash"]:  # No objects in this label row yet.
         continue
 
-    label_row_details = project.get_label_row(label_row["label_hash"])
+    # Only set the `include_reviews` flag to `True` if the reviews payload is needed.
+    label_row_details = project.get_label_row(
+        label_row["label_hash"], include_reviews=True
+    )
     reviewed_bounding_boxes += list(
         iterate_over_objects(label_row_details, include_object_fn_bbox)
     )

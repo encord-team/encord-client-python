@@ -14,7 +14,7 @@ class RequestsSettings:
     """Number of allowed retries when a request is sent."""
 
     backoff_factor: float = DEFAULT_BACKOFF_FACTOR
-    """With each retry, there will be a sleep of backoff_factor * (2 ** retry_number)"""
+    """With each retry, there will be a sleep of backoff_factor * (2 ** (retry_number - 1) )"""
 
 
 DEFAULT_REQUESTS_SETTINGS = RequestsSettings()

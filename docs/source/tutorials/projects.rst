@@ -660,26 +660,46 @@ You can optionally return signed URLs for timed public access to that resource (
 Reviewing label logs
 --------------------
 
-You can query information about a project's labels by using the :meth:`get_label_logs() <encord.project.Project.get_label_logs>` method of a corresponding :class:`~encord.project.Project`.
-You will need an API key with the ``label_logs.read`` permission.
-The :meth:`get_label_logs() <encord.project.Project.get_label_logs>` method takes a number of optional parameters to narrow down the retrieved logs:
+While the :meth:`get_label_row() <encord.project.Project.get_label_row>` will gives static information about the labels at the point in time, the :meth:`get_label_logs() <encord.project.Project.get_label_logs>` gives you an actions log that was created in the UI to create all the current labels.
+Those actions include for example adding, editing, and deleting labels.
+Check the :meth:`Action <encord.orm.label_log.Action>` `Enum` for all possible actions.
 
-.. code-block::
+Possible use cases of consuming these actions would be to gather performance statistics around labelling.
 
-    logs = project.get_label_logs(user_hash=<user_hash>)
-    for log in logs:
-        print(log)
+Check the signature of the :meth:`get_label_logs() <encord.project.Project.get_label_logs>` function to see different ways to narrow down the response.
 
-.. code-block::
+If you are using an an API key you will need the `label_logs.read` permission.
 
-    def get_label_logs(
-        self,
-        user_hash: str = None,
-        data_hash: str = None,
-        from_unix_seconds: int = None,
-        to_unix_seconds: int = None
-        )
-        -> List[LabelLog]
+.. tabs::
+
+    .. tab:: Code
+
+        .. code-block::
+
+            # print first log
+            logs = project.get_label_logs(data_hash="7d452929-9d2a-4aac-9010-4aa1dc8d4806")
+            for log in logs:
+                print(log)
+                break
+
+    .. tab:: Example output
+
+        .. code-block::
+
+            LabelLog(
+                    log_hash=None,
+                    user_hash=None,
+                    user_email="xxxxx@cord.tech",
+                    annotation_hash="2t5kCNyw",
+                    identifier="2t5kCNyw",
+                    data_hash="7d452929-9d2a-4aac-9010-4aa1dc8d4806",
+                    feature_hash="KOYgD/K3",
+                    action=0,
+                    label_name="Text classification",
+                    time_taken=1482,
+                    created_at="2022-11-30 17:27:10",
+                    frame=1,
+                )
 
 
 Models
@@ -757,16 +777,18 @@ Click on the *Training API details* button to toggle a code snippet with model t
 .. code-block::
 
     from encord.constants.model_weights import *
+    from encord.constants.model import Device
 
     # Run training and print resulting model iteration object
     model_iteration = project.model_train(
-      <model_uid>,
+      "<model_uid>",
       label_rows=["<label_row_1>", "<label_row_2>", ...], # Label row uid's
       epochs=500, # Number of passes through training dataset.
       batch_size=24, # Number of training examples utilized in one iteration.
-      weights=fast_ai, # Model weights.
-      device="cuda" # Device (CPU or CUDA/GPU, default is CUDA).
+      weights=fast_rcnn_R_50_FPN_1x, # Model weights.
+      device=Device.CUDA # (CPU or CUDA/GPU, default is CUDA).
     )
+
     print(model_iteration)
 
 

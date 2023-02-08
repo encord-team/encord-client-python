@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -17,6 +17,15 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Set, cast
+
+
+class Device(Enum):
+    CUDA = "cuda"
+    CPU = "cpu"
+
+    @classmethod
+    def has_value(cls, value) -> bool:
+        return value in cls._value2member_map_
 
 
 class AutomationModels(Enum):

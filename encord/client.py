@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -34,6 +34,7 @@ and obtaining project info:
 from __future__ import annotations
 
 import base64
+import dataclasses
 import json
 import logging
 import os.path
@@ -45,7 +46,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
-from encord.constants.model import AutomationModels
+from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import *
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
@@ -58,10 +59,14 @@ from encord.http.utils import (
 from encord.objects.ontology_labels_impl import LabelRowClass, OntologyStructure
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import AddPrivateDataResponse
+from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, AddPrivateDataResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
+    DatasetAccessSettings,
     DatasetData,
+    DatasetUser,
+    DatasetUserRole,
+    DatasetUsers,
     DicomSeries,
     Image,
     ImageGroup,
@@ -92,6 +97,7 @@ from encord.orm.model import (
     ModelOperations,
     ModelRow,
     ModelTrainingParams,
+    ModelTrainingWeights,
     TrainingMetadata,
 )
 from encord.orm.ontology import Ontology as OrmOntology
@@ -214,12 +220,84 @@ class EncordClientDataset(EncordClient):
     DEPRECATED - prefer using the :class:`encord.dataset.Dataset` instead
     """
 
+    def __init__(
+        self,
+        querier: Querier,
+        config: Config,
+        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
+    ):
+        super().__init__(querier, config)
+        self._dataset_access_settings = dataset_access_settings
+
+    @staticmethod
+    def initialise(
+        resource_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        domain: str = ENCORD_DOMAIN,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
+    ) -> EncordClientDataset:
+        """
+        Create and initialize a Encord client from a resource EntityId and API key.
+
+        Args:
+            resource_id: either of the following
+
+                * A <project_hash>.
+                  If ``None``, uses the ``ENCORD_PROJECT_ID`` environment variable.
+                  The ``CORD_PROJECT_ID`` environment variable is supported for backwards compatibility.
+
+                * A <dataset_hash>.
+                  If ``None``, uses the ``ENCORD_DATASET_ID`` environment variable.
+                  The ``CORD_DATASET_ID`` environment variable is supported for backwards compatibility.
+
+            api_key: An API key.
+                     If None, uses the ``ENCORD_API_KEY`` environment variable.
+                     The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
+            domain: The encord api-server domain.
+                If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
+            requests_settings: The RequestsSettings from this config
+            dataset_access_settings: Change the default :class:`encord.orm.dataset.DatasetAccessSettings`.
+
+        Returns:
+            EncordClientDataset: A Encord client dataset instance.
+        """
+        config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
+        return EncordClientDataset.initialise_with_config(config, dataset_access_settings=dataset_access_settings)
+
+    @staticmethod
+    def initialise_with_config(
+        config: ApiKeyConfig, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
+    ) -> Union[EncordClientProject, EncordClientDataset]:
+        """
+        Create and initialize a Encord client from a Encord config instance.
+
+        Args:
+            config: A Encord config instance.
+            dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
+
+        Returns:
+            EncordClientDataset: An Encord client dataset instance.
+        """
+        querier = Querier(config)
+        key_type = querier.basic_getter(ApiKeyMeta)
+        resource_type = key_type.get("resource_type", None)
+
+        if resource_type == TYPE_PROJECT:
+            raise RuntimeError("Trying to initialise an EncordClientDataset using a project key.")
+
+        elif resource_type == TYPE_DATASET:
+            logger.info("Initialising Encord client for dataset using key: %s", key_type.get("title", ""))
+            return EncordClientDataset(querier, config, dataset_access_settings=dataset_access_settings)
+
+        else:
+            raise encord.exceptions.InitialisationError(
+                message=f"API key [{config.api_key}] is not associated with a project or dataset"
+            )
+
     def get_dataset(self) -> OrmDataset:
         """
         Retrieve dataset info (pointers to data, labels).
-
-        Args:
-            self: Encord client object.
 
         Returns:
             OrmDataset: A dataset record instance.
@@ -229,7 +307,23 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
-        return self._querier.basic_getter(OrmDataset)
+        return self._querier.basic_getter(
+            OrmDataset, payload={"dataset_access_settings": dataclasses.asdict(self._dataset_access_settings)}
+        )
+
+    def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
+        self._dataset_access_settings = dataset_access_settings
+
+    def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
+        """
+        This function is documented in :meth:`encord.project.Dataset.add_users`.
+        """
+
+        payload = {"user_emails": user_emails, "user_role": user_role}
+
+        users = self._querier.basic_setter(DatasetUsers, self._config.resource_id, payload=payload)
+
+        return list(map(lambda user: DatasetUser.from_dict(user), users))
 
     def upload_video(
         self,
@@ -259,6 +353,8 @@ class EncordClientDataset(EncordClient):
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
+        *,
+        create_video: bool = True,
     ):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
@@ -275,7 +371,14 @@ class EncordClientDataset(EncordClient):
         upload_images_to_encord(successful_uploads, self._querier)
 
         image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
-        res = self._querier.basic_setter(ImageGroup, uid=image_hash_list, payload={"image_group_title": title})
+        res = self._querier.basic_setter(
+            ImageGroup,
+            uid=image_hash_list,
+            payload={
+                "image_group_title": title,
+                "create_video": create_video,
+            },
+        )
 
         if res:
             titles = [video_data.get("title") for video_data in res]
@@ -448,9 +551,6 @@ class EncordClientProject(EncordClient):
         """
         Retrieve project info (pointers to data, labels).
 
-        Args:
-            self: Encord client object.
-
         Returns:
             OrmProject: A project record instance.
 
@@ -470,7 +570,6 @@ class EncordClientProject(EncordClient):
     ) -> List[LabelRowMetadata]:
         """
         Args:
-            self: Encord client object.
             edited_before: Optionally filter to only rows last edited before the specified time
             edited_after: Optionally filter to only rows last edited after the specified time
             label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
@@ -553,6 +652,7 @@ class EncordClientProject(EncordClient):
         *,
         include_object_feature_hashes: Optional[typing.Set[str]] = None,
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
+        include_reviews: bool = False,
     ) -> LabelRow:
         """
         This function is documented in :meth:`encord.project.Project.get_label_row`.
@@ -562,6 +662,7 @@ class EncordClientProject(EncordClient):
             "multi_request": False,
             "include_object_feature_hashes": optional_set_to_list(include_object_feature_hashes),
             "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
+            "include_reviews": include_reviews,
         }
 
         return self._querier.basic_getter(LabelRow, uid, payload=payload)
@@ -573,6 +674,7 @@ class EncordClientProject(EncordClient):
         *,
         include_object_feature_hashes: Optional[typing.Set[str]] = None,
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
+        include_reviews: bool = False,
     ) -> List[LabelRow]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_rows`.
@@ -582,6 +684,7 @@ class EncordClientProject(EncordClient):
             "multi_request": True,
             "include_object_feature_hashes": optional_set_to_list(include_object_feature_hashes),
             "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
+            "include_reviews": include_reviews,
         }
 
         return self._querier.get_multiple(LabelRow, uids, payload=payload)
@@ -729,16 +832,16 @@ class EncordClientProject(EncordClient):
 
     def model_inference(
         self,
-        uid,
-        file_paths=None,
-        base64_strings=None,
-        conf_thresh=0.6,
-        iou_thresh=0.3,
-        device="cuda",
-        detection_frame_range=None,
-        allocation_enabled=False,
-        data_hashes=None,
-        rdp_thresh=0.005,
+        uid: str,
+        file_paths: Optional[List[str]] = None,
+        base64_strings: Optional[List[bytes]] = None,
+        conf_thresh: float = 0.6,
+        iou_thresh: float = 0.3,
+        device: Device = Device.CUDA,
+        detection_frame_range: Optional[List[int]] = None,
+        allocation_enabled: bool = False,
+        data_hashes: Optional[List[str]] = None,
+        rdp_thresh: float = 0.005,
     ):
         """
         This function is documented in :meth:`encord.project.Project.model_inference`.
@@ -779,6 +882,14 @@ class EncordClientProject(EncordClient):
                     }
                 )
 
+        if isinstance(device, Device):
+            device = device.value
+
+        if device is None or not Device.has_value(device):  # Backward compatibility with string options
+            raise encord.exceptions.EncordException(
+                message="You must pass a device from the `from encord.constants.model.Device` Enum to run inference."
+            )
+
         inference_params = ModelInferenceParams(
             {
                 "files": files,
@@ -801,7 +912,15 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(Model, uid, payload=model)
 
-    def model_train(self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"):
+    def model_train(
+        self,
+        uid: str,
+        label_rows: Optional[List[str]] = None,
+        epochs: Optional[int] = None,
+        batch_size: int = 24,
+        weights: Optional[ModelTrainingWeights] = None,
+        device: Device = Device.CUDA,
+    ):
         """
         This function is documented in :meth:`encord.project.Project.model_train`.
         """
@@ -816,11 +935,18 @@ class EncordClientProject(EncordClient):
         if batch_size is None:
             raise encord.exceptions.EncordException(message="You must set a batch size to train a model.")
 
-        if weights is None:
-            raise encord.exceptions.EncordException(message="You must select model weights to train a model.")
+        if weights is None or not isinstance(weights, ModelTrainingWeights):
+            raise encord.exceptions.EncordException(
+                message="You must pass weights from the `encord.constants.model_weights` module to train a model."
+            )
 
-        if device is None:
-            raise encord.exceptions.EncordException(message="You must set a device (cuda or CPU) train a model.")
+        if isinstance(device, Device):
+            device = device.value
+
+        if device is None or not Device.has_value(device):  # Backward compatibility with string options
+            raise encord.exceptions.EncordException(
+                message="You must pass a device from the `from encord.constants.model.Device` Enum to train a model."
+            )
 
         training_params = ModelTrainingParams(
             {
@@ -926,13 +1052,16 @@ class EncordClientProject(EncordClient):
     def get_label_logs(
         self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
     ) -> List[LabelLog]:
+        """
+        This function is documented in :meth:`encord.project.Project.get_label_logs`.
+        """
 
         # Flag for backwards compatibility
         include_user_email_and_interface_key = True
 
         function_arguments = locals()
 
-        query_payload = {k: v for (k, v) in function_arguments.items() if k is not "self" and v is not None}
+        query_payload = {k: v for (k, v) in function_arguments.items() if k != "self" and v is not None}
 
         return self._querier.get_multiple(LabelLog, payload=query_payload)
 

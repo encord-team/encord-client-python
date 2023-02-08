@@ -41,7 +41,19 @@ class Dataset:
         dataset_instance = self._get_dataset_instance()
         return dataset_instance.storage_location
 
+    @property
+    def data_rows(self) -> List[DataRow]:
+        """
+        Part of the response of this function can be configured by the
+        :meth:`encord.dataset.Dataset.set_access_settings` method.
 
+        .. code::
+
+            dataset.set_access_settings(DatasetAccessSettings(fetch_client_metadata=True))
+            print(dataset.data_rows)
+        """
+        dataset_instance = self._get_dataset_instance()
+        return dataset_instance.data_rows
 
     def refetch_data(self) -> None:
         """

@@ -84,6 +84,7 @@ codeautolink_autodoc_inject = True
 
 
 # == THEME CONFIG SECTION == #
+html_favicon = '../_static/logo.svg'
 html_logo = "../_static/logo.svg"
 html_css_files = ["css/custom.css"]
 
@@ -108,7 +109,7 @@ sphinx_gallery_conf = {
     "examples_dirs": "code_examples/tutorials/end-to-end",
     "gallery_dirs": "tutorials/end-to-end",
     "default_thumb_file": "source/images/end-to-end-thumbs/default.png",
-    "line_numbers": True,
+    "line_numbers": False,
     "remove_config_comments": True,
     "min_reported_time": 10,
     "doc_module": ("encord",),

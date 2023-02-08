@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -35,8 +35,39 @@ class DatasetUserRole(IntEnum):
     USER = 1
 
 
+@dataclasses.dataclass(frozen=True)
+class DatasetUser(Formatter):
+    user_email: str
+    user_role: DatasetUserRole
+    dataset_hash: str
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict):
+        return DatasetUser(
+            user_email=json_dict["user_email"],
+            user_role=DatasetUserRole(json_dict["user_role"]),
+            dataset_hash=json_dict["dataset_hash"],
+        )
+
+
+class DatasetUsers:
+    pass
+
+
+@dataclasses.dataclass
+class DataClientMetadata:
+    payload: dict
+
+
 class DataRow(dict, Formatter):
-    def __init__(self, uid: str, title: str, data_type: DataType, created_at: datetime):
+    def __init__(
+        self,
+        uid: str,
+        title: str,
+        data_type: DataType,
+        created_at: datetime,
+        client_metadata: Optional[dict],
+    ):
         """
         This class has dict-style accessors for backwards compatibility.
         Clients who are using this class for the first time are encouraged to use the property accessors and setters
@@ -52,6 +83,7 @@ class DataRow(dict, Formatter):
                 "data_title": title,
                 "data_type": data_type.to_upper_case_string(),
                 "created_at": created_at.strftime(DATETIME_STRING_FORMAT),
+                "client_metadata": client_metadata,
             }
         )
 
@@ -88,6 +120,14 @@ class DataRow(dict, Formatter):
         """Datetime will trim milliseconds for backwards compatibility."""
         self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
+    @property
+    def client_metadata(self) -> Optional[dict]:
+        """
+        Custom client metadata. This is null if it is disabled via the
+        :class:`encord.orm.dataset.DatasetAccessSettings`
+        """
+        return self["client_metadata"]
+
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
         data_type = DataType.from_upper_case_string(json_dict["data_type"])
@@ -98,6 +138,7 @@ class DataRow(dict, Formatter):
             # The API server currently returns upper cased DataType strings.
             data_type=data_type,
             created_at=parser.parse(json_dict["created_at"]),
+            client_metadata=json_dict["client_metadata"],
         )
 
     @classmethod
@@ -463,6 +504,12 @@ class DicomSeries:
 
 
 @dataclasses.dataclass(frozen=True)
+class DicomDeidentifyTask:
+    dicom_urls: List[str]
+    integration_hash: str
+
+
+@dataclasses.dataclass(frozen=True)
 class ImageGroupOCR:
     processed_texts: Dict
 
@@ -493,3 +540,16 @@ class ReEncodeVideoTask(Formatter):
             return ReEncodeVideoTask(json_dict["status"], results)
         else:
             return ReEncodeVideoTask(json_dict["status"])
+
+
+@dataclasses.dataclass
+class DatasetAccessSettings:
+    """Settings for using the dataset object."""
+
+    fetch_client_metadata: bool
+    """Whether client metadata should be retrieved for each `data_row`."""
+
+
+DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
+    fetch_client_metadata=False,
+)
