@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
@@ -236,8 +236,11 @@ class LabelRowMetadata(Formatter):
     label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
     is_shadow_data: bool
-    duration: float
-    frames_per_second: int
+    number_of_frames: int
+    duration: Optional[float]
+    """Only available for the VIDEO data_type"""
+    frames_per_second: Optional[int]
+    """Only available for the VIDEO data_type"""
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -250,6 +253,7 @@ class LabelRowMetadata(Formatter):
             LabelStatus(json_dict["label_status"]),
             AnnotationTaskStatus(json_dict["annotation_task_status"]),
             json_dict.get("is_shadow_data", False),
+            number_of_frames=json_dict["number_of_frames"],
             duration=json_dict["duration"],
             frames_per_second=json_dict["frames_per_second"],
         )

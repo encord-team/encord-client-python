@@ -939,11 +939,12 @@ def test_frame_view():
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 25
     label_row_metadata_dict["duration"] = 0.2
+    label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
     label_row = LabelRowV2(label_row_metadata, Mock())
 
-    assert label_row.number_of_frames == label_row_metadata.duration * label_row_metadata.frames_per_second
+    assert label_row.number_of_frames == label_row_metadata.number_of_frames
 
     with pytest.raises(LabelRowError):
         frames = label_row.frames()
@@ -968,10 +969,6 @@ def test_frame_view():
         assert frame.frame == frame_num
         frame_num += 1
 
-    # DENIS: now this is not yet loaded.
-    # * either I lazy load here
-    # * or this is part of the LabelRowMetadata
-    # * can also be loaded in advance.
     assert frames[0].image_hash == "f850dfb4-7146-49e0-9afc-2b9434a64a9f"
     assert frames[0].image_title == "Screenshot 2021-11-24 at 18.35.57.png"
     assert frames[0].file_type == "image/png"

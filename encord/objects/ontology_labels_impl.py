@@ -1492,11 +1492,8 @@ class LabelRowV2:
 
     def to_encord_dict(self) -> dict:
         """
-        Client should never need to use this, but they can.
-
-        I think on download it is important to cache whatever we have, because of all the additional data.
-        Or the read only data actually already has all of the information anyways, and we parse it back
-        and forth every single time.
+        This is an internal helper function. Likely this should not be used by a user. To upload labels use the
+        `.upload_labels()` function.
         """
         self._check_labelling_is_initalised()
 
@@ -1758,12 +1755,6 @@ class LabelRowV2:
     def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowV2.LabelRowReadOnlyData:
         data_type = DataType.from_upper_case_string(label_row_metadata.data_type)
 
-        if data_type == DataType.VIDEO:
-            duration = label_row_metadata.duration
-            fps = label_row_metadata.frames_per_second
-        else:
-            duration = None
-            fps = None
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_metadata.label_hash,
             data_hash=label_row_metadata.data_hash,
@@ -1772,9 +1763,9 @@ class LabelRowV2:
             label_status=label_row_metadata.label_status,
             annotation_task_status=label_row_metadata.annotation_task_status,
             is_shadow_data=label_row_metadata.is_shadow_data,
-            duration=duration,
-            fps=fps,
-            number_of_frames=int(label_row_metadata.duration * label_row_metadata.frames_per_second),
+            duration=label_row_metadata.duration,
+            fps=label_row_metadata.frames_per_second,
+            number_of_frames=label_row_metadata.number_of_frames,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -1783,22 +1774,16 @@ class LabelRowV2:
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
         data_type = DataType(label_row_dict["data_type"])
 
-        duration = None
-        fps = None
         dicom_data_links = None
 
         if data_type == DataType.VIDEO:
             video_dict = list(label_row_dict["data_units"].values())[0]
-            duration = video_dict["data_duration"]
-            fps = video_dict["data_fps"]
-            number_of_frames = int(duration * fps)
             data_link = video_dict["data_link"]
             height = video_dict["height"]
             width = video_dict["width"]
 
         elif data_type == DataType.DICOM:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
-            number_of_frames = 0  # DENIS: I think this will not really fly for constructing labels.
             dicom_data_links = dicom_dict["data_links"]
             data_link = None
             height = dicom_dict["height"]
@@ -1806,7 +1791,6 @@ class LabelRowV2:
 
         elif data_type == DataType.IMAGE:
             image_dict = list(label_row_dict["data_units"].values())[0]
-            number_of_frames = 1
             data_link = image_dict["data_link"]
             height = image_dict["height"]
             width = image_dict["width"]
@@ -1833,9 +1817,9 @@ class LabelRowV2:
             frame_level_data=frame_level_data,
             image_hash_to_frame=image_hash_to_frame,
             frame_to_image_hash=frame_to_image_hash,
-            duration=duration,
-            fps=fps,
-            number_of_frames=number_of_frames,
+            duration=self.duration,
+            fps=self.fps,
+            number_of_frames=self.number_of_frames,
             data_link=data_link,
             height=height,
             width=width,
