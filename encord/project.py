@@ -153,7 +153,8 @@ class Project:
     ) -> List[LabelRowV2]:
         """
         Args:
-            self: Encord client object.
+            data_hashes: List of data hashes to filter by.
+            label_hashes: List of label hashes to filter by.
             edited_before: Optionally filter to only rows last edited before the specified time
             edited_after: Optionally filter to only rows last edited after the specified time
             label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es

@@ -14,6 +14,7 @@
 # under the License.
 from __future__ import annotations
 
+import datetime
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
@@ -171,6 +172,8 @@ class LabelRow(base_orm.BaseORM):
     DB_FIELDS = OrderedDict(
         [
             ("label_hash", str),
+            ("created_at", str),
+            ("last_edited_at", str),
             ("dataset_hash", str),
             ("dataset_title", str),
             ("data_title", str),
@@ -228,7 +231,13 @@ class LabelRowMetadata(Formatter):
     Contains helpful information about a LabelRowV2.
     """
 
-    label_hash: str
+    label_hash: Optional[str]
+    """Only present if the label row is initiated"""
+    created_at: Optional[datetime.datetime]
+    """Only present if the label row is initiated"""
+    last_edited_at: Optional[datetime.datetime]
+    """Only present if the label row is initiated"""
+
     data_hash: str
     dataset_hash: str
     data_title: str
@@ -244,15 +253,24 @@ class LabelRowMetadata(Formatter):
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
+        created_at = json_dict["created_at"]
+        if created_at is not None:
+            created_at = datetime.datetime.fromisoformat(created_at)
+        last_edited_at = json_dict["last_edited_at"]
+        if last_edited_at is not None:
+            last_edited_at = datetime.datetime.fromisoformat(last_edited_at)
+
         return LabelRowMetadata(
-            json_dict["label_hash"],
-            json_dict["data_hash"],
-            json_dict["dataset_hash"],
-            json_dict["data_title"],
-            json_dict["data_type"],
-            LabelStatus(json_dict["label_status"]),
-            AnnotationTaskStatus(json_dict["annotation_task_status"]),
-            json_dict.get("is_shadow_data", False),
+            label_hash=json_dict["label_hash"],
+            created_at=created_at,
+            last_edited_at=last_edited_at,
+            data_hash=json_dict["data_hash"],
+            dataset_hash=json_dict["dataset_hash"],
+            data_title=json_dict["data_title"],
+            data_type=json_dict["data_type"],
+            label_status=LabelStatus(json_dict["label_status"]),
+            annotation_task_status=AnnotationTaskStatus(json_dict["annotation_task_status"]),
+            is_shadow_data=json_dict.get("is_shadow_data", False),
             number_of_frames=json_dict["number_of_frames"],
             duration=json_dict["duration"],
             frames_per_second=json_dict["frames_per_second"],

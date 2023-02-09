@@ -12,6 +12,7 @@ from encord.orm.label_row import LabelRowMetadata
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data import (
     data_1,
+    empty_video,
     native_image_data,
     ontology_with_many_dynamic_classifications,
     video_with_dynamic_classifications,
@@ -163,3 +164,30 @@ def test_dynamic_classifications():
         video_with_dynamic_classifications.labels,
         exclude_regex_paths=["\['trackHash'\]"],
     )
+
+
+def test_uninitialised_label_row():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = 0.08
+    label_row_metadata_dict["frames_per_second"] = 25.0
+    label_row_metadata_dict["label_hash"] = None
+    label_row_metadata_dict["created_at"] = None
+    label_row_metadata_dict["last_edited_at"] = None
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock())
+
+    assert label_row.label_hash is None
+    assert label_row.created_at is None
+    assert label_row.last_edited_at is None
+    assert label_row.is_labelling_initialised is False
+
+    label_row.from_labels_dict(
+        empty_video.labels,
+        OntologyStructure.from_dict(all_ontology_types),
+    )
+
+    assert label_row.label_hash is not None
+    assert label_row.created_at is not None
+    assert label_row.last_edited_at is not None
+    assert label_row.is_labelling_initialised is True

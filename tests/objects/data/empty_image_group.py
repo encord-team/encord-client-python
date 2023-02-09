@@ -58,6 +58,8 @@ empty_image_group_ontology = {
 
 empty_image_group_labels = {
     "label_hash": "f1e6bc82-9f89-4545-8abb-f271bf28cf99",
+    "created_at": "2023-02-09 14:12:03",
+    "last_edited_at": "2023-02-09 14:12:03",
     "data_hash": "aaa6bc82-9f89-4545-adbb-f271bf28cf99",
     "annotation_task_status": "QUEUED",
     "is_shadow_data": False,

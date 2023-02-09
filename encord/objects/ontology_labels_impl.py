@@ -1033,12 +1033,18 @@ class LabelRowV2:
     class LabelRowReadOnlyData:
         label_hash: Optional[str]
         """This is None if the label row does not have any labels and was not initialised for labelling."""
+        created_at: Optional[datetime]
+        """This is None if the label row does not have any labels and was not initialised for labelling."""
+        last_edited_at: Optional[datetime]
+        """This is None if the label row does not have any labels and was not initialised for labelling."""
         data_hash: str
         data_type: DataType
         label_status: LabelStatus
         annotation_task_status: AnnotationTaskStatus
         is_shadow_data: bool
-        number_of_frames: Optional[int] = None  # DENIS: return this from BE, or get it from DataRow.
+        number_of_frames: Optional[
+            int
+        ] = None  # DENIS: return this from BE, or get it from DataRow. DENIS: remove the `None`
         dataset_hash: Optional[str] = None  # probably in DataRow
         dataset_title: Optional[str] = None  # probably in DataRow
         data_title: Optional[str] = None  # probably in DataRow
@@ -1113,6 +1119,16 @@ class LabelRowV2:
     @property
     def is_shadow_data(self) -> bool:
         return self._label_row_read_only_data.is_shadow_data
+
+    @property
+    def created_at(self) -> Optional[datetime]:
+        """The creation of the label row. None if the label row was not yet created."""
+        return self._label_row_read_only_data.created_at
+
+    @property
+    def last_edited_at(self) -> Optional[datetime]:
+        """The time the label row was updated last as a whole. None if the label row was not yet created."""
+        return self._label_row_read_only_data.last_edited_at
 
     # START: fields that are not returned right now from the get label row.
     @property
@@ -1501,6 +1517,8 @@ class LabelRowV2:
         read_only_data = self._label_row_read_only_data
 
         ret["label_hash"] = read_only_data.label_hash
+        ret["created_at"] = read_only_data.created_at
+        ret["last_edited_at"] = read_only_data.last_edited_at
         ret["data_hash"] = read_only_data.data_hash
         ret["dataset_hash"] = read_only_data.dataset_hash
         ret["dataset_title"] = read_only_data.dataset_title
@@ -1763,6 +1781,8 @@ class LabelRowV2:
             label_status=label_row_metadata.label_status,
             annotation_task_status=label_row_metadata.annotation_task_status,
             is_shadow_data=label_row_metadata.is_shadow_data,
+            created_at=label_row_metadata.created_at,
+            last_edited_at=label_row_metadata.last_edited_at,
             duration=label_row_metadata.duration,
             fps=label_row_metadata.frames_per_second,
             number_of_frames=label_row_metadata.number_of_frames,
@@ -1814,6 +1834,8 @@ class LabelRowV2:
             label_status=LabelStatus(label_row_dict["label_status"]),
             annotation_task_status=label_row_dict["annotation_task_status"],
             is_shadow_data=self.is_shadow_data,
+            created_at=label_row_dict["created_at"],
+            last_edited_at=label_row_dict["last_edited_at"],
             frame_level_data=frame_level_data,
             image_hash_to_frame=image_hash_to_frame,
             frame_to_image_hash=frame_to_image_hash,

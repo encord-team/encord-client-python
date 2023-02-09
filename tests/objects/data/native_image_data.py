@@ -1,5 +1,7 @@
 labels = {
     "label_hash": "66454013-7382-4418-a9ca-41c089d8997f",
+    "created_at": "2023-02-09 14:12:03",
+    "last_edited_at": "2023-02-09 14:12:03",
     "data_hash": "aaa6bc82-9f89-4545-adbb-f271bf28cf99",
     "annotation_task_status": "QUEUED",
     "is_shadow_data": False,

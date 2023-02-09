@@ -1,8 +1,12 @@
+import datetime
+
 from encord.objects.constants import LabelStatus
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata
 
 FAKE_LABEL_ROW_METADATA = LabelRowMetadata(
     label_hash="",
+    created_at=datetime.datetime.now(),
+    last_edited_at=datetime.datetime.now(),
     data_hash="",
     dataset_hash="",
     data_title="",

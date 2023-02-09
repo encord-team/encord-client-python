@@ -1,5 +1,7 @@
 dicom_labels = {
     "label_hash": "0aea5ac7-cbc0-4451-a242-e22445d2c9fa",
+    "created_at": "2023-02-09 14:12:03",
+    "last_edited_at": "2023-02-09 14:12:03",
     "data_hash": "aaa6bc82-9f89-4545-adbb-f271bf28cf99",
     "annotation_task_status": "QUEUED",
     "is_shadow_data": False,

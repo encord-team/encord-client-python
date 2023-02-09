@@ -30,11 +30,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 PROJECT_RESOURCE_ID = "6ced337c-4330-42b1-b44d-4b367284b30f"  # Third Project - local dev
-PROJECT_RESOURCE_ID = "4ab65a47-293f-4cab-93f5-1ff5ca67038d"  # Project with one single image annotated - local dev
-PROJECT_RESOURCE_ID = (
-    "0db22af4-03eb-448d-92ab-3697c319334c"  # project for DICOM dataset with dynamic classifications - local dev
-)
-PROJECT_RESOURCE_ID = "efbe39ee-d8c5-4bb0-baee-48c7aaed02ec"  # Project with 3 native images in image group and dynamic classifications - local dev
+# PROJECT_RESOURCE_ID = "4ab65a47-293f-4cab-93f5-1ff5ca67038d"  # Project with one single image annotated - local dev
+# PROJECT_RESOURCE_ID = (
+#     "0db22af4-03eb-448d-92ab-3697c319334c"  # project for DICOM dataset with dynamic classifications - local dev
+# )
+# PROJECT_RESOURCE_ID = "efbe39ee-d8c5-4bb0-baee-48c7aaed02ec"  # Project with 3 native images in image group and dynamic classifications - local dev
 
 
 def get_user_client() -> EncordUserClient:
@@ -69,26 +69,32 @@ def get_project_ssh() -> Project:
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="Manual tests are disabled")
 def test_label_structure_manual_v2():
     project = get_project_ssh()
-    for label_row in project.list_label_rows_v2():
-        label_row.initialise_labelling()
-        labels_1 = label_row.to_encord_dict()
+    label_rows = project.list_label_rows_v2()
+    print("got label rows")
+    label_rows[0].initialise_labelling()
+    print(label_rows[0].to_encord_dict())
+    # DENIS: after initialising, the created_at and last_edited_at date is not updated.
 
-        ontology = label_row.ontology_structure
-        box_object = ontology.get_items_by_title("box")[0]
-        box_instance = box_object.create_instance()
-        box_instance.set_for_frame(
-            BoundingBoxCoordinates(
-                height=5,
-                width=6,
-                top_left_x=2,
-                top_left_y=3,
-            ),
-            1,
-        )
+    # for label_row in label_rows:
+    #     label_row.initialise_labelling()
+    #     labels_1 = label_row.to_encord_dict()
+    #
+    #     ontology = label_row.ontology_structure
+    #     box_object = ontology.get_items_by_title("box")[0]
+    #     box_instance = box_object.create_instance()
+    #     box_instance.set_for_frame(
+    #         BoundingBoxCoordinates(
+    #             height=5,
+    #             width=6,
+    #             top_left_x=2,
+    #             top_left_y=3,
+    #         ),
+    #         1,
+    #     )
+    #
+    #     label_row.add_object(box_instance)
+    #     label_row.upload_labels()
 
-        label_row.add_object(box_instance)
-        label_row.upload_labels()
-
-        # label_row.initialise_labelling()
-        # labels_2 = label_row.to_encord_dict()
-        # assert labels_1 == labels_2
+    # label_row.initialise_labelling()
+    # labels_2 = label_row.to_encord_dict()
+    # assert labels_1 == labels_2
