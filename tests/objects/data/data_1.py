@@ -1,5 +1,8 @@
 labels = {
     "label_hash": "1b4398aa-1d4d-4873-8470-2ac9fa373ac0",
+    "data_hash": "aaa6bc82-9f89-4545-adbb-f271bf28cf99",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
     "dataset_hash": "d947e847-88c8-4762-aee5-53dc7eeab852",
     "dataset_title": "Tracking bug dataset",
     "data_title": "failing_video_new.mp4",

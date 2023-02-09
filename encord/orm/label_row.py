@@ -236,6 +236,8 @@ class LabelRowMetadata(Formatter):
     label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
     is_shadow_data: bool
+    duration: float
+    frames_per_second: int
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -248,6 +250,8 @@ class LabelRowMetadata(Formatter):
             LabelStatus(json_dict["label_status"]),
             AnnotationTaskStatus(json_dict["annotation_task_status"]),
             json_dict.get("is_shadow_data", False),
+            duration=json_dict["duration"],
+            frames_per_second=json_dict["frames_per_second"],
         )
 
     @classmethod

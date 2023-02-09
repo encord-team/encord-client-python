@@ -58,6 +58,9 @@ empty_image_group_ontology = {
 
 empty_image_group_labels = {
     "label_hash": "f1e6bc82-9f89-4545-8abb-f271bf28cf99",
+    "data_hash": "aaa6bc82-9f89-4545-adbb-f271bf28cf99",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
     "dataset_hash": "d9f19c3c-5cd0-4f8c-b98c-6c0e24676224",
     "dataset_title": "One image group",
     "data_title": "image-group-8375e",

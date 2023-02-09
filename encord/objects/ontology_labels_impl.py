@@ -1027,7 +1027,9 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class LabelRowReadOnlyData:
-        label_hash: str
+        label_hash: Optional[str]
+        """This is None if the label row does not have any labels and was not initialised for labelling."""
+        data_hash: str
         data_type: DataType
         label_status: LabelStatus
         annotation_task_status: AnnotationTaskStatus
@@ -1035,7 +1037,6 @@ class LabelRowV2:
         number_of_frames: Optional[int] = None  # DENIS: return this from BE, or get it from DataRow.
         dataset_hash: Optional[str] = None  # probably in DataRow
         dataset_title: Optional[str] = None  # probably in DataRow
-        data_hash: Optional[str] = None  # DENIS: this is needed
         data_title: Optional[str] = None  # probably in DataRow
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
@@ -1061,6 +1062,8 @@ class LabelRowV2:
             label_row_metadata
         )
 
+        self._is_labelling_initialised = False
+
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
 
@@ -1072,8 +1075,12 @@ class LabelRowV2:
         # at least at the final objects_index/classifications_index level.
 
     @property
-    def label_hash(self) -> str:
+    def label_hash(self) -> Optional[str]:
         return self._label_row_read_only_data.label_hash
+
+    @property
+    def data_hash(self) -> str:
+        return self._label_row_read_only_data.data_hash
 
     @property
     def dataset_hash(self) -> str:
@@ -1141,17 +1148,28 @@ class LabelRowV2:
 
     # END: fields that are not returned right now from the get label row.
 
-    def fetch_labels(
+    @property
+    def is_labelling_initialised(self) -> bool:
+        """
+        Whether you can start labelling or not. If this is `False`, call the member `.initialise_labelling()` to
+        read or write specific ObjectInstances or ClassificationInstances.
+        """
+        return self._is_labelling_initialised
+
+    def initialise_labelling(
         self,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
     ) -> None:
         """
-        Fetch the labels that are currently stored in the Encord server. If the label was not yet in progress, this will
-        set the label status to "IN_PROGRESS". DENIS: proper link
+        Call this function to start reading or writing labels. This will fetch the labels that are currently stored
+        in the Encord server. If the label was not yet in progress, this will set the label status to
+        "IN_PROGRESS". DENIS: proper link
 
-        Calling this function will reset all the labels that are currently stored within this class.
+        You can call this function at any point to overwrite the current labels stored in this class with the most
+        up to date labels stored in the Encord servers. This would only matter if you manipulate the labels while
+        someone else is working on the labels as well.
 
         Args:
             include_object_feature_hashes: If None all the objects will be included. Otherwise, only objects labels
@@ -1164,33 +1182,38 @@ class LabelRowV2:
             self._refresh_ontology_structure()
 
         get_signed_url = False
-        label_row_dict = self._project_client.get_label_row(
-            uid=self.label_hash,
-            get_signed_url=get_signed_url,
-            include_object_feature_hashes=include_object_feature_hashes,
-            include_classification_feature_hashes=include_classification_feature_hashes,
-            include_reviews=include_reviews,
-        )
+        if self.label_hash is None:
+            label_row_dict = self._project_client.create_label_row(self.data_hash)
+        else:
+            label_row_dict = self._project_client.get_label_row(
+                uid=self.label_hash,
+                get_signed_url=get_signed_url,
+                include_object_feature_hashes=include_object_feature_hashes,
+                include_classification_feature_hashes=include_classification_feature_hashes,
+                include_reviews=include_reviews,
+            )
 
         self.from_labels_dict(label_row_dict)
 
-    def _refresh_ontology_structure(self):
-        ontology_hash = self._project_client.get_project()["ontology_hash"]
-        ontology = self._querier.basic_getter(Ontology, ontology_hash)
-        self._ontology_structure = ontology.structure
-
-    def from_labels_dict(self, label_row_dict: dict) -> None:
+    def from_labels_dict(self, label_row_dict: dict, ontology_structure: Optional[OntologyStructure] = None) -> None:
         """
         If you have a label row dictionary in the same format that the Encord servers produce, you can initialise the
-        LabelRow from that directly. In most cases you should prefer using the `fetch_labels` method.
+        LabelRow from that directly. In most cases you should prefer using the `initialise_labelling` method.
+
+        This function also initialises the label row.
 
         Calling this function will reset all the labels that are currently stored within this class.
 
         Args:
             label_row_dict: The dictionary of all labels as expected by the Encord format.
         """
+        if ontology_structure is not None:
+            self._ontology_structure = ontology_structure
+
         if self._ontology_structure is None:
             self._refresh_ontology_structure()
+
+        self._is_labelling_initialised = True
 
         self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
         self._frame_to_hashes = defaultdict(set)
@@ -1207,6 +1230,8 @@ class LabelRowV2:
         Get the corresponding image hash of the frame number. Return `None` if the frame number is out of bounds.
         Raise an error if this function is used for non-image data types.
         """
+        self._check_labelling_is_initalised()
+
         if self.data_type not in (DataType.IMAGE, DataType.IMG_GROUP):
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
 
@@ -1218,6 +1243,8 @@ class LabelRowV2:
         associated frame number.
         Raise an error if this function is used for non-image data types.
         """
+        self._check_labelling_is_initalised()
+
         if self.data_type not in (DataType.IMAGE, DataType.IMG_GROUP):
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
@@ -1225,6 +1252,7 @@ class LabelRowV2:
     def upload(self):
         """Do the client request"""
         # Can probably just use the set label row here.
+        # DENIS: todo
         pass
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
@@ -1233,6 +1261,7 @@ class LabelRowV2:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
+        self._check_labelling_is_initalised()
         if isinstance(frame, str):
             frame = self.get_frame_number(frame)
         return self.FrameView(self, self._label_row_read_only_data, frame)
@@ -1241,22 +1270,15 @@ class LabelRowV2:
         """
         Returns:
             A list of frame views in order of available frames.
+
+        Raises:
+            LabelRowError: If the LabelRowV2 is not initialised via the `initialise_labelling` member.
         """
+        self._check_labelling_is_initalised()
         ret = []
         for frame in range(self.number_of_frames):
             ret.append(self.get_frame_view(frame))
         return ret
-
-    def refresh(self, *, get_signed_urls: bool = False, force: bool = False) -> bool:
-        """
-        Grab the labels from the server. Return False if the labels have been changed in the meantime.
-
-        Args:
-            force:
-                If `False`, it will not do the refresh if something has changed on the server.
-                If `True`, it will always overwrite the local changes with what has happened on the server.
-        """
-        # Actually can probably use the get_label_row() here.
 
     def get_objects(
         self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
@@ -1271,6 +1293,8 @@ class LabelRowV2:
         Returns:
             All the `ObjectInstance`s that match the filter.
         """
+        self._check_labelling_is_initalised()
+
         ret: List[ObjectInstance] = list()
 
         if filter_frames is not None:
@@ -1309,6 +1333,8 @@ class LabelRowV2:
         Args:
             force: overwrites current objects, otherwise this will replace the current object.
         """
+        self._check_labelling_is_initalised()
+
         if not object_instance.is_valid():
             raise LabelRowError("The supplied ObjectInstance is not in a valid format.")
 
@@ -1333,6 +1359,8 @@ class LabelRowV2:
         self._add_to_frame_to_hashes_map(object_instance)
 
     def add_classification(self, classification_instance: ClassificationInstance, force: bool = False):
+        self._check_labelling_is_initalised()
+
         if not classification_instance.is_valid():
             raise LabelRowError("The supplied ClassificationInstance is not in a valid format.")
 
@@ -1371,6 +1399,8 @@ class LabelRowV2:
         self._add_to_frame_to_hashes_map(classification_instance)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
+        self._check_labelling_is_initalised()
+
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
         all_frames = self._classifications_to_frames[classification_instance.ontology_item]
@@ -1382,6 +1412,8 @@ class LabelRowV2:
         self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
     ) -> None:
         """This is an internal function, it is not meant to be called by the SDK user."""
+        self._check_labelling_is_initalised()
+
         if isinstance(label_item, ObjectInstance):
             self._frame_to_hashes[frame].add(label_item.object_hash)
         elif isinstance(label_item, ClassificationInstance):
@@ -1402,6 +1434,8 @@ class LabelRowV2:
         Returns:
             All the `ObjectInstance`s that match the filter.
         """
+        self._check_labelling_is_initalised()
+
         ret: List[ClassificationInstance] = list()
 
         if filter_frames is not None:
@@ -1434,6 +1468,8 @@ class LabelRowV2:
 
     def remove_object(self, object_instance: ObjectInstance):
         """Remove the object."""
+        self._check_labelling_is_initalised()
+
         self._objects_map.pop(object_instance.object_hash)
         self._remove_from_frame_to_hashes_map(object_instance.frames(), object_instance.object_hash)
         object_instance._parent = None
@@ -1446,14 +1482,19 @@ class LabelRowV2:
         Or the read only data actually already has all of the information anyways, and we parse it back
         and forth every single time.
         """
+        self._check_labelling_is_initalised()
+
         ret = {}
         read_only_data = self._label_row_read_only_data
 
         ret["label_hash"] = read_only_data.label_hash
+        ret["data_hash"] = read_only_data.data_hash
         ret["dataset_hash"] = read_only_data.dataset_hash
         ret["dataset_title"] = read_only_data.dataset_title
         ret["data_title"] = read_only_data.data_title
         ret["data_type"] = read_only_data.data_type.value
+        ret["annotation_task_status"] = read_only_data.annotation_task_status
+        ret["is_shadow_data"] = read_only_data.is_shadow_data
         ret["object_answers"] = self._to_object_answers()
         ret["classification_answers"] = self._to_classification_answers()
         ret["object_actions"] = self._to_object_actions()
@@ -1461,6 +1502,11 @@ class LabelRowV2:
         ret["data_units"] = self._to_encord_data_units()
 
         return ret
+
+    def _refresh_ontology_structure(self):
+        ontology_hash = self._project_client.get_project()["ontology_hash"]
+        ontology = self._querier.basic_getter(Ontology, ontology_hash)
+        self._ontology_structure = ontology.structure
 
     def _to_object_answers(self) -> dict:
         ret = {}
@@ -1694,13 +1740,25 @@ class LabelRowV2:
             self._frame_to_hashes[frame].remove(item_hash)
 
     def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowV2.LabelRowReadOnlyData:
+        data_type = DataType.from_upper_case_string(label_row_metadata.data_type)
+
+        if data_type == DataType.VIDEO:
+            duration = label_row_metadata.duration
+            fps = label_row_metadata.frames_per_second
+        else:
+            duration = None
+            fps = None
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_metadata.label_hash,
+            data_hash=label_row_metadata.data_hash,
             dataset_hash=label_row_metadata.dataset_hash,
-            data_type=DataType.from_upper_case_string(label_row_metadata.data_type),
+            data_type=data_type,
             label_status=label_row_metadata.label_status,
             annotation_task_status=label_row_metadata.annotation_task_status,
             is_shadow_data=label_row_metadata.is_shadow_data,
+            duration=duration,
+            fps=fps,
+            number_of_frames=int(label_row_metadata.duration * label_row_metadata.frames_per_second),
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -1724,7 +1782,7 @@ class LabelRowV2:
 
         elif data_type == DataType.DICOM:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
-            number_of_frames = 0
+            number_of_frames = 0  # DENIS: I think this will not really fly for constructing labels.
             dicom_data_links = dicom_dict["data_links"]
             data_link = None
             height = dicom_dict["height"]
@@ -1915,6 +1973,13 @@ class LabelRowV2:
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
 
         classification_instance.set_for_frame([frame], **asdict(frame_view))
+
+    def _check_labelling_is_initalised(self):
+        if not self.is_labelling_initialised:
+            raise LabelRowError(
+                "For this operation you will need to initialise labelling first. Call the `.initialise_labelling()` "
+                "to do so first."
+            )
 
     def __repr__(self) -> str:
         return f"LabelRowData(label_hash={self.label_hash}, data_title={self.data_title})"

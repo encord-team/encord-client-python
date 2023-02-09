@@ -1,5 +1,8 @@
 labels = {
     "label_hash": "66454013-7382-4418-a9ca-41c089d8997f",
+    "data_hash": "aaa6bc82-9f89-4545-adbb-f271bf28cf99",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
     "dataset_hash": "77f9c59a-89d3-4635-a20e-5da9a01d5138",
     "dataset_title": "Dataset with one single image annotated",
     "data_title": "rousseau_2.jpg",

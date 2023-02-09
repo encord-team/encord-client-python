@@ -1,5 +1,8 @@
 dicom_labels = {
     "label_hash": "0aea5ac7-cbc0-4451-a242-e22445d2c9fa",
+    "data_hash": "aaa6bc82-9f89-4545-adbb-f271bf28cf99",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
     "dataset_hash": "b02ba3d9-883b-4c5e-ba09-751072ccfc57",
     "dataset_title": "DICOM dataset",
     "data_title": "cd53",

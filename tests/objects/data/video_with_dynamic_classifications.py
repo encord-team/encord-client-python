@@ -1,5 +1,8 @@
 labels = {
     "label_hash": "003959e1-a63f-4e08-9f3c-916d1e807ed6",
+    "data_hash": "aaa6bc82-9f89-4545-adbb-f271bf28cf99",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
     "dataset_hash": "b0d93919-a5e8-4418-8dd5-2c51e3977de8",
     "dataset_title": "Dataset with 2 frame video",
     "data_title": "two-frame-video.mp4",

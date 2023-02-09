@@ -2,10 +2,12 @@
 All tests regarding converting from and to Encord dict to the label row.
 """
 from typing import List, Union
+from unittest.mock import Mock
 
 from deepdiff import DeepDiff
 
-from encord.objects.ontology_labels_impl import LabelRowV2
+from encord.objects.ontology_labels_impl import LabelRowV2, OntologyStructure
+from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data import (
     data_1,
     native_image_data,
@@ -40,12 +42,14 @@ def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], e
 
 
 def test_serialise_image_group_with_classifications():
-    label_row = LabelRowV2(empty_image_group_labels, empty_image_group_ontology)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(empty_image_group_labels, OntologyStructure.from_dict(empty_image_group_ontology))
 
     actual = label_row.to_encord_dict()
     assert empty_image_group_labels == actual
 
-    label_row = LabelRowV2(image_group_labels, image_group_ontology)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(image_group_labels, OntologyStructure.from_dict(image_group_ontology))
 
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
@@ -58,7 +62,8 @@ def test_serialise_image_group_with_classifications():
 
 
 def test_serialise_video():
-    label_row = LabelRowV2(data_1.labels, data_1.ontology)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(data_1.labels, OntologyStructure.from_dict(data_1.ontology))
 
     # TODO: also check at this point whether the internal data is correct.
 
@@ -71,7 +76,8 @@ def test_serialise_video():
 
 
 def test_serialise_image_with_object_answers():
-    label_row = LabelRowV2(native_image_data.labels, all_ontology_types)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(native_image_data.labels, OntologyStructure.from_dict(all_ontology_types))
 
     actual = label_row.to_encord_dict()
 
@@ -84,7 +90,8 @@ def test_serialise_image_with_object_answers():
 
 
 def test_serialise_dicom_with_dynamic_classifications():
-    label_row = LabelRowV2(dicom_labels, dynamic_classifications_ontology)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(dicom_labels, OntologyStructure.from_dict(dynamic_classifications_ontology))
 
     assert label_row.data_link is None
     assert label_row.height == 256
@@ -104,8 +111,10 @@ def test_serialise_dicom_with_dynamic_classifications():
 
 
 def test_dynamic_classifications():
-    label_row = LabelRowV2(
-        video_with_dynamic_classifications.labels, ontology_with_many_dynamic_classifications.ontology
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(
+        video_with_dynamic_classifications.labels,
+        OntologyStructure.from_dict(ontology_with_many_dynamic_classifications.ontology),
     )
 
     actual = label_row.to_encord_dict()

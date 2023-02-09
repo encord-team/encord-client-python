@@ -1,4 +1,5 @@
 import datetime
+from dataclasses import asdict
 from unittest.mock import Mock
 
 import pytest
@@ -24,7 +25,8 @@ from encord.objects.coordinates import (
     PolygonCoordinates,
 )
 from encord.objects.utils import Range
-from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata
+from encord.orm.label_row import LabelRowMetadata
+from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels
 
@@ -88,16 +90,6 @@ POLYGON_COORDINATES = PolygonCoordinates(
 
 KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
 
-FAKE_LABEL_ROW_METADATA = LabelRowMetadata(
-    label_hash="",
-    data_hash="",
-    dataset_hash="",
-    data_title="",
-    data_type="IMG_GROUP",
-    label_status=LabelStatus.NOT_LABELLED,
-    annotation_task_status=AnnotationTaskStatus.QUEUED,
-    is_shadow_data=False,
-)
 
 # =======================================================
 # =========== demonstrative tests below here ============
@@ -216,13 +208,19 @@ def test_create_object_instance_one_coordinate():
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
     label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
 
+    with pytest.raises(LabelRowError):
+        label_row.get_classifications()
+
+    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
     assert label_row.get_classifications() == []
     assert label_row.get_objects() == []
     # TODO: do more assertions
 
 
 def test_add_object_instance_to_label_row():
-    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+
     object_instance = ObjectInstance(box_ontology_item)
 
     coordinates = BoundingBoxCoordinates(
@@ -238,7 +236,8 @@ def test_add_object_instance_to_label_row():
 
 
 def test_add_remove_access_object_instances_in_label_row():
-    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
 
     object_instance_1 = ObjectInstance(box_ontology_item)
     object_instance_2 = ObjectInstance(box_ontology_item)
@@ -275,7 +274,9 @@ def test_add_remove_access_object_instances_in_label_row():
 
 
 def test_filter_for_objects():
-    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
 
@@ -324,7 +325,9 @@ def test_add_wrong_coordinates():
 
 
 def test_get_object_instances_by_frames():
-    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
 
@@ -361,8 +364,12 @@ def test_get_object_instances_by_frames():
 
 
 def test_adding_object_instance_to_multiple_frames_fails():
-    label_row_1 = LabelRowV2(empty_image_group_labels, all_types_structure)
-    label_row_2 = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row_1 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row_1.from_labels_dict(empty_image_group_labels, all_types_structure)
+
+    label_row_2 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row_2.from_labels_dict(empty_image_group_labels, all_types_structure)
+
     label_box = ObjectInstance(box_ontology_item)
 
     label_box.set_for_frame(BOX_COORDINATES, 1)
@@ -470,7 +477,9 @@ def test_update_remove_object_instance_coordinates():
 
 
 def test_removing_coordinates_from_object_removes_it_from_parent():
-    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+
     label_box = ObjectInstance(box_ontology_item)
     label_box.set_for_frame(BOX_COORDINATES, 1)
     label_box.set_for_frame(BOX_COORDINATES, 2)
@@ -617,7 +626,9 @@ def test_classification_instances_frame_view():
 
 
 def test_add_and_get_classification_instances_to_label_row():
-    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+
     classification_instance_1 = ClassificationInstance(text_classification)
     classification_instance_2 = ClassificationInstance(text_classification)
     classification_instance_3 = ClassificationInstance(checklist_classification)
@@ -925,10 +936,21 @@ def test_label_status_forwards_compatibility():
 
 
 def test_frame_view():
-    label_row = LabelRowV2(empty_image_group_labels, all_types_structure)
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 25
+    label_row_metadata_dict["duration"] = 0.2
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock())
+
+    assert label_row.number_of_frames == label_row_metadata.duration * label_row_metadata.frames_per_second
+
+    with pytest.raises(LabelRowError):
+        frames = label_row.frames()
+
+    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)  # initialise the labels.
 
     frame_view: LabelRowV2.FrameView = label_row.get_frame_view(1)
-
     assert frame_view.get_objects() == []
     assert frame_view.get_classifications() == []
 
@@ -939,13 +961,17 @@ def test_frame_view():
     frame_view.add_classification(classification_instance)
 
     frames = label_row.frames()
-    assert len(frames) == 5
+    assert len(frames) == label_row_metadata.duration * label_row_metadata.frames_per_second
 
     frame_num = 0
     for frame in label_row.frames():
         assert frame.frame == frame_num
         frame_num += 1
 
+    # DENIS: now this is not yet loaded.
+    # * either I lazy load here
+    # * or this is part of the LabelRowMetadata
+    # * can also be loaded in advance.
     assert frames[0].image_hash == "f850dfb4-7146-49e0-9afc-2b9434a64a9f"
     assert frames[0].image_title == "Screenshot 2021-11-24 at 18.35.57.png"
     assert frames[0].file_type == "image/png"

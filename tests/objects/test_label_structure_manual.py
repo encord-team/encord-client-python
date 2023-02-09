@@ -10,7 +10,7 @@ import pytest
 from encord import EncordUserClient, Project
 from encord.configs import ENCORD_DOMAIN
 
-ENABLE_MANUAL_TESTS = True
+ENABLE_MANUAL_TESTS = False
 
 
 LOCAL_DOMAIN = "http://127.0.0.1:8000"
@@ -53,16 +53,16 @@ def get_project_ssh() -> Project:
     return cord_user_client.get_project(PROJECT_RESOURCE_ID)
 
 
-@pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="Manual tests are disabled")
-def test_label_structure_manual_v1():
-    project = get_project_ssh()
-    for label_row in project.label_rows:
-        label_hash = label_row["label_hash"]
-        # if label_hash is not None and label_row["data_title"] == "failing_video_new.mp4":
-        if label_hash is not None and label_row["data_title"] == "two-frame-video.mp4":
-            label_structure = project.get_label_row_class(label_hash)
-            print(label_structure)
-            break
+# @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="Manual tests are disabled")
+# def test_label_structure_manual_v1():
+#     project = get_project_ssh()
+#     for label_row in project.label_rows:
+#         label_hash = label_row["label_hash"]
+#         # if label_hash is not None and label_row["data_title"] == "failing_video_new.mp4":
+#         if label_hash is not None and label_row["data_title"] == "two-frame-video.mp4":
+#             label_structure = project.get_label_row_class(label_hash)
+#             print(label_structure)
+#             break
 
 
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="Manual tests are disabled")
@@ -70,4 +70,4 @@ def test_label_structure_manual_v2():
     project = get_project_ssh()
     for label_row in project.list_label_rows_v2():
         print(label_row)
-        label_row.fetch_labels()
+        label_row.initialise_labelling()
