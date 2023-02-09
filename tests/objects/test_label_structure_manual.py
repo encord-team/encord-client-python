@@ -69,11 +69,11 @@ def get_project_ssh() -> Project:
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="Manual tests are disabled")
 def test_label_structure_manual_v2():
     project = get_project_ssh()
-    label_rows = project.list_label_rows_v2()
+    label_rows = project.list_label_rows_v2(label_hashes=["28f0e9d2-51e0-459d-8ffa-2e214da653a9"])
     print("got label rows")
+    print(len(label_rows))
     label_rows[0].initialise_labelling()
     print(label_rows[0].to_encord_dict())
-    # DENIS: after initialising, the created_at and last_edited_at date is not updated.
 
     # for label_row in label_rows:
     #     label_row.initialise_labelling()

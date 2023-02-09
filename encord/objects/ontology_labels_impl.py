@@ -97,7 +97,6 @@ class Object:
 
     def create_instance(self) -> ObjectInstance:
         """Create a :class:`encord.objects.ObjectInstance` to be used with a label row."""
-        # DENIS: do I want to pass sth to create the first parameters.
         return ObjectInstance(self)
 
     @overload

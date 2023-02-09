@@ -143,7 +143,6 @@ class Project:
 
     def list_label_rows_v2(
         self,
-        # DENIS: implement these.
         data_hashes: Optional[List[str]] = None,
         label_hashes: Optional[List[str]] = None,
         edited_before: Optional[Union[str, datetime.datetime]] = None,
@@ -163,12 +162,13 @@ class Project:
         Returns:
             A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows
         """
-        """
-        Fetch the label rows according to the filters, then translate to "empty" LabelRowV2. 
-        Then user can do .fetch_labels() to get all the labels with filters.
-        """
         label_row_metadatas = self._client.list_label_rows(
-            edited_before, edited_after, label_statuses, shadow_data_state
+            edited_before,
+            edited_after,
+            label_statuses,
+            shadow_data_state,
+            data_hashes=data_hashes,
+            label_hashes=label_hashes,
         )
 
         label_rows = [LabelRowV2(label_row_metadata, self._client) for label_row_metadata in label_row_metadatas]
@@ -648,6 +648,8 @@ class Project:
         edited_after: Optional[Union[str, datetime.datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
+        data_hashes: Optional[List[str]] = None,
+        label_hashes: Optional[List[str]] = None,
     ) -> List[LabelRowMetadata]:
         """
         DEPRECATED - use `list_label_rows_v2` to manage label rows instead.
@@ -658,6 +660,8 @@ class Project:
             edited_after: Optionally filter to only rows last edited after the specified time
             label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
             shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
+            data_hashes: List of data hashes to filter by.
+            label_hashes: List of label hashes to filter by.
 
         Returns:
             A list of :class:`~encord.orm.label_row.LabelRowMetadata` instances for all the matching label rows
@@ -666,7 +670,9 @@ class Project:
             AuthorisationError: If not a member of the project.
             UnknownError: If an error occurs while retrieving the data.
         """
-        return self._client.list_label_rows(edited_before, edited_after, label_statuses, shadow_data_state)
+        return self._client.list_label_rows(
+            edited_before, edited_after, label_statuses, shadow_data_state, data_hashes, label_hashes
+        )
 
     def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
         """
