@@ -70,7 +70,6 @@ def get_project_ssh() -> Project:
 def test_label_structure_manual_v2():
     project = get_project_ssh()
     for label_row in project.list_label_rows_v2():
-        print(label_row)
         label_row.initialise_labelling()
         labels_1 = label_row.to_encord_dict()
 

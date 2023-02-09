@@ -781,7 +781,7 @@ class ClassificationInstance:
 
     def copy(self) -> ClassificationInstance:
         """
-        Creates an exact copy of this ClassificationINstance but with a new classification hash and without being
+        Creates an exact copy of this ClassificationInstance but with a new classification hash and without being
         associated to any LabelRowV2. This is useful if you want to add the semantically same
         ClassificationInstance to multiple `LabelRowV2`s.
         """
@@ -855,7 +855,11 @@ class ClassificationInstance:
             )
 
     def __repr__(self):
-        return f"ClassificationInstance({self.classification_hash})"
+        return (
+            f"ClassificationInstance(classification_hash={self.classification_hash}, "
+            f"classification_name={self._ontology_classification.attributes[0].name}, "
+            f"object_feature_hash={self._ontology_classification.feature_node_hash})"
+        )
 
 
 class LabelRowV2:
@@ -1994,7 +1998,7 @@ class LabelRowV2:
             )
 
     def __repr__(self) -> str:
-        return f"LabelRowData(label_hash={self.label_hash}, data_title={self.data_title})"
+        return f"LabelRowV2(label_hash={self.label_hash}, data_hash={self.data_hash}, data_title={self.data_title})"
 
 
 @dataclass
@@ -2606,7 +2610,10 @@ class ObjectInstance:
         return self._dynamic_answer_manager.get_all_answers()
 
     def __repr__(self):
-        return f"ObjectInstance({self._object_hash})"
+        return (
+            f"ObjectInstance(object_hash={self._object_hash}, object_name={self._ontology_object.name}, "
+            f"object_feature_hash={self._ontology_object.feature_node_hash})"
+        )
 
 
 class DynamicAnswerManager:
