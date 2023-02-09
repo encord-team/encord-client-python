@@ -148,7 +148,7 @@ class Object:
         """
         found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
         if found_item is None:
-            raise RuntimeError("Item not found.")  # DENIS: change these error types?
+            raise RuntimeError("Item not found.")
         check_type(found_item, type_)
         return found_item
 

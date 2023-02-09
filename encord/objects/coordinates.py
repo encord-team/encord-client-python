@@ -151,4 +151,3 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.POLYLINE: PolylineCoordinates,
     Shape.SKELETON: SkeletonCoordinates,
 }
-# DENIS: guard this with a unit test.

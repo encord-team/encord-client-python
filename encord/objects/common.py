@@ -583,7 +583,6 @@ class NestableOption(_OptionBase):
         return _add_attribute(self.nested_options, cls, name, self.uid, local_uid, feature_node_hash, required)
 
     def __hash__(self):
-        # DENIS: is this okay? what if someone changes other parts of the object?
         return hash(self.feature_node_hash)
 
 

@@ -217,7 +217,6 @@ class Project:
 
     def submit_label_row_for_review(self, uid: str):
         """
-        DENIS: ideally this would be deprecated and covered by LabelRowV2
         Submit a label row for review.
 
         Args:
