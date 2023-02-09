@@ -1041,9 +1041,7 @@ class LabelRowV2:
         label_status: LabelStatus
         annotation_task_status: AnnotationTaskStatus
         is_shadow_data: bool
-        number_of_frames: Optional[
-            int
-        ] = None  # DENIS: return this from BE, or get it from DataRow. DENIS: remove the `None`
+        number_of_frames: int
         dataset_hash: Optional[str] = None  # probably in DataRow
         dataset_title: Optional[str] = None  # probably in DataRow
         data_title: Optional[str] = None  # probably in DataRow
@@ -1146,7 +1144,6 @@ class LabelRowV2:
 
     @property
     def data_link(self) -> Optional[str]:
-        # DENIS: not actually needed
         return self._label_row_read_only_data.data_link
 
     @property
@@ -1160,7 +1157,6 @@ class LabelRowV2:
     @property
     def dicom_data_links(self) -> Optional[List[str]]:
         """Only a value for DICOM data types."""
-        # DENIS: this could be deprecated in favour of the DataRow class.
         if self._label_row_read_only_data.data_type != DataType.DICOM:
             raise LabelRowError("DICOM data links can only be retrieved for DICOM files.")
         return self._label_row_read_only_data.dicom_data_links
@@ -1192,7 +1188,7 @@ class LabelRowV2:
         """
         Call this function to start reading or writing labels. This will fetch the labels that are currently stored
         in the Encord server. If the label was not yet in progress, this will set the label status to
-        "IN_PROGRESS". DENIS: proper link
+        `LabelStatus.LABEL_IN_PROGRESS`.
 
         You can call this function at any point to overwrite the current labels stored in this class with the most
         up to date labels stored in the Encord servers. This would only matter if you manipulate the labels while
@@ -1249,8 +1245,6 @@ class LabelRowV2:
         self._objects_map: Dict[str, ObjectInstance] = dict()
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
         self._parse_labels_from_dict(label_row_dict)
-
-    # DENIS: getting signed urls will not be supported at all, as this needs to be fetched via the DataRow.
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
         """

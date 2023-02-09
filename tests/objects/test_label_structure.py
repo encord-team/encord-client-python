@@ -696,7 +696,6 @@ def test_object_instance_answer_for_static_attributes():
     # Setting frames for a non-dynamic attribute
     assert object_instance.get_answer(nested_polygon_checklist) == []
     with pytest.raises(LabelRowError):
-        # DENIS: make the option hashable so it can go into a set.
         object_instance.set_answer(
             [nested_polygon_checklist_option_1],
             attribute=nested_polygon_checklist,
@@ -886,8 +885,6 @@ def test_object_instance_dynamic_answer_delete():
         AnswerForFrames(answer="Poseidon", ranges=[Range(2, 4)]),
         AnswerForFrames(answer="Ulysses", ranges=[Range(5, 6)]),
     ]
-    # DENIS: with different overloads could have different flags for the return types and then the
-    # correct types!
 
     object_instance.delete_answer(dynamic_text, filter_frame=2)
     assert object_instance.get_answer(dynamic_text) == [

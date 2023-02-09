@@ -44,7 +44,6 @@ class Answer(ABC):
     def unset(self) -> None:
         """Remove the value from the answer"""
         self._answered = False
-        # DENIS: might be better to default everything again for more consistent states!
 
     @property
     def is_dynamic(self) -> bool:
@@ -452,7 +451,6 @@ def _search_child_attributes(
         return True
 
     if not isinstance(search_attribute, RadioAttribute):
-        # DENIS: or raise something?
         return False
 
     answer = static_answer_map[search_attribute.feature_node_hash]
