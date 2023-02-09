@@ -1147,6 +1147,14 @@ class LabelRowV2:
         return self._label_row_read_only_data.dicom_data_links
 
     # END: fields that are not returned right now from the get label row.
+    @property
+    def ontology_structure(self) -> OntologyStructure:
+        """Get the corresponding ontology structure"""
+        self._check_labelling_is_initalised()
+        if self._ontology_structure is None:
+            raise LabelRowError("The LabelRowV2 class is in an unexpected state.")
+
+        return self._ontology_structure
 
     @property
     def is_labelling_initialised(self) -> bool:
@@ -1249,11 +1257,15 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def upload(self):
-        """Do the client request"""
-        # Can probably just use the set label row here.
-        # DENIS: todo
-        pass
+    def upload_labels(self):
+        """
+        Upload the created labels with the Encord server. This will overwrite any labels that someone has created
+        in the platform in the meantime.
+        """
+        self._check_labelling_is_initalised()
+
+        dict_labels = self.to_encord_dict()
+        self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """

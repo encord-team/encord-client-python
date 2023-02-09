@@ -9,8 +9,9 @@ import pytest
 
 from encord import EncordUserClient, Project
 from encord.configs import ENCORD_DOMAIN
+from encord.objects.coordinates import BoundingBoxCoordinates
 
-ENABLE_MANUAL_TESTS = False
+ENABLE_MANUAL_TESTS = True
 
 
 LOCAL_DOMAIN = "http://127.0.0.1:8000"
@@ -71,3 +72,24 @@ def test_label_structure_manual_v2():
     for label_row in project.list_label_rows_v2():
         print(label_row)
         label_row.initialise_labelling()
+        labels_1 = label_row.to_encord_dict()
+
+        ontology = label_row.ontology_structure
+        box_object = ontology.get_items_by_title("box")[0]
+        box_instance = box_object.create_instance()
+        box_instance.set_for_frame(
+            BoundingBoxCoordinates(
+                height=5,
+                width=6,
+                top_left_x=2,
+                top_left_y=3,
+            ),
+            1,
+        )
+
+        label_row.add_object(box_instance)
+        label_row.upload_labels()
+
+        # label_row.initialise_labelling()
+        # labels_2 = label_row.to_encord_dict()
+        # assert labels_1 == labels_2
