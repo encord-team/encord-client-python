@@ -1055,14 +1055,14 @@ class LabelRowV2:
         annotation_task_status: AnnotationTaskStatus
         is_shadow_data: bool
         number_of_frames: int
+        duration: Optional[float]
+        fps: Optional[float]
         dataset_hash: Optional[str] = None  # probably in DataRow
         dataset_title: Optional[str] = None  # probably in DataRow
         data_title: Optional[str] = None  # probably in DataRow
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
-        duration: Optional[float] = None
-        fps: Optional[float] = None
         data_link: Optional[str] = None
         width: Optional[int] = None
         height: Optional[int] = None
@@ -1140,9 +1140,8 @@ class LabelRowV2:
         """The time the label row was updated last as a whole. None if the label row was not yet created."""
         return self._label_row_read_only_data.last_edited_at
 
-    # DENIS: START: fields that are not returned right now from the get label row.
     @property
-    def number_of_frames(self) -> Optional[int]:
+    def number_of_frames(self) -> int:
         return self._label_row_read_only_data.number_of_frames
 
     @property

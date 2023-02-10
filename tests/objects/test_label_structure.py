@@ -396,7 +396,7 @@ def test_update_remove_object_instance_coordinates():
     label_box.set_for_frame(BOX_COORDINATES, 1)
     frames = label_box.frames()
     frame_1_view = label_box.get_view_for_frame(1)
-    assert sorted(frames) == [1]
+    assert sorted([frame.frame for frame in frames]) == [1]
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
@@ -417,7 +417,7 @@ def test_update_remove_object_instance_coordinates():
     label_box.set_for_frame(box_coordinates_2, 4, confidence=confidence, manual_annotation=manual_annotation)
     frames = label_box.frames()
     # instance_data = label_box.get_instance_data(frames)
-    assert sorted(frames) == [1, 2, 3, 4]
+    assert sorted([frame.frame for frame in frames]) == [1, 2, 3, 4]
     frame_1_view = label_box.get_view_for_frame(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
@@ -434,7 +434,7 @@ def test_update_remove_object_instance_coordinates():
         frame_2_view.coordinates
 
     frames = label_box.frames()
-    assert sorted(frames) == [1, 4]
+    assert sorted([frame.frame for frame in frames]) == [1, 4]
     frame_1_view = label_box.get_view_for_frame(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
@@ -463,7 +463,7 @@ def test_update_remove_object_instance_coordinates():
     label_box.set_for_frame(box_coordinates_3, 5, confidence=new_confidence, manual_annotation=manual_annotation)
 
     frames = label_box.frames()
-    assert sorted(frames) == [1, 4, 5]
+    assert sorted([frame.frame for frame in frames]) == [1, 4, 5]
 
     frame_1_view = label_box.get_view_for_frame(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
