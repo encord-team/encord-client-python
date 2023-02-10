@@ -1184,15 +1184,19 @@ class LabelRowV2:
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
+        overwrite: bool = False,
     ) -> None:
         """
         Call this function to start reading or writing labels. This will fetch the labels that are currently stored
-        in the Encord server. If the label was not yet in progress, this will set the label status to
-        `LabelStatus.LABEL_IN_PROGRESS`.
+        in the Encord server. If you only want to inspect a subset of labels, you can filter them. Please note that if
+        you filter the labels, and upload them later, you will effectively delete all the labels that had been filtered
+        previously.
+
+        If the label was not yet in progress, this will set the label status to`LabelStatus.LABEL_IN_PROGRESS`.
 
         You can call this function at any point to overwrite the current labels stored in this class with the most
         up to date labels stored in the Encord servers. This would only matter if you manipulate the labels while
-        someone else is working on the labels as well.
+        someone else is working on the labels as well. You would need to supply the `overwrite` parameter to `True`
 
         Args:
             include_object_feature_hashes: If None all the objects will be included. Otherwise, only objects labels
@@ -1200,7 +1204,17 @@ class LabelRowV2:
             include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
                 classification labels will be included of which the feature_hash has been added.
             include_reviews: Whether to request read only information about the reviews of the label row.
+            overwrite: If the label row was already initialised, you need to set this flag to `True` to overwrite the
+                current labels with the labels stored in the Encord server. If this is `False` and the label row was
+                already initialised, this function will throw an error.
+
         """
+        if self.is_labelling_initialised and not overwrite:
+            raise LabelRowError(
+                "You are trying to re-initialise a label row that has already been initialised. This would overwrite "
+                "current labels. If this is your intend, set the `overwrite` flag to `True`."
+            )
+
         if self._ontology_structure is None:
             self._refresh_ontology_structure()
 
@@ -2025,27 +2039,27 @@ class ObjectInstance:
 
         @property
         def coordinates(self) -> Coordinates:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().coordinates
 
         @coordinates.setter
         def coordinates(self, coordinates: Coordinates) -> None:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             self._object_instance.set_for_frame(coordinates, self._frame)
 
         @property
         def created_at(self) -> datetime:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.created_at
 
         @created_at.setter
         def created_at(self, created_at: datetime) -> None:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             self._get_object_frame_instance_data().object_frame_instance_info.created_at = created_at
 
         @property
         def created_by(self) -> Optional[str]:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.created_by
 
         @created_by.setter
@@ -2053,24 +2067,24 @@ class ObjectInstance:
             """
             Set the created_by field with a user email or None if it should default to the current user of the SDK.
             """
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             if created_by is not None:
                 check_email(created_by)
             self._get_object_frame_instance_data().object_frame_instance_info.created_by = created_by
 
         @property
         def last_edited_at(self) -> datetime:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at
 
         @last_edited_at.setter
         def last_edited_at(self, last_edited_at: datetime) -> None:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at = last_edited_at
 
         @property
         def last_edited_by(self) -> Optional[str]:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by
 
         @last_edited_by.setter
@@ -2078,29 +2092,29 @@ class ObjectInstance:
             """
             Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
             """
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             if last_edited_by is not None:
                 check_email(last_edited_by)
             self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by = last_edited_by
 
         @property
         def confidence(self) -> float:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.confidence
 
         @confidence.setter
         def confidence(self, confidence: float) -> None:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             self._get_object_frame_instance_data().object_frame_instance_info.confidence = confidence
 
         @property
         def manual_annotation(self) -> bool:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation
 
         @manual_annotation.setter
         def manual_annotation(self, manual_annotation: bool) -> None:
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation = manual_annotation
 
         @property
@@ -2109,19 +2123,19 @@ class ObjectInstance:
             A read only property about the reviews that happened for this object on this frame.
             DENIS: TODO: probably want to type this out and possibly lazy load this.
             """
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.reviews
 
         @property
         def is_deleted(self) -> bool:
             """This property is only relevant for internal use."""
-            self._check_if_frame_view_valid()
+            self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
 
         def _get_object_frame_instance_data(self) -> ObjectInstance.FrameData:
             return self._object_instance._frames_to_instance_data[self._frame]
 
-        def _check_if_frame_view_valid(self) -> None:
+        def _check_if_frame_view_is_valid(self) -> None:
             if self._frame not in self._object_instance._frames_to_instance_data:
                 raise LabelRowError(
                     "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
