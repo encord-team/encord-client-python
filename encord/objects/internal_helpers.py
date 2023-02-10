@@ -27,7 +27,7 @@ from encord.objects.utils import (
 
 
 class Answer(ABC):
-    """An internal helper class for the LabelRowV2 class. This class is not meant to be used directly."""
+    """An internal helper class for the LabelRowV2 class. This class is not meant to be used directly by users."""
 
     _ontology_attribute: Attribute
 
@@ -36,7 +36,7 @@ class Answer(ABC):
         self._ontology_attribute = ontology_attribute
         self._track_hash = track_hash or short_uuid_str()
         self._is_manual_annotation = DEFAULT_MANUAL_ANNOTATION
-        self._should_propagate = False  # DENIS: pass from outside.
+        self._should_propagate = False
 
     def is_answered(self) -> bool:
         return self._answered
