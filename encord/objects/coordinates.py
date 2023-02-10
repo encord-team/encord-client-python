@@ -46,6 +46,27 @@ class RotatableBoundingBoxCoordinates:
     top_left_y: float
     theta: float  # angle of rotation originating at center of box
 
+    @staticmethod
+    def from_dict(d: dict) -> RotatableBoundingBoxCoordinates:
+        """Get RotatableBoundingBoxCoordinates from an encord dict"""
+        rotatable_bounding_box_dict = d["rotatableBoundingBox"]
+        return RotatableBoundingBoxCoordinates(
+            height=rotatable_bounding_box_dict["h"],
+            width=rotatable_bounding_box_dict["w"],
+            top_left_x=rotatable_bounding_box_dict["x"],
+            top_left_y=rotatable_bounding_box_dict["y"],
+            theta=rotatable_bounding_box_dict["theta"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "h": self.height,
+            "w": self.width,
+            "x": self.top_left_x,
+            "y": self.top_left_y,
+            "theta": self.theta,
+        }
+
 
 @dataclass(frozen=True)
 class PointCoordinate:
@@ -97,6 +118,29 @@ class PolygonCoordinates:
 @dataclass(frozen=True)
 class PolylineCoordinates:
     values: List[PointCoordinate]
+
+    @staticmethod
+    def from_dict(d: dict) -> PolylineCoordinates:
+        polyline = d["polyline"]
+        values: List[PointCoordinate] = []
+
+        sorted_dict_value_tuples = sorted((int(key), value) for key, value in polyline.items())
+        sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
+
+        for value in sorted_dict_values:
+            point_coordinate = PointCoordinate(
+                x=value["x"],
+                y=value["y"],
+            )
+            values.append(point_coordinate)
+
+        return PolylineCoordinates(values=values)
+
+    def to_dict(self) -> dict:
+        ret = {}
+        for idx, value in enumerate(self.values):
+            ret[str(idx)] = {"x": value.x, "y": value.y}
+        return ret
 
 
 class Visibility(Flag):

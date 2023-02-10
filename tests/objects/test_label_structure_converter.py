@@ -2,7 +2,7 @@
 All tests regarding converting from and to Encord dict to the label row.
 """
 from dataclasses import asdict
-from typing import List, Union
+from typing import Any, Dict, List, Union
 from unittest.mock import Mock
 
 from deepdiff import DeepDiff
@@ -13,6 +13,7 @@ from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data import (
     data_1,
     empty_video,
+    image_group_with_reviews,
     native_image_data,
     ontology_with_many_dynamic_classifications,
     video_with_dynamic_classifications,
@@ -158,7 +159,6 @@ def test_dynamic_classifications():
 
     actual = label_row.to_encord_dict()
 
-    # assert actual == video_with_dynamic_classifications.labels
     deep_diff_enhanced(
         actual,
         video_with_dynamic_classifications.labels,
@@ -191,3 +191,44 @@ def test_uninitialised_label_row():
     assert label_row.created_at is not None
     assert label_row.last_edited_at is not None
     assert label_row.is_labelling_initialised is True
+
+
+def _remove_reviews(labels: Dict[str, Any]) -> Dict[str, Any]:
+    if "reviews" in labels:
+        del labels["reviews"]
+    for key, value in labels.items():
+        if isinstance(value, dict):
+            labels[key] = _remove_reviews(value)
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                if isinstance(item, dict):
+                    value[index] = _remove_reviews(item)
+    return labels
+
+
+def test_label_row_with_reviews():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = None
+    label_row_metadata_dict["frames_per_second"] = None
+    label_row_metadata_dict["number_of_frames"] = 5
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock())
+    label_row.from_labels_dict(
+        image_group_with_reviews.labels,
+        OntologyStructure.from_dict(all_ontology_types),
+    )
+
+    first_object = label_row.get_objects()[0]
+    first_frame = first_object.frames()[0]
+
+    assert isinstance(first_frame.reviews, list)
+
+    actual = label_row.to_encord_dict()
+
+    expected_no_reviews = _remove_reviews(image_group_with_reviews.labels)
+    deep_diff_enhanced(
+        expected_no_reviews,
+        actual,
+        exclude_regex_paths=["\['trackHash'\]"],
+    )

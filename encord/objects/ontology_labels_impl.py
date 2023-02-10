@@ -55,6 +55,8 @@ from encord.objects.coordinates import (
     Coordinates,
     PointCoordinate,
     PolygonCoordinates,
+    PolylineCoordinates,
+    RotatableBoundingBoxCoordinates,
 )
 from encord.objects.internal_helpers import (
     Answer,
@@ -405,6 +407,10 @@ class ClassificationInstance:
             self._frame = frame
 
         @property
+        def frame(self) -> int:
+            return self._frame
+
+        @property
         def created_at(self) -> datetime:
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().created_at
@@ -622,8 +628,15 @@ class ClassificationInstance:
             self._parent._remove_frames_from_classification(self.ontology_item, frames)
             self._parent._remove_from_frame_to_hashes_map(frames, self.classification_hash)
 
-    def frames(self) -> List[int]:
-        return list(self._frames_to_data.keys())
+    def frames(self) -> List[ClassificationInstance.FrameView]:
+        """
+        Returns:
+            A list of `ClassificationInstance.FrameView` in order of available frames.
+        """
+        ret = []
+        for frame_num in sorted(self._frames_to_data.keys()):
+            ret.append(self.get_view_for_frame(frame_num))
+        return ret
 
     def is_valid(self) -> bool:
         return len(self._frames_to_data) > 0
@@ -1127,7 +1140,7 @@ class LabelRowV2:
         """The time the label row was updated last as a whole. None if the label row was not yet created."""
         return self._label_row_read_only_data.last_edited_at
 
-    # START: fields that are not returned right now from the get label row.
+    # DENIS: START: fields that are not returned right now from the get label row.
     @property
     def number_of_frames(self) -> Optional[int]:
         return self._label_row_read_only_data.number_of_frames
@@ -1218,6 +1231,7 @@ class LabelRowV2:
         if self._ontology_structure is None:
             self._refresh_ontology_structure()
 
+        # DENIS: should this be lazy loaded?
         get_signed_url = False
         if self.label_hash is None:
             label_row_dict = self._project_client.create_label_row(self.data_hash)
@@ -1309,9 +1323,6 @@ class LabelRowV2:
         """
         Returns:
             A list of frame views in order of available frames.
-
-        Raises:
-            LabelRowError: If the LabelRowV2 is not initialised via the `initialise_labelling` member.
         """
         self._check_labelling_is_initalised()
         ret = []
@@ -1412,7 +1423,7 @@ class LabelRowV2:
 
         classification_hash = classification_instance.classification_hash
         already_present_frame = self._is_classification_already_present(
-            classification_instance.ontology_item, classification_instance.frames()
+            classification_instance.ontology_item, _frame_views_to_frame_numbers(classification_instance.frames())
         )
         if classification_hash in self._classifications_map and not force:
             raise LabelRowError(
@@ -1433,7 +1444,7 @@ class LabelRowV2:
         classification_instance._parent = self
 
         self._classifications_to_frames[classification_instance.ontology_item].update(
-            set(classification_instance.frames())
+            set(_frame_views_to_frame_numbers(classification_instance.frames()))
         )
         self._add_to_frame_to_hashes_map(classification_instance)
 
@@ -1443,7 +1454,7 @@ class LabelRowV2:
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
         all_frames = self._classifications_to_frames[classification_instance.ontology_item]
-        actual_frames = classification_instance.frames()
+        actual_frames = _frame_views_to_frame_numbers(classification_instance.frames())
         for actual_frame in actual_frames:
             all_frames.remove(actual_frame)
 
@@ -1510,7 +1521,9 @@ class LabelRowV2:
         self._check_labelling_is_initalised()
 
         self._objects_map.pop(object_instance.object_hash)
-        self._remove_from_frame_to_hashes_map(object_instance.frames(), object_instance.object_hash)
+        self._remove_from_frame_to_hashes_map(
+            _frame_views_to_frame_numbers(object_instance.frames()), object_instance.object_hash
+        )
         object_instance._parent = None
 
     def to_encord_dict(self) -> dict:
@@ -1712,12 +1725,16 @@ class LabelRowV2:
     def _add_coordinates_to_encord_object(self, coordinates: Coordinates, encord_object: dict) -> None:
         if isinstance(coordinates, BoundingBoxCoordinates):
             encord_object["boundingBox"] = coordinates.to_dict()
+        elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
+            encord_object["rotatableBoundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, PolygonCoordinates):
             encord_object["polygon"] = coordinates.to_dict()
+        elif isinstance(coordinates, PolylineCoordinates):
+            encord_object["polyline"] = coordinates.to_dict()
         elif isinstance(coordinates, PointCoordinate):
             encord_object["point"] = coordinates.to_dict()
         else:
-            NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
+            raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
     def _to_encord_classifications_list(self, frame: int) -> list:
         ret: List[dict] = []
@@ -1770,8 +1787,8 @@ class LabelRowV2:
 
     def _add_to_frame_to_hashes_map(self, label_item: Union[ObjectInstance, ClassificationInstance]) -> None:
         """This can be called by the ObjectInstance."""
-        for frame in label_item.frames():
-            self.add_to_single_frame_to_hashes_map(label_item, frame)
+        for frame_view in label_item.frames():
+            self.add_to_single_frame_to_hashes_map(label_item, frame_view.frame)
 
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
@@ -1823,7 +1840,6 @@ class LabelRowV2:
             width = image_dict["width"]
 
         elif data_type == DataType.IMG_GROUP:
-            number_of_frames = len(label_row_dict["data_units"])
             data_link = None
             height = None
             width = None
@@ -1937,12 +1953,19 @@ class LabelRowV2:
     def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
         if "boundingBox" in frame_object_label:
             return BoundingBoxCoordinates.from_dict(frame_object_label)
+        if "rotatableBoundingBox" in frame_object_label:
+            return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
         elif "polygon" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
         elif "point" in frame_object_label:
             return PointCoordinate.from_dict(frame_object_label)
+        elif "polyline" in frame_object_label:
+            return PolylineCoordinates.from_dict(frame_object_label)
+        elif "skeleton" in frame_object_label:
+            # DENIS: uh oh.
+            raise NotImplementedError(f"Got a skeleton object, which is not supported yet")
         else:
-            raise NotImplementedError("Getting other coordinates is not yet implemented.")
+            raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
 
     def _add_classification_instances_from_classifications(
         self, classifications_list: List[dict], classification_answers: dict, frame: int
@@ -2038,6 +2061,10 @@ class ObjectInstance:
             self._frame = frame
 
         @property
+        def frame(self) -> int:
+            return self._frame
+
+        @property
         def coordinates(self) -> Coordinates:
             self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().coordinates
@@ -2121,7 +2148,6 @@ class ObjectInstance:
         def reviews(self) -> List[dict]:
             """
             A read only property about the reviews that happened for this object on this frame.
-            DENIS: TODO: probably want to type this out and possibly lazy load this.
             """
             self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.reviews
@@ -2537,9 +2563,15 @@ class ObjectInstance:
         ret._dynamic_answer_manager = self._dynamic_answer_manager.copy()
         return ret
 
-    def frames(self) -> List[int]:
-        """ """
-        return list(self._frames_to_instance_data.keys())
+    def frames(self) -> List[ObjectInstance.FrameView]:
+        """
+        Returns:
+            A list of `ObjectInstance.FrameView` in order of available frames.
+        """
+        ret = []
+        for frame_num in sorted(self._frames_to_instance_data.keys()):
+            ret.append(self.get_view_for_frame(frame_num))
+        return ret
 
     def remove_from_frames(self, frames: Frames):
         """Ensure that it will be removed from all frames."""
@@ -2565,7 +2597,7 @@ class ObjectInstance:
         Whether there are any dynamic answers on frames that have no coordinates.
         """
         dynamic_frames = set(self._dynamic_answer_manager.frames())
-        local_frames = set(self.frames())
+        local_frames = set(_frame_views_to_frame_numbers(self.frames()))
 
         return len(dynamic_frames - local_frames) == 0
 
@@ -2686,8 +2718,8 @@ class DynamicAnswerManager:
         self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
     ) -> None:
         if frames is None:
-            for available_frame in self._object_instance.frames():
-                self._set_answer(answer, attribute, available_frame)
+            for available_frame_view in self._object_instance.frames():
+                self._set_answer(answer, attribute, available_frame_view.frame)
             return
         self._set_answer(answer, attribute, frames)
 
@@ -3165,3 +3197,9 @@ class Ontology(dict, Formatter):
             ontology_hash=json_dict["ontology_hash"],
             structure=OntologyStructure.from_dict(json_dict["editor"]),
         )
+
+
+def _frame_views_to_frame_numbers(
+    frame_views: List[Union[ObjectInstance.FrameView, ClassificationInstance.FrameView, LabelRowV2.FrameView]]
+) -> List[int]:
+    return [frame_view.frame for frame_view in frame_views]

@@ -11,7 +11,7 @@ from encord import EncordUserClient, Project
 from encord.configs import ENCORD_DOMAIN
 from encord.objects.coordinates import BoundingBoxCoordinates
 
-ENABLE_MANUAL_TESTS = False
+ENABLE_MANUAL_TESTS = True
 
 
 LOCAL_DOMAIN = "http://127.0.0.1:8000"
@@ -19,7 +19,7 @@ DEV_DOMAIN = "https://dev.api.encord.com"
 STAGING_DOMAIN = "https://staging.api.encord.com"
 PROD_DOMAIN = ENCORD_DOMAIN
 
-USED_DOMAIN = LOCAL_DOMAIN
+USED_DOMAIN = PROD_DOMAIN
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -29,7 +29,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-PROJECT_RESOURCE_ID = "6ced337c-4330-42b1-b44d-4b367284b30f"  # Third Project - local dev
+# PROJECT_RESOURCE_ID = "6ced337c-4330-42b1-b44d-4b367284b30f"  # Third Project - local dev
+PROJECT_RESOURCE_ID = "95abd72c-dd09-4274-aea9-ad4fcb31a49b"  # labels with reviews - prod
 # PROJECT_RESOURCE_ID = "4ab65a47-293f-4cab-93f5-1ff5ca67038d"  # Project with one single image annotated - local dev
 # PROJECT_RESOURCE_ID = (
 #     "0db22af4-03eb-448d-92ab-3697c319334c"  # project for DICOM dataset with dynamic classifications - local dev
@@ -69,6 +70,10 @@ def get_project_ssh() -> Project:
 @pytest.mark.skipif(not ENABLE_MANUAL_TESTS, reason="Manual tests are disabled")
 def test_label_structure_manual_v2():
     project = get_project_ssh()
+    for label_row in project.label_rows:
+        print(project.get_label_row(label_row["label_hash"], include_reviews=True))
+
+    return
     label_rows = project.list_label_rows_v2(label_hashes=["28f0e9d2-51e0-459d-8ffa-2e214da653a9"])
     print("got label rows")
     print(len(label_rows))
