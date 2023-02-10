@@ -16,23 +16,16 @@ concurrency:
 
 jobs:
   formatting:
-    name: Assert code formatting
-    runs-on: ubuntu-20.04
+    name: Linting and type checking
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-
-      - name: Run black
-        uses: psf/black@stable
+      - uses: actions/checkout@v2
+      - name: Setup root poetry environment
+        uses: ./.github/actions/setup-root-poetry-environment
+      - name: Run linting, type checking and testing
+        uses: pre-commit/action@v2.0.3
         with:
-          options: "--check --diff"
-          src: "."
-
-      - name: Run isort
-        uses: isort/isort-action@v0.1.0
-        with:
-          configuration: "--check --diff --resolve-all-configs"
-
+          extra_args: "--all-files --hook-stage=push"
 
   unit-tests:
     name: Run unit tests
