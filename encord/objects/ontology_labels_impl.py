@@ -1057,9 +1057,9 @@ class LabelRowV2:
         number_of_frames: int
         duration: Optional[float]
         fps: Optional[float]
-        dataset_hash: Optional[str] = None  # probably in DataRow
-        dataset_title: Optional[str] = None  # probably in DataRow
-        data_title: Optional[str] = None  # probably in DataRow
+        dataset_hash: Optional[str] = None
+        dataset_title: Optional[str] = None
+        data_title: Optional[str] = None
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
@@ -1230,7 +1230,6 @@ class LabelRowV2:
         if self._ontology_structure is None:
             self._refresh_ontology_structure()
 
-        # DENIS: should this be lazy loaded?
         get_signed_url = False
         if self.label_hash is None:
             label_row_dict = self._project_client.create_label_row(self.data_hash)
@@ -1961,7 +1960,6 @@ class LabelRowV2:
         elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
-            # DENIS: uh oh.
             raise NotImplementedError(f"Got a skeleton object, which is not supported yet")
         else:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
