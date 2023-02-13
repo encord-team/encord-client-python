@@ -240,25 +240,14 @@ class DataRow(dict, Formatter):
     @property
     def client_metadata(self) -> Optional[dict]:
         """
-        DEPRECATED - please use `get_client_metadata` instead.
-        Returns:
-        If `client_metadata` is disabled via the :class:`encord.orm.dataset.DatasetAccessSettings
-        then this returns `null`.
-        Otherwise, this returns custom client metadata.
+        Returns the currently cached client metadata.
         """
-        if self["client_metadata"] is None:
-            if self["_querier"] is not None:
-                res = self["_querier"].basic_getter(DataClientMetadata, uid=self.uid)
-                self["client_metadata"] = res.payload
-            else:
-                raise EncordException(f"Could not retrieve client metadata for DataRow with uid: {self.uid}")
         return self["client_metadata"]
 
     @client_metadata.setter
-    def client_metadata(self, new_client_metadata: [Dict, List, int, float, bool, str]) -> None:
+    def client_metadata(self, new_client_metadata: Dict) -> None:
         """
-        DEPRECATED - please use `set_client_metadata` instead.
-        This updates custom client metadata with the new given data.
+        Update the custom client metadata. This does a request to the backend.
         """
         if self["_querier"] is not None:
             res = self["_querier"].basic_setter(
@@ -271,21 +260,16 @@ class DataRow(dict, Formatter):
             else:
                 raise EncordException(f"Could not update client metadata for DataRow with uid: {self.uid}")
 
-    def get_client_metadata(self):
+    def fetch_client_metadata(self) -> None:
         """
-        Returns:
-        If `client_metadata` is disabled via the :class:`encord.orm.dataset.DatasetAccessSettings
-        then this returns `null`.
-        Otherwise, this returns custom client metadata.
+        Does a request to the Encord server for the client metadata. Use this function to initially fetch or
+        re-fetch the client metadata.
         """
-        return self.client_metadata
-
-    def set_client_metadata(self, new_client_metadata: [Dict, List, int, float, bool, str]) -> None:
-        """
-        DEPRECATED - please use `set_client_metadata` instead.
-        This method updates custom client metadata with the new given data.
-        """
-        self.client_metadata = new_client_metadata
+        if self["_querier"] is not None:
+            res = self["_querier"].basic_getter(DataClientMetadata, uid=self.uid)
+            self["client_metadata"] = res.payload
+        else:
+            raise EncordException(f"Could not retrieve client metadata for DataRow with uid: {self.uid}")
 
     @property
     def width(self) -> int:
@@ -320,7 +304,8 @@ class DataRow(dict, Formatter):
         """
         return self["file_link"]
 
-    def get_signed_url(self):
+    # DENIS: should I do a get_signed_url or a fetch_signed_url that also returns self?
+    def fetch_signed_url(self):
         """
         Returns:
         This returns a generated cached signed url link of the given data asset.
@@ -341,7 +326,7 @@ class DataRow(dict, Formatter):
     def file_size(self) -> int:
         """
         Returns:
-        This returns an actual file size of the given data asset.
+            The file size of the given data asset in bytes.
         """
         return self["file_size"]
 
@@ -349,7 +334,7 @@ class DataRow(dict, Formatter):
     def file_type(self) -> str:
         """
         Returns:
-        This returns a MIME file type of the given data asset.
+            A MIME file type of the given data asset as a string
         """
         return self["file_type"]
 
@@ -357,16 +342,16 @@ class DataRow(dict, Formatter):
     def storage_location(self) -> StorageLocation:
         """
         Returns:
-        This returns a storage location of the given data asset.
-        The returned type is `StorageLocation`.
+            This returns a storage location of the given data asset.
         """
         return self["storage_location"]
 
+    # DENIS: or have image data be a subsidiary itself?
     def get_images(self, get_signed_url: bool = False) -> List[ImageData]:
         """
         Args:
             get_signed_url: optional flag which is responsible for generating signed urls for returned
-            images data (`False` by default)
+                images data (`False` by default).
         Returns:
             This method lazily retrieves list of images, cache and returns it for the given DataRow image group.
             If the data type is not `DataType.IMG_GROUP` then this method simply returns `None`.
@@ -388,6 +373,7 @@ class DataRow(dict, Formatter):
                 )
         return self["images"]
 
+    # DENIS: fetch_dicom_file_links to support batching?
     def get_dicom_file_links(self, get_signed_url: bool = False) -> List[str]:
         """
         Args:
