@@ -164,33 +164,61 @@ class ReviewApprovalState(str, Enum):
     NOT_SELECTED_FOR_REVIEW = "NOT_SELECTED_FOR_REVIEW"
 
 
+class CopyDatasetAction(str, Enum):
+    ATTACH = "ATTACH"
+    CLONE = "CLONE"
+
+
 @dataclass
-class CopyProjectMetadata:
-    project_title: str
-    project_description: str
+class CopyDatasetOptions:
+    """Options for copying the datasets associated with a project."""
+
+    action: CopyDatasetAction = CopyDatasetAction.ATTACH
+    """
+    One of `CopyDatasetAction.ATTACH` or `CopyDatasetAction.CLONE`. (defaults to ATTACH)
+    ATTACH: Attach the datasets associated with the original project to the copy project.
+    CLONE: Clone the data units from the associated datasets into a new dataset an attach it to the copy project.
+    """
     dataset_title: Optional[str] = None
     dataset_description: Optional[str] = None
-
-
-@dataclass
-class CopyReviewTasksOptions:
-    copy_review_tasks: bool = False
-    review_status_list: List = field(default_factory=list)
+    datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
+    """ A dictionary of `{ <dataset_hash>: List[<data_unit_hash>]}`.
+    When provided with a CLONE action this will filter the copied data units.
+    When combined with `CopyLabelsOptions`, only labels from specific data units will be copied.
+    """
 
 
 @dataclass
 class CopyLabelsOptions:
-    datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
-    copy_review_tasks_options: CopyReviewTasksOptions = CopyReviewTasksOptions()
+    """Options for copying the labels associated with a project."""
+
     accepted_label_hashes: Optional[List[str]] = None
+    """ A list of label hashes that will be copied to the new project  """
     accepted_label_statuses: Optional[List[ReviewApprovalState]] = None
-    create_new_dataset: Optional[bool] = None
+    """ A list of label statuses to filter the labels copied to the new project, defined in `ReviewApprovalState`"""
 
 
 @dataclass
 class CopyProjectPayload:
+    """WARN: do not use, this is only for internal purpose."""
+
+    @dataclass
+    class _CopyLabelsOptions:
+        datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
+        accepted_label_hashes: Optional[List[str]] = None
+        accepted_label_statuses: Optional[List[ReviewApprovalState]] = None
+        create_new_dataset: Optional[bool] = None
+
+    @dataclass
+    class _ProjectCopyMetadata:
+        project_title: str
+        project_description: str = ""
+        dataset_title: Optional[str] = None
+        dataset_description: Optional[str] = None
+
     copy_project_options: List[ProjectCopyOptions] = field(default_factory=list)
-    copy_labels_options: Optional[CopyLabelsOptions] = None
+    copy_labels_options: Optional[_CopyLabelsOptions] = None
+    project_copy_metadata: Optional[_ProjectCopyMetadata] = None
 
 
 class ProjectWorkflowType(Enum):

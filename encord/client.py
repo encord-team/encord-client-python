@@ -99,7 +99,12 @@ from encord.orm.model import (
     ModelTrainingWeights,
     TrainingMetadata,
 )
-from encord.orm.project import CopyLabelsOptions, CopyProjectPayload
+from encord.orm.project import (
+    CopyDatasetAction,
+    CopyDatasetOptions,
+    CopyLabelsOptions,
+    CopyProjectPayload,
+)
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import (
     ProjectCopy,
@@ -615,27 +620,43 @@ class EncordClientProject(EncordClient):
 
     def copy_project(
         self,
-        copy_datasets=False,
+        *,
+        new_title: str,
+        new_description: Optional[str] = None,
+        copy_datasets: Union[bool, CopyDatasetOptions] = False,
         copy_collaborators=False,
         copy_models=False,
-        copy_labels=False,
-        copy_labels_options: Optional[CopyLabelsOptions] = None,
+        copy_labels: Optional[CopyLabelsOptions] = None,
     ) -> str:
         """
         This function is documented in :meth:`encord.project.Project.copy_project`.
         """
+        payload = CopyProjectPayload()
+        payload.project_copy_metadata = CopyProjectPayload._ProjectCopyMetadata(new_title)
+        payload.copy_labels_options = CopyProjectPayload._CopyLabelsOptions()
 
-        copy_project_options: List[ProjectCopyOptions] = []
-        if copy_datasets:
-            copy_project_options.append(ProjectCopyOptions.DATASETS)
-        if copy_models:
-            copy_project_options.append(ProjectCopyOptions.MODELS)
-        if copy_collaborators:
-            copy_project_options.append(ProjectCopyOptions.COLLABORATORS)
+        if payload.project_copy_metadata and new_description:
+            payload.project_copy_metadata.project_description = new_description
+
         if copy_labels:
-            copy_project_options.append(ProjectCopyOptions.LABELS)
+            payload.copy_project_options.append(ProjectCopyOptions.LABELS)
+            if isinstance(copy_labels, CopyLabelsOptions):
+                payload.copy_labels_options.accepted_label_hashes = copy_labels.accepted_label_hashes
+                payload.copy_labels_options.accepted_label_statuses = copy_labels.accepted_label_statuses
 
-        payload = CopyProjectPayload(copy_project_options=copy_project_options, copy_labels_options=copy_labels_options)
+        if copy_datasets:
+            if copy_datasets is True or copy_datasets.action == CopyDatasetAction.ATTACH:
+                payload.copy_project_options.append(ProjectCopyOptions.DATASETS)
+            elif copy_datasets.action == CopyDatasetAction.CLONE:
+                payload.project_copy_metadata.dataset_title = copy_datasets.dataset_title
+                payload.project_copy_metadata.dataset_description = copy_datasets.dataset_description
+                payload.copy_labels_options.create_new_dataset = True
+                payload.copy_labels_options.datasets_to_data_hashes_map = copy_datasets.datasets_to_data_hashes_map
+
+        if copy_models:
+            payload.copy_project_options.append(ProjectCopyOptions.MODELS)
+        if copy_collaborators:
+            payload.copy_project_options.append(ProjectCopyOptions.COLLABORATORS)
 
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=dataclasses.asdict(payload))
 
