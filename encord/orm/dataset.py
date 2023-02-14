@@ -68,7 +68,6 @@ class SignedUrl:
     signed_url: str
 
 
-@dataclasses.dataclass(frozen=True)
 class ImageData:
     id: int
     title: str
@@ -84,11 +83,82 @@ class ImageData:
     height: int
     width: int
 
+    def __init__(
+        self,
+        image_hash: UUID,
+        title: str,
+        file_link: str,
+        file_type: str,
+        file_size: float,
+        storage_location: StorageLocation,
+        created_at: datetime,
+        last_edited_at: datetime,
+        width: int,
+        signed_url: Optional[str],
+        height: int,
+    ):
+
+        self._image_hash = image_hash
+        self._title = title
+        self._file_link = file_link
+        self._file_type = file_type
+        self._file_size = file_size
+        self._storage_location = storage_location
+        self._created_at = created_at
+        self._last_edited_at = last_edited_at
+        self._height = height
+        self._width = width
+        self._signed_url = signed_url
+
+    @property
+    def image_hash(self) -> str:
+        return self._image_hash
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @property
+    def file_link(self) -> str:
+        return self._file_link
+
+    @property
+    def file_type(self) -> str:
+        """Return the MIME type of the file."""
+        return self._file_type
+
+    @property
+    def file_size(self) -> int:
+        return self._file_size
+
+    @property
+    def storage_location(self) -> StorageLocation:
+        return self._storage_location
+
+    @property
+    def created_at(self) -> datetime:
+        return self._created_at
+
+    @property
+    def last_edited_at(self) -> str:
+        return self._last_edited_at
+
+    @property
+    def height(self) -> str:
+        return self._height
+
+    @property
+    def width(self) -> str:
+        return self._width
+
+    @property
+    def signed_url(self) -> Optional[str]:
+        """Return the signed URL if one was generated when this class was created."""
+        return self._signed_url
+
     @classmethod
-    def from_dict(cls, json_dict: Dict):
+    def from_dict(cls, json_dict: Dict) -> ImageData:
         return ImageData(
-            id=json_dict["id"],
-            user_hash=json_dict["user_hash"],
             title=json_dict["title"],
             file_link=json_dict["file_link"],
             file_type=json_dict["file_type"],
@@ -99,8 +169,15 @@ class ImageData:
             last_edited_at=parser.parse(json_dict["last_edited_at"]),
             height=json_dict["height"],
             width=json_dict["width"],
-            signed_url=json_dict["signed_url"] if "signed_url" in json_dict else None,
+            signed_url=json_dict.get("signed_url"),
         )
+
+    @classmethod
+    def from_list(cls, json_list: List) -> List[ImageData]:
+        return [cls.from_dict(json_dict) for json_dict in json_list]
+
+    def __repr__(self):
+        return f"ImageData(title={self.title}, image_hash={self.image_hash})"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -121,18 +198,19 @@ class DataRow(dict, Formatter):
         data_type: DataType,
         created_at: datetime,
         last_edited_at: datetime,
-        width: int,
-        height: int,
-        file_link: str,
-        file_size: int,
-        file_type: str,
+        width: Optional[int],
+        height: Optional[int],
+        file_link: Optional[str],
+        file_size: Optional[int],
+        file_type: Optional[str],
         storage_location: StorageLocation,
         client_metadata: Optional[dict],
         frames_per_second: Optional[int],
         duration: Optional[int],
-        images_data: Optional[List[ImageData]],
+        images_data: Optional[List[dict]],
         signed_url: Optional[str],
-        dicom_signed_url: Optional[str],
+        dicom_signed_urls: Optional[str],
+        is_optimised_image_group: Optional[bool],
     ):
         """
         This class has dict-style accessors for backwards compatibility.
@@ -143,6 +221,10 @@ class DataRow(dict, Formatter):
         WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
         datastructure.
         """
+        parsed_images_data = None
+        if images_data is not None:
+            parsed_images_data = [ImageData.from_dict(image_data) for image_data in images_data]
+
         super().__init__(
             {
                 "data_hash": uid,
@@ -160,9 +242,10 @@ class DataRow(dict, Formatter):
                 "duration": duration,
                 "client_metadata": client_metadata,
                 "_querier": None,
-                "images_data": images_data,
+                "images_data": parsed_images_data,
                 "signed_url": signed_url,
-                "dicom_signed_urls": dicom_signed_url,
+                "dicom_signed_urls": dicom_signed_urls,
+                "is_optimised_image_group": is_optimised_image_group,
                 "_dirty_fields": [],
             }
         )
@@ -200,8 +283,6 @@ class DataRow(dict, Formatter):
         If the data type is `DataType.VIDEO` this returns the actual number of frames per second for the video.
         Otherwise, it returns None as a `frames_per_second` field is not applicable.
         """
-        if self.data_type != DataType.VIDEO:
-            return None
         return self["frames_per_second"]
 
     @property
@@ -291,9 +372,13 @@ class DataRow(dict, Formatter):
             client_metadata: If True, this will fetch the client metadata of the data asset.
         """
         if self["_querier"] is not None:
+            fetch_images_data = None
+            if image_data is not None:
+                fetch_images_data = dataclasses.asdict(image_data)
+
             payload = {
                 "fetch_signed_url": signed_url,
-                "fetch_image_data": image_data,
+                "fetch_images_data": fetch_images_data,
                 "fetch_client_metadata": client_metadata,
             }
             res = self["_querier"].basic_getter(DataRow, uid=self.uid, payload=payload)
@@ -317,7 +402,7 @@ class DataRow(dict, Formatter):
             res = self["_querier"].basic_setter(DataRow, uid=self.uid, payload=payload)
             if res:
                 self._compare_upload_payload(res, payload)
-                data_row_dict = upload_res["data_row"]
+                data_row_dict = res["data_row"]
                 self._update_current_class(DataRow.from_dict(data_row_dict))
             else:
                 raise EncordException(f"Could not upload data for DataRow with uid: {self.uid}")
@@ -349,7 +434,7 @@ class DataRow(dict, Formatter):
         return self["storage_location"]
 
     @property
-    def image_data(self) -> Optional[List[ImageData]]:
+    def images_data(self) -> Optional[List[ImageData]]:
         """
         Returns:
             This returns a list of ImageData objects for the given data asset.
@@ -361,10 +446,16 @@ class DataRow(dict, Formatter):
     def dicom_signed_urls(self) -> Optional[List[str]]:
         """
         Returns:
-            This returns a list of ImageData objects for the given data asset.
-            If the data type is not `DataType.IMG_GROUP` then this returns an empty list.
         """
         return self["dicom_signed_urls"]
+
+    @property
+    def is_optimised_image_group(self) -> Optional[bool]:
+        """
+        Returns:
+            If the data type is an image group, returns whether this is a performance optimised image group.
+        """
+        return self["is_optimised_image_group"]
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
@@ -387,7 +478,8 @@ class DataRow(dict, Formatter):
             frames_per_second=json_dict["frames_per_second"],
             duration=json_dict["duration"],
             signed_url=json_dict.get("signed_url"),
-            dicom_signed_url=json_dict.get("dicom_signed_url"),
+            dicom_signed_urls=json_dict.get("dicom_signed_urls"),
+            is_optimised_image_group=json_dict.get("is_optimised_image_group"),
             images_data=json_dict.get("images_data"),
         )
 
