@@ -113,28 +113,6 @@ class DicomFileLinks:
     file_links: List[str]
 
 
-@dataclasses.dataclass(frozen=True)
-class DataRowV2:
-    # DENIS: either I do this, or I re-use the actual DataRow somehow and make sure that in the payload I have a
-    # 'v2' flag.
-    pass
-
-
-# def check_if_images_have_signed_url(images: List[ImageData]) -> bool:
-#     if len(images) == 0:
-#         return False
-#     for image in images:
-#         if image.signed_url is None:
-#             return False
-#     return True
-
-
-# def check_if_file_links_are_signed_urls(file_links: List[str]) -> bool:
-#     if len(file_links) == 0:
-#         return False
-#     return is_signed_url(file_links[0])
-
-
 class DataRow(dict, Formatter):
     def __init__(
         self,
@@ -247,31 +225,11 @@ class DataRow(dict, Formatter):
     @client_metadata.setter
     def client_metadata(self, new_client_metadata: Dict) -> None:
         """
-        Update the custom client metadata. This does a request to the backend.
+        Update the custom client metadata. This queues a request for the backend which will happen on call of
+        `upload`.
         """
         self["_dirty_fields"].append("client_metadata")
         self["client_metadata"] = new_client_metadata
-        # if self["_querier"] is not None:
-        #     res = self["_querier"].basic_setter(
-        #         DataClientMetadata,
-        #         uid=self.uid,
-        #         payload={"new_client_metadata": new_client_metadata},
-        #     )
-        #     if res:
-        #         self["client_metadata"] = new_client_metadata
-        #     else:
-        #         raise EncordException(f"Could not update client metadata for DataRow with uid: {self.uid}")
-
-    # def fetch_client_metadata(self) -> None:
-    #     """
-    #     Does a request to the Encord server for the client metadata. Use this function to initially fetch or
-    #     re-fetch the client metadata.
-    #     """
-    #     if self["_querier"] is not None:
-    #         res = self["_querier"].basic_getter(DataClientMetadata, uid=self.uid)
-    #         self["client_metadata"] = res.payload
-    #     else:
-    #         raise EncordException(f"Could not retrieve client metadata for DataRow with uid: {self.uid}")
 
     @property
     def width(self) -> int:
@@ -352,33 +310,15 @@ class DataRow(dict, Formatter):
             payload = {}
             for dirty_field in self["_dirty_fields"]:
                 payload[dirty_field] = self[dirty_field]
+            self["_dirty_fields"] = []
 
             res = self["_querier"].basic_setter(DataRow, uid=self.uid, payload=payload)
             if res:
-                # DENIS: should it return everything again?
-                pass
+                self._compare_upload_payload(res, payload)
             else:
                 raise EncordException(f"Could not upload data for DataRow with uid: {self.uid}")
         else:
             raise EncordException(f"Could not upload data. The DataRow is in an invalid state.")
-
-    # def fetch_signed_url(self):
-    #     """
-    #     Returns:
-    #     This returns a generated cached signed url link of the given data asset.
-    #     """
-    #     # DENIS: this will only do stuff for non-DICOM
-    #     if self.data_type in [DataType.VIDEO, DataType.IMG_GROUP, DataType.IMAGE] and self["signed_url"] is None:
-    #         if self["_querier"] is not None:
-    #             payload = {"data_type": self.data_type.value}
-    #             res = self["_querier"].basic_getter(SignedUrl, uid=self.uid, payload=payload)
-    #             self["signed_url"] = res.signed_url
-    #         else:
-    #             raise EncordException(
-    #                 f"Could not get signed url for DataRow with uid: {self.uid}."
-    #                 f"This could be because the given DataRow was initialised incorrectly."
-    #             )
-    #     return self["signed_url"]
 
     @property
     def file_size(self) -> int:
@@ -413,39 +353,6 @@ class DataRow(dict, Formatter):
         """
         return self["images_data"]
 
-    # DENIS: or have image data be a subsidiary itself?
-    # def fetch_image_data(self, get_signed_url: bool = False) -> None:
-    #     """
-    #     Args:
-    #         get_signed_url: optional flag which is responsible for generating signed urls for returned
-    #             images data (`False` by default).
-    #     Returns:
-    #         If the data type is not `DataType.IMG_GROUP` then this method simply returns `None`.
-    #         If `get_signed_url` is `False` then `signed_url' of each image data in the returned array is None.
-    #         Otherwise, `signed_url` for each image is a generated signed url link.
-    #     """
-    #     if self.data_type == DataType.IMG_GROUP:
-    #         if self["_querier"] is not None:
-    #             payload = {
-    #                 "get_signed_url": get_signed_url,
-    #             }
-    #             res = self["_querier"].basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
-    #             self["images_data"] = [ImageData.from_dict(image) for image in res.images]
-    #         else:
-    #             raise EncordException(
-    #                 f"Could not get images data for image group with uid: {self.uid}. "
-    #                 f"This could be because the given DataRow was initialised incorrectly."
-    #             )
-
-    # @property
-    # def dicom_file_links(self) -> Optional[List[str]]:
-    #     """
-    #     Returns:
-    #         This returns a list of file links for the given data asset.
-    #         If the data type is not `DataType.DICOM` then this returns an empty list.
-    #     """
-    #     return self["dicom_file_links"]
-
     @property
     def dicom_signed_urls(self) -> Optional[List[str]]:
         """
@@ -455,28 +362,6 @@ class DataRow(dict, Formatter):
         """
         return self["dicom_signed_urls"]
 
-    # # DENIS: fetch_dicom_file_links to support batching?
-    # def fetch_dicom_signed_urls(self) -> None:
-    #     """
-    #     Returns:
-    #         This method lazily retrieves and returns list of file links for the given dicom DataRow and cache it.
-    #         If the data type is not `DataType.DICOM` then this method simply returns `None`.
-    #         If the `get_signed_url` is `True` then the method returns array of generated signed url file links.
-    #         Otherwise, this returns permanent file links.
-    #     """
-    #     if self.data_type == DataType.DICOM:
-    #         if self["_querier"] is not None:
-    #             res = self["_querier"].basic_getter(DicomFileLinks, uid=self.uid, payload={})
-    #             self["dicom_signed_urls"] = res.file_links
-    #         else:
-    #             raise EncordException(
-    #                 f"Could not get file links for dicom with uid: {self.uid}."
-    #                 f"This could be because the given DataRow was initialised incorrectly."
-    #             )
-
-    # DENIS: maybe a `fetch()` would be better, and if we need more specific configs, it can be added like for the
-    # `copy_project` function.
-
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
         data_type = DataType.from_upper_case_string(json_dict["data_type"])
@@ -484,7 +369,7 @@ class DataRow(dict, Formatter):
         return DataRow(
             uid=json_dict["data_hash"],
             title=json_dict["data_title"],
-            # The API server currently returns upper cased DataType strings.
+            # The API server currently returns upper-cased DataType strings.
             data_type=data_type,
             created_at=parser.parse(json_dict["created_at"]),
             client_metadata=json_dict.get("client_metadata"),
@@ -508,6 +393,17 @@ class DataRow(dict, Formatter):
         for json_dict in json_list:
             ret.append(cls.from_dict(json_dict))
         return ret
+
+    def _compare_upload_payload(self, upload_res: dict, initial_payload: dict) -> None:
+        """
+        Compares the upload payload with the response from the server.
+        """
+        updated_fields = set(upload_res["updated_fields"])
+        fields_requested_for_update = set(initial_payload.keys())
+        if updated_fields != fields_requested_for_update:
+            raise EncordException(
+                f"The actually updated fields `{updated_fields}` do not match the fields that are requested for update."
+            )
 
 
 @dataclasses.dataclass(frozen=True)
