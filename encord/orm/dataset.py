@@ -29,6 +29,7 @@ from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
+from encord.utilities.common import _remove_none_keys
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -112,24 +113,26 @@ class DicomFileLinks:
     file_links: List[str]
 
 
-def is_signed_url(string: str) -> bool:
-    pattern = re.compile(r"^https://.*")
-    return pattern.match(string) is not None
+@dataclasses.dataclass(frozen=True)
+class DataRowV2:
+    # DENIS: either I do this, or I re-use the actual DataRow somehow and make sure that in the payload I have a
+    # 'v2' flag.
+    pass
 
 
-def check_if_images_have_signed_url(images: List[ImageData]) -> bool:
-    if len(images) == 0:
-        return False
-    for image in images:
-        if image.signed_url is None:
-            return False
-    return True
+# def check_if_images_have_signed_url(images: List[ImageData]) -> bool:
+#     if len(images) == 0:
+#         return False
+#     for image in images:
+#         if image.signed_url is None:
+#             return False
+#     return True
 
 
-def check_if_file_links_are_signed_urls(file_links: List[str]) -> bool:
-    if len(file_links) == 0:
-        return False
-    return is_signed_url(file_links[0])
+# def check_if_file_links_are_signed_urls(file_links: List[str]) -> bool:
+#     if len(file_links) == 0:
+#         return False
+#     return is_signed_url(file_links[0])
 
 
 class DataRow(dict, Formatter):
@@ -149,6 +152,9 @@ class DataRow(dict, Formatter):
         client_metadata: Optional[dict],
         frames_per_second: Optional[int],
         duration: Optional[int],
+        images_data: Optional[List[ImageData]],
+        signed_url: Optional[str],
+        dicom_signed_url: Optional[str],
     ):
         """
         This class has dict-style accessors for backwards compatibility.
@@ -176,9 +182,10 @@ class DataRow(dict, Formatter):
                 "duration": duration,
                 "client_metadata": client_metadata,
                 "_querier": None,
-                "images": None,
-                "signed_url": None,
-                "dicom_file_links": None,
+                "images_data": images_data,
+                "signed_url": signed_url,
+                "dicom_signed_urls": dicom_signed_url,
+                "_dirty_fields": [],
             }
         )
 
@@ -188,6 +195,7 @@ class DataRow(dict, Formatter):
 
     @uid.setter
     def uid(self, value: str) -> None:
+        """This function will never update the uid in the server."""
         self["data_hash"] = value
 
     @property
@@ -196,24 +204,16 @@ class DataRow(dict, Formatter):
 
     @title.setter
     def title(self, value: str) -> None:
+        self["_dirty_fields"].append("data_title")
         self["data_title"] = value
 
     @property
     def data_type(self) -> DataType:
         return DataType.from_upper_case_string(self["data_type"])
 
-    @data_type.setter
-    def data_type(self, value: DataType) -> None:
-        self["data_type"] = value.to_upper_case_string()
-
     @property
     def created_at(self) -> datetime:
         return parser.parse(self["created_at"])
-
-    @created_at.setter
-    def created_at(self, value: datetime) -> None:
-        """Datetime will trim milliseconds for backwards compatibility."""
-        self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
     @property
     def frames_per_second(self) -> Optional[int]:
@@ -249,27 +249,29 @@ class DataRow(dict, Formatter):
         """
         Update the custom client metadata. This does a request to the backend.
         """
-        if self["_querier"] is not None:
-            res = self["_querier"].basic_setter(
-                DataClientMetadata,
-                uid=self.uid,
-                payload={"new_client_metadata": new_client_metadata},
-            )
-            if res:
-                self["client_metadata"] = new_client_metadata
-            else:
-                raise EncordException(f"Could not update client metadata for DataRow with uid: {self.uid}")
+        self["_dirty_fields"].append("client_metadata")
+        self["client_metadata"] = new_client_metadata
+        # if self["_querier"] is not None:
+        #     res = self["_querier"].basic_setter(
+        #         DataClientMetadata,
+        #         uid=self.uid,
+        #         payload={"new_client_metadata": new_client_metadata},
+        #     )
+        #     if res:
+        #         self["client_metadata"] = new_client_metadata
+        #     else:
+        #         raise EncordException(f"Could not update client metadata for DataRow with uid: {self.uid}")
 
-    def fetch_client_metadata(self) -> None:
-        """
-        Does a request to the Encord server for the client metadata. Use this function to initially fetch or
-        re-fetch the client metadata.
-        """
-        if self["_querier"] is not None:
-            res = self["_querier"].basic_getter(DataClientMetadata, uid=self.uid)
-            self["client_metadata"] = res.payload
-        else:
-            raise EncordException(f"Could not retrieve client metadata for DataRow with uid: {self.uid}")
+    # def fetch_client_metadata(self) -> None:
+    #     """
+    #     Does a request to the Encord server for the client metadata. Use this function to initially fetch or
+    #     re-fetch the client metadata.
+    #     """
+    #     if self["_querier"] is not None:
+    #         res = self["_querier"].basic_getter(DataClientMetadata, uid=self.uid)
+    #         self["client_metadata"] = res.payload
+    #     else:
+    #         raise EncordException(f"Could not retrieve client metadata for DataRow with uid: {self.uid}")
 
     @property
     def width(self) -> int:
@@ -299,28 +301,84 @@ class DataRow(dict, Formatter):
     def file_link(self) -> str:
         """
         Returns:
-        This returns a permanent file link of the given data asset.
-        If the data type is `DataType.DICOM` then this returns an empty string.
+            This returns a permanent file link of the given data asset.
+            If the data type is `DataType.DICOM` then this returns an empty string.
         """
         return self["file_link"]
 
-    # DENIS: should I do a get_signed_url or a fetch_signed_url that also returns self?
-    def fetch_signed_url(self):
+    @property
+    def signed_url(self) -> Optional[str]:
         """
         Returns:
-        This returns a generated cached signed url link of the given data asset.
+            This returns the cached signed url of the given data asset. To cache the signed url, use the
+            `fetch()` function.
         """
-        if self.data_type in [DataType.VIDEO, DataType.IMG_GROUP, DataType.IMAGE] and self["signed_url"] is None:
-            if self["_querier"] is not None:
-                payload = {"data_type": self.data_type.value}
-                res = self["_querier"].basic_getter(SignedUrl, uid=self.uid, payload=payload)
-                self["signed_url"] = res.signed_url
-            else:
-                raise EncordException(
-                    f"Could not get signed url for DataRow with uid: {self.uid}."
-                    f"This could be because the given DataRow was initialised incorrectly."
-                )
         return self["signed_url"]
+
+    def fetch(
+        self,
+        *,
+        signed_url: bool = False,
+        image_data: Optional[FetchImagesDataConfig] = None,
+        client_metadata: bool = False,
+    ):
+        """
+        Fetches all the most up-to-date data. If any of the parameters are falsey, the current values will not be
+        updated.
+
+        Args:
+            signed_url: If True, this will fetch a generated signed url of the data asset.
+            image_data: If not None, this will fetch the image data of the data asset. You can additionally
+                specify what to fetch with the `FetchImagesDataConfig` class.
+            client_metadata: If True, this will fetch the client metadata of the data asset.
+        """
+        if self["_querier"] is not None:
+            payload = {
+                "fetch_signed_url": signed_url,
+                "fetch_image_data": image_data,
+                "fetch_client_metadata": client_metadata,
+            }
+            res = self["_querier"].basic_getter(DataRow, uid=self.uid, payload=payload)
+            res_dict = _remove_none_keys(dict(res))
+            self.update(res_dict)
+        else:
+            raise EncordException(f"Could not fetch data. The DataRow is in an invalid state.")
+
+    def upload(self) -> None:
+        """
+        Uploads the set fields to the Encord server. This is a blocking function.
+        """
+        if self["_querier"] is not None:
+            payload = {}
+            for dirty_field in self["_dirty_fields"]:
+                payload[dirty_field] = self[dirty_field]
+
+            res = self["_querier"].basic_setter(DataRow, uid=self.uid, payload=payload)
+            if res:
+                # DENIS: should it return everything again?
+                pass
+            else:
+                raise EncordException(f"Could not upload data for DataRow with uid: {self.uid}")
+        else:
+            raise EncordException(f"Could not upload data. The DataRow is in an invalid state.")
+
+    # def fetch_signed_url(self):
+    #     """
+    #     Returns:
+    #     This returns a generated cached signed url link of the given data asset.
+    #     """
+    #     # DENIS: this will only do stuff for non-DICOM
+    #     if self.data_type in [DataType.VIDEO, DataType.IMG_GROUP, DataType.IMAGE] and self["signed_url"] is None:
+    #         if self["_querier"] is not None:
+    #             payload = {"data_type": self.data_type.value}
+    #             res = self["_querier"].basic_getter(SignedUrl, uid=self.uid, payload=payload)
+    #             self["signed_url"] = res.signed_url
+    #         else:
+    #             raise EncordException(
+    #                 f"Could not get signed url for DataRow with uid: {self.uid}."
+    #                 f"This could be because the given DataRow was initialised incorrectly."
+    #             )
+    #     return self["signed_url"]
 
     @property
     def file_size(self) -> int:
@@ -346,60 +404,78 @@ class DataRow(dict, Formatter):
         """
         return self["storage_location"]
 
-    # DENIS: or have image data be a subsidiary itself?
-    def get_images(self, get_signed_url: bool = False) -> List[ImageData]:
+    @property
+    def image_data(self) -> Optional[List[ImageData]]:
         """
-        Args:
-            get_signed_url: optional flag which is responsible for generating signed urls for returned
-                images data (`False` by default).
         Returns:
-            This method lazily retrieves list of images, cache and returns it for the given DataRow image group.
-            If the data type is not `DataType.IMG_GROUP` then this method simply returns `None`.
-            If `get_signed_url` is `False` then `signed_url' of each image data in the returned array is None.
-            Otherwise, `signed_url` for each image is a generated signed url link.
+            This returns a list of ImageData objects for the given data asset.
+            If the data type is not `DataType.IMG_GROUP` then this returns an empty list.
         """
-        if self.data_type == DataType.IMG_GROUP:
-            if self["_querier"] is not None:
-                if self["images"] is None or get_signed_url != check_if_images_have_signed_url(self["images"]):
-                    payload = {
-                        "get_signed_url": get_signed_url,
-                    }
-                    res = self["_querier"].basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
-                    self["images"] = [ImageData.from_dict(image) for image in res.images]
-            else:
-                raise EncordException(
-                    f"Could not get images data for image group with uid: {self.uid}. "
-                    f"This could be because the given DataRow was initialised incorrectly."
-                )
-        return self["images"]
+        return self["images_data"]
 
-    # DENIS: fetch_dicom_file_links to support batching?
-    def get_dicom_file_links(self, get_signed_url: bool = False) -> List[str]:
+    # DENIS: or have image data be a subsidiary itself?
+    # def fetch_image_data(self, get_signed_url: bool = False) -> None:
+    #     """
+    #     Args:
+    #         get_signed_url: optional flag which is responsible for generating signed urls for returned
+    #             images data (`False` by default).
+    #     Returns:
+    #         If the data type is not `DataType.IMG_GROUP` then this method simply returns `None`.
+    #         If `get_signed_url` is `False` then `signed_url' of each image data in the returned array is None.
+    #         Otherwise, `signed_url` for each image is a generated signed url link.
+    #     """
+    #     if self.data_type == DataType.IMG_GROUP:
+    #         if self["_querier"] is not None:
+    #             payload = {
+    #                 "get_signed_url": get_signed_url,
+    #             }
+    #             res = self["_querier"].basic_getter(ImagesInGroup, uid=self.uid, payload=payload)
+    #             self["images_data"] = [ImageData.from_dict(image) for image in res.images]
+    #         else:
+    #             raise EncordException(
+    #                 f"Could not get images data for image group with uid: {self.uid}. "
+    #                 f"This could be because the given DataRow was initialised incorrectly."
+    #             )
+
+    # @property
+    # def dicom_file_links(self) -> Optional[List[str]]:
+    #     """
+    #     Returns:
+    #         This returns a list of file links for the given data asset.
+    #         If the data type is not `DataType.DICOM` then this returns an empty list.
+    #     """
+    #     return self["dicom_file_links"]
+
+    @property
+    def dicom_signed_urls(self) -> Optional[List[str]]:
         """
-        Args:
-            get_signed_url: optional flag which is responsible for generating signed urls(`False` by default)
         Returns:
-            This method lazily retrieves and returns list of file links for the given dicom DataRow and cache it.
-            If the data type is not `DataType.DICOM` then this method simply returns `None`.
-            If the `get_signed_url` is `True` then the method returns array of generated signed url file links.
-            Otherwise, this returns permanent file links.
+            This returns a list of ImageData objects for the given data asset.
+            If the data type is not `DataType.IMG_GROUP` then this returns an empty list.
         """
-        if self.data_type == DataType.DICOM:
-            if self["_querier"] is not None:
-                if self["dicom_file_links"] is None or get_signed_url != check_if_file_links_are_signed_urls(
-                    self["dicom_file_links"]
-                ):
-                    payload = {
-                        "get_signed_url": get_signed_url,
-                    }
-                    res = self["_querier"].basic_getter(DicomFileLinks, uid=self.uid, payload=payload)
-                    self["dicom_file_links"] = res.file_links
-            else:
-                raise EncordException(
-                    f"Could not get file links for dicom with uid: {self.uid}."
-                    f"This could be because the given DataRow was initialised incorrectly."
-                )
-        return self["dicom_file_links"]
+        return self["dicom_signed_urls"]
+
+    # # DENIS: fetch_dicom_file_links to support batching?
+    # def fetch_dicom_signed_urls(self) -> None:
+    #     """
+    #     Returns:
+    #         This method lazily retrieves and returns list of file links for the given dicom DataRow and cache it.
+    #         If the data type is not `DataType.DICOM` then this method simply returns `None`.
+    #         If the `get_signed_url` is `True` then the method returns array of generated signed url file links.
+    #         Otherwise, this returns permanent file links.
+    #     """
+    #     if self.data_type == DataType.DICOM:
+    #         if self["_querier"] is not None:
+    #             res = self["_querier"].basic_getter(DicomFileLinks, uid=self.uid, payload={})
+    #             self["dicom_signed_urls"] = res.file_links
+    #         else:
+    #             raise EncordException(
+    #                 f"Could not get file links for dicom with uid: {self.uid}."
+    #                 f"This could be because the given DataRow was initialised incorrectly."
+    #             )
+
+    # DENIS: maybe a `fetch()` would be better, and if we need more specific configs, it can be added like for the
+    # `copy_project` function.
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
@@ -411,7 +487,7 @@ class DataRow(dict, Formatter):
             # The API server currently returns upper cased DataType strings.
             data_type=data_type,
             created_at=parser.parse(json_dict["created_at"]),
-            client_metadata=json_dict["client_metadata"],
+            client_metadata=json_dict.get("client_metadata"),
             last_edited_at=parser.parse(json_dict["last_edited_at"]),
             width=json_dict["width"],
             height=json_dict["height"],
@@ -421,6 +497,9 @@ class DataRow(dict, Formatter):
             storage_location=json_dict["storage_location"],
             frames_per_second=json_dict["frames_per_second"],
             duration=json_dict["duration"],
+            signed_url=json_dict.get("signed_url"),
+            dicom_signed_url=json_dict.get("dicom_signed_url"),
+            images_data=json_dict.get("images_data"),
         )
 
     @classmethod
@@ -835,3 +914,8 @@ class DatasetAccessSettings:
 DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
     fetch_client_metadata=False,
 )
+
+
+@dataclasses.dataclass
+class FetchImagesDataConfig:
+    fetch_signed_urls: bool = False
