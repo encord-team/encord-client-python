@@ -297,14 +297,16 @@ class DataRow(dict, Formatter):
                 "fetch_client_metadata": client_metadata,
             }
             res = self["_querier"].basic_getter(DataRow, uid=self.uid, payload=payload)
-            res_dict = _remove_none_keys(dict(res))
-            self.update(res_dict)
+            self._update_current_class(res)
+
         else:
             raise EncordException(f"Could not fetch data. The DataRow is in an invalid state.")
 
     def upload(self) -> None:
         """
         Uploads the set fields to the Encord server. This is a blocking function.
+
+        The newest values from the Encord server will update the current DataRow object.
         """
         if self["_querier"] is not None:
             payload = {}
@@ -315,6 +317,8 @@ class DataRow(dict, Formatter):
             res = self["_querier"].basic_setter(DataRow, uid=self.uid, payload=payload)
             if res:
                 self._compare_upload_payload(res, payload)
+                data_row_dict = upload_res["data_row"]
+                self._update_current_class(DataRow.from_dict(data_row_dict))
             else:
                 raise EncordException(f"Could not upload data for DataRow with uid: {self.uid}")
         else:
@@ -397,6 +401,8 @@ class DataRow(dict, Formatter):
     def _compare_upload_payload(self, upload_res: dict, initial_payload: dict) -> None:
         """
         Compares the upload payload with the response from the server.
+
+        NOTE: this could also compare the new fields, field by field and update the current DataRow.
         """
         updated_fields = set(upload_res["updated_fields"])
         fields_requested_for_update = set(initial_payload.keys())
@@ -404,6 +410,10 @@ class DataRow(dict, Formatter):
             raise EncordException(
                 f"The actually updated fields `{updated_fields}` do not match the fields that are requested for update."
             )
+
+    def _update_current_class(self, new_class: DataRow) -> None:
+        res_dict = _remove_none_keys(dict(new_class))
+        self.update(res_dict)
 
 
 @dataclasses.dataclass(frozen=True)
