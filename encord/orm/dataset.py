@@ -63,19 +63,11 @@ class DataClientMetadata:
 
 
 class ImageData:
-    id: int
-    title: str
-    user_hash: UUID
-    file_link: str
-    signed_url: str
-    file_type: str
-    file_size: float
-    image_hash: UUID
-    storage_location: StorageLocation
-    created_at: datetime
-    last_edited_at: datetime
-    height: int
-    width: int
+    """
+    Information about individual images within a single :class:`~encord.orm.dataset.DataRow` of type
+    :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`. Get this information
+    via the :meth:`DataRow.images <encord.orm.dataset.DataRow.images>` property.
+    """
 
     def __init__(
         self,
@@ -118,11 +110,16 @@ class ImageData:
 
     @property
     def file_type(self) -> str:
-        """Return the MIME type of the file."""
+        """
+        The MIME type of the file.
+        """
         return self._file_type
 
     @property
     def file_size(self) -> int:
+        """
+        The size of the file in bytes.
+        """
         return self._file_size
 
     @property
@@ -147,7 +144,7 @@ class ImageData:
 
     @property
     def signed_url(self) -> Optional[str]:
-        """Return the signed URL if one was generated when this class was created."""
+        """The signed URL if one was generated when this class was created."""
         return self._signed_url
 
     @classmethod
@@ -236,15 +233,23 @@ class DataRow(dict, Formatter):
 
     @property
     def uid(self) -> str:
+        """
+        The unique identifier for this data row. Note that the setter does not update the data on the server.
+        """
         return self["data_hash"]
 
     @uid.setter
     def uid(self, value: str) -> None:
-        """DEPRECATED. Do not this function as it will never update the uid in the server."""
         self["data_hash"] = value
 
     @property
     def title(self) -> str:
+        """
+        The data title.
+
+        The setter updates the custom client metadata. This queues a request for the backend which will be
+        executed on a call of :meth:`.DataRow.upload`.
+        """
         return self["data_title"]
 
     @title.setter
@@ -265,8 +270,6 @@ class DataRow(dict, Formatter):
     def created_at(self) -> datetime:
         return parser.parse(self["created_at"])
 
-    # DENIS: review all the doc strings. Possibly add some further documentation in the docs.
-
     @created_at.setter
     def created_at(self, value: datetime) -> None:
         """DEPRECATED. Do not this function as it will never update the created_at in the server."""
@@ -275,18 +278,17 @@ class DataRow(dict, Formatter):
     @property
     def frames_per_second(self) -> Optional[int]:
         """
-        Returns:
-        If the data type is `DataType.VIDEO` this returns the actual number of frames per second for the video.
-        Otherwise, it returns None as a `frames_per_second` field is not applicable.
+        If the data type is :meth:`DataType.VIDEO <encord.constants.enums.DataType.VIDEO>` this returns the
+        actual number of frames per second for the video. Otherwise, it returns `None` as a frames_per_second
+        field is not applicable.
         """
         return self["frames_per_second"]
 
     @property
     def duration(self) -> Optional[int]:
         """
-        Returns:
-            If the data type is `DataType.VIDEO` this returns the actual video duration.
-            Otherwise, it returns None as a `duration` field is not applicable.
+        If the data type is :meth:`DataType.VIDEO <encord.constants.enums.DataType.VIDEO>` this returns the
+        actual duration for the video. Otherwise, it returns `None` as a duration field is not applicable.
         """
         if self.data_type != DataType.VIDEO:
             return None
@@ -295,60 +297,107 @@ class DataRow(dict, Formatter):
     @property
     def client_metadata(self) -> Optional[dict]:
         """
-        Returns the currently cached client metadata.
+        The currently cached client metadata. To cache the client metadata, use the
+        :meth:`~encord.orm.dataset.DataRow.fetch()` function.
+
+        The setter updates the custom client metadata. This queues a request for the backend which will
+        be executed on a call of :meth:`.DataRow.upload`.
         """
         return self["client_metadata"]
 
     @client_metadata.setter
     def client_metadata(self, new_client_metadata: Dict) -> None:
-        """
-        Update the custom client metadata. This queues a request for the backend which will happen on call of
-        `upload`.
-        """
         self["_dirty_fields"].append("client_metadata")
         self["client_metadata"] = new_client_metadata
 
     @property
-    def width(self) -> int:
+    def width(self) -> Optional[int]:
         """
-        Returns:
-        This returns an actual width of the data asset.
+        An actual width of the data asset. This is `None` for data types of
+        :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
+        :meth:`is_optimised_image_group <encord.data.DataRow.is_optimised_image_group>` is `False`, because
+        each image in this group can have a different dimension. Inspect the
+        :meth:`images <encord.data.DataRow.images>` to get the height of individual images.
         """
         return self["width"]
 
     @property
-    def height(self) -> int:
+    def height(self) -> Optional[int]:
         """
-        Returns:
-        This returns an actual height of the data asset.
+        An actual height of the data asset. This is `None` for data types of
+        :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
+        :meth:`is_optimised_image_group <encord.data.DataRow.is_optimised_image_group>` is `False`, because
+        each image in this group can have a different dimension. Inspect the
+        :meth:`images <encord.data.DataRow.images>` to get the height of individual images.
         """
         return self["height"]
 
     @property
     def last_edited_at(self) -> datetime:
-        """
-        Returns:
-        This returns a datetime when the given data asset was last edited.
-        """
         return parser.parse(self["last_edited_at"])
 
     @property
-    def file_link(self) -> str:
+    def file_link(self) -> Optional[str]:
         """
-        Returns:
-            This returns a permanent file link of the given data asset.
-            If the data type is `DataType.DICOM` then this returns an empty string.
+        A permanent file link of the given data asset. When stored in
+        :meth:`StorageLocation.CORD_STORAGE <encord.orm.dataset.StorageLocation.CORD_STORAGE>` this will be the
+        internal file path. In private bucket storage location this will be the full path to the file.
+        If the data type is `DataType.DICOM` then this returns None as no single file is associated with the
+        series.
         """
         return self["file_link"]
 
     @property
     def signed_url(self) -> Optional[str]:
         """
-        Returns:
-            This returns the cached signed url of the given data asset. To cache the signed url, use the
-            `fetch()` function.
+        The cached signed url of the given data asset. To cache the signed url, use the
+        :meth:`~encord.orm.dataset.DataRow.fetch()` function.
         """
         return self["signed_url"]
+
+    @property
+    def file_size(self) -> int:
+        """
+        The file size of the given data asset in bytes.
+        """
+        return self["file_size"]
+
+    @property
+    def file_type(self) -> str:
+        """
+        A MIME file type of the given data asset as a string
+        """
+        return self["file_type"]
+
+    @property
+    def storage_location(self) -> StorageLocation:
+        return self["storage_location"]
+
+    @property
+    def images(self) -> Optional[List[ImageData]]:
+        """
+        A list of the cached :class:`~encord.orm.dataset.ImageData` objects for the given data asset.
+        Fetch the images with appropriate settings in the :meth:`~encord.orm.dataset.DataRow.fetch()` function.
+        If the data type is not :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`
+        then this returns None.
+        """
+        return self["images"]
+
+    @property
+    def dicom_signed_urls(self) -> Optional[List[str]]:
+        """
+        The signed urls of all the DICOM files in the series of the :class:`~encord.orm.dataset.DataRow`.
+        Returns `None` if the data type is not :meth:`DataType.DICOM <encord.constants.enums.DataType.DICOM>`.
+        """
+        return self["dicom_signed_urls"]
+
+    @property
+    def is_optimised_image_group(self) -> Optional[bool]:
+        """
+        If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
+        returns whether this is a performance optimised image group. Returns `None` for other data types.
+        """
+        return self["is_optimised_image_group"]
 
     def fetch(
         self,
@@ -358,13 +407,13 @@ class DataRow(dict, Formatter):
         client_metadata: bool = False,
     ):
         """
-        Fetches all the most up-to-date data. If any of the parameters are falsey, the current values will not be
+        Fetches all the most up-to-date data. If any of the parameters are falsy, the current values will not be
         updated.
 
         Args:
             signed_url: If True, this will fetch a generated signed url of the data asset.
             images: If not None, this will fetch the image data of the data asset. You can additionally
-                specify what to fetch with the `FetchImagesDataConfig` class.
+                specify what to fetch with the :class:`.FetchImagesDataConfig` class.
             client_metadata: If True, this will fetch the client metadata of the data asset.
         """
         if self["_querier"] is not None:
@@ -387,7 +436,7 @@ class DataRow(dict, Formatter):
         """
         Uploads the set fields to the Encord server. This is a blocking function.
 
-        The newest values from the Encord server will update the current DataRow object.
+        The newest values from the Encord server will update the current :class:`.DataRow` object.
         """
         if self["_querier"] is not None:
             payload = {}
@@ -404,54 +453,6 @@ class DataRow(dict, Formatter):
                 raise EncordException(f"Could not upload data for DataRow with uid: {self.uid}")
         else:
             raise EncordException(f"Could not upload data. The DataRow is in an invalid state.")
-
-    @property
-    def file_size(self) -> int:
-        """
-        Returns:
-            The file size of the given data asset in bytes.
-        """
-        return self["file_size"]
-
-    @property
-    def file_type(self) -> str:
-        """
-        Returns:
-            A MIME file type of the given data asset as a string
-        """
-        return self["file_type"]
-
-    @property
-    def storage_location(self) -> StorageLocation:
-        """
-        Returns:
-            This returns a storage location of the given data asset.
-        """
-        return self["storage_location"]
-
-    @property
-    def images(self) -> Optional[List[ImageData]]:
-        """
-        Returns:
-            This returns a list of ImageData objects for the given data asset.
-            If the data type is not `DataType.IMG_GROUP` then this returns an empty list.
-        """
-        return self["images"]
-
-    @property
-    def dicom_signed_urls(self) -> Optional[List[str]]:
-        """
-        Returns:
-        """
-        return self["dicom_signed_urls"]
-
-    @property
-    def is_optimised_image_group(self) -> Optional[bool]:
-        """
-        Returns:
-            If the data type is an image group, returns whether this is a performance optimised image group.
-        """
-        return self["is_optimised_image_group"]
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:

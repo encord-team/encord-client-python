@@ -84,7 +84,7 @@ codeautolink_autodoc_inject = True
 
 
 # == THEME CONFIG SECTION == #
-html_favicon = '../_static/logo.svg'
+html_favicon = "../_static/logo.svg"
 html_logo = "../_static/logo.svg"
 html_css_files = ["css/custom.css"]
 
