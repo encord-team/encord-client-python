@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
@@ -226,7 +226,8 @@ class LabelRowMetadata(Formatter):
     Contains helpful information about a LabelRow.
     """
 
-    label_hash: str
+    label_hash: Optional[str]
+    """Is `None` if the label row was not yet created."""
     data_hash: str
     dataset_hash: str
     data_title: str

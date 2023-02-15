@@ -565,6 +565,10 @@ class EncordClientProject(EncordClient):
         edited_after: Optional[Union[str, datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
+        *,
+        include_uninitialised_labels=False,
+        label_hashes: Optional[List[str]] = None,
+        data_hashes: Optional[List[str]] = None,
     ) -> List[LabelRowMetadata]:
         """
         Args:
@@ -572,7 +576,12 @@ class EncordClientProject(EncordClient):
             edited_after: Optionally filter to only rows last edited after the specified time
             label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
             shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
-
+            include_uninitialised_labels: Whether to return only label rows that are "created" and have a label_hash
+                (default). If set to `True`, this will return all label rows, including those that do not have a
+                label_hash. This flag is for backwards compatibility support. You probably always will prefer setting
+                this flag to `True`.
+            data_hashes: List of data hashes to filter by.
+            label_hashes: List of label hashes to filter by.
         Returns:
             A list of :class:`~encord.orm.label_row.LabelRowMetadata` instances for all the matching label rows
 
@@ -589,6 +598,9 @@ class EncordClientProject(EncordClient):
             "edited_after": edited_after,
             "label_statuses": label_statuses,
             "shadow_data_state": shadow_data_state.value if shadow_data_state else None,
+            "include_uninitialised_labels": include_uninitialised_labels,
+            "data_hashes": data_hashes,
+            "label_hashes": label_hashes,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload)
 
