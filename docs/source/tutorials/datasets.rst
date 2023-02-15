@@ -5,29 +5,9 @@ Datasets
 ********
 
 The |sdk| allows you to interact with the datasets you have added to |company|.
-A dataset has the attributes ``title``, ``description``, ``dataset_type``, and ``data_rows``
+The attributes and member functions of the Dataset class can be found here: :class:`Dataset <encord.dataset.Dataset>`.
 
-.. code-block::
-
-    {
-        "title": "Example title",
-        "description": "Example description ..",
-        "dataset_type": "0",
-        "data_rows": [
-            {
-                "data_hash": "<data_hash>",
-                "data_title": "sample_data.mp4",
-                "data_type": "VIDEO"
-            }, {
-                "data_hash": "<data_hash>",
-                "data_title": "image-group-abcde",
-                "data_type": "IMG_GROUP"
-            },
-            ...
-        ]
-    }
-
-Note how the ``data_rows`` can both consist of videos and image groups.
+Each dataset can have a list of :class:`DataRows <encord.dataset.DataRow>` which are the individual videos, image groups, images, or DICOM series within the Dataset.
 
 Below, you can find tutorials on how to interact with your datasets when you have associated a :xref:`public-private_key_pair` with |company|.
 
@@ -236,6 +216,13 @@ Adding data from a private cloud
         .. literalinclude:: /code_examples/tutorials/datasets/add_private_data_with_safe_retries.py
             :language: python
 
+
+Reading and updating data
+-------------------------
+To inspect data within a dataset you can use the :meth:`Dataset.data_rows <encord.dataset.Dataset.data_rows>` method.
+You will get a list of :class:`DataRows <encord.orm.dataset.DataRow>`.
+Check the auto-generated documentation for the :class:`DataRow <encord.orm.dataset.DataRow>` class for more information on
+which fields you can access and update.
 
 Deleting data
 -------------

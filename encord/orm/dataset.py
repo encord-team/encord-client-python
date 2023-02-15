@@ -172,6 +172,18 @@ class ImageData:
 
 
 class DataRow(dict, Formatter):
+    """
+    Each individual DataRow is one upload of a video, image group, single image, or DICOM series.
+
+    This class has dict-style accessors for backwards compatibility.
+    Clients who are using this class for the first time are encouraged to use the property accessors and setters
+    instead of the underlying dictionary.
+    The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
+
+    WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
+    datastructure.
+    """
+
     def __init__(
         self,
         uid: str,
@@ -193,15 +205,7 @@ class DataRow(dict, Formatter):
         dicom_signed_urls: Optional[str],
         is_optimised_image_group: Optional[bool],
     ):
-        """
-        This class has dict-style accessors for backwards compatibility.
-        Clients who are using this class for the first time are encouraged to use the property accessors and setters
-        instead of the underlying dictionary.
-        The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
 
-        WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
-        datastructure.
-        """
         parsed_images = None
         if images is not None:
             parsed_images = [ImageData.from_dict(image) for image in images]
