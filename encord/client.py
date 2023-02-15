@@ -620,13 +620,13 @@ class EncordClientProject(EncordClient):
 
     def copy_project(
         self,
-        *,
-        new_title: str,
-        new_description: Optional[str] = None,
         copy_datasets: Union[bool, CopyDatasetOptions] = False,
         copy_collaborators=False,
         copy_models=False,
+        *,
         copy_labels: Optional[CopyLabelsOptions] = None,
+        new_title: str,
+        new_description: Optional[str] = None,
     ) -> str:
         """
         This function is documented in :meth:`encord.project.Project.copy_project`.

@@ -206,6 +206,7 @@ class Project:
         copy_datasets: Union[bool, CopyDatasetOptions] = False,
         copy_collaborators=False,
         copy_models=False,
+        *,
         copy_labels: Optional[CopyLabelsOptions] = None,
         new_title: Optional[str] = None,
         new_description: Optional[str] = None,
