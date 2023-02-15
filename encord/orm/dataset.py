@@ -83,7 +83,7 @@ class ImageData:
         title: str,
         file_link: str,
         file_type: str,
-        file_size: float,
+        file_size: int,
         storage_location: StorageLocation,
         created_at: datetime,
         last_edited_at: datetime,
@@ -106,7 +106,7 @@ class ImageData:
 
     @property
     def image_hash(self) -> str:
-        return self._image_hash
+        return str(self._image_hash)
 
     @property
     def title(self) -> str:
@@ -134,15 +134,15 @@ class ImageData:
         return self._created_at
 
     @property
-    def last_edited_at(self) -> str:
+    def last_edited_at(self) -> datetime:
         return self._last_edited_at
 
     @property
-    def height(self) -> str:
+    def height(self) -> int:
         return self._height
 
     @property
-    def width(self) -> str:
+    def width(self) -> int:
         return self._width
 
     @property
