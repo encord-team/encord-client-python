@@ -89,12 +89,14 @@ def test_dataset_setters_and_getters():
 
     uid = "123456"
     data_row_title = "Datarow title"
-    created_at = datetime(2022, 1, 5, 18, 51, 5)
+    created_at = datetime(2022, 1, 12, 15, 25, 54)
     data_type = DataType.VIDEO
 
     data_row = dataset.data_rows[0]
     data_row.uid = uid
     data_row.title = data_row_title
+    data_row.created_at = created_at
+    data_row.data_type = data_type
 
     assert data_row.uid == uid
     assert data_row.title == data_row_title

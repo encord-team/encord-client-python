@@ -259,7 +259,7 @@ class DataRow(dict, Formatter):
     @data_type.setter
     def data_type(self, value: DataType) -> None:
         """DEPRECATED. Do not this function as it will never update the created_at in the server."""
-        self["data_type"] = value
+        self["data_type"] = value.to_upper_case_string()
 
     @property
     def created_at(self) -> datetime:
@@ -270,7 +270,7 @@ class DataRow(dict, Formatter):
     @created_at.setter
     def created_at(self, value: datetime) -> None:
         """DEPRECATED. Do not this function as it will never update the created_at in the server."""
-        self["created_at"] = value
+        self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
     @property
     def frames_per_second(self) -> Optional[int]:
