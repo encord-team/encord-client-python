@@ -160,8 +160,7 @@ class Project:
             shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
             include_uninitialised_labels: Whether to return only label rows that are "created" and have a label_hash
                 (default). If set to `True`, this will return all label rows, including those that do not have a
-                label_hash. This flag is for backwards compatibility support. You probably always will prefer setting
-                this flag to `True`.
+                label_hash.
             data_hashes: List of data hashes to filter by.
             label_hashes: List of label hashes to filter by.
 
