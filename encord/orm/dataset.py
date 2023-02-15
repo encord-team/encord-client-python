@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import dataclasses
 import json
-import re
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
@@ -61,11 +60,6 @@ class DatasetUsers:
 @dataclasses.dataclass(frozen=True)
 class DataClientMetadata:
     payload: dict
-
-
-@dataclasses.dataclass(frozen=True)
-class SignedUrl:
-    signed_url: str
 
 
 class ImageData:
@@ -180,16 +174,6 @@ class ImageData:
         return f"ImageData(title={self.title}, image_hash={self.image_hash})"
 
 
-@dataclasses.dataclass(frozen=True)
-class ImagesInGroup:
-    images: List[Dict]
-
-
-@dataclasses.dataclass(frozen=True)
-class DicomFileLinks:
-    file_links: List[str]
-
-
 class DataRow(dict, Formatter):
     def __init__(
         self,
@@ -256,7 +240,7 @@ class DataRow(dict, Formatter):
 
     @uid.setter
     def uid(self, value: str) -> None:
-        """This function will never update the uid in the server."""
+        """DEPRECATED. Do not this function as it will never update the uid in the server."""
         self["data_hash"] = value
 
     @property
@@ -272,9 +256,21 @@ class DataRow(dict, Formatter):
     def data_type(self) -> DataType:
         return DataType.from_upper_case_string(self["data_type"])
 
+    @data_type.setter
+    def data_type(self, value: DataType) -> None:
+        """DEPRECATED. Do not this function as it will never update the created_at in the server."""
+        self["data_type"] = value
+
     @property
     def created_at(self) -> datetime:
         return parser.parse(self["created_at"])
+
+    # DENIS: review all the doc strings. Possibly add some further documentation in the docs.
+
+    @created_at.setter
+    def created_at(self, value: datetime) -> None:
+        """DEPRECATED. Do not this function as it will never update the created_at in the server."""
+        self["created_at"] = value
 
     @property
     def frames_per_second(self) -> Optional[int]:
@@ -289,8 +285,8 @@ class DataRow(dict, Formatter):
     def duration(self) -> Optional[int]:
         """
         Returns:
-        If the data type is `DataType.VIDEO` this returns the actual video duration.
-        Otherwise, it returns None as a `duration` field is not applicable.
+            If the data type is `DataType.VIDEO` this returns the actual video duration.
+            Otherwise, it returns None as a `duration` field is not applicable.
         """
         if self.data_type != DataType.VIDEO:
             return None
@@ -917,3 +913,7 @@ DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
 @dataclasses.dataclass
 class FetchImagesDataConfig:
     fetch_signed_urls: bool = False
+    """
+    Whether to fetch signed urls for each individual image. Only set this to true if you need to download the 
+    images.
+    """

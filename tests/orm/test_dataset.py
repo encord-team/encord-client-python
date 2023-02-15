@@ -29,10 +29,10 @@ DATASET_JSON = {
             "storage_location": StorageLocation.CORD_STORAGE.value,
             "frames_per_second": None,
             "duration": None,
-            '_querier': None,
-            'images': None,
-            'signed_url': None,
-            'dicom_file_links': None
+            "_querier": None,
+            "images": None,
+            "signed_url": None,
+            "dicom_file_links": None,
         }
     ],
 }
@@ -93,8 +93,6 @@ def test_dataset_setters_and_getters():
     data_row = dataset.data_rows[0]
     data_row.uid = uid
     data_row.title = data_row_title
-    data_row.created_at = created_at
-    data_row.data_type = data_type
 
     assert data_row.uid == uid
     assert data_row.title == data_row_title
