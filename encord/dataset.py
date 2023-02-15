@@ -258,6 +258,9 @@ class Dataset:
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """
+        DEPRECATED: Use the individual setter properties of the respective :class:`encord.orm.dataset.DataRow`
+        instance instead. These can be retrieved via the :meth:`.Dataset.data_rows` function.
+
         Update a data item
 
         Args:
