@@ -458,10 +458,10 @@ class EncordClientDataset(EncordClient):
         res = self._querier.basic_setter(SingleImage, uid=None, payload=upload)
 
         if res["success"]:
-            image_data = Image(
+            image = Image(
                 {"data_hash": upload["data_hash"], "title": upload["title"], "file_link": upload["file_link"]}
             )
-            return image_data
+            return image
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
 

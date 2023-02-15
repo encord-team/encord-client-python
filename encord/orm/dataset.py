@@ -191,7 +191,7 @@ class DataRow(dict, Formatter):
         client_metadata: Optional[dict],
         frames_per_second: Optional[int],
         duration: Optional[int],
-        images_data: Optional[List[dict]],
+        images: Optional[List[dict]],
         signed_url: Optional[str],
         dicom_signed_urls: Optional[str],
         is_optimised_image_group: Optional[bool],
@@ -205,9 +205,9 @@ class DataRow(dict, Formatter):
         WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
         datastructure.
         """
-        parsed_images_data = None
-        if images_data is not None:
-            parsed_images_data = [ImageData.from_dict(image_data) for image_data in images_data]
+        parsed_images = None
+        if images is not None:
+            parsed_images = [ImageData.from_dict(image) for image in images]
 
         super().__init__(
             {
@@ -226,7 +226,7 @@ class DataRow(dict, Formatter):
                 "duration": duration,
                 "client_metadata": client_metadata,
                 "_querier": None,
-                "images_data": parsed_images_data,
+                "images": parsed_images,
                 "signed_url": signed_url,
                 "dicom_signed_urls": dicom_signed_urls,
                 "is_optimised_image_group": is_optimised_image_group,
@@ -354,7 +354,7 @@ class DataRow(dict, Formatter):
         self,
         *,
         signed_url: bool = False,
-        image_data: Optional[FetchImagesDataConfig] = None,
+        images: Optional[FetchImagesDataConfig] = None,
         client_metadata: bool = False,
     ):
         """
@@ -363,18 +363,18 @@ class DataRow(dict, Formatter):
 
         Args:
             signed_url: If True, this will fetch a generated signed url of the data asset.
-            image_data: If not None, this will fetch the image data of the data asset. You can additionally
+            images: If not None, this will fetch the image data of the data asset. You can additionally
                 specify what to fetch with the `FetchImagesDataConfig` class.
             client_metadata: If True, this will fetch the client metadata of the data asset.
         """
         if self["_querier"] is not None:
-            fetch_images_data = None
-            if image_data is not None:
-                fetch_images_data = dataclasses.asdict(image_data)
+            fetch_images = None
+            if images is not None:
+                fetch_images = dataclasses.asdict(images)
 
             payload = {
                 "fetch_signed_url": signed_url,
-                "fetch_images_data": fetch_images_data,
+                "fetch_images": fetch_images,
                 "fetch_client_metadata": client_metadata,
             }
             res = self["_querier"].basic_getter(DataRow, uid=self.uid, payload=payload)
@@ -430,13 +430,13 @@ class DataRow(dict, Formatter):
         return self["storage_location"]
 
     @property
-    def images_data(self) -> Optional[List[ImageData]]:
+    def images(self) -> Optional[List[ImageData]]:
         """
         Returns:
             This returns a list of ImageData objects for the given data asset.
             If the data type is not `DataType.IMG_GROUP` then this returns an empty list.
         """
-        return self["images_data"]
+        return self["images"]
 
     @property
     def dicom_signed_urls(self) -> Optional[List[str]]:
@@ -476,7 +476,7 @@ class DataRow(dict, Formatter):
             signed_url=json_dict.get("signed_url"),
             dicom_signed_urls=json_dict.get("dicom_signed_urls"),
             is_optimised_image_group=json_dict.get("is_optimised_image_group"),
-            images_data=json_dict.get("images_data"),
+            images=json_dict.get("images"),
         )
 
     @classmethod

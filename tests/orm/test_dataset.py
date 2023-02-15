@@ -27,12 +27,14 @@ DATASET_JSON = {
             "data_type": "IMG_GROUP",
             "client_metadata": {"key", "value"},
             "storage_location": StorageLocation.CORD_STORAGE.value,
+            "is_optimised_image_group": None,
             "frames_per_second": None,
             "duration": None,
             "_querier": None,
+            "_dirty_fields": [],
             "images": None,
             "signed_url": None,
-            "dicom_file_links": None,
+            "dicom_signed_urls": None,
         }
     ],
 }
@@ -87,7 +89,7 @@ def test_dataset_setters_and_getters():
 
     uid = "123456"
     data_row_title = "Datarow title"
-    created_at = datetime(2022, 1, 12, 15, 25, 54)
+    created_at = datetime(2022, 1, 5, 18, 51, 5)
     data_type = DataType.VIDEO
 
     data_row = dataset.data_rows[0]
