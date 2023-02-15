@@ -228,7 +228,7 @@ class LabelStatus(Enum):
 @dataclass(frozen=True)
 class LabelRowMetadata(Formatter):
     """
-    Contains helpful information about a LabelRowV2.
+    Contains helpful information about a label row.
     """
 
     label_hash: Optional[str]
