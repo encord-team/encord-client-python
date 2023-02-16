@@ -28,7 +28,7 @@ from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
-from encord.utilities.common import _remove_none_keys
+from encord.utilities.common import _get_dict_without_none_keys
 
 DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -475,7 +475,7 @@ class DataRow(dict, Formatter):
             file_link=json_dict["file_link"],
             file_size=json_dict["file_size"],
             file_type=json_dict["file_type"],
-            storage_location=json_dict["storage_location"],
+            storage_location=StorageLocation(json_dict["storage_location"]),
             frames_per_second=json_dict["frames_per_second"],
             duration=json_dict["duration"],
             signed_url=json_dict.get("signed_url"),
@@ -505,7 +505,7 @@ class DataRow(dict, Formatter):
             )
 
     def _update_current_class(self, new_class: DataRow) -> None:
-        res_dict = _remove_none_keys(dict(new_class))
+        res_dict = _get_dict_without_none_keys(dict(new_class))
         self.update(res_dict)
 
 
@@ -724,6 +724,12 @@ class StorageLocation(IntEnum):
     AZURE = 3
     OTC = 4
 
+    NEW_STORAGE = -99
+    """
+    This is a placeholder for a new storage location that is not yet supported by your SDK version.
+    Please update your SDK to the latest version. 
+    """
+
     @staticmethod
     def from_str(string_location: str) -> StorageLocation:
         return STORAGE_LOCATION_BY_STR[string_location]
@@ -739,6 +745,9 @@ class StorageLocation(IntEnum):
             return "AZURE_STR"
         elif self == StorageLocation.OTC:
             return "OTC_STR"
+
+    def _missing_(cls) -> StorageLocation:
+        return StorageLocation.NEW_STORAGE
 
 
 STORAGE_LOCATION_BY_STR: Dict[str, StorageLocation] = {location.get_str(): location for location in StorageLocation}

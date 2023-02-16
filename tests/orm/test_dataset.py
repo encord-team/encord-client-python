@@ -117,3 +117,8 @@ def test_dataset_backwards_compatibility():
     assert dataset["description"] == DATASET_JSON["description"]
     assert dataset["dataset_type"] == DATASET_JSON["dataset_type"]
     assert dataset["data_rows"] == DATASET_JSON["data_rows"]
+
+
+def test_storage_location_default():
+    assert StorageLocation(0) == StorageLocation.CORD_STORAGE
+    assert StorageLocation(100) == StorageLocation.NEW_STORAGE
