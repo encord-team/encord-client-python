@@ -34,11 +34,11 @@ project.copy_project(
         dataset_title="baz",
         dataset_description="quz",
         datasets_to_data_hashes_map={
-            "<dataset_hash>": ["<data_unit_1", "<data_unit_2"]
+            "<dataset_hash>": ["<data_hash_1", "<data_hash_2"]
         },
     ),
     copy_labels=CopyLabelsOptions(
         accepted_label_statuses=[ReviewApprovalState.APPROVED],
-        accepted_label_hashes=["<label_hahs_1>", "<label_hahs_2>"],
+        accepted_label_hashes=["<label_hash_1>", "<label_hash_2>"],
     ),
 )
