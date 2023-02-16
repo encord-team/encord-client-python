@@ -309,11 +309,8 @@ class EncordClientDataset(EncordClient):
             OrmDataset, payload={"dataset_access_settings": dataclasses.asdict(self._dataset_access_settings)}
         )
 
-        def add_querier_to_data_rows(response):
-            for idx in range(len(response.data_rows)):
-                response.data_rows[idx]["_querier"] = self._querier
-
-        add_querier_to_data_rows(res)
+        for row in res.data_rows:
+            row["_querier"] = self._querier
         return res
 
     def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
