@@ -202,7 +202,6 @@ class DataRow(dict, Formatter):
         duration: Optional[int],
         images: Optional[List[dict]],
         signed_url: Optional[str],
-        dicom_signed_urls: Optional[str],
         is_optimised_image_group: Optional[bool],
     ):
 
@@ -229,7 +228,6 @@ class DataRow(dict, Formatter):
                 "_querier": None,
                 "images": parsed_images,
                 "signed_url": signed_url,
-                "dicom_signed_urls": dicom_signed_urls,
                 "is_optimised_image_group": is_optimised_image_group,
                 "_dirty_fields": [],
             }
@@ -388,14 +386,6 @@ class DataRow(dict, Formatter):
         return self["images"]
 
     @property
-    def dicom_signed_urls(self) -> Optional[List[str]]:
-        """
-        The signed urls of all the DICOM files in the series of the :class:`~encord.orm.dataset.DataRow`.
-        Returns `None` if the data type is not :meth:`DataType.DICOM <encord.constants.enums.DataType.DICOM>`.
-        """
-        return self["dicom_signed_urls"]
-
-    @property
     def is_optimised_image_group(self) -> Optional[bool]:
         """
         If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
@@ -479,7 +469,6 @@ class DataRow(dict, Formatter):
             frames_per_second=json_dict["frames_per_second"],
             duration=json_dict["duration"],
             signed_url=json_dict.get("signed_url"),
-            dicom_signed_urls=json_dict.get("dicom_signed_urls"),
             is_optimised_image_group=json_dict.get("is_optimised_image_group"),
             images=json_dict.get("images"),
         )
