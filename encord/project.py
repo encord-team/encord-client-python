@@ -169,6 +169,7 @@ class Project:
             shadow_data_state,
             data_hashes=data_hashes,
             label_hashes=label_hashes,
+            include_uninitialised_labels=True,
         )
 
         label_rows = [LabelRowV2(label_row_metadata, self._client) for label_row_metadata in label_row_metadatas]

@@ -565,6 +565,8 @@ class EncordClientProject(EncordClient):
         edited_after: Optional[Union[str, datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
+        *,
+        include_uninitialised_labels=False,
         data_hashes: Optional[List[str]] = None,
         label_hashes: Optional[List[str]] = None,
     ) -> List[LabelRowMetadata]:
@@ -593,6 +595,7 @@ class EncordClientProject(EncordClient):
             "edited_after": edited_after,
             "label_statuses": label_statuses,
             "shadow_data_state": shadow_data_state.value if shadow_data_state else None,
+            "include_uninitialised_labels": include_uninitialised_labels,
             "data_hashes": data_hashes,
             "label_hashes": label_hashes,
         }
