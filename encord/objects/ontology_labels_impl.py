@@ -12,6 +12,7 @@ from typing import (
     List,
     NoReturn,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Type,
@@ -60,6 +61,7 @@ from encord.objects.coordinates import (
 from encord.objects.internal_helpers import (
     Answer,
     _get_static_answer_map,
+    _infer_attribute_from_answer,
     _search_child_attributes,
     get_answer_from_object,
     get_default_answer_from_attribute,
@@ -694,15 +696,17 @@ class ClassificationInstance:
         return len(self._frames_to_data) > 0
 
     @overload
-    def set_answer(self, answer: str, attribute: TextAttribute) -> None:
+    def set_answer(self, answer: str, attribute: Optional[TextAttribute] = None, overwrite: bool = False) -> None:
         ...
 
     @overload
-    def set_answer(self, answer: Option, attribute: RadioAttribute, overwrite: bool = False) -> None:
+    def set_answer(self, answer: Option, attribute: Optional[RadioAttribute] = None, overwrite: bool = False) -> None:
         ...
 
     @overload
-    def set_answer(self, answer: Iterable[Option], attribute: ChecklistAttribute, overwrite: bool = False) -> None:
+    def set_answer(
+        self, answer: Iterable[Option], attribute: Optional[ChecklistAttribute] = None, overwrite: bool = False
+    ) -> None:
         ...
 
     @overload
@@ -718,17 +722,19 @@ class ClassificationInstance:
         overwrite: bool = False,
     ) -> None:
         """
-        We could make these functions part of a different class which this inherits from.
-
         Args:
             answer: The answer to set.
-            attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
-            DENIS: this can be inferred by the answer for radio and checklist.
+            attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
+                inferred.  For answers to :class:`encord.objects.common.RadioAttribute` or
+                :class:`encord.objects.common.ChecklistAttribute`, this can be inferred automatically. For
+                :class:`encord.objects.common.TextAttribute`, this will only be inferred there is only one possible
+                TextAttribute to set for the entire object instance. Otherwise, a
+                :class:`encord.exceptionsLabelRowError` will be thrown.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
                 a RuntimeError if the answer already exists.
         """
         if attribute is None:
-            attribute = self._ontology_classification.attributes[0]
+            attribute = _infer_attribute_from_answer(self._ontology_classification.attributes, answer)
         elif not self._is_attribute_valid_child_of_classification(attribute):
             raise LabelRowError("The attribute is not a valid child of the classification.")
         elif not self._is_selectable_child_attribute(attribute):
@@ -2400,7 +2406,7 @@ class ObjectInstance:
     def set_answer(
         self,
         answer: str,
-        attribute: TextAttribute,
+        attribute: Optional[TextAttribute] = None,
         frames: Optional[Frames] = None,
         overwrite: bool = False,
     ) -> None:
@@ -2410,7 +2416,7 @@ class ObjectInstance:
     def set_answer(
         self,
         answer: Option,
-        attribute: RadioAttribute,
+        attribute: Optional[RadioAttribute] = None,
         frames: Optional[Frames] = None,
         overwrite: bool = False,
     ) -> None:
@@ -2420,7 +2426,7 @@ class ObjectInstance:
     def set_answer(
         self,
         answer: Iterable[Option],
-        attribute: ChecklistAttribute,
+        attribute: Optional[ChecklistAttribute] = None,
         frames: Optional[Frames] = None,
         overwrite: bool = False,
     ) -> None:
@@ -2428,8 +2434,8 @@ class ObjectInstance:
 
     def set_answer(
         self,
-        answer: Union[str, Option, Iterable[Option]],
-        attribute: Attribute,
+        answer: Union[str, Option, Sequence[Option]],
+        attribute: Optional[Attribute] = None,
         frames: Optional[Frames] = None,
         overwrite: bool = False,
     ) -> None:
@@ -2438,7 +2444,12 @@ class ObjectInstance:
 
         Args:
             answer: The answer to set.
-            attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
+            attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
+                inferred.  For answers to :class:`encord.objects.common.RadioAttribute` or
+                :class:`encord.objects.common.ChecklistAttribute`, this can be inferred automatically. For
+                :class:`encord.objects.common.TextAttribute`, this will only be inferred there is only one possible
+                TextAttribute to set for the entire object instance. Otherwise, a
+                :class:`encord.exceptionsLabelRowError` will be thrown.
             frames: Only relevant for dynamic attributes. The frames to set the answer for. If `None`, the
                 answer is set for all frames that this object currently has set coordinates for (also overwriting
                 current answers). This will not automatically propagate the answer to new frames that are added in the
@@ -2448,6 +2459,8 @@ class ObjectInstance:
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
                 a RuntimeError if the answer already exists. This argument is ignored for dynamic attributes.
         """
+        if attribute is None:
+            attribute = _infer_attribute_from_answer(self._ontology_object.attributes, answer)
         if not self._is_attribute_valid_child_of_object_instance(attribute):
             raise LabelRowError("The attribute is not a valid child of the object.")
         elif not self._is_selectable_child_attribute(attribute):
@@ -2472,6 +2485,7 @@ class ObjectInstance:
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
+        This is a low level helper function and should usually not be used directly.
         Sets the answer for the classification from a dictionary.
 
         Args:

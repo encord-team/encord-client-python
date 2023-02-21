@@ -501,12 +501,14 @@ def test_classification_index_answer_overwrite():
     attribute = text_classification.attributes[0]
 
     classification_instance.set_answer("Zeus", attribute)
-
     assert classification_instance.get_answer() == "Zeus"
+
+    classification_instance.set_answer("Hermes", overwrite=True)  # inferred attribute
+    assert classification_instance.get_answer() == "Hermes"
 
     with pytest.raises(LabelRowError):
         classification_instance.set_answer("Poseidon")
-    assert classification_instance.get_answer() == "Zeus"
+    assert classification_instance.get_answer() == "Hermes"
 
     classification_instance.set_answer("Aphrodite", overwrite=True)
     assert classification_instance.get_answer() == "Aphrodite"
@@ -522,8 +524,10 @@ def test_classification_index_answer_nested_attributes():
     assert classification_instance.get_answer(attribute) is None
 
     # Setting non-nested answer
-    classification_instance.set_answer(answer=radio_classification_option_1, attribute=attribute)
+    classification_instance.set_answer(answer=radio_classification_option_2, attribute=attribute)  # inferred attribute
+    assert classification_instance.get_answer(attribute) == radio_classification_option_2
 
+    classification_instance.set_answer(answer=radio_classification_option_1, overwrite=True)
     assert classification_instance.get_answer(attribute) == radio_classification_option_1
 
     # Changing to the nested passed_attribute
@@ -670,14 +674,7 @@ def test_add_and_get_classification_instances_to_label_row():
 
 
 def test_object_instance_answer_for_static_attributes():
-    """Be able to check which attributes can be answered. Set multiple answers.
-    NOTE: I'll also need to implement logic for dynamic answers.
-    I need to somehow deal with the dynamic vs non dynamic deep states.
-    * in the UI you can nest, but what happens is that these nested attributes are always static, so they
-        just keep their value. It doesn't really make sense but I need to account for it.
 
-
-    """
     object_instance = ObjectInstance(deeply_nested_polygon_item)
 
     assert object_instance.get_answer(nested_polygon_text) is None
@@ -722,8 +719,7 @@ def test_object_instance_answer_static_checklist():
         # Already set the answer
         object_instance.set_answer([nested_polygon_checklist_option_1], attribute=nested_polygon_checklist)
 
-    object_instance.set_answer([nested_polygon_checklist_option_1], attribute=nested_polygon_checklist, overwrite=True)
-
+    object_instance.set_answer([nested_polygon_checklist_option_1], overwrite=True)  # inferred answer
     assert object_instance.get_answer(nested_polygon_checklist) == [nested_polygon_checklist_option_1]
 
     object_instance.set_answer(
@@ -749,6 +745,10 @@ def test_object_instance_answer_static_nested_radio():
 
     object_instance.set_answer(radio_nested_option_1, attribute=radio_attribute_level_1)
     assert object_instance.get_answer(radio_attribute_level_1) == radio_nested_option_1
+
+    with pytest.raises(LabelRowError):
+        # inferring answers does not work if multiple text answers are possible.
+        object_instance.set_answer("Zeus")  # inferred answer
 
     object_instance.set_answer("Zeus", attribute=radio_nested_option_1_text)
     assert object_instance.get_answer(radio_nested_option_1_text) == "Zeus"

@@ -3,8 +3,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, NoReturn, Optional, Set, Union
+from typing import Any, Dict, Iterable, List, NoReturn, Optional, Sequence, Set, Union
 
+from encord.exceptions import LabelRowError
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
@@ -16,6 +17,7 @@ from encord.objects.common import (
     RadioAttribute,
     TextAttribute,
     _get_option_by_hash,
+    _OptionBase,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.utils import (
@@ -466,3 +468,77 @@ def _search_child_attributes(
                     return True
 
     return False
+
+
+def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Optional[Attribute]:
+    for attribute in attributes:
+        if attribute.has_options_field():
+            for option in attribute.options:
+                if option == passed_option:
+                    return attribute
+                if option.get_option_type() == OptionType.NESTABLE:
+                    attribute_opt = _search_for_parent(passed_option, option.nested_options)
+                    if attribute_opt is not None:
+                        return attribute_opt
+    return None
+
+
+def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
+    text_attributes: List[Attribute] = list()
+    for attribute in attributes:
+        if attribute.get_property_type() == PropertyType.TEXT:
+            text_attributes.append(attribute)
+        elif attribute.has_options_field():
+            for option in attribute.options:
+                if option.get_option_type() == OptionType.NESTABLE:
+                    text_attributes.extend(_search_for_text_attributes(option.nested_options))
+    return text_attributes
+
+
+def _infer_attribute_from_answer(
+    attributes: List[Attribute], answer: Union[str, Option, Sequence[Option]]
+) -> Attribute:
+    if isinstance(answer, _OptionBase):
+        parent_opt = _search_for_parent(answer, attributes)  # type: ignore
+        if parent_opt is None:
+            raise LabelRowError(
+                "Cannot find a corresponding attribute for the given answer in the Object ontology. "
+                "Please ensure to only pass the correct answer options for the given Object ontology. "
+                f"The used answer is `{answer}`"
+            )
+        return parent_opt
+    elif isinstance(answer, str):
+        text_attributes = _search_for_text_attributes(attributes)
+        if len(text_attributes) == 0:
+            raise LabelRowError(
+                "Cannot find any text attribute in the ontology of the given instance. Setting "
+                "a text answer is not supported."
+            )
+        if len(text_attributes) > 1:
+            raise LabelRowError(
+                "Multiple text attributes are present in the ontology of the given instance. "
+                f"Please provide the attribute explicitly. The found text attributes are {text_attributes}"
+            )
+        return text_attributes[0]
+    elif isinstance(answer, Sequence):
+        if len(answer) == 0:
+            raise LabelRowError(
+                "Cannot infer the attribute if a list of answers is empty. Please provide the " "attribute explicitly."
+            )
+
+        parent_opt = _search_for_parent(answer[0], attributes)
+        if parent_opt is None:
+            raise LabelRowError(
+                "Cannot find a corresponding attribute for one of the given answers in the Object ontology. "
+                "Please ensure to only pass the correct answer options for the given Object ontology. "
+                f"The used answer is `{answer}`"
+            )
+        for option in answer:
+            if option not in parent_opt.options:
+                raise LabelRowError(
+                    "Multiple options have been provided that do not belong to the same attribute. Please ensure that "
+                    "all options belong to the same ontology attribute."
+                )
+        return parent_opt
+    else:
+        raise NotImplementedError(f"The answer type is not supported for answer `{answer}` of type {type(answer)}.")
