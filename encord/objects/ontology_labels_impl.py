@@ -693,7 +693,8 @@ class ClassificationInstance:
         return ret
 
     def is_valid(self) -> bool:
-        return len(self._frames_to_data) > 0
+        if not len(self._frames_to_data) > 0:
+            raise LabelRowError("ClassificationInstance is not on any frames. Please add it to at least one frame.")
 
     @overload
     def set_answer(self, answer: str, attribute: Optional[TextAttribute] = None, overwrite: bool = False) -> None:
@@ -1439,8 +1440,7 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
-        if not object_instance.is_valid():
-            raise LabelRowError("The supplied ObjectInstance is not in a valid format.")
+        object_instance.is_valid()
 
         if object_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -1465,8 +1465,7 @@ class LabelRowV2:
     def add_classification(self, classification_instance: ClassificationInstance, force: bool = False):
         self._check_labelling_is_initalised()
 
-        if not classification_instance.is_valid():
-            raise LabelRowError("The supplied ClassificationInstance is not in a valid format.")
+        classification_instance.is_valid()
 
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -2465,7 +2464,7 @@ class ObjectInstance:
             raise LabelRowError("The attribute is not a valid child of the object.")
         elif not self._is_selectable_child_attribute(attribute):
             raise LabelRowError(
-                "Setting a nested attribute is only possible if all parent attributes have been" "selected."
+                "Setting a nested attribute is only possible if all parent attributes have been selected."
             )
         elif frames is not None and attribute.dynamic is False:
             raise LabelRowError("Setting frames is only possible for dynamic attributes.")
@@ -2645,21 +2644,23 @@ class ObjectInstance:
     def is_valid(self) -> bool:
         """Check if is valid, could also return some human/computer  messages."""
         if len(self._frames_to_instance_data) == 0:
-            return False
+            raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
 
-        if not self.are_dynamic_answers_valid():
-            return False
+        self.are_dynamic_answers_valid()
 
-        return True
-
-    def are_dynamic_answers_valid(self) -> bool:
+    def are_dynamic_answers_valid(self) -> None:
         """
         Whether there are any dynamic answers on frames that have no coordinates.
         """
         dynamic_frames = set(self._dynamic_answer_manager.frames())
         local_frames = set(_frame_views_to_frame_numbers(self.frames()))
 
-        return len(dynamic_frames - local_frames) == 0
+        if not len(dynamic_frames - local_frames) == 0:
+            raise LabelRowError(
+                "There are some dynamic answers on frames that have no coordinates. "
+                "Please ensure that all the dynamic answers are only on frames where coordinates "
+                "have been set previously."
+            )
 
     def _set_answer_unsafe(
         self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, track_hash: str, ranges: Ranges
