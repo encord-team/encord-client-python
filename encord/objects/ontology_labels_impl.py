@@ -26,7 +26,6 @@ from dateutil.parser import parse
 from encord.client import EncordClientProject
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
-from encord.http.querier import Querier
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
@@ -40,6 +39,7 @@ from encord.objects.common import (
     _get_attribute_by_hash,
     _get_attributes_by_title,
     _get_option_by_hash,
+    _handle_wrong_number_of_found_items,
     attribute_from_dict,
     attributes_to_list_dict,
 )
@@ -152,6 +152,32 @@ class Object:
             raise RuntimeError("Item not found.")
         check_type(found_item, type_)
         return found_item
+
+    def get_item_by_title(
+        self,
+        title: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns one ontology item with the matching title and matching type if specified. If more than one items in this
+        Object have the same title, then an error will be thrown. If no item is found, an error will be thrown as
+        well.
+
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_items = self.get_items_by_title(title, type_)
+        _handle_wrong_number_of_found_items(found_items, title, type_)
+        return found_items[0]
 
     def get_items_by_title(
         self,
@@ -316,7 +342,32 @@ class Classification:
         check_type(found_item, type_)
         return found_item
 
-    # DENIS: also do `get_item_by_title` which throws if not only one found.
+    def get_item_by_title(
+        self,
+        title: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns one ontology item with the matching title and matching type if specified. If more than one items in this
+        Classification have the same title, then an error will be thrown. If no item is found, an error will be thrown
+        as well.
+
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_items = self.get_items_by_title(title, type_)
+        _handle_wrong_number_of_found_items(found_items, title, type_)
+        return found_items[0]
+
     # DENIS: have the chaining in the docs.
     def get_items_by_title(
         self,
@@ -2922,6 +2973,32 @@ class OntologyStructure:
                 return found_item
 
         raise RuntimeError("Item not found.")
+
+    def get_item_by_title(
+        self,
+        title: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns one ontology item with the matching title and matching type if specified. If more than one items in this
+        ontology have the same title, then an error will be thrown. If no item is found, an error will be thrown as
+        well.
+
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_items = self.get_items_by_title(title, type_)
+        _handle_wrong_number_of_found_items(found_items, title, type_)
+        return found_items[0]
 
     def get_items_by_title(
         self,

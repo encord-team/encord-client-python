@@ -4,7 +4,7 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, List, Optional, Tuple, Type, TypeVar, Union
 
 from encord.objects.utils import (
     _decode_nested_uid,
@@ -70,7 +70,33 @@ class _AttributeBase(ABC):
             None,
         ] = None,
     ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
-        pass
+        raise NotImplementedError("This method is not implemented for this class")
+
+    def get_item_by_title(
+        self,
+        title: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns one ontology item with the matching title and matching type if specified. If more than one items in this
+        Attribute have the same title, then an error will be thrown. If no item is found, an error will be thrown
+        as well.
+
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_items = self.get_items_by_title(title, type_)
+        _handle_wrong_number_of_found_items(found_items, title, type_)
+        return found_items[0]
 
     @abstractmethod
     def get_items_by_title(
@@ -85,7 +111,7 @@ class _AttributeBase(ABC):
             None,
         ] = None,
     ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
-        pass
+        raise NotImplementedError("This method is not implemented for this class")
 
     def to_dict(self) -> dict:
         ret = self._encode_base()
@@ -407,7 +433,33 @@ class _OptionBase(ABC):
             None,
         ] = None,
     ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
-        pass
+        raise NotImplementedError("This method is not implemented for this class")
+
+    def get_item_by_title(
+        self,
+        title: str,
+        type_: Union[
+            Type[RadioAttribute],
+            Type[ChecklistAttribute],
+            Type[TextAttribute],
+            Type[NestableOption],
+            Type[FlatOption],
+            None,
+        ] = None,
+    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        """
+        Returns one ontology item with the matching title and matching type if specified. If more than one items in this
+        Option have the same title, then an error will be thrown. If no item is found, an error will be thrown
+        as well.
+
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
+        found_items = self.get_items_by_title(title, type_)
+        _handle_wrong_number_of_found_items(found_items, title, type_)
+        return found_items[0]
 
     @abstractmethod
     def get_items_by_title(
@@ -422,7 +474,7 @@ class _OptionBase(ABC):
             None,
         ] = None,
     ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
-        pass
+        raise NotImplementedError("This method is not implemented for this class")
 
     def to_dict(self) -> dict:
         ret = dict()
@@ -721,3 +773,18 @@ def _get_attributes_by_title(
             found_items = _get_options_by_title(title, attribute.options)
             ret.extend(found_items)
     return ret
+
+
+def _handle_wrong_number_of_found_items(
+    found_items: List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]],
+    title: str,
+    type_: Any,
+) -> None:
+    if len(found_items) == 0:
+        raise RuntimeError(f"No item was found in the ontology with the given title `{title}` and type `{type_}`")
+    elif len(found_items) > 1:
+        raise RuntimeError(
+            f"More than one item was found in the ontology with the given title `{title}` and type `{type_}`. "
+            f"Use the `get_items_by_title` or `get_item_by_hash` function instead. "
+            f"The found items are `{found_items}`."
+        )
