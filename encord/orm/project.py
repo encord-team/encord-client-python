@@ -166,7 +166,9 @@ class ReviewApprovalState(str, Enum):
 
 class CopyDatasetAction(str, Enum):
     ATTACH = "ATTACH"
+    """ Attach the datasets associated with the original project to the copy project. """
     CLONE = "CLONE"
+    """ Clone the data units from the associated datasets into a new dataset an attach it to the copy project. """
 
 
 @dataclass
@@ -176,8 +178,6 @@ class CopyDatasetOptions:
     action: CopyDatasetAction = CopyDatasetAction.ATTACH
     """
     One of `CopyDatasetAction.ATTACH` or `CopyDatasetAction.CLONE`. (defaults to ATTACH)
-    ATTACH: Attach the datasets associated with the original project to the copy project.
-    CLONE: Clone the data units from the associated datasets into a new dataset an attach it to the copy project.
     """
     dataset_title: Optional[str] = None
     dataset_description: Optional[str] = None
@@ -211,8 +211,8 @@ class CopyProjectPayload:
 
     @dataclass
     class _ProjectCopyMetadata:
-        project_title: str
-        project_description: str = ""
+        project_title: Optional[str] = None
+        project_description: Optional[str] = None
         dataset_title: Optional[str] = None
         dataset_description: Optional[str] = None
 

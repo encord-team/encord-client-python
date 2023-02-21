@@ -625,7 +625,7 @@ class EncordClientProject(EncordClient):
         copy_models=False,
         *,
         copy_labels: Optional[CopyLabelsOptions] = None,
-        new_title: str,
+        new_title: Optional[str] = None,
         new_description: Optional[str] = None,
     ) -> str:
         """

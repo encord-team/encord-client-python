@@ -222,6 +222,9 @@ class Project:
                                 If label and/or annotator reviewer mapping is set, this will also be copied over
             copy_models: currently if True, all models with their training information will be copied into the new
                          project
+            copy_labels: options for copying labels, defined in `CopyLabelsOptions`
+            new_title: when provided, will be used as the title for the new project.
+            new_description: when provided, will be used as the title for the new project.
 
         Returns:
             the EntityId of the newly created project
@@ -232,7 +235,7 @@ class Project:
             UnknownError: If an error occurs while copying the project.
         """
         return self._client.copy_project(
-            new_title=new_title or f"Copy of {self.title}",
+            new_title=new_title,
             new_description=new_description,
             copy_datasets=copy_datasets,
             copy_collaborators=copy_collaborators,
