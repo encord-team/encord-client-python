@@ -250,8 +250,10 @@ class LabelRowMetadata(Formatter):
 
     data_hash: str
     dataset_hash: str
+    dataset_title: str
     data_title: str
     data_type: str
+    data_link: str
     label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
     is_shadow_data: bool
@@ -260,6 +262,8 @@ class LabelRowMetadata(Formatter):
     """Only available for the VIDEO data_type"""
     frames_per_second: Optional[int]
     """Only available for the VIDEO data_type"""
+    height: Optional[int]
+    width: Optional[int]
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -276,14 +280,18 @@ class LabelRowMetadata(Formatter):
             last_edited_at=last_edited_at,
             data_hash=json_dict["data_hash"],
             dataset_hash=json_dict["dataset_hash"],
+            dataset_title=json_dict["dataset_title"],
             data_title=json_dict["data_title"],
             data_type=json_dict["data_type"],
+            data_link=json_dict["data_link"],
             label_status=LabelStatus(json_dict["label_status"]),
             annotation_task_status=AnnotationTaskStatus(json_dict["annotation_task_status"]),
             is_shadow_data=json_dict.get("is_shadow_data", False),
             number_of_frames=json_dict["number_of_frames"],
             duration=json_dict["duration"],
             frames_per_second=json_dict["frames_per_second"],
+            height=json_dict["height"],
+            width=json_dict["width"],
         )
 
     @classmethod

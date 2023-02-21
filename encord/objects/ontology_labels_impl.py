@@ -1059,16 +1059,15 @@ class LabelRowV2:
         number_of_frames: int
         duration: Optional[float]
         fps: Optional[float]
-        dataset_hash: Optional[str] = None
-        dataset_title: Optional[str] = None
-        data_title: Optional[str] = None
+        dataset_hash: str
+        dataset_title: str
+        data_title: str
+        width: Optional[int]
+        height: Optional[int]
+        data_link: Optional[str]
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
-        data_link: Optional[str] = None
-        width: Optional[int] = None
-        height: Optional[int] = None
-        dicom_data_links: Optional[List[str]] = None
 
     def __init__(
         self,
@@ -1168,14 +1167,6 @@ class LabelRowV2:
     def height(self) -> Optional[int]:
         return self._label_row_read_only_data.height
 
-    @property
-    def dicom_data_links(self) -> Optional[List[str]]:
-        """Only a value for DICOM data types."""
-        if self._label_row_read_only_data.data_type != DataType.DICOM:
-            raise LabelRowError("DICOM data links can only be retrieved for DICOM files.")
-        return self._label_row_read_only_data.dicom_data_links
-
-    # END: fields that are not returned right now from the get label row.
     @property
     def ontology_structure(self) -> OntologyStructure:
         """Get the corresponding ontology structure"""
@@ -1654,8 +1645,6 @@ class LabelRowV2:
             ret["data_duration"] = self._label_row_read_only_data.duration
         if self._label_row_read_only_data.fps is not None:
             ret["data_fps"] = self._label_row_read_only_data.fps
-        if self._label_row_read_only_data.dicom_data_links is not None:
-            ret["data_links"] = self._label_row_read_only_data.dicom_data_links
 
         return ret
 
@@ -1803,8 +1792,11 @@ class LabelRowV2:
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_metadata.label_hash,
             data_hash=label_row_metadata.data_hash,
+            data_title=label_row_metadata.data_title,
             dataset_hash=label_row_metadata.dataset_hash,
+            dataset_title=label_row_metadata.dataset_title,
             data_type=data_type,
+            data_link=label_row_metadata.data_link,
             label_status=label_row_metadata.label_status,
             annotation_task_status=label_row_metadata.annotation_task_status,
             is_shadow_data=label_row_metadata.is_shadow_data,
@@ -1813,6 +1805,8 @@ class LabelRowV2:
             duration=label_row_metadata.duration,
             fps=label_row_metadata.frames_per_second,
             number_of_frames=label_row_metadata.number_of_frames,
+            width=label_row_metadata.width,
+            height=label_row_metadata.height,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -1820,8 +1814,6 @@ class LabelRowV2:
         image_hash_to_frame = {item.image_hash: item.frame_number for item in frame_level_data.values()}
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
         data_type = DataType(label_row_dict["data_type"])
-
-        dicom_data_links = None
 
         if data_type == DataType.VIDEO:
             video_dict = list(label_row_dict["data_units"].values())[0]
@@ -1831,7 +1823,6 @@ class LabelRowV2:
 
         elif data_type == DataType.DICOM:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
-            dicom_data_links = dicom_dict["data_links"]
             data_link = None
             height = dicom_dict["height"]
             width = dicom_dict["width"]
@@ -1871,7 +1862,6 @@ class LabelRowV2:
             data_link=data_link,
             height=height,
             width=width,
-            dicom_data_links=dicom_data_links,
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):

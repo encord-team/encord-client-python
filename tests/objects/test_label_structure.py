@@ -14,18 +14,14 @@ from encord.objects import (
     ObjectInstance,
 )
 from encord.objects.common import TextAttribute
-from encord.objects.constants import (
-    DEFAULT_CONFIDENCE,
-    DEFAULT_MANUAL_ANNOTATION,
-    LabelStatus,
-)
+from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     BoundingBoxCoordinates,
     PointCoordinate,
     PolygonCoordinates,
 )
 from encord.objects.utils import Range
-from encord.orm.label_row import LabelRowMetadata
+from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels

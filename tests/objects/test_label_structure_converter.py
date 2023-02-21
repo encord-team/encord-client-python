@@ -131,15 +131,13 @@ def test_serialise_dicom_with_dynamic_classifications():
     assert label_row.data_link is None
     assert label_row.height == 256
     assert label_row.width == 256
-    assert isinstance(label_row.dicom_data_links, list)
-    assert isinstance(label_row.dicom_data_links[0], str)
 
     actual = label_row.to_encord_dict()
 
     deep_diff_enhanced(
         actual,
         dicom_labels,
-        exclude_regex_paths=["\['trackHash'\]"],
+        exclude_regex_paths=["\['trackHash'\]", "\['data_links'\]"],
     )
     # NOTE: likely we do not care about the trackHash. If we end up caring about it, we'll have to ensure that we can
     #  set it from parsing the data and keep it around when setting new answers for example.
