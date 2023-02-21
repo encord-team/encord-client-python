@@ -47,7 +47,6 @@ from encord.objects.constants import (
     DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
-    LabelStatus,
 )
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
@@ -81,7 +80,7 @@ from encord.objects.utils import (
     short_uuid_str,
 )
 from encord.orm.formatter import Formatter
-from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata
+from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
 
 @dataclass
@@ -581,7 +580,7 @@ class ClassificationInstance:
 
     def set_for_frame(
         self,
-        frames: Union[int, Iterable[int]],
+        frames: Union[int, Iterable[int]],  # DENIS: align the plural/singular here with the ObjectInstance
         *,
         overwrite: bool = False,
         created_at: datetime = datetime.now(),
@@ -872,6 +871,9 @@ class ClassificationInstance:
             f"classification_name={self._ontology_classification.attributes[0].name}, "
             f"object_feature_hash={self._ontology_classification.feature_node_hash})"
         )
+
+    def __lt__(self, other) -> bool:
+        return self.classification_hash < other.classification_hash
 
 
 class LabelRowV2:
@@ -1199,6 +1201,8 @@ class LabelRowV2:
         overwrite: bool = False,
     ) -> None:
         """
+        DENIS: should this be named somehow differently?
+
         Call this function to start reading or writing labels. This will fetch the labels that are currently stored
         in the Encord server. If you only want to inspect a subset of labels, you can filter them. Please note that if
         you filter the labels, and upload them later, you will effectively delete all the labels that had been filtered
@@ -1308,6 +1312,7 @@ class LabelRowV2:
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
+        # DENIS: can I rename this to be consistent with `get_view_for_frame`?
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
@@ -1876,9 +1881,9 @@ class LabelRowV2:
             data_type = label_row_dict["data_type"]
             if data_type in {DataType.IMG_GROUP.value, DataType.IMAGE.value}:
                 frame = int(data_unit["data_sequence"])
-                self._add_object_instances_from_objects(data_unit["labels"]["objects"], frame)
+                self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
                 self._add_classification_instances_from_classifications(
-                    data_unit["labels"]["classifications"], classification_answers, int(frame)
+                    data_unit["labels"].get("classifications", []), classification_answers, int(frame)
                 )
             elif data_type in {DataType.VIDEO.value, DataType.DICOM.value}:
                 for frame, frame_data in data_unit["labels"].items():
@@ -2657,6 +2662,12 @@ class ObjectInstance:
             f"object_feature_hash={self._ontology_object.feature_node_hash})"
         )
 
+    def __hash__(self) -> int:
+        return hash(id(self))
+
+    def __lt__(self, other: ObjectInstance) -> bool:
+        return self._object_hash < other._object_hash
+
 
 class DynamicAnswerManager:
     def __init__(self, object_instance: ObjectInstance):
@@ -2665,7 +2676,6 @@ class DynamicAnswerManager:
         This can be part of the ObjectInstance class.
         """
         self._object_instance = object_instance
-        # self._ontology_object = ontology_object
         self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
         self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
 
@@ -2783,6 +2793,16 @@ class DynamicAnswerManager:
                 answer = get_default_answer_from_attribute(attribute)
                 ret.add(answer)
         return ret
+
+    def __eq__(self, other: DynamicAnswerManager):
+        if not isinstance(other, DynamicAnswerManager):
+            return False
+        return (
+            self._frames_to_answers == other._frames_to_answers and self._answers_to_frames == other._answers_to_frames
+        )
+
+    def __hash__(self) -> int:
+        return hash(id(self))
 
 
 def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:

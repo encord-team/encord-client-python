@@ -224,6 +224,16 @@ class LabelStatus(Enum):
     REVIEWED = "REVIEWED"
     REVIEWED_TWICE = "REVIEWED_TWICE"
 
+    MISSING_LABEL_STATUS = "_MISSING_LABEL_STATUS_"
+    """
+    This value will be displayed if the Encord platform has a new label status and your SDK version does not understand
+    it yet. Please update your SDK to the latest version. 
+    """
+
+    @classmethod
+    def _missing_(cls, value):
+        return cls.MISSING_LABEL_STATUS
+
 
 @dataclass(frozen=True)
 class LabelRowMetadata(Formatter):
