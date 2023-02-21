@@ -14,6 +14,7 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
+from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -200,7 +201,16 @@ class Project:
         """
         return self._client.add_users(user_emails, user_role)
 
-    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False) -> str:
+    def copy_project(
+        self,
+        copy_datasets: Union[bool, CopyDatasetOptions] = False,
+        copy_collaborators=False,
+        copy_models=False,
+        *,
+        copy_labels: Optional[CopyLabelsOptions] = None,
+        new_title: Optional[str] = None,
+        new_description: Optional[str] = None,
+    ) -> str:
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
         Labels and models are optional.
@@ -212,6 +222,9 @@ class Project:
                                 If label and/or annotator reviewer mapping is set, this will also be copied over
             copy_models: currently if True, all models with their training information will be copied into the new
                          project
+            copy_labels: options for copying labels, defined in `CopyLabelsOptions`
+            new_title: when provided, will be used as the title for the new project.
+            new_description: when provided, will be used as the title for the new project.
 
         Returns:
             the EntityId of the newly created project
@@ -221,7 +234,14 @@ class Project:
             ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while copying the project.
         """
-        return self._client.copy_project(copy_datasets, copy_collaborators, copy_models)
+        return self._client.copy_project(
+            new_title=new_title,
+            new_description=new_description,
+            copy_datasets=copy_datasets,
+            copy_collaborators=copy_collaborators,
+            copy_models=copy_models,
+            copy_labels=copy_labels,
+        )
 
     def get_label_row(
         self,
