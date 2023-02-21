@@ -316,6 +316,8 @@ class Classification:
         check_type(found_item, type_)
         return found_item
 
+    # DENIS: also do `get_item_by_title` which throws if not only one found.
+    # DENIS: have the chaining in the docs.
     def get_items_by_title(
         self,
         title: str,
@@ -670,6 +672,7 @@ class ClassificationInstance:
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not provided, the first level attribute is used.
+            DENIS: this can be inferred by the answer for radio and checklist.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
                 a RuntimeError if the answer already exists.
         """
