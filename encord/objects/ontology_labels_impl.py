@@ -633,9 +633,9 @@ class ClassificationInstance:
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
 
-    def set_for_frame(
+    def set_for_frames(
         self,
-        frames: Frames,
+        frames: Frames = 0,
         *,
         overwrite: bool = False,
         created_at: datetime = datetime.now(),
@@ -652,7 +652,7 @@ class ClassificationInstance:
 
         Args:
             frames:
-                The frame to add the classification instance to.
+                The frame to add the classification instance to. Defaulting to the first frame for convenience.
             overwrite:
                 If `True`, overwrite existing data for the given frames. This will not reset all the
                 non-specified values. If `False` and data already exists for the given frames,
@@ -1042,7 +1042,7 @@ class LabelRowV2:
                     "added to multiple label rows at once."
                 )
 
-            object_instance.set_for_frame(
+            object_instance.set_for_frames(
                 coordinates,
                 self._frame,
                 overwrite=overwrite,
@@ -1076,7 +1076,7 @@ class LabelRowV2:
                     "added to multiple label rows at once."
                 )
 
-            classification_instance.set_for_frame(
+            classification_instance.set_for_frames(
                 self._frame,
                 overwrite=overwrite,
                 created_at=created_at,
@@ -2011,7 +2011,7 @@ class LabelRowV2:
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
-        object_instance.set_for_frame(coordinates=coordinates, frames=frame, **asdict(object_frame_instance_info))
+        object_instance.set_for_frames(coordinates=coordinates, frames=frame, **asdict(object_frame_instance_info))
         return object_instance
 
     def _add_coordinates_to_object_instance(
@@ -2025,7 +2025,7 @@ class LabelRowV2:
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
-        object_instance.set_for_frame(coordinates=coordinates, frames=frame, **asdict(object_frame_instance_info))
+        object_instance.set_for_frames(coordinates=coordinates, frames=frame, **asdict(object_frame_instance_info))
 
     def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
         if "boundingBox" in frame_object_label:
@@ -2083,7 +2083,7 @@ class LabelRowV2:
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
-        classification_instance.set_for_frame(frame, **asdict(frame_view))
+        classification_instance.set_for_frames(frame, **asdict(frame_view))
         answers_dict = classification_answers[classification_hash]["classifications"]
         self._add_static_answers_from_dict(classification_instance, answers_dict)
 
@@ -2100,7 +2100,7 @@ class LabelRowV2:
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
 
-        classification_instance.set_for_frame(frame, **asdict(frame_view))
+        classification_instance.set_for_frames(frame, **asdict(frame_view))
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
@@ -2148,7 +2148,7 @@ class ObjectInstance:
         @coordinates.setter
         def coordinates(self, coordinates: Coordinates) -> None:
             self._check_if_frame_view_is_valid()
-            self._object_instance.set_for_frame(coordinates, self._frame)
+            self._object_instance.set_for_frames(coordinates, self._frame)
 
         @property
         def created_at(self) -> datetime:
@@ -2556,10 +2556,10 @@ class ObjectInstance:
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
-    def set_for_frame(
+    def set_for_frames(
         self,
         coordinates: Coordinates,
-        frames: Frames,
+        frames: Frames = 0,
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
@@ -2580,7 +2580,7 @@ class ObjectInstance:
                 The coordinates of the object in the frame. This will throw an error if the type of the coordinates
                 does not match the type of the attribute in the object instance.
             frames:
-                The frames to add the object instance to.
+                The frames to add the object instance to. Defaulting to the first frame for convenience.
             overwrite:
                 If `True`, overwrite existing data for the given frames. This will not reset all the
                 non-specified values. If `False` and data already exists for the given frames,
