@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import prettyprinter as pp
-
 from encord import EncordUserClient
 from encord.utilities.client_utilities import CvatImporterSuccess, LocalImport
 

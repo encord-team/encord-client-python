@@ -154,10 +154,9 @@ class Project:
     ) -> List[LabelRowMetadata]:
         """
         Args:
-            self: Encord client object.
             edited_before: Optionally filter to only rows last edited before the specified time
             edited_after: Optionally filter to only rows last edited after the specified time
-            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
+            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`
             shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
             include_uninitialised_labels: Whether to return only label rows that are "created" and have a label_hash
                 (default). If set to `True`, this will return all label rows, including those that do not have a
@@ -169,7 +168,6 @@ class Project:
             A list of :class:`~encord.orm.label_row.LabelRowMetadata` instances for all the matching label rows
 
         Raises:
-            AuthorisationError: If not a member of the project.
             UnknownError: If an error occurs while retrieving the data.
         """
         return self._client.list_label_rows(
