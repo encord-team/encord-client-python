@@ -197,8 +197,8 @@ def test_create_object_instance_one_coordinate():
         top_left_y=0.4,
     )
 
-    object_instance.set_for_frame(coordinates=coordinates, frame=1)
-    assert object_instance.is_valid()
+    object_instance.set_for_frame(coordinates=coordinates, frames=1)
+    object_instance.is_valid()
 
 
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
@@ -226,7 +226,7 @@ def test_add_object_instance_to_label_row():
         top_left_y=0.4,
     )
 
-    object_instance.set_for_frame(coordinates=coordinates, frame=1)
+    object_instance.set_for_frame(coordinates=coordinates, frames=1)
     label_row.add_object(object_instance)
     assert label_row.get_objects()[0].object_hash == object_instance.object_hash
 
@@ -251,9 +251,9 @@ def test_add_remove_access_object_instances_in_label_row():
         top_left_y=0.4,
     )
 
-    object_instance_1.set_for_frame(coordinates=coordinates_1, frame=1)
-    object_instance_2.set_for_frame(coordinates=coordinates_2, frame=2)
-    object_instance_2.set_for_frame(coordinates=coordinates_2, frame=3)
+    object_instance_1.set_for_frame(coordinates=coordinates_1, frames=1)
+    object_instance_2.set_for_frame(coordinates=coordinates_2, frames=2)
+    object_instance_2.set_for_frame(coordinates=coordinates_2, frames=3)
 
     label_row.add_object(object_instance_1)
     label_row.add_object(object_instance_2)
@@ -317,7 +317,7 @@ def test_filter_for_objects():
 def test_add_wrong_coordinates():
     label_box = ObjectInstance(box_ontology_item)
     with pytest.raises(LabelRowError):
-        label_box.set_for_frame(POLYGON_COORDINATES, frame=1)
+        label_box.set_for_frame(POLYGON_COORDINATES, frames=1)
 
 
 def test_get_object_instances_by_frames():
@@ -391,7 +391,7 @@ def test_update_remove_object_instance_coordinates():
     # Add initial coordinates
     label_box.set_for_frame(BOX_COORDINATES, 1)
     frames = label_box.frames()
-    frame_1_view = label_box.get_view_for_frame(1)
+    frame_1_view = label_box.get_frame_view(1)
     assert sorted([frame.frame for frame in frames]) == [1]
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
@@ -414,12 +414,12 @@ def test_update_remove_object_instance_coordinates():
     frames = label_box.frames()
     # instance_data = label_box.get_instance_data(frames)
     assert sorted([frame.frame for frame in frames]) == [1, 2, 3, 4]
-    frame_1_view = label_box.get_view_for_frame(1)
+    frame_1_view = label_box.get_frame_view(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
-    frame_2_view = label_box.get_view_for_frame(2)
+    frame_2_view = label_box.get_frame_view(2)
     assert frame_2_view.coordinates == box_coordinates_2
     assert frame_2_view.confidence == confidence
     assert frame_2_view.manual_annotation == manual_annotation
@@ -431,12 +431,12 @@ def test_update_remove_object_instance_coordinates():
 
     frames = label_box.frames()
     assert sorted([frame.frame for frame in frames]) == [1, 4]
-    frame_1_view = label_box.get_view_for_frame(1)
+    frame_1_view = label_box.get_frame_view(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
-    frame_4_view = label_box.get_view_for_frame(4)
+    frame_4_view = label_box.get_frame_view(4)
     assert frame_4_view.coordinates == box_coordinates_2
     assert frame_4_view.confidence == confidence
     assert frame_4_view.manual_annotation == manual_annotation
@@ -461,12 +461,12 @@ def test_update_remove_object_instance_coordinates():
     frames = label_box.frames()
     assert sorted([frame.frame for frame in frames]) == [1, 4, 5]
 
-    frame_1_view = label_box.get_view_for_frame(1)
+    frame_1_view = label_box.get_frame_view(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
-    frame_4_view = label_box.get_view_for_frame(4)
+    frame_4_view = label_box.get_frame_view(4)
     assert frame_4_view.coordinates == box_coordinates_3
     assert frame_4_view.confidence == new_confidence
     assert frame_4_view.manual_annotation == manual_annotation
@@ -561,10 +561,12 @@ def test_classification_index_answer_nested_attributes():
 def test_classification_instances():
     classification_instance_1 = ClassificationInstance(text_classification)
     classification_instance_2 = ClassificationInstance(text_classification)
-    assert not classification_instance_1.is_valid()
+    with pytest.raises(LabelRowError) as e:
+        classification_instance_1.is_valid()
+        assert "not on any frames" in str(e)
 
-    classification_instance_1.set_for_frame([1, 2, 3])
-    assert classification_instance_1.is_valid()
+    classification_instance_1.set_for_frame(Range(1, 3))
+    classification_instance_1.is_valid()
 
     classification_instance_1.set_answer("Dionysus")
     assert classification_instance_1.get_answer() == "Dionysus"
@@ -589,10 +591,10 @@ def assert_datetime_is_recent(datetime_: datetime.datetime):
 def test_classification_instances_frame_view():
     classification_instance_1 = ClassificationInstance(text_classification)
 
-    classification_instance_1.set_for_frame([1, 2, 3])
+    classification_instance_1.set_for_frame(Range(1, 3))
 
     # Test defaults
-    frame_view_1 = classification_instance_1.get_view_for_frame(1)
+    frame_view_1 = classification_instance_1.get_frame_view(1)
     assert frame_view_1.created_by is None
     assert_datetime_is_recent(frame_view_1.created_at)
     assert frame_view_1.last_edited_by is None
@@ -616,7 +618,7 @@ def test_classification_instances_frame_view():
     assert frame_view_1.confidence == 0.5
     assert frame_view_1.manual_annotation == False
 
-    classification_instance_1.remove_from_frames([1])
+    classification_instance_1.remove_from_frames(1)
 
     # Using invalid frame view.
     with pytest.raises(LabelRowError):
@@ -633,9 +635,9 @@ def test_add_and_get_classification_instances_to_label_row():
     classification_instance_2 = ClassificationInstance(text_classification)
     classification_instance_3 = ClassificationInstance(checklist_classification)
 
-    classification_instance_1.set_for_frame([1, 2])
-    classification_instance_2.set_for_frame([3, 4])
-    classification_instance_3.set_for_frame([1, 2, 3, 4])
+    classification_instance_1.set_for_frame(Range(1, 2))
+    classification_instance_2.set_for_frame(Range(3, 4))
+    classification_instance_3.set_for_frame(Range(1, 4))
 
     label_row.add_classification(classification_instance_1)
     label_row.add_classification(classification_instance_2)
@@ -652,25 +654,25 @@ def test_add_and_get_classification_instances_to_label_row():
     assert set(filtered_classification_instances) == {classification_instance_1, classification_instance_2}
 
     overlapping_classification_instance = ClassificationInstance(text_classification)
-    overlapping_classification_instance.set_for_frame([1])
+    overlapping_classification_instance.set_for_frame(1)
     with pytest.raises(LabelRowError):
         label_row.add_classification(overlapping_classification_instance)
 
-    overlapping_classification_instance.remove_from_frames([1])
+    overlapping_classification_instance.remove_from_frames(1)
     overlapping_classification_instance.set_for_frame(5)
     label_row.add_classification(overlapping_classification_instance)
     with pytest.raises(LabelRowError):
-        overlapping_classification_instance.set_for_frame([1])
+        overlapping_classification_instance.set_for_frame(1)
     with pytest.raises(LabelRowError):
-        overlapping_classification_instance.set_for_frame([1], overwrite=True)
+        overlapping_classification_instance.set_for_frame(1, overwrite=True)
 
     label_row.remove_classification(classification_instance_1)
-    overlapping_classification_instance.set_for_frame([1])
+    overlapping_classification_instance.set_for_frame(1)
 
     with pytest.raises(LabelRowError):
-        overlapping_classification_instance.set_for_frame([3])
-    classification_instance_2.remove_from_frames([3])
-    overlapping_classification_instance.set_for_frame([3])
+        overlapping_classification_instance.set_for_frame(3)
+    classification_instance_2.remove_from_frames(3)
+    overlapping_classification_instance.set_for_frame(3)
 
 
 def test_object_instance_answer_for_static_attributes():
@@ -794,9 +796,9 @@ def test_object_instance_answer_dynamic_no_frames_argument():
     object_instance.set_answer("Zeus", attribute=dynamic_text)
     assert object_instance.get_answer(dynamic_text) == []
 
-    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=1)
-    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=2)
-    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=3)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frames=1)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frames=2)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frames=3)
     assert object_instance.get_answer(dynamic_text) == []
 
     object_instance.set_answer("Zeus", attribute=dynamic_text)
@@ -805,8 +807,8 @@ def test_object_instance_answer_dynamic_no_frames_argument():
         AnswerForFrames(answer="Zeus", ranges=[Range(1, 3)]),
     ]
 
-    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=5)
-    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=6)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frames=5)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frames=6)
     # Nothing changes after setting new coordinates
     assert object_instance.get_answer(dynamic_text) == [
         AnswerForFrames(answer="Zeus", ranges=[Range(1, 3)]),
@@ -824,18 +826,27 @@ def test_object_instance_answer_dynamic_no_frames_argument():
 def test_object_instance_answer_dynamic_is_valid():
     object_instance = ObjectInstance(keypoint_dynamic)
 
-    assert object_instance.is_valid() is False
-    assert object_instance.are_dynamic_answers_valid() is True
+    with pytest.raises(LabelRowError) as e:
+        object_instance.is_valid()
+    assert "not on any frames" in str(e)
+
+    object_instance.are_dynamic_answers_valid()
 
     object_instance.set_answer("Zeus", attribute=dynamic_text, frames=1)
     # Dynamic answers without corresponding coordinates.
-    assert object_instance.is_valid() is False
-    assert object_instance.are_dynamic_answers_valid() is False
 
-    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=1)
-    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=2)
-    object_instance.set_for_frame(KEYPOINT_COORDINATES, frame=3)
-    assert object_instance.is_valid() is True
+    with pytest.raises(LabelRowError) as e:
+        object_instance.is_valid()
+    assert "not on any frames" in str(e)
+
+    with pytest.raises(LabelRowError) as e:
+        object_instance.are_dynamic_answers_valid()
+    assert "only on frames" in str(e)
+
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frames=1)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frames=2)
+    object_instance.set_for_frame(KEYPOINT_COORDINATES, frames=3)
+    object_instance.is_valid()
 
 
 def test_object_instance_answer_dynamic_getter_filters():

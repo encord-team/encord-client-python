@@ -635,7 +635,7 @@ class ClassificationInstance:
 
     def set_for_frame(
         self,
-        frames: Union[int, Iterable[int]],  # DENIS: align the plural/singular here with the ObjectInstance
+        frames: Frames,
         *,
         overwrite: bool = False,
         created_at: datetime = datetime.now(),
@@ -647,17 +647,37 @@ class ClassificationInstance:
         reviews: Optional[List[dict]] = None,
     ) -> None:
         """
-        Overwrites the current frames.
+        Places the classification onto the specified frame. If the classification already exists on the frame and
+        overwrite is set to `True`, the currently specified values will be overwritten.
+
         Args:
-            reviews: Should only be set by internal functions
-
+            frames:
+                The frame to add the classification instance to.
+            overwrite:
+                If `True`, overwrite existing data for the given frames. This will not reset all the
+                non-specified values. If `False` and data already exists for the given frames,
+                raises an error.
+            created_at:
+                Optionally specify the creation time of the classification instance on this frame. Defaults to `datetime.now()`.
+            created_by:
+                Optionally specify the creator of the classification instance on this frame. Defaults to the current SDK user.
+            last_edited_at:
+                Optionally specify the last edit time of the classification instance on this frame. Defaults to `datetime.now()`.
+            last_edited_by:
+                Optionally specify the last editor of the classification instance on this frame. Defaults to the current SDK
+                user.
+            confidence:
+                Optionally specify the confidence of the classification instance on this frame. Defaults to `1.0`.
+            manual_annotation:
+                Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
+            reviews:
+                Should only be set by internal functions.
         """
-        if isinstance(frames, int):
-            frames = [frames]
+        frames_list = frames_class_to_frames_list(frames)
 
-        self._check_classification_already_present(frames)
+        self._check_classification_already_present(frames_list)
 
-        for frame in frames:
+        for frame in frames_list:
             self._check_within_range(frame)
             self._set_frame_and_frame_data(
                 frame,
@@ -671,16 +691,24 @@ class ClassificationInstance:
                 reviews=reviews,
             )
 
-    def get_view_for_frame(self, frame: int) -> ClassificationInstance.FrameView:
+    def get_frame_view(self, frame: Union[int, str] = 0) -> ClassificationInstance.FrameView:
+        """
+        Args:
+            frame: Either the frame number or the image hash if the data type is an image or image group.
+                Defaults to the first frame.
+        """
+        if isinstance(frame, str):
+            frame = self._parent.get_frame_number(frame)
         return self.FrameView(self, frame)
 
-    def remove_from_frames(self, frames: Union[int, Iterable[int]]) -> None:
-        for frame in frames:
+    def remove_from_frames(self, frames: Frames) -> None:
+        frame_list = frames_class_to_frames_list(frames)
+        for frame in frame_list:
             self._frames_to_data.pop(frame)
 
         if self.is_assigned_to_label_row():
-            self._parent._remove_frames_from_classification(self.ontology_item, frames)
-            self._parent._remove_from_frame_to_hashes_map(frames, self.classification_hash)
+            self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
+            self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
     def frames(self) -> List[ClassificationInstance.FrameView]:
         """
@@ -689,10 +717,10 @@ class ClassificationInstance:
         """
         ret = []
         for frame_num in sorted(self._frames_to_data.keys()):
-            ret.append(self.get_view_for_frame(frame_num))
+            ret.append(self.get_frame_view(frame_num))
         return ret
 
-    def is_valid(self) -> bool:
+    def is_valid(self) -> None:
         if not len(self._frames_to_data) > 0:
             raise LabelRowError("ClassificationInstance is not on any frames. Please add it to at least one frame.")
 
@@ -1253,8 +1281,6 @@ class LabelRowV2:
         overwrite: bool = False,
     ) -> None:
         """
-        DENIS: should this be named somehow differently?
-
         Call this function to start reading or writing labels. This will fetch the labels that are currently stored
         in the Encord server. If you only want to inspect a subset of labels, you can filter them. Please note that if
         you filter the labels, and upload them later, you will effectively delete all the labels that had been filtered
@@ -1364,7 +1390,6 @@ class LabelRowV2:
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
-        # DENIS: can I rename this to be consistent with `get_view_for_frame`?
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
@@ -1746,7 +1771,7 @@ class LabelRowV2:
     ) -> dict:
         ret = {}
 
-        object_instance_frame_view = object_.get_view_for_frame(frame)
+        object_instance_frame_view = object_.get_frame_view(frame)
         coordinates = object_instance_frame_view.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
         ontology_object = self._ontology_structure.get_item_by_hash(ontology_hash)
@@ -1800,7 +1825,7 @@ class LabelRowV2:
     def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> dict:
         ret = {}
 
-        frame_view = classification.get_view_for_frame(frame)
+        frame_view = classification.get_frame_view(frame)
         classification_feature_hash = classification.ontology_item.feature_node_hash
         ontology_classification = self._ontology_structure.get_item_by_hash(classification_feature_hash)
         attribute_hash = classification.ontology_item.attributes[0].feature_node_hash
@@ -1986,7 +2011,7 @@ class LabelRowV2:
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
-        object_instance.set_for_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
+        object_instance.set_for_frame(coordinates=coordinates, frames=frame, **asdict(object_frame_instance_info))
         return object_instance
 
     def _add_coordinates_to_object_instance(
@@ -2000,7 +2025,7 @@ class LabelRowV2:
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
-        object_instance.set_for_frame(coordinates=coordinates, frame=frame, **asdict(object_frame_instance_info))
+        object_instance.set_for_frame(coordinates=coordinates, frames=frame, **asdict(object_frame_instance_info))
 
     def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
         if "boundingBox" in frame_object_label:
@@ -2058,7 +2083,7 @@ class LabelRowV2:
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
-        classification_instance.set_for_frame([frame], **asdict(frame_view))
+        classification_instance.set_for_frame(frame, **asdict(frame_view))
         answers_dict = classification_answers[classification_hash]["classifications"]
         self._add_static_answers_from_dict(classification_instance, answers_dict)
 
@@ -2075,7 +2100,7 @@ class LabelRowV2:
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
 
-        classification_instance.set_for_frame([frame], **asdict(frame_view))
+        classification_instance.set_for_frame(frame, **asdict(frame_view))
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
@@ -2534,7 +2559,7 @@ class ObjectInstance:
     def set_for_frame(
         self,
         coordinates: Coordinates,
-        frame: int,
+        frames: Frames,
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
@@ -2554,8 +2579,8 @@ class ObjectInstance:
             coordinates:
                 The coordinates of the object in the frame. This will throw an error if the type of the coordinates
                 does not match the type of the attribute in the object instance.
-            frame:
-                The frame to add the object instance to.
+            frames:
+                The frames to add the object instance to.
             overwrite:
                 If `True`, overwrite existing data for the given frames. This will not reset all the
                 non-specified values. If `False` and data already exists for the given frames,
@@ -2578,36 +2603,48 @@ class ObjectInstance:
             is_deleted:
                 Should only be set by internal functions.
         """
-        existing_frame_data = self._frames_to_instance_data.get(frame)
+        frames_list = frames_class_to_frames_list(frames)
 
-        if overwrite is False and existing_frame_data is not None:
-            raise LabelRowError("Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite.")
+        for frame in frames_list:
+            existing_frame_data = self._frames_to_instance_data.get(frame)
 
-        check_coordinate_type(coordinates, self._ontology_object)
-        self.check_within_range(frame)
+            if overwrite is False and existing_frame_data is not None:
+                raise LabelRowError(
+                    "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
+                )
 
-        if existing_frame_data is None:
-            existing_frame_data = ObjectInstance.FrameData(
-                coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+            check_coordinate_type(coordinates, self._ontology_object)
+            self.check_within_range(frame)
+
+            if existing_frame_data is None:
+                existing_frame_data = ObjectInstance.FrameData(
+                    coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+                )
+                self._frames_to_instance_data[frame] = existing_frame_data
+
+            existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                reviews=reviews,
+                is_deleted=is_deleted,
             )
-            self._frames_to_instance_data[frame] = existing_frame_data
+            existing_frame_data.coordinates = coordinates
 
-        existing_frame_data.object_frame_instance_info.update_from_optional_fields(
-            created_at=created_at,
-            created_by=created_by,
-            last_edited_at=last_edited_at,
-            last_edited_by=last_edited_by,
-            confidence=confidence,
-            manual_annotation=manual_annotation,
-            reviews=reviews,
-            is_deleted=is_deleted,
-        )
-        existing_frame_data.coordinates = coordinates
+            if self._parent:
+                self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
-        if self._parent:
-            self._parent.add_to_single_frame_to_hashes_map(self, frame)
-
-    def get_view_for_frame(self, frame: int) -> ObjectInstance.FrameView:
+    def get_frame_view(self, frame: Union[int, str] = 0) -> ObjectInstance.FrameView:
+        """
+        Args:
+            frame: Either the frame number or the image hash if the data type is an image or image group.
+                Defaults to the first frame.
+        """
+        if isinstance(frame, str):
+            frame = self._parent.get_frame_number(frame)
         return self.FrameView(self, frame)
 
     def copy(self) -> ObjectInstance:
@@ -2629,7 +2666,7 @@ class ObjectInstance:
         """
         ret = []
         for frame_num in sorted(self._frames_to_instance_data.keys()):
-            ret.append(self.get_view_for_frame(frame_num))
+            ret.append(self.get_frame_view(frame_num))
         return ret
 
     def remove_from_frames(self, frames: Frames):
