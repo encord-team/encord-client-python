@@ -287,7 +287,7 @@ class LabelRowMetadata(Formatter):
             label_status=LabelStatus(json_dict["label_status"]),
             annotation_task_status=AnnotationTaskStatus(json_dict["annotation_task_status"]),
             is_shadow_data=json_dict.get("is_shadow_data", False),
-            number_of_frames=json_dict["number_of_frames"],
+            number_of_frames=json_dict["number_of_frames"],s
             duration=json_dict["duration"],
             frames_per_second=json_dict["frames_per_second"],
             height=json_dict["height"],
@@ -306,13 +306,4 @@ class LabelRowMetadata(Formatter):
         Returns:
             The dict equivalent of LabelRowMetadata.
         """
-        return dict(
-            label_hash=self.label_hash,
-            data_hash=self.data_hash,
-            dataset_hash=self.dataset_hash,
-            data_title=self.data_title,
-            data_type=self.data_type,
-            label_status=self.label_status.value,
-            annotation_task_status=self.annotation_task_status.value,
-            is_shadow_data=self.is_shadow_data,
-        )
+        return asdict(self)
