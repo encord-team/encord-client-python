@@ -34,7 +34,6 @@ DATASET_JSON = {
             "_dirty_fields": [],
             "images": None,
             "signed_url": None,
-            "dicom_signed_urls": None,
         }
     ],
 }
