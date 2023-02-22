@@ -1246,14 +1246,27 @@ class LabelRowV2:
 
     @property
     def data_link(self) -> Optional[str]:
+        """
+        The data link in either your cloud storage or the encord storage to the underlying object. This will be `None`
+        for DICOM series or image groups that have been created without performance optimisations, as there is no
+        single underlying file for these data types.
+        """
         return self._label_row_read_only_data.data_link
 
     @property
     def width(self) -> Optional[int]:
+        """
+        This is `None` for image groups without performance optimisation, as there is no single underlying width
+        for this data type.
+        """
         return self._label_row_read_only_data.width
 
     @property
     def height(self) -> Optional[int]:
+        """
+        This is `None` for image groups without performance optimisation, as there is no single underlying width
+        for this data type.
+        """
         return self._label_row_read_only_data.height
 
     @property

@@ -6,7 +6,14 @@ from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset import Image, ImageGroupOCR, StorageLocation
+from encord.orm.dataset import (
+    DatasetAccessSettings,
+    DatasetUser,
+    DatasetUserRole,
+    Image,
+    ImageGroupOCR,
+    StorageLocation,
+)
 
 
 class Dataset:
@@ -68,6 +75,27 @@ class Dataset:
         """
         return self._client.get_dataset()
 
+    def set_access_settings(self, dataset_access_settings: DatasetAccessSettings, *, refetch_data: bool = True) -> None:
+        """
+        Args:
+            dataset_access_settings: The access settings to use going forward
+            refetch_data: Whether a `refetch_data()` call should follow the update of the dataset access settings.
+        """
+        self._client.set_access_settings(dataset_access_settings)
+        if refetch_data:
+            self.refetch_data()
+
+    def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
+        """
+        Add users to dataset. If the user was already added, this operation will succeed but the `user_role` will be
+        unchanged. The existing `user_role` will be reflected in the `DatasetUser` instance.
+
+        Args:
+            user_emails: list of user emails to be added
+            user_role: the user role to assign to all users
+        """
+        return self._client.add_users(user_emails, user_role)
+
     def upload_video(
         self,
         file_path: str,
@@ -78,7 +106,6 @@ class Dataset:
         Upload video to Encord storage.
 
         Args:
-            self: Encord client object.
             file_path: path to video e.g. '/home/user/data/video.mp4'
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
@@ -101,13 +128,14 @@ class Dataset:
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
+        *,
+        create_video: bool = True,
     ):
         """
         Create an image group in Encord storage. Choose this type of image upload for sequential images. Else, you can
         choose the :meth:`.Dataset.upload_image` function.
 
         Args:
-            self: Encord client object.
             file_paths: a list of paths to images, e.g.
                 ['/home/user/data/img1.png', '/home/user/data/img2.png']
             max_workers:
@@ -117,6 +145,10 @@ class Dataset:
             title:
                 The title of the image group. If unspecified this will be randomly generated for you. This title should
                 NOT include an extension. For example "encord_image_group".
+            create_video:
+                A flag specifying how image groups are stored. If `True`, a compressed video will be created from
+                the image groups. `True` was the previous default support. If `False`, the images
+                are saved as a sequence of images.
 
         Returns:
             Bool.
@@ -125,7 +157,12 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings, title=title)
+        return self._client.create_image_group(
+            file_paths,
+            cloud_upload_settings=cloud_upload_settings,
+            title=title,
+            create_video=create_video,
+        )
 
     def create_dicom_series(
         self,
@@ -137,7 +174,6 @@ class Dataset:
         Upload a DICOM series to Encord storage
 
         Args:
-            self: Encord client object.
             file_paths: a list of paths to DICOM files, e.g.
                 ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
             cloud_upload_settings:
@@ -189,7 +225,6 @@ class Dataset:
         Delete a video/image group from a dataset.
 
         Args:
-            self: Encord client object.
             data_hashes: list of hash of the videos/image_groups you'd like to delete, all should belong to the same
              dataset
         """
@@ -202,7 +237,11 @@ class Dataset:
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
         """
-        Append data hosted on private clouds to existing dataset
+        Append data hosted on private clouds to existing dataset.
+
+        For a more complete example of safe uploads, please follow the guide found in our docs under
+        :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud
+        <tutorials/datasets:Adding data from a private cloud>`
 
         Args:
             integration_id: str
@@ -237,7 +276,6 @@ class Dataset:
         Launches an async task that can re-encode a list of videos.
 
         Args:
-            self: Encord client object.
             data_hashes: list of hash of the videos you'd like to re_encode, all should belong to the same
              dataset
         Returns:
@@ -251,7 +289,6 @@ class Dataset:
         Returns the status of an existing async task which is aimed at re-encoding videos.
 
         Args:
-            self: Encord client object.
             job_id: id of the async task that was launched to re-encode the videos
 
         Returns:
