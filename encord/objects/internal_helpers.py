@@ -507,6 +507,7 @@ def _infer_attribute_from_answer(
                 f"The used answer is `{answer}`"
             )
         return parent_opt
+
     elif isinstance(answer, str):
         text_attributes = _search_for_text_attributes(attributes)
         if len(text_attributes) == 0:
@@ -520,6 +521,7 @@ def _infer_attribute_from_answer(
                 f"Please provide the attribute explicitly. The found text attributes are {text_attributes}"
             )
         return text_attributes[0]
+
     elif isinstance(answer, Sequence):
         if len(answer) == 0:
             raise LabelRowError(
@@ -540,5 +542,6 @@ def _infer_attribute_from_answer(
                     "all options belong to the same ontology attribute."
                 )
         return parent_opt
+
     else:
         raise NotImplementedError(f"The answer type is not supported for answer `{answer}` of type {type(answer)}.")
