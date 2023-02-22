@@ -14,10 +14,11 @@
 # under the License.
 from __future__ import annotations
 
+import datetime
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
@@ -226,7 +227,13 @@ class LabelRowMetadata(Formatter):
     Contains helpful information about a LabelRow.
     """
 
-    label_hash: str
+    label_hash: Optional[str]
+    """Only present if the label row is initiated"""
+    created_at: Optional[datetime.datetime]
+    """Only present if the label row is initiated"""
+    last_edited_at: Optional[datetime.datetime]
+    """Only present if the label row is initiated"""
+
     data_hash: str
     dataset_hash: str
     data_title: str
@@ -234,18 +241,35 @@ class LabelRowMetadata(Formatter):
     label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
     is_shadow_data: bool
+    number_of_frames: int
+    duration: Optional[float]
+    """Only available for the VIDEO data_type"""
+    frames_per_second: Optional[int]
+    """Only available for the VIDEO data_type"""
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
+        created_at = json_dict["created_at"]
+        if created_at is not None:
+            created_at = datetime.datetime.fromisoformat(created_at)
+        last_edited_at = json_dict["last_edited_at"]
+        if last_edited_at is not None:
+            last_edited_at = datetime.datetime.fromisoformat(last_edited_at)
+
         return LabelRowMetadata(
-            json_dict["label_hash"],
-            json_dict["data_hash"],
-            json_dict["dataset_hash"],
-            json_dict["data_title"],
-            json_dict["data_type"],
-            LabelStatus(json_dict["label_status"]),
-            AnnotationTaskStatus(json_dict["annotation_task_status"]),
-            json_dict.get("is_shadow_data", False),
+            label_hash=json_dict["label_hash"],
+            created_at=created_at,
+            last_edited_at=last_edited_at,
+            data_hash=json_dict["data_hash"],
+            dataset_hash=json_dict["dataset_hash"],
+            data_title=json_dict["data_title"],
+            data_type=json_dict["data_type"],
+            label_status=LabelStatus(json_dict["label_status"]),
+            annotation_task_status=AnnotationTaskStatus(json_dict["annotation_task_status"]),
+            is_shadow_data=json_dict.get("is_shadow_data", False),
+            number_of_frames=json_dict["number_of_frames"],
+            duration=json_dict["duration"],
+            frames_per_second=json_dict["frames_per_second"],
         )
 
     @classmethod
@@ -260,13 +284,4 @@ class LabelRowMetadata(Formatter):
         Returns:
             The dict equivalent of LabelRowMetadata.
         """
-        return dict(
-            label_hash=self.label_hash,
-            data_hash=self.data_hash,
-            dataset_hash=self.dataset_hash,
-            data_title=self.data_title,
-            data_type=self.data_type,
-            label_status=self.label_status.value,
-            annotation_task_status=self.annotation_task_status.value,
-            is_shadow_data=self.is_shadow_data,
-        )
+        return asdict(self)

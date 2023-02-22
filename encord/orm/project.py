@@ -16,7 +16,7 @@ import datetime
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from encord.orm import base_orm
 
@@ -149,10 +149,76 @@ class ProjectDataset:
     pass
 
 
-class ProjectCopyOptions(Enum):
+class ProjectCopyOptions(str, Enum):
     COLLABORATORS = "collaborators"
     DATASETS = "datasets"
     MODELS = "models"
+    LABELS = "labels"
+
+
+class ReviewApprovalState(str, Enum):
+    APPROVED = "APPROVED"
+    PENDING = "PENDING"
+    REJECTED = "REJECTED"
+    DELETED = "DELETED"
+    NOT_SELECTED_FOR_REVIEW = "NOT_SELECTED_FOR_REVIEW"
+
+
+class CopyDatasetAction(str, Enum):
+    ATTACH = "ATTACH"
+    """ Attach the datasets associated with the original project to the copy project. """
+    CLONE = "CLONE"
+    """ Clone the data units from the associated datasets into a new dataset an attach it to the copy project. """
+
+
+@dataclass
+class CopyDatasetOptions:
+    """Options for copying the datasets associated with a project."""
+
+    action: CopyDatasetAction = CopyDatasetAction.ATTACH
+    """
+    One of `CopyDatasetAction.ATTACH` or `CopyDatasetAction.CLONE`. (defaults to ATTACH)
+    """
+    dataset_title: Optional[str] = None
+    dataset_description: Optional[str] = None
+    datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
+    """ A dictionary of `{ <dataset_hash>: List[<data_unit_hash>]}`.
+    When provided with a CLONE action this will filter the copied data units.
+    When combined with `CopyLabelsOptions`, only labels from specific data units will be copied.
+    """
+
+
+@dataclass
+class CopyLabelsOptions:
+    """Options for copying the labels associated with a project."""
+
+    accepted_label_hashes: Optional[List[str]] = None
+    """ A list of label hashes that will be copied to the new project  """
+    accepted_label_statuses: Optional[List[ReviewApprovalState]] = None
+    """ A list of label statuses to filter the labels copied to the new project, defined in `ReviewApprovalState`"""
+
+
+@dataclass
+class CopyProjectPayload:
+    """WARN: do not use, this is only for internal purpose."""
+
+    @dataclass
+    class _CopyLabelsOptions:
+        datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
+        accepted_label_hashes: Optional[List[str]] = None
+        accepted_label_statuses: Optional[List[ReviewApprovalState]] = None
+        create_new_dataset: Optional[bool] = None
+
+    @dataclass
+    class _ProjectCopyMetadata:
+        project_title: Optional[str] = None
+        project_description: Optional[str] = None
+        dataset_title: Optional[str] = None
+        dataset_description: Optional[str] = None
+
+    copy_project_options: List[ProjectCopyOptions] = field(default_factory=list)
+    copy_labels_options: Optional[_CopyLabelsOptions] = None
+    project_copy_metadata: Optional[_ProjectCopyMetadata] = None
 
 
 class ProjectWorkflowType(Enum):

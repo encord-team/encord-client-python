@@ -99,6 +99,12 @@ from encord.orm.model import (
     ModelTrainingWeights,
     TrainingMetadata,
 )
+from encord.orm.project import (
+    CopyDatasetAction,
+    CopyDatasetOptions,
+    CopyLabelsOptions,
+    CopyProjectPayload,
+)
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import (
     ProjectCopy,
@@ -566,19 +572,13 @@ class EncordClientProject(EncordClient):
         edited_after: Optional[Union[str, datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
+        *,
+        include_uninitialised_labels=False,
+        label_hashes: Optional[List[str]] = None,
+        data_hashes: Optional[List[str]] = None,
     ) -> List[LabelRowMetadata]:
         """
-        Args:
-            edited_before: Optionally filter to only rows last edited before the specified time
-            edited_after: Optionally filter to only rows last edited after the specified time
-            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
-            shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
-
-        Returns:
-            A list of :class:`~encord.orm.label_row.LabelRowMetadata` instances for all the matching label rows
-
-        Raises:
-            UnknownError: If an error occurs while retrieving the data.
+        This function is documented in :meth:`encord.project.Project.list_label_rows`.
         """
         if label_statuses:
             label_statuses = [label_status.value for label_status in label_statuses]
@@ -590,6 +590,9 @@ class EncordClientProject(EncordClient):
             "edited_after": edited_after,
             "label_statuses": label_statuses,
             "shadow_data_state": shadow_data_state.value if shadow_data_state else None,
+            "include_uninitialised_labels": include_uninitialised_labels,
+            "data_hashes": data_hashes,
+            "label_hashes": label_hashes,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload)
 
@@ -613,20 +616,57 @@ class EncordClientProject(EncordClient):
 
         return list(map(lambda user: ProjectUser.from_dict(user), users))
 
-    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False) -> str:
+    def copy_project(
+        self,
+        copy_datasets: Union[bool, CopyDatasetOptions] = False,
+        copy_collaborators=False,
+        copy_models=False,
+        *,
+        copy_labels: Optional[CopyLabelsOptions] = None,
+        new_title: Optional[str] = None,
+        new_description: Optional[str] = None,
+    ) -> str:
         """
         This function is documented in :meth:`encord.project.Project.copy_project`.
         """
+        payload = CopyProjectPayload()
+        payload.project_copy_metadata = CopyProjectPayload._ProjectCopyMetadata(new_title)
+        payload.copy_labels_options = CopyProjectPayload._CopyLabelsOptions()
 
-        payload = {"copy_project_options": []}
+        if payload.project_copy_metadata and new_description:
+            payload.project_copy_metadata.project_description = new_description
+
+        if copy_labels:
+            payload.copy_project_options.append(ProjectCopyOptions.LABELS)
+            if isinstance(copy_labels, CopyLabelsOptions):
+                payload.copy_labels_options.accepted_label_hashes = copy_labels.accepted_label_hashes
+                payload.copy_labels_options.accepted_label_statuses = copy_labels.accepted_label_statuses
+
         if copy_datasets:
-            payload["copy_project_options"].append(ProjectCopyOptions.DATASETS.value)
-        if copy_models:
-            payload["copy_project_options"].append(ProjectCopyOptions.MODELS.value)
-        if copy_collaborators:
-            payload["copy_project_options"].append(ProjectCopyOptions.COLLABORATORS.value)
+            if copy_datasets is True or copy_datasets.action == CopyDatasetAction.ATTACH:
+                payload.copy_project_options.append(ProjectCopyOptions.DATASETS)
+            elif copy_datasets.action == CopyDatasetAction.CLONE:
+                payload.project_copy_metadata.dataset_title = copy_datasets.dataset_title
+                payload.project_copy_metadata.dataset_description = copy_datasets.dataset_description
+                payload.copy_labels_options.create_new_dataset = True
+                payload.copy_labels_options.datasets_to_data_hashes_map = copy_datasets.datasets_to_data_hashes_map
 
-        return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=payload)
+        if copy_models:
+            payload.copy_project_options.append(ProjectCopyOptions.MODELS)
+        if copy_collaborators:
+            payload.copy_project_options.append(ProjectCopyOptions.COLLABORATORS)
+
+        # NOTE: In order to keep backward compaitbily we need to remove the `project_copy_metadata`
+        # since the server is not ready to handle a `project_copy_metadata` without a title
+        if all(
+            [
+                getattr(payload.project_copy_metadata, field.name) is None
+                for field in dataclasses.fields(payload.project_copy_metadata)
+            ]
+        ):
+            payload.project_copy_metadata = None
+
+        return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=dataclasses.asdict(payload))
 
     def get_label_row(
         self,
