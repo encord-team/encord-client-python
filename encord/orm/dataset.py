@@ -393,7 +393,7 @@ class DataRow(dict, Formatter):
         """
         return self["is_optimised_image_group"]
 
-    def fetch(
+    def refetch_data(
         self,
         *,
         signed_url: bool = False,
@@ -426,9 +426,9 @@ class DataRow(dict, Formatter):
         else:
             raise EncordException(f"Could not fetch data. The DataRow is in an invalid state.")
 
-    def upload(self) -> None:
+    def save(self) -> None:
         """
-        Uploads the set fields to the Encord server. This is a blocking function.
+        Sync local state to the server, if updates are made. This is a blocking function.
 
         The newest values from the Encord server will update the current :class:`.DataRow` object.
         """
