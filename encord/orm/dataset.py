@@ -200,14 +200,14 @@ class DataRow(dict, Formatter):
         client_metadata: Optional[dict],
         frames_per_second: Optional[int],
         duration: Optional[int],
-        images: Optional[List[dict]],
+        images_data: Optional[List[dict]],
         signed_url: Optional[str],
         is_optimised_image_group: Optional[bool],
     ):
 
         parsed_images = None
-        if images is not None:
-            parsed_images = [ImageData.from_dict(image) for image in images]
+        if images_data is not None:
+            parsed_images = [ImageData.from_dict(image_data) for image_data in images_data]
 
         super().__init__(
             {
@@ -226,7 +226,7 @@ class DataRow(dict, Formatter):
                 "duration": duration,
                 "client_metadata": client_metadata,
                 "_querier": None,
-                "images": parsed_images,
+                "images_data": parsed_images,
                 "signed_url": signed_url,
                 "is_optimised_image_group": is_optimised_image_group,
                 "_dirty_fields": [],
@@ -376,14 +376,14 @@ class DataRow(dict, Formatter):
         return self["storage_location"]
 
     @property
-    def images(self) -> Optional[List[ImageData]]:
+    def images_data(self) -> Optional[List[ImageData]]:
         """
         A list of the cached :class:`~encord.orm.dataset.ImageData` objects for the given data asset.
         Fetch the images with appropriate settings in the :meth:`~encord.orm.dataset.DataRow.fetch()` function.
         If the data type is not :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`
         then this returns None.
         """
-        return self["images"]
+        return self["images_data"]
 
     @property
     def is_optimised_image_group(self) -> Optional[bool]:
@@ -397,7 +397,7 @@ class DataRow(dict, Formatter):
         self,
         *,
         signed_url: bool = False,
-        images: Optional[FetchImagesDataConfig] = None,
+        images_data_fetch_options: Optional[ImagesDataFetchOptions] = None,
         client_metadata: bool = False,
     ):
         """
@@ -406,19 +406,20 @@ class DataRow(dict, Formatter):
 
         Args:
             signed_url: If True, this will fetch a generated signed url of the data asset.
-            images: If not None, this will fetch the image data of the data asset. You can additionally
-                specify what to fetch with the :class:`.FetchImagesDataConfig` class.
+            images_data_fetch_options: If not None, this will fetch the image data of the data asset. You can
+                additionally specify what to fetch with the :class:`.ImagesDataFetchOptions` class.
             client_metadata: If True, this will fetch the client metadata of the data asset.
         """
         if self["_querier"] is not None:
-            fetch_images = None
-            if images is not None:
-                fetch_images = dataclasses.asdict(images)
+            if images_data_fetch_options is not None:
+                images_data_fetch_options = dataclasses.asdict(images_data_fetch_options)
 
             payload = {
-                "fetch_signed_url": signed_url,
-                "fetch_images": fetch_images,
-                "fetch_client_metadata": client_metadata,
+                "additional_data": {
+                    "signed_url": signed_url,
+                    "images_data_fetch_options": images_data_fetch_options,
+                    "client_metadata": client_metadata,
+                }
             }
             res = self["_querier"].basic_getter(DataRow, uid=self.uid, payload=payload)
             self._update_current_class(res)
@@ -470,7 +471,7 @@ class DataRow(dict, Formatter):
             duration=json_dict["duration"],
             signed_url=json_dict.get("signed_url"),
             is_optimised_image_group=json_dict.get("is_optimised_image_group"),
-            images=json_dict.get("images"),
+            images_data=json_dict.get("images_data"),
         )
 
     @classmethod
@@ -914,7 +915,7 @@ DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
 
 
 @dataclasses.dataclass
-class FetchImagesDataConfig:
+class ImagesDataFetchOptions:
     fetch_signed_urls: bool = False
     """
     Whether to fetch signed urls for each individual image. Only set this to true if you need to download the 

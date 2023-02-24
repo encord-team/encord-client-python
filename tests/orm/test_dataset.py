@@ -32,7 +32,7 @@ DATASET_JSON = {
             "duration": None,
             "_querier": None,
             "_dirty_fields": [],
-            "images": None,
+            "images_data": None,
             "signed_url": None,
         }
     ],
