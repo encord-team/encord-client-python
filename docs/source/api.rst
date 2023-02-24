@@ -74,7 +74,7 @@ Label Row V2
 Label ObjectInstance
 ------------------------------------
 
-.. autoclass:: encord.objects.ObjectsInstance
+.. autoclass:: encord.objects.ObjectInstance
     :members:
     :undoc-members:
 

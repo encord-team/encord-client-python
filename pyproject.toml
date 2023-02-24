@@ -45,6 +45,7 @@ click = "8.0.2"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
+sphinx-toolbox = "^3.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -1115,14 +1115,20 @@ class LabelRowV2:
 
         Args:
             include_object_feature_hashes: If None all the objects will be included. Otherwise, only objects labels
-                will be included of which the feature_hash has been added.
+                will be included of which the feature_hash has been added. WARNING: it is only recommended to use
+                this filter if you are reading (not writing) the labels. If you are requesting a subset of objects and
+                later, save the label, you will effectively delete all the object instances that are stored in the
+                Encord platform, which were not included in this filtered subset.
             include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
-                classification labels will be included of which the feature_hash has been added.
+                classification labels will be included of which the feature_hash has been added. WARNING: it is only
+                recommended to use this filter if you are reading (not writing) the labels. If you are requesting a
+                subset of classifications and later, save the label, you will effectively delete all the
+                classification instances that are stored in the Encord platform, which were not included in this
+                filtered subset.
             include_reviews: Whether to request read only information about the reviews of the label row.
             overwrite: If the label row was already initialised, you need to set this flag to `True` to overwrite the
                 current labels with the labels stored in the Encord server. If this is `False` and the label row was
                 already initialised, this function will throw an error.
-
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -1199,8 +1205,9 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def upload_labels(self):
+    def save(self):
         """
+        # DENIS: this change will probably break the integration tests
         Upload the created labels with the Encord server. This will overwrite any labels that someone has created
         in the platform in the meantime.
         """

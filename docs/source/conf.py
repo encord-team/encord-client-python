@@ -39,15 +39,19 @@ extensions = [
     "sphinx_autodoc_typehints",  # https://sphinx-toolbox.readthedocs.io/en/latest/extensions/more_autodoc/typehints.html automatically add type hints
     "sphinx_copybutton",  # https://sphinx-copybutton.readthedocs.io/en/latest/ adds copy button to code blocks.
     "sphinx_gallery.gen_gallery",  # https://sphinx-gallery.github.io/stable/index.html# build an example gallary, like in end-to-end tutorials landing page
+    # ^ Also responsible for converting the end-to-end .py tutorials to sphinx docs.
     "sphinx_codeautolink",  # https://pypi.org/project/sphinx-codeautolink/ - link back to source code examples
     "sphinx_tabs.tabs",  # https://sphinx-tabs.readthedocs.io/en/latest/ - for tabs support
     "xref",
+    "sphinx_toolbox.more_autodoc.overloads",  # https://sphinx-toolbox.readthedocs.io/en/latest/extensions/more_autodoc/overloads.html - support for nice documentation of overloads.
+    # ^ this does not seem to be working.
 ]
 
 highlight_language = "python3"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["../_templates"]
+
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
