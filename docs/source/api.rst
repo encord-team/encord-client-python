@@ -65,6 +65,30 @@ Encord Objects
     :members:
     :undoc-members:
 
+Label Row V2
+--------------------
+.. autoclass:: encord.objects.LabelRowV2
+    :members:
+    :undoc-members:
+
+Label ObjectInstance
+------------------------------------
+
+.. autoclass:: encord.objects.ObjectsInstance
+    :members:
+    :undoc-members:
+
+Label ClassificationInstance
+------------------------------------
+.. autoclass:: encord.objects.ClassificationInstance
+    :members:
+    :undoc-members:
+
+.. autoclass:: encord.objects.AnswerForFrames
+    :members:
+    :undoc-members:
+
+
 
 Project Ontology
 ----------------

@@ -455,152 +455,6 @@ class Classification:
 
 
 class ClassificationInstance:
-    class FrameView:
-        def __init__(self, classification_instance: ClassificationInstance, frame: int):
-            self._classification_instance = classification_instance
-            self._frame = frame
-
-        @property
-        def frame(self) -> int:
-            return self._frame
-
-        @property
-        def created_at(self) -> datetime:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().created_at
-
-        @created_at.setter
-        def created_at(self, created_at: datetime) -> None:
-            self._check_if_frame_view_valid()
-            self._get_object_frame_instance_data().created_at = created_at
-
-        @property
-        def created_by(self) -> Optional[str]:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().created_by
-
-        @created_by.setter
-        def created_by(self, created_by: Optional[str]) -> None:
-            """
-            Set the created_by field with a user email or None if it should default to the current user of the SDK.
-            """
-            self._check_if_frame_view_valid()
-            if created_by is not None:
-                check_email(created_by)
-            self._get_object_frame_instance_data().created_by = created_by
-
-        @property
-        def last_edited_at(self) -> datetime:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().last_edited_at
-
-        @last_edited_at.setter
-        def last_edited_at(self, last_edited_at: datetime) -> None:
-            self._check_if_frame_view_valid()
-            self._get_object_frame_instance_data().last_edited_at = last_edited_at
-
-        @property
-        def last_edited_by(self) -> Optional[str]:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().last_edited_by
-
-        @last_edited_by.setter
-        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
-            """
-            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
-            """
-            self._check_if_frame_view_valid()
-            if last_edited_by is not None:
-                check_email(last_edited_by)
-            self._get_object_frame_instance_data().last_edited_by = last_edited_by
-
-        @property
-        def confidence(self) -> float:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().confidence
-
-        @confidence.setter
-        def confidence(self, confidence: float) -> None:
-            self._check_if_frame_view_valid()
-            self._get_object_frame_instance_data().confidence = confidence
-
-        @property
-        def manual_annotation(self) -> bool:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().manual_annotation
-
-        @manual_annotation.setter
-        def manual_annotation(self, manual_annotation: bool) -> None:
-            self._check_if_frame_view_valid()
-            self._get_object_frame_instance_data().manual_annotation = manual_annotation
-
-        @property
-        def reviews(self) -> List[dict]:
-            """
-            A read only property about the reviews that happened for this object on this frame.
-            """
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().reviews
-
-        def _check_if_frame_view_valid(self) -> None:
-            if self._frame not in self._classification_instance._frames_to_data:
-                raise LabelRowError(
-                    "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
-                )
-
-        def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
-            return self._classification_instance._frames_to_data[self._frame]
-
-    @dataclass
-    class FrameData:
-        created_at: datetime = datetime.now()
-        created_by: str = None
-        confidence: int = DEFAULT_CONFIDENCE
-        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-        last_edited_at: datetime = datetime.now()
-        last_edited_by: Optional[str] = None
-        reviews: Optional[List[dict]] = None
-
-        @staticmethod
-        def from_dict(d: dict) -> ClassificationInstance.FrameData:
-            if "lastEditedAt" in d:
-                last_edited_at = parse(d["lastEditedAt"])
-            else:
-                last_edited_at = None
-
-            return ClassificationInstance.FrameData(
-                created_at=parse(d["createdAt"]),
-                created_by=d["createdBy"],
-                confidence=d["confidence"],
-                manual_annotation=d["manualAnnotation"],
-                last_edited_at=last_edited_at,
-                last_edited_by=d.get("lastEditedBy"),
-                reviews=d.get("reviews"),
-            )
-
-        def update_from_optional_fields(
-            self,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
-            confidence: Optional[int] = None,
-            manual_annotation: Optional[bool] = None,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
-            reviews: Optional[List[dict]] = None,
-        ) -> None:
-            self.created_at = created_at or self.created_at
-            if created_by is not None:
-                self.created_by = created_by
-            self.last_edited_at = last_edited_at or self.last_edited_at
-            if last_edited_by is not None:
-                self.last_edited_by = last_edited_by
-            if confidence is not None:
-                self.confidence = confidence
-            if manual_annotation is not None:
-                self.manual_annotation = manual_annotation
-            if reviews is not None:
-                self.reviews = reviews
-
     def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowV2] = None
@@ -894,6 +748,152 @@ class ClassificationInstance:
         """A low level helper function."""
         return list(self._static_answer_map.values())
 
+    class FrameView:
+        def __init__(self, classification_instance: ClassificationInstance, frame: int):
+            self._classification_instance = classification_instance
+            self._frame = frame
+
+        @property
+        def frame(self) -> int:
+            return self._frame
+
+        @property
+        def created_at(self) -> datetime:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().created_at
+
+        @created_at.setter
+        def created_at(self, created_at: datetime) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().created_at = created_at
+
+        @property
+        def created_by(self) -> Optional[str]:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().created_by
+
+        @created_by.setter
+        def created_by(self, created_by: Optional[str]) -> None:
+            """
+            Set the created_by field with a user email or None if it should default to the current user of the SDK.
+            """
+            self._check_if_frame_view_valid()
+            if created_by is not None:
+                check_email(created_by)
+            self._get_object_frame_instance_data().created_by = created_by
+
+        @property
+        def last_edited_at(self) -> datetime:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().last_edited_at
+
+        @last_edited_at.setter
+        def last_edited_at(self, last_edited_at: datetime) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().last_edited_at = last_edited_at
+
+        @property
+        def last_edited_by(self) -> Optional[str]:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().last_edited_by
+
+        @last_edited_by.setter
+        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
+            """
+            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
+            """
+            self._check_if_frame_view_valid()
+            if last_edited_by is not None:
+                check_email(last_edited_by)
+            self._get_object_frame_instance_data().last_edited_by = last_edited_by
+
+        @property
+        def confidence(self) -> float:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().confidence
+
+        @confidence.setter
+        def confidence(self, confidence: float) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().confidence = confidence
+
+        @property
+        def manual_annotation(self) -> bool:
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().manual_annotation
+
+        @manual_annotation.setter
+        def manual_annotation(self, manual_annotation: bool) -> None:
+            self._check_if_frame_view_valid()
+            self._get_object_frame_instance_data().manual_annotation = manual_annotation
+
+        @property
+        def reviews(self) -> List[dict]:
+            """
+            A read only property about the reviews that happened for this object on this frame.
+            """
+            self._check_if_frame_view_valid()
+            return self._get_object_frame_instance_data().reviews
+
+        def _check_if_frame_view_valid(self) -> None:
+            if self._frame not in self._classification_instance._frames_to_data:
+                raise LabelRowError(
+                    "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
+                )
+
+        def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
+            return self._classification_instance._frames_to_data[self._frame]
+
+    @dataclass
+    class FrameData:
+        created_at: datetime = datetime.now()
+        created_by: str = None
+        confidence: int = DEFAULT_CONFIDENCE
+        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
+        last_edited_at: datetime = datetime.now()
+        last_edited_by: Optional[str] = None
+        reviews: Optional[List[dict]] = None
+
+        @staticmethod
+        def from_dict(d: dict) -> ClassificationInstance.FrameData:
+            if "lastEditedAt" in d:
+                last_edited_at = parse(d["lastEditedAt"])
+            else:
+                last_edited_at = None
+
+            return ClassificationInstance.FrameData(
+                created_at=parse(d["createdAt"]),
+                created_by=d["createdBy"],
+                confidence=d["confidence"],
+                manual_annotation=d["manualAnnotation"],
+                last_edited_at=last_edited_at,
+                last_edited_by=d.get("lastEditedBy"),
+                reviews=d.get("reviews"),
+            )
+
+        def update_from_optional_fields(
+            self,
+            created_at: Optional[datetime] = None,
+            created_by: Optional[str] = None,
+            confidence: Optional[int] = None,
+            manual_annotation: Optional[bool] = None,
+            last_edited_at: Optional[datetime] = None,
+            last_edited_by: Optional[str] = None,
+            reviews: Optional[List[dict]] = None,
+        ) -> None:
+            self.created_at = created_at or self.created_at
+            if created_by is not None:
+                self.created_by = created_by
+            self.last_edited_at = last_edited_at or self.last_edited_at
+            if last_edited_by is not None:
+                self.last_edited_by = last_edited_by
+            if confidence is not None:
+                self.confidence = confidence
+            if manual_annotation is not None:
+                self.manual_annotation = manual_annotation
+            if reviews is not None:
+                self.reviews = reviews
+
     def _set_frame_and_frame_data(
         self,
         frame,
@@ -966,198 +966,6 @@ class ClassificationInstance:
 
 
 class LabelRowV2:
-    class FrameView:
-        """
-        This class can be used to inspect what object/classification instances are on a given frame or
-        what metadata, such as a image file size, is on a given frame.
-        """
-
-        def __init__(
-            self, label_row: LabelRowV2, label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData, frame: int
-        ):
-
-            self._label_row = label_row
-            self._label_row_read_only_data = label_row_read_only_data
-            self._frame = frame
-
-        @property
-        def image_hash(self) -> str:
-            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-                raise LabelRowError("Image hash can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
-            return self._frame_level_data().image_hash
-
-        @property
-        def image_title(self) -> str:
-            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-                raise LabelRowError("Image title can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
-            return self._frame_level_data().image_title
-
-        @property
-        def file_type(self) -> str:
-            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-                raise LabelRowError("File type can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
-            return self._frame_level_data().file_type
-
-        @property
-        def frame(self) -> int:
-            return self._frame
-
-        @property
-        def width(self) -> int:
-            if self._label_row.data_type in [DataType.IMG_GROUP]:
-                return self._frame_level_data().width
-            else:
-                return self._label_row_read_only_data.width
-
-        @property
-        def height(self) -> int:
-            if self._label_row.data_type in [DataType.IMG_GROUP]:
-                return self._frame_level_data().height
-            else:
-                return self._label_row_read_only_data.height
-
-        @property
-        def data_link(self) -> Optional[str]:
-            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
-                raise LabelRowError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
-            return self._frame_level_data().data_link
-
-        def add_object(
-            self,
-            object_instance: ObjectInstance,
-            coordinates: Coordinates,
-            *,
-            overwrite: bool = False,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
-            confidence: Optional[float] = None,
-            manual_annotation: Optional[bool] = None,
-        ) -> None:
-            label_row = object_instance.is_assigned_to_label_row()
-            if label_row and self._label_row != label_row:
-                raise LabelRowError(
-                    "This object instance is already assigned to a different label row. It can not be "
-                    "added to multiple label rows at once."
-                )
-
-            object_instance.set_for_frames(
-                coordinates,
-                self._frame,
-                overwrite=overwrite,
-                created_at=created_at,
-                created_by=created_by,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-            )
-
-            if not label_row:
-                self._label_row.add_object(object_instance)
-
-        def add_classification(
-            self,
-            classification_instance: ClassificationInstance,
-            *,
-            overwrite: bool = False,
-            created_at: datetime = datetime.now(),
-            created_by: str = None,
-            confidence: int = DEFAULT_CONFIDENCE,
-            manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
-            last_edited_at: datetime = datetime.now(),
-            last_edited_by: Optional[str] = None,
-        ) -> None:
-            label_row = classification_instance.is_assigned_to_label_row()
-            if label_row and self._label_row != label_row:
-                raise LabelRowError(
-                    "This object instance is already assigned to a different label row. It can not be "
-                    "added to multiple label rows at once."
-                )
-
-            classification_instance.set_for_frames(
-                self._frame,
-                overwrite=overwrite,
-                created_at=created_at,
-                created_by=created_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-            )
-
-            if not label_row:
-                self._label_row.add_classification(classification_instance)
-
-        def get_objects(self, filter_ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
-            """
-            Args:
-                filter_ontology_object:
-                    Optionally filter by a specific ontology object.
-
-            Returns:
-                All the `ObjectInstance`s that match the filter.
-            """
-            return self._label_row.get_objects(filter_ontology_object=filter_ontology_object, filter_frames=self._frame)
-
-        def get_classifications(
-            self, filter_ontology_classification: Optional[Classification] = None
-        ) -> List[ClassificationInstance]:
-            """
-            Args:
-                filter_ontology_classification:
-                    Optionally filter by a specific ontology object.
-
-            Returns:
-                All the `ObjectInstance`s that match the filter.
-            """
-            return self._label_row.get_classifications(
-                filter_ontology_classification=filter_ontology_classification, filter_frames=self._frame
-            )
-
-        def _frame_level_data(self) -> LabelRowV2.FrameLevelImageGroupData:
-            return self._label_row_read_only_data.frame_level_data[self._frame]
-
-        def __repr__(self):
-            return f"FrameView(label_row={self._label_row}, frame={self._frame})"
-
-    @dataclass(frozen=True)
-    class FrameLevelImageGroupData:
-        image_hash: str
-        image_title: str
-        file_type: str
-        frame_number: int
-        width: int
-        height: int
-        data_link: Optional[str] = None
-
-    @dataclass(frozen=True)
-    class LabelRowReadOnlyData:
-        label_hash: Optional[str]
-        """This is None if the label row does not have any labels and was not initialised for labelling."""
-        created_at: Optional[datetime]
-        """This is None if the label row does not have any labels and was not initialised for labelling."""
-        last_edited_at: Optional[datetime]
-        """This is None if the label row does not have any labels and was not initialised for labelling."""
-        data_hash: str
-        data_type: DataType
-        label_status: LabelStatus
-        annotation_task_status: AnnotationTaskStatus
-        is_shadow_data: bool
-        number_of_frames: int
-        duration: Optional[float]
-        fps: Optional[float]
-        dataset_hash: str
-        dataset_title: str
-        data_title: str
-        width: Optional[int]
-        height: Optional[int]
-        data_link: Optional[str]
-        frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
-        image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
-        frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
-
     def __init__(
         self,
         label_row_metadata: LabelRowMetadata,
@@ -1644,6 +1452,198 @@ class LabelRowV2:
         ret["data_units"] = self._to_encord_data_units()
 
         return ret
+
+    class FrameView:
+        """
+        This class can be used to inspect what object/classification instances are on a given frame or
+        what metadata, such as a image file size, is on a given frame.
+        """
+
+        def __init__(
+            self, label_row: LabelRowV2, label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData, frame: int
+        ):
+
+            self._label_row = label_row
+            self._label_row_read_only_data = label_row_read_only_data
+            self._frame = frame
+
+        @property
+        def image_hash(self) -> str:
+            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+                raise LabelRowError("Image hash can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+            return self._frame_level_data().image_hash
+
+        @property
+        def image_title(self) -> str:
+            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+                raise LabelRowError("Image title can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+            return self._frame_level_data().image_title
+
+        @property
+        def file_type(self) -> str:
+            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+                raise LabelRowError("File type can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+            return self._frame_level_data().file_type
+
+        @property
+        def frame(self) -> int:
+            return self._frame
+
+        @property
+        def width(self) -> int:
+            if self._label_row.data_type in [DataType.IMG_GROUP]:
+                return self._frame_level_data().width
+            else:
+                return self._label_row_read_only_data.width
+
+        @property
+        def height(self) -> int:
+            if self._label_row.data_type in [DataType.IMG_GROUP]:
+                return self._frame_level_data().height
+            else:
+                return self._label_row_read_only_data.height
+
+        @property
+        def data_link(self) -> Optional[str]:
+            if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
+                raise LabelRowError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
+            return self._frame_level_data().data_link
+
+        def add_object(
+            self,
+            object_instance: ObjectInstance,
+            coordinates: Coordinates,
+            *,
+            overwrite: bool = False,
+            created_at: Optional[datetime] = None,
+            created_by: Optional[str] = None,
+            last_edited_at: Optional[datetime] = None,
+            last_edited_by: Optional[str] = None,
+            confidence: Optional[float] = None,
+            manual_annotation: Optional[bool] = None,
+        ) -> None:
+            label_row = object_instance.is_assigned_to_label_row()
+            if label_row and self._label_row != label_row:
+                raise LabelRowError(
+                    "This object instance is already assigned to a different label row. It can not be "
+                    "added to multiple label rows at once."
+                )
+
+            object_instance.set_for_frames(
+                coordinates,
+                self._frame,
+                overwrite=overwrite,
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+            )
+
+            if not label_row:
+                self._label_row.add_object(object_instance)
+
+        def add_classification(
+            self,
+            classification_instance: ClassificationInstance,
+            *,
+            overwrite: bool = False,
+            created_at: datetime = datetime.now(),
+            created_by: str = None,
+            confidence: int = DEFAULT_CONFIDENCE,
+            manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
+            last_edited_at: datetime = datetime.now(),
+            last_edited_by: Optional[str] = None,
+        ) -> None:
+            label_row = classification_instance.is_assigned_to_label_row()
+            if label_row and self._label_row != label_row:
+                raise LabelRowError(
+                    "This object instance is already assigned to a different label row. It can not be "
+                    "added to multiple label rows at once."
+                )
+
+            classification_instance.set_for_frames(
+                self._frame,
+                overwrite=overwrite,
+                created_at=created_at,
+                created_by=created_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+            )
+
+            if not label_row:
+                self._label_row.add_classification(classification_instance)
+
+        def get_objects(self, filter_ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
+            """
+            Args:
+                filter_ontology_object:
+                    Optionally filter by a specific ontology object.
+
+            Returns:
+                All the `ObjectInstance`s that match the filter.
+            """
+            return self._label_row.get_objects(filter_ontology_object=filter_ontology_object, filter_frames=self._frame)
+
+        def get_classifications(
+            self, filter_ontology_classification: Optional[Classification] = None
+        ) -> List[ClassificationInstance]:
+            """
+            Args:
+                filter_ontology_classification:
+                    Optionally filter by a specific ontology object.
+
+            Returns:
+                All the `ObjectInstance`s that match the filter.
+            """
+            return self._label_row.get_classifications(
+                filter_ontology_classification=filter_ontology_classification, filter_frames=self._frame
+            )
+
+        def _frame_level_data(self) -> LabelRowV2.FrameLevelImageGroupData:
+            return self._label_row_read_only_data.frame_level_data[self._frame]
+
+        def __repr__(self):
+            return f"FrameView(label_row={self._label_row}, frame={self._frame})"
+
+    @dataclass(frozen=True)
+    class FrameLevelImageGroupData:
+        image_hash: str
+        image_title: str
+        file_type: str
+        frame_number: int
+        width: int
+        height: int
+        data_link: Optional[str] = None
+
+    @dataclass(frozen=True)
+    class LabelRowReadOnlyData:
+        label_hash: Optional[str]
+        """This is None if the label row does not have any labels and was not initialised for labelling."""
+        created_at: Optional[datetime]
+        """This is None if the label row does not have any labels and was not initialised for labelling."""
+        last_edited_at: Optional[datetime]
+        """This is None if the label row does not have any labels and was not initialised for labelling."""
+        data_hash: str
+        data_type: DataType
+        label_status: LabelStatus
+        annotation_task_status: AnnotationTaskStatus
+        is_shadow_data: bool
+        number_of_frames: int
+        duration: Optional[float]
+        fps: Optional[float]
+        dataset_hash: str
+        dataset_title: str
+        data_title: str
+        width: Optional[int]
+        height: Optional[int]
+        data_link: Optional[str]
+        frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
+        image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
+        frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
 
     def _refresh_ontology_structure(self):
         ontology_hash = self._project_client.get_project()["ontology_hash"]
@@ -2140,186 +2140,6 @@ AnswersForFrames = List[AnswerForFrames]
 
 
 class ObjectInstance:
-    class FrameView:
-        """
-        This class can be used to set or get data for a specific frame of an ObjectInstance.
-        """
-
-        def __init__(self, object_instance: ObjectInstance, frame: int):
-            self._object_instance = object_instance
-            self._frame = frame
-
-        @property
-        def frame(self) -> int:
-            return self._frame
-
-        @property
-        def coordinates(self) -> Coordinates:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().coordinates
-
-        @coordinates.setter
-        def coordinates(self, coordinates: Coordinates) -> None:
-            self._check_if_frame_view_is_valid()
-            self._object_instance.set_for_frames(coordinates, self._frame)
-
-        @property
-        def created_at(self) -> datetime:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.created_at
-
-        @created_at.setter
-        def created_at(self, created_at: datetime) -> None:
-            self._check_if_frame_view_is_valid()
-            self._get_object_frame_instance_data().object_frame_instance_info.created_at = created_at
-
-        @property
-        def created_by(self) -> Optional[str]:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.created_by
-
-        @created_by.setter
-        def created_by(self, created_by: Optional[str]) -> None:
-            """
-            Set the created_by field with a user email or None if it should default to the current user of the SDK.
-            """
-            self._check_if_frame_view_is_valid()
-            if created_by is not None:
-                check_email(created_by)
-            self._get_object_frame_instance_data().object_frame_instance_info.created_by = created_by
-
-        @property
-        def last_edited_at(self) -> datetime:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at
-
-        @last_edited_at.setter
-        def last_edited_at(self, last_edited_at: datetime) -> None:
-            self._check_if_frame_view_is_valid()
-            self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at = last_edited_at
-
-        @property
-        def last_edited_by(self) -> Optional[str]:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by
-
-        @last_edited_by.setter
-        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
-            """
-            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
-            """
-            self._check_if_frame_view_is_valid()
-            if last_edited_by is not None:
-                check_email(last_edited_by)
-            self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by = last_edited_by
-
-        @property
-        def confidence(self) -> float:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.confidence
-
-        @confidence.setter
-        def confidence(self, confidence: float) -> None:
-            self._check_if_frame_view_is_valid()
-            self._get_object_frame_instance_data().object_frame_instance_info.confidence = confidence
-
-        @property
-        def manual_annotation(self) -> bool:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation
-
-        @manual_annotation.setter
-        def manual_annotation(self, manual_annotation: bool) -> None:
-            self._check_if_frame_view_is_valid()
-            self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation = manual_annotation
-
-        @property
-        def reviews(self) -> List[dict]:
-            """
-            A read only property about the reviews that happened for this object on this frame.
-            """
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.reviews
-
-        @property
-        def is_deleted(self) -> bool:
-            """This property is only relevant for internal use."""
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
-
-        def _get_object_frame_instance_data(self) -> ObjectInstance.FrameData:
-            return self._object_instance._frames_to_instance_data[self._frame]
-
-        def _check_if_frame_view_is_valid(self) -> None:
-            if self._frame not in self._object_instance._frames_to_instance_data:
-                raise LabelRowError(
-                    "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
-                )
-
-    @dataclass
-    class FrameInfo:
-        created_at: datetime = datetime.now()
-        created_by: Optional[str] = None
-        """None defaults to the user of the SDK."""
-        last_edited_at: datetime = datetime.now()
-        last_edited_by: Optional[str] = None
-        """None defaults to the user of the SDK."""
-        confidence: float = DEFAULT_CONFIDENCE
-        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-        reviews: Optional[List[dict]] = None
-        is_deleted: Optional[bool] = None
-
-        @staticmethod
-        def from_dict(d: dict):
-            if "lastEditedAt" in d:
-                last_edited_at = parse(d["lastEditedAt"])
-            else:
-                last_edited_at = None
-
-            return ObjectInstance.FrameInfo(
-                created_at=parse(d["createdAt"]),
-                created_by=d["createdBy"],
-                last_edited_at=last_edited_at,
-                last_edited_by=d.get("lastEditedBy"),
-                confidence=d["confidence"],
-                manual_annotation=d["manualAnnotation"],
-                reviews=d.get("reviews"),
-                is_deleted=d.get("isDeleted"),
-            )
-
-        def update_from_optional_fields(
-            self,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
-            confidence: Optional[float] = None,
-            manual_annotation: Optional[bool] = None,
-            reviews: Optional[List[dict]] = None,
-            is_deleted: Optional[bool] = None,
-        ) -> None:
-            """Return a new instance with the specified fields updated."""
-            self.created_at = created_at or self.created_at
-            if created_by is not None:
-                self.created_by = created_by
-            self.last_edited_at = last_edited_at or self.last_edited_at
-            if last_edited_by is not None:
-                self.last_edited_by = last_edited_by
-            if confidence is not None:
-                self.confidence = confidence
-            if manual_annotation is not None:
-                self.manual_annotation = manual_annotation
-            if reviews is not None:
-                self.reviews = reviews
-            if is_deleted is not None:
-                self.is_deleted = is_deleted
-
-    @dataclass
-    class FrameData:
-        coordinates: Coordinates
-        object_frame_instance_info: ObjectInstance.FrameInfo
-        # Probably the above can be flattened out into this class.
-
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = dict()
@@ -2711,6 +2531,186 @@ class ObjectInstance:
                 "Please ensure that all the dynamic answers are only on frames where coordinates "
                 "have been set previously."
             )
+
+    class FrameView:
+        """
+        This class can be used to set or get data for a specific frame of an ObjectInstance.
+        """
+
+        def __init__(self, object_instance: ObjectInstance, frame: int):
+            self._object_instance = object_instance
+            self._frame = frame
+
+        @property
+        def frame(self) -> int:
+            return self._frame
+
+        @property
+        def coordinates(self) -> Coordinates:
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().coordinates
+
+        @coordinates.setter
+        def coordinates(self, coordinates: Coordinates) -> None:
+            self._check_if_frame_view_is_valid()
+            self._object_instance.set_for_frames(coordinates, self._frame)
+
+        @property
+        def created_at(self) -> datetime:
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.created_at
+
+        @created_at.setter
+        def created_at(self, created_at: datetime) -> None:
+            self._check_if_frame_view_is_valid()
+            self._get_object_frame_instance_data().object_frame_instance_info.created_at = created_at
+
+        @property
+        def created_by(self) -> Optional[str]:
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.created_by
+
+        @created_by.setter
+        def created_by(self, created_by: Optional[str]) -> None:
+            """
+            Set the created_by field with a user email or None if it should default to the current user of the SDK.
+            """
+            self._check_if_frame_view_is_valid()
+            if created_by is not None:
+                check_email(created_by)
+            self._get_object_frame_instance_data().object_frame_instance_info.created_by = created_by
+
+        @property
+        def last_edited_at(self) -> datetime:
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at
+
+        @last_edited_at.setter
+        def last_edited_at(self, last_edited_at: datetime) -> None:
+            self._check_if_frame_view_is_valid()
+            self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at = last_edited_at
+
+        @property
+        def last_edited_by(self) -> Optional[str]:
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by
+
+        @last_edited_by.setter
+        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
+            """
+            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
+            """
+            self._check_if_frame_view_is_valid()
+            if last_edited_by is not None:
+                check_email(last_edited_by)
+            self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by = last_edited_by
+
+        @property
+        def confidence(self) -> float:
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.confidence
+
+        @confidence.setter
+        def confidence(self, confidence: float) -> None:
+            self._check_if_frame_view_is_valid()
+            self._get_object_frame_instance_data().object_frame_instance_info.confidence = confidence
+
+        @property
+        def manual_annotation(self) -> bool:
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation
+
+        @manual_annotation.setter
+        def manual_annotation(self, manual_annotation: bool) -> None:
+            self._check_if_frame_view_is_valid()
+            self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation = manual_annotation
+
+        @property
+        def reviews(self) -> List[dict]:
+            """
+            A read only property about the reviews that happened for this object on this frame.
+            """
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.reviews
+
+        @property
+        def is_deleted(self) -> bool:
+            """This property is only relevant for internal use."""
+            self._check_if_frame_view_is_valid()
+            return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
+
+        def _get_object_frame_instance_data(self) -> ObjectInstance.FrameData:
+            return self._object_instance._frames_to_instance_data[self._frame]
+
+        def _check_if_frame_view_is_valid(self) -> None:
+            if self._frame not in self._object_instance._frames_to_instance_data:
+                raise LabelRowError(
+                    "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
+                )
+
+    @dataclass
+    class FrameInfo:
+        created_at: datetime = datetime.now()
+        created_by: Optional[str] = None
+        """None defaults to the user of the SDK."""
+        last_edited_at: datetime = datetime.now()
+        last_edited_by: Optional[str] = None
+        """None defaults to the user of the SDK."""
+        confidence: float = DEFAULT_CONFIDENCE
+        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
+        reviews: Optional[List[dict]] = None
+        is_deleted: Optional[bool] = None
+
+        @staticmethod
+        def from_dict(d: dict):
+            if "lastEditedAt" in d:
+                last_edited_at = parse(d["lastEditedAt"])
+            else:
+                last_edited_at = None
+
+            return ObjectInstance.FrameInfo(
+                created_at=parse(d["createdAt"]),
+                created_by=d["createdBy"],
+                last_edited_at=last_edited_at,
+                last_edited_by=d.get("lastEditedBy"),
+                confidence=d["confidence"],
+                manual_annotation=d["manualAnnotation"],
+                reviews=d.get("reviews"),
+                is_deleted=d.get("isDeleted"),
+            )
+
+        def update_from_optional_fields(
+            self,
+            created_at: Optional[datetime] = None,
+            created_by: Optional[str] = None,
+            last_edited_at: Optional[datetime] = None,
+            last_edited_by: Optional[str] = None,
+            confidence: Optional[float] = None,
+            manual_annotation: Optional[bool] = None,
+            reviews: Optional[List[dict]] = None,
+            is_deleted: Optional[bool] = None,
+        ) -> None:
+            """Return a new instance with the specified fields updated."""
+            self.created_at = created_at or self.created_at
+            if created_by is not None:
+                self.created_by = created_by
+            self.last_edited_at = last_edited_at or self.last_edited_at
+            if last_edited_by is not None:
+                self.last_edited_by = last_edited_by
+            if confidence is not None:
+                self.confidence = confidence
+            if manual_annotation is not None:
+                self.manual_annotation = manual_annotation
+            if reviews is not None:
+                self.reviews = reviews
+            if is_deleted is not None:
+                self.is_deleted = is_deleted
+
+    @dataclass
+    class FrameData:
+        coordinates: Coordinates
+        object_frame_instance_info: ObjectInstance.FrameInfo
+        # Probably the above can be flattened out into this class.
 
     def _set_answer_unsafe(
         self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, track_hash: str, ranges: Ranges
