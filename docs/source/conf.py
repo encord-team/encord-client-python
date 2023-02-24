@@ -31,16 +31,16 @@ author = "Denis Gavrielov, Frederik Hvilshøj"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.coverage",
-    "sphinx.ext.napoleon",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.autosectionlabel",
-    "sphinx_autodoc_typehints",
-    "sphinx_copybutton",
-    "sphinx_gallery.gen_gallery",
-    "sphinx_codeautolink",
-    "sphinx_tabs.tabs",
+    "sphinx.ext.autodoc",  # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html include documentation from doc strings.
+    "sphinx.ext.coverage",  # https://www.sphinx-doc.org/en/master/usage/extensions/coverage.html collects doc coverage. Could be removed?
+    "sphinx.ext.napoleon",  # https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html support for google doc strings
+    "sphinx.ext.viewcode",  # https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html creates back links to source code.
+    "sphinx.ext.autosectionlabel",  # https://www.sphinx-doc.org/en/master/usage/extensions/autosectionlabel.html each section header becomes its ref.
+    "sphinx_autodoc_typehints",  # https://sphinx-toolbox.readthedocs.io/en/latest/extensions/more_autodoc/typehints.html automatically add type hints
+    "sphinx_copybutton",  # https://sphinx-copybutton.readthedocs.io/en/latest/ adds copy button to code blocks.
+    "sphinx_gallery.gen_gallery",  # https://sphinx-gallery.github.io/stable/index.html# build an example gallary, like in end-to-end tutorials landing page
+    "sphinx_codeautolink",  # https://pypi.org/project/sphinx-codeautolink/ - link back to source code examples
+    "sphinx_tabs.tabs",  # https://sphinx-tabs.readthedocs.io/en/latest/ - for tabs support
     "xref",
 ]
 
