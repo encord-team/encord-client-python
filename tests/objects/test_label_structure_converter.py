@@ -217,7 +217,7 @@ def test_label_row_with_reviews():
         OntologyStructure.from_dict(all_ontology_types),
     )
 
-    first_object = label_row.get_objects()[0]
+    first_object = label_row.get_object_instances()[0]
     first_frame = first_object.frames()[0]
 
     assert isinstance(first_frame.reviews, list)

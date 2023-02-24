@@ -1227,7 +1227,7 @@ class LabelRowV2:
             frame = self.get_frame_number(frame)
         return self.FrameView(self, self._label_row_read_only_data, frame)
 
-    def frames(self) -> List[FrameView]:
+    def get_frame_views(self) -> List[FrameView]:
         """
         Returns:
             A list of frame views in order of available frames.
@@ -1238,7 +1238,7 @@ class LabelRowV2:
             ret.append(self.get_frame_view(frame))
         return ret
 
-    def get_objects(
+    def get_object_instances(
         self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
     ) -> List[ObjectInstance]:
         """
@@ -1284,9 +1284,10 @@ class LabelRowV2:
 
         return ret
 
-    def add_object(self, object_instance: ObjectInstance, force=True):
+    def add_object_instance(self, object_instance: ObjectInstance, force=True):
         """
-        Do we want a bulk function? probably not needed as it is local? (only for the force option)
+        DENIS: Do we want a bulk function? probably not needed as it is local? (only for the force option)
+        also, maybe call this
 
         Args:
             force: overwrites current objects, otherwise this will replace the current object.
@@ -1315,7 +1316,8 @@ class LabelRowV2:
 
         self._add_to_frame_to_hashes_map(object_instance)
 
-    def add_classification(self, classification_instance: ClassificationInstance, force: bool = False):
+    def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False):
+        """DENIS: document this."""
         self._check_labelling_is_initalised()
 
         classification_instance.is_valid()
@@ -1377,7 +1379,7 @@ class LabelRowV2:
         else:
             raise NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
 
-    def get_classifications(
+    def get_classification_instances(
         self, filter_ontology_classification: Optional[Classification] = None, filter_frames: Optional[Frames] = None
     ) -> List[ClassificationInstance]:
         """
@@ -1516,7 +1518,7 @@ class LabelRowV2:
                 raise LabelRowError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
             return self._frame_level_data().data_link
 
-        def add_object(
+        def add_object_instance(
             self,
             object_instance: ObjectInstance,
             coordinates: Coordinates,
@@ -1530,6 +1532,7 @@ class LabelRowV2:
             manual_annotation: Optional[bool] = None,
         ) -> None:
             label_row = object_instance.is_assigned_to_label_row()
+            # DENIS: this is not necessarily nice, it only supports adding for the first time.
             if label_row and self._label_row != label_row:
                 raise LabelRowError(
                     "This object instance is already assigned to a different label row. It can not be "
@@ -1549,9 +1552,9 @@ class LabelRowV2:
             )
 
             if not label_row:
-                self._label_row.add_object(object_instance)
+                self._label_row.add_object_instance(object_instance)
 
-        def add_classification(
+        def add_classification_instance(
             self,
             classification_instance: ClassificationInstance,
             *,
@@ -1582,9 +1585,9 @@ class LabelRowV2:
             )
 
             if not label_row:
-                self._label_row.add_classification(classification_instance)
+                self._label_row.add_classification_instance(classification_instance)
 
-        def get_objects(self, filter_ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
+        def get_object_instances(self, filter_ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
             """
             Args:
                 filter_ontology_object:
@@ -1593,9 +1596,11 @@ class LabelRowV2:
             Returns:
                 All the `ObjectInstance`s that match the filter.
             """
-            return self._label_row.get_objects(filter_ontology_object=filter_ontology_object, filter_frames=self._frame)
+            return self._label_row.get_object_instances(
+                filter_ontology_object=filter_ontology_object, filter_frames=self._frame
+            )
 
-        def get_classifications(
+        def get_classification_instances(
             self, filter_ontology_classification: Optional[Classification] = None
         ) -> List[ClassificationInstance]:
             """
@@ -1606,7 +1611,7 @@ class LabelRowV2:
             Returns:
                 All the `ObjectInstance`s that match the filter.
             """
-            return self._label_row.get_classifications(
+            return self._label_row.get_classification_instances(
                 filter_ontology_classification=filter_ontology_classification, filter_frames=self._frame
             )
 
@@ -1778,7 +1783,7 @@ class LabelRowV2:
         # Get objects for frame
         ret: List[dict] = []
 
-        objects = self.get_objects(filter_frames=frame)
+        objects = self.get_object_instances(filter_frames=frame)
         for object_ in objects:
             encord_object = self._to_encord_object(object_, frame)
             ret.append(encord_object)
@@ -1835,7 +1840,7 @@ class LabelRowV2:
     def _to_encord_classifications_list(self, frame: int) -> list:
         ret: List[dict] = []
 
-        classifications = self.get_classifications(filter_frames=frame)
+        classifications = self.get_classification_instances(filter_frames=frame)
         for classification in classifications:
             encord_classification = self._to_encord_classification(classification, frame)
             ret.append(encord_classification)
@@ -2000,7 +2005,7 @@ class LabelRowV2:
             object_hash = frame_object_label["objectHash"]
             if object_hash not in self._objects_map:
                 object_instance = self._create_new_object_instance(frame_object_label, frame)
-                self.add_object(object_instance)
+                self.add_object_instance(object_instance)
             else:
                 self._add_coordinates_to_object_instance(frame_object_label, frame)
 
@@ -2072,7 +2077,7 @@ class LabelRowV2:
                 classification_instance = self._create_new_classification_instance(
                     frame_classification_label, frame, classification_answers
                 )
-                self.add_classification(classification_instance)
+                self.add_classification_instance(classification_instance)
             else:
                 self._add_frames_to_classification_instance(frame_classification_label, frame)
 
@@ -3050,6 +3055,8 @@ class OntologyStructure:
         self,
         title: str,
         type_: Union[
+            Type[Object],
+            Type[Classification],
             Type[RadioAttribute],
             Type[ChecklistAttribute],
             Type[TextAttribute],

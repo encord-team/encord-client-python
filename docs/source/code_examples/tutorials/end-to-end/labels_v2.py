@@ -23,7 +23,8 @@ from pathlib import Path
 from typing import List
 
 from encord import EncordUserClient, Project
-from encord.objects import LabelRowV2
+from encord.objects import LabelRowV2, Object, ObjectInstance, OntologyStructure
+from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.orm.project import Project as OrmProject
 
 #%%
@@ -87,6 +88,60 @@ first_label_row.save()
 #%%
 # Creating/reading object instances
 # ---------------------------------
+# The :class:`encord.objects.LabelRowV2` class works with its corresponding ontology. If you add object instances
+# or classification instances, these will be created from the ontology.
+#
+# Defining the ontology object
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+ontology_structure: OntologyStructure = first_label_row.ontology_structure
+box_ontology_object: Object = ontology_structure.get_item_by_title(title="Box of a human", type_=Object)
+# ^ optionally specify the `type_` to narrow the return type and also have a runtime check.
+
+# %%
+# Creating and saving an object instance
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+
+box_object_instance: ObjectInstance = box_ontology_object.create_instance()
+
+box_object_instance.set_for_frames(
+    coordinates=BoundingBoxCoordinates(
+        height=0.5,
+        width=0.5,
+        top_left_x=0.2,
+        top_left_y=0.2,
+    ),
+    # Add the bounding box for the first frame
+    frames=0,
+)
+
+# Link the object instance to the label row.
+first_label_row.add_object_instance(box_object_instance)
+
+
+first_label_row.save()  # Upload the label to the server
+
+#%%
+# Inspecting an object instance
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# You can now get all the object instances that are part of the label row.
+
+# Check the optional filters for when you have many different object/classification instances.
+all_object_instances: List[ObjectInstance] = first_label_row.get_object_instances()
+
+assert all_object_instances[0] == box_object_instance
+
+#%%
+# Frame views of labels
+# ^^^^^^^^^^^^^^^^^^^^^
+#
+# Using a per frame view of the label row to read/write the labels is also possible and can be convenient.
 #
 #
-#
+
+box_object_instance_copy: ObjectInstance = box_object_instance.copy()
+
+frame_view: LabelRowV2.FrameView = first_label_row.get_frame_view(0)
+# DENIS: TODO: this part maybe needs an API rethink.

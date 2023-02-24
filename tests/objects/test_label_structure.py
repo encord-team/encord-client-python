@@ -144,7 +144,7 @@ def test_upload_simple_data():
     ]
 
     # ======== Add the object to the label row ========
-    label_row.add_object(object_instance)
+    label_row.add_object_instance(object_instance)
 
     # ======= ClassificationIndex ========
     # This essentially works very similar to setting one static answer in the ObjectInstance.
@@ -160,7 +160,7 @@ def test_upload_simple_data():
 
     classification_instance.add_frames([2, 3])
 
-    label_row.add_classification(classification_instance)
+    label_row.add_classification_instance(classification_instance)
     # ======== Radio classification ========
     # This will work similarly for the ObjectIndex
     radio_classification = example_ontology_structure.get_item_by_hash("jPOcEswer", Classification)
@@ -205,11 +205,11 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict():
     label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
 
     with pytest.raises(LabelRowError):
-        label_row.get_classifications()
+        label_row.get_classification_instances()
 
     label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
-    assert label_row.get_classifications() == []
-    assert label_row.get_objects() == []
+    assert label_row.get_classification_instances() == []
+    assert label_row.get_object_instances() == []
     # TODO: do more assertions
 
 
@@ -227,8 +227,8 @@ def test_add_object_instance_to_label_row():
     )
 
     object_instance.set_for_frames(coordinates=coordinates, frames=1)
-    label_row.add_object(object_instance)
-    assert label_row.get_objects()[0].object_hash == object_instance.object_hash
+    label_row.add_object_instance(object_instance)
+    assert label_row.get_object_instances()[0].object_hash == object_instance.object_hash
 
 
 def test_add_remove_access_object_instances_in_label_row():
@@ -255,16 +255,16 @@ def test_add_remove_access_object_instances_in_label_row():
     object_instance_2.set_for_frames(coordinates=coordinates_2, frames=2)
     object_instance_2.set_for_frames(coordinates=coordinates_2, frames=3)
 
-    label_row.add_object(object_instance_1)
-    label_row.add_object(object_instance_2)
+    label_row.add_object_instance(object_instance_1)
+    label_row.add_object_instance(object_instance_2)
 
-    objects = label_row.get_objects()
+    objects = label_row.get_object_instances()
     assert objects[0].object_hash == object_instance_1.object_hash
     assert objects[1].object_hash == object_instance_2.object_hash
     # The FE may sometimes rely on the order of these.
 
     label_row.remove_object(object_instance_1)
-    objects = label_row.get_objects()
+    objects = label_row.get_object_instances()
     assert len(objects) == 1
     assert objects[0].object_hash == object_instance_2.object_hash
 
@@ -296,21 +296,21 @@ def test_filter_for_objects():
     label_polygon.set_for_frames(polygon_coordinates, 2)
     label_polygon.set_for_frames(polygon_coordinates, 3)
 
-    label_row.add_object(label_box)
-    label_row.add_object(label_polygon)
+    label_row.add_object_instance(label_box)
+    label_row.add_object_instance(label_polygon)
 
-    objects = label_row.get_objects()
+    objects = label_row.get_object_instances()
     assert len(objects) == 2
 
-    objects = label_row.get_objects(filter_ontology_object=polygon_ontology_item)
+    objects = label_row.get_object_instances(filter_ontology_object=polygon_ontology_item)
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
-    objects = label_row.get_objects(filter_ontology_object=box_ontology_item)
+    objects = label_row.get_object_instances(filter_ontology_object=box_ontology_item)
     assert len(objects) == 1
     assert objects[0].object_hash == label_box.object_hash
 
-    objects = label_row.get_objects(filter_ontology_object=polyline_ontology_item)
+    objects = label_row.get_object_instances(filter_ontology_object=polyline_ontology_item)
     assert len(objects) == 0
 
 
@@ -332,29 +332,29 @@ def test_get_object_instances_by_frames():
     label_polygon.set_for_frames(POLYGON_COORDINATES, 2)
     label_polygon.set_for_frames(POLYGON_COORDINATES, 3)
 
-    label_row.add_object(label_box)
-    label_row.add_object(label_polygon)
+    label_row.add_object_instance(label_box)
+    label_row.add_object_instance(label_polygon)
 
-    objects = label_row.get_objects(filter_frames=2)
+    objects = label_row.get_object_instances(filter_frames=2)
     assert len(objects) == 2
 
-    objects = label_row.get_objects(filter_frames=4)
+    objects = label_row.get_object_instances(filter_frames=4)
     assert len(objects) == 0
 
-    objects = list(label_row.get_objects(filter_frames=1))
+    objects = list(label_row.get_object_instances(filter_frames=1))
     assert len(objects) == 1
     assert objects[0].object_hash == label_box.object_hash
 
-    objects = list(label_row.get_objects(filter_frames=3))
+    objects = list(label_row.get_object_instances(filter_frames=3))
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
     label_box.set_for_frames(BOX_COORDINATES, 3)
-    objects = list(label_row.get_objects(filter_frames=3))
+    objects = list(label_row.get_object_instances(filter_frames=3))
     assert len(objects) == 2
 
     label_row.remove_object(label_box)
-    objects = list(label_row.get_objects(filter_frames=3))
+    objects = list(label_row.get_object_instances(filter_frames=3))
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
 
@@ -370,18 +370,18 @@ def test_adding_object_instance_to_multiple_frames_fails():
 
     label_box.set_for_frames(BOX_COORDINATES, 1)
 
-    label_row_1.add_object(label_box)
+    label_row_1.add_object_instance(label_box)
     with pytest.raises(LabelRowError):
-        label_row_2.add_object(label_box)
+        label_row_2.add_object_instance(label_box)
 
     label_row_1.remove_object(label_box)
-    label_row_2.add_object(label_box)
+    label_row_2.add_object_instance(label_box)
 
     with pytest.raises(LabelRowError):
-        label_row_1.add_object(label_box)
+        label_row_1.add_object_instance(label_box)
 
     label_box_copy = label_box.copy()
-    label_row_1.add_object(label_box_copy)
+    label_row_1.add_object_instance(label_box_copy)
     assert label_box.object_hash != label_box_copy.object_hash
 
 
@@ -481,18 +481,18 @@ def test_removing_coordinates_from_object_removes_it_from_parent():
     label_box.set_for_frames(BOX_COORDINATES, 2)
     label_box.set_for_frames(BOX_COORDINATES, 3)
 
-    label_row.add_object(label_box)
+    label_row.add_object_instance(label_box)
 
-    objects = label_row.get_objects(filter_frames=Range(1, 3))
+    objects = label_row.get_object_instances(filter_frames=Range(1, 3))
     assert len(objects) == 1
-    objects = label_row.get_objects(filter_frames=3)
+    objects = label_row.get_object_instances(filter_frames=3)
     assert len(objects) == 1
 
     label_box.remove_from_frames(3)
 
-    objects = label_row.get_objects(filter_frames=Range(1, 3))
+    objects = label_row.get_object_instances(filter_frames=Range(1, 3))
     assert len(objects) == 1
-    objects = label_row.get_objects(filter_frames=3)
+    objects = label_row.get_object_instances(filter_frames=3)
     assert len(objects) == 0
 
 
@@ -639,28 +639,28 @@ def test_add_and_get_classification_instances_to_label_row():
     classification_instance_2.set_for_frames(Range(3, 4))
     classification_instance_3.set_for_frames(Range(1, 4))
 
-    label_row.add_classification(classification_instance_1)
-    label_row.add_classification(classification_instance_2)
-    label_row.add_classification(classification_instance_3)
+    label_row.add_classification_instance(classification_instance_1)
+    label_row.add_classification_instance(classification_instance_2)
+    label_row.add_classification_instance(classification_instance_3)
 
-    classification_instances = label_row.get_classifications()
+    classification_instances = label_row.get_classification_instances()
     assert set(classification_instances) == {
         classification_instance_1,
         classification_instance_2,
         classification_instance_3,
     }
 
-    filtered_classification_instances = label_row.get_classifications(text_classification)
+    filtered_classification_instances = label_row.get_classification_instances(text_classification)
     assert set(filtered_classification_instances) == {classification_instance_1, classification_instance_2}
 
     overlapping_classification_instance = ClassificationInstance(text_classification)
     overlapping_classification_instance.set_for_frames(1)
     with pytest.raises(LabelRowError):
-        label_row.add_classification(overlapping_classification_instance)
+        label_row.add_classification_instance(overlapping_classification_instance)
 
     overlapping_classification_instance.remove_from_frames(1)
     overlapping_classification_instance.set_for_frames(5)
-    label_row.add_classification(overlapping_classification_instance)
+    label_row.add_classification_instance(overlapping_classification_instance)
     with pytest.raises(LabelRowError):
         overlapping_classification_instance.set_for_frames(1)
     with pytest.raises(LabelRowError):
@@ -951,25 +951,25 @@ def test_frame_view():
     assert label_row.number_of_frames == label_row_metadata.number_of_frames
 
     with pytest.raises(LabelRowError):
-        frames = label_row.frames()
+        frames = label_row.get_frame_views()
 
     label_row.from_labels_dict(empty_image_group_labels, all_types_structure)  # initialise the labels.
 
     frame_view: LabelRowV2.FrameView = label_row.get_frame_view(1)
-    assert frame_view.get_objects() == []
-    assert frame_view.get_classifications() == []
+    assert frame_view.get_object_instances() == []
+    assert frame_view.get_classification_instances() == []
 
     object_instance = ObjectInstance(box_ontology_item)
     classification_instance = ClassificationInstance(text_classification)
 
-    frame_view.add_object(object_instance, BOX_COORDINATES)
-    frame_view.add_classification(classification_instance)
+    frame_view.add_object_instance(object_instance, BOX_COORDINATES)
+    frame_view.add_classification_instance(classification_instance)
 
-    frames = label_row.frames()
+    frames = label_row.get_frame_views()
     assert len(frames) == label_row_metadata.duration * label_row_metadata.frames_per_second
 
     frame_num = 0
-    for frame in label_row.frames():
+    for frame in label_row.get_frame_views():
         assert frame.frame == frame_num
         frame_num += 1
 
@@ -983,5 +983,5 @@ def test_frame_view():
         == "https://storage.googleapis.com/cord-ai-platform.appspot.com/cord-images-prod/yiA5JxmLEGSoEcJAuxr3AJdDDXE2/f850dfb4-7146-49e0-9afc-2b9434a64a9f?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-64w1p%40cord-ai-platform.iam.gserviceaccount.com%2F20221201%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20221201T133838Z&X-Goog-Expires=604800&X-Goog-SignedHeaders=host&X-Goog-Signature=94c66d85014ff52a99fec1cf671ccc1b859ebead4308ca82c4d810e13ac285d2afa8cfa4bfcbd09f615b243b95d9b1d5d1d779e7a4ba5832a2207b4f3b99dbe405ded373f03f06abe4e24098e70568c269899f2f397c7a4392a1c3090bff2b8c98f2177f5db36f0884a83033f404354bdfda0506bf162e25ff6186fc54104e8273e86959b0296958a03359514660528a54ba94e25c59e59534ce5102f9c87ff7cb03a591606b3a191123af4a30fa4296a788a9433f0c8c1dc7d3f80a022cc42f8716ba44d09ecd04118dc6e4ee5977ffbadcc8d635cc4e906f024dba26e520cfc304fc0f3458a3e3b2422c196956fd3024a6eba0512d557683487b10a1a381b4"
     )
 
-    assert frame_view.get_objects() == [object_instance]
-    assert frame_view.get_classifications() == [classification_instance]
+    assert frame_view.get_object_instances() == [object_instance]
+    assert frame_view.get_classification_instances() == [classification_instance]
