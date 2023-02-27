@@ -545,7 +545,7 @@ class ClassificationInstance:
                 reviews=reviews,
             )
 
-    def get_frame_view(self, frame: Union[int, str] = 0) -> ClassificationInstance.FrameView:
+    def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
@@ -564,7 +564,7 @@ class ClassificationInstance:
             self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
             self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
-    def frames(self) -> List[ClassificationInstance.FrameView]:
+    def frames(self) -> List[FrameView]:
         """
         Returns:
             A list of `ClassificationInstance.FrameView` in order of available frames.
@@ -2481,7 +2481,7 @@ class ObjectInstance:
             if self._parent:
                 self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
-    def get_frame_view(self, frame: Union[int, str] = 0) -> "ObjectInstance.FrameView":
+    def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
         DENIS: do this return pattern everywhere. Check if it works well with the docs.
         Args:
@@ -2504,8 +2504,9 @@ class ObjectInstance:
         ret._dynamic_answer_manager = self._dynamic_answer_manager.copy()
         return ret
 
-    def frames(self) -> List[ObjectInstance.FrameView]:
+    def frames(self) -> List[FrameView]:
         """
+        DENIS: do I want to rename this to `get_frame_views`??
         Returns:
             A list of `ObjectInstance.FrameView` in order of available frames.
         """

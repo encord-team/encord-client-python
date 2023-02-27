@@ -25,7 +25,13 @@ from pathlib import Path
 from typing import List
 
 from encord import EncordUserClient, Project
-from encord.objects import LabelRowV2, Object, ObjectInstance, OntologyStructure
+from encord.objects import (
+    Classification,
+    LabelRowV2,
+    Object,
+    ObjectInstance,
+    OntologyStructure,
+)
 from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.orm.project import Project as OrmProject
 
@@ -205,7 +211,7 @@ for label_row_frame_view in first_label_row.get_frame_views():
 
 
 #%%
-# Creating and saving a classification instance
+# Working with a classification instance
 # ---------------------------------------------
 #
 # Creating a classification instance is similar to creating an object instance. The only differences are that you
@@ -214,15 +220,33 @@ for label_row_frame_view in first_label_row.get_frame_views():
 #
 # You can read more about classification instances here: https://docs.encord.com/ontologies/use/#classifications
 #
+# Get the ontology object
+# ^^^^^^^^^^^^^^^^^^^^^^^^
+
+# Assume that the following text classification exists in the ontology.
+text_ontology_classification: Classification = ontology_structure.get_item_by_title(
+    title="Free text about the frame", type_=Classification
+)
+text_classification_instance = text_ontology_classification.create_instance()
+
+
 #
+# Add the classification instance to the label row
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-"""
-However, I can actuall do a new object_instance, and then iterate it over frames to add it 
-Just show how to add and read to multiple frames by iterating over frames. Emphasise that this is 
-nicer in a read view (for writing it doesn't make a big difference I think). 
-"""
+# First set the value of the classification instance
+text_classification_instance.set_answer(answer="This is a text classification.")
 
-# TODO:
-# * use classifications
+# Then add it to the label row
+first_label_row.add_classification_instance(text_classification_instance)
+
+#
+# Read classification instances
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# Check the convenient filters of get_classification_instances() for your use cases
+all_classification_instances = first_label_row.get_classification_instances()
+assert all_classification_instances[0] == text_classification_instance
+
 # * set/read answers for objects or classifications
 # * set/read dynamic answers.
