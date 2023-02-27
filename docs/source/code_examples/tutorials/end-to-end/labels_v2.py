@@ -3,6 +3,8 @@ Working with the LabelRowV2
 ===========================
 
 DENIS: probably the code links not working will be the blocker for me using this tool.
+DENIS: Think about having easy back links. Maybe one "setup" script, and then every section can be started
+   from the setup.
 
 The :class:`encord.objects.LabelRowV2` class is a wrapper around the Encord label row data format. It
 provides a convenient way to read, create, and manipulate labels.
@@ -89,7 +91,8 @@ first_label_row.save()
 # Creating/reading object instances
 # ---------------------------------
 # The :class:`encord.objects.LabelRowV2` class works with its corresponding ontology. If you add object instances
-# or classification instances, these will be created from the ontology.
+# or classification instances, these will be created from the ontology. You can read more about object instances
+# here: https://docs.encord.com/ontologies/use/#objects
 #
 # Defining the ontology object
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -112,7 +115,7 @@ box_object_instance.set_for_frames(
         top_left_x=0.2,
         top_left_y=0.2,
     ),
-    # Add the bounding box for the first frame
+    # Add the bounding box to the first frame
     frames=0,
 )
 
@@ -128,20 +131,98 @@ first_label_row.save()  # Upload the label to the server
 #
 # You can now get all the object instances that are part of the label row.
 
-# Check the optional filters for when you have many different object/classification instances.
+# Check the get_object_instances optional filters for when you have many different object/classification instances.
 all_object_instances: List[ObjectInstance] = first_label_row.get_object_instances()
 
 assert all_object_instances[0] == box_object_instance
 
 #%%
-# Frame views of labels
-# ^^^^^^^^^^^^^^^^^^^^^
+# Adding object instances to multiple frames.
+# -------------------------------------------
 #
-# Using a per frame view of the label row to read/write the labels is also possible and can be convenient.
+# Sometimes, you might want to work with a video where a single object instance is present in multiple frames.
+# For example, you are tracking a car across multiple frames. In this case you would create one
+# object instance and place it on all the frames where it is present.
+# If objects are never present in multiple frames, you would always create a new object instance for a new frame.
+
+# Assume you have the coordinates of a single object for the first 3 frames of a video.
+# These are indexed by frame number.
+coordinates_per_frame = {
+    3: BoundingBoxCoordinates(
+        height=0.5,
+        width=0.5,
+        top_left_x=0.2,
+        top_left_y=0.2,
+    ),
+    4: BoundingBoxCoordinates(
+        height=0.5,
+        width=0.5,
+        top_left_x=0.3,
+        top_left_y=0.3,
+    ),
+    5: BoundingBoxCoordinates(
+        height=0.5,
+        width=0.5,
+        top_left_x=0.4,
+        top_left_y=0.4,
+    ),
+}
+
+
+# OPTION 1 - think in terms of "the frames per object instance"
+box_object_instance_2: ObjectInstance = box_ontology_object.create_instance()
+
+for frame_number, coordinates in coordinates_per_frame.items():
+    box_object_instance_2.set_for_frames(coordinates=coordinates, frames=frame_number)
+
+# OPTION 2 - think in terms of the "object instances per frame"
+box_object_instance_3: ObjectInstance = box_ontology_object.create_instance()
+
+for frame_view in first_label_row.get_frame_views():
+    if frame_view.frame_number in coordinates_per_frame:
+        frame_view.add_object_instance(
+            object_instance=box_object_instance_3,
+            coordinates=coordinates_per_frame[frame_view.frame_number],
+        )
+
+
+#%%
+# Read access across multiple frames
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# As shown above with OPTION 1 and OPTION 2, you can think of the individual object instances and on which
+# frames they are present or you can think of the individual frames and which objects they have.
+# For a read access thinking of the individual frames can be particularly convenient.
+
+for label_row_frame_view in first_label_row.get_frame_views():
+    frame_number = label_row_frame_view.frame
+    print(f"Frame number: {frame_number}")
+    object_instances_in_frame: List[ObjectInstance] = label_row_frame_view.get_object_instances()
+    for object_instance in object_instances_in_frame:
+        print(f"Object instance: {object_instance}")
+        object_instance_frame_view = object_instance.get_frame_view(frame=frame_number)
+        print(f"Coordinates: {object_instance_frame_view.coordinates}")
+
+
+#%%
+# Creating and saving a classification instance
+# ---------------------------------------------
+#
+# Creating a classification instance is similar to creating an object instance. The only differences are that you
+# cannot create have more than one classification instance of the same type on the same frame and that there is
+# no coordinates to be set for classification instances.
+#
+# You can read more about classification instances here: https://docs.encord.com/ontologies/use/#classifications
 #
 #
 
-box_object_instance_copy: ObjectInstance = box_object_instance.copy()
+"""
+However, I can actuall do a new object_instance, and then iterate it over frames to add it 
+Just show how to add and read to multiple frames by iterating over frames. Emphasise that this is 
+nicer in a read view (for writing it doesn't make a big difference I think). 
+"""
 
-frame_view: LabelRowV2.FrameView = first_label_row.get_frame_view(0)
-# DENIS: TODO: this part maybe needs an API rethink.
+# TODO:
+# * use classifications
+# * set/read answers for objects or classifications
+# * set/read dynamic answers.

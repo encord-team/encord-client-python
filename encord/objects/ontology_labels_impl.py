@@ -1532,7 +1532,6 @@ class LabelRowV2:
             manual_annotation: Optional[bool] = None,
         ) -> None:
             label_row = object_instance.is_assigned_to_label_row()
-            # DENIS: this is not necessarily nice, it only supports adding for the first time.
             if label_row and self._label_row != label_row:
                 raise LabelRowError(
                     "This object instance is already assigned to a different label row. It can not be "
@@ -2482,8 +2481,9 @@ class ObjectInstance:
             if self._parent:
                 self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
-    def get_frame_view(self, frame: Union[int, str] = 0) -> ObjectInstance.FrameView:
+    def get_frame_view(self, frame: Union[int, str] = 0) -> "ObjectInstance.FrameView":
         """
+        DENIS: do this return pattern everywhere. Check if it works well with the docs.
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
