@@ -2,16 +2,11 @@
 Working with the LabelRowV2
 ===========================
 
-DENIS: probably the code links not working will be the blocker for me using this tool.
 DENIS: Think about having easy back links. Maybe one "setup" script, and then every section can be started
    from the setup.
 
 The :class:`encord.objects.LabelRowV2` class is a wrapper around the Encord label row data format. It
 provides a convenient way to read, create, and manipulate labels.
-
-This is just an illustrative example.
-
-
 """
 
 #%%
@@ -23,6 +18,7 @@ from typing import List
 
 from encord import EncordUserClient, Project
 from encord.objects import (
+    AnswerForFrames,
     Classification,
     LabelRowV2,
     Object,
@@ -31,6 +27,7 @@ from encord.objects import (
     RadioAttribute,
 )
 from encord.objects.coordinates import BoundingBoxCoordinates
+from encord.objects.utils import Range
 from encord.orm.project import Project as OrmProject
 
 #%%
@@ -81,7 +78,6 @@ for label_row in label_rows:
 # method which will download the state of the label from the Encord server.
 #
 # Once this method has been called, you can create your first label.
-# DENIS: think of creating a screenshot from the platform here.
 
 first_label_row: LabelRowV2 = label_rows[0]
 
@@ -380,10 +376,52 @@ assert car_object_instance.get_answer(attribute=car_brand_attribute) == mercedes
 
 # %%
 # Setting answers for dynamic attributes
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# --------------------------------------
 #
+# Dynamic attributes are attributes for object instances where the answer can change in each frame.
+# You can read more about them here: https://docs.encord.com/annotate/editor/videos/#dynamic-classification
 #
+# These behave very similarly to static attributes, however, they expect that a frame is passed to the `set_answer`
+# which will set the answer for the specific frame.
+#
+# The read access, however, behaves slightly different to show which answers have been set for which frames.
+
+person_ontology_object: Object = ontology_structure.get_item_by_title("Person", type_=Object)
+
+position_attribute = person_ontology_object.get_item_by_title(
+    title="Position",  # The options here are "Standing" or "Walking"
+    type_=RadioAttribute,
+)
+
+person_object_instance = person_ontology_object.create_instance()
+
+# Assume you would add the right coordinates of this person for frames 0-10 here.
+# Now assume the person is standing in frames 0-5 and walking in frames 6-10.
+
+person_object_instance.set_answer(
+    answer=position_attribute.get_item_by_title("Standing"),
+    frames=Range(start=0, end=5),
+    # Wherever you can set frames, you can either set a single int, a Range, or a list of Range.
+)
+
+person_object_instance.set_answer(
+    answer=position_attribute.get_item_by_title("Walking"),
+    frames=Range(start=6, end=10),
+)
+
+# DENIS: make sure that we refer to all the Range helpers.
+assert person_object_instance.get_answer(attribute=position_attribute) == [
+    AnswerForFrames(
+        answer=position_attribute.get_item_by_title("Standing"),
+        ranges=[Range(start=0, end=5)],
+    ),
+    AnswerForFrames(
+        answer=position_attribute.get_item_by_title("Walking"),
+        ranges=[Range(start=6, end=10)],
+    ),
+]
 
 
 # * set/read dynamic answers. https://docs.encord.com/annotate/editor/videos/#dynamic-classification
 # DENIS: show how to set the manual_annotation for example.
+# DENIS: provide an actual reference ontology where all of these examples would work.
