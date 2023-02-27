@@ -605,6 +605,8 @@ class ClassificationInstance:
         overwrite: bool = False,
     ) -> None:
         """
+        DENIS: revise again how clients are getting the classification and the attribute of the classification, given
+        it's lack of a top level title.
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
@@ -2308,7 +2310,7 @@ class ObjectInstance:
         overwrite: bool = False,
     ) -> None:
         """
-        We could make these functions part of a different class which this inherits from.
+        DENIS: We could make these functions part of a different class which this inherits from.
 
         Args:
             answer: The answer to set.

@@ -13,7 +13,7 @@ from encord.objects import (
     Object,
     ObjectInstance,
 )
-from encord.objects.common import TextAttribute
+from encord.objects.common import RadioAttribute, TextAttribute
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     BoundingBoxCoordinates,
@@ -512,6 +512,26 @@ def test_classification_index_answer_overwrite():
 
     classification_instance.set_answer("Aphrodite", overwrite=True)
     assert classification_instance.get_answer() == "Aphrodite"
+
+
+def test_classification_answering_with_ontology_access():
+    """A demonstrative test to show how easy it would be for clients to use the ontology to answer classifications"""
+
+    # NOTE: it is important to add the `Classification` here, to distinguish between the attribute and classification,
+    # which both go by the same name.
+    radio_classification_ = all_types_structure.get_item_by_title("Radio classification 1", Classification)
+    radio_instance = radio_classification_.create_instance()
+
+    radio_classification_attribute = radio_classification_.get_item_by_title("Radio classification 1", RadioAttribute)
+
+    option_1 = radio_classification_.get_item_by_title("cl 1 option 1")
+    option_2 = radio_classification_.get_item_by_title("cl 1 option 2")
+
+    radio_instance.set_answer(option_1, attribute=radio_classification_attribute)
+    assert radio_instance.get_answer() == option_1
+
+    radio_instance.set_answer(option_2, overwrite=True)
+    assert radio_instance.get_answer() == option_2
 
 
 def test_classification_index_answer_nested_attributes():

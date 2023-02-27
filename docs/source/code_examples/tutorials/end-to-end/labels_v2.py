@@ -11,9 +11,6 @@ provides a convenient way to read, create, and manipulate labels.
 
 This is just an illustrative example.
 
-.. figure:: /images/cvat_project_export.png
-
-    Export Project.
 
 """
 
@@ -31,6 +28,7 @@ from encord.objects import (
     Object,
     ObjectInstance,
     OntologyStructure,
+    RadioAttribute,
 )
 from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.orm.project import Project as OrmProject
@@ -230,7 +228,7 @@ text_ontology_classification: Classification = ontology_structure.get_item_by_ti
 text_classification_instance = text_ontology_classification.create_instance()
 
 
-#
+#%%
 # Add the classification instance to the label row
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -240,7 +238,7 @@ text_classification_instance.set_answer(answer="This is a text classification.")
 # Then add it to the label row
 first_label_row.add_classification_instance(text_classification_instance)
 
-#
+#%%
 # Read classification instances
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -248,5 +246,144 @@ first_label_row.add_classification_instance(text_classification_instance)
 all_classification_instances = first_label_row.get_classification_instances()
 assert all_classification_instances[0] == text_classification_instance
 
-# * set/read answers for objects or classifications
-# * set/read dynamic answers.
+#%%
+# Working with object/classification instance attributes
+# ------------------------------------------------------
+#
+# Both object instances and classification instances can have attributes. You can read more about examples
+# using these links: https://docs.encord.com/annotate/editor/images#frame-classification and
+# https://docs.encord.com/annotate/editor/images#frame-classification
+#
+# In the ontology you might have already configured text, radio, or checklist attributes for your object/classification.
+# With the LabelRowV2, you can set or get the values of these attributes. Here, we refer to as "setting or getting an
+# answer to an attribute".
+#
+# Answering classification instance attributes
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# The case for answering classification instance attributes is simpler, so let's start with those.
+#
+# You will again need to deal with the original ontology object to interact with answers to attributes. We have
+# exposed convenient accessors to find the right attributes to get the attributes or the respective options by
+# their title.
+#
+# .. note::
+#
+#     When working with attributes, you will see that the first thing to do is often to grab the ontology object.
+#     Usually, when calling the `get_item_by_title` the `type_` is recommended, but still optional. However, for
+#     classifications this is often required.
+#
+#     The reason is that the classification title is always equal to the title of the top level attribute of this
+#     classification. Therefore, it is important to distinguish what exactly you're trying to search for.
+#
+# Text attributes
+# """""""""""""""
+#
+# Answering text attributes is the simplest case and has already been shown in the section on classification instances
+# above.
+
+# Assume that the following text classification exists in the ontology.
+text_ontology_classification: Classification = ontology_structure.get_item_by_title(
+    title="Free text about the frame",
+    # Do not forget to specify the type here
+    type_=Classification,
+)
+text_classification_instance = text_ontology_classification.create_instance()
+
+# First set the value of the classification instance
+text_classification_instance.set_answer(answer="This is a text classification.")
+
+assert text_classification_instance.get_answer() == "This is a text classification."
+
+# %%
+# We encourage you to read the `set_answer` and `get_answer` docstrings to understand the different behaviours and
+# possible options which you can set.
+#
+# Checklist attributes
+# """"""""""""""""""""
+#
+# Assume we have a checklist with "all colours in the picture" which defines a bunch of colours that we can
+# see in the image. You will need to get all the options from the checklist ontology that you would like to
+# select as answers.
+
+checklist_ontology_classification: Classification = ontology_structure.get_item_by_title(
+    title="All colours in the picture",
+    # Do not forget to specify the type here
+    type_=Classification,
+)
+checklist_classification_instance = checklist_ontology_classification.create_instance()
+
+# Prefer using the `checklist_ontology_classification` over the `ontology_structure` to get the options.
+# The more specific the ontology item that you're searching from is, the more likely you will avoid title clashes.
+green_option = checklist_ontology_classification.get_item_by_title(
+    "Green"
+)  # DENIS: make it work with type: Option (so ppl don't have to write FlatOption.
+blue_option = checklist_ontology_classification.get_item_by_title("Blue")
+
+checklist_classification_instance.set_answer([green_option, blue_option])
+
+assert sorted(checklist_classification_instance.get_answer()) == sorted([green_option, blue_option])
+
+# %%
+# Radio attributes
+# """"""""""""""""
+#
+# Let's assume we have a radio classification called "Scenery" with the options "Mountains", "Ocean", and "Desert".
+
+scenery_ontology_classification: Classification = ontology_structure.get_item_by_title(
+    title="Scenery",
+    # Do not forget to specify the type here
+    type_=Classification,
+)
+
+mountains_option = scenery_ontology_classification.get_item_by_title(title="Mountains")
+
+darkness_classification_instance = scenery_ontology_classification.create_instance()
+
+darkness_classification_instance.set_answer(mountains_option)
+
+assert darkness_classification_instance.get_answer() == mountains_option
+
+# %%
+# Radio attributes can also be nested. You can read more about nested options here:
+# https://docs.encord.com/ontologies/use/#nested-classifications
+#
+# Let's say that if you have the Mountains scenery, there is an additional radio classification called "Mountains count"
+# with the answers "One", "Two", and "Many". Continuing the example above, you can set the nested answer like this:
+
+mountains_count_attribute = mountains_option.get_item_by_title("Mountains count")
+two_mountains_option = mountains_count_attribute.get_item_by_title("Two")
+
+darkness_classification_instance.set_answer(two_mountains_option)
+
+# Note, that if for `set_answer` or `get_answer` the attribute of the classification cannot be inferred, we need
+# to manually specify it.
+assert darkness_classification_instance.get_answer(attribute=mountains_count_attribute) == two_mountains_option
+
+# %%
+# Answering object instance attributes
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Setting answers on object instances is almost identical to setting answers on classification instances.
+# You will need to possibly get the attribute, but also the answer options from the ontology.
+
+car_ontology_object: Object = ontology_structure.get_item_by_title("Car")
+car_brand_attribute = car_ontology_object.get_item_by_title(title="Car brand", type_=RadioAttribute)
+# Again, doing ontology_structure.get_item_by_title("Mercedes") is also possible, but might be more ambiguous.
+mercedes_option = car_brand_attribute.get_item_by_title(title="Mercedes")
+
+car_object_instance = car_ontology_object.create_instance()
+
+car_object_instance.set_answer(mercedes_option)
+
+# The attribute cannot be inferred, so we need to specify it.
+assert car_object_instance.get_answer(attribute=car_brand_attribute) == mercedes_option
+
+# %%
+# Setting answers for dynamic attributes
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+#
+
+
+# * set/read dynamic answers. https://docs.encord.com/annotate/editor/videos/#dynamic-classification
+# DENIS: show how to set the manual_annotation for example.
