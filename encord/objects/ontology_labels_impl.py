@@ -559,26 +559,6 @@ class ClassificationInstance:
         if not len(self._frames_to_data) > 0:
             raise LabelRowError("ClassificationInstance is not on any frames. Please add it to at least one frame.")
 
-    @overload
-    def set_answer(self, answer: str, attribute: Optional[TextAttribute] = None, overwrite: bool = False) -> None:
-        ...
-
-    @overload
-    def set_answer(self, answer: Option, attribute: Optional[RadioAttribute] = None, overwrite: bool = False) -> None:
-        ...
-
-    @overload
-    def set_answer(
-        self, answer: Iterable[Option], attribute: Optional[ChecklistAttribute] = None, overwrite: bool = False
-    ) -> None:
-        ...
-
-    @overload
-    def set_answer(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: None = None, overwrite: bool = False
-    ) -> None:
-        ...
-
     def set_answer(
         self,
         answer: Union[str, Option, Iterable[Option]],
@@ -586,6 +566,9 @@ class ClassificationInstance:
         overwrite: bool = False,
     ) -> None:
         """
+        Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
+        UI after adding a ClassificationInstance. There is only one answer per ClassificationInstance per Attribute.
+
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
@@ -617,6 +600,8 @@ class ClassificationInstance:
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
+        This is a low level helper function and should not be used directly.
+
         Sets the answer for the classification from a dictionary.
 
         Args:
@@ -652,26 +637,16 @@ class ClassificationInstance:
             else:
                 raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
-    @overload
-    def get_answer(self, attribute: TextAttribute) -> str:
-        ...
-
-    @overload
-    def get_answer(self, attribute: RadioAttribute) -> Option:
-        ...
-
-    @overload
-    def get_answer(self, attribute: ChecklistAttribute) -> List[Option]:
-        ...
-
-    @overload
-    def get_answer(self, attribute: None = None) -> Union[str, Option, List[Option]]:
-        ...
-
     def get_answer(self, attribute: Optional[Attribute] = None) -> Union[str, Option, Iterable[Option], None]:
         """
+        Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
+
+        For the ChecklistAttribute, it returns None if and only if
+        the attribute is nested and the parent is unselected. Otherwise, if not yet answered it will return an empty
+        list.
+
         Args:
-            attribute: The ontology attribute to get the answer for. If not provided, the first level attribute is used.
+            attribute: The ontology attribute to get the answer for.
         """
         if attribute is None:
             attribute = self._ontology_classification.attributes[0]
@@ -684,24 +659,10 @@ class ClassificationInstance:
 
         return get_answer_from_object(static_answer)
 
-    def get_answer_dict(self, attribute: Optional[Attribute] = None) -> dict:
-        """
-        A low level helper to convert to the Encord JSON format.
-        For most use cases the `get_answer` function should be used instead.
-        """
-        if attribute is None:
-            attribute = self._ontology_classification.attributes[0]
-        elif not self._is_attribute_valid_child_of_classification(attribute):
-            raise LabelRowError("The attribute is not a valid child of the classification.")
-        elif not self._is_selectable_child_attribute(attribute):
-            return {}
-
-        static_answer = self._static_answer_map[attribute.feature_node_hash]
-
-        return static_answer.to_encord_dict()
-
     def delete_answer(self, attribute: Optional[Attribute] = None) -> None:
         """
+        This resets the answer of an attribute as if it was never set.
+
         Args:
             attribute: The ontology attribute to delete the answer for. If not provided, the first level attribute is
                 used.
@@ -2181,48 +2142,6 @@ class ObjectInstance:
         else:
             return self._parent.number_of_frames
 
-    @overload
-    def get_answer(
-        self,
-        attribute: TextAttribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
-        is_dynamic: Optional[bool] = False,
-    ) -> Optional[str]:
-        ...
-
-    @overload
-    def get_answer(
-        self,
-        attribute: RadioAttribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
-        is_dynamic: Optional[bool] = False,
-    ) -> Optional[Option]:
-        ...
-
-    @overload
-    def get_answer(
-        self,
-        attribute: ChecklistAttribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
-        is_dynamic: Optional[bool] = False,
-    ) -> Optional[List[Option]]:
-        """Returns None only if the attribute is nested and the parent is unselected. Otherwise, if not
-        yet answered it will return an empty list."""
-        ...
-
-    @overload
-    def get_answer(
-        self,
-        attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
-        filter_frame: Optional[int] = None,
-        is_dynamic: Optional[bool] = True,
-    ) -> AnswersForFrames:
-        ...
-
     def get_answer(
         self,
         attribute: Attribute,
@@ -2231,6 +2150,12 @@ class ObjectInstance:
         is_dynamic: Optional[bool] = None,
     ) -> Union[str, Option, Iterable[Option], AnswersForFrames, None]:
         """
+        Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
+
+        For the ChecklistAttribute, it returns None if and only if
+        the attribute is nested and the parent is unselected. Otherwise, if not yet answered it will return an empty
+        list.
+
         Args:
             attribute: The ontology attribute to get the answer for.
             filter_answer: A filter for a specific answer value. Only applies to dynamic attributes.
@@ -2262,36 +2187,6 @@ class ObjectInstance:
 
         return get_answer_from_object(static_answer)
 
-    @overload
-    def set_answer(
-        self,
-        answer: str,
-        attribute: Optional[TextAttribute] = None,
-        frames: Optional[Frames] = None,
-        overwrite: bool = False,
-    ) -> None:
-        ...
-
-    @overload
-    def set_answer(
-        self,
-        answer: Option,
-        attribute: Optional[RadioAttribute] = None,
-        frames: Optional[Frames] = None,
-        overwrite: bool = False,
-    ) -> None:
-        ...
-
-    @overload
-    def set_answer(
-        self,
-        answer: Iterable[Option],
-        attribute: Optional[ChecklistAttribute] = None,
-        frames: Optional[Frames] = None,
-        overwrite: bool = False,
-    ) -> None:
-        ...
-
     def set_answer(
         self,
         answer: Union[str, Option, Sequence[Option]],
@@ -2300,6 +2195,10 @@ class ObjectInstance:
         overwrite: bool = False,
     ) -> None:
         """
+        Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
+        UI after drowing the ObjectInstance. There is only one answer per ObjectInstance per Attribute, unless
+        the attribute is dynamic (check the args list for more instructions on how to set dynamic answers).
+
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
@@ -2344,6 +2243,7 @@ class ObjectInstance:
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
         This is a low level helper function and should usually not be used directly.
+
         Sets the answer for the classification from a dictionary.
 
         Args:
