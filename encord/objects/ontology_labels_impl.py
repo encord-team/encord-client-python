@@ -62,6 +62,14 @@ from encord.objects.coordinates import (
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
 )
+from encord.objects.frames import (
+    Frames,
+    Range,
+    Ranges,
+    frames_class_to_frames_list,
+    frames_to_ranges,
+    ranges_list_to_ranges,
+)
 from encord.objects.internal_helpers import (
     Answer,
     _get_static_answer_map,
@@ -72,17 +80,11 @@ from encord.objects.internal_helpers import (
     set_answer_for_object,
 )
 from encord.objects.utils import (
-    Frames,
-    Range,
-    Ranges,
     _lower_snake_case,
     check_email,
     check_type,
     does_type_match,
     filter_by_type,
-    frames_class_to_frames_list,
-    frames_to_ranges,
-    ranges_list_to_ranges,
     short_uuid_str,
 )
 from encord.orm.formatter import Formatter

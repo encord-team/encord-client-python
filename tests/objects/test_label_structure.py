@@ -26,7 +26,7 @@ from encord.objects.coordinates import (
     PointCoordinate,
     PolygonCoordinates,
 )
-from encord.objects.utils import Range
+from encord.objects.frames import Range
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data.all_types_ontology_structure import all_types_structure

@@ -19,12 +19,8 @@ from encord.objects.common import (
     _get_option_by_hash,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
-from encord.objects.utils import (
-    Ranges,
-    _lower_snake_case,
-    ranges_to_list,
-    short_uuid_str,
-)
+from encord.objects.frames import Ranges, ranges_to_list
+from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 
 class Answer(ABC):

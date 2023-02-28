@@ -191,6 +191,7 @@ class RadioAttribute(Attribute):
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
+        """DENIS: add the docstrings."""
         found_item = _get_option_by_hash(feature_node_hash, self.options)
         if found_item is None:
             raise OntologyError("Item not found.")

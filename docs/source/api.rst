@@ -56,6 +56,7 @@ Encord Objects
 .. automodule:: encord.objects.common
     :members:
     :undoc-members:
+    :inherited-members:
 
 .. automodule:: encord.objects.utils
     :members:
@@ -88,6 +89,15 @@ Label ClassificationInstance
     :members:
     :undoc-members:
 
+Label Frame Utilities
+----------------------
+.. autoclass:: encord.objects.frames.Frames
+
+.. autoclass:: encord.objects.frames.Ranges
+
+.. automodule:: encord.objects.frames
+    :members:
+    :undoc-members:
 
 
 Project Ontology
