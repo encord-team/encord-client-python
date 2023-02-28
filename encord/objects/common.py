@@ -191,7 +191,15 @@ class RadioAttribute(Attribute):
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
-        """DENIS: add the docstrings."""
+        """
+        Returns the first found item where the hash matches. If there is more than one item with the same hash in
+        the ontology, then the ontology would be in an invalid state. Throws if nothing is found.
+
+        Args:
+            feature_node_hash: the feature_node_hash to search for
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
         found_item = _get_option_by_hash(feature_node_hash, self.options)
         if found_item is None:
             raise OntologyError("Item not found.")
@@ -203,6 +211,15 @@ class RadioAttribute(Attribute):
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> List[Union[AttributeClasses, OptionClasses]]:
+        """
+        Returns all the children with the matching title and matching type if specified. Title in ontologies do not need
+        to be unique, however, we recommend unique titles when creating ontologies.
+
+        Args:
+            title: The exact title of the item to search for in the ontology.
+            type_: The expected type of the item. This is user for better type support for further functions.
+                Also, an error is thrown if an unexpected type is found.
+        """
         found_items = _get_options_by_title(title, self.options)
         return filter_by_type(found_items, type_)  # noqa
 

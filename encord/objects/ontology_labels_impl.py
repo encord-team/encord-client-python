@@ -586,8 +586,6 @@ class ClassificationInstance:
         overwrite: bool = False,
     ) -> None:
         """
-        DENIS: revise again how clients are getting the classification and the attribute of the classification, given
-        it's lack of a top level title.
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
@@ -732,6 +730,11 @@ class ClassificationInstance:
         return list(self._static_answer_map.values())
 
     class Annotation:
+        """
+        This class can be used to set or get data for a specific annotation (i.e. the ClassificationInstance for a given
+        frame number).
+        """
+
         def __init__(self, classification_instance: ClassificationInstance, frame: int):
             self._classification_instance = classification_instance
             self._frame = frame
@@ -2470,7 +2473,6 @@ class ObjectInstance:
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
-        DENIS: do this return pattern everywhere. Check if it works well with the docs.
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
@@ -2533,8 +2535,8 @@ class ObjectInstance:
 
     class Annotation:
         """
-        DENIS: call this "Annotation"
-        This class can be used to set or get data for a specific frame of an ObjectInstance.
+        This class can be used to set or get data for a specific annotation (i.e. the ObjectInstance for a given
+        frame number).
         """
 
         def __init__(self, object_instance: ObjectInstance, frame: int):
@@ -2962,47 +2964,14 @@ class OntologyStructure:
     objects: List[Object] = field(default_factory=list)
     classifications: List[Classification] = field(default_factory=list)
 
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[Object]) -> Object:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[Classification]) -> Classification:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[RadioAttribute]) -> RadioAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[ChecklistAttribute]) -> ChecklistAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[TextAttribute]) -> TextAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[NestableOption]) -> NestableOption:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[FlatOption]) -> FlatOption:
-        ...
-
-    @overload
-    def get_item_by_hash(
-        self, feature_node_hash: str, type_: None = None
-    ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
-        ...
-
     def get_item_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
     ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
         """
-        Returns the first found item where the hash matches. If there is more than one item with the same hash in
+        DENIS: call this get_child_by_hash??
+        Returns the first found child where the hash matches. If there is more than one child with the same hash in
         the ontology, then the ontology would be in an invalid state. Throws if nothing is found.
 
         Args:
@@ -3036,8 +3005,8 @@ class OntologyStructure:
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
     ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
         """
-        Returns one ontology item with the matching title and matching type if specified. If more than one items in this
-        ontology have the same title, then an error will be thrown. If no item is found, an error will be thrown as
+        Returns one ontology child with the matching title and matching type if specified. If more than one children in
+        this ontology have the same title, then an error will be thrown. If no item is found, an error will be thrown as
         well.
 
         Args:
@@ -3055,7 +3024,7 @@ class OntologyStructure:
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
     ) -> List[Union[OntologyClasses, AttributeClasses, OptionClasses]]:
         """
-        Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
+        Returns all the children with the matching title and matching type if specified. Title in ontologies do not need
         to be unique, however, we recommend unique titles when creating ontologies.
 
         Args:
