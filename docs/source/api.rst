@@ -25,34 +25,23 @@ Ontology
     :members:
     :undoc-members:
 
-Client
-------------
-.. automodule:: encord.client
+Ontology Structure
+------------------
+
+.. autoclass:: encord.objects.ontology_labels_impl.OntologyStructure
     :members:
     :undoc-members:
 
-..
-    FHV: I don't know why this i here?
-    Utilities - User Client
-    ------------------------
-    .. automodule:: encord.utilities.user_client_utilities
-        :members:
-        :undoc-members:
+.. autoclass:: encord.objects.ontology_labels_impl.Object
+    :members:
+    :undoc-members:
+
+.. autoclass:: encord.objects.ontology_labels_impl.Classification
+    :members:
+    :undoc-members:
 
 Encord Objects
 ---------------
-.. automodule:: encord.objects.ontology_structure
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.objects.ontology_object
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.objects.classification
-    :members:
-    :undoc-members:
-
 .. automodule:: encord.objects.common
     :members:
     :undoc-members:
@@ -100,37 +89,6 @@ Label Frame Utilities
     :undoc-members:
 
 
-Project Ontology
-----------------
-Note that these classes are DEPRECATED and the :class:`encord.ontology.Ontology` should be used instead.
-
-.. automodule:: encord.project_ontology.classification_attribute
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.project_ontology.classification_option
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.project_ontology.classification_type
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.project_ontology.object_type
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.project_ontology.ontology
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.project_ontology.ontology_classification
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.project_ontology.ontology_object
-    :members:
-    :undoc-members:
 
 
 Utilities - Client
@@ -222,3 +180,50 @@ Exceptions
     :members:
     :undoc-members:
 
+DEPRECATED Client
+-----------------
+Using this client is deprecated. You are encouraged to use the :class:`~encord.project.Project` and :class:`~encord.dataset.Dataset` instead.
+
+.. automodule:: encord.client
+    :members:
+    :undoc-members:
+
+..
+    FHV: I don't know why this i here?
+    Utilities - User Client
+    ------------------------
+    .. automodule:: encord.utilities.user_client_utilities
+        :members:
+        :undoc-members:
+
+DEPRECATED: Project Ontology
+----------------------------
+Note that these classes are DEPRECATED and the :class:`encord.ontology.Ontology` should be used instead.
+
+.. automodule:: encord.project_ontology.classification_attribute
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.classification_option
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.classification_type
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.object_type
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology_classification
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology_object
+    :members:
+    :undoc-members:
