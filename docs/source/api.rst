@@ -102,6 +102,8 @@ Label Frame Utilities
 
 Project Ontology
 ----------------
+Note that these classes are DEPRECATED and the :class:`encord.ontology.Ontology` should be used instead.
+
 .. automodule:: encord.project_ontology.classification_attribute
     :members:
     :undoc-members:

@@ -6,6 +6,8 @@ from encord.project_ontology.object_type import ObjectShape
 @dataclass
 class OntologyObject:
     """
+    DEPRECATED: prefer using :class:`encord.ontology.Ontology`
+
     A dataclass which holds an object for of the :class:`encord.project_ontology.Ontology`.
     """
 

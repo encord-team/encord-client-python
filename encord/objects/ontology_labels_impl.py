@@ -2999,17 +2999,8 @@ class OntologyStructure:
     def get_item_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[Object],
-            Type[Classification],
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
         """
         Returns the first found item where the hash matches. If there is more than one item with the same hash in
         the ontology, then the ontology would be in an invalid state. Throws if nothing is found.
