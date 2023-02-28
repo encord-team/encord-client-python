@@ -17,7 +17,6 @@ from encord.objects.common import (
     RadioAttribute,
     TextAttribute,
     _get_option_by_hash,
-    _OptionBase,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.utils import (
@@ -498,7 +497,7 @@ def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
 def _infer_attribute_from_answer(
     attributes: List[Attribute], answer: Union[str, Option, Sequence[Option]]
 ) -> Attribute:
-    if isinstance(answer, _OptionBase):
+    if isinstance(answer, Option):
         parent_opt = _search_for_parent(answer, attributes)  # type: ignore
         if parent_opt is None:
             raise LabelRowError(

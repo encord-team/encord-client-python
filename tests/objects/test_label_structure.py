@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from encord.exceptions import LabelRowError
+from encord.exceptions import LabelRowError, OntologyError
 from encord.objects import (
     AnswerForFrames,
     Classification,
@@ -13,7 +13,7 @@ from encord.objects import (
     Object,
     ObjectInstance,
 )
-from encord.objects.common import RadioAttribute, TextAttribute
+from encord.objects.common import Attribute, Option, RadioAttribute, TextAttribute
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     BoundingBoxCoordinates,
@@ -522,12 +522,26 @@ def test_classification_answering_with_ontology_access():
     radio_classification_ = all_types_structure.get_item_by_title("Radio classification 1", Classification)
     radio_instance = radio_classification_.create_instance()
 
-    radio_classification_attribute = radio_classification_.get_item_by_title("Radio classification 1", RadioAttribute)
+    radio_classification_attribute_1 = radio_classification_.get_item_by_title(
+        "Radio classification 1", type_=RadioAttribute
+    )
+    # Different `type_` with generic `Attribute`
+    radio_classification_attribute_2 = radio_classification_.get_item_by_title(
+        "Radio classification 1", type_=Attribute
+    )
+    with pytest.raises(OntologyError):
+        radio_classification_.get_item_by_title(
+            # This is not the correct `type_`
+            "Radio classification 1",
+            type_=Option,
+        )
 
-    option_1 = radio_classification_.get_item_by_title("cl 1 option 1")
-    option_2 = radio_classification_.get_item_by_title("cl 1 option 2")
+    assert radio_classification_attribute_1 == radio_classification_attribute_2
 
-    radio_instance.set_answer(option_1, attribute=radio_classification_attribute)
+    option_1 = radio_classification_.get_item_by_title("cl 1 option 1", type_=Option)
+    option_2 = radio_classification_.get_item_by_title("cl 1 option 2", type_=Option)
+
+    radio_instance.set_answer(option_1, attribute=radio_classification_attribute_2)
     assert radio_instance.get_answer() == option_1
 
     radio_instance.set_answer(option_2, overwrite=True)

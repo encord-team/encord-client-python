@@ -26,6 +26,7 @@ from encord.objects import (
     OntologyStructure,
     RadioAttribute,
 )
+from encord.objects.common import Option
 from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.utils import Range
 from encord.orm.project import Project as OrmProject
@@ -229,7 +230,6 @@ text_classification_instance = text_ontology_classification.create_instance()
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # First set the value of the classification instance
-# DENIS: show how you place it on frames.
 text_classification_instance.set_answer(answer="This is a text classification.")
 
 # Then add it to the label row
@@ -311,10 +311,8 @@ checklist_classification_instance = checklist_ontology_classification.create_ins
 
 # Prefer using the `checklist_ontology_classification` over the `ontology_structure` to get the options.
 # The more specific the ontology item that you're searching from is, the more likely you will avoid title clashes.
-green_option = checklist_ontology_classification.get_item_by_title(
-    "Green"
-)  # DENIS: make it work with type: Option (so ppl don't have to write FlatOption.
-blue_option = checklist_ontology_classification.get_item_by_title("Blue")
+green_option = checklist_ontology_classification.get_item_by_title("Green", type_=Option)
+blue_option = checklist_ontology_classification.get_item_by_title("Blue", type_=Option)
 
 checklist_classification_instance.set_answer([green_option, blue_option])
 
@@ -332,7 +330,7 @@ scenery_ontology_classification: Classification = ontology_structure.get_item_by
     type_=Classification,
 )
 
-mountains_option = scenery_ontology_classification.get_item_by_title(title="Mountains")
+mountains_option = scenery_ontology_classification.get_item_by_title(title="Mountains", type_=Option)
 
 darkness_classification_instance = scenery_ontology_classification.create_instance()
 
@@ -347,8 +345,8 @@ assert darkness_classification_instance.get_answer() == mountains_option
 # Let's say that if you have the Mountains scenery, there is an additional radio classification called "Mountains count"
 # with the answers "One", "Two", and "Many". Continuing the example above, you can set the nested answer like this:
 
-mountains_count_attribute = mountains_option.get_item_by_title("Mountains count")
-two_mountains_option = mountains_count_attribute.get_item_by_title("Two")
+mountains_count_attribute = mountains_option.get_item_by_title("Mountains count", type_=RadioAttribute)
+two_mountains_option = mountains_count_attribute.get_item_by_title("Two", type_=Option)
 
 darkness_classification_instance.set_answer(two_mountains_option)
 
@@ -357,6 +355,8 @@ darkness_classification_instance.set_answer(two_mountains_option)
 # DENIS: this is not darkness anymore!
 assert darkness_classification_instance.get_answer(attribute=mountains_count_attribute) == two_mountains_option
 
+# DENIS: test if all the typing support actually works.
+
 # %%
 # Answering object instance attributes
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -364,10 +364,10 @@ assert darkness_classification_instance.get_answer(attribute=mountains_count_att
 # Setting answers on object instances is almost identical to setting answers on classification instances.
 # You will need to possibly get the attribute, but also the answer options from the ontology.
 
-car_ontology_object: Object = ontology_structure.get_item_by_title("Car")
+car_ontology_object: Object = ontology_structure.get_item_by_title("Car", type_=Object)
 car_brand_attribute = car_ontology_object.get_item_by_title(title="Car brand", type_=RadioAttribute)
 # Again, doing ontology_structure.get_item_by_title("Mercedes") is also possible, but might be more ambiguous.
-mercedes_option = car_brand_attribute.get_item_by_title(title="Mercedes")
+mercedes_option = car_brand_attribute.get_item_by_title(title="Mercedes", type_=Option)
 
 car_object_instance = car_ontology_object.create_instance()
 
@@ -401,24 +401,24 @@ person_object_instance = person_ontology_object.create_instance()
 # Now assume the person is standing in frames 0-5 and walking in frames 6-10.
 
 person_object_instance.set_answer(
-    answer=position_attribute.get_item_by_title("Standing"),
+    answer=position_attribute.get_item_by_title("Standing", type_=Option),
     frames=Range(start=0, end=5),
     # Wherever you can set frames, you can either set a single int, a Range, or a list of Range.
 )
 
 person_object_instance.set_answer(
-    answer=position_attribute.get_item_by_title("Walking"),
+    answer=position_attribute.get_item_by_title("Walking", type_=Option),
     frames=Range(start=6, end=10),
 )
 
 # DENIS: make sure that we refer to all the Range helpers.
 assert person_object_instance.get_answer(attribute=position_attribute) == [
     AnswerForFrames(
-        answer=position_attribute.get_item_by_title("Standing"),
+        answer=position_attribute.get_item_by_title("Standing", type_=Option),
         ranges=[Range(start=0, end=5)],
     ),
     AnswerForFrames(
-        answer=position_attribute.get_item_by_title("Walking"),
+        answer=position_attribute.get_item_by_title("Walking", type_=Option),
         ranges=[Range(start=6, end=10)],
     ),
 ]

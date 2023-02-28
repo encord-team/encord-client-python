@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any, List, Optional, Tuple, Type, TypeVar, Union
 
+from encord.exceptions import OntologyError
 from encord.objects.utils import (
     _decode_nested_uid,
     check_type,
@@ -33,7 +34,7 @@ class Shape(StringEnum):
 
 
 @dataclass
-class _AttributeBase(ABC):
+class Attribute(ABC):
     """
     Base class for shared Attribute fields
     """
@@ -54,36 +55,22 @@ class _AttributeBase(ABC):
 
     @classmethod
     @abstractmethod
-    def has_options_field(self) -> bool:
+    def has_options_field(cls) -> bool:
         pass
 
     @abstractmethod
     def get_item_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         raise NotImplementedError("This method is not implemented for this class")
 
     def get_item_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         """
         Returns one ontology item with the matching title and matching type if specified. If more than one items in this
         Attribute have the same title, then an error will be thrown. If no item is found, an error will be thrown
@@ -102,15 +89,8 @@ class _AttributeBase(ABC):
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         raise NotImplementedError("This method is not implemented for this class")
 
     def to_dict(self) -> dict:
@@ -192,7 +172,7 @@ class _AttributeBase(ABC):
 
 
 @dataclass
-class RadioAttribute(_AttributeBase):
+class RadioAttribute(Attribute):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
@@ -203,39 +183,25 @@ class RadioAttribute(_AttributeBase):
         return PropertyType.RADIO
 
     @classmethod
-    def has_options_field(self) -> bool:
+    def has_options_field(cls) -> bool:
         return True
 
     def get_item_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         found_item = _get_option_by_hash(feature_node_hash, self.options)
         if found_item is None:
-            raise RuntimeError("Item not found.")
+            raise OntologyError("Item not found.")
         check_type(found_item, type_)
         return found_item
 
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         found_items = _get_options_by_title(title, self.options)
         return filter_by_type(found_items, type_)  # noqa
 
@@ -262,7 +228,7 @@ class RadioAttribute(_AttributeBase):
 
 
 @dataclass
-class ChecklistAttribute(_AttributeBase):
+class ChecklistAttribute(Attribute):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
@@ -273,39 +239,25 @@ class ChecklistAttribute(_AttributeBase):
         return PropertyType.CHECKLIST
 
     @classmethod
-    def has_options_field(self) -> bool:
+    def has_options_field(cls) -> bool:
         return True
 
     def get_item_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         found_item = _get_option_by_hash(feature_node_hash, self.options)
         if found_item is None:
-            raise RuntimeError("Item not found.")
+            raise OntologyError("Item not found.")
         # check_type(found_item, type_)
         return found_item
 
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         found_items = _get_options_by_title(title, self.options)
         return filter_by_type(found_items, type_)  # noqa
 
@@ -331,7 +283,7 @@ class ChecklistAttribute(_AttributeBase):
 
 
 @dataclass
-class TextAttribute(_AttributeBase):
+class TextAttribute(Attribute):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
@@ -340,42 +292,24 @@ class TextAttribute(_AttributeBase):
         return PropertyType.TEXT
 
     @classmethod
-    def has_options_field(self) -> bool:
+    def has_options_field(cls) -> bool:
         return False
 
     def get_item_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
-        raise RuntimeError("No nested options available for text attributes.")
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
+        raise OntologyError("No nested options available for text attributes.")
 
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         return []
 
 
-Attribute = Union[RadioAttribute, ChecklistAttribute, TextAttribute]
-"""
-This class is currently in BETA. Its API might change in future minor version releases. 
-"""
 OptionAttribute = Union[RadioAttribute, ChecklistAttribute]
 """
 This class is currently in BETA. Its API might change in future minor version releases. 
@@ -389,7 +323,7 @@ def _attribute_id_from_json_str(attribute_id: str) -> NestedID:
 
 def attribute_from_dict(d: dict) -> Attribute:
     """Convenience functions as you cannot call static member on union types."""
-    return _AttributeBase.from_dict(d)
+    return Attribute.from_dict(d)
 
 
 def attributes_to_list_dict(attributes: List[Attribute]) -> list:
@@ -406,7 +340,7 @@ class OptionType(Enum):
 
 
 @dataclass
-class _OptionBase(ABC):
+class Option(ABC):
     """
     Base class for shared Option fields
     """
@@ -424,29 +358,15 @@ class _OptionBase(ABC):
     def get_item_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         raise NotImplementedError("This method is not implemented for this class")
 
     def get_item_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         """
         Returns one ontology item with the matching title and matching type if specified. If more than one items in this
         Option have the same title, then an error will be thrown. If no item is found, an error will be thrown
@@ -465,15 +385,8 @@ class _OptionBase(ABC):
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         raise NotImplementedError("This method is not implemented for this class")
 
     def to_dict(self) -> dict:
@@ -504,7 +417,7 @@ class _OptionBase(ABC):
 
 
 @dataclass
-class FlatOption(_OptionBase):
+class FlatOption(Option):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
@@ -515,29 +428,15 @@ class FlatOption(_OptionBase):
     def get_item_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
-        raise RuntimeError("No nested attributes for flat options.")
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
+        raise OntologyError("No nested attributes for flat options.")
 
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         return []
 
     @classmethod
@@ -549,7 +448,7 @@ class FlatOption(_OptionBase):
 
 
 @dataclass
-class NestableOption(_OptionBase):
+class NestableOption(Option):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
@@ -562,33 +461,19 @@ class NestableOption(_OptionBase):
     def get_item_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         found_item = _get_attribute_by_hash(feature_node_hash, self.nested_options)
         if found_item is None:
-            raise RuntimeError("Item not found.")
+            raise OntologyError("Item not found.")
         check_type(found_item, type_)
         return found_item
 
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         found_items = _get_attributes_by_title(title, self.nested_options)
         return filter_by_type(found_items, type_)  # noqa
 
@@ -636,12 +521,6 @@ class NestableOption(_OptionBase):
 
     def __hash__(self):
         return hash(self.feature_node_hash)
-
-
-Option = Union[FlatOption, NestableOption]
-"""
-This class is currently in BETA. Its API might change in future minor version releases. 
-"""
 
 
 def __build_identifiers(
@@ -781,10 +660,21 @@ def _handle_wrong_number_of_found_items(
     type_: Any,
 ) -> None:
     if len(found_items) == 0:
-        raise RuntimeError(f"No item was found in the ontology with the given title `{title}` and type `{type_}`")
+        raise OntologyError(f"No item was found in the ontology with the given title `{title}` and type `{type_}`")
     elif len(found_items) > 1:
-        raise RuntimeError(
+        raise OntologyError(
             f"More than one item was found in the ontology with the given title `{title}` and type `{type_}`. "
             f"Use the `get_items_by_title` or `get_item_by_hash` function instead. "
             f"The found items are `{found_items}`."
         )
+
+
+AttributeTypes = Union[
+    Type[RadioAttribute],
+    Type[ChecklistAttribute],
+    Type[TextAttribute],
+    Type[Attribute],
+]
+AttributeClasses = Union[RadioAttribute, ChecklistAttribute, TextAttribute, Attribute]
+OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
+OptionClasses = Union[FlatOption, NestableOption, Option]

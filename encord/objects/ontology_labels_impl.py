@@ -26,13 +26,17 @@ from dateutil.parser import parse
 
 from encord.client import EncordClientProject
 from encord.constants.enums import DataType
-from encord.exceptions import LabelRowError
+from encord.exceptions import LabelRowError, OntologyError
 from encord.objects.common import (
     Attribute,
+    AttributeClasses,
+    AttributeTypes,
     ChecklistAttribute,
     FlatOption,
     NestableOption,
     Option,
+    OptionClasses,
+    OptionTypes,
     RadioAttribute,
     Shape,
     TextAttribute,
@@ -151,22 +155,15 @@ class Object:
         """
         found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
         if found_item is None:
-            raise RuntimeError("Item not found.")
+            raise OntologyError("Item not found.")
         check_type(found_item, type_)
         return found_item
 
     def get_item_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         """
         Returns one ontology item with the matching title and matching type if specified. If more than one items in this
         Object have the same title, then an error will be thrown. If no item is found, an error will be thrown as
@@ -184,15 +181,8 @@ class Object:
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         """
         Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
         to be unique, however, we recommend unique titles when creating ontologies.
@@ -340,22 +330,15 @@ class Classification:
         """
         found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
         if found_item is None:
-            raise RuntimeError("Item not found.")
+            raise OntologyError("Item not found.")
         check_type(found_item, type_)
         return found_item
 
     def get_item_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[OptionTypes, AttributeTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         """
         Returns one ontology item with the matching title and matching type if specified. If more than one items in this
         Classification have the same title, then an error will be thrown. If no item is found, an error will be thrown
@@ -370,19 +353,11 @@ class Classification:
         _handle_wrong_number_of_found_items(found_items, title, type_)
         return found_items[0]
 
-    # DENIS: have the chaining in the docs.
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+        type_: Union[OptionTypes, AttributeTypes, None] = None,
+    ) -> List[Union[AttributeClasses, OptionClasses]]:
         """
         Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
         to be unique, however, we recommend unique titles when creating ontologies.
@@ -452,6 +427,10 @@ class Classification:
 
     def __hash__(self):
         return hash(self.feature_node_hash)
+
+
+OntologyTypes = Union[Type[Object], Type[Classification]]
+OntologyClasses = Union[Object, Classification]
 
 
 class ClassificationInstance:
@@ -616,7 +595,7 @@ class ClassificationInstance:
                 TextAttribute to set for the entire object instance. Otherwise, a
                 :class:`encord.exceptionsLabelRowError` will be thrown.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
-                a RuntimeError if the answer already exists.
+                a LabelRowError if the answer already exists.
         """
         if attribute is None:
             attribute = _infer_attribute_from_answer(self._ontology_classification.attributes, answer)
@@ -2298,6 +2277,7 @@ class ObjectInstance:
     ) -> None:
         ...
 
+    # DENIS: test these overloads again and see if they actually work.
     @overload
     def set_answer(
         self,
@@ -2333,7 +2313,7 @@ class ObjectInstance:
                 If this is anything but `None` for non-dynamic attributes, this will
                 throw a ValueError.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
-                a RuntimeError if the answer already exists. This argument is ignored for dynamic attributes.
+                a LabelRowError if the answer already exists. This argument is ignored for dynamic attributes.
         """
         if attribute is None:
             attribute = _infer_attribute_from_answer(self._ontology_object.attributes, answer)
@@ -3058,22 +3038,13 @@ class OntologyStructure:
                 check_type(found_item, type_)
                 return found_item
 
-        raise RuntimeError("Item not found.")
+        raise OntologyError("Item not found.")
 
     def get_item_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[Object],
-            Type[Classification],
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[Object, Classification, RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
         """
         Returns one ontology item with the matching title and matching type if specified. If more than one items in this
         ontology have the same title, then an error will be thrown. If no item is found, an error will be thrown as
@@ -3091,27 +3062,8 @@ class OntologyStructure:
     def get_items_by_title(
         self,
         title: str,
-        type_: Union[
-            Type[Object],
-            Type[Classification],
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> List[
-        Union[
-            Object,
-            Classification,
-            RadioAttribute,
-            ChecklistAttribute,
-            TextAttribute,
-            NestableOption,
-            FlatOption,
-        ]
-    ]:
+        type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
+    ) -> List[Union[OntologyClasses, AttributeClasses, OptionClasses]]:
         """
         Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
         to be unique, however, we recommend unique titles when creating ontologies.

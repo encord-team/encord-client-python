@@ -240,3 +240,9 @@ class LabelRowError(EncordException):
     """An error thrown when the construction of a LabelRow class is invalid."""
 
     pass
+
+
+class OntologyError(EncordException):
+    """An error thrown when using the ontology class with an error."""
+
+    pass

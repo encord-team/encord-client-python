@@ -5,6 +5,9 @@ import os
 import pytest
 
 import encord.objects
+import encord.objects.classification
+import encord.objects.ontology_object
+import encord.objects.ontology_structure
 from encord.objects.common import Shape
 from encord.objects.utils import short_uuid_str
 
@@ -13,7 +16,8 @@ DATA_DIR = os.path.join(CURRENT_DIR, "data")
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-OBJECT_1 = encord.objects.Object(
+# intentionally using a different import for backwards compatibility check
+OBJECT_1 = encord.objects.ontology_object.Object(
     uid=1,
     name="Eye",
     color="#D33115",
@@ -54,7 +58,8 @@ OBJECT_2 = encord.objects.Object(
     attributes=[CHECKLIST_ATTRIBUTE],
 )
 
-RADIO_ATTRIBUTE_1 = encord.objects.RadioAttribute(
+# intentionally using a different import for backwards compatibility check
+RADIO_ATTRIBUTE_1 = encord.objects.common.RadioAttribute(
     uid=[4, 1, 1, 1],
     feature_node_hash="59204845",
     name="Leaf",
@@ -109,15 +114,15 @@ RADIO_ATTRIBUTE_3 = encord.objects.RadioAttribute(
     dynamic=False,
     options=[NESTABLE_OPTION_1, NESTABLE_OPTION_2],
 )
-
-CLASSIFICATION_1 = encord.objects.Classification(
+# intentionally using a different import for backwards compatibility check
+CLASSIFICATION_1 = encord.objects.classification.Classification(
     uid=1,
     feature_node_hash="a39d81c0",
     attributes=[RADIO_ATTRIBUTE_3],
 )
 
-
-EXPECTED_ONTOLOGY: encord.objects.OntologyStructure = encord.objects.OntologyStructure(
+# intentionally using a different import for backwards compatibility check
+EXPECTED_ONTOLOGY: encord.objects.ontology_structure.OntologyStructure = encord.objects.OntologyStructure(
     objects=[
         OBJECT_1,
         OBJECT_2,
