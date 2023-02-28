@@ -249,15 +249,15 @@ class LabelRowMetadata(Formatter):
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
-        created_at = json_dict["created_at"]
+        created_at = json_dict.get("created_at", None)
         if created_at is not None:
             created_at = datetime.datetime.fromisoformat(created_at)
-        last_edited_at = json_dict["last_edited_at"]
+        last_edited_at = json_dict.get("last_edited_at", None)
         if last_edited_at is not None:
             last_edited_at = datetime.datetime.fromisoformat(last_edited_at)
 
         return LabelRowMetadata(
-            label_hash=json_dict["label_hash"],
+            label_hash=json_dict.get("label_hash", None),
             created_at=created_at,
             last_edited_at=last_edited_at,
             data_hash=json_dict["data_hash"],
@@ -268,8 +268,8 @@ class LabelRowMetadata(Formatter):
             annotation_task_status=AnnotationTaskStatus(json_dict["annotation_task_status"]),
             is_shadow_data=json_dict.get("is_shadow_data", False),
             number_of_frames=json_dict["number_of_frames"],
-            duration=json_dict["duration"],
-            frames_per_second=json_dict["frames_per_second"],
+            duration=json_dict.get("duration", None),
+            frames_per_second=json_dict.get("frames_per_second", None),
         )
 
     @classmethod
