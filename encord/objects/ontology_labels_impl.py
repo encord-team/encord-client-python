@@ -545,7 +545,7 @@ class ClassificationInstance:
                 reviews=reviews,
             )
 
-    def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
+    def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
@@ -553,7 +553,7 @@ class ClassificationInstance:
         """
         if isinstance(frame, str):
             frame = self._parent.get_frame_number(frame)
-        return self.FrameView(self, frame)
+        return self.Annotation(self, frame)
 
     def remove_from_frames(self, frames: Frames) -> None:
         frame_list = frames_class_to_frames_list(frames)
@@ -564,14 +564,14 @@ class ClassificationInstance:
             self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
             self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
-    def frames(self) -> List[FrameView]:
+    def get_annotations(self) -> List[Annotation]:
         """
         Returns:
-            A list of `ClassificationInstance.FrameView` in order of available frames.
+            A list of `ClassificationInstance.Annotation` in order of available frames.
         """
         ret = []
         for frame_num in sorted(self._frames_to_data.keys()):
-            ret.append(self.get_frame_view(frame_num))
+            ret.append(self.get_annotation(frame_num))
         return ret
 
     def is_valid(self) -> None:
@@ -750,7 +750,7 @@ class ClassificationInstance:
         """A low level helper function."""
         return list(self._static_answer_map.values())
 
-    class FrameView:
+    class Annotation:
         def __init__(self, classification_instance: ClassificationInstance, frame: int):
             self._classification_instance = classification_instance
             self._frame = frame
@@ -840,7 +840,7 @@ class ClassificationInstance:
         def _check_if_frame_view_valid(self) -> None:
             if self._frame not in self._classification_instance._frames_to_data:
                 raise LabelRowError(
-                    "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
+                    "Trying to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frame."
                 )
 
         def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
@@ -1333,7 +1333,8 @@ class LabelRowV2:
 
         classification_hash = classification_instance.classification_hash
         already_present_frame = self._is_classification_already_present(
-            classification_instance.ontology_item, _frame_views_to_frame_numbers(classification_instance.frames())
+            classification_instance.ontology_item,
+            _frame_views_to_frame_numbers(classification_instance.get_annotations()),
         )
         if classification_hash in self._classifications_map and not force:
             raise LabelRowError(
@@ -1354,7 +1355,7 @@ class LabelRowV2:
         classification_instance._parent = self
 
         self._classifications_to_frames[classification_instance.ontology_item].update(
-            set(_frame_views_to_frame_numbers(classification_instance.frames()))
+            set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
         )
         self._add_to_frame_to_hashes_map(classification_instance)
 
@@ -1364,7 +1365,7 @@ class LabelRowV2:
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
         all_frames = self._classifications_to_frames[classification_instance.ontology_item]
-        actual_frames = _frame_views_to_frame_numbers(classification_instance.frames())
+        actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
         for actual_frame in actual_frames:
             all_frames.remove(actual_frame)
 
@@ -1432,7 +1433,7 @@ class LabelRowV2:
 
         self._objects_map.pop(object_instance.object_hash)
         self._remove_from_frame_to_hashes_map(
-            _frame_views_to_frame_numbers(object_instance.frames()), object_instance.object_hash
+            _frame_views_to_frame_numbers(object_instance.get_annotations()), object_instance.object_hash
         )
         object_instance._parent = None
 
@@ -1797,8 +1798,8 @@ class LabelRowV2:
     ) -> dict:
         ret = {}
 
-        object_instance_frame_view = object_.get_frame_view(frame)
-        coordinates = object_instance_frame_view.coordinates
+        object_instance_annotation = object_.get_annotation(frame)
+        coordinates = object_instance_annotation.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
         ontology_object = self._ontology_structure.get_item_by_hash(ontology_hash)
 
@@ -1806,19 +1807,19 @@ class LabelRowV2:
         ret["color"] = ontology_object.color
         ret["shape"] = ontology_object.shape.value
         ret["value"] = _lower_snake_case(ontology_object.name)
-        ret["createdAt"] = object_instance_frame_view.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        ret["createdBy"] = object_instance_frame_view.created_by
-        ret["confidence"] = object_instance_frame_view.confidence
+        ret["createdAt"] = object_instance_annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        ret["createdBy"] = object_instance_annotation.created_by
+        ret["confidence"] = object_instance_annotation.confidence
         ret["objectHash"] = object_.object_hash
         ret["featureHash"] = ontology_object.feature_node_hash
-        ret["manualAnnotation"] = object_instance_frame_view.manual_annotation
+        ret["manualAnnotation"] = object_instance_annotation.manual_annotation
 
-        if object_instance_frame_view.last_edited_at is not None:
-            ret["lastEditedAt"] = object_instance_frame_view.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        if object_instance_frame_view.last_edited_by is not None:
-            ret["lastEditedBy"] = object_instance_frame_view.last_edited_by
-        if object_instance_frame_view.is_deleted is not None:
-            ret["isDeleted"] = object_instance_frame_view.is_deleted
+        if object_instance_annotation.last_edited_at is not None:
+            ret["lastEditedAt"] = object_instance_annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        if object_instance_annotation.last_edited_by is not None:
+            ret["lastEditedBy"] = object_instance_annotation.last_edited_by
+        if object_instance_annotation.is_deleted is not None:
+            ret["isDeleted"] = object_instance_annotation.is_deleted
 
         self._add_coordinates_to_encord_object(coordinates, ret)
 
@@ -1851,7 +1852,7 @@ class LabelRowV2:
     def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> dict:
         ret = {}
 
-        frame_view = classification.get_frame_view(frame)
+        annotation = classification.get_annotation(frame)
         classification_feature_hash = classification.ontology_item.feature_node_hash
         ontology_classification = self._ontology_structure.get_item_by_hash(classification_feature_hash)
         attribute_hash = classification.ontology_item.attributes[0].feature_node_hash
@@ -1859,17 +1860,17 @@ class LabelRowV2:
 
         ret["name"] = ontology_attribute.name
         ret["value"] = _lower_snake_case(ontology_attribute.name)
-        ret["createdAt"] = frame_view.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        ret["createdBy"] = frame_view.created_by
-        ret["confidence"] = frame_view.confidence
+        ret["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        ret["createdBy"] = annotation.created_by
+        ret["confidence"] = annotation.confidence
         ret["featureHash"] = ontology_classification.feature_node_hash
         ret["classificationHash"] = classification.classification_hash
-        ret["manualAnnotation"] = frame_view.manual_annotation
+        ret["manualAnnotation"] = annotation.manual_annotation
 
-        if frame_view.last_edited_at is not None:
-            ret["lastEditedAt"] = frame_view.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-        if frame_view.last_edited_by is not None:
-            ret["lastEditedBy"] = frame_view.last_edited_by
+        if annotation.last_edited_at is not None:
+            ret["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        if annotation.last_edited_by is not None:
+            ret["lastEditedBy"] = annotation.last_edited_by
 
         return ret
 
@@ -1889,7 +1890,7 @@ class LabelRowV2:
 
     def _add_to_frame_to_hashes_map(self, label_item: Union[ObjectInstance, ClassificationInstance]) -> None:
         """This can be called by the ObjectInstance."""
-        for frame_view in label_item.frames():
+        for frame_view in label_item.get_annotations():
             self.add_to_single_frame_to_hashes_map(label_item, frame_view.frame)
 
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
@@ -2483,7 +2484,7 @@ class ObjectInstance:
             if self._parent:
                 self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
-    def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
+    def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
         DENIS: do this return pattern everywhere. Check if it works well with the docs.
         Args:
@@ -2492,7 +2493,7 @@ class ObjectInstance:
         """
         if isinstance(frame, str):
             frame = self._parent.get_frame_number(frame)
-        return self.FrameView(self, frame)
+        return self.Annotation(self, frame)
 
     def copy(self) -> ObjectInstance:
         """
@@ -2506,15 +2507,14 @@ class ObjectInstance:
         ret._dynamic_answer_manager = self._dynamic_answer_manager.copy()
         return ret
 
-    def frames(self) -> List[FrameView]:
+    def get_annotations(self) -> List[Annotation]:
         """
-        DENIS: do I want to rename this to `get_frame_views`??
         Returns:
-            A list of `ObjectInstance.FrameView` in order of available frames.
+            A list of `ObjectInstance.Annotation` in order of available frames.
         """
         ret = []
         for frame_num in sorted(self._frames_to_instance_data.keys()):
-            ret.append(self.get_frame_view(frame_num))
+            ret.append(self.get_annotation(frame_num))
         return ret
 
     def remove_from_frames(self, frames: Frames):
@@ -2538,7 +2538,7 @@ class ObjectInstance:
         Whether there are any dynamic answers on frames that have no coordinates.
         """
         dynamic_frames = set(self._dynamic_answer_manager.frames())
-        local_frames = set(_frame_views_to_frame_numbers(self.frames()))
+        local_frames = set(_frame_views_to_frame_numbers(self.get_annotations()))
 
         if not len(dynamic_frames - local_frames) == 0:
             raise LabelRowError(
@@ -2547,8 +2547,9 @@ class ObjectInstance:
                 "have been set previously."
             )
 
-    class FrameView:
+    class Annotation:
         """
+        DENIS: call this "Annotation"
         This class can be used to set or get data for a specific frame of an ObjectInstance.
         """
 
@@ -2660,17 +2661,17 @@ class ObjectInstance:
         def _check_if_frame_view_is_valid(self) -> None:
             if self._frame not in self._object_instance._frames_to_instance_data:
                 raise LabelRowError(
-                    "Trying to use an ObjectInstance.FrameView for an ObjectInstance that is not on the frame."
+                    "Tryinannotation to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frameAnnotation"
                 )
 
     @dataclass
     class FrameInfo:
         created_at: datetime = datetime.now()
         created_by: Optional[str] = None
-        """None defaults to the user of the SDK."""
+        """None defaults to the user of the SDK once uploaded to the server."""
         last_edited_at: datetime = datetime.now()
         last_edited_by: Optional[str] = None
-        """None defaults to the user of the SDK."""
+        """None defaults to the user of the SDK once uploaded to the server."""
         confidence: float = DEFAULT_CONFIDENCE
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
         reviews: Optional[List[dict]] = None
@@ -2849,7 +2850,7 @@ class DynamicAnswerManager:
         self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
     ) -> None:
         if frames is None:
-            for available_frame_view in self._object_instance.frames():
+            for available_frame_view in self._object_instance.get_annotations():
                 self._set_answer(answer, attribute, available_frame_view.frame)
             return
         self._set_answer(answer, attribute, frames)
@@ -3369,6 +3370,6 @@ class Ontology(dict, Formatter):
 
 
 def _frame_views_to_frame_numbers(
-    frame_views: List[Union[ObjectInstance.FrameView, ClassificationInstance.FrameView, LabelRowV2.FrameView]]
+    frame_views: List[Union[ObjectInstance.Annotation, ClassificationInstance.Annotation, LabelRowV2.FrameView]]
 ) -> List[int]:
     return [frame_view.frame for frame_view in frame_views]

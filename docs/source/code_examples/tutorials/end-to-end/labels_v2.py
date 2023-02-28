@@ -81,6 +81,7 @@ for label_row in label_rows:
 
 first_label_row: LabelRowV2 = label_rows[0]
 
+# DENIS: .initialise_labels !!
 first_label_row.initialise_labelling()
 # ^ Check the reference for possible arguments
 
@@ -229,6 +230,7 @@ text_classification_instance = text_ontology_classification.create_instance()
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # First set the value of the classification instance
+# DENIS: show how you place it on frames.
 text_classification_instance.set_answer(answer="This is a text classification.")
 
 # Then add it to the label row
@@ -353,6 +355,7 @@ darkness_classification_instance.set_answer(two_mountains_option)
 
 # Note, that if for `set_answer` or `get_answer` the attribute of the classification cannot be inferred, we need
 # to manually specify it.
+# DENIS: this is not darkness anymore!
 assert darkness_classification_instance.get_answer(attribute=mountains_count_attribute) == two_mountains_option
 
 # %%

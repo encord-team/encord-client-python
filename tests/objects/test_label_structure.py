@@ -390,8 +390,8 @@ def test_update_remove_object_instance_coordinates():
 
     # Add initial coordinates
     label_box.set_for_frames(BOX_COORDINATES, 1)
-    frames = label_box.frames()
-    frame_1_view = label_box.get_frame_view(1)
+    frames = label_box.get_annotations()
+    frame_1_view = label_box.get_annotation(1)
     assert sorted([frame.frame for frame in frames]) == [1]
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
@@ -411,15 +411,15 @@ def test_update_remove_object_instance_coordinates():
     label_box.set_for_frames(box_coordinates_2, 2, confidence=confidence, manual_annotation=manual_annotation)
     label_box.set_for_frames(box_coordinates_2, 3, confidence=confidence, manual_annotation=manual_annotation)
     label_box.set_for_frames(box_coordinates_2, 4, confidence=confidence, manual_annotation=manual_annotation)
-    frames = label_box.frames()
+    frames = label_box.get_annotations()
     # instance_data = label_box.get_instance_data(frames)
     assert sorted([frame.frame for frame in frames]) == [1, 2, 3, 4]
-    frame_1_view = label_box.get_frame_view(1)
+    frame_1_view = label_box.get_annotation(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
-    frame_2_view = label_box.get_frame_view(2)
+    frame_2_view = label_box.get_annotation(2)
     assert frame_2_view.coordinates == box_coordinates_2
     assert frame_2_view.confidence == confidence
     assert frame_2_view.manual_annotation == manual_annotation
@@ -429,14 +429,14 @@ def test_update_remove_object_instance_coordinates():
     with pytest.raises(LabelRowError):
         frame_2_view.coordinates
 
-    frames = label_box.frames()
+    frames = label_box.get_annotations()
     assert sorted([frame.frame for frame in frames]) == [1, 4]
-    frame_1_view = label_box.get_frame_view(1)
+    frame_1_view = label_box.get_annotation(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
-    frame_4_view = label_box.get_frame_view(4)
+    frame_4_view = label_box.get_annotation(4)
     assert frame_4_view.coordinates == box_coordinates_2
     assert frame_4_view.confidence == confidence
     assert frame_4_view.manual_annotation == manual_annotation
@@ -458,15 +458,15 @@ def test_update_remove_object_instance_coordinates():
     )
     label_box.set_for_frames(box_coordinates_3, 5, confidence=new_confidence, manual_annotation=manual_annotation)
 
-    frames = label_box.frames()
+    frames = label_box.get_annotations()
     assert sorted([frame.frame for frame in frames]) == [1, 4, 5]
 
-    frame_1_view = label_box.get_frame_view(1)
+    frame_1_view = label_box.get_annotation(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
     assert frame_1_view.confidence == DEFAULT_CONFIDENCE
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
-    frame_4_view = label_box.get_frame_view(4)
+    frame_4_view = label_box.get_annotation(4)
     assert frame_4_view.coordinates == box_coordinates_3
     assert frame_4_view.confidence == new_confidence
     assert frame_4_view.manual_annotation == manual_annotation
@@ -614,7 +614,7 @@ def test_classification_instances_frame_view():
     classification_instance_1.set_for_frames(Range(1, 3))
 
     # Test defaults
-    frame_view_1 = classification_instance_1.get_frame_view(1)
+    frame_view_1 = classification_instance_1.get_annotation(1)
     assert frame_view_1.created_by is None
     assert_datetime_is_recent(frame_view_1.created_at)
     assert frame_view_1.last_edited_by is None
