@@ -118,6 +118,8 @@ box_object_instance.set_for_frames(
     ),
     # Add the bounding box to the first frame
     frames=0,
+    # There are multiple additional fields that can be set optionally:
+    manual_annotation=True,
 )
 
 # Link the object instance to the label row.
@@ -136,6 +138,7 @@ first_label_row.save()  # Upload the label to the server
 all_object_instances: List[ObjectInstance] = first_label_row.get_object_instances()
 
 assert all_object_instances[0] == box_object_instance
+assert all_object_instances[0].get_annotation(frame=0).manual_annotation is True
 
 #%%
 # Adding object instances to multiple frames.
@@ -332,11 +335,11 @@ scenery_ontology_classification: Classification = ontology_structure.get_item_by
 
 mountains_option = scenery_ontology_classification.get_item_by_title(title="Mountains", type_=Option)
 
-darkness_classification_instance = scenery_ontology_classification.create_instance()
+scenery_classification_instance = scenery_ontology_classification.create_instance()
 
-darkness_classification_instance.set_answer(mountains_option)
+scenery_classification_instance.set_answer(mountains_option)
 
-assert darkness_classification_instance.get_answer() == mountains_option
+assert scenery_classification_instance.get_answer() == mountains_option
 
 # %%
 # Radio attributes can also be nested. You can read more about nested options here:
@@ -348,14 +351,12 @@ assert darkness_classification_instance.get_answer() == mountains_option
 mountains_count_attribute = mountains_option.get_item_by_title("Mountains count", type_=RadioAttribute)
 two_mountains_option = mountains_count_attribute.get_item_by_title("Two", type_=Option)
 
-darkness_classification_instance.set_answer(two_mountains_option)
+scenery_classification_instance.set_answer(two_mountains_option)
 
 # Note, that if for `set_answer` or `get_answer` the attribute of the classification cannot be inferred, we need
 # to manually specify it.
-# DENIS: this is not darkness anymore!
-assert darkness_classification_instance.get_answer(attribute=mountains_count_attribute) == two_mountains_option
+assert scenery_classification_instance.get_answer(attribute=mountains_count_attribute) == two_mountains_option
 
-# DENIS: test if all the typing support actually works.
 
 # %%
 # Answering object instance attributes
@@ -422,8 +423,3 @@ assert person_object_instance.get_answer(attribute=position_attribute) == [
         ranges=[Range(start=6, end=10)],
     ),
 ]
-
-
-# * set/read dynamic answers. https://docs.encord.com/annotate/editor/videos/#dynamic-classification
-# DENIS: show how to set the manual_annotation for example.
-# DENIS: provide an actual reference ontology where all of these examples would work.

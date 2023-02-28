@@ -13,7 +13,13 @@ from encord.objects import (
     Object,
     ObjectInstance,
 )
-from encord.objects.common import Attribute, Option, RadioAttribute, TextAttribute
+from encord.objects.common import (
+    Attribute,
+    ChecklistAttribute,
+    Option,
+    RadioAttribute,
+    TextAttribute,
+)
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     BoundingBoxCoordinates,
@@ -522,7 +528,7 @@ def test_classification_answering_with_ontology_access():
     radio_classification_ = all_types_structure.get_item_by_title("Radio classification 1", Classification)
     radio_instance = radio_classification_.create_instance()
 
-    radio_classification_attribute_1 = radio_classification_.get_item_by_title(
+    radio_classification_attribute_1: ChecklistAttribute = radio_classification_.get_item_by_title(
         "Radio classification 1", type_=RadioAttribute
     )
     # Different `type_` with generic `Attribute`

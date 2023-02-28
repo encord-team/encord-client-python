@@ -2277,7 +2277,6 @@ class ObjectInstance:
     ) -> None:
         ...
 
-    # DENIS: test these overloads again and see if they actually work.
     @overload
     def set_answer(
         self,
@@ -2296,8 +2295,6 @@ class ObjectInstance:
         overwrite: bool = False,
     ) -> None:
         """
-        DENIS: We could make these functions part of a different class which this inherits from.
-
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
