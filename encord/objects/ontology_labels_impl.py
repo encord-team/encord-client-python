@@ -1096,7 +1096,7 @@ class LabelRowV2:
         """
         return self._is_labelling_initialised
 
-    def initialise_labelling(
+    def initialise_labels(
         self,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
@@ -1109,7 +1109,7 @@ class LabelRowV2:
         you filter the labels, and upload them later, you will effectively delete all the labels that had been filtered
         previously.
 
-        If the label was not yet in progress, this will set the label status to`LabelStatus.LABEL_IN_PROGRESS`.
+        If the label was not yet in progress, this will set the label status to `LabelStatus.LABEL_IN_PROGRESS`.
 
         You can call this function at any point to overwrite the current labels stored in this class with the most
         up to date labels stored in the Encord servers. This would only matter if you manipulate the labels while
@@ -1209,7 +1209,6 @@ class LabelRowV2:
 
     def save(self):
         """
-        # DENIS: this change will probably break the integration tests
         Upload the created labels with the Encord server. This will overwrite any labels that someone has created
         in the platform in the meantime.
         """
@@ -1286,12 +1285,12 @@ class LabelRowV2:
 
         return ret
 
-    def add_object_instance(self, object_instance: ObjectInstance, force=True):
+    def add_object_instance(self, object_instance: ObjectInstance, force: bool = True) -> None:
         """
-        DENIS: Do we want a bulk function? probably not needed as it is local? (only for the force option)
-        also, maybe call this
+        Add an object instance to the label row. If the object instance already exists, it
 
         Args:
+            object_instance: The object instance to add.
             force: overwrites current objects, otherwise this will replace the current object.
         """
         self._check_labelling_is_initalised()
@@ -1318,8 +1317,14 @@ class LabelRowV2:
 
         self._add_to_frame_to_hashes_map(object_instance)
 
-    def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False):
-        """DENIS: document this."""
+    def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
+        """
+        Add a classification instance to the label row.
+
+        Args:
+            classification_instance: The object instance to add.
+            force: overwrites current objects, otherwise this will replace the current object.
+        """
         self._check_labelling_is_initalised()
 
         classification_instance.is_valid()

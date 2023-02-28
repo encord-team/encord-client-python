@@ -81,8 +81,7 @@ for label_row in label_rows:
 
 first_label_row: LabelRowV2 = label_rows[0]
 
-# DENIS: .initialise_labels !!
-first_label_row.initialise_labelling()
+first_label_row.initialise_labels()
 # ^ Check the reference for possible arguments
 
 # Once you have added new labels, you will need to call .save() to upload all labels to the server.

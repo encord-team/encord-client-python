@@ -77,7 +77,7 @@ def test_label_structure_manual_v2():
     label_rows = project.list_label_rows_v2(label_hashes=["28f0e9d2-51e0-459d-8ffa-2e214da653a9"])
     print("got label rows")
     print(len(label_rows))
-    label_rows[0].initialise_labelling()
+    label_rows[0].initialise_labels()
     print(label_rows[0].to_encord_dict())
 
     # for label_row in label_rows:
