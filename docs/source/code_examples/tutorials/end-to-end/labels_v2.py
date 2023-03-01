@@ -47,12 +47,7 @@ with private_key_path.open() as f:
 user_client = EncordUserClient.create_with_ssh_private_key(private_key)
 
 # Find project to work with based on title.
-project_orm: OrmProject = next(
-    (
-        p["project"]
-        for p in user_client.get_projects(title_eq="Your project name")
-    )
-)
+project_orm: OrmProject = next((p["project"] for p in user_client.get_projects(title_eq="Your project name")))
 project: Project = user_client.get_project(project_orm.project_hash)
 
 
@@ -104,9 +99,7 @@ first_label_row.save()
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 ontology_structure: OntologyStructure = first_label_row.ontology_structure
-box_ontology_object: Object = ontology_structure.get_item_by_title(
-    title="Box of a human", type_=Object
-)
+box_ontology_object: Object = ontology_structure.get_child_by_title(title="Box of a human", type_=Object)
 # ^ optionally specify the `type_` to narrow the return type and also have a runtime check.
 
 # %%
@@ -142,9 +135,7 @@ first_label_row.save()  # Upload the label to the server
 # You can now get all the object instances that are part of the label row.
 
 # Check the get_object_instances optional filters for when you have many different object/classification instances.
-all_object_instances: List[
-    ObjectInstance
-] = first_label_row.get_object_instances()
+all_object_instances: List[ObjectInstance] = first_label_row.get_object_instances()
 
 assert all_object_instances[0] == box_object_instance
 assert all_object_instances[0].get_annotation(frame=0).manual_annotation is True
@@ -186,9 +177,7 @@ coordinates_per_frame = {
 box_object_instance_2: ObjectInstance = box_ontology_object.create_instance()
 
 for frame_number, coordinates in coordinates_per_frame.items():
-    box_object_instance_2.set_for_frames(
-        coordinates=coordinates, frames=frame_number
-    )
+    box_object_instance_2.set_for_frames(coordinates=coordinates, frames=frame_number)
 
 # OPTION 2 - think in terms of the "object instances per frame"
 box_object_instance_3: ObjectInstance = box_ontology_object.create_instance()
@@ -212,14 +201,10 @@ for frame_view in first_label_row.get_frame_views():
 for label_row_frame_view in first_label_row.get_frame_views():
     frame_number = label_row_frame_view.frame
     print(f"Frame number: {frame_number}")
-    object_instances_in_frame: List[
-        ObjectInstance
-    ] = label_row_frame_view.get_object_instances()
+    object_instances_in_frame: List[ObjectInstance] = label_row_frame_view.get_object_instances()
     for object_instance in object_instances_in_frame:
         print(f"Object instance: {object_instance}")
-        object_instance_frame_view = object_instance.get_frame_view(
-            frame=frame_number
-        )
+        object_instance_frame_view = object_instance.get_frame_view(frame=frame_number)
         print(f"Coordinates: {object_instance_frame_view.coordinates}")
 
 
@@ -237,10 +222,8 @@ for label_row_frame_view in first_label_row.get_frame_views():
 # ^^^^^^^^^^^^^^^^^^^^^^^^
 
 # Assume that the following text classification exists in the ontology.
-text_ontology_classification: Classification = (
-    ontology_structure.get_item_by_title(
-        title="Free text about the frame", type_=Classification
-    )
+text_ontology_classification: Classification = ontology_structure.get_child_by_title(
+    title="Free text about the frame", type_=Classification
 )
 text_classification_instance = text_ontology_classification.create_instance()
 
@@ -286,7 +269,7 @@ assert all_classification_instances[0] == text_classification_instance
 # .. note::
 #
 #     When working with attributes, you will see that the first thing to do is often to grab the ontology object.
-#     Usually, when calling the `get_item_by_title` the `type_` is recommended, but still optional. However, for
+#     Usually, when calling the `get_child_by_title` the `type_` is recommended, but still optional. However, for
 #     classifications this is often required.
 #
 #     The reason is that the classification title is always equal to the title of the top level attribute of this
@@ -299,7 +282,7 @@ assert all_classification_instances[0] == text_classification_instance
 # above.
 
 # Assume that the following text classification exists in the ontology.
-text_ontology_classification: Classification = ontology_structure.get_item_by_title(
+text_ontology_classification: Classification = ontology_structure.get_child_by_title(
     title="Free text about the frame",
     # Do not forget to specify the type here
     type_=Classification,
@@ -309,10 +292,7 @@ text_classification_instance = text_ontology_classification.create_instance()
 # First set the value of the classification instance
 text_classification_instance.set_answer(answer="This is a text classification.")
 
-assert (
-    text_classification_instance.get_answer()
-    == "This is a text classification."
-)
+assert text_classification_instance.get_answer() == "This is a text classification."
 
 # %%
 # We encourage you to read the `set_answer` and `get_answer` docstrings to understand the different behaviours and
@@ -325,29 +305,21 @@ assert (
 # see in the image. You will need to get all the options from the checklist ontology that you would like to
 # select as answers.
 
-checklist_ontology_classification: Classification = ontology_structure.get_item_by_title(
+checklist_ontology_classification: Classification = ontology_structure.get_child_by_title(
     title="All colours in the picture",
     # Do not forget to specify the type here
     type_=Classification,
 )
-checklist_classification_instance = (
-    checklist_ontology_classification.create_instance()
-)
+checklist_classification_instance = checklist_ontology_classification.create_instance()
 
 # Prefer using the `checklist_ontology_classification` over the `ontology_structure` to get the options.
 # The more specific the ontology item that you're searching from is, the more likely you will avoid title clashes.
-green_option = checklist_ontology_classification.get_item_by_title(
-    "Green", type_=Option
-)
-blue_option = checklist_ontology_classification.get_item_by_title(
-    "Blue", type_=Option
-)
+green_option = checklist_ontology_classification.get_child_by_title("Green", type_=Option)
+blue_option = checklist_ontology_classification.get_child_by_title("Blue", type_=Option)
 
 checklist_classification_instance.set_answer([green_option, blue_option])
 
-assert sorted(checklist_classification_instance.get_answer()) == sorted(
-    [green_option, blue_option]
-)
+assert sorted(checklist_classification_instance.get_answer()) == sorted([green_option, blue_option])
 
 # %%
 # Radio attributes
@@ -355,19 +327,15 @@ assert sorted(checklist_classification_instance.get_answer()) == sorted(
 #
 # Let's assume we have a radio classification called "Scenery" with the options "Mountains", "Ocean", and "Desert".
 
-scenery_ontology_classification: Classification = ontology_structure.get_item_by_title(
+scenery_ontology_classification: Classification = ontology_structure.get_child_by_title(
     title="Scenery",
     # Do not forget to specify the type here
     type_=Classification,
 )
 
-mountains_option = scenery_ontology_classification.get_item_by_title(
-    title="Mountains", type_=Option
-)
+mountains_option = scenery_ontology_classification.get_child_by_title(title="Mountains", type_=Option)
 
-scenery_classification_instance = (
-    scenery_ontology_classification.create_instance()
-)
+scenery_classification_instance = scenery_ontology_classification.create_instance()
 
 scenery_classification_instance.set_answer(mountains_option)
 
@@ -380,23 +348,14 @@ assert scenery_classification_instance.get_answer() == mountains_option
 # Let's say that if you have the Mountains scenery, there is an additional radio classification called "Mountains count"
 # with the answers "One", "Two", and "Many". Continuing the example above, you can set the nested answer like this:
 
-mountains_count_attribute = mountains_option.get_item_by_title(
-    "Mountains count", type_=RadioAttribute
-)
-two_mountains_option = mountains_count_attribute.get_item_by_title(
-    "Two", type_=Option
-)
+mountains_count_attribute = mountains_option.get_child_by_title("Mountains count", type_=RadioAttribute)
+two_mountains_option = mountains_count_attribute.get_child_by_title("Two", type_=Option)
 
 scenery_classification_instance.set_answer(two_mountains_option)
 
 # Note, that if for `set_answer` or `get_answer` the attribute of the classification cannot be inferred, we need
 # to manually specify it.
-assert (
-    scenery_classification_instance.get_answer(
-        attribute=mountains_count_attribute
-    )
-    == two_mountains_option
-)
+assert scenery_classification_instance.get_answer(attribute=mountains_count_attribute) == two_mountains_option
 
 
 # %%
@@ -406,26 +365,17 @@ assert (
 # Setting answers on object instances is almost identical to setting answers on classification instances.
 # You will need to possibly get the attribute, but also the answer options from the ontology.
 
-car_ontology_object: Object = ontology_structure.get_item_by_title(
-    "Car", type_=Object
-)
-car_brand_attribute = car_ontology_object.get_item_by_title(
-    title="Car brand", type_=RadioAttribute
-)
-# Again, doing ontology_structure.get_item_by_title("Mercedes") is also possible, but might be more ambiguous.
-mercedes_option = car_brand_attribute.get_item_by_title(
-    title="Mercedes", type_=Option
-)
+car_ontology_object: Object = ontology_structure.get_child_by_title("Car", type_=Object)
+car_brand_attribute = car_ontology_object.get_child_by_title(title="Car brand", type_=RadioAttribute)
+# Again, doing ontology_structure.get_child_by_title("Mercedes") is also possible, but might be more ambiguous.
+mercedes_option = car_brand_attribute.get_child_by_title(title="Mercedes", type_=Option)
 
 car_object_instance = car_ontology_object.create_instance()
 
 car_object_instance.set_answer(mercedes_option)
 
 # The attribute cannot be inferred, so we need to specify it.
-assert (
-    car_object_instance.get_answer(attribute=car_brand_attribute)
-    == mercedes_option
-)
+assert car_object_instance.get_answer(attribute=car_brand_attribute) == mercedes_option
 
 # %%
 # Setting answers for dynamic attributes
@@ -439,11 +389,9 @@ assert (
 #
 # The read access, however, behaves slightly different to show which answers have been set for which frames.
 
-person_ontology_object: Object = ontology_structure.get_item_by_title(
-    "Person", type_=Object
-)
+person_ontology_object: Object = ontology_structure.get_child_by_title("Person", type_=Object)
 
-position_attribute = person_ontology_object.get_item_by_title(
+position_attribute = person_ontology_object.get_child_by_title(
     title="Position",  # The options here are "Standing" or "Walking"
     type_=RadioAttribute,
 )
@@ -454,23 +402,23 @@ person_object_instance = person_ontology_object.create_instance()
 # Now assume the person is standing in frames 0-5 and walking in frames 6-10.
 
 person_object_instance.set_answer(
-    answer=position_attribute.get_item_by_title("Standing", type_=Option),
+    answer=position_attribute.get_child_by_title("Standing", type_=Option),
     frames=Range(start=0, end=5),
     # Wherever you can set frames, you can either set a single int, a Range, or a list of Range.
 )
 
 person_object_instance.set_answer(
-    answer=position_attribute.get_item_by_title("Walking", type_=Option),
+    answer=position_attribute.get_child_by_title("Walking", type_=Option),
     frames=Range(start=6, end=10),
 )
 
 assert person_object_instance.get_answer(attribute=position_attribute) == [
     AnswerForFrames(
-        answer=position_attribute.get_item_by_title("Standing", type_=Option),
+        answer=position_attribute.get_child_by_title("Standing", type_=Option),
         ranges=[Range(start=0, end=5)],
     ),
     AnswerForFrames(
-        answer=position_attribute.get_item_by_title("Walking", type_=Option),
+        answer=position_attribute.get_child_by_title("Walking", type_=Option),
         ranges=[Range(start=6, end=10)],
     ),
 ]

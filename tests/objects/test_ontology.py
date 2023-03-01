@@ -374,132 +374,132 @@ def build_expected_ontology():
 
 def test_ontology_getters():
     # Object
-    assert EXPECTED_ONTOLOGY.get_item_by_hash(OBJECT_1.feature_node_hash) == OBJECT_1
-    assert EXPECTED_ONTOLOGY.get_item_by_hash(OBJECT_1.feature_node_hash, encord.objects.Object)
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(OBJECT_1.feature_node_hash) == OBJECT_1
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(OBJECT_1.feature_node_hash, encord.objects.Object)
     with pytest.raises(TypeError):
-        EXPECTED_ONTOLOGY.get_item_by_hash(OBJECT_1.feature_node_hash, encord.objects.TextAttribute)
+        EXPECTED_ONTOLOGY.get_child_by_hash(OBJECT_1.feature_node_hash, encord.objects.TextAttribute)
 
-    assert EXPECTED_ONTOLOGY.get_items_by_title(OBJECT_1.name) == [OBJECT_1]
-    assert EXPECTED_ONTOLOGY.get_items_by_title(OBJECT_1.name, encord.objects.Object) == [OBJECT_1]
-    assert EXPECTED_ONTOLOGY.get_items_by_title(OBJECT_1.name, encord.objects.Classification) == []
+    assert EXPECTED_ONTOLOGY.get_children_by_title(OBJECT_1.name) == [OBJECT_1]
+    assert EXPECTED_ONTOLOGY.get_children_by_title(OBJECT_1.name, encord.objects.Object) == [OBJECT_1]
+    assert EXPECTED_ONTOLOGY.get_children_by_title(OBJECT_1.name, encord.objects.Classification) == []
 
     # Option
-    assert EXPECTED_ONTOLOGY.get_item_by_hash(FLAT_OPTION_1.feature_node_hash) == FLAT_OPTION_1
-    assert EXPECTED_ONTOLOGY.get_item_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.FlatOption)
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(FLAT_OPTION_1.feature_node_hash) == FLAT_OPTION_1
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.FlatOption)
     with pytest.raises(TypeError):
-        EXPECTED_ONTOLOGY.get_item_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.TextAttribute)
+        EXPECTED_ONTOLOGY.get_child_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.TextAttribute)
 
-    assert EXPECTED_ONTOLOGY.get_items_by_title(FLAT_OPTION_1.label) == [FLAT_OPTION_1]
-    assert EXPECTED_ONTOLOGY.get_items_by_title(FLAT_OPTION_1.label, encord.objects.FlatOption) == [FLAT_OPTION_1]
-    assert EXPECTED_ONTOLOGY.get_items_by_title(FLAT_OPTION_1.label, encord.objects.Classification) == []
+    assert EXPECTED_ONTOLOGY.get_children_by_title(FLAT_OPTION_1.label) == [FLAT_OPTION_1]
+    assert EXPECTED_ONTOLOGY.get_children_by_title(FLAT_OPTION_1.label, encord.objects.FlatOption) == [FLAT_OPTION_1]
+    assert EXPECTED_ONTOLOGY.get_children_by_title(FLAT_OPTION_1.label, encord.objects.Classification) == []
 
     # Attribute
-    assert EXPECTED_ONTOLOGY.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash) == CHECKLIST_ATTRIBUTE
-    assert EXPECTED_ONTOLOGY.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.ChecklistAttribute)
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash) == CHECKLIST_ATTRIBUTE
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.ChecklistAttribute)
     with pytest.raises(TypeError):
-        EXPECTED_ONTOLOGY.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.TextAttribute)
+        EXPECTED_ONTOLOGY.get_child_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.TextAttribute)
 
-    assert EXPECTED_ONTOLOGY.get_items_by_title(CHECKLIST_ATTRIBUTE.name) == [CHECKLIST_ATTRIBUTE]
-    assert EXPECTED_ONTOLOGY.get_items_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.ChecklistAttribute) == [
+    assert EXPECTED_ONTOLOGY.get_children_by_title(CHECKLIST_ATTRIBUTE.name) == [CHECKLIST_ATTRIBUTE]
+    assert EXPECTED_ONTOLOGY.get_children_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.ChecklistAttribute) == [
         CHECKLIST_ATTRIBUTE
     ]
-    assert EXPECTED_ONTOLOGY.get_items_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.Classification) == []
+    assert EXPECTED_ONTOLOGY.get_children_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.Classification) == []
 
     # Classification
-    assert EXPECTED_ONTOLOGY.get_item_by_hash(CLASSIFICATION_1.feature_node_hash) == CLASSIFICATION_1
-    assert EXPECTED_ONTOLOGY.get_item_by_hash(CLASSIFICATION_1.feature_node_hash, encord.objects.Classification)
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(CLASSIFICATION_1.feature_node_hash) == CLASSIFICATION_1
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(CLASSIFICATION_1.feature_node_hash, encord.objects.Classification)
     with pytest.raises(TypeError):
-        EXPECTED_ONTOLOGY.get_item_by_hash(CLASSIFICATION_1.feature_node_hash, encord.objects.TextAttribute)
+        EXPECTED_ONTOLOGY.get_child_by_hash(CLASSIFICATION_1.feature_node_hash, encord.objects.TextAttribute)
     # NOTE: getting by name does not work. The classification has no name, just its attribute
 
 
 def test_object_getters():
 
     # Option
-    assert OBJECT_2.get_item_by_hash(FLAT_OPTION_1.feature_node_hash) == FLAT_OPTION_1
-    assert OBJECT_2.get_item_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.FlatOption)
+    assert OBJECT_2.get_child_by_hash(FLAT_OPTION_1.feature_node_hash) == FLAT_OPTION_1
+    assert OBJECT_2.get_child_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.FlatOption)
     with pytest.raises(TypeError):
-        OBJECT_2.get_item_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.TextAttribute)
+        OBJECT_2.get_child_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.TextAttribute)
 
-    assert OBJECT_2.get_items_by_title(FLAT_OPTION_1.label) == [FLAT_OPTION_1]
-    assert OBJECT_2.get_items_by_title(FLAT_OPTION_1.label, encord.objects.FlatOption) == [FLAT_OPTION_1]
-    assert OBJECT_2.get_items_by_title(FLAT_OPTION_1.label, encord.objects.ChecklistAttribute) == []
+    assert OBJECT_2.get_children_by_title(FLAT_OPTION_1.label) == [FLAT_OPTION_1]
+    assert OBJECT_2.get_children_by_title(FLAT_OPTION_1.label, encord.objects.FlatOption) == [FLAT_OPTION_1]
+    assert OBJECT_2.get_children_by_title(FLAT_OPTION_1.label, encord.objects.ChecklistAttribute) == []
 
     # Attribute
-    assert OBJECT_2.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash) == CHECKLIST_ATTRIBUTE
-    assert OBJECT_2.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.ChecklistAttribute)
+    assert OBJECT_2.get_child_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash) == CHECKLIST_ATTRIBUTE
+    assert OBJECT_2.get_child_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.ChecklistAttribute)
     with pytest.raises(TypeError):
-        OBJECT_2.get_item_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.TextAttribute)
+        OBJECT_2.get_child_by_hash(CHECKLIST_ATTRIBUTE.feature_node_hash, encord.objects.TextAttribute)
 
-    assert OBJECT_2.get_items_by_title(CHECKLIST_ATTRIBUTE.name) == [CHECKLIST_ATTRIBUTE]
-    assert OBJECT_2.get_items_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.ChecklistAttribute) == [
+    assert OBJECT_2.get_children_by_title(CHECKLIST_ATTRIBUTE.name) == [CHECKLIST_ATTRIBUTE]
+    assert OBJECT_2.get_children_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.ChecklistAttribute) == [
         CHECKLIST_ATTRIBUTE
     ]
-    assert OBJECT_2.get_items_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.TextAttribute) == []
+    assert OBJECT_2.get_children_by_title(CHECKLIST_ATTRIBUTE.name, encord.objects.TextAttribute) == []
 
 
 def test_classification_getters():
     # Option
-    assert CLASSIFICATION_1.get_item_by_hash(NESTABLE_OPTION_2.feature_node_hash) == NESTABLE_OPTION_2
-    assert CLASSIFICATION_1.get_item_by_hash(NESTABLE_OPTION_2.feature_node_hash, encord.objects.NestableOption)
+    assert CLASSIFICATION_1.get_child_by_hash(NESTABLE_OPTION_2.feature_node_hash) == NESTABLE_OPTION_2
+    assert CLASSIFICATION_1.get_child_by_hash(NESTABLE_OPTION_2.feature_node_hash, encord.objects.NestableOption)
     with pytest.raises(TypeError):
-        CLASSIFICATION_1.get_item_by_hash(NESTABLE_OPTION_2.feature_node_hash, encord.objects.TextAttribute)
+        CLASSIFICATION_1.get_child_by_hash(NESTABLE_OPTION_2.feature_node_hash, encord.objects.TextAttribute)
 
-    assert CLASSIFICATION_1.get_items_by_title(NESTABLE_OPTION_2.label) == [NESTABLE_OPTION_2]
-    assert CLASSIFICATION_1.get_items_by_title(NESTABLE_OPTION_2.label, encord.objects.NestableOption) == [
+    assert CLASSIFICATION_1.get_children_by_title(NESTABLE_OPTION_2.label) == [NESTABLE_OPTION_2]
+    assert CLASSIFICATION_1.get_children_by_title(NESTABLE_OPTION_2.label, encord.objects.NestableOption) == [
         NESTABLE_OPTION_2
     ]
-    assert CLASSIFICATION_1.get_items_by_title(NESTABLE_OPTION_2.label, encord.objects.ChecklistAttribute) == []
+    assert CLASSIFICATION_1.get_children_by_title(NESTABLE_OPTION_2.label, encord.objects.ChecklistAttribute) == []
 
     # Attribute
-    assert CLASSIFICATION_1.get_item_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash) == RADIO_ATTRIBUTE_3
-    assert CLASSIFICATION_1.get_item_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash, encord.objects.RadioAttribute)
+    assert CLASSIFICATION_1.get_child_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash) == RADIO_ATTRIBUTE_3
+    assert CLASSIFICATION_1.get_child_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash, encord.objects.RadioAttribute)
     with pytest.raises(TypeError):
-        CLASSIFICATION_1.get_item_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash, encord.objects.TextAttribute)
+        CLASSIFICATION_1.get_child_by_hash(RADIO_ATTRIBUTE_3.feature_node_hash, encord.objects.TextAttribute)
 
-    assert CLASSIFICATION_1.get_items_by_title(RADIO_ATTRIBUTE_3.name) == [RADIO_ATTRIBUTE_3]
-    assert CLASSIFICATION_1.get_items_by_title(RADIO_ATTRIBUTE_3.name, encord.objects.RadioAttribute) == [
+    assert CLASSIFICATION_1.get_children_by_title(RADIO_ATTRIBUTE_3.name) == [RADIO_ATTRIBUTE_3]
+    assert CLASSIFICATION_1.get_children_by_title(RADIO_ATTRIBUTE_3.name, encord.objects.RadioAttribute) == [
         RADIO_ATTRIBUTE_3
     ]
-    assert CLASSIFICATION_1.get_items_by_title(RADIO_ATTRIBUTE_3.name, encord.objects.TextAttribute) == []
+    assert CLASSIFICATION_1.get_children_by_title(RADIO_ATTRIBUTE_3.name, encord.objects.TextAttribute) == []
 
 
 def test_attribute_getters():
     # Option
-    assert RADIO_ATTRIBUTE_2.get_item_by_hash(NESTABLE_OPTION_3.feature_node_hash) == NESTABLE_OPTION_3
-    assert RADIO_ATTRIBUTE_2.get_item_by_hash(NESTABLE_OPTION_3.feature_node_hash, encord.objects.NestableOption)
+    assert RADIO_ATTRIBUTE_2.get_child_by_hash(NESTABLE_OPTION_3.feature_node_hash) == NESTABLE_OPTION_3
+    assert RADIO_ATTRIBUTE_2.get_child_by_hash(NESTABLE_OPTION_3.feature_node_hash, encord.objects.NestableOption)
     with pytest.raises(TypeError):
-        RADIO_ATTRIBUTE_2.get_item_by_hash(NESTABLE_OPTION_3.feature_node_hash, encord.objects.TextAttribute)
+        RADIO_ATTRIBUTE_2.get_child_by_hash(NESTABLE_OPTION_3.feature_node_hash, encord.objects.TextAttribute)
 
-    assert RADIO_ATTRIBUTE_2.get_items_by_title(NESTABLE_OPTION_3.label) == [NESTABLE_OPTION_3]
-    assert RADIO_ATTRIBUTE_2.get_items_by_title(NESTABLE_OPTION_3.label, encord.objects.NestableOption) == [
+    assert RADIO_ATTRIBUTE_2.get_children_by_title(NESTABLE_OPTION_3.label) == [NESTABLE_OPTION_3]
+    assert RADIO_ATTRIBUTE_2.get_children_by_title(NESTABLE_OPTION_3.label, encord.objects.NestableOption) == [
         NESTABLE_OPTION_3
     ]
-    assert RADIO_ATTRIBUTE_2.get_items_by_title(NESTABLE_OPTION_3.label, encord.objects.ChecklistAttribute) == []
+    assert RADIO_ATTRIBUTE_2.get_children_by_title(NESTABLE_OPTION_3.label, encord.objects.ChecklistAttribute) == []
 
     # Attribute
-    assert RADIO_ATTRIBUTE_2.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash) == RADIO_ATTRIBUTE_1
-    assert RADIO_ATTRIBUTE_2.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.RadioAttribute)
+    assert RADIO_ATTRIBUTE_2.get_child_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash) == RADIO_ATTRIBUTE_1
+    assert RADIO_ATTRIBUTE_2.get_child_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.RadioAttribute)
     with pytest.raises(TypeError):
-        RADIO_ATTRIBUTE_2.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.TextAttribute)
+        RADIO_ATTRIBUTE_2.get_child_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.TextAttribute)
 
-    assert RADIO_ATTRIBUTE_2.get_items_by_title(RADIO_ATTRIBUTE_1.name) == [RADIO_ATTRIBUTE_1]
-    assert RADIO_ATTRIBUTE_2.get_items_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.RadioAttribute) == [
+    assert RADIO_ATTRIBUTE_2.get_children_by_title(RADIO_ATTRIBUTE_1.name) == [RADIO_ATTRIBUTE_1]
+    assert RADIO_ATTRIBUTE_2.get_children_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.RadioAttribute) == [
         RADIO_ATTRIBUTE_1
     ]
-    assert RADIO_ATTRIBUTE_2.get_items_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.TextAttribute) == []
+    assert RADIO_ATTRIBUTE_2.get_children_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.TextAttribute) == []
 
 
 def test_option_getters():
 
     # Attribute
-    assert NESTABLE_OPTION_3.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash) == RADIO_ATTRIBUTE_1
-    assert NESTABLE_OPTION_3.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.RadioAttribute)
+    assert NESTABLE_OPTION_3.get_child_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash) == RADIO_ATTRIBUTE_1
+    assert NESTABLE_OPTION_3.get_child_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.RadioAttribute)
     with pytest.raises(TypeError):
-        NESTABLE_OPTION_3.get_item_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.TextAttribute)
+        NESTABLE_OPTION_3.get_child_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.TextAttribute)
 
-    assert NESTABLE_OPTION_3.get_items_by_title(RADIO_ATTRIBUTE_1.name) == [RADIO_ATTRIBUTE_1]
-    assert NESTABLE_OPTION_3.get_items_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.RadioAttribute) == [
+    assert NESTABLE_OPTION_3.get_children_by_title(RADIO_ATTRIBUTE_1.name) == [RADIO_ATTRIBUTE_1]
+    assert NESTABLE_OPTION_3.get_children_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.RadioAttribute) == [
         RADIO_ATTRIBUTE_1
     ]
-    assert NESTABLE_OPTION_3.get_items_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.TextAttribute) == []
+    assert NESTABLE_OPTION_3.get_children_by_title(RADIO_ATTRIBUTE_1.name, encord.objects.TextAttribute) == []

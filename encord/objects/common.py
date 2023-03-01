@@ -59,14 +59,14 @@ class Attribute(ABC):
         pass
 
     @abstractmethod
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         raise NotImplementedError("This method is not implemented for this class")
 
-    def get_item_by_title(
+    def get_child_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -81,12 +81,12 @@ class Attribute(ABC):
             type_: The expected type of the item. This is user for better type support for further functions.
                 Also, an error is thrown if an unexpected type is found.
         """
-        found_items = self.get_items_by_title(title, type_)
+        found_items = self.get_children_by_title(title, type_)
         _handle_wrong_number_of_found_items(found_items, title, type_)
         return found_items[0]
 
     @abstractmethod
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -186,7 +186,7 @@ class RadioAttribute(Attribute):
     def has_options_field(cls) -> bool:
         return True
 
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -206,7 +206,7 @@ class RadioAttribute(Attribute):
         check_type(found_item, type_)
         return found_item
 
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -260,7 +260,7 @@ class ChecklistAttribute(Attribute):
     def has_options_field(cls) -> bool:
         return True
 
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -271,7 +271,7 @@ class ChecklistAttribute(Attribute):
         # check_type(found_item, type_)
         return found_item
 
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -313,14 +313,14 @@ class TextAttribute(Attribute):
     def has_options_field(cls) -> bool:
         return False
 
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         raise OntologyError("No nested options available for text attributes.")
 
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -373,14 +373,14 @@ class Option(ABC):
         pass
 
     @abstractmethod
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         raise NotImplementedError("This method is not implemented for this class")
 
-    def get_item_by_title(
+    def get_child_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -395,12 +395,12 @@ class Option(ABC):
             type_: The expected type of the item. This is user for better type support for further functions.
                 Also, an error is thrown if an unexpected type is found.
         """
-        found_items = self.get_items_by_title(title, type_)
+        found_items = self.get_children_by_title(title, type_)
         _handle_wrong_number_of_found_items(found_items, title, type_)
         return found_items[0]
 
     @abstractmethod
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -443,14 +443,14 @@ class FlatOption(Option):
     def get_option_type(self) -> OptionType:
         return OptionType.FLAT
 
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         raise OntologyError("No nested attributes for flat options.")
 
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -476,7 +476,7 @@ class NestableOption(Option):
     def get_option_type(self) -> OptionType:
         return OptionType.NESTABLE
 
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -487,7 +487,7 @@ class NestableOption(Option):
         check_type(found_item, type_)
         return found_item
 
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -682,7 +682,7 @@ def _handle_wrong_number_of_found_items(
     elif len(found_items) > 1:
         raise OntologyError(
             f"More than one item was found in the ontology with the given title `{title}` and type `{type_}`. "
-            f"Use the `get_items_by_title` or `get_item_by_hash` function instead. "
+            f"Use the `get_children_by_title` or `get_child_by_hash` function instead. "
             f"The found items are `{found_items}`."
         )
 

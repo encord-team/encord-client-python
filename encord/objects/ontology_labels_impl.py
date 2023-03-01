@@ -108,44 +108,11 @@ class Object:
         """Create a :class:`encord.objects.ObjectInstance` to be used with a label row."""
         return ObjectInstance(self)
 
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[RadioAttribute]) -> RadioAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[ChecklistAttribute]) -> ChecklistAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[TextAttribute]) -> TextAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[NestableOption]) -> NestableOption:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[FlatOption]) -> FlatOption:
-        ...
-
-    @overload
-    def get_item_by_hash(
-        self, feature_node_hash: str, type_: None = None
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
-        ...
-
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         """
         Returns the first found item where the hash matches. If there is more than one item with the same hash in
         the Object, then the Object would be in an invalid state. Throws if nothing is found.
@@ -161,7 +128,7 @@ class Object:
         check_type(found_item, type_)
         return found_item
 
-    def get_item_by_title(
+    def get_child_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -176,11 +143,11 @@ class Object:
             type_: The expected type of the item. This is user for better type support for further functions.
                 Also, an error is thrown if an unexpected type is found.
         """
-        found_items = self.get_items_by_title(title, type_)
+        found_items = self.get_children_by_title(title, type_)
         _handle_wrong_number_of_found_items(found_items, title, type_)
         return found_items[0]
 
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
@@ -283,44 +250,11 @@ class Classification:
         """Create a :class:`encord.objects.ClassificationInstance` to be used with a label row."""
         return ClassificationInstance(self)
 
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[RadioAttribute]) -> RadioAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[ChecklistAttribute]) -> ChecklistAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[TextAttribute]) -> TextAttribute:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[NestableOption]) -> NestableOption:
-        ...
-
-    @overload
-    def get_item_by_hash(self, feature_node_hash: str, type_: Type[FlatOption]) -> FlatOption:
-        ...
-
-    @overload
-    def get_item_by_hash(
-        self, feature_node_hash: str, type_: None = None
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
-        ...
-
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[
-            Type[RadioAttribute],
-            Type[ChecklistAttribute],
-            Type[TextAttribute],
-            Type[NestableOption],
-            Type[FlatOption],
-            None,
-        ] = None,
-    ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]:
+        type_: Union[AttributeTypes, OptionTypes, None] = None,
+    ) -> Union[AttributeClasses, OptionClasses]:
         """
         Returns the first found item where the hash matches. If there is more than one item with the same hash in
         the Object, then the Object would be in an invalid state. Throws if nothing is found.
@@ -336,7 +270,7 @@ class Classification:
         check_type(found_item, type_)
         return found_item
 
-    def get_item_by_title(
+    def get_child_by_title(
         self,
         title: str,
         type_: Union[OptionTypes, AttributeTypes, None] = None,
@@ -351,11 +285,11 @@ class Classification:
             type_: The expected type of the item. This is user for better type support for further functions.
                 Also, an error is thrown if an unexpected type is found.
         """
-        found_items = self.get_items_by_title(title, type_)
+        found_items = self.get_children_by_title(title, type_)
         _handle_wrong_number_of_found_items(found_items, title, type_)
         return found_items[0]
 
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[OptionTypes, AttributeTypes, None] = None,
@@ -1751,7 +1685,7 @@ class LabelRowV2:
         object_instance_annotation = object_.get_annotation(frame)
         coordinates = object_instance_annotation.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
-        ontology_object = self._ontology_structure.get_item_by_hash(ontology_hash)
+        ontology_object = self._ontology_structure.get_child_by_hash(ontology_hash)
 
         ret["name"] = ontology_object.name
         ret["color"] = ontology_object.color
@@ -1804,9 +1738,9 @@ class LabelRowV2:
 
         annotation = classification.get_annotation(frame)
         classification_feature_hash = classification.ontology_item.feature_node_hash
-        ontology_classification = self._ontology_structure.get_item_by_hash(classification_feature_hash)
+        ontology_classification = self._ontology_structure.get_child_by_hash(classification_feature_hash)
         attribute_hash = classification.ontology_item.attributes[0].feature_node_hash
-        ontology_attribute = self._ontology_structure.get_item_by_hash(attribute_hash)
+        ontology_attribute = self._ontology_structure.get_child_by_hash(attribute_hash)
 
         ret["name"] = ontology_attribute.name
         ret["value"] = _lower_snake_case(ontology_attribute.name)
@@ -1982,7 +1916,7 @@ class LabelRowV2:
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
 
-        label_class = ontology.get_item_by_hash(feature_hash)
+        label_class = ontology.get_child_by_hash(feature_hash)
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
         coordinates = self._get_coordinates(frame_object_label)
@@ -2056,7 +1990,7 @@ class LabelRowV2:
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
 
-        label_class = ontology.get_item_by_hash(feature_hash)
+        label_class = ontology.get_child_by_hash(feature_hash)
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
@@ -2864,13 +2798,12 @@ class OntologyStructure:
     objects: List[Object] = field(default_factory=list)
     classifications: List[Classification] = field(default_factory=list)
 
-    def get_item_by_hash(
+    def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
     ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
         """
-        DENIS: call this get_child_by_hash??
         Returns the first found child where the hash matches. If there is more than one child with the same hash in
         the ontology, then the ontology would be in an invalid state. Throws if nothing is found.
 
@@ -2899,7 +2832,7 @@ class OntologyStructure:
 
         raise OntologyError("Item not found.")
 
-    def get_item_by_title(
+    def get_child_by_title(
         self,
         title: str,
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
@@ -2914,11 +2847,11 @@ class OntologyStructure:
             type_: The expected type of the item. This is user for better type support for further functions.
                 Also, an error is thrown if an unexpected type is found.
         """
-        found_items = self.get_items_by_title(title, type_)
+        found_items = self.get_children_by_title(title, type_)
         _handle_wrong_number_of_found_items(found_items, title, type_)
         return found_items[0]
 
-    def get_items_by_title(
+    def get_children_by_title(
         self,
         title: str,
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,

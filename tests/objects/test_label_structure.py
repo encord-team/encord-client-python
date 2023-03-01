@@ -32,47 +32,47 @@ from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels
 
-box_ontology_item = all_types_structure.get_item_by_hash("MjI2NzEy", Object)
-polygon_ontology_item = all_types_structure.get_item_by_hash("ODkxMzAx", Object)
-polyline_ontology_item = all_types_structure.get_item_by_hash("OTcxMzIy", Object)
+box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
+polygon_ontology_item = all_types_structure.get_child_by_hash("ODkxMzAx", Object)
+polyline_ontology_item = all_types_structure.get_child_by_hash("OTcxMzIy", Object)
 
-nested_box_ontology_item = all_types_structure.get_item_by_hash("MTA2MjAx")
-text_attribute_1 = all_types_structure.get_item_by_hash("OTkxMjU1")
-checklist_attribute_1 = all_types_structure.get_item_by_hash("ODcxMDAy")
-checklist_attribute_1_option_1 = all_types_structure.get_item_by_hash("MTE5MjQ3")
-checklist_attribute_1_option_2 = all_types_structure.get_item_by_hash("Nzg3MDE3")
+nested_box_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx")
+text_attribute_1 = all_types_structure.get_child_by_hash("OTkxMjU1")
+checklist_attribute_1 = all_types_structure.get_child_by_hash("ODcxMDAy")
+checklist_attribute_1_option_1 = all_types_structure.get_child_by_hash("MTE5MjQ3")
+checklist_attribute_1_option_2 = all_types_structure.get_child_by_hash("Nzg3MDE3")
 
-deeply_nested_polygon_item = all_types_structure.get_item_by_hash("MTM1MTQy")
-nested_polygon_text = all_types_structure.get_item_by_hash("OTk555U1")
-nested_polygon_checklist = all_types_structure.get_item_by_hash("ODc555Ay")
-nested_polygon_checklist_option_1 = all_types_structure.get_item_by_hash("MT5555Q3")
-nested_polygon_checklist_option_2 = all_types_structure.get_item_by_hash("Nzg5555E3")
-radio_attribute_level_1 = all_types_structure.get_item_by_hash("MTExMjI3")
-radio_nested_option_1 = all_types_structure.get_item_by_hash("MTExNDQ5")
-radio_nested_option_1_text = all_types_structure.get_item_by_hash("MjE2OTE0")
-radio_nested_option_2 = all_types_structure.get_item_by_hash("MTcxMjAy")
-radio_nested_option_2_checklist = all_types_structure.get_item_by_hash("ODc666Ay")
-radio_nested_option_2_checklist_option_1 = all_types_structure.get_item_by_hash("MT66665Q3")
-radio_nested_option_2_checklist_option_2 = all_types_structure.get_item_by_hash("Nzg66665E3")
+deeply_nested_polygon_item = all_types_structure.get_child_by_hash("MTM1MTQy")
+nested_polygon_text = all_types_structure.get_child_by_hash("OTk555U1")
+nested_polygon_checklist = all_types_structure.get_child_by_hash("ODc555Ay")
+nested_polygon_checklist_option_1 = all_types_structure.get_child_by_hash("MT5555Q3")
+nested_polygon_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg5555E3")
+radio_attribute_level_1 = all_types_structure.get_child_by_hash("MTExMjI3")
+radio_nested_option_1 = all_types_structure.get_child_by_hash("MTExNDQ5")
+radio_nested_option_1_text = all_types_structure.get_child_by_hash("MjE2OTE0")
+radio_nested_option_2 = all_types_structure.get_child_by_hash("MTcxMjAy")
+radio_nested_option_2_checklist = all_types_structure.get_child_by_hash("ODc666Ay")
+radio_nested_option_2_checklist_option_1 = all_types_structure.get_child_by_hash("MT66665Q3")
+radio_nested_option_2_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg66665E3")
 
-keypoint_dynamic = all_types_structure.get_item_by_hash("MTY2MTQx")
-dynamic_text: TextAttribute = all_types_structure.get_item_by_hash("OTkxMjU1")
-dynamic_checklist = all_types_structure.get_item_by_hash("ODcxMDAy")
-dynamic_checklist_option_1 = all_types_structure.get_item_by_hash("MTE5MjQ3")
-dynamic_checklist_option_2 = all_types_structure.get_item_by_hash("Nzg3MDE3")
-dynamic_radio = all_types_structure.get_item_by_hash("MTExM9I3")
-dynamic_radio_option_1 = all_types_structure.get_item_by_hash("MT9xNDQ5")  # This is dynamic and deeply nested.
-dynamic_radio_option_2 = all_types_structure.get_item_by_hash("9TcxMjAy")  # This is dynamic and deeply nested.
+keypoint_dynamic = all_types_structure.get_child_by_hash("MTY2MTQx")
+dynamic_text: TextAttribute = all_types_structure.get_child_by_hash("OTkxMjU1")
+dynamic_checklist = all_types_structure.get_child_by_hash("ODcxMDAy")
+dynamic_checklist_option_1 = all_types_structure.get_child_by_hash("MTE5MjQ3")
+dynamic_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg3MDE3")
+dynamic_radio = all_types_structure.get_child_by_hash("MTExM9I3")
+dynamic_radio_option_1 = all_types_structure.get_child_by_hash("MT9xNDQ5")  # This is dynamic and deeply nested.
+dynamic_radio_option_2 = all_types_structure.get_child_by_hash("9TcxMjAy")  # This is dynamic and deeply nested.
 
-text_classification = all_types_structure.get_item_by_hash("jPOcEsbw", Classification)
-text_classification_attribute: TextAttribute = all_types_structure.get_item_by_hash("OxrtEM+v", TextAttribute)
-radio_classification = all_types_structure.get_item_by_hash("NzIxNTU1")
-radio_classification_option_1 = all_types_structure.get_item_by_hash("MTcwMjM5")
-radio_classification_option_2 = all_types_structure.get_item_by_hash("MjUzMTg1")
-radio_classification_option_2_text = all_types_structure.get_item_by_hash("MTg0MjIw")
-checklist_classification = all_types_structure.get_item_by_hash("3DuQbFxo")
-checklist_classification_option_1 = all_types_structure.get_item_by_hash("fvLjF0qZ")
-checklist_classification_option_2 = all_types_structure.get_item_by_hash("a4r7nK9i")
+text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
+text_classification_attribute: TextAttribute = all_types_structure.get_child_by_hash("OxrtEM+v", TextAttribute)
+radio_classification = all_types_structure.get_child_by_hash("NzIxNTU1")
+radio_classification_option_1 = all_types_structure.get_child_by_hash("MTcwMjM5")
+radio_classification_option_2 = all_types_structure.get_child_by_hash("MjUzMTg1")
+radio_classification_option_2_text = all_types_structure.get_child_by_hash("MTg0MjIw")
+checklist_classification = all_types_structure.get_child_by_hash("3DuQbFxo")
+checklist_classification_option_1 = all_types_structure.get_child_by_hash("fvLjF0qZ")
+checklist_classification_option_2 = all_types_structure.get_child_by_hash("a4r7nK9i")
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
@@ -91,106 +91,6 @@ POLYGON_COORDINATES = PolygonCoordinates(
 )
 
 KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
-
-
-# =======================================================
-# =========== demonstrative tests below here ============
-# =======================================================
-
-
-@pytest.mark.skip("The functionality is not fully implemented")
-def test_upload_simple_data():
-    project = "code that generates a project ..."
-    label_hash = "1234"
-
-    label_row = project.get_label_row_class(label_hash)  # can either take label_hash or data_hash
-
-    # Now create an object and add it to the label row
-    box_ontology_item = example_ontology_structure.get_item_by_hash("MjI2NzEy", Object)
-    # ^ The `Object` argument is for properly typing the return value and doing an internal type check which can throw.
-
-    object_instance = ObjectInstance(box_ontology_item)
-    # ^ There is an ongoing discussion about making this box_ontology_item.create_instance() instead, which has
-    # other tradeoffs.
-
-    coordinates = BoundingBoxCoordinates(
-        height=0.1,
-        width=0.2,
-        top_left_x=0.3,
-        top_left_y=0.4,
-    )
-    object_instance.set_for_frames(coordinates=coordinates, frames=Range(1, 3))
-
-    # ======== Setting static attributes ========
-    text_attribute_of_box_ontology_item = example_ontology_structure.get_item_by_hash("OTkxMjU1", TextAttribute)
-    object_instance.set_answer(answer="Poseidon", attribute=text_attribute_of_box_ontology_item)
-    # ^ this is how we answer static attributes
-    assert object_instance.get_answer(attribute=text_attribute_of_box_ontology_item) == "Poseidon"
-
-    # Overwritting previous answers
-    object_instance.set_answer(answer="Ulysses", attribute=text_attribute_of_box_ontology_item, overwrite=True)
-    # ^ add overwrite=True to avoid throwing an error.
-    assert object_instance.get_answer(attribute=text_attribute_of_box_ontology_item) == "Ulysses"
-
-    # NOTE: Setting nested answers to attribute where a parent is not selected will throw an error.
-
-    # ======== Setting dynamic attributes ========
-    dynamic_text_attribute_of_box_item = example_ontology_structure.get_item_by_hash("OTkxMj222", TextAttribute)
-    object_instance.set_answer(answer="Zeus", attribute=dynamic_text_attribute_of_box_item)
-    # ^ this sets the answer for all the dynamic attributes that are currently available
-
-    assert object_instance.get_answer(attribute=dynamic_text_attribute_of_box_item) == [
-        AnswerForFrames(answer="Zeus", ranges=[Range(1, 3)]),
-    ]
-
-    object_instance.set_answer(answer="Hermes", attribute=dynamic_text_attribute_of_box_item, frames=1)
-    assert object_instance.get_answer(attribute=dynamic_text_attribute_of_box_item) == [
-        AnswerForFrames(answer="Hermes", ranges=[Range(1, 1)]),
-        AnswerForFrames(answer="Zeus", ranges=[Range(2, 3)]),
-    ]
-
-    # ======== Add the object to the label row ========
-    label_row.add_object_instance(object_instance)
-
-    # ======= ClassificationIndex ========
-    # This essentially works very similar to setting one static answer in the ObjectInstance.
-    text_classification = example_ontology_structure.get_item_by_hash("jPOcEsbw", Classification)
-    text_attribute = text_classification.attributes[0]
-
-    classification_instance = ClassificationInstance(text_classification)
-    classification_instance.set_answer("Zeus")  # You can explicitly set the `text_attribute`, but it is implicit.
-
-    assert classification_instance.get_answer() == "Zeus"
-    # ^ Again, the `text_attribute` is implicit here, but you can explicitly set it. If it was a nested attribute,
-    # you would have to set the parent first and then you must specify the nested attribute.
-
-    classification_instance.add_frames([2, 3])
-
-    label_row.add_classification_instance(classification_instance)
-    # ======== Radio classification ========
-    # This will work similarly for the ObjectIndex
-    radio_classification = example_ontology_structure.get_item_by_hash("jPOcEswer", Classification)
-    radio_option_1 = radio_classification.attributes[0].options[0]
-
-    radio_classification.set_answer(radio_option_1)
-    assert radio_classification.get_answer() == radio_option_1
-
-    # ======== Checklist classification ========
-    # This will work similarly for the ObjectIndex
-    checklist_classification = example_ontology_structure.get_item_by_hash("jPOcEswer", Classification)
-    checklist_option_1 = checklist_classification.attributes[0].options[0]
-    checklist_option_2 = checklist_classification.attributes[0].options[1]
-
-    checklist_classification.set_answer({checklist_option_1, checklist_option_2})
-    assert checklist_classification.get_answer() == {checklist_option_1, checklist_option_2}
-
-    # ======== Upload to server ========
-    label_row.save()
-
-
-# =======================================================
-# =========== demonstrative tests above here ============
-# =======================================================
 
 
 def test_create_object_instance_one_coordinate():
@@ -525,18 +425,18 @@ def test_classification_answering_with_ontology_access():
 
     # NOTE: it is important to add the `Classification` here, to distinguish between the attribute and classification,
     # which both go by the same name.
-    radio_classification_ = all_types_structure.get_item_by_title("Radio classification 1", Classification)
+    radio_classification_ = all_types_structure.get_child_by_title("Radio classification 1", Classification)
     radio_instance = radio_classification_.create_instance()
 
-    radio_classification_attribute_1: ChecklistAttribute = radio_classification_.get_item_by_title(
+    radio_classification_attribute_1: ChecklistAttribute = radio_classification_.get_child_by_title(
         "Radio classification 1", type_=RadioAttribute
     )
     # Different `type_` with generic `Attribute`
-    radio_classification_attribute_2 = radio_classification_.get_item_by_title(
+    radio_classification_attribute_2 = radio_classification_.get_child_by_title(
         "Radio classification 1", type_=Attribute
     )
     with pytest.raises(OntologyError):
-        radio_classification_.get_item_by_title(
+        radio_classification_.get_child_by_title(
             # This is not the correct `type_`
             "Radio classification 1",
             type_=Option,
@@ -544,8 +444,8 @@ def test_classification_answering_with_ontology_access():
 
     assert radio_classification_attribute_1 == radio_classification_attribute_2
 
-    option_1 = radio_classification_.get_item_by_title("cl 1 option 1", type_=Option)
-    option_2 = radio_classification_.get_item_by_title("cl 1 option 2", type_=Option)
+    option_1 = radio_classification_.get_child_by_title("cl 1 option 1", type_=Option)
+    option_2 = radio_classification_.get_child_by_title("cl 1 option 2", type_=Option)
 
     radio_instance.set_answer(option_1, attribute=radio_classification_attribute_2)
     assert radio_instance.get_answer() == option_1

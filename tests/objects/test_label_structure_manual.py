@@ -85,7 +85,7 @@ def test_label_structure_manual_v2():
     #     labels_1 = label_row.to_encord_dict()
     #
     #     ontology = label_row.ontology_structure
-    #     box_object = ontology.get_items_by_title("box")[0]
+    #     box_object = ontology.get_children_by_title("box")[0]
     #     box_instance = box_object.create_instance()
     #     box_instance.set_for_frame(
     #         BoundingBoxCoordinates(
