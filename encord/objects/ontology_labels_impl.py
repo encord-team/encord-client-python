@@ -134,14 +134,13 @@ class Object:
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         """
-        Returns one ontology item with the matching title and matching type if specified. If more than one items in this
-        Object have the same title, then an error will be thrown. If no item is found, an error will be thrown as
-        well.
+        Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
+        than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
+        will be thrown as well.
 
         Args:
-            title: The exact title of the item to search for in the ontology.
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            title: The exact title of the child node to search for in the ontology.
+            type_: The expected type of the child node. Only a node that matches this type will be returned.
         """
         found_items = self.get_children_by_title(title, type_)
         _handle_wrong_number_of_found_items(found_items, title, type_)
@@ -153,13 +152,12 @@ class Object:
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> List[Union[AttributeClasses, OptionClasses]]:
         """
-        Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
-        to be unique, however, we recommend unique titles when creating ontologies.
+        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
+        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
 
         Args:
-            title: The exact title of the item to search for in the ontology.
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            title: The exact title of the child node to search for in the ontology.
+            type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_attributes_by_title(title, self.attributes)
         return filter_by_type(found_items, type_)  # noqa
@@ -276,14 +274,13 @@ class Classification:
         type_: Union[OptionTypes, AttributeTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         """
-        Returns one ontology item with the matching title and matching type if specified. If more than one items in this
-        Classification have the same title, then an error will be thrown. If no item is found, an error will be thrown
-        as well.
+        Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
+        than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
+        will be thrown as well.
 
         Args:
-            title: The exact title of the item to search for in the ontology.
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            title: The exact title of the child node to search for in the ontology.
+            type_: The expected type of the child node. Only a node that matches this type will be returned.
         """
         found_items = self.get_children_by_title(title, type_)
         _handle_wrong_number_of_found_items(found_items, title, type_)
@@ -295,13 +292,12 @@ class Classification:
         type_: Union[OptionTypes, AttributeTypes, None] = None,
     ) -> List[Union[AttributeClasses, OptionClasses]]:
         """
-        Returns all the items with the matching title and matching type if specified. Title in ontologies do not need
-        to be unique, however, we recommend unique titles when creating ontologies.
+        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
+        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
 
         Args:
-            title: The exact title of the item to search for in the ontology.
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            title: The exact title of the child node to search for in the ontology.
+            type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_attributes_by_title(title, self.attributes)
         return filter_by_type(found_items, type_)  # noqa
@@ -2838,14 +2834,13 @@ class OntologyStructure:
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
     ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
         """
-        Returns one ontology child with the matching title and matching type if specified. If more than one children in
-        this ontology have the same title, then an error will be thrown. If no item is found, an error will be thrown as
-        well.
+        Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
+        than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
+        will be thrown as well.
 
         Args:
-            title: The exact title of the item to search for in the ontology.
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            title: The exact title of the child node to search for in the ontology.
+            type_: The expected type of the child node. Only a node that matches this type will be returned.
         """
         found_items = self.get_children_by_title(title, type_)
         _handle_wrong_number_of_found_items(found_items, title, type_)
@@ -2857,13 +2852,12 @@ class OntologyStructure:
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
     ) -> List[Union[OntologyClasses, AttributeClasses, OptionClasses]]:
         """
-        Returns all the children with the matching title and matching type if specified. Title in ontologies do not need
-        to be unique, however, we recommend unique titles when creating ontologies.
+        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
+        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
 
         Args:
-            title: The exact title of the item to search for in the ontology.
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            title: The exact title of the child node to search for in the ontology.
+            type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         ret = []
         for object_ in self.objects:
