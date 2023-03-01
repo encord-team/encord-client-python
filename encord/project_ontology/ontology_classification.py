@@ -7,6 +7,8 @@ from encord.project_ontology.classification_attribute import ClassificationAttri
 @dataclass
 class OntologyClassification:
     """
+    DEPRECATED: prefer using :class:`encord.ontology.Ontology`
+
     A dataclass which holds classifications of the :class:`encord.project_ontology.Ontology`.
     """
 

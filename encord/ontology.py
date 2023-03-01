@@ -3,13 +3,14 @@ from typing import Optional
 
 from encord.configs import SshConfig
 from encord.http.querier import Querier
-from encord.objects.ontology_structure import OntologyStructure
-from encord.orm.ontology import Ontology as OrmOntology
+from encord.objects.ontology_labels_impl import Ontology as OrmOntology
+from encord.objects.ontology_labels_impl import OntologyStructure
 
 
 class Ontology:
     """
-    Access ontology related data and manipulate the ontology.
+    Access ontology related data and manipulate the ontology. Instantiate this class via
+    :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
     def __init__(self, querier: Querier, config: SshConfig, instance: Optional[OrmOntology] = None):

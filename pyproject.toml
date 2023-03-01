@@ -42,6 +42,10 @@ matplotlib = "^3.5.2"
 # Pinning click to solve black issues https://stackoverflow.com/questions/71673404/importerror-cannot-import-name-unicodefun-from-click
 click = "8.0.2"
 
+
+[tool.poetry.group.dev.dependencies]
+deepdiff = "^6.2.1"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
