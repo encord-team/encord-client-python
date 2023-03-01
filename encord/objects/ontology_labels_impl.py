@@ -966,7 +966,7 @@ class LabelRowV2:
     @property
     def is_labelling_initialised(self) -> bool:
         """
-        Whether you can start labelling or not. If this is `False`, call the member `.initialise_labelling()` to
+        Whether you can start labelling or not. If this is `False`, call the member `.initialise_labels()` to
         read or write specific ObjectInstances or ClassificationInstances.
         """
         return self._is_labelling_initialised
@@ -1033,7 +1033,7 @@ class LabelRowV2:
     def from_labels_dict(self, label_row_dict: dict, ontology_structure: Optional[OntologyStructure] = None) -> None:
         """
         If you have a label row dictionary in the same format that the Encord servers produce, you can initialise the
-        LabelRow from that directly. In most cases you should prefer using the `initialise_labelling` method.
+        LabelRow from that directly. In most cases you should prefer using the `initialise_labels` method.
 
         This function also initialises the label row.
 
@@ -2012,7 +2012,7 @@ class LabelRowV2:
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
             raise LabelRowError(
-                "For this operation you will need to initialise labelling first. Call the `.initialise_labelling()` "
+                "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` "
                 "to do so first."
             )
 

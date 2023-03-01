@@ -1,8 +1,9 @@
 """
-Reading project labels
-======================
+DEPRECATED - Reading project labels
+===================================
 
-Use this script to read labels from your Encord project.
+This tutorial introduces a deprecated script to read labels from you Encord project. You are encouraged to
+use the tools introduced in the Working with the LabelRowV2 section instead.
 
 Imports and authentication
 --------------------------

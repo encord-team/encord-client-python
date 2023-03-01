@@ -81,7 +81,7 @@ def test_label_structure_manual_v2():
     print(label_rows[0].to_encord_dict())
 
     # for label_row in label_rows:
-    #     label_row.initialise_labelling()
+    #     label_row.initialise_labels()
     #     labels_1 = label_row.to_encord_dict()
     #
     #     ontology = label_row.ontology_structure
@@ -100,6 +100,6 @@ def test_label_structure_manual_v2():
     #     label_row.add_object(box_instance)
     #     label_row.upload_labels()
 
-    # label_row.initialise_labelling()
+    # label_row.initialise_labels()
     # labels_2 = label_row.to_encord_dict()
     # assert labels_1 == labels_2

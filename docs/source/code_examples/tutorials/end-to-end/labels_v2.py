@@ -75,7 +75,7 @@ for label_row in label_rows:
 # Starting to read or write labels
 # --------------------------------
 #
-# To start reading or writing labels, you need to call the :meth:`~encord.objects.LabelRowV2.initialise_labelling`
+# To start reading or writing labels, you need to call the :meth:`~encord.objects.LabelRowV2.initialise_labels`
 # method which will download the state of the label from the Encord server.
 #
 # Once this method has been called, you can create your first label.
@@ -84,6 +84,9 @@ first_label_row: LabelRowV2 = label_rows[0]
 
 first_label_row.initialise_labels()
 # ^ Check the reference for possible arguments
+
+# Code to add/manipulate some labels
+...
 
 # Once you have added new labels, you will need to call .save() to upload all labels to the server.
 first_label_row.save()
@@ -95,9 +98,17 @@ first_label_row.save()
 # or classification instances, these will be created from the ontology. You can read more about object instances
 # here: https://docs.encord.com/ontologies/use/#objects
 #
-# Defining the ontology object
+# You can think of an object instance as a visual label in the label editor. One bounding box would be one object
+# instance.
+#
+# Finding the ontology object
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
+# The LabelRowV2 is designed to work with its corresponding ontology via the :class:`~encord.objects.ontology_labels_impl.OntologyStructure`.
+# You will need to use the title or feature node hash to find the right objects, classifications, attributes, or
+# attribute options. See the example below to find the ontology object for the demonstrative "Box of a human" object.
+#
+
 ontology_structure: OntologyStructure = first_label_row.ontology_structure
 box_ontology_object: Object = ontology_structure.get_child_by_title(title="Box of a human", type_=Object)
 # ^ optionally specify the `type_` to narrow the return type and also have a runtime check.
@@ -107,6 +118,7 @@ box_ontology_object: Object = ontology_structure.get_child_by_title(title="Box o
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
+# Instantiate an object instance from the box ontology node.
 box_object_instance: ObjectInstance = box_ontology_object.create_instance()
 
 box_object_instance.set_for_frames(
@@ -183,10 +195,11 @@ for frame_number, coordinates in coordinates_per_frame.items():
 box_object_instance_3: ObjectInstance = box_ontology_object.create_instance()
 
 for frame_view in first_label_row.get_frame_views():
-    if frame_view.frame_number in coordinates_per_frame:
+    frame_number = frame_view.frame
+    if frame_number in coordinates_per_frame:
         frame_view.add_object_instance(
             object_instance=box_object_instance_3,
-            coordinates=coordinates_per_frame[frame_view.frame_number],
+            coordinates=coordinates_per_frame[frame_number],
         )
 
 
@@ -204,8 +217,8 @@ for label_row_frame_view in first_label_row.get_frame_views():
     object_instances_in_frame: List[ObjectInstance] = label_row_frame_view.get_object_instances()
     for object_instance in object_instances_in_frame:
         print(f"Object instance: {object_instance}")
-        object_instance_frame_view = object_instance.get_frame_view(frame=frame_number)
-        print(f"Coordinates: {object_instance_frame_view.coordinates}")
+        annotation = object_instance.get_annotation(frame=frame_number)
+        print(f"Coordinates: {annotation.coordinates}")
 
 
 #%%
@@ -314,8 +327,8 @@ checklist_classification_instance = checklist_ontology_classification.create_ins
 
 # Prefer using the `checklist_ontology_classification` over the `ontology_structure` to get the options.
 # The more specific the ontology item that you're searching from is, the more likely you will avoid title clashes.
-green_option = checklist_ontology_classification.get_child_by_title("Green", type_=Option)
-blue_option = checklist_ontology_classification.get_child_by_title("Blue", type_=Option)
+green_option: Option = checklist_ontology_classification.get_child_by_title("Green", type_=Option)
+blue_option: Option = checklist_ontology_classification.get_child_by_title("Blue", type_=Option)
 
 checklist_classification_instance.set_answer([green_option, blue_option])
 
@@ -424,8 +437,8 @@ assert person_object_instance.get_answer(attribute=position_attribute) == [
 ]
 
 # %%
-# Dealing with numeric frames
-# ---------------------------
+# Utils: Dealing with numeric frames
+# ----------------------------------
 #
 # You will see that in many places you can use :class:`encord.objects.frames.Range` which allows you to
 # specify frames in a more flexible way. Use

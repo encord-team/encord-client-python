@@ -1,8 +1,9 @@
 """
-Saving project labels
-=====================
+DEPRECATED - Saving project labels
+==================================
 
-Use this script to save your local labels to your Encord project.
+This tutorial introduces a deprecated script to save labels to your Encord project. You are encouraged to
+use the tools introduced in the Working with the LabelRowV2 section instead.
 
 The code uses a couple of utility functions for constructing dictionaries following the
 structure of Encord label rows and finding ontology dictionaries from the Encord
