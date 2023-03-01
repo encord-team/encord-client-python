@@ -655,16 +655,6 @@ class EncordClientProject(EncordClient):
         if copy_collaborators:
             payload.copy_project_options.append(ProjectCopyOptions.COLLABORATORS)
 
-        # NOTE: In order to keep backward compaitbily we need to remove the `project_copy_metadata`
-        # since the server is not ready to handle a `project_copy_metadata` without a title
-        if all(
-            [
-                getattr(payload.project_copy_metadata, field.name) is None
-                for field in dataclasses.fields(payload.project_copy_metadata)
-            ]
-        ):
-            payload.project_copy_metadata = None
-
         return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=dataclasses.asdict(payload))
 
     def get_label_row(
