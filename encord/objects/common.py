@@ -64,6 +64,15 @@ class Attribute(ABC):
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
+        """
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
+
+        Args:
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+        """
         raise NotImplementedError("This method is not implemented for this class")
 
     def get_child_by_title(
@@ -199,13 +208,13 @@ class RadioAttribute(Attribute):
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         """
-        Returns the first found item where the hash matches. If there is more than one item with the same hash in
-        the ontology, then the ontology would be in an invalid state. Throws if nothing is found.
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
 
         Args:
-            feature_node_hash: the feature_node_hash to search for
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
         """
         found_item = _get_option_by_hash(feature_node_hash, self.options)
         if found_item is None:
@@ -271,10 +280,19 @@ class ChecklistAttribute(Attribute):
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
+        """
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
+
+        Args:
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+        """
         found_item = _get_option_by_hash(feature_node_hash, self.options)
         if found_item is None:
             raise OntologyError("Item not found.")
-        # check_type(found_item, type_)
+        check_type(found_item, type_)
         return found_item
 
     def get_children_by_title(
@@ -332,6 +350,17 @@ class TextAttribute(Attribute):
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
+        """
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
+
+        For TextAttributes this will always throw as they have no children.
+
+        Args:
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+        """
         raise OntologyError("No nested options available for text attributes.")
 
     def get_children_by_title(
@@ -402,6 +431,15 @@ class Option(ABC):
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
+        """
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
+
+        Args:
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+        """
         raise NotImplementedError("This method is not implemented for this class")
 
     def get_child_by_title(
@@ -479,6 +517,17 @@ class FlatOption(Option):
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
+        """
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
+
+        For FlatOptions this will always throw as they have no children.
+
+        Args:
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+        """
         raise OntologyError("No nested attributes for flat options.")
 
     def get_children_by_title(
@@ -522,6 +571,15 @@ class NestableOption(Option):
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
+        """
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
+
+        Args:
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+        """
         found_item = _get_attribute_by_hash(feature_node_hash, self.nested_options)
         if found_item is None:
             raise OntologyError("Item not found.")

@@ -114,13 +114,13 @@ class Object:
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         """
-        Returns the first found item where the hash matches. If there is more than one item with the same hash in
-        the Object, then the Object would be in an invalid state. Throws if nothing is found.
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
 
         Args:
-            feature_node_hash: the feature_node_hash to search for
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
         """
         found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
         if found_item is None:
@@ -254,13 +254,13 @@ class Classification:
         type_: Union[AttributeTypes, OptionTypes, None] = None,
     ) -> Union[AttributeClasses, OptionClasses]:
         """
-        Returns the first found item where the hash matches. If there is more than one item with the same hash in
-        the Object, then the Object would be in an invalid state. Throws if nothing is found.
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
 
         Args:
-            feature_node_hash: the feature_node_hash to search for
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
         """
         found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
         if found_item is None:
@@ -2800,13 +2800,13 @@ class OntologyStructure:
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
     ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
         """
-        Returns the first found child where the hash matches. If there is more than one child with the same hash in
-        the ontology, then the ontology would be in an invalid state. Throws if nothing is found.
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
 
         Args:
-            feature_node_hash: the feature_node_hash to search for
-            type_: The expected type of the item. This is user for better type support for further functions.
-                Also, an error is thrown if an unexpected type is found.
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
         """
         for object_ in self.objects:
             if object_.feature_node_hash == feature_node_hash:
