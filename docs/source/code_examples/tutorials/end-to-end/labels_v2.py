@@ -2,9 +2,6 @@
 Working with the LabelRowV2
 ===========================
 
-DENIS: Think about having easy back links. Maybe one "setup" script, and then every section can be started
-   from the setup.
-
 The :class:`encord.objects.LabelRowV2` class is a wrapper around the Encord label row data format. It
 provides a convenient way to read, create, and manipulate labels.
 """

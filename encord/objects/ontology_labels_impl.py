@@ -843,12 +843,20 @@ class ClassificationInstance:
 
 
 class LabelRowV2:
+    """
+    This class represents a single label row. It is corresponding to exactly one data row within a project. It holds all
+    the labels for that data row.
+
+    You can access a many metadata fields with this class directly. If you want to read or write labels you will need to
+    call :meth:`.initialise_labels()` first. To upload your added labels call :meth:`.save()`.
+    """
+
     def __init__(
         self,
         label_row_metadata: LabelRowMetadata,
         project_client: EncordClientProject,
     ) -> None:
-        self._ontology_structure = None
+        self._ontology_structure: Optional[OntologyStructure] = None
 
         self._project_client = project_client
         self._querier = project_client._querier
@@ -907,7 +915,7 @@ class LabelRowV2:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """The creation of the label row. None if the label row was not yet created."""
+        """The creation date of the label row. None if the label row was not yet created."""
         return self._label_row_read_only_data.created_at
 
     @property
@@ -1240,6 +1248,7 @@ class LabelRowV2:
         self._add_to_frame_to_hashes_map(classification_instance)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
+        """Remove a classification instance from a label row."""
         self._check_labelling_is_initalised()
 
         classification_hash = classification_instance.classification_hash
@@ -1308,7 +1317,7 @@ class LabelRowV2:
         return ret
 
     def remove_object(self, object_instance: ObjectInstance):
-        """Remove the object."""
+        """Remove an object instance from a label row."""
         self._check_labelling_is_initalised()
 
         self._objects_map.pop(object_instance.object_hash)
@@ -1320,7 +1329,7 @@ class LabelRowV2:
     def to_encord_dict(self) -> dict:
         """
         This is an internal helper function. Likely this should not be used by a user. To upload labels use the
-        `.upload_labels()` function.
+        :meth:`.save()` function.
         """
         self._check_labelling_is_initalised()
 
@@ -1505,6 +1514,8 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class FrameLevelImageGroupData:
+        """This is an internal helper class. A user should not directly interract with it."""
+
         image_hash: str
         image_title: str
         file_type: str
@@ -1515,6 +1526,8 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class LabelRowReadOnlyData:
+        """This is an internal helper class. A user should not directly interract with it."""
+
         label_hash: Optional[str]
         """This is None if the label row does not have any labels and was not initialised for labelling."""
         created_at: Optional[datetime]
@@ -2034,6 +2047,10 @@ AnswersForFrames = List[AnswerForFrames]
 
 
 class ObjectInstance:
+    """
+    An object instance is an object that has coordinates and can be places on one or multiple frames in a label row.
+    """
+
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = dict()
@@ -2051,19 +2068,12 @@ class ObjectInstance:
 
     @property
     def object_hash(self) -> str:
+        """A unique identifier for the object instance."""
         return self._object_hash
-
-    @object_hash.setter
-    def object_hash(self, v: Any) -> NoReturn:
-        raise LabelRowError("Cannot set the object hash on an instantiated label object.")
 
     @property
     def ontology_item(self) -> Any:
         return deepcopy(self._ontology_object)
-
-    @ontology_item.setter
-    def ontology_item(self, v: Any) -> NoReturn:
-        raise LabelRowError("Cannot set the ontology item of an instantiated ObjectInstance.")
 
     @property
     def _last_frame(self) -> Union[int, float]:
@@ -2201,6 +2211,8 @@ class ObjectInstance:
         filter_frame: Optional[int] = None,
     ) -> None:
         """
+        This resets the answer of an attribute as if it was never set.
+
         Args:
             attribute: The attribute to delete the answer for.
             filter_answer: A filter for a specific answer value. Delete only answers with the provided value.
@@ -2303,6 +2315,8 @@ class ObjectInstance:
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
+        Get the annotation for the object instance on the specified frame.
+
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
@@ -2325,6 +2339,8 @@ class ObjectInstance:
 
     def get_annotations(self) -> List[Annotation]:
         """
+        Get all annotations for the object instance on all frames it has been placed to.
+
         Returns:
             A list of `ObjectInstance.Annotation` in order of available frames.
         """
@@ -2342,7 +2358,7 @@ class ObjectInstance:
         if self._parent:
             self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
 
-    def is_valid(self) -> bool:
+    def is_valid(self) -> None:
         """Check if is valid, could also return some human/computer  messages."""
         if len(self._frames_to_instance_data) == 0:
             raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
@@ -2611,11 +2627,14 @@ class ObjectInstance:
 
 
 class DynamicAnswerManager:
+    """
+    This class is an internal helper class. The user should not interact with it directly.
+
+    Manages the answers that are set for different frames.
+    This can be part of the ObjectInstance class.
+    """
+
     def __init__(self, object_instance: ObjectInstance):
-        """
-        Manages the answers that are set for different frames.
-        This can be part of the ObjectInstance class.
-        """
         self._object_instance = object_instance
         self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
         self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
@@ -2637,7 +2656,7 @@ class DynamicAnswerManager:
         self,
         attribute: Attribute,
         frames: Optional[Frames] = None,
-        filter_answer: Union[str, Option, Iterable[Option]] = None,
+        filter_answer: Union[str, Option, Iterable[Option], None] = None,
     ) -> None:
         if frames is None:
             frames = [Range(i, i) for i in self._frames_to_answers.keys()]
@@ -2735,7 +2754,7 @@ class DynamicAnswerManager:
                 ret.add(answer)
         return ret
 
-    def __eq__(self, other: DynamicAnswerManager):
+    def __eq__(self, other: DynamicAnswerManager) -> bool:
         if not isinstance(other, DynamicAnswerManager):
             return False
         return (
@@ -3113,6 +3132,6 @@ class Ontology(dict, Formatter):
 
 
 def _frame_views_to_frame_numbers(
-    frame_views: List[Union[ObjectInstance.Annotation, ClassificationInstance.Annotation, LabelRowV2.FrameView]]
+    frame_views: Sequence[Union[ObjectInstance.Annotation, ClassificationInstance.Annotation, LabelRowV2.FrameView]]
 ) -> List[int]:
     return [frame_view.frame for frame_view in frame_views]
