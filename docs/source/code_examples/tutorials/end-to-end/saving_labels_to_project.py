@@ -1,8 +1,9 @@
 """
-Saving project labels
-=====================
+DEPRECATED - Saving project labels
+==================================
 
-Use this script to save your local labels to your Encord project.
+This tutorial introduces a deprecated script to save labels to your Encord project. You are encouraged to
+use the tools introduced in the Working with the LabelRowV2 section instead.
 
 The code uses a couple of utility functions for constructing dictionaries following the
 structure of Encord label rows and finding ontology dictionaries from the Encord
@@ -21,6 +22,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pytz
+from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 GMT_TIMEZONE = pytz.timezone("GMT")
 DATETIME_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
@@ -32,10 +34,6 @@ def __get_timestamp():
     now = datetime.now()
     new_timezone_timestamp = now.astimezone(GMT_TIMEZONE)
     return new_timezone_timestamp.strftime(DATETIME_STRING_FORMAT)
-
-
-def __lower_snake_case(s: str):
-    return "_".join(s.lower().split())
 
 
 def make_object_dict(
@@ -63,12 +61,12 @@ def make_object_dict(
     :type object_hash: If you want the object to have the same id across frames (for
         videos only), you can specify the object hash, which need to be
         an eight-character hex string (e.g., use
-        ``str(uuid.uuid4())[:8]`` or the ``objectHash`` from an
+        ``short_uuid_str()`` or the ``objectHash`` from an
         associated object.
     :returns: An object dictionary conforming with the Encord label row data format.
     """
     if object_hash is None:
-        object_hash = str(uuid.uuid4())[:8]
+        object_hash = short_uuid_str()
 
     timestamp: str = __get_timestamp()
     shape: str = ontology_object.get("shape")
@@ -76,7 +74,7 @@ def make_object_dict(
     object_dict = {
         "name": ontology_object["name"],
         "color": ontology_object["color"],
-        "value": __lower_snake_case(ontology_object["name"]),
+        "value": _lower_snake_case(ontology_object["name"]),
         "createdAt": timestamp,
         "createdBy": "robot@cord.tech",
         "confidence": 1,
@@ -171,7 +169,7 @@ def make_classification_dict_and_answer_dict(
               row data format.
     """
     if classification_hash is None:
-        classification_hash = str(uuid.uuid4())[:8]
+        classification_hash = short_uuid_str()
 
     if isinstance(answers, dict):
         answers = [answers]
