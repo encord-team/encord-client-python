@@ -311,9 +311,13 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
-        return self._querier.basic_getter(
+        res = self._querier.basic_getter(
             OrmDataset, payload={"dataset_access_settings": dataclasses.asdict(self._dataset_access_settings)}
         )
+
+        for row in res.data_rows:
+            row["_querier"] = self._querier
+        return res
 
     def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
         self._dataset_access_settings = dataset_access_settings
@@ -457,10 +461,7 @@ class EncordClientDataset(EncordClient):
         res = self._querier.basic_setter(SingleImage, uid=None, payload=upload)
 
         if res["success"]:
-            image_data = Image(
-                {"data_hash": upload["data_hash"], "title": upload["title"], "file_link": upload["file_link"]}
-            )
-            return image_data
+            return Image({"data_hash": upload["data_hash"], "title": upload["title"], "file_link": upload["file_link"]})
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
 

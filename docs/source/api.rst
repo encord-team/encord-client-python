@@ -165,6 +165,10 @@ Utilities - Other
     :members:
     :undoc-members:
 
+.. automodule:: encord.constants.enums
+    :members:
+    :undoc-members:
+
 Configs
 ------------
 .. automodule:: encord.configs
