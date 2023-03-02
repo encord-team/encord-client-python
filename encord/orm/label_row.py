@@ -253,7 +253,8 @@ class LabelRowMetadata(Formatter):
     dataset_title: str
     data_title: str
     data_type: str
-    data_link: str
+    data_link: Optional[str]
+    """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
     is_shadow_data: bool
