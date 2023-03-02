@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "encord"
-version = "0.1.63"
+version = "0.1.64"
 description = "Encord Python SDK Client"
 authors = ["Cord Technologies Limited <hello@encord.com>"]
 license = "Apache Software License"
@@ -41,13 +41,11 @@ sphinx-gallery = "^0.10.1"
 matplotlib = "^3.5.2"
 # Pinning click to solve black issues https://stackoverflow.com/questions/71673404/importerror-cannot-import-name-unicodefun-from-click
 click = "8.0.2"
-
-
-[tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
 
+
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.3.2"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
