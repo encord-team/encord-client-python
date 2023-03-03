@@ -724,7 +724,7 @@ class ClassificationInstance:
     @dataclass
     class FrameData:
         created_at: datetime = datetime.now()
-        created_by: str = None
+        created_by: Optional[str] = None
         confidence: int = DEFAULT_CONFIDENCE
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
         last_edited_at: datetime = datetime.now()
@@ -2401,7 +2401,7 @@ class ObjectInstance:
         @coordinates.setter
         def coordinates(self, coordinates: Coordinates) -> None:
             self._check_if_frame_view_is_valid()
-            self._object_instance.set_for_frames(coordinates, self._frame)
+            self._object_instance.set_for_frames(coordinates, self._frame, overwrite=True)
 
         @property
         def created_at(self) -> datetime:
