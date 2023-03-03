@@ -633,7 +633,7 @@ class EncordClientProject(EncordClient):
         payload.project_copy_metadata = CopyProjectPayload._ProjectCopyMetadata(new_title)
         payload.copy_labels_options = CopyProjectPayload._CopyLabelsOptions()
 
-        if payload.project_copy_metadata and new_description:
+        if payload.project_copy_metadata:
             payload.project_copy_metadata.project_description = new_description
 
         if copy_labels:
