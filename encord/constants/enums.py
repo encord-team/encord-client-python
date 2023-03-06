@@ -6,6 +6,7 @@ class DataType(StringEnum):
     IMG_GROUP = "img_group"
     DICOM = "dicom"
     IMAGE = "image"
+    DICOM_STUDY = "dicom_study"
 
     @staticmethod
     def from_upper_case_string(string: str) -> "DataType":
