@@ -38,6 +38,7 @@ import dataclasses
 import json
 import logging
 import os.path
+import time
 import typing
 import uuid
 from datetime import datetime
@@ -61,6 +62,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, AddPrivateDataResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
+    DatasetDataLongPolling,
     DatasetAccessSettings,
     DatasetData,
     DatasetUser,
@@ -504,10 +506,32 @@ class EncordClientDataset(EncordClient):
         else:
             raise ValueError(f"Type [{type(private_files)}] of argument private_files is not supported")
 
-        payload = {"files": files, "integration_id": integration_id, "ignore_errors": ignore_errors}
-        response = self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
+        process_hash = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            self._config.resource_id,
+            payload={
+                "files": files,
+                "integration_id": integration_id,
+                "ignore_errors": ignore_errors,
+            },
+        )["process_hash"]
 
-        return AddPrivateDataResponse.from_dict(response)
+        for _ in range(10):
+            polling_response = self._querier.basic_getter(
+                DatasetDataLongPolling,
+                self._config.resource_id,
+                payload={
+                    "process_hash": process_hash,
+                    "ignore_errors": ignore_errors,
+                },
+            )
+
+            if polling_response["is_done"]:
+                return AddPrivateDataResponse.from_dict(polling_response["response"])
+            else:
+                time.sleep(1)
+
+        raise Exception("Response not received")
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""
