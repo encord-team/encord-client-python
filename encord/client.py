@@ -516,22 +516,25 @@ class EncordClientDataset(EncordClient):
             },
         )["process_hash"]
 
-        for _ in range(10):
-            polling_response = self._querier.basic_getter(
-                DatasetDataLongPolling,
-                self._config.resource_id,
-                payload={
-                    "process_hash": process_hash,
-                    "ignore_errors": ignore_errors,
-                },
-            )
+        while True:
+            polling_response = None
 
-            if polling_response["is_done"]:
+            for _ in range(3):
+                try:
+                    polling_response = self._querier.basic_getter(
+                        DatasetDataLongPolling,
+                        self._config.resource_id,
+                        payload={
+                            "process_hash": process_hash,
+                            "ignore_errors": ignore_errors,
+                        },
+                    )
+                except Exception as e:
+                    logger.error(e)
+                    time.sleep(3)
+
+            if polling_response and polling_response["is_done"]:
                 return AddPrivateDataResponse.from_dict(polling_response["response"])
-            else:
-                time.sleep(1)
-
-        raise Exception("Response not received")
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""

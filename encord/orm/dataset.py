@@ -765,15 +765,6 @@ class DatasetData(base_orm.BaseORM):
     )
 
 
-class DatasetDataLongPolling(base_orm.BaseORM):
-    DB_FIELDS = OrderedDict(
-        [
-            ("is_done", bool),
-            ("response", dict),
-        ]
-    )
-
-
 class SignedVideoURL(base_orm.BaseORM):
     """A signed URL object with supporting information."""
 
@@ -930,3 +921,9 @@ class ImagesDataFetchOptions:
     Whether to fetch signed urls for each individual image. Only set this to true if you need to download the 
     images.
     """
+
+
+@dataclasses.dataclass(frozen=True)
+class DatasetDataLongPolling:
+    is_done: bool
+    response: dict
