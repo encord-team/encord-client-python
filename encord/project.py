@@ -150,6 +150,8 @@ class Project:
         edited_after: Optional[Union[str, datetime.datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
+        data_title_eq: Optional[str] = None,
+        data_title_like: Optional[str] = None,
     ) -> List[LabelRowV2]:
         """
         Args:
@@ -159,6 +161,8 @@ class Project:
             edited_after: Optionally filter to only rows last edited after the specified time
             label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
             shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
+            data_title_eq: Optionally filter by exact title match
+            data_title_like: Optionally filter by fuzzy title match; SQL syntax
 
         Returns:
             A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows
@@ -171,6 +175,8 @@ class Project:
             data_hashes=data_hashes,
             label_hashes=label_hashes,
             include_uninitialised_labels=True,
+            data_title_eq=data_title_eq,
+            data_title_like=data_title_like,
         )
 
         label_rows = [LabelRowV2(label_row_metadata, self._client) for label_row_metadata in label_row_metadatas]

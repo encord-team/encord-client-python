@@ -576,6 +576,8 @@ class EncordClientProject(EncordClient):
         include_uninitialised_labels=False,
         label_hashes: Optional[List[str]] = None,
         data_hashes: Optional[List[str]] = None,
+        data_title_eq: Optional[str] = None,
+        data_title_like: Optional[str] = None,
     ) -> List[LabelRowMetadata]:
         """
         This function is documented in :meth:`encord.project.Project.list_label_rows`.
@@ -593,6 +595,8 @@ class EncordClientProject(EncordClient):
             "include_uninitialised_labels": include_uninitialised_labels,
             "data_hashes": data_hashes,
             "label_hashes": label_hashes,
+            "data_title_eq": data_title_eq,
+            "data_title_like": data_title_like,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload)
 
