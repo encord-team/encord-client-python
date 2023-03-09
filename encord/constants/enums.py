@@ -8,13 +8,20 @@ class DataType(StringEnum):
     IMAGE = "image"
     DICOM_STUDY = "dicom_study"
 
+    # will be displayed if the Encord platform has a new data type that is not present in this SDK version
+    MISSING_DATA_TYPE = "_MISSING_DATA_TYPE_"
+
+    @classmethod
+    def _missing_(cls, value: str) -> "DataType":
+        return cls.MISSING_DATA_TYPE
+
     @staticmethod
     def from_upper_case_string(string: str) -> "DataType":
         for data_type in DataType:
             if string == data_type.to_upper_case_string():
                 return data_type
 
-        raise ValueError(f"No DataType corresponding to value [{string}]")
+        return DataType.MISSING_DATA_TYPE
 
     def to_upper_case_string(self) -> str:
         return self.value.upper()
