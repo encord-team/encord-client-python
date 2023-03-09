@@ -8,7 +8,7 @@ class DataType(StringEnum):
     IMAGE = "image"
     DICOM_STUDY = "dicom_study"
 
-    # will be displayed if the Encord platform has a new data type that is not present in this SDK version
+    # will be displayed if the Encord platform has a new data type that is not present in this SDK version. Please upgrade your SDK version
     MISSING_DATA_TYPE = "_MISSING_DATA_TYPE_"
 
     @classmethod
