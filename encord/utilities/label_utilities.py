@@ -42,12 +42,12 @@ def construct_answer_dictionaries(label_row):
             labels = data_unit.get(LABELS)
 
             if data_type in {DataType.IMG_GROUP.value, DataType.IMAGE.value}:  # Go through images
-                items = labels.get(OBJECTS) + labels.get(CLASSIFICATIONS)
+                items = labels.get(OBJECTS, {}) + labels.get(CLASSIFICATIONS, {})
                 add_answers_to_items(items, classification_answers, object_answers)
 
             elif data_type in (DataType.VIDEO.value, DataType.DICOM.value):
                 for frame in labels:  # Go through frames
-                    items = labels[frame].get(OBJECTS) + labels[frame].get(CLASSIFICATIONS)
+                    items = labels[frame].get(OBJECTS, {}) + labels[frame].get(CLASSIFICATIONS, {})
                     add_answers_to_items(items, classification_answers, object_answers)
 
     label_row[OBJECT_ANSWERS] = object_answers
