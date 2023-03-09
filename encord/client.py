@@ -299,7 +299,11 @@ class EncordClientDataset(EncordClient):
                 message=f"API key [{config.api_key}] is not associated with a project or dataset"
             )
 
-    def get_dataset(self) -> OrmDataset:
+    def get_dataset(
+        self,
+        title_eq: Optional[str] = None,
+        title_like: Optional[str] = None,
+    ) -> OrmDataset:
         """
         Retrieve dataset info (pointers to data, labels).
 
@@ -312,7 +316,12 @@ class EncordClientDataset(EncordClient):
             UnknownError: If an error occurs while retrieving the dataset.
         """
         res = self._querier.basic_getter(
-            OrmDataset, payload={"dataset_access_settings": dataclasses.asdict(self._dataset_access_settings)}
+            OrmDataset,
+            payload={
+                "title_eq": title_eq,
+                "title_like": title_like,
+                "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
+            },
         )
 
         for row in res.data_rows:

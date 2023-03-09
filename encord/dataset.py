@@ -62,6 +62,14 @@ class Dataset:
         dataset_instance = self._get_dataset_instance()
         return dataset_instance.data_rows
 
+    def list_data_rows(
+        self,
+        title_eq: Optional[str] = None,
+        title_like: Optional[str] = None,
+    ) -> List[DataRow]:
+        result_dataset = self._client.get_dataset(title_eq, title_like)
+        return result_dataset.data_rows
+
     def refetch_data(self) -> None:
         """
         The Dataset class will only fetch its properties once. Use this function if you suspect the state of those
