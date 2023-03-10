@@ -499,6 +499,23 @@ class DataRow(dict, Formatter):
         self.update(res_dict)
 
 
+class DataRows(dict, Formatter):
+    def __init__(self, data_rows: List[DataRow]):
+        super().__init__(
+            {
+                "data_rows": data_rows,
+            }
+        )
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> DataRows:
+        return DataRows(data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])))
+
+    @property
+    def data_rows(self) -> List[DataRow]:
+        return self["data_rows"]
+
+
 @dataclasses.dataclass(frozen=True)
 class DatasetInfo:
     """

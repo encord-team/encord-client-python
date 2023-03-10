@@ -72,8 +72,26 @@ class Dataset:
         created_after: Optional[Union[str, datetime]] = None,
         data_type: Optional[DataType] = None,
     ) -> List[DataRow]:
-        result_dataset = self._client.get_dataset(title_eq, title_like, created_before, created_after, data_type)
-        return result_dataset.data_rows
+        """
+        Retrieve dataset rows (pointers to data, labels).
+
+        Args:
+            title_eq: optional exact title row filter
+            title_like: optional fuzzy title row filter; SQL syntax
+            created_before: optional datetime row filter
+            created_after: optional datetime row filter
+            data_type: optional data type row filter
+
+        Returns:
+            OrmDataset: A dataset record instance.
+
+        Raises:
+            AuthorisationError: If the dataset API key is invalid.
+            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
+            UnknownError: If an error occurs while retrieving the dataset.
+        """
+
+        return self._client.list_data_rows(title_eq, title_like, created_before, created_after, data_type)
 
     def refetch_data(self) -> None:
         """

@@ -59,7 +59,7 @@ from encord.http.utils import (
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, AddPrivateDataResponse
-from encord.orm.dataset import Dataset as OrmDataset
+from encord.orm.dataset import Dataset as OrmDataset, DataRows, DataRow
 from encord.orm.dataset import (
     DatasetAccessSettings,
     DatasetData,
@@ -300,16 +300,47 @@ class EncordClientDataset(EncordClient):
                 message=f"API key [{config.api_key}] is not associated with a project or dataset"
             )
 
-    def get_dataset(
+    def get_dataset(self) -> OrmDataset:
+        """
+        Retrieve dataset info (pointers to data, labels).
+
+        Returns:
+            OrmDataset: A dataset record instance.
+
+        Raises:
+            AuthorisationError: If the dataset API key is invalid.
+            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
+            UnknownError: If an error occurs while retrieving the dataset.
+        """
+
+        res = self._querier.basic_getter(
+            OrmDataset,
+            payload={
+                "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
+            },
+        )
+
+        for row in res.data_rows:
+            row["_querier"] = self._querier
+        return res
+
+    def list_data_rows(
         self,
         title_eq: Optional[str] = None,
         title_like: Optional[str] = None,
         created_before: Optional[Union[str, datetime]] = None,
         created_after: Optional[Union[str, datetime]] = None,
         data_type: Optional[DataType] = None,
-    ) -> OrmDataset:
+    ) -> List[DataRow]:
         """
-        Retrieve dataset info (pointers to data, labels).
+        Retrieve dataset rows (pointers to data, labels).
+
+        Args:
+            title_eq: optional exact title row filter
+            title_like: optional fuzzy title row filter; SQL syntax
+            created_before: optional datetime row filter
+            created_after: optional datetime row filter
+            data_type: optional data type row filter
 
         Returns:
             OrmDataset: A dataset record instance.
@@ -324,7 +355,7 @@ class EncordClientDataset(EncordClient):
         created_after = parse_datetime("created_after", created_after)
 
         res = self._querier.basic_getter(
-            OrmDataset,
+            DataRows,
             payload={
                 "title_eq": title_eq,
                 "title_like": title_like,
@@ -337,7 +368,8 @@ class EncordClientDataset(EncordClient):
 
         for row in res.data_rows:
             row["_querier"] = self._querier
-        return res
+
+        return res.data_rows
 
     def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
         self._dataset_access_settings = dataset_access_settings
