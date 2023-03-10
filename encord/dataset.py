@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 from typing import Dict, Iterable, List, Optional, TextIO, Union
 
 from encord.client import EncordClientDataset
@@ -14,6 +15,7 @@ from encord.orm.dataset import (
     ImageGroupOCR,
     StorageLocation,
 )
+from encord.constants.enums import DataType
 
 
 class Dataset:
@@ -66,8 +68,11 @@ class Dataset:
         self,
         title_eq: Optional[str] = None,
         title_like: Optional[str] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        data_type: Optional[DataType] = None,
     ) -> List[DataRow]:
-        result_dataset = self._client.get_dataset(title_eq, title_like)
+        result_dataset = self._client.get_dataset(title_eq, title_like, created_before, created_after, data_type)
         return result_dataset.data_rows
 
     def refetch_data(self) -> None:

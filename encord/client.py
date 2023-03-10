@@ -117,6 +117,7 @@ from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
 from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
+from encord.constants.enums import DataType
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +304,9 @@ class EncordClientDataset(EncordClient):
         self,
         title_eq: Optional[str] = None,
         title_like: Optional[str] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        data_type: Optional[DataType] = None,
     ) -> OrmDataset:
         """
         Retrieve dataset info (pointers to data, labels).
@@ -315,11 +319,18 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
+
+        created_before = parse_datetime("created_before", created_before)
+        created_after = parse_datetime("created_after", created_after)
+
         res = self._querier.basic_getter(
             OrmDataset,
             payload={
                 "title_eq": title_eq,
                 "title_like": title_like,
+                "created_before": created_before,
+                "created_after": created_after,
+                "data_type": data_type.to_upper_case_string() if data_type is not None else None,
                 "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
             },
         )
