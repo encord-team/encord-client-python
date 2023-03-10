@@ -354,7 +354,7 @@ class EncordClientDataset(EncordClient):
         created_before = parse_datetime("created_before", created_before)
         created_after = parse_datetime("created_after", created_after)
 
-        res = self._querier.basic_getter(
+        data_rows = self._querier.get_multiple(
             DataRows,
             payload={
                 "title_eq": title_eq,
@@ -366,10 +366,10 @@ class EncordClientDataset(EncordClient):
             },
         )
 
-        for row in res.data_rows:
+        for row in data_rows:
             row["_querier"] = self._querier
 
-        return res.data_rows
+        return data_rows
 
     def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
         self._dataset_access_settings = dataset_access_settings

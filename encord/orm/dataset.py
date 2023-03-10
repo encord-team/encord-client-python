@@ -499,6 +499,7 @@ class DataRow(dict, Formatter):
         self.update(res_dict)
 
 
+@dataclasses.dataclass(frozen=True)
 class DataRows(dict, Formatter):
     def __init__(self, data_rows: List[DataRow]):
         super().__init__(
@@ -508,12 +509,8 @@ class DataRows(dict, Formatter):
         )
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> DataRows:
-        return DataRows(data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])))
-
-    @property
-    def data_rows(self) -> List[DataRow]:
-        return self["data_rows"]
+    def from_dict(cls, json_dict: Dict) -> DataRow:
+        return DataRow.from_dict(json_dict)
 
 
 @dataclasses.dataclass(frozen=True)
