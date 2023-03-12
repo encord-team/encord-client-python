@@ -524,10 +524,7 @@ class EncordClientDataset(EncordClient):
                     polling_response = self._querier.basic_getter(
                         DatasetDataLongPolling,
                         self._config.resource_id,
-                        payload={
-                            "process_hash": process_hash,
-                            "ignore_errors": ignore_errors,
-                        },
+                        payload={"process_hash": process_hash},
                     )
                 except Exception as e:
                     logger.error(e)
