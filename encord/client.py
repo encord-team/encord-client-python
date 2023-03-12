@@ -516,6 +516,9 @@ class EncordClientDataset(EncordClient):
             },
         )["process_hash"]
 
+        logger.info(f"Dataset creation job started with upload_job_id={process_hash}.")
+        logger.info("SDK process can be terminated, this will not affect successful dataset creation.")
+
         while True:
             polling_response = None
 
