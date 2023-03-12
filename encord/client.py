@@ -44,7 +44,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple, Union
-
+import requests
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels, Device
@@ -526,12 +526,12 @@ class EncordClientDataset(EncordClient):
                         self._config.resource_id,
                         payload={"process_hash": process_hash},
                     )
-                except Exception as e:
+                except requests.exceptions.RequestException as e:
                     logger.error(e)
                     time.sleep(3)
 
-            if polling_response and polling_response["is_done"]:
-                return AddPrivateDataResponse.from_dict(polling_response["response"])
+            if (polling_response is not None) and polling_response.is_done:
+                return AddPrivateDataResponse.from_dict(polling_response.response)
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""
