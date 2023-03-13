@@ -70,7 +70,7 @@ class Dataset:
         title_like: Optional[str] = None,
         created_before: Optional[Union[str, datetime]] = None,
         created_after: Optional[Union[str, datetime]] = None,
-        data_type: Optional[DataType] = None,
+        data_types: Optional[List[DataType]] = None,
     ) -> List[DataRow]:
         """
         Retrieve dataset rows (pointers to data, labels).
@@ -80,10 +80,10 @@ class Dataset:
             title_like: optional fuzzy title row filter; SQL syntax
             created_before: optional datetime row filter
             created_after: optional datetime row filter
-            data_type: optional data type row filter
+            data_types: optional data types row filter
 
         Returns:
-            OrmDataset: A dataset record instance.
+            List[DataRow]: A list of DataRows object that match the filter
 
         Raises:
             AuthorisationError: If the dataset API key is invalid.
@@ -91,7 +91,7 @@ class Dataset:
             UnknownError: If an error occurs while retrieving the dataset.
         """
 
-        return self._client.list_data_rows(title_eq, title_like, created_before, created_after, data_type)
+        return self._client.list_data_rows(title_eq, title_like, created_before, created_after, data_types)
 
     def refetch_data(self) -> None:
         """

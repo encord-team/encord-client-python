@@ -330,7 +330,7 @@ class EncordClientDataset(EncordClient):
         title_like: Optional[str] = None,
         created_before: Optional[Union[str, datetime]] = None,
         created_after: Optional[Union[str, datetime]] = None,
-        data_type: Optional[DataType] = None,
+        data_types: Optional[List[DataType]] = None,
     ) -> List[DataRow]:
         """
         Retrieve dataset rows (pointers to data, labels).
@@ -340,10 +340,10 @@ class EncordClientDataset(EncordClient):
             title_like: optional fuzzy title row filter; SQL syntax
             created_before: optional datetime row filter
             created_after: optional datetime row filter
-            data_type: optional data type row filter
+            data_types: optional data types row filter
 
         Returns:
-            OrmDataset: A dataset record instance.
+            List[DataRow]: A list of DataRows object that match the filter
 
         Raises:
             AuthorisationError: If the dataset API key is invalid.
@@ -361,7 +361,7 @@ class EncordClientDataset(EncordClient):
                 "title_like": title_like,
                 "created_before": created_before,
                 "created_after": created_after,
-                "data_type": data_type.to_upper_case_string() if data_type is not None else None,
+                "data_types": [data_type.to_upper_case_string() for data_type in data_types] if data_types else None,
                 "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
             },
         )

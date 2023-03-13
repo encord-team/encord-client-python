@@ -501,6 +501,11 @@ class DataRow(dict, Formatter):
 
 @dataclasses.dataclass(frozen=True)
 class DataRows(dict, Formatter):
+    """
+    This is a helper class that forms request for filtered dataset rows
+    Not intended to be used directly
+    """
+
     def __init__(self, data_rows: List[DataRow]):
         super().__init__(
             {
