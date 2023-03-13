@@ -539,7 +539,7 @@ class EncordClientDataset(EncordClient):
             except requests.exceptions.RequestException:
                 failed_requests_count += 1
 
-                if failed_requests_count == LONG_POLLING_RESPONSE_RETRY_N:
+                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
                     raise
 
                 time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
