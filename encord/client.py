@@ -120,6 +120,8 @@ from encord.project_ontology.ontology import Ontology
 from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
+POLLING_RESPONSE_RETRY_N = 3
+
 logger = logging.getLogger(__name__)
 
 
@@ -522,15 +524,18 @@ class EncordClientDataset(EncordClient):
         while True:
             polling_response = None
 
-            for _ in range(3):
+            for _ in range(POLLING_RESPONSE_RETRY_N):
                 try:
                     polling_response = self._querier.basic_getter(
                         DatasetDataLongPolling,
                         self._config.resource_id,
                         payload={"process_hash": process_hash},
                     )
+                    break
                 except requests.exceptions.RequestException as e:
-                    logger.error(e)
+                    logger.warning(
+                        "Long polling GET request for add_private_data_to_dataset failed, retrying", exc_info=True
+                    )
                     time.sleep(3)
 
             if (polling_response is not None) and polling_response.is_done:
