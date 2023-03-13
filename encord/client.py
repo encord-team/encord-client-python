@@ -120,7 +120,8 @@ from encord.project_ontology.ontology import Ontology
 from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
-POLLING_RESPONSE_RETRY_N = 3
+LONG_POLLING_RESPONSE_RETRY_N = 3
+LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 3
 
 logger = logging.getLogger(__name__)
 
@@ -521,25 +522,27 @@ class EncordClientDataset(EncordClient):
         logger.info(f"Dataset creation job started with upload_job_id={process_hash}.")
         logger.info("SDK process can be terminated, this will not affect successful dataset creation.")
 
+        failed_requests_count = 0
+
         while True:
-            polling_response = None
+            try:
+                polling_response = self._querier.basic_getter(
+                    DatasetDataLongPolling,
+                    self._config.resource_id,
+                    payload={"process_hash": process_hash},
+                )
 
-            for _ in range(POLLING_RESPONSE_RETRY_N):
-                try:
-                    polling_response = self._querier.basic_getter(
-                        DatasetDataLongPolling,
-                        self._config.resource_id,
-                        payload={"process_hash": process_hash},
-                    )
-                    break
-                except requests.exceptions.RequestException as e:
-                    logger.warning(
-                        "Long polling GET request for add_private_data_to_dataset failed, retrying", exc_info=True
-                    )
-                    time.sleep(3)
+                if polling_response.is_done:
+                    return AddPrivateDataResponse.from_dict(polling_response.response)
 
-            if (polling_response is not None) and polling_response.is_done:
-                return AddPrivateDataResponse.from_dict(polling_response.response)
+                failed_requests_count = 0
+            except requests.exceptions.RequestException:
+                failed_requests_count += 1
+
+                if failed_requests_count == LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""
