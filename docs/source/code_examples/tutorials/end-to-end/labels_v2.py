@@ -241,8 +241,8 @@ for label_row_frame_view in first_label_row.get_frame_views():
 #
 # You can read more about classification instances here: https://docs.encord.com/ontologies/use/#classifications
 #
-# Get the ontology object
-# ^^^^^^^^^^^^^^^^^^^^^^^^
+# Get the ontology classification
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # Assume that the following text classification exists in the ontology.
 text_ontology_classification: Classification = (
@@ -259,6 +259,9 @@ text_classification_instance = text_ontology_classification.create_instance()
 
 # First set the value of the classification instance
 text_classification_instance.set_answer(answer="This is a text classification.")
+
+# Second, select the frames where the classification instance is present
+text_classification_instance.set_for_frames(frames=0)
 
 # Then add it to the label row
 first_label_row.add_classification_instance(text_classification_instance)
