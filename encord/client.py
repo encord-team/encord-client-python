@@ -361,7 +361,9 @@ class EncordClientDataset(EncordClient):
                 "title_like": title_like,
                 "created_before": created_before,
                 "created_after": created_after,
-                "data_types": [data_type.to_upper_case_string() for data_type in data_types] if data_types else None,
+                "data_types": [data_type.to_upper_case_string() for data_type in data_types]
+                if data_types is not None
+                else None,
                 "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
             },
         )
