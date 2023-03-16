@@ -709,11 +709,11 @@ class EncordClientProject(EncordClient):
         label = LabelRow(label)
         return self._querier.basic_setter(LabelRow, uid, payload=label)
 
-    def create_label_row(self, uid):
+    def create_label_row(self, uid, label=None):
         """
         This function is documented in :meth:`encord.project.Project.create_label_row`.
         """
-        return self._querier.basic_put(LabelRow, uid=uid, payload=None)
+        return self._querier.basic_put(LabelRow, uid=uid, payload=label)
 
     def submit_label_row_for_review(self, uid):
         """

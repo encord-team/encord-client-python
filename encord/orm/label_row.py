@@ -197,7 +197,7 @@ class Review:
     pass
 
 
-class AnnotationTaskStatus(Enum):
+class AnnotationTaskStatus(str, Enum):
     QUEUED = "QUEUED"
     ASSIGNED = "ASSIGNED"
     IN_REVIEW = "IN_REVIEW"

@@ -1013,19 +1013,18 @@ class LabelRowV2:
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
-        get_signed_url = False
-        if self.label_hash is None:
-            label_row_dict = self._project_client.create_label_row(self.data_hash)
-        else:
+        if self.label_hash:
             label_row_dict = self._project_client.get_label_row(
                 uid=self.label_hash,
-                get_signed_url=get_signed_url,
+                get_signed_url=False,
                 include_object_feature_hashes=include_object_feature_hashes,
                 include_classification_feature_hashes=include_classification_feature_hashes,
                 include_reviews=include_reviews,
             )
 
-        self.from_labels_dict(label_row_dict)
+            self.from_labels_dict(label_row_dict)
+        else:
+            self._is_labelling_initialised = True
 
     def from_labels_dict(self, label_row_dict: dict) -> None:
         """
@@ -1081,7 +1080,10 @@ class LabelRowV2:
         self._check_labelling_is_initalised()
 
         dict_labels = self.to_encord_dict()
-        self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
+        if self.label_hash is None:
+            self._project_client.create_label_row(uid=self.data_hash, label=dict_labels)
+        else:
+            self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
