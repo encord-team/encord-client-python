@@ -47,6 +47,7 @@ def project(project_client_mock, ssh_key_file_path):
     return user_client.get_project("test_project")
 
 
+
 @pytest.mark.parametrize("weights", [None, "invalid-weight"])
 def test_invalid_weights_raises(project: Project, weights):
 
