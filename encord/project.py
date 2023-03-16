@@ -21,6 +21,7 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
+from encord.ontology import Ontology
 
 
 class Project:
@@ -28,8 +29,10 @@ class Project:
     Access project related data and manipulate the project.
     """
 
-    def __init__(self, client: EncordClientProject):
+    def __init__(self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology):
         self._client = client
+        self._project_instance = project_instance
+        self._ontology = ontology
         self._project_instance: Optional[OrmProject] = None
 
     @property
@@ -173,7 +176,9 @@ class Project:
             include_uninitialised_labels=True,
         )
 
-        label_rows = [LabelRowV2(label_row_metadata, self._client) for label_row_metadata in label_row_metadatas]
+        label_rows = [
+            LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
+        ]
         return label_rows
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:

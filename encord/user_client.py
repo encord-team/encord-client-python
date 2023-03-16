@@ -113,7 +113,10 @@ class EncordUserClient:
         config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
         querier = Querier(config)
         client = EncordClientProject(querier=querier, config=config)
-        return Project(client)
+
+        orm_project = client.get_project()
+        project_ontology = self.get_ontology(orm_project["ontology_hash"])
+        return Project(client, orm_project, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
