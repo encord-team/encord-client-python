@@ -20,6 +20,8 @@ def test_frames_class_to_frames_list():
     assert frames_class_to_frames_list(list_of_range_2) == [3, 4, 5, 8, 9, 10, 11, 12]
 
     # List of integer frame numbers
+    # Empty List
+    assert frames_class_to_frames_list([]) == []
     list_of_integers_1 = [4, 5, 6, 24, 60]
     assert frames_class_to_frames_list(list_of_integers_1) == list_of_integers_1
     assert frames_class_to_frames_list([4]) == [4]
