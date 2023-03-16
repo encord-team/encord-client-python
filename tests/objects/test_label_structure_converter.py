@@ -1,9 +1,10 @@
 """
 All tests regarding converting from and to Encord dict to the label row.
 """
+import pytest
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
-from unittest.mock import Mock
+from unittest.mock import Mock, PropertyMock
 
 from deepdiff import DeepDiff
 
@@ -15,11 +16,12 @@ from tests.objects.data import (
     empty_video,
     image_group_with_reviews,
     native_image_data,
-    ontology_with_many_dynamic_classifications,
     video_with_dynamic_classifications,
 )
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.dicom_labels import dicom_labels
+
+from tests.objects.data.ontology_with_many_dynamic_classifications import ontology as ontology_with_many_dynamic_classifications
 from tests.objects.data.dynamic_classifications_ontology import (
     dynamic_classifications_ontology,
 )
@@ -28,6 +30,12 @@ from tests.objects.data.empty_image_group import (
     empty_image_group_ontology,
 )
 from tests.objects.data.image_group import image_group_labels, image_group_ontology
+
+
+def ontology_from_dict(ontology_structure_dict: Dict):
+    ontology = Mock()
+    ontology.structure = OntologyStructure.from_dict(ontology_structure_dict)
+    return ontology
 
 
 def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], exclude_regex_paths: List[str] = None):
@@ -52,14 +60,14 @@ def test_serialise_image_group_with_classifications():
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
-    label_row.from_labels_dict(empty_image_group_labels, OntologyStructure.from_dict(empty_image_group_ontology))
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(empty_image_group_ontology))
+    label_row.from_labels_dict(empty_image_group_labels)
 
     actual = label_row.to_encord_dict()
     assert empty_image_group_labels == actual
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
-    label_row.from_labels_dict(image_group_labels, OntologyStructure.from_dict(image_group_ontology))
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(image_group_ontology))
+    label_row.from_labels_dict(image_group_labels)
 
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
@@ -77,8 +85,8 @@ def test_serialise_video():
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
-    label_row.from_labels_dict(data_1.labels, OntologyStructure.from_dict(data_1.ontology))
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(data_1.ontology))
+    label_row.from_labels_dict(data_1.labels)
 
     # TODO: also check at this point whether the internal data is correct.
 
@@ -97,8 +105,8 @@ def test_serialise_image_with_object_answers():
     label_row_metadata_dict["number_of_frames"] = 1
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
-    label_row.from_labels_dict(native_image_data.labels, OntologyStructure.from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(native_image_data.labels)
 
     actual = label_row.to_encord_dict()
 
@@ -116,12 +124,12 @@ def test_serialise_dicom_with_dynamic_classifications():
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(dynamic_classifications_ontology))
     assert label_row.number_of_frames == label_row_metadata.number_of_frames
     assert label_row.duration == label_row_metadata.duration
     assert label_row.fps == label_row_metadata.frames_per_second
 
-    label_row.from_labels_dict(dicom_labels, OntologyStructure.from_dict(dynamic_classifications_ontology))
+    label_row.from_labels_dict(dicom_labels)
 
     assert label_row.number_of_frames == label_row_metadata.number_of_frames
     assert label_row.duration == label_row_metadata.duration
@@ -150,11 +158,8 @@ def test_dynamic_classifications():
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
-    label_row.from_labels_dict(
-        video_with_dynamic_classifications.labels,
-        OntologyStructure.from_dict(ontology_with_many_dynamic_classifications.ontology),
-    )
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(ontology_with_many_dynamic_classifications))
+    label_row.from_labels_dict(video_with_dynamic_classifications.labels)
 
     actual = label_row.to_encord_dict()
 
@@ -176,17 +181,14 @@ def test_uninitialised_label_row():
     label_row_metadata_dict["last_edited_at"] = None
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
 
     assert label_row.label_hash is None
     assert label_row.created_at is None
     assert label_row.last_edited_at is None
     assert label_row.is_labelling_initialised is False
 
-    label_row.from_labels_dict(
-        empty_video.labels,
-        OntologyStructure.from_dict(all_ontology_types),
-    )
+    label_row.from_labels_dict(empty_video.labels)
 
     assert label_row.label_hash is not None
     assert label_row.created_at is not None
@@ -214,11 +216,8 @@ def test_label_row_with_reviews():
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
-    label_row.from_labels_dict(
-        image_group_with_reviews.labels,
-        OntologyStructure.from_dict(all_ontology_types),
-    )
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(image_group_with_reviews.labels)
 
     first_object = label_row.get_object_instances()[0]
     first_frame = first_object.get_annotations()[0]

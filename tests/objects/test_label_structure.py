@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import asdict
-from unittest.mock import Mock
+from unittest.mock import Mock, PropertyMock
 
 import pytest
 
@@ -93,6 +93,13 @@ POLYGON_COORDINATES = PolygonCoordinates(
 KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
 
 
+@pytest.fixture
+def ontology():
+    ontology_structure = PropertyMock(return_value=all_types_structure)
+    ontology = Mock(structure=ontology_structure)
+    yield ontology
+
+
 def test_create_object_instance_one_coordinate():
     object_instance = box_ontology_item.create_instance()
 
@@ -127,21 +134,21 @@ def test_create_object_instance_one_coordinate_multiframe():
     assert annotated_frames == [6, 8, 12]
 
 
-def test_create_a_label_row_from_empty_image_group_label_row_dict():
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
+def test_create_a_label_row_from_empty_image_group_label_row_dict(ontology):
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
 
     with pytest.raises(LabelRowError):
         label_row.get_classification_instances()
 
-    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+    label_row.from_labels_dict(empty_image_group_labels)
     assert label_row.get_classification_instances() == []
     assert label_row.get_object_instances() == []
     # TODO: do more assertions
 
 
-def test_add_object_instance_to_label_row():
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
-    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+def test_add_object_instance_to_label_row(ontology):
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(empty_image_group_labels)
 
     object_instance = ObjectInstance(box_ontology_item)
 
@@ -157,9 +164,9 @@ def test_add_object_instance_to_label_row():
     assert label_row.get_object_instances()[0].object_hash == object_instance.object_hash
 
 
-def test_add_remove_access_object_instances_in_label_row():
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
-    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+def test_add_remove_access_object_instances_in_label_row(ontology):
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(empty_image_group_labels)
 
     object_instance_1 = ObjectInstance(box_ontology_item)
     object_instance_2 = ObjectInstance(box_ontology_item)
@@ -195,9 +202,9 @@ def test_add_remove_access_object_instances_in_label_row():
     assert objects[0].object_hash == object_instance_2.object_hash
 
 
-def test_filter_for_objects():
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
-    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+def test_filter_for_objects(ontology):
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
@@ -246,9 +253,9 @@ def test_add_wrong_coordinates():
         label_box.set_for_frames(POLYGON_COORDINATES, frames=1)
 
 
-def test_get_object_instances_by_frames():
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
-    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+def test_get_object_instances_by_frames(ontology):
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
     label_polygon = ObjectInstance(polygon_ontology_item)
@@ -285,12 +292,12 @@ def test_get_object_instances_by_frames():
     assert objects[0].object_hash == label_polygon.object_hash
 
 
-def test_adding_object_instance_to_multiple_frames_fails():
-    label_row_1 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
-    label_row_1.from_labels_dict(empty_image_group_labels, all_types_structure)
+def test_adding_object_instance_to_multiple_frames_fails(ontology):
+    label_row_1 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row_1.from_labels_dict(empty_image_group_labels)
 
-    label_row_2 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
-    label_row_2.from_labels_dict(empty_image_group_labels, all_types_structure)
+    label_row_2 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row_2.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
 
@@ -398,9 +405,9 @@ def test_update_remove_object_instance_coordinates():
     assert frame_4_view.manual_annotation == manual_annotation
 
 
-def test_removing_coordinates_from_object_removes_it_from_parent():
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
-    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+def test_removing_coordinates_from_object_removes_it_from_parent(ontology):
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
     label_box.set_for_frames(BOX_COORDINATES, 1)
@@ -587,9 +594,9 @@ def test_classification_instances_frame_view():
         frame_view_1.created_by = "aphrodite@gmail.com"
 
 
-def test_add_and_get_classification_instances_to_label_row():
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
-    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)
+def test_add_and_get_classification_instances_to_label_row(ontology):
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(empty_image_group_labels)
 
     classification_instance_1 = ClassificationInstance(text_classification)
     classification_instance_2 = ClassificationInstance(text_classification)
@@ -899,21 +906,21 @@ def test_label_status_forwards_compatibility():
     assert LabelStatus("new-unknown-status").value == "_MISSING_LABEL_STATUS_"
 
 
-def test_frame_view():
+def test_frame_view(ontology):
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 25
     label_row_metadata_dict["duration"] = 0.2
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
 
     assert label_row.number_of_frames == label_row_metadata.number_of_frames
 
     with pytest.raises(LabelRowError):
         frames = label_row.get_frame_views()
 
-    label_row.from_labels_dict(empty_image_group_labels, all_types_structure)  # initialise the labels.
+    label_row.from_labels_dict(empty_image_group_labels)  # initialise the labels.
 
     frame_view: LabelRowV2.FrameView = label_row.get_frame_view(1)
     assert frame_view.get_object_instances() == []
