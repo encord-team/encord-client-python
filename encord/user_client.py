@@ -115,7 +115,12 @@ class EncordUserClient:
         client = EncordClientProject(querier=querier, config=config)
 
         orm_project = client.get_project()
-        project_ontology = self.get_ontology(orm_project["ontology_hash"])
+
+        # TODO: it seems like client.get_ontology should be used here, but this leads to the permission errors
+        ontology_hash = orm_project["ontology_hash"]
+        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
+        project_ontology = Ontology(querier, config)
+
         return Project(client, orm_project, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
