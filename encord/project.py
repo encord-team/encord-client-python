@@ -138,6 +138,12 @@ class Project:
         """
         self._project_instance = self.get_project()
 
+    def refetch_ontology(self) -> None:
+        """
+        Update the ontology for the project to reflect changes on the backend
+        """
+        self._ontology.refetch_data()
+
     def get_project(self) -> OrmProject:
         """
         This function is exposed for convenience. You are encouraged to use the property accessors instead.
