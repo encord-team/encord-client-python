@@ -33,7 +33,6 @@ class Project:
         self._client = client
         self._project_instance = project_instance
         self._ontology = ontology
-        self._project_instance: Optional[OrmProject] = None
 
     @property
     def project_hash(self) -> str:
