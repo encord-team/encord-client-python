@@ -521,7 +521,7 @@ class EncordClientDataset(EncordClient):
 
         logger.info(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
         logger.info("SDK process can be terminated, this will not affect successful job execution.")
-        logger.info("Please follow progress in frontend UI via notifications.")
+        logger.info("You can follow the progress in the web app via notifications.")
 
         failed_requests_count = 0
 
@@ -534,6 +534,7 @@ class EncordClientDataset(EncordClient):
                 )
 
                 if polling_response.is_done:
+                    logger.info(f"add_private_data_to_dataset job completed with upload_job_id={process_hash}.")
                     return AddPrivateDataResponse.from_dict(polling_response.response)
                 else:
                     files_finished = polling_response.units_done_count + polling_response.units_error_count
@@ -542,8 +543,13 @@ class EncordClientDataset(EncordClient):
                         + polling_response.units_done_count
                         + polling_response.units_error_count
                     )
-                    logger.info(f"Waiting for add_private_data_to_dataset job to finish.")
-                    logger.info(f"Job status: {files_finished}/{files_total} files finished.")
+
+                    if files_finished != files_total:
+                        logger.info(f"Processed {files_finished}/{files_total} files")
+                    else:
+                        logger.info(
+                            f"Processed all files, dataset data linking and task creation is performed, please wait"
+                        )
 
                 failed_requests_count = 0
             except requests.exceptions.RequestException:
