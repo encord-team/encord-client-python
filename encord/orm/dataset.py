@@ -927,3 +927,6 @@ class ImagesDataFetchOptions:
 class DatasetDataLongPolling:
     is_done: bool
     response: dict
+    units_pending_count: int
+    units_done_count: int
+    units_error_count: int

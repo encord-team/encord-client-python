@@ -535,6 +535,15 @@ class EncordClientDataset(EncordClient):
 
                 if polling_response.is_done:
                     return AddPrivateDataResponse.from_dict(polling_response.response)
+                else:
+                    files_finished = polling_response.units_done_count + polling_response.units_error_count
+                    files_total = (
+                        polling_response.units_pending_count
+                        + polling_response.units_done_count
+                        + polling_response.units_error_count
+                    )
+                    logger.info(f"Waiting for add_private_data_to_dataset job to finish.")
+                    logger.info(f"Job status: {files_finished}/{files_total} files finished.")
 
                 failed_requests_count = 0
             except requests.exceptions.RequestException:
