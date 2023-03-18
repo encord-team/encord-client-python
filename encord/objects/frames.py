@@ -11,7 +11,8 @@ class Range:
 
 
 Ranges = List[Range]
-Frames = Union[int, Range, Ranges]
+FramesList = List[int]
+Frames = Union[int, FramesList, Range, Ranges]
 
 
 def frame_to_range(frame: int) -> Range:
@@ -121,6 +122,11 @@ def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
     elif isinstance(frames_class, Range):
         return range_to_frames(frames_class)
     elif isinstance(frames_class, list):
-        return ranges_to_frames(frames_class)
+        if all([isinstance(x, int) for x in frames_class]):
+            return sorted(list(set(frames_class)))
+        elif all([isinstance(x, Range) for x in frames_class]):
+            return ranges_to_frames(frames_class)
+        else:
+            raise RuntimeError("Unexpected type for frames.")
     else:
         raise RuntimeError("Unexpected type for frames.")

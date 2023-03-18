@@ -107,6 +107,26 @@ def test_create_object_instance_one_coordinate():
     object_instance.is_valid()
 
 
+def test_create_object_instance_one_coordinate_multiframe():
+    object_instance = box_ontology_item.create_instance()
+
+    coordinates = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
+
+    object_instance.set_for_frames(coordinates=coordinates, frames=[12, 6, 8])
+    object_instance.is_valid()
+
+    annotations = object_instance.get_annotations()
+    annotated_frames = []
+    for a in annotations:
+        annotated_frames.append(a.frame)
+    assert annotated_frames == [6, 8, 12]
+
+
 def test_create_a_label_row_from_empty_image_group_label_row_dict():
     label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock())
 

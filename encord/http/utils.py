@@ -45,22 +45,6 @@ class CloudUploadSettings:
     """
 
 
-def read_in_chunks(file_path, pbar, blocksize=1024, chunks=-1):
-    """Splitting the file into chunks."""
-    with open(file_path, "rb") as file_object:
-        size = os.path.getsize(file_path)
-        current = 0
-        while chunks:
-            data = file_object.read(blocksize)
-            if not data:
-                break
-            yield data
-            chunks -= 1
-            step = round(blocksize / size * PROGRESS_BAR_FILE_FACTOR, 1)
-            current = min(PROGRESS_BAR_FILE_FACTOR, current + step)
-            pbar.update(min(PROGRESS_BAR_FILE_FACTOR - current, step))
-
-
 OrmT = TypeVar("OrmT")
 
 
@@ -74,44 +58,40 @@ def upload_to_signed_url_list(
     """Upload files and return the upload returns in the same order as the file paths supplied."""
     failed_uploads = []
     successful_uploads = []
-    total = len(file_paths) * PROGRESS_BAR_FILE_FACTOR
-    with tqdm(total=total, desc="Files upload progress: ", leave=False) as pbar:
-        for i in range(len(file_paths)):
-            file_path = file_paths[i]
+    for file_path in tqdm(file_paths):
+        if orm_class == Images:
+            content_type = mimetypes.guess_type(file_path)[0]
+        elif orm_class == Video:
+            content_type = "application/octet-stream"
+        elif orm_class == DicomSeries:
+            content_type = "application/dicom"
+        else:
+            raise RuntimeError(f"Unsupported type `{orm_class}`")
 
-            if orm_class == Images:
-                content_type = mimetypes.guess_type(file_path)[0]
-            elif orm_class == Video:
-                content_type = "application/octet-stream"
-            elif orm_class == DicomSeries:
-                content_type = "application/dicom"
+        file_name = os.path.basename(file_path)
+        signed_url = _get_signed_url(file_name, orm_class, querier)
+        assert signed_url.get("title", "") == file_name, "Ordering issue"
+
+        try:
+            if cloud_upload_settings.max_retries is not None:
+                max_retries = cloud_upload_settings.max_retries
             else:
-                raise RuntimeError(f"Unsupported type `{orm_class}`")
+                max_retries = config.requests_settings.max_retries
 
-            file_name = os.path.basename(file_path)
-            signed_url = _get_signed_url(file_name, orm_class, querier)
-            assert signed_url.get("title", "") == file_name, "Ordering issue"
+            if cloud_upload_settings.backoff_factor is not None:
+                backoff_factor = cloud_upload_settings.backoff_factor
+            else:
+                backoff_factor = config.requests_settings.backoff_factor
 
-            try:
-                if cloud_upload_settings.max_retries is not None:
-                    max_retries = cloud_upload_settings.max_retries
-                else:
-                    max_retries = config.requests_settings.max_retries
-
-                if cloud_upload_settings.backoff_factor is not None:
-                    backoff_factor = cloud_upload_settings.backoff_factor
-                else:
-                    backoff_factor = config.requests_settings.backoff_factor
-
-                _upload_single_file(
-                    file_path, signed_url, pbar, content_type, max_retries=max_retries, backoff_factor=backoff_factor
-                )
-                successful_uploads.append(signed_url)
-            except CloudUploadError as e:
-                if cloud_upload_settings.allow_failures:
-                    failed_uploads.append(file_path)
-                else:
-                    raise e
+            _upload_single_file(
+                file_path, signed_url, content_type, max_retries=max_retries, backoff_factor=backoff_factor
+            )
+            successful_uploads.append(signed_url)
+        except CloudUploadError as e:
+            if cloud_upload_settings.allow_failures:
+                failed_uploads.append(file_path)
+            else:
+                raise e
 
     if failed_uploads:
         logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
@@ -151,27 +131,23 @@ def _get_signed_url(
 
 
 def _upload_single_file(
-    file_path: str, signed_url: dict, pbar, content_type: str, *, max_retries: int, backoff_factor: float
+    file_path: str, signed_url: dict, content_type: str, *, max_retries: int, backoff_factor: float
 ) -> None:
     with create_new_session(max_retries=max_retries, backoff_factor=backoff_factor) as session:
         url = signed_url.get("signed_url")
-        data_chunks = read_in_chunks(file_path, pbar)
 
-        res_upload = session.put(
-            url=url,
-            data=data_chunks,
-            headers={"Content-Type": content_type},
-        )
+        with open(file_path, "rb") as f:
+            res_upload = session.put(url, data=f, headers={"Content-Type": content_type})
 
-        if res_upload.status_code != 200:
-            status_code = res_upload.status_code
-            headers = res_upload.headers
-            res_text = res_upload.text
-            error_string = str(
-                f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
-                f"'{signed_url.get('signed_url')}'.\n"
-                f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
-            )
+            if res_upload.status_code != 200:
+                status_code = res_upload.status_code
+                headers = res_upload.headers
+                res_text = res_upload.text
+                error_string = str(
+                    f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
+                    f"'{signed_url.get('signed_url')}'.\n"
+                    f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
+                )
 
-            logger.error(error_string)
-            raise RuntimeError(error_string)
+                logger.error(error_string)
+                raise RuntimeError(error_string)
