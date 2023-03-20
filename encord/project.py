@@ -287,7 +287,10 @@ class Project:
             UnknownError: If an error occurs while adding the datasets to the project.
             OperationNotAllowed: If the write operation is not allowed by the API key.
         """
-        return self._client.add_datasets(dataset_hashes)
+        res = self._client.add_datasets(dataset_hashes)
+        if res:
+            self._invalidate_project_instance()
+        return res
 
     def remove_datasets(self, dataset_hashes: List[str]) -> bool:
         """
@@ -306,7 +309,10 @@ class Project:
             UnknownError: If an error occurs while removing the datasets from the project.
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
-        return self._client.remove_datasets(dataset_hashes)
+        res = self._client.remove_datasets(dataset_hashes)
+        if res:
+            self._invalidate_project_instance()
+        return res
 
     def get_project_ontology(self) -> LegacyOntology:
         """
@@ -923,3 +929,6 @@ class Project:
         if self._project_instance is None:
             self._project_instance = self.get_project()
         return self._project_instance
+
+    def _invalidate_project_instance(self):
+        self._project_instance = None
