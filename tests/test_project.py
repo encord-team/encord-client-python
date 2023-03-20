@@ -12,6 +12,7 @@ from encord.constants.model_weights import faster_rcnn_R_101_C4_3x
 from encord.exceptions import EncordException
 from encord.project import Project
 from encord.user_client import EncordUserClient
+from encord.client import EncordClientProject
 
 PRIVATE_KEY = (
     Ed25519PrivateKey.generate()
@@ -36,7 +37,10 @@ def teardown_function():
 
 
 @pytest.fixture
-def project(ssh_key_file_path):
+@patch.object(EncordClientProject, "get_project")
+def project(project_client_mock, ssh_key_file_path):
+    project_client_mock.get_project.return_value = MagicMock()
+
     os.environ[_ENCORD_SSH_KEY_FILE] = ssh_key_file_path
     user_client = EncordUserClient.create_with_ssh_private_key()
     assert isinstance(user_client, EncordUserClient)

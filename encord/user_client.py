@@ -113,7 +113,17 @@ class EncordUserClient:
         config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
         querier = Querier(config)
         client = EncordClientProject(querier=querier, config=config)
-        return Project(client)
+
+        orm_project = client.get_project()
+
+        # Querying ontology using project querier to avoid permission error,
+        # as there might be only read-only ontology structure access in scope of the project,
+        # not full access, that is implied by get_ontology method
+        ontology_hash = orm_project["ontology_hash"]
+        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
+        project_ontology = Ontology(querier, config)
+
+        return Project(client, orm_project, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)

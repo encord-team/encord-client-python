@@ -852,14 +852,10 @@ class LabelRowV2:
     """
 
     def __init__(
-        self,
-        label_row_metadata: LabelRowMetadata,
-        project_client: EncordClientProject,
+        self, label_row_metadata: LabelRowMetadata, project_client: EncordClientProject, ontology: Ontology
     ) -> None:
-        self._ontology_structure: Optional[OntologyStructure] = None
-
         self._project_client = project_client
-        self._querier = project_client._querier
+        self._ontology = ontology
 
         self._label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData = self._parse_label_row_metadata(
             label_row_metadata
@@ -965,11 +961,7 @@ class LabelRowV2:
     @property
     def ontology_structure(self) -> OntologyStructure:
         """Get the corresponding ontology structure"""
-        self._check_labelling_is_initalised()
-        if self._ontology_structure is None:
-            raise LabelRowError("The LabelRowV2 class is in an unexpected state.")
-
-        return self._ontology_structure
+        return self._ontology.structure
 
     @property
     def is_labelling_initialised(self) -> bool:
@@ -1021,9 +1013,6 @@ class LabelRowV2:
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
-        if self._ontology_structure is None:
-            self._refresh_ontology_structure()
-
         get_signed_url = False
         if self.label_hash is None:
             label_row_dict = self._project_client.create_label_row(self.data_hash)
@@ -1038,7 +1027,7 @@ class LabelRowV2:
 
         self.from_labels_dict(label_row_dict)
 
-    def from_labels_dict(self, label_row_dict: dict, ontology_structure: Optional[OntologyStructure] = None) -> None:
+    def from_labels_dict(self, label_row_dict: dict) -> None:
         """
         If you have a label row dictionary in the same format that the Encord servers produce, you can initialise the
         LabelRow from that directly. In most cases you should prefer using the `initialise_labels` method.
@@ -1050,12 +1039,6 @@ class LabelRowV2:
         Args:
             label_row_dict: The dictionary of all labels as expected by the Encord format.
         """
-        if ontology_structure is not None:
-            self._ontology_structure = ontology_structure
-
-        if self._ontology_structure is None:
-            self._refresh_ontology_structure()
-
         self._is_labelling_initialised = True
 
         self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
@@ -1552,11 +1535,6 @@ class LabelRowV2:
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
 
-    def _refresh_ontology_structure(self):
-        ontology_hash = self._project_client.get_project()["ontology_hash"]
-        ontology = self._querier.basic_getter(Ontology, ontology_hash)
-        self._ontology_structure = ontology.structure
-
     def _to_object_answers(self) -> dict:
         ret = {}
         for obj in self._objects_map.values():
@@ -1694,7 +1672,7 @@ class LabelRowV2:
         object_instance_annotation = object_.get_annotation(frame)
         coordinates = object_instance_annotation.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
-        ontology_object = self._ontology_structure.get_child_by_hash(ontology_hash)
+        ontology_object = self._ontology.structure.get_child_by_hash(ontology_hash)
 
         ret["name"] = ontology_object.name
         ret["color"] = ontology_object.color
@@ -1747,9 +1725,9 @@ class LabelRowV2:
 
         annotation = classification.get_annotation(frame)
         classification_feature_hash = classification.ontology_item.feature_node_hash
-        ontology_classification = self._ontology_structure.get_child_by_hash(classification_feature_hash)
+        ontology_classification = self._ontology.structure.get_child_by_hash(classification_feature_hash)
         attribute_hash = classification.ontology_item.attributes[0].feature_node_hash
-        ontology_attribute = self._ontology_structure.get_child_by_hash(attribute_hash)
+        ontology_attribute = self._ontology.structure.get_child_by_hash(attribute_hash)
 
         ret["name"] = ontology_attribute.name
         ret["value"] = _lower_snake_case(ontology_attribute.name)
@@ -1921,7 +1899,7 @@ class LabelRowV2:
             object_instance.set_answer_from_list(answer_list)
 
     def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
-        ontology = self._ontology_structure
+        ontology = self._ontology.structure
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
 
@@ -1995,11 +1973,10 @@ class LabelRowV2:
     def _create_new_classification_instance(
         self, frame_classification_label: dict, frame: int, classification_answers: dict
     ) -> ClassificationInstance:
-        ontology = self._ontology_structure
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
 
-        label_class = ontology.get_child_by_hash(feature_hash)
+        label_class = self._ontology.structure.get_child_by_hash(feature_hash)
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
