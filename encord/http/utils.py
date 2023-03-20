@@ -21,6 +21,7 @@ from encord.orm.dataset import (
 )
 
 PROGRESS_BAR_FILE_FACTOR = 100
+CACHE_DURATION_IN_SECONDS = 24 * 60 * 60  # 1 day
 
 logger = logging.getLogger(__name__)
 
@@ -131,13 +132,21 @@ def _get_signed_url(
 
 
 def _upload_single_file(
-    file_path: str, signed_url: dict, content_type: str, *, max_retries: int, backoff_factor: float
+    file_path: str,
+    signed_url: dict,
+    content_type: str,
+    *,
+    max_retries: int,
+    backoff_factor: float,
+    cache_max_age: int = CACHE_DURATION_IN_SECONDS,
 ) -> None:
     with create_new_session(max_retries=max_retries, backoff_factor=backoff_factor) as session:
         url = signed_url.get("signed_url")
 
         with open(file_path, "rb") as f:
-            res_upload = session.put(url, data=f, headers={"Content-Type": content_type})
+            res_upload = session.put(
+                url, data=f, headers={"Content-Type": content_type, "Cache-Control": f"max-age={cache_max_age}"}
+            )
 
             if res_upload.status_code != 200:
                 status_code = res_upload.status_code
