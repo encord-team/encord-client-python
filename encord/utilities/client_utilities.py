@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
+from datetime import datetime
 import pprint
 from dataclasses import dataclass
 from enum import Enum
@@ -120,12 +120,12 @@ class CvatImporterError:
     issues: Issues
 
 
-def parse_datetime(key, val):
+def parse_datetime(key: str, val: Union[str, datetime]) -> str:
     if not val:
         return None
     if isinstance(val, str):
-        return dateutil.parser.isoparse(val)
-    if isinstance(val, datetime.datetime):
+        return dateutil.parser.isoparse(val).isoformat()
+    if isinstance(val, datetime):
         return val.isoformat()
     else:
         raise ValueError(f"Value for {key} should be a datetime")
