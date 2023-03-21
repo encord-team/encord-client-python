@@ -864,11 +864,24 @@ class EncordClientProject(EncordClient):
         label = LabelRow(label)
         return self._querier.basic_setter(LabelRow, uid, payload=label)
 
+    def save_label_rows(self, uids: List[str], payload=List[LabelRow]):
+        payload = {
+            "multi_request": True,
+            "labels": payload,
+        }
+        return self._querier.basic_setter(LabelRow, uid=uids, payload=payload)
+
     def create_label_row(self, uid):
         """
         This function is documented in :meth:`encord.project.Project.create_label_row`.
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload=None)
+
+    def create_label_rows(self, uids: List[str]) -> List[LabelRow]:
+        """
+        This function is documented in :meth:`encord.project.Project.create_label_rows`.
+        """
+        return self._querier.put_multiple(LabelRow, uid=uids, payload={"multi_request": True})
 
     def submit_label_row_for_review(self, uid):
         """

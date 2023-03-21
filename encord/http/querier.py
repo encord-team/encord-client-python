@@ -45,16 +45,25 @@ class Querier:
 
     def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
         """Single DB object getter."""
-        request = self.request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
-        res = self.execute(request)
+        request = self._request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
+        res = self._execute(request)
         if res:
             return self._parse_response(db_object_type, res)
         else:
             raise ResourceNotFoundError("Resource not found.")
 
     def get_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
-        request = self.request(QueryMethods.GET, object_type, uid, self._config.read_timeout, payload=payload)
-        result = self.execute(request)
+        return self._request_multiple(QueryMethods.GET, object_type, uid, payload)
+
+    def post_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
+        return self._request_multiple(QueryMethods.POST, object_type, uid, payload)
+
+    def put_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
+        return self._request_multiple(QueryMethods.PUT, object_type, uid, payload)
+
+    def _request_multiple(self, method: QueryMethods, object_type: Type[T], uid: List[str], payload=None) -> List[T]:
+        request = self._request(method, object_type, uid, self._config.read_timeout, payload=payload)
+        result = self._execute(request)
 
         if result is not None:
             return [self._parse_response(object_type, item) for item in result]
@@ -72,18 +81,18 @@ class Querier:
 
     def basic_delete(self, db_object_type: Type[T], uid=None):
         """Single DB object getter."""
-        request = self.request(
+        request = self._request(
             QueryMethods.DELETE,
             db_object_type,
             uid,
             self._config.read_timeout,
         )
 
-        return self.execute(request)
+        return self._execute(request)
 
     def basic_setter(self, db_object_type: Type[T], uid, payload):
         """Single DB object setter."""
-        request = self.request(
+        request = self._request(
             QueryMethods.POST,
             db_object_type,
             uid,
@@ -91,7 +100,7 @@ class Querier:
             payload=payload,
         )
 
-        res = self.execute(request)
+        res = self._execute(request)
 
         if res:
             return res
@@ -100,7 +109,7 @@ class Querier:
 
     def basic_put(self, db_object_type, uid, payload, enable_logging=True):
         """Single DB object put request."""
-        request = self.request(
+        request = self._request(
             QueryMethods.PUT,
             db_object_type,
             uid,
@@ -108,7 +117,7 @@ class Querier:
             payload=payload,
         )
 
-        res = self.execute(request, enable_logging)
+        res = self._execute(request, enable_logging)
 
         if res:
             return res
@@ -119,7 +128,7 @@ class Querier:
     def _user_agent():
         return f"Encord Python SDK {encord_version}; Python {platform.python_version()}"
 
-    def request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
+    def _request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
         request = Request(method, db_object_type, uid, timeout, self._config.connect_timeout, payload)
 
         request.headers = self._config.define_headers(request.data)
@@ -127,7 +136,7 @@ class Querier:
 
         return request
 
-    def execute(self, request, enable_logging=True) -> Any:
+    def _execute(self, request, enable_logging=True) -> Any:
         """Execute a request."""
         if enable_logging:
             logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)

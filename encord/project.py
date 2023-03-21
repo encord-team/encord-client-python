@@ -22,6 +22,7 @@ from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.ontology import Ontology
+from encord.http.batch import Batch
 
 
 class Project:
@@ -934,3 +935,6 @@ class Project:
 
     def _invalidate_project_instance(self):
         self._project_instance = None
+
+    def batched_operation(self) -> Batch:
+        return Batch()

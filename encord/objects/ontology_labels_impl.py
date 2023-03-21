@@ -89,6 +89,7 @@ from encord.objects.utils import (
 )
 from encord.orm.formatter import Formatter
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from encord.http.batch import Batch, BatchMapper
 
 
 @dataclass
@@ -987,6 +988,7 @@ class LabelRowV2:
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
         overwrite: bool = False,
+        batch: Optional[Batch] = None,
     ) -> None:
         """
         Call this function to start reading or writing labels. This will fetch the labels that are currently stored
@@ -1016,6 +1018,8 @@ class LabelRowV2:
             overwrite: If the label row was already initialised, you need to set this flag to `True` to overwrite the
                 current labels with the labels stored in the Encord server. If this is `False` and the label row was
                 already initialised, this function will throw an error.
+            batch: If not passed, initialisation is performed independently. If passed, it will be delayed and
+                initialised along with other objects in the same batch once batch is executed
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -1023,19 +1027,101 @@ class LabelRowV2:
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
-        get_signed_url = False
-        if self.label_hash is None:
-            label_row_dict = self._project_client.create_label_row(self.data_hash)
-        else:
-            label_row_dict = self._project_client.get_label_row(
+        if batch is not None:
+            self._batched_initialise(
+                batch,
                 uid=self.label_hash,
+                get_signed_url=False,
+                include_object_feature_hashes=include_object_feature_hashes,
+                include_classification_feature_hashes=include_classification_feature_hashes,
+                include_reviews=include_reviews,
+            )
+        else:
+            if self.label_hash is None:
+                label_row_dict = self._project_client.create_label_row(self.data_hash)
+            else:
+                label_row_dict = self._project_client.get_label_row(
+                    uid=self.label_hash,
+                    get_signed_url=False,
+                    include_object_feature_hashes=include_object_feature_hashes,
+                    include_classification_feature_hashes=include_classification_feature_hashes,
+                    include_reviews=include_reviews,
+                )
+
+            self.from_labels_dict(label_row_dict)
+
+    @dataclass
+    class BatchGetRowsPayload:
+        uids: List[str]
+        get_signed_url: bool
+        include_object_feature_hashes: Optional[Set[str]]
+        include_classification_feature_hashes: Optional[Set[str]]
+        include_reviews: bool
+
+    @dataclass
+    class BatchCreateRowsPayload:
+        uids: List[str]
+
+    @dataclass
+    class BatchSaveRowsPayload:
+        uids: List[str]
+        payload: List[Dict]
+
+    def _batched_initialise(
+        self,
+        batch: Batch,
+        uid,
+        get_signed_url,
+        include_object_feature_hashes,
+        include_classification_feature_hashes,
+        include_reviews,
+    ):
+        if self.label_hash is None:
+            batch.add(
+                self._project_client.create_label_rows,
+                self._batch_create_rows_mapper,
+                self._batch_create_rows_reducer,
+                uid=self.data_hash,
+            )
+        else:
+            batch.add(
+                self._project_client.get_label_rows,
+                self._batch_get_rows_mapper,
+                self._batch_get_rows_reducer,
+                uid=uid,
                 get_signed_url=get_signed_url,
                 include_object_feature_hashes=include_object_feature_hashes,
                 include_classification_feature_hashes=include_classification_feature_hashes,
                 include_reviews=include_reviews,
             )
 
-        self.from_labels_dict(label_row_dict)
+    def _batch_create_rows_reducer(self, payload_batch: BatchCreateRowsPayload, arguments):
+        if payload_batch is None:
+            payload_batch = LabelRowV2.BatchCreateRowsPayload([arguments["uid"]])
+        else:
+            payload_batch.uids.append(arguments["uid"])
+
+        return payload_batch, BatchMapper(arguments["uid"], self.from_labels_dict)
+
+    def _batch_get_rows_reducer(self, payload_batch: BatchGetRowsPayload, arguments):
+        if payload_batch is None:
+            payload_batch = LabelRowV2.BatchGetRowsPayload(
+                [arguments["uid"]],
+                arguments["get_signed_url"],
+                arguments["include_object_feature_hashes"],
+                arguments["include_classification_feature_hashes"],
+                arguments["include_reviews"],
+            )
+        else:
+            payload_batch.uids.append(arguments["uid"])
+
+        return payload_batch, BatchMapper(arguments["uid"], self.from_labels_dict)
+
+    def _batch_get_rows_mapper(self, entry):
+        return entry["label_hash"]
+
+    def _batch_create_rows_mapper(self, entry):
+        return entry["data_hash"]
 
     def from_labels_dict(self, label_row_dict: dict) -> None:
         """
@@ -1083,15 +1169,40 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def save(self):
+    def save(self, batch: Batch = None):
         """
         Upload the created labels with the Encord server. This will overwrite any labels that someone has created
         in the platform in the meantime.
+
+        Args:
+            batch: if not passed, save is executed immediately. If passed, it is executed as a part of the batch
         """
         self._check_labelling_is_initalised()
 
         dict_labels = self.to_encord_dict()
-        self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
+
+        if batch is None:
+            self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
+        else:
+            batch.add(
+                self._project_client.save_label_rows,
+                None,
+                self._batch_save_rows_reducer,
+                uid=self.label_hash,
+                label=dict_labels,
+            )
+
+    def _batch_save_rows_reducer(self, payload_batch: BatchSaveRowsPayload, arguments):
+        if payload_batch is None:
+            payload_batch = LabelRowV2.BatchSaveRowsPayload(uids=[arguments["uid"]], payload=[arguments["label"]])
+        else:
+            payload_batch.uids.append(arguments["uid"])
+            payload_batch.payload.append(arguments["label"])
+
+        return payload_batch, BatchMapper(arguments["uid"], None)
+
+    def _batch_save_rows_mapper(self, entry):
+        return entry["label_hash"]
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
