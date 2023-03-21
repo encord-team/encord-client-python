@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import datetime
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
@@ -227,7 +227,7 @@ class LabelStatus(Enum):
     MISSING_LABEL_STATUS = "_MISSING_LABEL_STATUS_"
     """
     This value will be displayed if the Encord platform has a new label status and your SDK version does not understand
-    it yet. Please update your SDK to the latest version. 
+    it yet. Please update your SDK to the latest version.
     """
 
     @classmethod
@@ -307,4 +307,12 @@ class LabelRowMetadata(Formatter):
         Returns:
             The dict equivalent of LabelRowMetadata.
         """
-        return asdict(self)
+
+        def transform(value: Any):
+            if isinstance(value, Enum):
+                return value.value
+            elif isinstance(value, datetime.datetime):
+                return value.isoformat()
+            return value
+
+        return {k: transform(v) for k, v in asdict(self).items()}
