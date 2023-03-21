@@ -25,7 +25,7 @@ from uuid import uuid4
 
 from dateutil.parser import parse
 
-from encord.client import EncordClientProject
+from encord.client import EncordClientProject, LabelRow as OrmLabelRow
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError, OntologyError
 from encord.objects.common import (
@@ -91,7 +91,7 @@ from encord.objects.utils import (
 from encord.orm.formatter import Formatter
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus, WorkflowGraphNode
 from encord.exceptions import WrongProjectTypeError
-
+from encord.http.bundle import Bundle, BundleResultHandler
 
 log = logging.getLogger(__name__)
 
@@ -857,6 +857,26 @@ class ClassificationInstance:
         return self.classification_hash < other.classification_hash
 
 
+@dataclass
+class BundledGetRowsPayload:
+    uids: List[str]
+    get_signed_url: bool
+    include_object_feature_hashes: Optional[Set[str]]
+    include_classification_feature_hashes: Optional[Set[str]]
+    include_reviews: bool
+
+
+@dataclass
+class BundledCreateRowsPayload:
+    uids: List[str]
+
+
+@dataclass
+class BatchSaveRowsPayload:
+    uids: List[str]
+    payload: List[Dict]
+
+
 class LabelRowV2:
     """
     This class represents a single label row. It is corresponding to exactly one data row within a project. It holds all
@@ -1027,6 +1047,7 @@ class LabelRowV2:
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
         overwrite: bool = False,
+        bundle: Optional[Bundle] = None,
     ) -> None:
         """
         Call this function to start reading or writing labels. This will fetch the labels that are currently stored
@@ -1056,6 +1077,8 @@ class LabelRowV2:
             overwrite: If the label row was already initialised, you need to set this flag to `True` to overwrite the
                 current labels with the labels stored in the Encord server. If this is `False` and the label row was
                 already initialised, this function will throw an error.
+            bundle: If not passed, initialisation is performed independently. If passed, it will be delayed and
+                initialised along with other objects in the same batch once batch is executed
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -1063,19 +1086,90 @@ class LabelRowV2:
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
-        get_signed_url = False
-        if self.label_hash is None:
-            label_row_dict = self._project_client.create_label_row(self.data_hash)
-        else:
-            label_row_dict = self._project_client.get_label_row(
+        if bundle is not None:
+            self.__batched_initialise(
+                bundle,
                 uid=self.label_hash,
-                get_signed_url=get_signed_url,
+                get_signed_url=False,
                 include_object_feature_hashes=include_object_feature_hashes,
                 include_classification_feature_hashes=include_classification_feature_hashes,
                 include_reviews=include_reviews,
             )
+        else:
+            if self.label_hash is None:
+                label_row_dict = self._project_client.create_label_row(self.data_hash)
+            else:
+                label_row_dict = self._project_client.get_label_row(
+                    uid=self.label_hash,
+                    get_signed_url=False,
+                    include_object_feature_hashes=include_object_feature_hashes,
+                    include_classification_feature_hashes=include_classification_feature_hashes,
+                    include_reviews=include_reviews,
+                )
 
-        self.from_labels_dict(label_row_dict)
+            self.from_labels_dict(label_row_dict)
+
+    def __batched_initialise(
+        self,
+        batch: Bundle,
+        uid,
+        get_signed_url,
+        include_object_feature_hashes,
+        include_classification_feature_hashes,
+        include_reviews,
+    ):
+        if self.label_hash is None:
+            batch.add(
+                operation=self._project_client.create_label_rows,
+                reducer=self._bundle_create_rows_reducer,
+                mapper=(
+                    self._bundle_create_rows_mapper,
+                    BundleResultHandler(predicate=self.data_hash, continuation=self.from_labels_dict),
+                ),
+                payload=BundledCreateRowsPayload(
+                    uids=[self.data_hash],
+                ),
+                limit=100,
+            )
+        else:
+            batch.add(
+                operation=self._project_client.get_label_rows,
+                reducer=self._bundle_get_rows_reducer,
+                mapper=(
+                    self._bundle_get_rows_mapper,
+                    BundleResultHandler(predicate=self.label_hash, continuation=self.from_labels_dict),
+                ),
+                payload=BundledGetRowsPayload(
+                    uids=[uid],
+                    get_signed_url=get_signed_url,
+                    include_object_feature_hashes=include_object_feature_hashes,
+                    include_classification_feature_hashes=include_classification_feature_hashes,
+                    include_reviews=include_reviews,
+                ),
+                limit=100,
+            )
+
+    @staticmethod
+    def _bundle_create_rows_reducer(
+        bundle_payload: BundledCreateRowsPayload, payload: BundledCreateRowsPayload
+    ) -> BundledCreateRowsPayload:
+        bundle_payload.uids += payload.uids
+        return bundle_payload
+
+    @staticmethod
+    def _bundle_get_rows_reducer(
+        bundle_payload: BundledGetRowsPayload, payload: BundledGetRowsPayload
+    ) -> BundledGetRowsPayload:
+        bundle_payload.uids += payload.uids
+        return bundle_payload
+
+    @staticmethod
+    def _bundle_get_rows_mapper(entry: OrmLabelRow) -> str:
+        return entry["label_hash"]
+
+    @staticmethod
+    def _bundle_create_rows_mapper(entry: OrmLabelRow) -> str:
+        return entry["data_hash"]
 
     def from_labels_dict(self, label_row_dict: dict) -> None:
         """
@@ -1123,15 +1217,35 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def save(self):
+    def save(self, bundle: Bundle = None) -> None:
         """
         Upload the created labels with the Encord server. This will overwrite any labels that someone has created
         in the platform in the meantime.
+
+        Args:
+            bundle: if not passed, save is executed immediately. If passed, it is executed as a part of the batch
         """
         self._check_labelling_is_initalised()
 
         dict_labels = self.to_encord_dict()
-        self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
+
+        if bundle is None:
+            self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
+        else:
+            bundle.add(
+                operation=self._project_client.save_label_rows,
+                reducer=self.__batch_save_rows_reducer,
+                mapper=None,
+                payload=BatchSaveRowsPayload(uids=[self.label_hash], payload=[dict_labels]),
+                limit=100,
+            )
+
+    @staticmethod
+    def __batch_save_rows_reducer(
+        payload_batch: BatchSaveRowsPayload, payload: BatchSaveRowsPayload
+    ) -> BatchSaveRowsPayload:
+        payload_batch.uids += payload.uids
+        return payload
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
