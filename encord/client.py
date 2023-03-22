@@ -38,12 +38,14 @@ import dataclasses
 import json
 import logging
 import os.path
+import time
 import typing
 import uuid
 from datetime import datetime
+from math import ceil
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple, Union
-
+import requests
 import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.model import AutomationModels, Device
@@ -61,6 +63,8 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, AddPrivateDataResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
+    DatasetDataLongPolling,
+    LongPollingStatus,
     DatasetAccessSettings,
     DatasetData,
     DatasetUser,
@@ -117,6 +121,10 @@ from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
 from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
+
+LONG_POLLING_RESPONSE_RETRY_N = 3
+LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 3
+LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 
 logger = logging.getLogger(__name__)
 
@@ -486,6 +494,27 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.AddPrivateDataResponse`.
         """
+        upload_job_id = self.add_private_data_to_dataset_start(
+            integration_id,
+            private_files,
+            ignore_errors,
+        )
+
+        res = self.add_private_data_to_dataset_get_result(upload_job_id)
+
+        if res.status == LongPollingStatus.DONE:
+            return AddPrivateDataResponse(dataset_data_list=res.data_hashes_with_titles)
+        if res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(f"add_private_data_to_dataset errors occured {res.errors}")
+        else:
+            raise ValueError(f"res.status={res.status}, this should never happen")
+
+    def add_private_data_to_dataset_start(
+        self,
+        integration_id: str,
+        private_files: Union[str, typing.Dict, Path, typing.TextIO],
+        ignore_errors: bool = False,
+    ) -> str:
         if isinstance(private_files, dict):
             files = private_files
         elif isinstance(private_files, str):
@@ -504,10 +533,74 @@ class EncordClientDataset(EncordClient):
         else:
             raise ValueError(f"Type [{type(private_files)}] of argument private_files is not supported")
 
-        payload = {"files": files, "integration_id": integration_id, "ignore_errors": ignore_errors}
-        response = self._querier.basic_setter(DatasetData, self._config.resource_id, payload=payload)
+        process_hash = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            self._config.resource_id,
+            payload={
+                "files": files,
+                "integration_id": integration_id,
+                "ignore_errors": ignore_errors,
+            },
+        )["process_hash"]
 
-        return AddPrivateDataResponse.from_dict(response)
+        logger.info(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
+        logger.info("SDK process can be terminated, this will not affect successful job execution.")
+        logger.info("You can follow the progress in the web app via notifications.")
+
+        return process_hash
+
+    def add_private_data_to_dataset_get_result(
+        self,
+        upload_job_id: str,
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> DatasetDataLongPolling:
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                res = self._querier.basic_getter(
+                    DatasetDataLongPolling,
+                    self._config.resource_id,
+                    payload={
+                        "process_hash": upload_job_id,
+                        "timeout_seconds": min(
+                            polling_available_seconds,
+                            LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    },
+                )
+
+                if res.status == LongPollingStatus.DONE:
+                    logger.info(f"add_private_data_to_dataset job completed with upload_job_id={upload_job_id}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or res.status in [LongPollingStatus.DONE, LongPollingStatus.ERROR]:
+                    return res
+
+                files_finished_count = res.units_done_count + res.units_error_count
+                files_total_count = res.units_pending_count + res.units_done_count + res.units_error_count
+
+                if files_finished_count != files_total_count:
+                    logger.info(f"Processed {files_finished_count}/{files_total_count} files")
+                else:
+                    logger.info(
+                        f"Processed all files, dataset data linking and task creation is performed, please wait"
+                    )
+
+                failed_requests_count = 0
+            except requests.exceptions.RequestException:
+                failed_requests_count += 1
+
+                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""

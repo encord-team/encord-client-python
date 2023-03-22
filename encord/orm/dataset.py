@@ -921,3 +921,36 @@ class ImagesDataFetchOptions:
     Whether to fetch signed urls for each individual image. Only set this to true if you need to download the 
     images.
     """
+
+
+class LongPollingStatus(str, Enum):
+    PENDING = "PENDING"
+    DONE = "DONE"
+    ERROR = "ERROR"
+
+
+@dataclasses.dataclass(frozen=True)
+class DatasetDataLongPolling(Formatter):
+    status: LongPollingStatus
+    data_hashes_with_titles: List[DatasetDataInfo]
+    errors: List[str]
+    units_pending_count: int
+    units_done_count: int
+    units_error_count: int
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> DatasetDataLongPolling:
+        return DatasetDataLongPolling(
+            status=LongPollingStatus(json_dict["status"]),
+            data_hashes_with_titles=[
+                DatasetDataInfo(
+                    data_hash=x["data_hash"],
+                    title=x["title"],
+                )
+                for x in json_dict["data_hashes_with_titles"]
+            ],
+            errors=json_dict["errors"],
+            units_pending_count=json_dict["units_pending_count"],
+            units_done_count=json_dict["units_done_count"],
+            units_error_count=json_dict["units_error_count"],
+        )
