@@ -2478,7 +2478,7 @@ class ObjectInstance:
         created_at: datetime = datetime.now()
         created_by: Optional[str] = None
         """None defaults to the user of the SDK once uploaded to the server."""
-        last_edited_at: datetime = datetime.now()
+        last_edited_at: datetime = None
         last_edited_by: Optional[str] = None
         """None defaults to the user of the SDK once uploaded to the server."""
         confidence: float = DEFAULT_CONFIDENCE
