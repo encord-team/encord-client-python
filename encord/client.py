@@ -494,13 +494,13 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.AddPrivateDataResponse`.
         """
-        upload_job_id = self.add_private_data_to_dataset_start(
+        upload_job_id = self.__add_private_data_to_dataset_start(
             integration_id,
             private_files,
             ignore_errors,
         )
 
-        res = self.add_private_data_to_dataset_get_result(upload_job_id)
+        res = self.__add_private_data_to_dataset_get_result(upload_job_id)
 
         if res.status == LongPollingStatus.DONE:
             return AddPrivateDataResponse(dataset_data_list=res.data_hashes_with_titles)
@@ -509,7 +509,7 @@ class EncordClientDataset(EncordClient):
         else:
             raise ValueError(f"res.status={res.status}, this should never happen")
 
-    def add_private_data_to_dataset_start(
+    def __add_private_data_to_dataset_start(
         self,
         integration_id: str,
         private_files: Union[str, typing.Dict, Path, typing.TextIO],
@@ -549,7 +549,7 @@ class EncordClientDataset(EncordClient):
 
         return process_hash
 
-    def add_private_data_to_dataset_get_result(
+    def __add_private_data_to_dataset_get_result(
         self,
         upload_job_id: str,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
