@@ -543,9 +543,9 @@ class EncordClientDataset(EncordClient):
             },
         )["process_hash"]
 
-        logger.info(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
-        logger.info("SDK process can be terminated, this will not affect successful job execution.")
-        logger.info("You can follow the progress in the web app via notifications.")
+        print(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
+        print("SDK process can be terminated, this will not affect successful job execution.")
+        print("You can follow the progress in the web app via notifications.")
 
         return process_hash
 
@@ -575,7 +575,7 @@ class EncordClientDataset(EncordClient):
                 )
 
                 if res.status == LongPollingStatus.DONE:
-                    logger.info(f"add_private_data_to_dataset job completed with upload_job_id={upload_job_id}.")
+                    print(f"add_private_data_to_dataset job completed with upload_job_id={upload_job_id}.")
 
                 polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
                 polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
@@ -587,11 +587,9 @@ class EncordClientDataset(EncordClient):
                 files_total_count = res.units_pending_count + res.units_done_count + res.units_error_count
 
                 if files_finished_count != files_total_count:
-                    logger.info(f"Processed {files_finished_count}/{files_total_count} files")
+                    print(f"Processed {files_finished_count}/{files_total_count} files")
                 else:
-                    logger.info(
-                        f"Processed all files, dataset data linking and task creation is performed, please wait"
-                    )
+                    print(f"Processed all files, dataset data linking and task creation is performed, please wait")
 
                 failed_requests_count = 0
             except requests.exceptions.RequestException:
