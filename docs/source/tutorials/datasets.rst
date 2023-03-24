@@ -211,18 +211,6 @@ Adding data from a private cloud
         2. A way to enable cloud integrations from the SDK?
         3. Sample outputs of the given script
 
-.. note::
-
-    We strongly encourage you to follow and adapt the below script for an idiomatic way to upload data to your dataset.
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/datasets/add_private_data_with_safe_retries.py
-            :language: python
-
-
 Reading and updating data
 -------------------------
 To inspect data within a dataset you can use the :meth:`Dataset.data_rows <encord.dataset.Dataset.data_rows>` method.
