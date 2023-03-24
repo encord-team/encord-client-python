@@ -172,7 +172,13 @@ Use the method :meth:`create_image_group() <encord.dataset.Dataset.create_image_
         ]
     )
 
-This will upload the given list of images to the dataset associated with the :class:`dataset <encord.dataset.Dataset>` and create an image group.
+This method will upload the given list of images to the dataset associated with the :class:`dataset <encord.dataset.Dataset>` and create an image group.
+
+You can also upload individual images to a dataset using Encord storage with the method :meth:`upload_image() <encord.dataset.Dataset.upload_image>`.
+
+.. code-block:: python
+
+    dataset.upload_image("path/to/your/img1.jpeg")
 
 .. note::
 
