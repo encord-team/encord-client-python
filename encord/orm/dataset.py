@@ -944,18 +944,53 @@ class ImagesDataFetchOptions:
 
 class LongPollingStatus(str, Enum):
     PENDING = "PENDING"
+    """Job will automatically start soon (waiting in queue) or already started processing."""
+
     DONE = "DONE"
+    """
+    Job is finished successfully (possibly with errors if `ignore_errors=True`)
+    If `ignore_errors=False` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`
+    , job will have DONE status only if there were no errors.
+    If `ignore_errors=True` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`
+    , job will always have `DONE` status at some point (after finished processing), job cannot have `ERROR`
+    status if this flag was set to True. There could be errors, that were ignored.
+    Information about number of errors and stringified exceptions is available in
+    `units_error_count: int` and `errors: List[str]` attributes.
+    """
+
     ERROR = "ERROR"
+    """
+    Job is finished with errors, this could happen only if `ignore_errors` was set to `False`.
+    Information about errors is available in `units_error_count: int` and `errors: List[str]` attributes.
+    """
 
 
 @dataclasses.dataclass(frozen=True)
 class DatasetDataLongPolling(Formatter):
+    """
+    Response of upload job long polling request.
+
+    Note: Upload job consists of job units, job unit could be
+    one of video, image group, dicom series, image.
+    """
+
     status: LongPollingStatus
+    """Status of upload job. Documented in detail in :meth:`LongPollingStatus`"""
+
     data_hashes_with_titles: List[DatasetDataInfo]
+    """Information about data that was added to dataset."""
+
     errors: List[str]
+    """Stringified list of exceptions."""
+
     units_pending_count: int
+    """Number of upload job units that have pending status."""
+
     units_done_count: int
+    """Number of upload job units that have done status."""
+
     units_error_count: int
+    """Number of upload job units that have error status."""
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DatasetDataLongPolling:

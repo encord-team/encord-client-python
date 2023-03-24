@@ -276,11 +276,11 @@ class Dataset:
         <tutorials/datasets:Adding data from a private cloud>`
 
         Args:
-            integration_id: str
+            integration_id:
                 EntityId of the cloud integration to be used when accessing those files
             private_files:
                 A str path or Path object to a json file, json str or python dictionary of the files you wish to add
-            ignore_errors: bool, optional
+            ignore_errors:
                 Ignore individual errors when trying to access the specified files
         Returns:
             add_private_data_response List of DatasetDataInfo objects containing data_hash and title
@@ -297,25 +297,26 @@ class Dataset:
         """
         Append data hosted on private clouds to existing dataset.
 
-        This method is only initialising upload job in Encord Backend.
-        Once upload_job_id is returned from this method one can:
+        This method is only initialising upload job in Encord backend.
+        Once upload job id is returned from this method one can:
 
          - Forget about next steps, exit terminal,
-           job will continue running in Encord BE without any interruption.
+           job will continue running in Encord backend without any interruption.
 
-         - Fetch job status with add_private_data_to_dataset_get_result,
-           this even could be done in different python session.
+         - Fetch job status with :meth:`add_private_data_to_dataset_get_result`,
+           this could be done in different python session (only upload job id as input matters).
 
         Args:
-            integration_id: str
-                EntityId of the cloud integration to be used when accessing those files
+            integration_id:
+                `EntityId` of the cloud integration to be used when accessing those files
             private_files:
-                A str path or Path object to a json file, json str or python dictionary of the files you wish to add
-            ignore_errors: bool, optional
+                A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
+            ignore_errors:
                 Ignore individual errors when trying to access the specified files
         Returns:
-            upload_job_id: str
-                UUID Identifier of upload job. This id enables user to track job progress, via SDK or web app
+            str
+                `upload_job_id` - UUID Identifier of upload job.
+                This id enables user to track job progress via SDK or web app
         """
         return self._client.add_private_data_to_dataset_start(integration_id, private_files, ignore_errors)
 
@@ -325,49 +326,17 @@ class Dataset:
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> DatasetDataLongPolling:
         """
-        Fetch data upload status, perform long polling process for timeout_seconds.
+        Fetch data upload status, perform long polling process for `timeout_seconds`.
 
         Args:
-            upload_job_id: str
-                UUID Identifier of upload job. This id enables user to track job progress, via SDK or web app.
-            timeout_seconds: int, with default
+            upload_job_id:
+                UUID Identifier of upload job. This id enables user to track job progress via SDK or web app.
+            timeout_seconds:
                 Number of seconds method will be waiting and checking for response.
-                If timeout_seconds == 0, only one checking request is performed, returning immediately.
+                If `timeout_seconds == 0`, only one checking request is performed, returning immediately.
         Returns:
-            Response(DatasetDataLongPolling)
-                Status of upload job.
-
-                Upload job always has a status, it is one of:
-                    - LongPollingStatus.PENDING
-                        Job will automatically start soon (waiting in queue) or already started processing.
-                    - LongPollingStatus.DONE
-                        Job is finished successfully
-                        If ignore_errors=False was specified in add_private_data_to_dataset_start, job will have
-                        DONE status only if there were no errors.
-                        If ignore_errors=True was specified in add_private_data_to_dataset_start, job will always have
-                        DONE status at some point (after finished processing), job cannot have ERROR status if this flag
-                        was set to True. There could be errors, that were ignored. Information about number of errors and
-                        stringified exceptions is available in units_error_count: int and errors: List[str] attributes.
-                    - LongPollingStatus.ERROR
-                        Job is finished with errors, this could happen only if ignore_errors is set to False.
-                        Information about errors is available in units_error_count: int and errors: List[str] attributes.
-
-                DatasetDataLongPolling attributes:
-                    status: LongPollingStatus
-                        Status of upload job.
-
-                    data_hashes_with_titles: List[DatasetDataInfo]
-                        Information about data that was added to dataset.
-
-                    errors: List[str]
-                        Stringified list of exceptions.
-
-                    units_pending_count: int
-                    units_done_count: int
-                    units_error_count: int
-                        Number of job units that are pending, done, error.
-                        Upload job consists of job units, job unit could be
-                        one of video, image group, dicom series, image.
+            DatasetDataLongPolling
+                Response containing details about job status, errors and progress.
         """
         return self._client.add_private_data_to_dataset_get_result(upload_job_id, timeout_seconds)
 
