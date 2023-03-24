@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 from typing import Dict, Iterable, List, Optional, TextIO, Union
 
 from encord.client import EncordClientDataset
@@ -14,6 +15,7 @@ from encord.orm.dataset import (
     ImageGroupOCR,
     StorageLocation,
 )
+from encord.constants.enums import DataType
 
 
 class Dataset:
@@ -61,6 +63,35 @@ class Dataset:
         """
         dataset_instance = self._get_dataset_instance()
         return dataset_instance.data_rows
+
+    def list_data_rows(
+        self,
+        title_eq: Optional[str] = None,
+        title_like: Optional[str] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        data_types: Optional[List[DataType]] = None,
+    ) -> List[DataRow]:
+        """
+        Retrieve dataset rows (pointers to data, labels).
+
+        Args:
+            title_eq: optional exact title row filter
+            title_like: optional fuzzy title row filter; SQL syntax
+            created_before: optional datetime row filter
+            created_after: optional datetime row filter
+            data_types: optional data types row filter
+
+        Returns:
+            List[DataRow]: A list of DataRows object that match the filter
+
+        Raises:
+            AuthorisationError: If the dataset API key is invalid.
+            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
+            UnknownError: If an error occurs while retrieving the dataset.
+        """
+
+        return self._client.list_data_rows(title_eq, title_like, created_before, created_after, data_types)
 
     def refetch_data(self) -> None:
         """

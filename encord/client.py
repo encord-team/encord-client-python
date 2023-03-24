@@ -61,7 +61,7 @@ from encord.http.utils import (
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, AddPrivateDataResponse
-from encord.orm.dataset import Dataset as OrmDataset
+from encord.orm.dataset import Dataset as OrmDataset, DataRows, DataRow
 from encord.orm.dataset import (
     DatasetDataLongPolling,
     LongPollingStatus,
@@ -121,6 +121,7 @@ from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
 from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
+from encord.constants.enums import DataType
 
 LONG_POLLING_RESPONSE_RETRY_N = 3
 LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 3
@@ -319,13 +320,66 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
+
         res = self._querier.basic_getter(
-            OrmDataset, payload={"dataset_access_settings": dataclasses.asdict(self._dataset_access_settings)}
+            OrmDataset,
+            payload={
+                "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
+            },
         )
 
         for row in res.data_rows:
             row["_querier"] = self._querier
         return res
+
+    def list_data_rows(
+        self,
+        title_eq: Optional[str] = None,
+        title_like: Optional[str] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        data_types: Optional[List[DataType]] = None,
+    ) -> List[DataRow]:
+        """
+        Retrieve dataset rows (pointers to data, labels).
+
+        Args:
+            title_eq: optional exact title row filter
+            title_like: optional fuzzy title row filter; SQL syntax
+            created_before: optional datetime row filter
+            created_after: optional datetime row filter
+            data_types: optional data types row filter
+
+        Returns:
+            List[DataRow]: A list of DataRows object that match the filter
+
+        Raises:
+            AuthorisationError: If the dataset API key is invalid.
+            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
+            UnknownError: If an error occurs while retrieving the dataset.
+        """
+
+        created_before = parse_datetime("created_before", created_before)
+        created_after = parse_datetime("created_after", created_after)
+
+        data_rows = self._querier.get_multiple(
+            DataRows,
+            payload={
+                "title_eq": title_eq,
+                "title_like": title_like,
+                "created_before": created_before,
+                "created_after": created_after,
+                "data_types": [data_type.to_upper_case_string() for data_type in data_types]
+                if data_types is not None
+                else None,
+                "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
+            },
+        )
+
+        for row in data_rows:
+            row["_querier"] = self._querier
+
+        return data_rows
 
     def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
         self._dataset_access_settings = dataset_access_settings

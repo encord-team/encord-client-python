@@ -500,6 +500,25 @@ class DataRow(dict, Formatter):
 
 
 @dataclasses.dataclass(frozen=True)
+class DataRows(dict, Formatter):
+    """
+    This is a helper class that forms request for filtered dataset rows
+    Not intended to be used directly
+    """
+
+    def __init__(self, data_rows: List[DataRow]):
+        super().__init__(
+            {
+                "data_rows": data_rows,
+            }
+        )
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> DataRow:
+        return DataRow.from_dict(json_dict)
+
+
+@dataclasses.dataclass(frozen=True)
 class DatasetInfo:
     """
     This class represents a dataset in the context of listing
