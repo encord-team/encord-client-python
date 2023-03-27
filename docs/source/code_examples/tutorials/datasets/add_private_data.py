@@ -17,8 +17,8 @@ print(integrations)
 integration_idx: int = [i.title for i in integrations].index("AWS")
 integration: str = integrations[integration_idx].id
 
-# Check the https://docs.encord.com/datasets/private-cloud-integration/#json-format
-# documentation to build the correct format for your upload.
+# Check our documentation here: https://docs.encord.com/datasets/private-cloud-integration/#json-format
+# to make sure you upload your data in the correct format
 response: AddPrivateDataResponse = dataset.add_private_data_to_dataset(
     integration, "path/to/json/file.json"
 )

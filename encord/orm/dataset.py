@@ -948,37 +948,37 @@ class LongPollingStatus(str, Enum):
 
     DONE = "DONE"
     """
-    Job is finished successfully (possibly with errors if `ignore_errors=True`)
+    Job has finished successfully (possibly with errors if `ignore_errors=True`)
     If `ignore_errors=False` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`
-    , job will have DONE status only if there were no errors.
+    , job will only have the status `DONE` if there were no errors.
     If `ignore_errors=True` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`
-    , job will always have `DONE` status at some point (after finished processing), job cannot have `ERROR`
-    status if this flag was set to True. There could be errors, that were ignored.
-    Information about number of errors and stringified exceptions is available in
+    , job will always show the status `DONE` once complete and will never show `ERROR`
+    status if this flag was set to `True`. There could be errors that were ignored.
+    Information about number of errors and stringified exceptions is available in the
     `units_error_count: int` and `errors: List[str]` attributes.
     """
 
     ERROR = "ERROR"
     """
-    Job is finished with errors, this could happen only if `ignore_errors` was set to `False`.
-    Information about errors is available in `units_error_count: int` and `errors: List[str]` attributes.
+    Job has completed with errors. This can only happen if `ignore_errors` was set to `False`.
+    Information about errors is available in the `units_error_count: int` and `errors: List[str]` attributes.
     """
 
 
 @dataclasses.dataclass(frozen=True)
 class DatasetDataLongPolling(Formatter):
     """
-    Response of upload job long polling request.
+    Response of the upload job's long polling request.
 
-    Note: Upload job consists of job units, job unit could be
-    one of video, image group, dicom series, image.
+    Note: An upload job consists of job units, where job unit could be
+    either a video, image group, dicom series, or a single image.
     """
 
     status: LongPollingStatus
-    """Status of upload job. Documented in detail in :meth:`LongPollingStatus`"""
+    """Status of the upload job. Documented in detail in :meth:`LongPollingStatus`"""
 
     data_hashes_with_titles: List[DatasetDataInfo]
-    """Information about data that was added to dataset."""
+    """Information about data which was added to the dataset."""
 
     errors: List[str]
     """Stringified list of exceptions."""

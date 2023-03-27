@@ -269,7 +269,7 @@ class Dataset:
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
         """
-        Append data hosted on private clouds to existing dataset.
+        Append data hosted on a private cloud to an existing dataset.
 
         For a more complete example of safe uploads, please follow the guide found in our docs under
         :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud
@@ -277,11 +277,11 @@ class Dataset:
 
         Args:
             integration_id:
-                EntityId of the cloud integration to be used when accessing those files
+                The 'EntityId' of the cloud integration you wish to use.
             private_files:
-                A str path or Path object to a json file, json str or python dictionary of the files you wish to add
+                A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
             ignore_errors:
-                Ignore individual errors when trying to access the specified files
+                When set to `True`, this will prevent individual errors from stopping the upload process.
         Returns:
             add_private_data_response List of DatasetDataInfo objects containing data_hash and title
 
@@ -295,28 +295,28 @@ class Dataset:
         ignore_errors: bool = False,
     ) -> str:
         """
-        Append data hosted on private clouds to existing dataset.
+        Append data hosted on a private cloud to an existing dataset.
 
-        This method is only initialising upload job in Encord backend.
-        Once upload job id is returned from this method one can:
+        This method inititalizes the upload in Encord's backend.
+        Once the upload id has been returned, you can exit the terminal
+        while the job continues uninterrupted.
 
-         - Forget about next steps, exit terminal,
-           job will continue running in Encord backend without any interruption.
-
-         - Fetch job status with :meth:`add_private_data_to_dataset_get_result`,
-           this could be done in different python session (only upload job id as input matters).
+        You can check the uploaded status at any point using
+        the :meth:`add_private_data_to_dataset_get_result` method.
+        This can be done in a separate python session to the one
+        where the upload was initialized.
 
         Args:
             integration_id:
-                `EntityId` of the cloud integration to be used when accessing those files
+                The 'EntityId' of the cloud integration you wish to use.
             private_files:
                 A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
             ignore_errors:
-                Ignore individual errors when trying to access the specified files
+                When set to `True`, this will prevent individual errors from stopping the upload process.
         Returns:
             str
                 `upload_job_id` - UUID Identifier of upload job.
-                This id enables user to track job progress via SDK or web app
+                This id enables the user to track the job progress via SDK, or web app.
         """
         return self._client.add_private_data_to_dataset_start(integration_id, private_files, ignore_errors)
 
@@ -330,10 +330,11 @@ class Dataset:
 
         Args:
             upload_job_id:
-                UUID Identifier of upload job. This id enables user to track job progress via SDK or web app.
+                UUID Identifier of upload job. This id enables the user to track the job progress via SDK, or web app.
             timeout_seconds:
-                Number of seconds method will be waiting and checking for response.
-                If `timeout_seconds == 0`, only one checking request is performed, returning immediately.
+                Number of seconds the method will wait while waiting for a response.
+                If `timeout_seconds == 0`, only a single checking request is performed.
+                Response will be immediately returned.
         Returns:
             DatasetDataLongPolling
                 Response containing details about job status, errors and progress.
