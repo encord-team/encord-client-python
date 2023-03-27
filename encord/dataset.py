@@ -277,7 +277,7 @@ class Dataset:
 
         Args:
             integration_id:
-                The 'EntityId' of the cloud integration you wish to use.
+                The `EntityId` of the cloud integration you wish to use.
             private_files:
                 A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
             ignore_errors:
@@ -301,14 +301,14 @@ class Dataset:
         Once the upload id has been returned, you can exit the terminal
         while the job continues uninterrupted.
 
-        You can check the uploaded status at any point using
+        You can check upload job status at any point using
         the :meth:`add_private_data_to_dataset_get_result` method.
         This can be done in a separate python session to the one
         where the upload was initialized.
 
         Args:
             integration_id:
-                The 'EntityId' of the cloud integration you wish to use.
+                The `EntityId` of the cloud integration you wish to use.
             private_files:
                 A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
             ignore_errors:
