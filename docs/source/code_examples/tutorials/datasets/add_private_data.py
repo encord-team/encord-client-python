@@ -55,7 +55,7 @@ else:
     res = dataset.add_private_data_to_dataset_get_result(upload_job_id)
 
     if res.status == LongPollingStatus.DONE:
-        response: AddPrivateDataResponse = AddPrivateDataResponse(
+        response = AddPrivateDataResponse(
             dataset_data_list=res.data_hashes_with_titles
         )
     if res.status == LongPollingStatus.ERROR:
