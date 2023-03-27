@@ -546,15 +546,15 @@ class EncordClientDataset(EncordClient):
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
         """
-        This function is documented in :meth:`encord.dataset.Dataset.AddPrivateDataResponse`.
+        This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset`.
         """
-        upload_job_id = self.__add_private_data_to_dataset_start(
+        upload_job_id = self.add_private_data_to_dataset_start(
             integration_id,
             private_files,
             ignore_errors,
         )
 
-        res = self.__add_private_data_to_dataset_get_result(upload_job_id)
+        res = self.add_private_data_to_dataset_get_result(upload_job_id)
 
         if res.status == LongPollingStatus.DONE:
             return AddPrivateDataResponse(dataset_data_list=res.data_hashes_with_titles)
@@ -563,12 +563,15 @@ class EncordClientDataset(EncordClient):
         else:
             raise ValueError(f"res.status={res.status}, this should never happen")
 
-    def __add_private_data_to_dataset_start(
+    def add_private_data_to_dataset_start(
         self,
         integration_id: str,
         private_files: Union[str, typing.Dict, Path, typing.TextIO],
         ignore_errors: bool = False,
     ) -> str:
+        """
+        This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`.
+        """
         if isinstance(private_files, dict):
             files = private_files
         elif isinstance(private_files, str):
@@ -603,11 +606,14 @@ class EncordClientDataset(EncordClient):
 
         return process_hash
 
-    def __add_private_data_to_dataset_get_result(
+    def add_private_data_to_dataset_get_result(
         self,
         upload_job_id: str,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> DatasetDataLongPolling:
+        """
+        This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_get_result`.
+        """
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
 

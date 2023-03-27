@@ -8,6 +8,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
+    DatasetDataLongPolling,
     DatasetAccessSettings,
     DatasetUser,
     DatasetUserRole,
@@ -268,24 +269,77 @@ class Dataset:
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
         """
-        Append data hosted on private clouds to existing dataset.
+        Append data hosted on a private cloud to an existing dataset.
 
         For a more complete example of safe uploads, please follow the guide found in our docs under
         :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud
         <tutorials/datasets:Adding data from a private cloud>`
 
         Args:
-            integration_id: str
-                EntityId of the cloud integration to be used when accessing those files
+            integration_id:
+                The `EntityId` of the cloud integration you wish to use.
             private_files:
-                A str path or Path object to a json file, json str or python dictionary of the files you wish to add
-            ignore_errors: bool, optional
-                Ignore individual errors when trying to access the specified files
+                A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
+            ignore_errors:
+                When set to `True`, this will prevent individual errors from stopping the upload process.
         Returns:
             add_private_data_response List of DatasetDataInfo objects containing data_hash and title
 
         """
         return self._client.add_private_data_to_dataset(integration_id, private_files, ignore_errors)
+
+    def add_private_data_to_dataset_start(
+        self,
+        integration_id: str,
+        private_files: Union[str, Dict, Path, TextIO],
+        ignore_errors: bool = False,
+    ) -> str:
+        """
+        Append data hosted on a private cloud to an existing dataset.
+
+        This method inititalizes the upload in Encord's backend.
+        Once the upload id has been returned, you can exit the terminal
+        while the job continues uninterrupted.
+
+        You can check upload job status at any point using
+        the :meth:`add_private_data_to_dataset_get_result` method.
+        This can be done in a separate python session to the one
+        where the upload was initialized.
+
+        Args:
+            integration_id:
+                The `EntityId` of the cloud integration you wish to use.
+            private_files:
+                A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
+            ignore_errors:
+                When set to `True`, this will prevent individual errors from stopping the upload process.
+        Returns:
+            str
+                `upload_job_id` - UUID Identifier of upload job.
+                This id enables the user to track the job progress via SDK, or web app.
+        """
+        return self._client.add_private_data_to_dataset_start(integration_id, private_files, ignore_errors)
+
+    def add_private_data_to_dataset_get_result(
+        self,
+        upload_job_id: str,
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> DatasetDataLongPolling:
+        """
+        Fetch data upload status, perform long polling process for `timeout_seconds`.
+
+        Args:
+            upload_job_id:
+                UUID Identifier of upload job. This id enables the user to track the job progress via SDK, or web app.
+            timeout_seconds:
+                Number of seconds the method will wait while waiting for a response.
+                If `timeout_seconds == 0`, only a single checking request is performed.
+                Response will be immediately returned.
+        Returns:
+            DatasetDataLongPolling
+                Response containing details about job status, errors and progress.
+        """
+        return self._client.add_private_data_to_dataset_get_result(upload_job_id, timeout_seconds)
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """
