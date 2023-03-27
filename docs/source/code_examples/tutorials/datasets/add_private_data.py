@@ -58,7 +58,7 @@ else:
         response = AddPrivateDataResponse(
             dataset_data_list=res.data_hashes_with_titles
         )
-    if res.status == LongPollingStatus.ERROR:
+    elif res.status == LongPollingStatus.ERROR:
         raise Exception(res.errors)  # one can specify custom error handling
     else:
         raise ValueError(f"res.status={res.status}, this should never happen")
