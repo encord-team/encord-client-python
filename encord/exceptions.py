@@ -12,6 +12,8 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import time
+from datetime import datetime, timezone
 
 
 class EncordException(Exception):
@@ -22,7 +24,9 @@ class EncordException(Exception):
         self.message = message
 
     def __str__(self):
-        return self.message
+        datetime_postfix = f"Error timestamp: {datetime.now(tz=timezone.utc).isoformat()}."
+
+        return f"{self.message} {datetime_postfix}"
 
 
 CordException = EncordException
