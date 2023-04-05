@@ -14,6 +14,7 @@
 # under the License.
 import dataclasses
 import logging
+import platform
 from contextlib import contextmanager
 from typing import Any, List, Optional, Type, TypeVar
 
@@ -29,6 +30,7 @@ from encord.http.error_utils import check_error_response
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
 from encord.orm.formatter import Formatter
+from encord._version import __version__ as encord_version
 
 logger = logging.getLogger(__name__)
 
@@ -113,10 +115,16 @@ class Querier:
         else:
             raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
 
+    @staticmethod
+    def _user_agent():
+        return f"Encord Python SDK {encord_version}; Python {platform.python_version()}"
+
     def request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
         request = Request(method, db_object_type, uid, timeout, self._config.connect_timeout, payload)
 
         request.headers = self._config.define_headers(request.data)
+        request.headers["User-Agent"] = self._user_agent()
+
         return request
 
     def execute(self, request, enable_logging=True) -> Any:
