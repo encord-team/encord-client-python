@@ -340,7 +340,11 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call
         """
-        return self._client.add_object(name, shape)
+        res = self._client.add_object(name, shape)
+        if res:
+            self._invalidate_project_instance()
+
+        return res
 
     def add_classification(
         self,
@@ -367,7 +371,11 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call
         """
-        return self._client.add_classification(name, classification_type, required, options)
+        res = self._client.add_classification(name, classification_type, required, options)
+        if res:
+            self._invalidate_project_instance()
+
+        return res
 
     def list_models(self) -> List[ModelConfiguration]:
         """
