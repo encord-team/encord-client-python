@@ -288,8 +288,7 @@ class Project:
             OperationNotAllowed: If the write operation is not allowed by the API key.
         """
         res = self._client.add_datasets(dataset_hashes)
-        if res:
-            self._invalidate_project_instance()
+        self._invalidate_project_instance()
         return res
 
     def remove_datasets(self, dataset_hashes: List[str]) -> bool:
@@ -310,8 +309,7 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
         res = self._client.remove_datasets(dataset_hashes)
-        if res:
-            self._invalidate_project_instance()
+        self._invalidate_project_instance()
         return res
 
     def get_project_ontology(self) -> LegacyOntology:
@@ -340,7 +338,9 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call
         """
-        return self._client.add_object(name, shape)
+        res = self._client.add_object(name, shape)
+        self._invalidate_project_instance()
+        return res
 
     def add_classification(
         self,
@@ -367,7 +367,9 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call
         """
-        return self._client.add_classification(name, classification_type, required, options)
+        res = self._client.add_classification(name, classification_type, required, options)
+        self._invalidate_project_instance()
+        return res
 
     def list_models(self) -> List[ModelConfiguration]:
         """
