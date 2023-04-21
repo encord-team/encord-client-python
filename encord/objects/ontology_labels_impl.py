@@ -1236,10 +1236,7 @@ class LabelRowV2:
 
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
-        all_frames = self._classifications_to_frames[classification_instance.ontology_item]
-        actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
-        for actual_frame in actual_frames:
-            all_frames.remove(actual_frame)
+        self._classifications_to_frames[classification_instance.ontology_item] = set()
 
     def add_to_single_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
