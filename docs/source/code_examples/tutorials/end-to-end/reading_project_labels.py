@@ -20,7 +20,7 @@ from encord.orm.project import Project as OrmProject
 from encord.project import Project
 from encord.project_ontology.object_type import ObjectShape
 
-#%%
+# %%
 # .. note::
 #
 #   To interact with Encord, you need to authenticate a client. You can find more details
@@ -108,7 +108,7 @@ class AnnotationObject:
     frame: Optional[int] = None
 
 
-#%%
+# %%
 # Then we define a function which iterates over all objects of a label row fetched with
 # :meth:`.EncordClientProject.get_label_row()`. The function has a callable argument
 # used to filter which objects should be returned.
@@ -148,7 +148,7 @@ def iterate_over_objects(
                     yield AnnotationObject(object, file_name, url, frame)
 
 
-#%%
+# %%
 # Then we can define a function, which is used to choose which objects to include.
 
 
@@ -177,7 +177,7 @@ include_object_fn_bbox: Callable[[dict], bool] = partial(
     include_object_fn_base, object_type=ObjectShape.BOUNDING_BOX
 )
 
-#%%
+# %%
 # Now we can use the iterator and the filter to collect the objects.
 
 reviewed_bounding_boxes: List[AnnotationObject] = []

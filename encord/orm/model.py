@@ -49,7 +49,6 @@ class Model(base_orm.BaseORM):
 
 @dataclass
 class ModelConfiguration(Formatter):
-
     model_uid: str
     title: str
     description: str

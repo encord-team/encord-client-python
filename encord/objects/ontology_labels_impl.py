@@ -1346,7 +1346,6 @@ class LabelRowV2:
         def __init__(
             self, label_row: LabelRowV2, label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData, frame: int
         ):
-
             self._label_row = label_row
             self._label_row_read_only_data = label_row_read_only_data
             self._frame = frame
@@ -1989,7 +1988,6 @@ class LabelRowV2:
     def _add_static_answers_from_dict(
         self, classification_instance: ClassificationInstance, answers_list: List[dict]
     ) -> None:
-
         classification_instance.set_answer_from_list(answers_list)
 
     def _add_frames_to_classification_instance(self, frame_classification_label: dict, frame: int) -> None:

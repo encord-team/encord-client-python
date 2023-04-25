@@ -29,6 +29,7 @@ DATETIME_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
 Point = Union[Tuple[float, float], List[float]]
 BBOX_KEYS = {"x", "y", "h", "w"}
 
+
 # === UTILITIES === #
 def __get_timestamp():
     now = datetime.now()
@@ -292,13 +293,13 @@ def find_ontology_classification(
     return {"classification": top_level_attribute, "options": options}
 
 
-#%%
+# %%
 #
 # .. raw:: html
 #
 #    </details>
 
-#%%
+# %%
 # Imports and authentication
 # --------------------------
 # First, import dependencies and authenticate a project manager.
@@ -307,7 +308,7 @@ from encord import EncordUserClient, Project
 from encord.orm.project import Project as OrmProject
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
-#%%
+# %%
 # .. note::
 #
 #   To interact with Encord, you need to authenticate a client. You can find more details
@@ -333,7 +334,7 @@ project: Project = user_client.get_project(project_orm.project_hash)
 
 ontology = project.ontology
 
-#%%
+# %%
 # Saving objects
 # --------------
 #
@@ -365,7 +366,7 @@ ontology = project.ontology
 #     Type: point           Name: Ant (key-point)
 #
 
-#%%
+# %%
 # Below, is an example of how to define your own mapping between your local object
 # identifiers and Encord ontology objects. Note that the keys in the dictionary could
 # be any type of keys. So if your local object types are defined by integers, for
@@ -384,7 +385,7 @@ local_to_encord_ont_objects = {
     for k, v in LOCAL_TO_ENCORD_NAMES.items()
 }
 
-#%%
+# %%
 # 2. Saving objects to Encord
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
@@ -438,7 +439,7 @@ local_objects = [
     # ...
 ]
 
-#%%
+# %%
 # The data is saved by the following code example.
 
 # Title of video to which the local objects are associated
@@ -494,7 +495,7 @@ for local_frame_level_objects in local_objects:
 label_row = construct_answer_dictionaries(label_row)
 project.save_label_row(label_row["label_hash"], label_row)
 
-#%%
+# %%
 # **Saving objects to label rows with image groups**
 #
 # Suppose you have the following local data that you want to save to Encord.
@@ -536,7 +537,7 @@ local_objects = {
     # ...
 }
 
-#%%
+# %%
 # The data is saved by the following code example.
 
 # Take any label row, which contains images with names from `local_objects`.
@@ -582,7 +583,7 @@ label_row = construct_answer_dictionaries(label_row)
 project.save_label_row(label_row["label_hash"], label_row)
 
 
-#%%
+# %%
 # Saving classifications
 # ----------------------
 # The workflow is very similar for classifications. Much of the code will be
@@ -652,7 +653,7 @@ local_to_encord_ont_classifications = {  # NEW
     for k, v in LOCAL_TO_ENCORD_NAMES.items()
 }
 
-#%%
+# %%
 # 2. Saving classifications to Encord
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # As the structure of label rows depends on the type of data in the label row, there are
@@ -700,7 +701,7 @@ local_classifications = [  # NEW
     # ...
 ]
 
-#%%
+# %%
 # The data is saved by the following code example.
 
 # Title of video for which the objects are associated
@@ -804,7 +805,7 @@ for local_frame_level_classifications in local_classifications:
 label_row = construct_answer_dictionaries(label_row)
 project.save_label_row(label_row["label_hash"], label_row)
 
-#%%
+# %%
 # **Saving classification to label rows with image groups**
 #
 # Suppose you have the following local data that you want to save to Encord.
@@ -835,7 +836,7 @@ local_classifications = {
     # ...
 }
 
-#%%
+# %%
 # The data is saved by the following code example.
 
 

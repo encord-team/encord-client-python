@@ -712,7 +712,6 @@ def _add_option(
     feature_node_hash: Optional[str] = None,
     value: Optional[str] = None,
 ) -> OT:
-
     local_uid, feature_node_hash = __build_identifiers(options, local_uid, feature_node_hash)
     if not value:
         value = re.sub(r"[\s]", "_", label).lower()
