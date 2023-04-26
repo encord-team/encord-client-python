@@ -146,13 +146,16 @@ class TextAnswer(Answer):
         self.is_manual_annotation = d["manualAnnotation"]
 
     def __hash__(self):
-        return hash((self._value, type(self).__name__))
+        return hash((self._ontology_attribute.feature_node_hash, self._value, type(self).__name__))
 
     def __eq__(self, other: TextAnswer) -> bool:
         if not isinstance(other, TextAnswer):
             return False
         else:
-            return self._value == other._value
+            return (
+                self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
+                and self._value == other._value
+            )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._value})"
@@ -230,13 +233,16 @@ class RadioAnswer(Answer):
         self.is_manual_annotation = d["manualAnnotation"]
 
     def __hash__(self):
-        return hash((self._value, type(self).__name__))
+        return hash((self.ontology_attribute.feature_node_hash, self._value, type(self).__name__))
 
     def __eq__(self, other: RadioAnswer) -> bool:
         if not isinstance(other, RadioAnswer):
             return False
         else:
-            return self._value == other._value
+            return (
+                self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
+                and self._value == other._value
+            )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._value})"
