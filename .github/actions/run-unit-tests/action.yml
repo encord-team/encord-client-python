@@ -8,7 +8,7 @@ inputs:
     required: false
   poetry-version:
     description: 'Poetry version to use'
-    default: 1.1.12
+    default: 1.2.1
     required: false
   test-report-file:
     description: 'File name to save the test report in'
@@ -30,7 +30,7 @@ runs:
 
       - name: Check cache
         id: cached-poetry
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .venv
           key: unit-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}-1
@@ -47,7 +47,7 @@ runs:
         shell: bash
 
       - name: Upload report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ${{ inputs.test-report-file }}
