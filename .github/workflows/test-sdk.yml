@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Run unit tests for Python 3.7
         uses: ./.github/actions/run-unit-tests
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Run unit tests for Python 3.11
         uses: ./.github/actions/run-unit-tests
@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
@@ -150,7 +150,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
@@ -167,7 +167,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
@@ -327,7 +327,7 @@ jobs:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Get workflow status
         uses: technote-space/workflow-conclusion-action@v2

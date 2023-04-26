@@ -19,11 +19,11 @@ jobs:
     name: Linting and type checking
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup root poetry environment
         uses: ./.github/actions/setup-root-poetry-environment
       - name: Run linting, type checking and testing
-        uses: pre-commit/action@v2.0.3
+        uses: pre-commit/action@v3.0.0
         with:
           extra_args: "--all-files --hook-stage=push"
 
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up python
         uses: actions/setup-python@v4
@@ -46,7 +46,7 @@ jobs:
 
       - name: Check cache
         id: cached-poetry
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .venv
           key: unit-${{ hashFiles('poetry.lock') }}-${{ env.PYTHON }}-1
@@ -61,7 +61,7 @@ jobs:
           python -m pytest tests --verbose --junitxml=${{ env.UNIT_TEST_REPORT }}
 
       - name: Upload report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ${{ env.UNIT_TEST_REPORT }}
