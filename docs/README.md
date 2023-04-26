@@ -2,12 +2,13 @@
 
 To build the documentation, follow these steps:
 
-Prerequisites: 
+**Prerequisites:** 
 
 - Install poetry using commands given [here](https://python-poetry.org/docs/). 
 
 - If you encounter "zsh: command not found: python" follow [this link](https://dev.to/smpnjn/how-to-fix-zsh-command-not-found-python-22j8) to fix it. 
 
+---
 
 1. Navigate to the root of the repo and run 
 ```shell
@@ -23,7 +24,18 @@ Prerequisites:
 ```
 4. You can open the `_build/html/index.html` page to inspect your changes.
 
+---
 ### For those writing docs:
+
+- Make changes to the docs by editing the `.rst` files in the `docs/source` folder. This will affect the way `.html` files in the `docs/_build` folder are constructed.
+
+- View the doc changes by running:
+```shell
+> open _build/html/index.html 
+```
+
+---
+
 Instead of `make html`, you can run
 ```shell
 > ./build_docs
