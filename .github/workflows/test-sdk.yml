@@ -11,11 +11,13 @@ env:
   UNIT_TEST_REPORT_PYTHON_3_8: unit-test-report-python3_8.xml
   UNIT_TEST_REPORT_PYTHON_3_9: unit-test-report-python3_9.xml
   UNIT_TEST_REPORT_PYTHON_3_10: unit-test-report-python3_10.xml
+  UNIT_TEST_REPORT_PYTHON_3_11: unit-test-report-python3_11.xml
 
   INTEGRATION_TEST_REPORT_PYTHON_3_7: integration-test-report-python3_7.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_8: integration-test-report-python3_8.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_9: integration-test-report-python3_9.xml
   INTEGRATION_TEST_REPORT_PYTHON_3_10: integration-test-report-python3_10.xml
+  INTEGRATION_TEST_REPORT_PYTHON_3_11: integration-test-report-python3_11.xml
   INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
 
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -79,6 +81,18 @@ jobs:
           python-version: 3.10.2
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
 
+  unit-tests-python-3-11:
+    name: Run unit tests for Python 3.11
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run unit tests for Python 3.11
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.11.2
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
 
   integration-tests-python-3-7:
     name: Run integration tests for Python 3.7
@@ -148,7 +162,23 @@ jobs:
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
 
-      
+  integration-tests-python-3-11:
+    name: Run integration tests for Python 3.11
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout backend repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      - name: Run integration tests for Python 3.11
+        uses: ./.github/actions/run-sdk-integration-tests
+        with:
+          python-version: 3.11.2
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+
 
   publish-test-reports:
       name: Publish test reports
@@ -157,11 +187,13 @@ jobs:
         unit-tests-python-3-7,
         unit-tests-python-3-8, 
         unit-tests-python-3-9, 
-        unit-tests-python-3-10, 
+        unit-tests-python-3-10,
+        unit-tests-python-3-11,
         integration-tests-python-3-7,
         integration-tests-python-3-8,
         integration-tests-python-3-9,
         integration-tests-python-3-10,
+        integration-tests-python-3-11,
         ]
       if: success() || failure()
 
@@ -190,6 +222,12 @@ jobs:
             name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
             path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
 
+        - name: Download unit test report Python 3.11
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
+            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
+
         - name: Download integration test report Python 3.7
           uses: actions/download-artifact@v2
           with:
@@ -213,6 +251,12 @@ jobs:
           with:
             name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}
             path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}
+
+        - name: Download integration test report Python 3.11
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
 
         - name: Publish unit test report Python 3.7
           uses: EnricoMi/publish-unit-test-result-action@v1
@@ -238,6 +282,12 @@ jobs:
             files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}/*.xml
             check_name: Unit test report
 
+        - name: Publish unit test report Python 3.11
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}/*.xml
+            check_name: Unit test report
+
         - name: Publish integration test report Python 3.7
           uses: EnricoMi/publish-unit-test-result-action@v1
           with:
@@ -260,6 +310,12 @@ jobs:
           uses: EnricoMi/publish-unit-test-result-action@v1
           with:
             files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_10 }}/*.xml
+            check_name: SDK integration test report
+
+        - name: Publish integration test report Python 3.11
+          uses: EnricoMi/publish-unit-test-result-action@v1
+          with:
+            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
             check_name: SDK integration test report
 
   send-slack-notification:
