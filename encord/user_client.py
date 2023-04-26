@@ -589,7 +589,7 @@ class EncordUserClient:
         ret = dict()
 
         # be relaxed with what we receive: translate raw strings to enum values
-        for (clause, val) in properties_filter.items():
+        for clause, val in properties_filter.items():
             if val is None:
                 continue
 

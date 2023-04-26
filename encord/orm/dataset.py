@@ -83,7 +83,6 @@ class ImageData:
         signed_url: Optional[str],
         height: int,
     ):
-
         self._image_hash = image_hash
         self._title = title
         self._file_link = file_link
@@ -204,7 +203,6 @@ class DataRow(dict, Formatter):
         signed_url: Optional[str],
         is_optimised_image_group: Optional[bool],
     ):
-
         parsed_images = None
         if images_data is not None:
             parsed_images = [ImageData.from_dict(image_data) for image_data in images_data]

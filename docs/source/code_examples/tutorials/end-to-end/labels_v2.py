@@ -6,7 +6,7 @@ The :class:`encord.objects.LabelRowV2` class is a wrapper around the Encord labe
 provides a convenient way to read, create, and manipulate labels.
 """
 
-#%%
+# %%
 # Imports and authentication
 # --------------------------
 # First, import dependencies and authenticate a project manager.
@@ -28,7 +28,7 @@ from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.frames import Range
 from encord.orm.project import Project as OrmProject
 
-#%%
+# %%
 # .. note::
 #
 #   To interact with Encord, you need to authenticate a client. You can find more details
@@ -53,7 +53,7 @@ project_orm: OrmProject = next(
 project: Project = user_client.get_project(project_orm.project_hash)
 
 
-#%%
+# %%
 # Get metadata around labels
 # ------------------------------
 #
@@ -68,7 +68,7 @@ for label_row in label_rows:
     print(f"Label created at: {label_row.created_at}")
     print(f"Annotation task status: {label_row.annotation_task_status}")
 
-#%%
+# %%
 # Inspect the filters in :meth:`~encord.project.Project.list_label_rows_v2` to only get a subset of the label rows.
 #
 # You can find more examples around all the available read properties by inspecting the properties of the
@@ -93,7 +93,7 @@ first_label_row.initialise_labels()
 # Once you have added new labels, you will need to call .save() to upload all labels to the server.
 first_label_row.save()
 
-#%%
+# %%
 # Creating/reading object instances
 # ---------------------------------
 # The :class:`encord.objects.LabelRowV2` class works with its corresponding ontology. If you add object instances
@@ -144,7 +144,7 @@ first_label_row.add_object_instance(box_object_instance)
 
 first_label_row.save()  # Upload the label to the server
 
-#%%
+# %%
 # Inspecting an object instance
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
@@ -158,7 +158,7 @@ all_object_instances: List[
 assert all_object_instances[0] == box_object_instance
 assert all_object_instances[0].get_annotation(frame=0).manual_annotation is True
 
-#%%
+# %%
 # Adding object instances to multiple frames.
 # -------------------------------------------
 #
@@ -211,7 +211,7 @@ for frame_view in first_label_row.get_frame_views():
         )
 
 
-#%%
+# %%
 # Read access across multiple frames
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
@@ -231,7 +231,7 @@ for label_row_frame_view in first_label_row.get_frame_views():
         print(f"Coordinates: {annotation.coordinates}")
 
 
-#%%
+# %%
 # Working with a classification instance
 # ---------------------------------------------
 #
@@ -253,7 +253,7 @@ text_ontology_classification: Classification = (
 text_classification_instance = text_ontology_classification.create_instance()
 
 
-#%%
+# %%
 # Add the classification instance to the label row
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -266,7 +266,7 @@ text_classification_instance.set_for_frames(frames=0)
 # Then add it to the label row
 first_label_row.add_classification_instance(text_classification_instance)
 
-#%%
+# %%
 # Read classification instances
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -274,7 +274,7 @@ first_label_row.add_classification_instance(text_classification_instance)
 all_classification_instances = first_label_row.get_classification_instances()
 assert all_classification_instances[0] == text_classification_instance
 
-#%%
+# %%
 # Working with object/classification instance attributes
 # ------------------------------------------------------
 #

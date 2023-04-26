@@ -153,7 +153,6 @@ class Config(BaseConfig):
         websocket_endpoint: str = WEBSOCKET_ENDPOINT,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
-
         if resource_id is None:
             resource_id = get_env_resource_id()
 
