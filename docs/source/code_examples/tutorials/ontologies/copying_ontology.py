@@ -10,5 +10,3 @@ new_ontology = user_client.create_ontology(
     description="<my ontology description>",
     structure=ontology.structure,
 )
-
-
