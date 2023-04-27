@@ -550,12 +550,9 @@ def test_classification_instances():
     assert classification_instance_1.get_answer() == "Dionysus"
 
 
-def assert_datetime_is_recent(datetime_: datetime.datetime):
-    now = datetime.datetime.now()
-    assert datetime_ > now - datetime.timedelta(seconds=5)
-
-
 def test_classification_instances_frame_view():
+    test_start_timestamp = datetime.datetime.now()
+
     classification_instance_1 = ClassificationInstance(text_classification)
 
     classification_instance_1.set_for_frames(Range(1, 3))
@@ -563,9 +560,9 @@ def test_classification_instances_frame_view():
     # Test defaults
     frame_view_1 = classification_instance_1.get_annotation(1)
     assert frame_view_1.created_by is None
-    assert_datetime_is_recent(frame_view_1.created_at)
+    assert frame_view_1.created_at > test_start_timestamp
     assert frame_view_1.last_edited_by is None
-    assert_datetime_is_recent(frame_view_1.last_edited_at)
+    assert frame_view_1.last_edited_at > test_start_timestamp
     assert frame_view_1.confidence is 1
     assert frame_view_1.manual_annotation is True
     assert frame_view_1.reviews is None
