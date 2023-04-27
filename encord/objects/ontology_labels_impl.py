@@ -403,11 +403,11 @@ class ClassificationInstance:
         frames: Frames = 0,
         *,
         overwrite: bool = False,
-        created_at: datetime = datetime.now(),
+        created_at: Optional[datetime] = None,
         created_by: str = None,
         confidence: int = DEFAULT_CONFIDENCE,
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
-        last_edited_at: datetime = datetime.now(),
+        last_edited_at: Optional[datetime] = None,
         last_edited_by: Optional[str] = None,
         reviews: Optional[List[dict]] = None,
     ) -> None:
@@ -438,6 +438,12 @@ class ClassificationInstance:
             reviews:
                 Should only be set by internal functions.
         """
+        if created_at is None:
+            created_at = datetime.now()
+
+        if last_edited_at is None:
+            last_edited_at = datetime.now()
+
         frames_list = frames_class_to_frames_list(frames)
 
         self._check_classification_already_present(frames_list)
@@ -723,11 +729,11 @@ class ClassificationInstance:
 
     @dataclass
     class FrameData:
-        created_at: datetime = datetime.now()
+        created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
         confidence: int = DEFAULT_CONFIDENCE
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-        last_edited_at: datetime = datetime.now()
+        last_edited_at: datetime = field(default_factory=datetime.now)
         last_edited_by: Optional[str] = None
         reviews: Optional[List[dict]] = None
 
@@ -1432,13 +1438,19 @@ class LabelRowV2:
             classification_instance: ClassificationInstance,
             *,
             overwrite: bool = False,
-            created_at: datetime = datetime.now(),
+            created_at: Optional[datetime] = None,
             created_by: str = None,
             confidence: int = DEFAULT_CONFIDENCE,
             manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
-            last_edited_at: datetime = datetime.now(),
+            last_edited_at: Optional[datetime] = None,
             last_edited_by: Optional[str] = None,
         ) -> None:
+            if created_at is None:
+                created_at = datetime.now()
+
+            if last_edited_at is None:
+                last_edited_at = datetime.now()
+
             label_row = classification_instance.is_assigned_to_label_row()
             if label_row and self._label_row != label_row:
                 raise LabelRowError(
@@ -2473,10 +2485,10 @@ class ObjectInstance:
 
     @dataclass
     class FrameInfo:
-        created_at: datetime = datetime.now()
+        created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
         """None defaults to the user of the SDK once uploaded to the server."""
-        last_edited_at: datetime = datetime.now()
+        last_edited_at: datetime = field(default_factory=datetime.now)
         last_edited_by: Optional[str] = None
         """None defaults to the user of the SDK once uploaded to the server."""
         confidence: float = DEFAULT_CONFIDENCE
