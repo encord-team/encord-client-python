@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
@@ -89,6 +90,8 @@ from encord.objects.utils import (
 )
 from encord.orm.formatter import Formatter
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus, WorkflowGraphNode
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -909,10 +912,22 @@ class LabelRowV2:
 
     @property
     def label_status(self) -> LabelStatus:
+        if self.__is_tms2_project:
+            log.warning(
+                'label_status property returns incorrect results for TMS2 projects.\
+             Please use "workflow_graph_node" property instead.'
+            )
+
         return self._label_row_read_only_data.label_status
 
     @property
     def annotation_task_status(self) -> AnnotationTaskStatus:
+        if self.__is_tms2_project:
+            log.warning(
+                'annotation_task_status property returns incorrect results for TMS2 projects.\
+             Please use "workflow_graph_node" property instead.'
+            )
+
         return self._label_row_read_only_data.annotation_task_status
 
     @property
@@ -984,6 +999,10 @@ class LabelRowV2:
         read or write specific ObjectInstances or ClassificationInstances.
         """
         return self._is_labelling_initialised
+
+    @property
+    def __is_tms2_project(self) -> bool:
+        return self.workflow_graph_node is not None
 
     def initialise_labels(
         self,
@@ -1350,6 +1369,23 @@ class LabelRowV2:
         ret["data_units"] = self._to_encord_data_units()
 
         return ret
+
+    def workflow_reopen(self) -> None:
+        """
+        Sets the label row for re-labeling by resetting its progress over the workflow graph
+        No data will be lost during this call.
+        This method only relevant for the projects that use the Encord Task Management System 2,
+        and does nothing for other types of projects
+        """
+        if self.label_hash is None:
+            # Label has not yet moved from the initial state, nothing to do
+            return
+
+        if self.workflow_graph_node is None:
+            logging.warning("workflow_reopen call for non-TMS2 project is ignored")
+            return
+
+        self._project_client.workflow_reopen([self.label_hash])
 
     class FrameView:
         """
