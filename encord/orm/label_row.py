@@ -236,6 +236,18 @@ class LabelStatus(Enum):
 
 
 @dataclass(frozen=True)
+class WorkflowGraphNode:
+    uuid: str
+    title: str
+
+    @classmethod
+    def from_optional_dict(cls, json_dict: Optional[Dict]) -> Optional[WorkflowGraphNode]:
+        if json_dict is None:
+            return None
+        return WorkflowGraphNode(uuid=json_dict["uuid"], title=json_dict["title"])
+
+
+@dataclass(frozen=True)
 class LabelRowMetadata(Formatter):
     """
     Contains helpful information about a label row.
@@ -257,6 +269,8 @@ class LabelRowMetadata(Formatter):
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
     annotation_task_status: AnnotationTaskStatus
+    """Only available for TMS2 project"""
+    workflow_graph_node: Optional[WorkflowGraphNode]
     is_shadow_data: bool
     number_of_frames: int
     duration: Optional[float]
@@ -287,6 +301,7 @@ class LabelRowMetadata(Formatter):
             data_link=json_dict["data_link"],
             label_status=LabelStatus(json_dict["label_status"]),
             annotation_task_status=AnnotationTaskStatus(json_dict["annotation_task_status"]),
+            workflow_graph_node=WorkflowGraphNode.from_optional_dict(json_dict.get("workflow_graph_node")),
             is_shadow_data=json_dict.get("is_shadow_data", False),
             number_of_frames=json_dict["number_of_frames"],
             duration=json_dict.get("duration", None),

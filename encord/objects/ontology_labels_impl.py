@@ -88,7 +88,7 @@ from encord.objects.utils import (
     short_uuid_str,
 )
 from encord.orm.formatter import Formatter
-from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus, WorkflowGraphNode
 
 
 @dataclass
@@ -916,6 +916,10 @@ class LabelRowV2:
         return self._label_row_read_only_data.annotation_task_status
 
     @property
+    def workflow_graph_node(self) -> Optional[WorkflowGraphNode]:
+        return self._label_row_read_only_data.workflow_graph_node
+
+    @property
     def is_shadow_data(self) -> bool:
         return self._label_row_read_only_data.is_shadow_data
 
@@ -1536,6 +1540,7 @@ class LabelRowV2:
         data_type: DataType
         label_status: LabelStatus
         annotation_task_status: AnnotationTaskStatus
+        workflow_graph_node: Optional[WorkflowGraphNode]
         is_shadow_data: bool
         number_of_frames: int
         duration: Optional[float]
@@ -1799,6 +1804,7 @@ class LabelRowV2:
             data_link=label_row_metadata.data_link,
             label_status=label_row_metadata.label_status,
             annotation_task_status=label_row_metadata.annotation_task_status,
+            workflow_graph_node=label_row_metadata.workflow_graph_node,
             is_shadow_data=label_row_metadata.is_shadow_data,
             created_at=label_row_metadata.created_at,
             last_edited_at=label_row_metadata.last_edited_at,
