@@ -62,6 +62,7 @@ The tutorials are separated into those that relate to *datasets* and those that 
 
    tutorials/configurations
    tutorials/datasets
+   tutorials/ontologies
    tutorials/projects
 
 

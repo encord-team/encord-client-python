@@ -239,15 +239,14 @@ To get those hashes, you can follow the example in :ref:`tutorials/datasets:List
 
 Ontology
 ========
-A central component of a project is the |ontology|.
-The ontology essentially defines the label structure of a given project.
-For a |platform| description of the |ontology|, please see :xref:`configure_label_editor_(ontology)`.
 
-To access the ontology you can use the :meth:`~encord.user_client.EncordUserClient.get_ontology()` method.
+A central component of a project is the ontology - an in-depth description of which can be found `here <https://docs.encord.com/ontologies/overview>`_.
 
-You can then work with its `structure` property to read or write parts of the ontology.
+Ontologies are top-level entities that can be attached to projects that provide a template structure for labels. 
+Please note that while a project can only have a single ontology attached to it, one ontology can be attached to multiple projects.
 
-The structure comes as the :class:`~encord.ontology.ontology_labels_impl.OntologyStructure` class which has good self documenting examples on how to be used.
+- To access the ontology you can use the :meth:`~encord.user_client.EncordUserClient.get_ontology()` method, that allows you to work with its `structure` property.
+- The structure comes as the :class:`~encord.ontology.ontology_labels_impl.OntologyStructure` class which has good self documenting examples on how to be used.
 
 Labels
 ======
