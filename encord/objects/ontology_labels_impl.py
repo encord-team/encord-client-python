@@ -462,6 +462,10 @@ class ClassificationInstance:
                 reviews=reviews,
             )
 
+        if self.is_assigned_to_label_row():
+            self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+            self._parent._add_to_frame_to_hashes_map(self)
+
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
         Args:
@@ -1764,6 +1768,9 @@ class LabelRowV2:
             if frame in present_frames:
                 return frame
         return None
+
+    def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
+        self._classifications_to_frames[classification].update(set(frames))
 
     def _remove_frames_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         present_frames = self._classifications_to_frames.get(classification, set())
