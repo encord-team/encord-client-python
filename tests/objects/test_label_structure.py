@@ -949,3 +949,26 @@ def test_frame_view(ontology):
 
     assert frame_view.get_object_instances() == [object_instance]
     assert frame_view.get_classification_instances() == [classification_instance]
+
+
+def test_classification_can_be_added_edited_and_removed(ontology):
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 25
+    label_row_metadata_dict["duration"] = 0.2
+    label_row_metadata_dict["number_of_frames"] = 2
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
+    label_row.from_labels_dict(empty_image_group_labels)  # initialise the labels.
+
+    classification_instance = ClassificationInstance(checklist_classification)
+    classification_instance.set_for_frames(0)
+
+    label_row.add_classification_instance(classification_instance)
+    assert len(label_row.get_classification_instances()) == 1
+
+    classification_instance.set_for_frames(1)
+
+    label_row.remove_classification(classification_instance)
+
+    assert len(label_row.get_classification_instances()) == 0
