@@ -14,6 +14,7 @@ FAKE_LABEL_ROW_METADATA = LabelRowMetadata(
     dataset_title="",
     label_status=LabelStatus.NOT_LABELLED,
     annotation_task_status=AnnotationTaskStatus.QUEUED,
+    workflow_graph_node=None,
     is_shadow_data=False,
     duration=100,
     frames_per_second=25,

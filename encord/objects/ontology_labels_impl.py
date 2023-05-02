@@ -90,6 +90,8 @@ from encord.objects.utils import (
 )
 from encord.orm.formatter import Formatter
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus, WorkflowGraphNode
+from encord.exceptions import WrongProjectTypeError
+
 
 log = logging.getLogger(__name__)
 
@@ -913,8 +915,8 @@ class LabelRowV2:
     @property
     def label_status(self) -> LabelStatus:
         if self.__is_tms2_project:
-            log.warning(
-                'label_status property returns incorrect results for TMS2 projects.\
+            raise WrongProjectTypeError(
+                '"label"_status property returns incorrect results for TMS2 projects.\
              Please use "workflow_graph_node" property instead.'
             )
 
@@ -923,8 +925,8 @@ class LabelRowV2:
     @property
     def annotation_task_status(self) -> AnnotationTaskStatus:
         if self.__is_tms2_project:
-            log.warning(
-                'annotation_task_status property returns incorrect results for TMS2 projects.\
+            raise WrongProjectTypeError(
+                '"annotation_task_status" property returns incorrect results for TMS2 projects.\
              Please use "workflow_graph_node" property instead.'
             )
 
@@ -1381,10 +1383,6 @@ class LabelRowV2:
             # Label has not yet moved from the initial state, nothing to do
             return
 
-        if self.workflow_graph_node is None:
-            logging.warning("workflow_reopen call for non-TMS2 project is ignored")
-            return
-
         self._project_client.workflow_reopen([self.label_hash])
 
     class FrameView:
@@ -1575,7 +1573,7 @@ class LabelRowV2:
         data_hash: str
         data_type: DataType
         label_status: LabelStatus
-        annotation_task_status: AnnotationTaskStatus
+        annotation_task_status: Optional[AnnotationTaskStatus]
         workflow_graph_node: Optional[WorkflowGraphNode]
         is_shadow_data: bool
         number_of_frames: int
@@ -1891,7 +1889,8 @@ class LabelRowV2:
             data_hash=label_row_dict["data_hash"],
             data_type=data_type,
             label_status=LabelStatus(label_row_dict["label_status"]),
-            annotation_task_status=label_row_dict["annotation_task_status"],
+            annotation_task_status=label_row_dict.get("annotation_task_status", None),
+            workflow_graph_node=label_row_dict.get("workflow_graph_node", None),
             is_shadow_data=self.is_shadow_data,
             created_at=label_row_dict["created_at"],
             last_edited_at=label_row_dict["last_edited_at"],

@@ -268,7 +268,8 @@ class LabelRowMetadata(Formatter):
     data_link: Optional[str]
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
-    annotation_task_status: AnnotationTaskStatus
+    """Can be `None` for TMS2 projects"""
+    annotation_task_status: Optional[AnnotationTaskStatus]
     """Only available for TMS2 project"""
     workflow_graph_node: Optional[WorkflowGraphNode]
     is_shadow_data: bool
@@ -289,6 +290,12 @@ class LabelRowMetadata(Formatter):
         if last_edited_at is not None:
             last_edited_at = datetime.datetime.fromisoformat(last_edited_at)
 
+        annotation_task_status = (
+            AnnotationTaskStatus(json_dict["annotation_task_status"])
+            if json_dict["annotation_task_status"] is not None
+            else None
+        )
+
         return LabelRowMetadata(
             label_hash=json_dict.get("label_hash", None),
             created_at=created_at,
@@ -300,7 +307,7 @@ class LabelRowMetadata(Formatter):
             data_type=json_dict["data_type"],
             data_link=json_dict["data_link"],
             label_status=LabelStatus(json_dict["label_status"]),
-            annotation_task_status=AnnotationTaskStatus(json_dict["annotation_task_status"]),
+            annotation_task_status=annotation_task_status,
             workflow_graph_node=WorkflowGraphNode.from_optional_dict(json_dict.get("workflow_graph_node")),
             is_shadow_data=json_dict.get("is_shadow_data", False),
             number_of_frames=json_dict["number_of_frames"],
