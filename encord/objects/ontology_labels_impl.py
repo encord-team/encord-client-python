@@ -1374,7 +1374,7 @@ class LabelRowV2:
 
     def workflow_reopen(self) -> None:
         """
-        Sets the label row for re-labeling by resetting its progress over the workflow graph
+        A label row is returned to the first annotation stage for re-labeling. No data is lost during the call.
         No data will be lost during this call.
         This method is only relevant for the projects that use the Encord Task Management System 2,
         and does nothing for other types of projects
