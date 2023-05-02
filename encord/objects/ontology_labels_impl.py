@@ -1376,7 +1376,7 @@ class LabelRowV2:
         """
         Sets the label row for re-labeling by resetting its progress over the workflow graph
         No data will be lost during this call.
-        This method only relevant for the projects that use the Encord Task Management System 2,
+        This method is only relevant for the projects that use the Encord Task Management System 2,
         and does nothing for other types of projects
         """
         if self.label_hash is None:
