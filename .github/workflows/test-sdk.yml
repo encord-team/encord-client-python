@@ -3,7 +3,6 @@ name: Test SDK
 on:
   push:
     branches:
-      - master
   workflow_dispatch:
 
 env:
@@ -103,6 +102,7 @@ jobs:
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          ref: tmp-test-downgrading-python-for-sdk-tests
 
       - name: Run integration tests for Python 3.7
         uses: ./.github/actions/run-sdk-integration-tests
@@ -120,6 +120,7 @@ jobs:
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          ref: tmp-test-downgrading-python-for-sdk-tests
 
       - name: Run integration tests for Python 3.8
         uses: ./.github/actions/run-sdk-integration-tests
@@ -137,6 +138,7 @@ jobs:
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          ref: tmp-test-downgrading-python-for-sdk-tests
 
       - name: Run integration tests for Python 3.9
         uses: ./.github/actions/run-sdk-integration-tests
@@ -154,6 +156,7 @@ jobs:
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          ref: tmp-test-downgrading-python-for-sdk-tests
 
       - name: Run integration tests for Python 3.10
         uses: ./.github/actions/run-sdk-integration-tests
@@ -171,6 +174,7 @@ jobs:
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          ref: tmp-test-downgrading-python-for-sdk-tests
 
       - name: Run integration tests for Python 3.11
         uses: ./.github/actions/run-sdk-integration-tests
