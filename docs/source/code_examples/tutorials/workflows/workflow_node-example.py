@@ -6,5 +6,5 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 project: Project = user_client.get_project("<workflows_project_hash>")
 
 for label_row in project.list_label_rows_v2():
-        if label_rows.workflow_graph_node.title == "<review_stage_2>":
-            label.workflow_reopen()
+    if label_rows.workflow_graph_node.title == "<review_stage_2>":
+        label.workflow_reopen()
