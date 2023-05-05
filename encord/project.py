@@ -262,6 +262,8 @@ class Project:
         """
         Submit a label row for review.
 
+        **Note:** this method is not supported for the workflow-based projects. See the documentation about the workflows
+
         Args:
             uid: A label_hash (uid) string.
 

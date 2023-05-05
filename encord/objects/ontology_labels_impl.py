@@ -914,9 +914,15 @@ class LabelRowV2:
 
     @property
     def label_status(self) -> LabelStatus:
+        """
+        Returns current labeling status for the label row.
+
+        **Note**: is not supported for the workflow-based projects. See the documentation about workflows
+        """
+
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
-                '"label"_status property returns incorrect results for TMS2 projects.\
+                '"label"_status property returns incorrect results for workflow-based projects.\
              Please use "workflow_graph_node" property instead.'
             )
 
@@ -924,9 +930,14 @@ class LabelRowV2:
 
     @property
     def annotation_task_status(self) -> AnnotationTaskStatus:
+        """
+        Returns current annotation task status for the label row.
+
+        **Note**: is not supported for the workflow-based projects. See the documentation about workflows
+        """
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
-                '"annotation_task_status" property returns incorrect results for TMS2 projects.\
+                '"annotation_task_status" property returns incorrect results for workflow-based projects.\
              Please use "workflow_graph_node" property instead.'
             )
 
