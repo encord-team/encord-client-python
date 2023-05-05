@@ -160,6 +160,8 @@ class Project:
         shadow_data_state: Optional[ShadowDataState] = None,
         data_title_eq: Optional[str] = None,
         data_title_like: Optional[str] = None,
+        workflow_graph_node_title_eq: Optional[str] = None,
+        workflow_graph_node_title_like: Optional[str] = None,
     ) -> List[LabelRowV2]:
         """
         Args:
@@ -171,6 +173,8 @@ class Project:
             shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
             data_title_eq: Optionally filter by exact title match
             data_title_like: Optionally filter by fuzzy title match; SQL syntax
+            workflow_graph_node_title_eq: Optionally filter by exact match with workflow node title
+            workflow_graph_node_title_like: Optionally filter by fuzzy match with workflow node title; SQL syntax
 
         Returns:
             A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows
@@ -185,6 +189,8 @@ class Project:
             include_uninitialised_labels=True,
             data_title_eq=data_title_eq,
             data_title_like=data_title_like,
+            workflow_graph_node_title_eq=workflow_graph_node_title_eq,
+            workflow_graph_node_title_like=workflow_graph_node_title_like,
         )
 
         label_rows = [
