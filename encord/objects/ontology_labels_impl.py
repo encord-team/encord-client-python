@@ -917,7 +917,9 @@ class LabelRowV2:
         """
         Returns the current labeling status for the label row.
 
-        **Note**: This method is not supported for workflow-based projects. Please see our workflow documentation for more details.
+        **Note**: This method is not supported for workflow-based projects. Please see our
+        :ref:`workflow documentation <tutorials/workflows:Workflows>`
+        for more details.
         """
 
         if self.__is_tms2_project:
@@ -933,7 +935,9 @@ class LabelRowV2:
         """
         Returns the current annotation task status for the label row.
 
-        **Note**: This method is not supported for workflow-based projects. Please see our workflow documentation for more details.
+        **Note**: This method is not supported for workflow-based projects. Please see our
+        :ref:`workflow documentation <tutorials/workflows:Workflows>`
+        for more details.
         """
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
