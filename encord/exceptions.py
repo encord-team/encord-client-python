@@ -250,3 +250,10 @@ class OntologyError(EncordException):
     """An error thrown when using the ontology class with an error."""
 
     pass
+
+
+class WrongProjectTypeError(CordException):
+    """
+    An error thrown when project type does not match the operation
+    E.g. when TMS2 specific operations are attempted on non-TMS2 project
+    """
