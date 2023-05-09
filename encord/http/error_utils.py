@@ -38,6 +38,7 @@ DUPLICATE_SSH_KEY_ERROR = ["DUPLICATE_SSH_KEY_ERROR"]
 SSH_KEY_NOT_FOUND_ERROR = ["SSH_KEY_NOT_FOUND_ERROR"]
 INVALID_ARGUMENTS_ERROR = ["INVALID_ARGUMENTS_ERROR"]
 MULTI_LABEL_LIMIT_ERROR = ["MULTI_LABEL_LIMIT_ERROR"]
+WRONG_PROJECT_TYPE_ERROR = ["WRONG_PROJECT_TYPE_ERROR"]
 
 
 def check_error_response(response, payload=None):
@@ -130,6 +131,14 @@ def check_error_response(response, payload=None):
             "of requested labels to stay under the reported limit.",
             maximum_labels_allowed=maximum_labels_allowed,
         )
+
+    if response == WRONG_PROJECT_TYPE_ERROR:
+        default_message = "Operation is not supported by the project type"
+        if payload is None:
+            message = default_message
+        else:
+            message = payload
+        raise WrongProjectTypeError(message)
 
     payload_string = ""
     if payload:

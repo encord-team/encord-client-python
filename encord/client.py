@@ -729,6 +729,8 @@ class EncordClientProject(EncordClient):
         data_hashes: Optional[List[str]] = None,
         data_title_eq: Optional[str] = None,
         data_title_like: Optional[str] = None,
+        workflow_graph_node_title_eq: Optional[str] = None,
+        workflow_graph_node_title_like: Optional[str] = None,
     ) -> List[LabelRowMetadata]:
         """
         This function is documented in :meth:`encord.project.Project.list_label_rows`.
@@ -748,6 +750,8 @@ class EncordClientProject(EncordClient):
             "label_hashes": label_hashes,
             "data_title_eq": data_title_eq,
             "data_title_like": data_title_like,
+            "workflow_graph_node_title_eq": workflow_graph_node_title_eq,
+            "workflow_graph_node_title_like": workflow_graph_node_title_like,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload)
 
@@ -1244,6 +1248,17 @@ class EncordClientProject(EncordClient):
         """
         payload = {"editor": ontology.to_dict()}
         return self._querier.basic_setter(OrmProject, uid=None, payload=payload)
+
+    def workflow_reopen(self, label_hashes: list[str]) -> None:
+        """
+        This function is documented in :meth:`encord.objects.LabelRowV2.workflow_reopen`.
+        """
+
+        # Workaround to make basic_setter generate proper api call
+        class LabelWorkflowGraphNode:
+            pass
+
+        self._querier.basic_setter(LabelWorkflowGraphNode, label_hashes, payload=None)
 
 
 CordClientProject = EncordClientProject
