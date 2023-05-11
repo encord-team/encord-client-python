@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import base64
-import datetime
+from datetime import datetime
 import logging
 from enum import Enum
 from pathlib import Path
@@ -238,7 +238,7 @@ class EncordUserClient:
     @staticmethod
     def create_with_ssh_private_key(
         ssh_private_key: Optional[str] = None,
-        password: str = None,
+        password: Optional[str] = None,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
     ) -> EncordUserClient:
@@ -565,7 +565,9 @@ class EncordUserClient:
             )
         return retval
 
-    def create_ontology(self, title: str, description: str = "", structure: OntologyStructure = None) -> Ontology:
+    def create_ontology(
+        self, title: str, description: str = "", structure: Optional[OntologyStructure] = None
+    ) -> Ontology:
         structure_dict = structure.to_dict() if structure else dict()
         ontology = {
             "title": title,
@@ -604,7 +606,7 @@ class EncordUserClient:
             if clause.value.endswith("before") or clause.value.endswith("after"):
                 if isinstance(val, str):
                     val = dateutil.parser.isoparse(val)
-                if isinstance(val, datetime.datetime):
+                if isinstance(val, datetime):
                     val = val.isoformat()
                 else:
                     raise ValueError(f"Value for {clause.name} filter should be a datetime")

@@ -120,7 +120,7 @@ class CvatImporterError:
     issues: Issues
 
 
-def parse_datetime(key: str, val: Union[str, datetime]) -> str:
+def parse_datetime(key: str, val: Optional[Union[str, datetime]]) -> Optional[str]:
     if not val:
         return None
     if isinstance(val, str):

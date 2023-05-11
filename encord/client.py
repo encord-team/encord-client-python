@@ -735,15 +735,17 @@ class EncordClientProject(EncordClient):
         """
         This function is documented in :meth:`encord.project.Project.list_label_rows`.
         """
-        if label_statuses:
-            label_statuses = [label_status.value for label_status in label_statuses]
+
+        label_statuses_values = (
+            [label_status.value for label_status in label_statuses] if label_statuses is not None else None
+        )
         edited_before = parse_datetime("edited_before", edited_before)
         edited_after = parse_datetime("edited_after", edited_after)
 
         payload = {
             "edited_before": edited_before,
             "edited_after": edited_after,
-            "label_statuses": label_statuses,
+            "label_statuses": label_statuses_values,
             "shadow_data_state": shadow_data_state.value if shadow_data_state else None,
             "include_uninitialised_labels": include_uninitialised_labels,
             "data_hashes": data_hashes,
@@ -986,14 +988,14 @@ class EncordClientProject(EncordClient):
             }
         )
 
-        model = Model(
+        model_payload = Model(
             {
                 "model_operation": ModelOperations.CREATE.value,
                 "model_parameters": model_row,
             }
         )
 
-        return self._querier.basic_put(Model, None, payload=model)
+        return self._querier.basic_put(Model, None, payload=model_payload)
 
     def model_delete(self, uid: str) -> bool:
         """
@@ -1222,7 +1224,11 @@ class EncordClientProject(EncordClient):
         return self._config.get_websocket_url()
 
     def get_label_logs(
-        self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
+        self,
+        user_hash: Optional[str] = None,
+        data_hash: Optional[str] = None,
+        from_unix_seconds: Optional[int] = None,
+        to_unix_seconds: Optional[int] = None,
     ) -> List[LabelLog]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_logs`.
