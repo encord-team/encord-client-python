@@ -78,7 +78,7 @@ for label_row in label_rows:
 # --------------------------------
 #
 # To start reading or writing labels, you need to call the :meth:`~encord.objects.LabelRowV2.initialise_labels`
-# method which will download the state of the label from the Encord server.
+# method which will download the state of the label from the Encord server and create a label hash if none exists.
 #
 # Once this method has been called, you can create your first label.
 
