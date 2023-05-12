@@ -12,7 +12,13 @@ R = TypeVar("R")
 @dataclass
 class BundleResultHandler(Generic[T]):
     predicate: str
-    continuation: Callable[[T], None]
+    handler: Callable[[T], None]
+
+
+@dataclass
+class BundleResultMapper(Generic[T]):
+    mapping_function: Callable[[T], str]
+    result_handler: BundleResultHandler[T]
 
 
 @dataclass
@@ -22,12 +28,12 @@ class BundledOperation(Generic[T, R]):
     mapper: Optional[Callable[[R], str]]
     limit: int
     payloads: list = field(default_factory=lambda: [])
-    continuations: Dict[str, Callable[[T], None]] = field(default_factory=lambda: dict())
+    result_handlers: Dict[str, Callable[[T], None]] = field(default_factory=lambda: dict())
 
-    def append(self, payload: T, continuation: Optional[BundleResultHandler]):
+    def append(self, payload: T, result_handler: Optional[BundleResultHandler]):
         self.payloads.append(payload)
-        if continuation is not None:
-            self.continuations[continuation.predicate] = continuation.continuation
+        if result_handler is not None:
+            self.result_handlers[result_handler.predicate] = result_handler.handler
 
     def get_bundled_payload(self) -> Generator[T, None, None]:
         for i in range(0, len(self.payloads), self.limit):
@@ -90,15 +96,15 @@ class Bundle:
         self,
         operation: Callable[..., List[R]],
         reducer: Callable[[T, T], T],
-        mapper: Optional[Tuple[Callable[[R], str], BundleResultHandler[R]]],
+        mapper: Optional[BundleResultMapper[R]],
         payload: T,
         limit: int,
     ) -> None:
         # This is an internal method and normally is not supposed to be used externally
 
-        mapper_predicate = mapper[0] if mapper is not None else None
-        mapper_continuation = mapper[1] if mapper is not None else None
-        self.__register_operation(operation, reducer, mapper_predicate, limit).append(payload, mapper_continuation)
+        mapping_function = mapper.mapping_function if mapper is not None else None
+        result_handler = mapper.result_handler if mapper is not None else None
+        self.__register_operation(operation, reducer, mapping_function, limit).append(payload, result_handler)
 
     def execute(self) -> None:
         """
@@ -111,9 +117,9 @@ class Bundle:
 
                 if operation.mapper is not None:
                     for br in bundle_result:
-                        continuation = operation.continuations.get(operation.mapper(br))
-                        if continuation is not None:
-                            continuation(br)
+                        result_handler = operation.result_handlers.get(operation.mapper(br))
+                        if result_handler is not None:
+                            result_handler(br)
 
     def __enter__(self):
         return self

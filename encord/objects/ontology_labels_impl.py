@@ -91,7 +91,7 @@ from encord.objects.utils import (
 from encord.orm.formatter import Formatter
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus, WorkflowGraphNode
 from encord.exceptions import WrongProjectTypeError
-from encord.http.bundle import Bundle, BundleResultHandler
+from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper
 from encord.http.limits import LABEL_ROW_BUNDLE_GET_LIMIT, LABEL_ROW_BUNDLE_CREATE_LIMIT, LABEL_ROW_BUNDLE_SAVE_LIMIT
 
 log = logging.getLogger(__name__)
@@ -1123,9 +1123,9 @@ class LabelRowV2:
             batch.add(
                 operation=self._project_client.create_label_rows,
                 reducer=self._bundle_create_rows_reducer,
-                mapper=(
-                    self._bundle_create_rows_mapper,
-                    BundleResultHandler(predicate=self.data_hash, continuation=self.from_labels_dict),
+                mapper=BundleResultMapper(
+                    mapping_function=self._bundle_create_rows_mapper,
+                    result_handler=BundleResultHandler(predicate=self.data_hash, handler=self.from_labels_dict),
                 ),
                 payload=BundledCreateRowsPayload(
                     uids=[self.data_hash],
@@ -1136,9 +1136,9 @@ class LabelRowV2:
             batch.add(
                 operation=self._project_client.get_label_rows,
                 reducer=self._bundle_get_rows_reducer,
-                mapper=(
-                    self._bundle_get_rows_mapper,
-                    BundleResultHandler(predicate=self.label_hash, continuation=self.from_labels_dict),
+                mapper=BundleResultMapper(
+                    mapping_function=self._bundle_get_rows_mapper,
+                    result_handler=BundleResultHandler(predicate=self.label_hash, handler=self.from_labels_dict),
                 ),
                 payload=BundledGetRowsPayload(
                     uids=[uid],
