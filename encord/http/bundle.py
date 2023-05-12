@@ -38,9 +38,24 @@ class Bundle:
     """
     This class allows to perform operations in bundles to improve performance by reducing number of network calls.
 
-    To execute batch you can either call  :meth:`.execute()` directly, or use a context manager.
+    To execute batch you can either call  :meth:`.execute()` directly, or use a Context Manager.
 
         .. code::
+                # Code example of performing batched label initialisation
+                project = ... # assuming you already have instantiated this Project object
+                label_rows = project.list_label_rows_v2()
+                bundle = project.create_bundle()
+                for label_row in label_rows:
+                    label_row.initialise_labels(bundle=bundle)
+                    # no real network operations happened at this point
+
+                # now, trigger the actual network interaction
+                bundle.execute()
+
+                # all labels are initialised at this point
+
+
+        And this is the same flow with the Context Manager approach:
 
                 # Code example of performing batched label initialisation
                 project = ... # assuming you already have instantiated this Project object
@@ -48,6 +63,7 @@ class Bundle:
                 with project.create_bundle() as bundle:
                     for label_row in label_rows:
                         label_row.initialise_labels(bundle=bundle)
+                        # no real network operations happened at this point
 
                 # At this point all labels will be initialised
     """
@@ -55,7 +71,7 @@ class Bundle:
     def __init__(self) -> None:
         self._operations: Dict[Callable, BundledOperation] = dict()
 
-    def _register_operation(
+    def __register_operation(
         self,
         operation: Callable[..., List[R]],
         reducer: Callable[[T, T], T],
@@ -79,7 +95,7 @@ class Bundle:
 
         mapper_predicate = mapper[0] if mapper is not None else None
         mapper_continuation = mapper[1] if mapper is not None else None
-        self._register_operation(operation, reducer, mapper_predicate, limit).append(payload, mapper_continuation)
+        self.__register_operation(operation, reducer, mapper_predicate, limit).append(payload, mapper_continuation)
 
     def execute(self) -> None:
         """

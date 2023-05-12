@@ -1078,7 +1078,7 @@ class LabelRowV2:
                 current labels with the labels stored in the Encord server. If this is `False` and the label row was
                 already initialised, this function will throw an error.
             bundle: If not passed, initialisation is performed independently. If passed, it will be delayed and
-                initialised along with other objects in the same batch once batch is executed
+                initialised along with other objects in the same bundle.
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -1223,7 +1223,7 @@ class LabelRowV2:
         in the platform in the meantime.
 
         Args:
-            bundle: if not passed, save is executed immediately. If passed, it is executed as a part of the batch
+            bundle: if not passed, save is executed immediately. If passed, it is executed as a part of the bundle
         """
         self._check_labelling_is_initalised()
 
