@@ -16,7 +16,7 @@ import dataclasses
 import logging
 import platform
 from contextlib import contextmanager
-from typing import Any, List, Optional, Type, TypeVar
+from typing import Any, List, Optional, Type, TypeVar, Generator
 
 import requests
 import requests.exceptions
@@ -30,6 +30,7 @@ from encord.http.error_utils import check_error_response
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
 from encord.orm.formatter import Formatter
+from encord.orm.base_orm import BaseORM
 from encord._version import __version__ as encord_version
 
 logger = logging.getLogger(__name__)
@@ -170,7 +171,7 @@ class Querier:
 
 
 @contextmanager
-def create_new_session(max_retries: Optional[int] = None, backoff_factor: float = 0) -> Session:
+def create_new_session(max_retries: Optional[int] = None, backoff_factor: float = 0) -> Generator[Session, None, None]:
     retry_policy = Retry(total=max_retries, connect=max_retries, read=max_retries, backoff_factor=backoff_factor)
 
     with Session() as session:

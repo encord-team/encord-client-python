@@ -14,7 +14,7 @@
 # under the License.
 
 import json
-from typing import Dict
+from typing import Dict, Optional
 
 from encord.http.query_methods import QueryMethods
 
@@ -32,7 +32,7 @@ class Request(object):
         timeout,
         connect_timeout,
         payload,
-    ):
+    ) -> None:
         self.http_method = QueryMethods.POST
         self.data: str = json.dumps(
             {
@@ -47,7 +47,7 @@ class Request(object):
         self.timeout = timeout
         self.connect_timeout = connect_timeout
 
-        self.headers: Dict = None
+        self.headers: Optional[Dict] = None
 
     def __str__(self):
         return f"Request({self.http_method}, {self.data}, {self.headers}, {self.timeout}, {self.connect_timeout})"
