@@ -92,6 +92,7 @@ from encord.orm.formatter import Formatter
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus, WorkflowGraphNode
 from encord.exceptions import WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler
+from encord.http.limits import LABEL_ROW_BUNDLE_GET_LIMIT, LABEL_ROW_BUNDLE_CREATE_LIMIT, LABEL_ROW_BUNDLE_SAVE_LIMIT
 
 log = logging.getLogger(__name__)
 
@@ -1129,7 +1130,7 @@ class LabelRowV2:
                 payload=BundledCreateRowsPayload(
                     uids=[self.data_hash],
                 ),
-                limit=100,
+                limit=LABEL_ROW_BUNDLE_CREATE_LIMIT,
             )
         else:
             batch.add(
@@ -1146,7 +1147,7 @@ class LabelRowV2:
                     include_classification_feature_hashes=include_classification_feature_hashes,
                     include_reviews=include_reviews,
                 ),
-                limit=100,
+                limit=LABEL_ROW_BUNDLE_GET_LIMIT,
             )
 
     @staticmethod
@@ -1237,7 +1238,7 @@ class LabelRowV2:
                 reducer=self.__batch_save_rows_reducer,
                 mapper=None,
                 payload=BatchSaveRowsPayload(uids=[self.label_hash], payload=[dict_labels]),
-                limit=100,
+                limit=LABEL_ROW_BUNDLE_SAVE_LIMIT,
             )
 
     @staticmethod
