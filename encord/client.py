@@ -419,7 +419,7 @@ class EncordClientDataset(EncordClient):
 
     def create_image_group(
         self,
-        file_paths: List[str],
+        file_paths: Iterable[str],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,

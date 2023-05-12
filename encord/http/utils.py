@@ -2,7 +2,7 @@ import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
-from typing import List, Optional, Type, TypeVar, Union
+from typing import List, Optional, Type, TypeVar, Union, Iterable
 
 from tqdm import tqdm
 
@@ -50,7 +50,7 @@ OrmT = TypeVar("OrmT")
 
 
 def upload_to_signed_url_list(
-    file_paths: List[str],
+    file_paths: Iterable[str],
     config: BaseConfig,
     querier: Querier,
     orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]],
