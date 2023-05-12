@@ -41,6 +41,7 @@ class Bundle:
     To execute batch you can either call  :meth:`.execute()` directly, or use a Context Manager.
 
         .. code::
+
                 # Code example of performing batched label initialisation
                 project = ... # assuming you already have instantiated this Project object
                 label_rows = project.list_label_rows_v2()
@@ -56,6 +57,8 @@ class Bundle:
 
 
         And this is the same flow with the Context Manager approach:
+
+        .. code::
 
                 # Code example of performing batched label initialisation
                 project = ... # assuming you already have instantiated this Project object
