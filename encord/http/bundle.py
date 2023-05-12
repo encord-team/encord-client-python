@@ -100,8 +100,11 @@ class Bundle:
         payload: T,
         limit: int,
     ) -> None:
-        # This is an internal method and normally is not supposed to be used externally
+        """
+        This is an internal method and normally is not supposed to be used externally.
 
+        Adds an operation to a bundle for delayed execution.
+        """
         mapping_function = mapper.mapping_function if mapper is not None else None
         result_handler = mapper.result_handler if mapper is not None else None
         self.__register_operation(operation, reducer, mapping_function, limit).append(payload, result_handler)
