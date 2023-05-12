@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Set, TypeVar, Union
 
-import dateutil
+from dateutil import parser as datetime_parser
 
 
 def pretty_print(data):
@@ -124,7 +124,7 @@ def parse_datetime(key: str, val: Optional[Union[str, datetime]]) -> Optional[st
     if not val:
         return None
     if isinstance(val, str):
-        return dateutil.parser.isoparse(val).isoformat()
+        return datetime_parser.isoparse(val).isoformat()
     if isinstance(val, datetime):
         return val.isoformat()
     else:
