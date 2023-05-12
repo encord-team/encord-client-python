@@ -703,9 +703,12 @@ class EncordClientProject(EncordClient):
     DEPRECATED - prefer using the :class:`encord.project.Project` instead
     """
 
-    def get_project(self):
+    def get_project(self, include_labels_metadata=True):
         """
         Retrieve project info (pointers to data, labels).
+
+        Args:
+            include_labels_metadata: if false, label row metadata information will not be returned.
 
         Returns:
             OrmProject: A project record instance.
@@ -715,7 +718,7 @@ class EncordClientProject(EncordClient):
             ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while retrieving the project.
         """
-        return self._querier.basic_getter(OrmProject)
+        return self._querier.basic_getter(OrmProject, payload={"include_labels_metadata": include_labels_metadata})
 
     def list_label_rows(
         self,
