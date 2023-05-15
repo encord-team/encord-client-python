@@ -193,4 +193,4 @@ def test_bundled_label_save(save_label_rows_mock: MagicMock,
     args = save_label_rows_mock.call_args[1]
     assert args is not None
     assert len(args["uids"]) == 3, "Expected 3 updates bundled"
-    assert len(args["payloads"]) == 3, "Expected 3 updates bundled"
+    assert len(args["payload"]) == 3, "Expected 3 updates bundled"
