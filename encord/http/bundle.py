@@ -21,14 +21,20 @@ class BundleResultMapper(Generic[T]):
     result_handler: BundleResultHandler[T]
 
 
-@dataclass
 class BundledOperation(Generic[T, R]):
-    operation: Callable[..., List[R]]
-    request_reducer: Callable[[T, T], T]
-    result_mapper: Optional[Callable[[R], str]]
-    limit: int
-    payloads: List[T] = field(default_factory=lambda: [])
-    result_handlers: Dict[str, Callable[[T], None]] = field(default_factory=lambda: dict())
+    def __init__(
+        self,
+        operation: Callable[..., List[R]],
+        request_reducer: Callable[[T, T], T],
+        result_mapper: Optional[Callable[[R], str]],
+        limit: int,
+    ) -> None:
+        self.operation = operation
+        self.request_reducer = request_reducer
+        self.result_mapper = result_mapper
+        self.limit = limit
+        self.payloads: List[T] = []
+        self.result_handlers: Dict[str, Callable[[T], None]] = dict()
 
     def append(self, payload: T, result_handler: Optional[BundleResultHandler]):
         self.payloads.append(payload)
