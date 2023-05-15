@@ -1124,7 +1124,7 @@ class LabelRowV2:
                 operation=self._project_client.create_label_rows,
                 request_reducer=self._bundle_create_rows_reducer,
                 result_mapper=BundleResultMapper(
-                    mapping_function=self._bundle_create_rows_mapper,
+                    result_mapping_predicate=self._bundle_create_rows_mapping_predicate,
                     result_handler=BundleResultHandler(predicate=self.data_hash, handler=self.from_labels_dict),
                 ),
                 payload=BundledCreateRowsPayload(
@@ -1137,7 +1137,7 @@ class LabelRowV2:
                 operation=self._project_client.get_label_rows,
                 request_reducer=self._bundle_get_rows_reducer,
                 result_mapper=BundleResultMapper(
-                    mapping_function=self._bundle_get_rows_mapper,
+                    result_mapping_predicate=self._bundle_get_rows_mapping_predicate,
                     result_handler=BundleResultHandler(predicate=self.label_hash, handler=self.from_labels_dict),
                 ),
                 payload=BundledGetRowsPayload(
@@ -1165,11 +1165,11 @@ class LabelRowV2:
         return bundle_payload
 
     @staticmethod
-    def _bundle_get_rows_mapper(entry: OrmLabelRow) -> str:
+    def _bundle_get_rows_mapping_predicate(entry: OrmLabelRow) -> str:
         return entry["label_hash"]
 
     @staticmethod
-    def _bundle_create_rows_mapper(entry: OrmLabelRow) -> str:
+    def _bundle_create_rows_mapping_predicate(entry: OrmLabelRow) -> str:
         return entry["data_hash"]
 
     def from_labels_dict(self, label_row_dict: dict) -> None:

@@ -17,15 +17,15 @@ class BundleResultHandler(Generic[T]):
 
 @dataclass
 class BundleResultMapper(Generic[T]):
-    mapping_function: Callable[[T], str]
+    result_mapping_predicate: Callable[[T], str]
     result_handler: BundleResultHandler[T]
 
 
 @dataclass
 class BundledOperation(Generic[T, R]):
     operation: Callable[..., List[R]]
-    reducer: Callable[[T, T], T]
-    mapper: Optional[Callable[[R], str]]
+    request_reducer: Callable[[T, T], T]
+    result_mapper: Optional[Callable[[R], str]]
     limit: int
     payloads: List[T] = field(default_factory=lambda: [])
     result_handlers: Dict[str, Callable[[T], None]] = field(default_factory=lambda: dict())
@@ -37,7 +37,7 @@ class BundledOperation(Generic[T, R]):
 
     def get_bundled_payload(self) -> Generator[T, None, None]:
         for i in range(0, len(self.payloads), self.limit):
-            yield reduce(self.reducer, self.payloads[i : i + self.limit])
+            yield reduce(self.request_reducer, self.payloads[i : i + self.limit])
 
 
 class Bundle:
@@ -86,12 +86,12 @@ class Bundle:
     def __register_operation(
         self,
         operation: Callable[..., List[R]],
-        reducer: Callable[[T, T], T],
-        mapper: Optional[Callable[[R], str]],
+        request_reducer: Callable[[T, T], T],
+        result_mapping_predicate: Optional[Callable[[R], str]],
         limit: int,
     ) -> BundledOperation[T, R]:
         if operation not in self._operations:
-            self._operations[operation] = BundledOperation(operation, reducer, mapper, limit)
+            self._operations[operation] = BundledOperation(operation, request_reducer, result_mapping_predicate, limit)
 
         return self._operations[operation]
 
@@ -108,9 +108,11 @@ class Bundle:
 
         Adds an operation to a bundle for delayed execution.
         """
-        mapping_function = result_mapper.mapping_function if result_mapper is not None else None
+        result_mapping_predicate = result_mapper.result_mapping_predicate if result_mapper is not None else None
         result_handler = result_mapper.result_handler if result_mapper is not None else None
-        self.__register_operation(operation, request_reducer, mapping_function, limit).append(payload, result_handler)
+        self.__register_operation(operation, request_reducer, result_mapping_predicate, limit).append(
+            payload, result_handler
+        )
 
     def execute(self) -> None:
         """
@@ -121,9 +123,9 @@ class Bundle:
             for bundled_payload in operation.get_bundled_payload():
                 bundle_result = operation.operation(**asdict(bundled_payload))
 
-                if operation.mapper is not None:
+                if operation.result_mapper is not None:
                     for br in bundle_result:
-                        result_handler = operation.result_handlers.get(operation.mapper(br))
+                        result_handler = operation.result_handlers.get(operation.result_mapper(br))
                         if result_handler is not None:
                             result_handler(br)
 
