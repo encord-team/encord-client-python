@@ -873,7 +873,7 @@ class BundledCreateRowsPayload:
 
 
 @dataclass
-class BatchSaveRowsPayload:
+class BundledSaveRowsPayload:
     uids: List[str]
     payload: List[Dict]
 
@@ -1237,14 +1237,14 @@ class LabelRowV2:
                 operation=self._project_client.save_label_rows,
                 request_reducer=self.__batch_save_rows_reducer,
                 result_mapper=None,
-                payload=BatchSaveRowsPayload(uids=[self.label_hash], payload=[dict_labels]),
+                payload=BundledSaveRowsPayload(uids=[self.label_hash], payload=[dict_labels]),
                 limit=LABEL_ROW_BUNDLE_SAVE_LIMIT,
             )
 
     @staticmethod
     def __batch_save_rows_reducer(
-        payload_batch: BatchSaveRowsPayload, payload: BatchSaveRowsPayload
-    ) -> BatchSaveRowsPayload:
+        payload_batch: BundledSaveRowsPayload, payload: BundledSaveRowsPayload
+    ) -> BundledSaveRowsPayload:
         payload_batch.uids += payload.uids
         payload_batch.payload += payload.payload
         return payload
