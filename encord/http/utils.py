@@ -2,7 +2,7 @@ import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
-from typing import List, Optional, Type, TypeVar, Union
+from typing import List, Optional, Type, TypeVar, Union, Iterable
 
 from tqdm import tqdm
 
@@ -49,8 +49,19 @@ class CloudUploadSettings:
 OrmT = TypeVar("OrmT")
 
 
+def _get_content_type(orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]], file_path: str) -> Optional[str]:
+    if orm_class == Images:
+        return mimetypes.guess_type(file_path)[0]
+    elif orm_class == Video:
+        return "application/octet-stream"
+    elif orm_class == DicomSeries:
+        return "application/dicom"
+    else:
+        raise ValueError(f"Unsupported type `{orm_class}`")
+
+
 def upload_to_signed_url_list(
-    file_paths: List[str],
+    file_paths: Iterable[str],
     config: BaseConfig,
     querier: Querier,
     orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]],
@@ -60,15 +71,7 @@ def upload_to_signed_url_list(
     failed_uploads = []
     successful_uploads = []
     for file_path in tqdm(file_paths):
-        if orm_class == Images:
-            content_type = mimetypes.guess_type(file_path)[0]
-        elif orm_class == Video:
-            content_type = "application/octet-stream"
-        elif orm_class == DicomSeries:
-            content_type = "application/dicom"
-        else:
-            raise RuntimeError(f"Unsupported type `{orm_class}`")
-
+        content_type = _get_content_type(orm_class, file_path)
         file_name = os.path.basename(file_path)
         signed_url = _get_signed_url(file_name, orm_class, querier)
         assert signed_url.get("title", "") == file_name, "Ordering issue"
@@ -133,19 +136,20 @@ def _get_signed_url(
         return querier.basic_getter(SignedImagesURL, uid=[file_name])[0]
     elif orm_class == DicomSeries:
         return querier.basic_getter(SignedDicomsURL, uid=[file_name])[0]
+    raise ValueError(f"Unsupported type `{orm_class}`")
 
 
 def _upload_single_file(
     file_path: str,
     signed_url: dict,
-    content_type: str,
+    content_type: Optional[str],
     *,
     max_retries: int,
     backoff_factor: float,
     cache_max_age: int = CACHE_DURATION_IN_SECONDS,
 ) -> None:
     with create_new_session(max_retries=max_retries, backoff_factor=backoff_factor) as session:
-        url = signed_url.get("signed_url")
+        url = signed_url["signed_url"]
 
         with open(file_path, "rb") as f:
             res_upload = session.put(

@@ -5,5 +5,5 @@ from typing import Dict, List, Union
 class Formatter(ABC):
     @classmethod
     @abstractmethod
-    def from_dict(cls, json_dict: Union[Dict, List]):
+    def from_dict(cls, json_dict: Dict):
         pass

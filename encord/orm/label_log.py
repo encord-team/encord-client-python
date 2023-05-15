@@ -17,7 +17,7 @@ class LabelLog:
     action: Action
     label_name: str
     time_taken: int
-    created_at: datetime.datetime
+    created_at: datetime
     frame: int
 
 

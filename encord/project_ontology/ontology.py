@@ -52,7 +52,7 @@ class Ontology:
         "#AB149E",
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.ontology_objects: List[OntologyObject] = []
         self.ontology_classifications: List[OntologyClassification] = []
         self.color_index = 0
@@ -218,11 +218,24 @@ class Ontology:
             "featureNodeHash": ontology_object.feature_node_hash,
         }
 
+    def __ontology_classification_options_to_dict(
+        self, options: Optional[Iterable[ClassificationOption]]
+    ) -> Optional[List[Dict]]:
+        if options is None:
+            return None
+
+        option_dicts = []
+        for classification_option in options:
+            option = {
+                "id": classification_option.id,
+                "label": classification_option.label,
+                "value": classification_option.value,
+                "featureNodeHash": classification_option.feature_node_hash,
+            }
+            option_dicts.append(option)
+        return option_dicts
+
     def ontology_classification_to_dict(self, ontology_classification: OntologyClassification) -> Dict:
-        classification = {
-            "id": ontology_classification.id,
-            "featureNodeHash": ontology_classification.feature_node_hash,
-        }
         attributes = []
         for classification_attribute in ontology_classification.attributes:
             attribute = {
@@ -231,21 +244,15 @@ class Ontology:
                 "type": classification_attribute.classification_type.value,
                 "required": classification_attribute.required,
                 "featureNodeHash": classification_attribute.feature_node_hash,
+                "options": self.__ontology_classification_options_to_dict(classification_attribute.options),
             }
-            if classification_attribute.options:
-                options = []
-                for classification_option in classification_attribute.options:
-                    option = {
-                        "id": classification_option.id,
-                        "label": classification_option.label,
-                        "value": classification_option.value,
-                        "featureNodeHash": classification_option.feature_node_hash,
-                    }
-                    options.append(option)
-                attribute["options"] = options
             attributes.append(attribute)
 
-        classification["attributes"] = attributes
+        classification = {
+            "id": ontology_classification.id,
+            "featureNodeHash": ontology_classification.feature_node_hash,
+            "attributes": attributes,
+        }
         return classification
 
     def __format_option_value(self, label: str):
