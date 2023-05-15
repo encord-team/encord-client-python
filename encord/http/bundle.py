@@ -27,7 +27,7 @@ class BundledOperation(Generic[T, R]):
     reducer: Callable[[T, T], T]
     mapper: Optional[Callable[[R], str]]
     limit: int
-    payloads: list = field(default_factory=lambda: [])
+    payloads: List[T] = field(default_factory=lambda: [])
     result_handlers: Dict[str, Callable[[T], None]] = field(default_factory=lambda: dict())
 
     def append(self, payload: T, result_handler: Optional[BundleResultHandler]):
