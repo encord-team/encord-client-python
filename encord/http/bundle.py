@@ -44,6 +44,9 @@ class Bundle:
     """
     This class allows to perform operations in bundles to improve performance by reducing number of network calls.
 
+    It is not supposed to be instantiated directly by a user. Use :meth:`encord.project.Project.create_bundle()`
+    method to initiate bundled operations.
+
     To execute batch you can either call  :meth:`.execute()` directly, or use a Context Manager.
 
         .. code::
