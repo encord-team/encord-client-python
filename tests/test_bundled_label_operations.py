@@ -101,6 +101,10 @@ def test_bundled_label_initialise_create(list_label_rows_mock: MagicMock,
     create_label_rows_mock.assert_called_once()
     get_label_rows_mock.assert_not_called()
 
+    args = create_label_rows_mock.call_args[1]
+    assert args is not None
+    assert len(args["uids"]) == 3, "Expected 3 requests bundled"
+
     for row in rows:
         assert row.is_labelling_initialised, "Expect all rows to be intitialised"
 
@@ -128,6 +132,10 @@ def test_bundled_label_initialise_get(list_label_rows_mock: MagicMock,
 
     create_label_rows_mock.assert_not_called()
     get_label_rows_mock.assert_called_once()
+
+    args = get_label_rows_mock.call_args[1]
+    assert args is not None
+    assert len(args["uids"]) == 3, "Expected 3 requests bundled"
 
     for row in rows:
         assert row.is_labelling_initialised, "Expect all rows to be initialized"
@@ -181,4 +189,8 @@ def test_bundled_label_save(save_label_rows_mock: MagicMock,
     bundle.execute()
 
     save_label_rows_mock.assert_called_once()
-    assert len(save_label_rows_mock.call_args(0)) == 3, "Expected 3 updates bundled"
+
+    args = save_label_rows_mock.call_args[1]
+    assert args is not None
+    assert len(args["uids"]) == 3, "Expected 3 updates bundled"
+    assert len(args["payloads"]) == 3, "Expected 3 updates bundled"

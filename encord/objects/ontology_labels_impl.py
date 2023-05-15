@@ -1243,11 +1243,11 @@ class LabelRowV2:
 
     @staticmethod
     def __batch_save_rows_reducer(
-        payload_batch: BundledSaveRowsPayload, payload: BundledSaveRowsPayload
+        bundle_payload: BundledSaveRowsPayload, payload: BundledSaveRowsPayload
     ) -> BundledSaveRowsPayload:
-        payload_batch.uids += payload.uids
-        payload_batch.payload += payload.payload
-        return payload
+        bundle_payload.uids += payload.uids
+        bundle_payload.payload += payload.payload
+        return bundle_payload
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
