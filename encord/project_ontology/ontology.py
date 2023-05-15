@@ -221,17 +221,18 @@ class Ontology:
     def __ontology_classification_options_to_dict(
         self, options: Optional[Iterable[ClassificationOption]]
     ) -> Optional[List[Dict]]:
-        option_dicts = []
-        if options is not None:
-            for classification_option in options:
-                option = {
-                    "id": classification_option.id,
-                    "label": classification_option.label,
-                    "value": classification_option.value,
-                    "featureNodeHash": classification_option.feature_node_hash,
-                }
-                option_dicts.append(option)
+        if options is None:
+            return None
 
+        option_dicts = []
+        for classification_option in options:
+            option = {
+                "id": classification_option.id,
+                "label": classification_option.label,
+                "value": classification_option.value,
+                "featureNodeHash": classification_option.feature_node_hash,
+            }
+            option_dicts.append(option)
         return option_dicts
 
     def ontology_classification_to_dict(self, ontology_classification: OntologyClassification) -> Dict:
