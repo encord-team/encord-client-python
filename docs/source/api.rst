@@ -88,9 +88,6 @@ Label Frame Utilities
     :members:
     :undoc-members:
 
-
-
-
 Utilities - Client
 ------------------------
 .. automodule:: encord.utilities.client_utilities
@@ -183,6 +180,11 @@ Exceptions
 .. automodule:: encord.exceptions
     :members:
     :undoc-members:
+
+Helpers
+------------
+.. autoclass:: encord.http.bundle.Bundle
+    :members:
 
 DEPRECATED Client
 -----------------

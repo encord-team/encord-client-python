@@ -22,6 +22,7 @@ from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.ontology import Ontology
+from encord.http.bundle import Bundle
 
 
 class Project:
@@ -942,3 +943,11 @@ class Project:
 
     def _invalidate_project_instance(self):
         self._project_instance = None
+
+    def create_bundle(self) -> Bundle:
+        """
+        Initialises a bundle to reduce amount of network calls performed by the Encord SDK
+
+        See the :class:`encord.http.bundle.Bundle` documentation for more details
+        """
+        return Bundle()
