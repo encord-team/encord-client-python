@@ -1246,6 +1246,7 @@ class LabelRowV2:
         payload_batch: BatchSaveRowsPayload, payload: BatchSaveRowsPayload
     ) -> BatchSaveRowsPayload:
         payload_batch.uids += payload.uids
+        payload_batch.payload += payload.payload
         return payload
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
