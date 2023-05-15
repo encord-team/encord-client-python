@@ -95,8 +95,8 @@ class Bundle:
     def add(
         self,
         operation: Callable[..., List[R]],
-        reducer: Callable[[T, T], T],
-        mapper: Optional[BundleResultMapper[R]],
+        request_reducer: Callable[[T, T], T],
+        result_mapper: Optional[BundleResultMapper[R]],
         payload: T,
         limit: int,
     ) -> None:
@@ -105,9 +105,9 @@ class Bundle:
 
         Adds an operation to a bundle for delayed execution.
         """
-        mapping_function = mapper.mapping_function if mapper is not None else None
-        result_handler = mapper.result_handler if mapper is not None else None
-        self.__register_operation(operation, reducer, mapping_function, limit).append(payload, result_handler)
+        mapping_function = result_mapper.mapping_function if result_mapper is not None else None
+        result_handler = result_mapper.result_handler if result_mapper is not None else None
+        self.__register_operation(operation, request_reducer, mapping_function, limit).append(payload, result_handler)
 
     def execute(self) -> None:
         """

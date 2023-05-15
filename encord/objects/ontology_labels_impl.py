@@ -1122,8 +1122,8 @@ class LabelRowV2:
         if self.label_hash is None:
             batch.add(
                 operation=self._project_client.create_label_rows,
-                reducer=self._bundle_create_rows_reducer,
-                mapper=BundleResultMapper(
+                request_reducer=self._bundle_create_rows_reducer,
+                result_mapper=BundleResultMapper(
                     mapping_function=self._bundle_create_rows_mapper,
                     result_handler=BundleResultHandler(predicate=self.data_hash, handler=self.from_labels_dict),
                 ),
@@ -1135,8 +1135,8 @@ class LabelRowV2:
         else:
             batch.add(
                 operation=self._project_client.get_label_rows,
-                reducer=self._bundle_get_rows_reducer,
-                mapper=BundleResultMapper(
+                request_reducer=self._bundle_get_rows_reducer,
+                result_mapper=BundleResultMapper(
                     mapping_function=self._bundle_get_rows_mapper,
                     result_handler=BundleResultHandler(predicate=self.label_hash, handler=self.from_labels_dict),
                 ),
@@ -1235,8 +1235,8 @@ class LabelRowV2:
         else:
             bundle.add(
                 operation=self._project_client.save_label_rows,
-                reducer=self.__batch_save_rows_reducer,
-                mapper=None,
+                request_reducer=self.__batch_save_rows_reducer,
+                result_mapper=None,
                 payload=BatchSaveRowsPayload(uids=[self.label_hash], payload=[dict_labels]),
                 limit=LABEL_ROW_BUNDLE_SAVE_LIMIT,
             )
