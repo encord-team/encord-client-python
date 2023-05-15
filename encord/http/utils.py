@@ -57,7 +57,7 @@ def _get_content_type(orm_class: Union[Type[Images], Type[Video], Type[DicomSeri
     elif orm_class == DicomSeries:
         return "application/dicom"
     else:
-        raise RuntimeError(f"Unsupported type `{orm_class}`")
+        raise ValueError(f"Unsupported type `{orm_class}`")
 
 
 def upload_to_signed_url_list(
@@ -136,7 +136,7 @@ def _get_signed_url(
         return querier.basic_getter(SignedImagesURL, uid=[file_name])[0]
     elif orm_class == DicomSeries:
         return querier.basic_getter(SignedDicomsURL, uid=[file_name])[0]
-    raise RuntimeError(f"Unsupported type `{orm_class}`")
+    raise ValueError(f"Unsupported type `{orm_class}`")
 
 
 def _upload_single_file(
