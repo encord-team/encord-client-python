@@ -1112,7 +1112,7 @@ class LabelRowV2:
 
     def __batched_initialise(
         self,
-        batch: Bundle,
+        bundle: Bundle,
         uid,
         get_signed_url,
         include_object_feature_hashes,
@@ -1120,7 +1120,7 @@ class LabelRowV2:
         include_reviews,
     ):
         if self.label_hash is None:
-            batch.add(
+            bundle.add(
                 operation=self._project_client.create_label_rows,
                 request_reducer=self._bundle_create_rows_reducer,
                 result_mapper=BundleResultMapper(
@@ -1133,7 +1133,7 @@ class LabelRowV2:
                 limit=LABEL_ROW_BUNDLE_CREATE_LIMIT,
             )
         else:
-            batch.add(
+            bundle.add(
                 operation=self._project_client.get_label_rows,
                 request_reducer=self._bundle_get_rows_reducer,
                 result_mapper=BundleResultMapper(
@@ -1235,14 +1235,14 @@ class LabelRowV2:
         else:
             bundle.add(
                 operation=self._project_client.save_label_rows,
-                request_reducer=self.__batch_save_rows_reducer,
+                request_reducer=self._batch_save_rows_reducer,
                 result_mapper=None,
                 payload=BundledSaveRowsPayload(uids=[self.label_hash], payload=[dict_labels]),
                 limit=LABEL_ROW_BUNDLE_SAVE_LIMIT,
             )
 
     @staticmethod
-    def __batch_save_rows_reducer(
+    def _batch_save_rows_reducer(
         bundle_payload: BundledSaveRowsPayload, payload: BundledSaveRowsPayload
     ) -> BundledSaveRowsPayload:
         bundle_payload.uids += payload.uids
