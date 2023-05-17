@@ -60,6 +60,7 @@ from encord.objects.constants import (
 )
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
     PointCoordinate,
@@ -1909,6 +1910,8 @@ class LabelRowV2:
             encord_object["polyline"] = coordinates.to_dict()
         elif isinstance(coordinates, PointCoordinate):
             encord_object["point"] = coordinates.to_dict()
+        elif isinstance(coordinates, BitmaskCoordinates):
+            encord_object["bitmask"] = coordinates.to_encoded_string()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
@@ -2145,6 +2148,8 @@ class LabelRowV2:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
             raise NotImplementedError("Got a skeleton object, which is not supported yet")
+        elif "bitmask" in frame_object_label:
+            return BitmaskCoordinates.from_dict(frame_object_label, shape=(self.height, self.width))
         else:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
 
