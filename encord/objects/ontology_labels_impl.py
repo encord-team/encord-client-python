@@ -2326,7 +2326,7 @@ class ObjectInstance:
             attribute = _infer_attribute_from_answer(self._ontology_object.attributes, answer)
         if not self._is_attribute_valid_child_of_object_instance(attribute):
             raise LabelRowError("The attribute is not a valid child of the object.")
-        elif not self._is_selectable_child_attribute(attribute):
+        elif not attribute.dynamic and not self._is_selectable_child_attribute(attribute):
             raise LabelRowError(
                 "Setting a nested attribute is only possible if all parent attributes have been selected."
             )
