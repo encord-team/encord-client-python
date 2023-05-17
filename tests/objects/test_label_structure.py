@@ -60,9 +60,9 @@ dynamic_text: TextAttribute = all_types_structure.get_child_by_hash("OTkxMjU1")
 dynamic_checklist = all_types_structure.get_child_by_hash("ODcxMDAy")
 dynamic_checklist_option_1 = all_types_structure.get_child_by_hash("MTE5MjQ3")
 dynamic_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg3MDE3")
-dynamic_radio = all_types_structure.get_child_by_hash("MTExM9I3")
-dynamic_radio_option_1 = all_types_structure.get_child_by_hash("MT9xNDQ5")  # This is dynamic and deeply nested.
-dynamic_radio_option_2 = all_types_structure.get_child_by_hash("9TcxMjAy")  # This is dynamic and deeply nested.
+dynamic_radio = all_types_structure.get_child_by_hash("MTExM9I3", type_=RadioAttribute)
+dynamic_radio_option_1 = all_types_structure.get_child_by_hash("MT9xNDQ5", type_=Option)  # Dynamic and deeply nested.
+dynamic_radio_option_2 = all_types_structure.get_child_by_hash("9TcxMjAy", type_=Option)  # Dynamic and deeply nested.
 
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
 text_classification_attribute: TextAttribute = all_types_structure.get_child_by_hash("OxrtEM+v", TextAttribute)
@@ -752,6 +752,18 @@ def test_object_instance_answer_dynamic_attributes():
     # Overwriting frames
     object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=1)
     assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Poseidon", ranges=[Range(1, 1)])]
+
+
+def test_object_instance_answer_dynamic_classification():
+    object_instance = keypoint_dynamic.create_instance()
+
+    assert object_instance.get_answer(dynamic_radio) == []
+
+    object_instance.set_answer(answer=dynamic_radio_option_1, frames=1)
+
+    assert object_instance.get_answer(dynamic_radio) == [
+        AnswerForFrames(answer=dynamic_radio_option_1, ranges=[Range(1, 1)])
+    ]
 
 
 def test_object_instance_answer_dynamic_no_frames_argument():
