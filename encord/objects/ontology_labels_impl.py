@@ -2769,6 +2769,9 @@ class ObjectInstance:
         # I have the ontology classification, so I can build the tree from that. Basically do a DFS.
         ontology_object = self._ontology_object
         for search_attribute in ontology_object.attributes:
+            if search_attribute.dynamic:
+                continue
+
             if _search_child_attributes(attribute, search_attribute, self._static_answer_map):
                 return True
         return False
