@@ -2277,7 +2277,7 @@ class ObjectInstance:
             attribute = self._ontology_object.attributes[0]
         elif not self._is_attribute_valid_child_of_object_instance(attribute):
             raise LabelRowError("The attribute is not a valid child of the classification.")
-        elif not self._is_selectable_child_attribute(attribute):
+        elif not attribute.dynamic and not self._is_selectable_child_attribute(attribute):
             return None
 
         if is_dynamic is not None and is_dynamic is not attribute.dynamic:
@@ -2326,7 +2326,7 @@ class ObjectInstance:
             attribute = _infer_attribute_from_answer(self._ontology_object.attributes, answer)
         if not self._is_attribute_valid_child_of_object_instance(attribute):
             raise LabelRowError("The attribute is not a valid child of the object.")
-        elif not self._is_selectable_child_attribute(attribute):
+        elif not attribute.dynamic and not self._is_selectable_child_attribute(attribute):
             raise LabelRowError(
                 "Setting a nested attribute is only possible if all parent attributes have been selected."
             )
@@ -2769,6 +2769,9 @@ class ObjectInstance:
         # I have the ontology classification, so I can build the tree from that. Basically do a DFS.
         ontology_object = self._ontology_object
         for search_attribute in ontology_object.attributes:
+            if search_attribute.dynamic:
+                continue
+
             if _search_child_attributes(attribute, search_attribute, self._static_answer_map):
                 return True
         return False
