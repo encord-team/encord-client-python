@@ -1,6 +1,6 @@
 import pytest
 
-from encord.objects.frames import frames_class_to_frames_list, Range
+from encord.objects.frames import Range, frames_class_to_frames_list
 
 
 def test_frames_class_to_frames_list():

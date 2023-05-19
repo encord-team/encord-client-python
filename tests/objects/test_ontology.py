@@ -325,7 +325,6 @@ def test_build_nested_options():
 
 
 def build_expected_ontology():
-
     ontology = encord.objects.OntologyStructure()
 
     eye = ontology.add_object(
@@ -414,7 +413,6 @@ def test_ontology_getters():
 
 
 def test_object_getters():
-
     # Option
     assert OBJECT_2.get_child_by_hash(FLAT_OPTION_1.feature_node_hash) == FLAT_OPTION_1
     assert OBJECT_2.get_child_by_hash(FLAT_OPTION_1.feature_node_hash, encord.objects.FlatOption)
@@ -491,7 +489,6 @@ def test_attribute_getters():
 
 
 def test_option_getters():
-
     # Attribute
     assert NESTABLE_OPTION_3.get_child_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash) == RADIO_ATTRIBUTE_1
     assert NESTABLE_OPTION_3.get_child_by_hash(RADIO_ATTRIBUTE_1.feature_node_hash, encord.objects.RadioAttribute)

@@ -1,22 +1,23 @@
-import pytest
-from unittest.mock import MagicMock, patch
 from copy import deepcopy
+from typing import Dict
+from unittest.mock import MagicMock, patch
 
-from encord import EncordUserClient, Project
-from encord.client import EncordClientProject
-from encord.orm.project import Project as OrmProject
-from encord.orm.label_row import LabelRowMetadata, LabelRow
-
-from encord.ontology import Ontology
-from encord.objects.ontology_labels_impl import Ontology as OrmOntology
-from encord.objects import LabelRowV2
-from tests.test_data.label_rows_metadata_blurb import LABEL_ROW_METADATA_BLURB, LABEL_ROW_BLURB
-from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
-
+import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from typing import Dict
+from encord import EncordUserClient, Project
+from encord.client import EncordClientProject
+from encord.objects import LabelRowV2
+from encord.objects.ontology_labels_impl import Ontology as OrmOntology
+from encord.ontology import Ontology
+from encord.orm.label_row import LabelRow, LabelRowMetadata
+from encord.orm.project import Project as OrmProject
+from tests.test_data.label_rows_metadata_blurb import (
+    LABEL_ROW_BLURB,
+    LABEL_ROW_METADATA_BLURB,
+)
+from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
 DUMMY_PRIVATE_KEY = (
     Ed25519PrivateKey.generate()
@@ -45,7 +46,8 @@ def ontology():
 @patch.object(EncordClientProject, "get_project")
 def project(client_project_mock, client: EncordUserClient, ontology: Ontology):
     client_project_mock.return_value = OrmProject(
-        {"ontology_hash": "dummy-ontology-hash", "project_hash": "dummy-project-hash"})
+        {"ontology_hash": "dummy-ontology-hash", "project_hash": "dummy-project-hash"}
+    )
     project = client.get_project("dummy-project-hash")
     project._ontology = ontology
     return project
@@ -53,13 +55,13 @@ def project(client_project_mock, client: EncordUserClient, ontology: Ontology):
 
 def remove_label_hash(obj: Dict) -> Dict:
     obj = deepcopy(obj)
-    del obj['label_hash']
+    del obj["label_hash"]
     return obj
 
 
 def get_response_by_data_hash(data_hash: str):
     for r in LABEL_ROW_BLURB:
-        if r['data_hash'] == data_hash:
+        if r["data_hash"] == data_hash:
             return r
     assert False
 
@@ -70,7 +72,7 @@ def get_valid_label_rows(project: Project):
         label_rows.append(LabelRowV2(LabelRowMetadata.from_dict(r), project._client, project._ontology))
 
     for r, v in zip(label_rows, LABEL_ROW_BLURB):
-        assert r.data_hash == v['data_hash']
+        assert r.data_hash == v["data_hash"]
         r.from_labels_dict(v)
 
     return label_rows
@@ -79,12 +81,12 @@ def get_valid_label_rows(project: Project):
 @patch.object(EncordClientProject, "get_label_rows")
 @patch.object(EncordClientProject, "create_label_rows")
 @patch.object(EncordClientProject, "list_label_rows")
-def test_bundled_label_initialise_create(list_label_rows_mock: MagicMock,
-                                         create_label_rows_mock: MagicMock,
-                                         get_label_rows_mock: MagicMock,
-                                         project: Project):
-    list_label_rows_mock.return_value = [LabelRowMetadata.from_dict(remove_label_hash(row)) for row in
-                                         LABEL_ROW_METADATA_BLURB]
+def test_bundled_label_initialise_create(
+    list_label_rows_mock: MagicMock, create_label_rows_mock: MagicMock, get_label_rows_mock: MagicMock, project: Project
+):
+    list_label_rows_mock.return_value = [
+        LabelRowMetadata.from_dict(remove_label_hash(row)) for row in LABEL_ROW_METADATA_BLURB
+    ]
     create_label_rows_mock.return_value = [LabelRow(row) for row in LABEL_ROW_BLURB]
 
     rows = project.list_label_rows_v2()
@@ -112,10 +114,9 @@ def test_bundled_label_initialise_create(list_label_rows_mock: MagicMock,
 @patch.object(EncordClientProject, "get_label_rows")
 @patch.object(EncordClientProject, "create_label_rows")
 @patch.object(EncordClientProject, "list_label_rows")
-def test_bundled_label_initialise_get(list_label_rows_mock: MagicMock,
-                                      create_label_rows_mock: MagicMock,
-                                      get_label_rows_mock: MagicMock,
-                                      project: Project):
+def test_bundled_label_initialise_get(
+    list_label_rows_mock: MagicMock, create_label_rows_mock: MagicMock, get_label_rows_mock: MagicMock, project: Project
+):
     list_label_rows_mock.return_value = [LabelRowMetadata.from_dict(row) for row in LABEL_ROW_METADATA_BLURB]
     get_label_rows_mock.return_value = [LabelRow(row) for row in LABEL_ROW_BLURB]
 
@@ -144,12 +145,12 @@ def test_bundled_label_initialise_get(list_label_rows_mock: MagicMock,
 @patch.object(EncordClientProject, "get_label_rows")
 @patch.object(EncordClientProject, "create_label_rows")
 @patch.object(EncordClientProject, "list_label_rows")
-def test_bundled_label_initialise_mix_get_create(list_label_rows_mock: MagicMock,
-                                                 create_label_rows_mock: MagicMock,
-                                                 get_label_rows_mock: MagicMock,
-                                                 project: Project):
-    responses = [get_response_by_data_hash(data_hash) for data_hash in
-                 [row['data_hash'] for row in LABEL_ROW_METADATA_BLURB]]
+def test_bundled_label_initialise_mix_get_create(
+    list_label_rows_mock: MagicMock, create_label_rows_mock: MagicMock, get_label_rows_mock: MagicMock, project: Project
+):
+    responses = [
+        get_response_by_data_hash(data_hash) for data_hash in [row["data_hash"] for row in LABEL_ROW_METADATA_BLURB]
+    ]
 
     rows_metadata_mix = LABEL_ROW_METADATA_BLURB[:2] + [remove_label_hash(row) for row in LABEL_ROW_METADATA_BLURB[2:]]
     list_label_rows_mock.return_value = [LabelRowMetadata.from_dict(row) for row in rows_metadata_mix]
@@ -176,8 +177,7 @@ def test_bundled_label_initialise_mix_get_create(list_label_rows_mock: MagicMock
 
 
 @patch.object(EncordClientProject, "save_label_rows")
-def test_bundled_label_save(save_label_rows_mock: MagicMock,
-                            project: Project):
+def test_bundled_label_save(save_label_rows_mock: MagicMock, project: Project):
     label_rows = get_valid_label_rows(project)
 
     bundle = project.create_bundle()
