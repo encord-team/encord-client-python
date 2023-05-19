@@ -127,7 +127,7 @@ class Querier:
 
     @staticmethod
     def _user_agent():
-        return f"Encord Python SDK {encord_version}; Python {platform.python_version()}"
+        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
     def _request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
         request = Request(method, db_object_type, uid, timeout, self._config.connect_timeout, payload)
