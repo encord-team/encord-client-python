@@ -14,19 +14,32 @@
 # under the License.
 import time
 from datetime import datetime, timezone
+from dataclasses import dataclass, field, fields
+from typing import Optional
+
+
+@dataclass
+class ExceptionContext:
+    timestamp: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
+
+    def __str__(self):
+        return " ".join(
+            f"{object_field.name}={getattr(self, object_field.name)!r}"
+            for object_field in fields(self)
+            if getattr(self, object_field.name) is not None
+        )
 
 
 class EncordException(Exception):
     """Base class for all exceptions."""
 
-    def __init__(self, message):
+    def __init__(self, message: str, context: Optional[ExceptionContext] = None):
         super().__init__(message)
         self.message = message
+        self.context = context if context is not None else ExceptionContext()
 
     def __str__(self):
-        datetime_postfix = f"Error timestamp: {datetime.now(tz=timezone.utc).isoformat()}."
-
-        return f"{self.message} {datetime_postfix}"
+        return f"{self.message} {self.context}"
 
 
 CordException = EncordException
