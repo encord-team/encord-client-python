@@ -8,8 +8,19 @@ repos:
         language: system
         files: ^encord/.*
       - id: black
+        name: black_tests
+        entry: poetry run black --config=pyproject.toml
+        types_or: [ python, pyi ]
+        language: system
+        files: ^tests/.*
+      - id: black
         name: black_docs
         entry: poetry run black --config=docs/source/code_examples/pyproject.toml
         types_or: [ python, pyi ]
         language: system
         files: ^docs/source/code_examples/.*
+      - id: isort
+        name: isort_tests
+        entry: poetry run isort --sp=pyproject.toml
+        language: system
+        files: ^tests/.*py$
