@@ -1,11 +1,11 @@
 """
 All tests regarding converting from and to Encord dict to the label row.
 """
-import pytest
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
 from unittest.mock import Mock, PropertyMock
 
+import pytest
 from deepdiff import DeepDiff
 
 from encord.objects.ontology_labels_impl import LabelRowV2, OntologyStructure
@@ -20,8 +20,6 @@ from tests.objects.data import (
 )
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.dicom_labels import dicom_labels
-
-from tests.objects.data.ontology_with_many_dynamic_classifications import ontology as ontology_with_many_dynamic_classifications
 from tests.objects.data.dynamic_classifications_ontology import (
     dynamic_classifications_ontology,
 )
@@ -30,6 +28,9 @@ from tests.objects.data.empty_image_group import (
     empty_image_group_ontology,
 )
 from tests.objects.data.image_group import image_group_labels, image_group_ontology
+from tests.objects.data.ontology_with_many_dynamic_classifications import (
+    ontology as ontology_with_many_dynamic_classifications,
+)
 
 
 def ontology_from_dict(ontology_structure_dict: Dict):

@@ -1,75 +1,74 @@
-LABEL_ROW_METADATA_BLURB = \
-    [
-        {
-            "label_hash": "44e1bdfb-3c45-4edb-8a71-a969f22fd632",
-            "label_status": "LABEL_IN_PROGRESS",
-            "created_at": "2023-03-21T09:58:08.472959",
-            "last_edited_at": "2023-03-21T11:03:52.573279",
-            "data_hash": "9b45984a-0046-4389-ba0d-b73b6b35ee82",
-            "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",
-            "dataset_title": "Test dataset",
-            "data_title": "sample.mp4",
-            "data_type": "VIDEO",
-            "is_shadow_data": False,
-            "frames_per_second": 23.976023976023978,
-            "duration": 29.07071,
-            "number_of_frames": 697,
-            "data_link": "cord-videos-dev/CcJU09GkdjcLCslKtd6bEqi48ZA2/9b45984a-0046-4389-ba0d-b73b6b35ee82",
-            "file_type": "video/mp4",
-            "file_size": "5468354.0",
-            "width": 1280,
-            "height": 720,
-            "is_optimised_image_group": "None",
-            "is_image_sequence": "None",
-            "annotation_task_status": "ASSIGNED"
-        },
-        {
-            "label_hash": "2321fd7d-99cd-4d85-b371-9a9f59cf79a7",
-            "label_status": "LABEL_IN_PROGRESS",
-            "created_at": "2023-03-21T10:25:48.821571",
-            "last_edited_at": "2023-03-21T11:51:19.785354",
-            "data_hash": "b13c4f55-1eae-4832-93e8-83b030ef17b0",
-            "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",
-            "dataset_title": "Test dataset",
-            "data_title": "Screenshot 2023-03-16 at 13.04.59.png",
-            "data_type": "IMAGE",
-            "is_shadow_data": False,
-            "frames_per_second": "None",
-            "duration": "None",
-            "number_of_frames": 1,
-            "data_link": "cord-images-dev/CcJU09GkdjcLCslKtd6bEqi48ZA2/b13c4f55-1eae-4832-93e8-83b030ef17b0",
-            "file_type": "image/png",
-            "file_size": "13154.0",
-            "width": 304,
-            "height": 220,
-            "is_optimised_image_group": "None",
-            "is_image_sequence": "None",
-            "annotation_task_status": "QUEUED"
-        },
-        {
-            "label_hash": "f6dcda1a-8e0a-45b2-a3c5-d7ebfe93ad8a",
-            "label_status": "LABEL_IN_PROGRESS",
-            "created_at": "2023-03-21T12:02:42.287150",
-            "last_edited_at": "2023-03-21T12:02:42.287150",
-            "data_hash": "f53546bf-9c1e-47d5-bc20-282a4c187977",
-            "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",
-            "dataset_title": "Test dataset",
-            "data_title": "mega-image-group",
-            "data_type": "IMG_GROUP",
-            "is_shadow_data": False,
-            "frames_per_second": "None",
-            "duration": "None",
-            "number_of_frames": 4,
-            "data_link": "None",
-            "file_type": "None",
-            "file_size": "None",
-            "width": "None",
-            "height": "None",
-            "is_optimised_image_group": False,
-            "is_image_sequence": False,
-            "annotation_task_status": "QUEUED"
-        }
-    ]
+LABEL_ROW_METADATA_BLURB = [
+    {
+        "label_hash": "44e1bdfb-3c45-4edb-8a71-a969f22fd632",
+        "label_status": "LABEL_IN_PROGRESS",
+        "created_at": "2023-03-21T09:58:08.472959",
+        "last_edited_at": "2023-03-21T11:03:52.573279",
+        "data_hash": "9b45984a-0046-4389-ba0d-b73b6b35ee82",
+        "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",
+        "dataset_title": "Test dataset",
+        "data_title": "sample.mp4",
+        "data_type": "VIDEO",
+        "is_shadow_data": False,
+        "frames_per_second": 23.976023976023978,
+        "duration": 29.07071,
+        "number_of_frames": 697,
+        "data_link": "cord-videos-dev/CcJU09GkdjcLCslKtd6bEqi48ZA2/9b45984a-0046-4389-ba0d-b73b6b35ee82",
+        "file_type": "video/mp4",
+        "file_size": "5468354.0",
+        "width": 1280,
+        "height": 720,
+        "is_optimised_image_group": "None",
+        "is_image_sequence": "None",
+        "annotation_task_status": "ASSIGNED",
+    },
+    {
+        "label_hash": "2321fd7d-99cd-4d85-b371-9a9f59cf79a7",
+        "label_status": "LABEL_IN_PROGRESS",
+        "created_at": "2023-03-21T10:25:48.821571",
+        "last_edited_at": "2023-03-21T11:51:19.785354",
+        "data_hash": "b13c4f55-1eae-4832-93e8-83b030ef17b0",
+        "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",
+        "dataset_title": "Test dataset",
+        "data_title": "Screenshot 2023-03-16 at 13.04.59.png",
+        "data_type": "IMAGE",
+        "is_shadow_data": False,
+        "frames_per_second": "None",
+        "duration": "None",
+        "number_of_frames": 1,
+        "data_link": "cord-images-dev/CcJU09GkdjcLCslKtd6bEqi48ZA2/b13c4f55-1eae-4832-93e8-83b030ef17b0",
+        "file_type": "image/png",
+        "file_size": "13154.0",
+        "width": 304,
+        "height": 220,
+        "is_optimised_image_group": "None",
+        "is_image_sequence": "None",
+        "annotation_task_status": "QUEUED",
+    },
+    {
+        "label_hash": "f6dcda1a-8e0a-45b2-a3c5-d7ebfe93ad8a",
+        "label_status": "LABEL_IN_PROGRESS",
+        "created_at": "2023-03-21T12:02:42.287150",
+        "last_edited_at": "2023-03-21T12:02:42.287150",
+        "data_hash": "f53546bf-9c1e-47d5-bc20-282a4c187977",
+        "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",
+        "dataset_title": "Test dataset",
+        "data_title": "mega-image-group",
+        "data_type": "IMG_GROUP",
+        "is_shadow_data": False,
+        "frames_per_second": "None",
+        "duration": "None",
+        "number_of_frames": 4,
+        "data_link": "None",
+        "file_type": "None",
+        "file_size": "None",
+        "width": "None",
+        "height": "None",
+        "is_optimised_image_group": False,
+        "is_image_sequence": False,
+        "annotation_task_status": "QUEUED",
+    },
+]
 
 LABEL_ROW_BLURB = [
     {
@@ -102,12 +101,7 @@ LABEL_ROW_BLURB = [
                             "objectHash": "8/VCHNzS",
                             "featureHash": "no8RyWRY",
                             "manualAnnotation": True,
-                            "boundingBox": {
-                                "h": 0.1836,
-                                "w": 0.093,
-                                "x": 0.2051,
-                                "y": 0.3293
-                            }
+                            "boundingBox": {"h": 0.1836, "w": 0.093, "x": 0.2051, "y": 0.3293},
                         },
                         {
                             "name": "Pear",
@@ -120,13 +114,8 @@ LABEL_ROW_BLURB = [
                             "objectHash": "uGsbuPaf",
                             "featureHash": "no8RyWRY",
                             "manualAnnotation": True,
-                            "boundingBox": {
-                                "h": 0.178,
-                                "w": 0.0903,
-                                "x": 0.4376,
-                                "y": 0.3367
-                            }
-                        }
+                            "boundingBox": {"h": 0.178, "w": 0.0903, "x": 0.4376, "y": 0.3367},
+                        },
                     ],
                     "classifications": [
                         {
@@ -138,28 +127,18 @@ LABEL_ROW_BLURB = [
                             "featureHash": "4BjoumKd",
                             "lastEditedAt": "Tue, 21 Mar 2023 11:23:36 GMT",
                             "classificationHash": "j8oMRZ8f",
-                            "manualAnnotation": True
+                            "manualAnnotation": True,
                         }
-                    ]
+                    ],
                 },
                 "data_link": "https://storage.googleapis.com/encord-local-dev.appspot.com/cord-images-dev/CcJU09GkdjcLCslKtd6bEqi48ZA2/b13c4f55-1eae-4832-93e8-83b030ef17b0?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-efw44%40encord-local-dev.iam.gserviceaccount.com%2F20230328%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230328T153206Z&X-Goog-Expires=604800&X-Goog-SignedHeaders=host&X-Goog-Signature=69a8f2fca41edc7d81d3d2719e3ad188cee29fb5ac3302f24e0e93cf60cb6ec38df6b39203ede30bca981c347722345ed13848a22fe0b63da9de44cd5ecb5b4d85a11ac595d927df7b354a93a5523bb1282cf8b4fa5abb3d2c5e41112f0002faf5c07d577f9241d6d23695c503c7a34b12733bea4827d1e6c5a4c4797607e47193beebb038e2debfd650033df9ed90db44e2aa853f10a1cfd55d7e288685e9c6b0e4812993fd089f114e7d8f7bfb78e4fae52b8946d6946807aba148b5514f9855d669f1e476cd3315ed699377c7db5947358b96666fd0b6c24eb47bb1f354fc70b48644a91427922927b9db85353d04f4024e71fa6cc162a6a591add123b814",
                 "width": 304,
-                "height": 220
+                "height": 220,
             }
         },
         "object_answers": {
-            "8/VCHNzS": {
-                "objectHash": "8/VCHNzS",
-                "classifications": [
-
-                ]
-            },
-            "uGsbuPaf": {
-                "objectHash": "uGsbuPaf",
-                "classifications": [
-
-                ]
-            }
+            "8/VCHNzS": {"objectHash": "8/VCHNzS", "classifications": []},
+            "uGsbuPaf": {"objectHash": "uGsbuPaf", "classifications": []},
         },
         "classification_answers": {
             "j8oMRZ8f": {
@@ -168,33 +147,25 @@ LABEL_ROW_BLURB = [
                     {
                         "name": "hot dog",
                         "value": "hot_dog",
-                        "answers": [
-                            {
-                                "name": "not hot dog",
-                                "value": "not_hot_dog",
-                                "featureHash": "MpKwvogL"
-                            }
-                        ],
+                        "answers": [{"name": "not hot dog", "value": "not_hot_dog", "featureHash": "MpKwvogL"}],
                         "featureHash": "t/prlg4Z",
-                        "manualAnnotation": True
+                        "manualAnnotation": True,
                     }
-                ]
+                ],
             }
         },
-        "object_actions": {
-
-        },
+        "object_actions": {},
         "label_status": "LABEL_IN_PROGRESS",
         "export_history": [
             {
                 "export_hash": "a5570813-ad77-4f4d-b507-bdda3ff4db8d",
                 "exported_at": "Tue, 21 Mar 2023 10:25:49 UTC",
-                "user_email": "sergei@encord.com"
+                "user_email": "sergei@encord.com",
             }
         ],
         "export_hash": "56042be4-3c8e-4a6e-a916-37d31da58617",
         "exported_at": "Tue, 28 Mar 2023 14:32:14 UTC",
-        "annotation_task_status": "QUEUED"
+        "annotation_task_status": "QUEUED",
     },
     {
         "label_hash": "f6dcda1a-8e0a-45b2-a3c5-d7ebfe93ad8a",
@@ -216,14 +187,7 @@ LABEL_ROW_BLURB = [
                 "data_sequence": "0",
                 "width": 376,
                 "height": 304,
-                "labels": {
-                    "objects": [
-
-                    ],
-                    "classifications": [
-
-                    ]
-                }
+                "labels": {"objects": [], "classifications": []},
             },
             "714a7e19-5802-447a-bfa8-8850ff906999": {
                 "data_hash": "714a7e19-5802-447a-bfa8-8850ff906999",
@@ -233,14 +197,7 @@ LABEL_ROW_BLURB = [
                 "data_sequence": "1",
                 "width": 418,
                 "height": 258,
-                "labels": {
-                    "objects": [
-
-                    ],
-                    "classifications": [
-
-                    ]
-                }
+                "labels": {"objects": [], "classifications": []},
             },
             "7b1dcb67-ca49-421b-9fc5-1fa52f538aab": {
                 "data_hash": "7b1dcb67-ca49-421b-9fc5-1fa52f538aab",
@@ -250,14 +207,7 @@ LABEL_ROW_BLURB = [
                 "data_sequence": "2",
                 "width": 226,
                 "height": 144,
-                "labels": {
-                    "objects": [
-
-                    ],
-                    "classifications": [
-
-                    ]
-                }
+                "labels": {"objects": [], "classifications": []},
             },
             "041408a2-c887-451b-a961-872f6a319e41": {
                 "data_hash": "041408a2-c887-451b-a961-872f6a319e41",
@@ -267,32 +217,17 @@ LABEL_ROW_BLURB = [
                 "data_sequence": "3",
                 "width": 252,
                 "height": 294,
-                "labels": {
-                    "objects": [
-
-                    ],
-                    "classifications": [
-
-                    ]
-                }
-            }
+                "labels": {"objects": [], "classifications": []},
+            },
         },
-        "object_answers": {
-
-        },
-        "classification_answers": {
-
-        },
-        "object_actions": {
-
-        },
+        "object_answers": {},
+        "classification_answers": {},
+        "object_actions": {},
         "label_status": "LABEL_IN_PROGRESS",
-        "export_history": [
-
-        ],
+        "export_history": [],
         "export_hash": "9778ee89-6c31-40ec-a67c-61bba6fcbb49",
         "exported_at": "Tue, 28 Mar 2023 14:32:15 UTC",
-        "annotation_task_status": "QUEUED"
+        "annotation_task_status": "QUEUED",
     },
     {
         "label_hash": "44e1bdfb-3c45-4edb-8a71-a969f22fd632",
@@ -312,14 +247,7 @@ LABEL_ROW_BLURB = [
                 "data_type": "video/mp4",
                 "data_sequence": 0,
                 "labels": {
-                    "0": {
-                        "objects": [
-
-                        ],
-                        "classifications": [
-
-                        ]
-                    },
+                    "0": {"objects": [], "classifications": []},
                     "1": {
                         "objects": [
                             {
@@ -333,12 +261,7 @@ LABEL_ROW_BLURB = [
                                 "objectHash": "cY1cfw0G",
                                 "featureHash": "qWm5E3j4",
                                 "manualAnnotation": True,
-                                "boundingBox": {
-                                    "h": 0.2712,
-                                    "w": 0.1549,
-                                    "x": 0.0238,
-                                    "y": 0.3007
-                                }
+                                "boundingBox": {"h": 0.2712, "w": 0.1549, "x": 0.0238, "y": 0.3007},
                             },
                             {
                                 "name": "Apple",
@@ -351,12 +274,7 @@ LABEL_ROW_BLURB = [
                                 "objectHash": "IFgHza0m",
                                 "featureHash": "qWm5E3j4",
                                 "manualAnnotation": True,
-                                "boundingBox": {
-                                    "h": 0.2589,
-                                    "w": 0.1664,
-                                    "x": 0.4353,
-                                    "y": 0.4302
-                                }
+                                "boundingBox": {"h": 0.2589, "w": 0.1664, "x": 0.4353, "y": 0.4302},
                             },
                             {
                                 "name": "Apple",
@@ -369,30 +287,14 @@ LABEL_ROW_BLURB = [
                                 "objectHash": "obAZPhln",
                                 "featureHash": "qWm5E3j4",
                                 "manualAnnotation": True,
-                                "boundingBox": {
-                                    "h": 0.3185,
-                                    "w": 0.1884,
-                                    "x": 0.6087,
-                                    "y": 0.3993
-                                }
-                            }
+                                "boundingBox": {"h": 0.3185, "w": 0.1884, "x": 0.6087, "y": 0.3993},
+                            },
                         ],
-                        "classifications": [
-
-                        ]
+                        "classifications": [],
                     },
-                    "2": {
-                        "objects": [
-
-                        ],
-                        "classifications": [
-
-                        ]
-                    },
+                    "2": {"objects": [], "classifications": []},
                     "290": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -403,14 +305,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "291": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -421,14 +321,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "292": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -439,14 +337,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "293": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -457,14 +353,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "294": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -475,14 +369,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "295": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -493,14 +385,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "296": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -511,14 +401,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "297": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -529,14 +417,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "298": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -547,14 +433,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "299": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -565,9 +449,9 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "300": {
                         "objects": [
@@ -582,12 +466,7 @@ LABEL_ROW_BLURB = [
                                 "objectHash": "cY1cfw0G",
                                 "featureHash": "qWm5E3j4",
                                 "manualAnnotation": True,
-                                "boundingBox": {
-                                    "h": 0.0944,
-                                    "w": 0.0526,
-                                    "x": 0.2919,
-                                    "y": 0.8575
-                                }
+                                "boundingBox": {"h": 0.0944, "w": 0.0526, "x": 0.2919, "y": 0.8575},
                             },
                             {
                                 "name": "Apple",
@@ -600,12 +479,7 @@ LABEL_ROW_BLURB = [
                                 "objectHash": "IFgHza0m",
                                 "featureHash": "qWm5E3j4",
                                 "manualAnnotation": True,
-                                "boundingBox": {
-                                    "h": 0.0834,
-                                    "w": 0.0541,
-                                    "x": 0.4507,
-                                    "y": 0.8722
-                                }
+                                "boundingBox": {"h": 0.0834, "w": 0.0541, "x": 0.4507, "y": 0.8722},
                             },
                             {
                                 "name": "Apple",
@@ -618,13 +492,8 @@ LABEL_ROW_BLURB = [
                                 "objectHash": "obAZPhln",
                                 "featureHash": "qWm5E3j4",
                                 "manualAnnotation": True,
-                                "boundingBox": {
-                                    "h": 0.0972,
-                                    "w": 0.0541,
-                                    "x": 0.5899,
-                                    "y": 0.8722
-                                }
-                            }
+                                "boundingBox": {"h": 0.0972, "w": 0.0541, "x": 0.5899, "y": 0.8722},
+                            },
                         ],
                         "classifications": [
                             {
@@ -636,14 +505,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "301": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -654,14 +521,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "302": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -672,14 +537,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "303": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -690,14 +553,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "304": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -708,14 +569,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "305": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -726,14 +585,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "306": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -744,14 +601,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "307": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -762,14 +617,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "308": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -780,14 +633,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "309": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -798,14 +649,12 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
+                        ],
                     },
                     "310": {
-                        "objects": [
-
-                        ],
+                        "objects": [],
                         "classifications": [
                             {
                                 "name": "hot dog",
@@ -816,37 +665,22 @@ LABEL_ROW_BLURB = [
                                 "featureHash": "4BjoumKd",
                                 "lastEditedAt": "Tue, 21 Mar 2023 10:33:59 GMT",
                                 "classificationHash": "+GqFZjI0",
-                                "manualAnnotation": True
+                                "manualAnnotation": True,
                             }
-                        ]
-                    }
+                        ],
+                    },
                 },
                 "data_fps": 23.976023976023978,
                 "data_duration": 29.07071,
                 "data_link": "https://storage.googleapis.com/encord-local-dev.appspot.com/cord-videos-dev/CcJU09GkdjcLCslKtd6bEqi48ZA2/9b45984a-0046-4389-ba0d-b73b6b35ee82?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-efw44%40encord-local-dev.iam.gserviceaccount.com%2F20230328%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230328T153208Z&X-Goog-Expires=604800&X-Goog-SignedHeaders=host&X-Goog-Signature=07aa2e0a51f13576be1be021072fd283f080b1bd26fb839a56b06165338bf3733b0051cce21eb27656728dcf8785f682d432781f3d1d638aa3bb150a492a62a20990449eaf2e02059d0ab835f67e9449c8637e47f36fbc1c0610eb06905a5b4cd1788df76228cf98f8beaf2e8b960374b5d40c90a062ecd9d49420829a6c4c78ee2ede62af00d2addc988488ffd638f633493fb4a14bf2067a6a036f90af728aef32700b5254d52026c69b30524cbe70959fae66ee5b6265579cfc6074ded8db9bfa8ca5ed432c2ad8ae9c1996a3b29efbcabf5cde024cce0a3ed25a69ff52b3c593bade583ef305a2f023585732e8c4362939d4e5a572faeb0492a41d574a2d",
                 "width": 1280,
-                "height": 720
+                "height": 720,
             }
         },
         "object_answers": {
-            "cY1cfw0G": {
-                "objectHash": "cY1cfw0G",
-                "classifications": [
-
-                ]
-            },
-            "IFgHza0m": {
-                "objectHash": "IFgHza0m",
-                "classifications": [
-
-                ]
-            },
-            "obAZPhln": {
-                "objectHash": "obAZPhln",
-                "classifications": [
-
-                ]
-            }
+            "cY1cfw0G": {"objectHash": "cY1cfw0G", "classifications": []},
+            "IFgHza0m": {"objectHash": "IFgHza0m", "classifications": []},
+            "obAZPhln": {"objectHash": "obAZPhln", "classifications": []},
         },
         "classification_answers": {
             "+GqFZjI0": {
@@ -855,35 +689,27 @@ LABEL_ROW_BLURB = [
                     {
                         "name": "hot dog",
                         "value": "hot_dog",
-                        "answers": [
-                            {
-                                "name": "hot dog",
-                                "value": "hot_dog",
-                                "featureHash": "8fjrfCJy"
-                            }
-                        ],
+                        "answers": [{"name": "hot dog", "value": "hot_dog", "featureHash": "8fjrfCJy"}],
                         "featureHash": "t/prlg4Z",
-                        "manualAnnotation": True
+                        "manualAnnotation": True,
                     }
-                ]
+                ],
             }
         },
-        "object_actions": {
-
-        },
+        "object_actions": {},
         "label_status": "LABEL_IN_PROGRESS",
         "export_history": [
             {
                 "export_hash": "b8354f9c-26f4-46ac-8207-1ff72b2552f4",
                 "exported_at": "Tue, 21 Mar 2023 10:23:19 UTC",
-                "user_email": "sergei@encord.com"
+                "user_email": "sergei@encord.com",
             }
         ],
         "export_hash": "069e80bc-3325-475f-8051-434aef7bc87b",
         "exported_at": "Tue, 28 Mar 2023 14:32:16 UTC",
-        "annotation_task_status": "ASSIGNED"
-    }
+        "annotation_task_status": "ASSIGNED",
+    },
 ]
 
-LABEL_ROW_METADATA_BLURB.sort(key=lambda x: x['data_hash'])
-LABEL_ROW_BLURB.sort(key=lambda x: x['data_hash'])
+LABEL_ROW_METADATA_BLURB.sort(key=lambda x: x["data_hash"])
+LABEL_ROW_BLURB.sort(key=lambda x: x["data_hash"])

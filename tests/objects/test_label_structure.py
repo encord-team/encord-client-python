@@ -640,7 +640,6 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
 
 
 def test_object_instance_answer_for_static_attributes():
-
     object_instance = ObjectInstance(deeply_nested_polygon_item)
 
     assert object_instance.get_answer(nested_polygon_text) is None

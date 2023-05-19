@@ -6,13 +6,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from requests import Session
 
+from encord.client import EncordClientProject
 from encord.configs import _ENCORD_SSH_KEY_FILE
 from encord.constants.model import Device
 from encord.constants.model_weights import faster_rcnn_R_101_C4_3x
 from encord.exceptions import EncordException
 from encord.project import Project
 from encord.user_client import EncordUserClient
-from encord.client import EncordClientProject
 
 PRIVATE_KEY = (
     Ed25519PrivateKey.generate()
@@ -49,7 +49,6 @@ def project(project_client_mock, ssh_key_file_path):
 
 @pytest.mark.parametrize("weights", [None, "invalid-weight"])
 def test_invalid_weights_raises(project: Project, weights):
-
     with pytest.raises(EncordException) as excinfo:
         project.model_train(
             uid=UID,
@@ -65,7 +64,6 @@ def test_invalid_weights_raises(project: Project, weights):
 
 @pytest.mark.parametrize("device", [None, "gpu"])
 def test_invalid_device_raises(project: Project, device):
-
     with pytest.raises(EncordException) as trainExcInfo:
         project.model_train(
             uid=UID,
@@ -91,7 +89,6 @@ def test_invalid_device_raises(project: Project, device):
 @pytest.mark.parametrize("device", [Device.CPU, Device.CUDA, "cuda", "cpu"])
 @patch.object(Session, "send")
 def test_valid_device(mock_send, project: Project, device):
-
     response = "ok"
     mock_response = MagicMock()
     mock_response.status_code = 200
