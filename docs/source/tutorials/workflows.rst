@@ -19,11 +19,11 @@ Please see our tutorial on how to `create Workflow projects <https://docs.encord
 
 Please note that the attributes outlined below can only be used when working with `Workflow` projects. 
 
-Our SDK currently had two attributes specific to working with `Workflow` projects:
-
-- The :meth:`~encord.user_client.EncordUserClient.workflows_reopen()` attribute returns a label row to the first annotation stage for re-labeling. No data is lost during the call.
+Our SDK currently has three attributes specific to working with `Workflow` projects:
 
 - The :meth:`~encord.user_client.EncordUserClient.workflow_graph_node()` attribute returns the location of a task within the workflow in the form of a 'uuid' and a 'title'. The 'title' corresponds to the name of the current stage in the workflow.
+- The :meth:`~encord.user_client.EncordUserClient.workflows_reopen()` attribute returns a label row to the first annotation stage for re-labeling. No data is lost during the call.
+- The :meth:`~encord.user_client.EncordUserClient.workflows_complete()` attribute moves a label row to the final annotation stage.
 
 
 3. Working with `Workflow` projects
