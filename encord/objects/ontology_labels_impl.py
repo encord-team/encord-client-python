@@ -1522,16 +1522,36 @@ class LabelRowV2:
 
     def workflow_reopen(self) -> None:
         """
-        A label row is returned to the first annotation stage for re-labeling. No data is lost during the call.
+        A label row is returned to the first annotation stage for re-labeling.
         No data will be lost during this call.
-        This method is only relevant for the projects that use the Encord Task Management System 2,
-        and does nothing for other types of projects
+
+        This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
+        feature, and will raise an error for pre-workflow projects.
+
+        Raises:
+            WrongProjectTypeError: when called for pre-workflow project
         """
         if self.label_hash is None:
             # Label has not yet moved from the initial state, nothing to do
             return
 
         self._project_client.workflow_reopen([self.label_hash])
+
+    def workflow_complete(self) -> None:
+        """
+        A label row is returned to the final workflow node.
+
+        This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
+        feature, and will raise an error for pre-workflow projects
+
+        Raises:
+            WrongProjectTypeError: when called for pre-workflow project
+        """
+        if self.label_hash is None:
+            # Label has not yet moved from the initial state, nothing to do
+            return
+
+        self._project_client.workflow_complete([self.label_hash])
 
     class FrameView:
         """

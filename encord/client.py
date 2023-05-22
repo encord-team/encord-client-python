@@ -124,11 +124,13 @@ from encord.orm.project import (
     ProjectDataset,
     ProjectUsers,
 )
+from encord.orm.workflow import WorkflowAction, LabelWorkflowGraphNode, LabelWorkflowGraphNodePayload
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
 from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
+
 
 LONG_POLLING_RESPONSE_RETRY_N = 3
 LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 3
@@ -1295,12 +1297,21 @@ class EncordClientProject(EncordClient):
         """
         This function is documented in :meth:`encord.objects.LabelRowV2.workflow_reopen`.
         """
+        self._querier.basic_setter(
+            LabelWorkflowGraphNode,
+            label_hashes,
+            payload=LabelWorkflowGraphNodePayload({"action": WorkflowAction.REOPEN.value}),
+        )
 
-        # Workaround to make basic_setter generate proper api call
-        class LabelWorkflowGraphNode:
-            pass
-
-        self._querier.basic_setter(LabelWorkflowGraphNode, label_hashes, payload=None)
+    def workflow_complete(self, label_hashes: List[str]) -> None:
+        """
+        This function is documented in :meth:`encord.objects.LabelRowV2.workflow_complete`.
+        """
+        self._querier.basic_setter(
+            LabelWorkflowGraphNode,
+            label_hashes,
+            payload=LabelWorkflowGraphNodePayload({"action": WorkflowAction.COMPLETE.value}),
+        )
 
 
 CordClientProject = EncordClientProject
