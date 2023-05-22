@@ -2659,7 +2659,7 @@ class ObjectInstance:
         def _check_if_frame_view_is_valid(self) -> None:
             if self._frame not in self._object_instance._frames_to_instance_data:
                 raise LabelRowError(
-                    "Tryinannotation to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frameAnnotation"
+                    "Trying to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frame"
                 )
 
     @dataclass
