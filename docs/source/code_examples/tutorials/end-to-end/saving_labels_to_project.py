@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pytz
+
 from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 GMT_TIMEZONE = pytz.timezone("GMT")

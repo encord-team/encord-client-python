@@ -15,24 +15,24 @@
 import dataclasses
 import logging
 import platform
-import uuid
 import random
+import uuid
 from contextlib import contextmanager
-from typing import Any, List, Tuple, Optional, Type, TypeVar, Generator
+from typing import Any, Generator, List, Optional, Tuple, Type, TypeVar
 
 import requests
 import requests.exceptions
-from requests import Session, Response
+from requests import Response, Session
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
+from encord._version import __version__ as encord_version
 from encord.configs import BaseConfig
 from encord.exceptions import *
 from encord.http.error_utils import check_error_response
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
 from encord.orm.formatter import Formatter
-from encord._version import __version__ as encord_version
 
 logger = logging.getLogger(__name__)
 

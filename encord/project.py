@@ -3,7 +3,9 @@ from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels, Device
+from encord.http.bundle import Bundle
 from encord.objects import LabelRowV2
+from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
@@ -21,8 +23,6 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
-from encord.ontology import Ontology
-from encord.http.bundle import Bundle
 
 
 class Project:

@@ -23,4 +23,14 @@ repos:
         name: isort_tests
         entry: poetry run isort --sp=pyproject.toml
         language: system
+        files: ^encord/.*py$
+      - id: isort
+        name: isort_tests
+        entry: poetry run isort --sp=pyproject.toml
+        language: system
         files: ^tests/.*py$
+      - id: isort
+        name: isort_docs
+        entry: poetry run isort --sp=pyproject.toml
+        language: system
+        files: ^docs/source/code_examples/.*py$

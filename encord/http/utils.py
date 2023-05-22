@@ -2,7 +2,7 @@ import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
-from typing import List, Optional, Type, TypeVar, Union, Iterable
+from typing import Iterable, List, Optional, Type, TypeVar, Union
 
 from tqdm import tqdm
 
