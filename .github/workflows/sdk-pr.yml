@@ -6,8 +6,8 @@ on:
       - master
 
 env:
-  PYTHON: 3.7.12
-  POETRY: 1.2.1
+  PYTHON: 3.7
+  POETRY: 1.5.0
   UNIT_TEST_REPORT: unit-test-report.xml
 
 concurrency:
