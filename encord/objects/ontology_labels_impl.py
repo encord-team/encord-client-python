@@ -404,6 +404,14 @@ class ClassificationInstance:
         return deepcopy(self._ontology_classification)
 
     @property
+    def classification_name(self) -> str:
+        return self._ontology_classification.attributes[0].name
+
+    @property
+    def object_feature_hash(self) -> str:
+        return self._ontology_classification.feature_node_hash
+
+    @property
     def _last_frame(self) -> Union[int, float]:
         if self._parent is None or self._parent.data_type is DataType.DICOM:
             return float("inf")
