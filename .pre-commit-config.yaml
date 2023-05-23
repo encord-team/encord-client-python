@@ -20,7 +20,7 @@ repos:
         language: system
         files: ^docs/source/code_examples/.*
       - id: isort
-        name: isort_tests
+        name: isort
         entry: poetry run isort --sp=pyproject.toml
         language: system
         files: ^encord/.*py$
@@ -34,3 +34,8 @@ repos:
         entry: poetry run isort --sp=pyproject.toml
         language: system
         files: ^docs/source/code_examples/.*py$
+      - id: pylint
+        name: pylint
+        entry: poetry run pylint
+        language: system
+        files: ^encord/.*
