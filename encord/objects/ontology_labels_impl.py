@@ -1541,15 +1541,21 @@ class LabelRowV2:
         """
         A label row is returned to the final workflow node.
 
+        This method can be called only for labels for which `.initialise_labels()` was called ance.
+        It is not required to do that every time though.
+
         This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
         feature, and will raise an error for pre-workflow projects
 
         Raises:
             WrongProjectTypeError: when called for pre-workflow project
+            LabelRowError: when called for a label row fir which labelling has never been initialised
         """
         if self.label_hash is None:
-            # Label has not yet moved from the initial state, nothing to do
-            return
+            raise LabelRowError(
+                "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` "
+                "to do so first."
+            )
 
         self._project_client.workflow_complete([self.label_hash])
 

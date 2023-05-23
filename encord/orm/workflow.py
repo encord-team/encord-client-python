@@ -1,6 +1,7 @@
-from enum import Enum
-from encord.orm import base_orm
 from collections import OrderedDict
+from enum import Enum
+
+from encord.orm import base_orm
 
 
 class WorkflowAction(Enum):
