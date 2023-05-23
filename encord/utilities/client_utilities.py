@@ -13,9 +13,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from datetime import datetime
 import pprint
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Set, TypeVar, Union
 

@@ -1,7 +1,7 @@
 import logging
-from typing import Callable, TypeVar, Optional, List, Dict, Tuple, Generic, Generator
 from dataclasses import asdict, dataclass, field
 from functools import reduce
+from typing import Callable, Dict, Generator, Generic, List, Optional, Tuple, TypeVar
 
 log = logging.getLogger(__name__)
 
