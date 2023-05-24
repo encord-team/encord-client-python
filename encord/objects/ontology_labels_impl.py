@@ -19,7 +19,6 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    overload,
 )
 from uuid import uuid4
 
@@ -40,8 +39,6 @@ from encord.objects.common import (
     AttributeClasses,
     AttributeTypes,
     ChecklistAttribute,
-    FlatOption,
-    NestableOption,
     Option,
     OptionClasses,
     OptionTypes,
@@ -2136,7 +2133,7 @@ class LabelRowV2:
         elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
-            raise NotImplementedError(f"Got a skeleton object, which is not supported yet")
+            raise NotImplementedError("Got a skeleton object, which is not supported yet")
         else:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
 
@@ -2945,7 +2942,7 @@ class DynamicAnswerManager:
 
 def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
     expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
-    if type(coordinates) != expected_coordinate_type:
+    if not isinstance(coordinates, expected_coordinate_type):
         raise LabelRowError(
             f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
         )

@@ -261,6 +261,7 @@ class StringEnum(Enum):
 
     @classmethod
     def from_string(cls, string: str) -> Optional["StringEnum"]:
+        # pylint: disable-next=no-member
         return cls._value2member_map_.get(string)
 
 
