@@ -215,17 +215,13 @@ class EncordClient(object):
         if not value:
             self_type = type(self).__name__
             if self_type == "CordClientDataset" and name in EncordClientProject.__dict__.keys():
-                raise encord.exceptions.EncordException(
-                    message=("{} is implemented in Projects, not Datasets.".format(name))
-                )
+                raise encord.exceptions.EncordException(message=f"{name} is implemented in Projects, not Datasets.")
             elif self_type == "CordClientProject" and name in EncordClientDataset.__dict__.keys():
-                raise encord.exceptions.EncordException(
-                    message=("{} is implemented in Datasets, not Projects.".format(name))
-                )
+                raise encord.exceptions.EncordException(message=f"{name} is implemented in Datasets, not Projects.")
             elif name == "items":
                 pass
             else:
-                raise encord.exceptions.EncordException(message="{} is not implemented.".format(name))
+                raise encord.exceptions.EncordException(message=f"{name} is not implemented.")
         return value
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
@@ -422,7 +418,7 @@ class EncordClientDataset(EncordClient):
             else:
                 raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
         else:
-            raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
+            raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
     def create_image_group(
         self,
@@ -438,7 +434,7 @@ class EncordClientDataset(EncordClient):
         """
         for file_path in file_paths:
             if not os.path.exists(file_path):
-                raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
+                raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
         successful_uploads = upload_to_signed_url_list(
             file_paths, self._config, self._querier, Images, cloud_upload_settings=cloud_upload_settings
@@ -459,7 +455,7 @@ class EncordClientDataset(EncordClient):
 
         if res:
             titles = [video_data.get("title") for video_data in res]
-            logger.info("Upload successful! {} created.".format(titles))
+            logger.info(f"Upload successful! {titles} created.")
             return res
         else:
             raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
@@ -475,7 +471,7 @@ class EncordClientDataset(EncordClient):
         """
         for file_path in file_paths:
             if not os.path.exists(file_path):
-                raise encord.exceptions.EncordException(message="{} does not point to a file.".format(file_path))
+                raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
         successful_uploads = upload_to_signed_url_list(
             file_paths=file_paths,
@@ -583,13 +579,13 @@ class EncordClientDataset(EncordClient):
             files = private_files
         elif isinstance(private_files, str):
             if os.path.exists(private_files):
-                text_contents = Path(private_files).read_text()
+                text_contents = Path(private_files).read_text(encoding="utf-8")
             else:
                 text_contents = private_files
 
             files = json.loads(text_contents)
         elif isinstance(private_files, Path):
-            text_contents = private_files.read_text()
+            text_contents = private_files.read_text(encoding="utf-8")
             files = json.loads(text_contents)
         elif isinstance(private_files, typing.TextIO):
             text_contents = private_files.read()
@@ -656,7 +652,7 @@ class EncordClientDataset(EncordClient):
                 if files_finished_count != files_total_count:
                     print(f"Processed {files_finished_count}/{files_total_count} files")
                 else:
-                    print(f"Processed all files, dataset data linking and task creation is performed, please wait")
+                    print("Processed all files, dataset data linking and task creation is performed, please wait")
 
                 failed_requests_count = 0
             except requests.exceptions.RequestException:

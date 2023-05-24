@@ -166,6 +166,7 @@ class Attribute(ABC):
         return ret
 
     def _encode_options(self) -> Optional[list]:
+        # pylint: disable-next=no-member
         if not self.has_options_field() or not self.options:
             return None
 

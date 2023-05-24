@@ -25,6 +25,7 @@ class Device(Enum):
 
     @classmethod
     def has_value(cls, value) -> bool:
+        # pylint: disable-next=no-member
         return value in cls._value2member_map_
 
 
@@ -80,6 +81,7 @@ class AutomationModels(Enum):
 
     @classmethod
     def has_value(cls, value) -> bool:
+        # pylint: disable-next=no-member
         return value in cls._value2member_map_
 
 

@@ -217,7 +217,7 @@ def get_env_ssh_key() -> str:
                 f"Failed to load private ssh key."
             )
 
-        with open(ssh_file) as f:
+        with open(ssh_file, encoding="ascii") as f:
             return f.read()
 
     # == 2. Look for raw key

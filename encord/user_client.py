@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import dateutil
 
 # add this for backward compatible class comparisons
+# pylint: disable-next=import-error
 from cord.utilities.client_utilities import LocalImport as CordLocalImport
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
@@ -395,7 +396,7 @@ class EncordUserClient:
             ValueError:
                 If the CVAT directory has an invalid format.
         """
-        if not (type(import_method) == LocalImport or type(import_method) == CordLocalImport):
+        if not isinstance(import_method, (LocalImport, CordLocalImport)):
             raise ValueError("Only local imports are currently supported ")
 
         cvat_directory_path = import_method.file_path
@@ -472,7 +473,7 @@ class EncordUserClient:
             )
 
         if not images:
-            raise ValueError(f"No images found in the provided data folder.")
+            raise ValueError("No images found in the provided data folder.")
         return images, used_base_path
 
     @staticmethod

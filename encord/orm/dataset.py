@@ -423,7 +423,7 @@ class DataRow(dict, Formatter):
             self._update_current_class(res)
 
         else:
-            raise EncordException(f"Could not fetch data. The DataRow is in an invalid state.")
+            raise EncordException("Could not fetch data. The DataRow is in an invalid state.")
 
     def save(self) -> None:
         """
@@ -445,7 +445,7 @@ class DataRow(dict, Formatter):
             else:
                 raise EncordException(f"Could not upload data for DataRow with uid: {self.uid}")
         else:
-            raise EncordException(f"Could not upload data. The DataRow is in an invalid state.")
+            raise EncordException("Could not upload data. The DataRow is in an invalid state.")
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
