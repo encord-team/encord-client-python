@@ -1,11 +1,13 @@
 <h1 align="center">
   <p align="center">Encord Python API Client</p>
-  <a href="https://encord.com"><img src="./docs/_static/logo.svg" width="100" alt="Cord logo"/></a>
+  <a href="https://encord.com">
+    <img src="./docs/_static/logo.svg" width="100" alt="Cord logo"/>
+  </a>
 </h1>
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-***The data engine for computer vision***
+# The data engine for computer vision
 
 ## 💻 Features
 
@@ -13,6 +15,7 @@
 - Supports Python: `3.7`, `3.8`, `3.9`, `3.10` and `3.11`
 
 ## ✨ Relevant Links
+
 * [Encord website](https://encord.com)
 * [Encord web app](https://app.encord.com)
 * [Encord documentation](https://docs.encord.com)
@@ -30,7 +33,6 @@ pip install encord
 Then, generate an public-private key pair, and upload the public key to [Encord website](https://www.encord.com/).
 Detailed guide can be found in the [dedicated manual](https://docs.encord.com/admins/settings/public-keys/).
 
-
 Passing the private key to the factory, you can initialise the Encord client directly.
 
 ```python
@@ -42,7 +44,7 @@ user_client = EncordUserClient.create_with_ssh_private_key(
 )
 ```
 
-Once you have instantiated an Encord client, it is easy to fetch a project information and start 
+Once you have instantiated an Encord client, it is easy to fetch a project information and start
 working with the platform.
 
 ```py
@@ -54,5 +56,5 @@ For detailed examples and API reference please refer to [Encord SDK documentatio
 
 ## 🐛 Troubleshooting
 
-Please report bugs to the [GitHub Issues](https://github.com/encord-team/encord-client-python/issues). 
+Please report bugs to the [GitHub Issues](https://github.com/encord-team/encord-client-python/issues).
 Just make sure you read the [Encord documentation](https://docs.encord.com) and search for related issues first.
