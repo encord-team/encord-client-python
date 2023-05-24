@@ -390,6 +390,7 @@ class ClassificationInstance:
 
     @property
     def classification_hash(self) -> str:
+        """A unique identifier for the classification instance."""
         return self._classification_hash
 
     @classification_hash.setter
@@ -399,6 +400,16 @@ class ClassificationInstance:
     @property
     def ontology_item(self) -> Classification:
         return deepcopy(self._ontology_classification)
+
+    @property
+    def classification_name(self) -> str:
+        """Classification name from the project ontology"""
+        return self._ontology_classification.attributes[0].name
+
+    @property
+    def feature_hash(self) -> str:
+        """Feature node hash from the project ontology"""
+        return self._ontology_classification.feature_node_hash
 
     @property
     def _last_frame(self) -> Union[int, float]:
@@ -857,7 +868,7 @@ class ClassificationInstance:
         return (
             f"ClassificationInstance(classification_hash={self.classification_hash}, "
             f"classification_name={self._ontology_classification.attributes[0].name}, "
-            f"object_feature_hash={self._ontology_classification.feature_node_hash})"
+            f"feature_hash={self._ontology_classification.feature_node_hash})"
         )
 
     def __lt__(self, other) -> bool:
@@ -2248,6 +2259,16 @@ class ObjectInstance:
         return deepcopy(self._ontology_object)
 
     @property
+    def feature_hash(self) -> str:
+        """Feature node hash from the project ontology"""
+        return self._ontology_object.feature_node_hash
+
+    @property
+    def object_name(self) -> str:
+        """Object name from the project ontology"""
+        return self._ontology_object.name
+
+    @property
     def _last_frame(self) -> Union[int, float]:
         if self._parent is None or self._parent.data_type is DataType.DICOM:
             return float("inf")
@@ -2791,7 +2812,7 @@ class ObjectInstance:
     def __repr__(self):
         return (
             f"ObjectInstance(object_hash={self._object_hash}, object_name={self._ontology_object.name}, "
-            f"object_feature_hash={self._ontology_object.feature_node_hash})"
+            f"feature_hash={self._ontology_object.feature_node_hash})"
         )
 
     def __hash__(self) -> int:
