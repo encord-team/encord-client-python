@@ -2815,7 +2815,7 @@ class ObjectInstance:
     def __repr__(self):
         return (
             f"ObjectInstance(object_hash={self._object_hash}, object_name={self._ontology_object.name}, "
-            f"object_feature_hash={self._ontology_object.feature_node_hash})"
+            f"feature_hash={self._ontology_object.feature_node_hash})"
         )
 
     def __hash__(self) -> int:
