@@ -23,10 +23,21 @@ def test_basic_rle_to_mask():
     assert res == b"\00\00\00\00\00\01\01\00\00\00\00\00"
 
 
+def test_basic_rle_to_mask_zebra():
+    res = _rle_to_mask([1, 1, 1, 1, 1, 1, 1, 1], size=8)
+    assert res == b"\00\01\00\01\00\01\00\01"
+
+
 def test_basic_mask_to_rle():
     mask = b"\00\00\00\00\00\01\01\00\00\00\00\00"
     rle = _mask_to_rle(mask)
     assert rle == [5, 2, 5]
+
+
+def test_basic_mask_to_rle_zebra():
+    mask = b"\00\01\00\01\00\01\00\01"
+    rle = _mask_to_rle(mask)
+    assert rle == [1, 1, 1, 1, 1, 1, 1, 1]
 
 
 def test_rle_to_mask():
