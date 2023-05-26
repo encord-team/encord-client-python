@@ -2,11 +2,7 @@ from typing import List
 
 from encord import Dataset, EncordUserClient
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import (
-    AddPrivateDataResponse,
-    DatasetDataLongPolling,
-    LongPollingStatus,
-)
+from encord.orm.dataset import AddPrivateDataResponse, LongPollingStatus
 
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     "<your_private_key>"
