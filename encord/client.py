@@ -1291,7 +1291,7 @@ class EncordClientProject(EncordClient):
         payload = {"editor": ontology.to_dict()}
         return self._querier.basic_setter(OrmProject, uid=None, payload=payload)
 
-    def workflow_reopen(self, label_hashes: list[str]) -> None:
+    def workflow_reopen(self, label_hashes: List[str]) -> None:
         """
         This function is documented in :meth:`encord.objects.LabelRowV2.workflow_reopen`.
         """
