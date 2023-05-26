@@ -1050,7 +1050,7 @@ class LabelRowV2:
     @property
     def is_labelling_initialised(self) -> bool:
         """
-        Whether you can start labelling or not. If this is `False`, call the member `.initialise_labels()` to
+        Whether you can start labelling or not. If this is `False`, call the member :meth:`.initialise_labels()` to
         read or write specific ObjectInstances or ClassificationInstances.
         """
         return self._is_labelling_initialised
@@ -1527,9 +1527,6 @@ class LabelRowV2:
 
         This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
         feature, and will raise an error for pre-workflow projects.
-
-        Raises:
-            WrongProjectTypeError: when called for pre-workflow project
         """
         if self.label_hash is None:
             # Label has not yet moved from the initial state, nothing to do
@@ -1541,19 +1538,16 @@ class LabelRowV2:
         """
         A label row is returned to the final workflow node.
 
-        This method can be called only for labels for which `.initialise_labels()` was called ance.
+        This method can be called only for labels for which :meth:`.initialise_labels()` was called at least ance, and
+        consequentially "label_hash" field is not `None`.
         It is not required to do that every time though.
 
         This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
         feature, and will raise an error for pre-workflow projects
-
-        Raises:
-            WrongProjectTypeError: when called for pre-workflow project
-            LabelRowError: when called for a label row fir which labelling has never been initialised
         """
         if self.label_hash is None:
             raise LabelRowError(
-                "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` "
+                "For this operation you will need to initialise labelling first. Call the .initialise_labels() "
                 "to do so first."
             )
 
