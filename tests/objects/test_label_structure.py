@@ -586,7 +586,7 @@ def test_classification_instances_frame_view():
 
     # Using invalid frame view.
     with pytest.raises(LabelRowError):
-        x = frame_view_1.created_by
+        frame_view_1.created_by
     with pytest.raises(LabelRowError):
         frame_view_1.created_by = "aphrodite@gmail.com"
 

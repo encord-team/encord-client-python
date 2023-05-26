@@ -9,7 +9,6 @@ import pytest
 
 from encord import EncordUserClient, Project
 from encord.configs import ENCORD_DOMAIN
-from encord.objects.coordinates import BoundingBoxCoordinates
 
 ENABLE_MANUAL_TESTS = False
 

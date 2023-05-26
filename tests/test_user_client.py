@@ -69,11 +69,11 @@ def test_initialise_with_correct_ssh_file_content_from_env(ssh_key_content):
 
 def test_initialise_with_wrong_ssh_file_content():
     with pytest.raises(expected_exception=ValueError) as excinfo:
-        user_client = EncordUserClient.create_with_ssh_private_key("Some random content.")
+        EncordUserClient.create_with_ssh_private_key("Some random content.")
 
 
 def test_initialise_with_wrong_ssh_file_content_from_env():
     assert _ENCORD_SSH_KEY_FILE not in os.environ
     os.environ[_ENCORD_SSH_KEY] = "Some random content."
     with pytest.raises(expected_exception=ValueError) as excinfo:
-        user_client = EncordUserClient.create_with_ssh_private_key()
+        EncordUserClient.create_with_ssh_private_key()
