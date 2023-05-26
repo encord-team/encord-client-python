@@ -16,7 +16,6 @@ ontology. You can safely skip those details.
 """
 # sphinx_gallery_thumbnail_path = 'images/end-to-end-thumbs/Artboard 10.svg'
 
-import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union

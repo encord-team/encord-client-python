@@ -3,9 +3,8 @@ All tests regarding converting from and to Encord dict to the label row.
 """
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock
 
-import pytest
 from deepdiff import DeepDiff
 
 from encord.objects.ontology_labels_impl import LabelRowV2, OntologyStructure

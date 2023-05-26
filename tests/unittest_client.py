@@ -69,11 +69,11 @@ class UnitTests(unittest.TestCase):
 
     def test_3(self):
         with self.assertRaises(AuthenticationError):
-            client = EncordClient.initialise(PROJECT_ID, uuid.uuid4())
+            EncordClient.initialise(PROJECT_ID, uuid.uuid4())
 
     def test_4(self):
         with self.assertRaises(AuthenticationError):
-            client = EncordClient.initialise(uuid.uuid4(), LABEL_READ_WRITE_KEY)
+            EncordClient.initialise(uuid.uuid4(), LABEL_READ_WRITE_KEY)
 
     def test_5(self):
         assert isinstance(self.rw_c.get_label_row(LABEL_ID), LabelRow)

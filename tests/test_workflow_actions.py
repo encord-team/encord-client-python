@@ -1,25 +1,18 @@
 import json
-from copy import deepcopy
-from typing import Dict
 from unittest.mock import MagicMock, patch
 
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from requests import Session
 
 from encord import EncordUserClient, Project
 from encord.client import EncordClientProject
 from encord.http.querier import Querier, RequestContext
-from encord.objects import LabelRowV2
 from encord.objects.ontology_labels_impl import Ontology as OrmOntology
 from encord.ontology import Ontology
-from encord.orm.label_row import LabelRow, LabelRowMetadata
+from encord.orm.label_row import LabelRowMetadata
 from encord.orm.project import Project as OrmProject
-from tests.test_data.label_rows_metadata_blurb import (
-    LABEL_ROW_BLURB,
-    LABEL_ROW_METADATA_BLURB,
-)
+from tests.test_data.label_rows_metadata_blurb import LABEL_ROW_METADATA_BLURB
 from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
 DUMMY_PRIVATE_KEY = (

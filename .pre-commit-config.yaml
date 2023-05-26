@@ -1,6 +1,16 @@
 repos:
   - repo: local
     hooks:
+      - id: autoflake
+        name: autoflake_tests
+        entry: poetry run autoflake
+        language: system
+        files: ^tests/.*
+      - id: autoflake
+        name: autoflake_docs
+        entry: poetry run autoflake
+        language: system
+        files: ^docs/source/code_examples/.*
       - id: black
         name: black
         entry: poetry run black --config=pyproject.toml

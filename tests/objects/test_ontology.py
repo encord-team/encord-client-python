@@ -317,7 +317,7 @@ def test_build_nested_options():
     assert isinstance(two, encord.objects.NestableOption)
 
     detail1 = one.add_nested_option(encord.objects.RadioAttribute, "detail one")
-    detail2 = one.add_nested_option(encord.objects.TextAttribute, "detail two")
+    one.add_nested_option(encord.objects.TextAttribute, "detail two")
 
     detail1value1 = detail1.add_option("value 1")
     assert isinstance(detail1value1, encord.objects.NestableOption)
