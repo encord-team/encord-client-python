@@ -151,6 +151,19 @@ class BitmaskCoordinates:
             "rleString": self.rle_string,
         }
 
+    def to_numpy_array(self):
+        """
+        Converts the mask to numpy array with dtype bool.
+
+        Numpy needs to be installed for this call to work
+        """
+        try:
+            import numpy as np
+        except ImportError:
+            raise EncordException("Numpy is required for .to_numpy call.")
+
+        return np.array(self.__array_interface__)
+
     @property
     def __array_interface__(self):
         rle = _string_to_rle(self.rle_string)
