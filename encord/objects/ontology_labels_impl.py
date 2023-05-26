@@ -1911,6 +1911,8 @@ class LabelRowV2:
         elif isinstance(coordinates, PointCoordinate):
             encord_object["point"] = coordinates.to_dict()
         elif isinstance(coordinates, BitmaskCoordinates):
+            if not (self.height == coordinates.height and self.width == coordinates.width):
+                raise ValueError("Bitmask resolution doesn't match the media resolution")
             encord_object["bitmask"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
