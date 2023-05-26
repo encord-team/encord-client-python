@@ -1911,7 +1911,7 @@ class LabelRowV2:
         elif isinstance(coordinates, PointCoordinate):
             encord_object["point"] = coordinates.to_dict()
         elif isinstance(coordinates, BitmaskCoordinates):
-            encord_object["bitmask"] = coordinates.to_encoded_string()
+            encord_object["bitmask"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
@@ -2149,7 +2149,7 @@ class LabelRowV2:
         elif "skeleton" in frame_object_label:
             raise NotImplementedError("Got a skeleton object, which is not supported yet")
         elif "bitmask" in frame_object_label:
-            return BitmaskCoordinates.from_dict(frame_object_label, shape=(self.height, self.width))
+            return BitmaskCoordinates.from_dict(frame_object_label)
         else:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
 
