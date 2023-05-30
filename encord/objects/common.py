@@ -803,3 +803,28 @@ AttributeTypes = Union[
 AttributeClasses = Union[RadioAttribute, ChecklistAttribute, TextAttribute, Attribute]
 OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
 OptionClasses = Union[FlatOption, NestableOption, Option]
+
+
+class DeidentifyRedactTextMode(Enum):
+    REDACT_ALL_TEXT = "REDACT_ALL_TEXT"
+    REDACT_NO_TEXT = "REDACT_NO_TEXT"
+    REDACT_SENSITIVE_TEXT = "REDACT_SENSITIVE_TEXT"
+
+
+class SaveDeidentifiedDicomConditionType(Enum):
+    NOT_SUBSTR = "NOT_SUBSTR"
+    IN = "IN"
+
+
+@dataclass
+class SaveDeidentifiedDicomCondition:
+    value: str | list[str]
+    condition_type: SaveDeidentifiedDicomConditionType
+    dicom_tag: str
+
+    def to_dict(self) -> dict:
+        return {
+            "value": self.value,
+            "condition_type": self.condition_type.value,
+            "dicom_tag": self.dicom_tag,
+        }

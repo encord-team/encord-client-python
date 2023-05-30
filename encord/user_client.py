@@ -23,6 +23,10 @@ from encord.http.utils import (
     upload_images_to_encord,
     upload_to_signed_url_list,
 )
+from encord.objects.common import (
+    DeidentifyRedactTextMode,
+    SaveDeidentifiedDicomCondition,
+)
 from encord.objects.ontology_labels_impl import Ontology as OrmOntology
 from encord.objects.ontology_labels_impl import OntologyStructure
 from encord.ontology import Ontology
@@ -620,6 +624,9 @@ class EncordUserClient:
         self,
         dicom_urls: List[str],
         integration_hash: str,
+        redact_dicom_tags: bool = True,
+        redact_pixels_mode: DeidentifyRedactTextMode = DeidentifyRedactTextMode.REDACT_NO_TEXT,
+        save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,
     ) -> List[str]:
         """
         Deidentify DICOM files in external storage.
@@ -648,6 +655,12 @@ class EncordUserClient:
                 `[ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]`
             integration_hash:
                 integration_hash parameter of Encord platform external storage integration
+            redact_dicom_tags:
+                Specifies if dicom tags redaction should be enabled.
+            redact_pixels_mode:
+                Specifies which text redaction policy should be applied to pixel data.
+            save_conditions:
+                Specifies list of conditions which all have to be true for dicom deidentified file to be saved.
         Returns:
             Function returns list of links pointing to deidentified DICOM files,
             those will be saved to the same bucket and the same directory
@@ -662,6 +675,9 @@ class EncordUserClient:
             uid=integration_hash,
             payload={
                 "dicom_urls": dicom_urls,
+                "redact_dicom_tags": redact_dicom_tags,
+                "redact_pixels_mode": redact_pixels_mode.value,
+                "save_conditions": [x.to_dict() for x in (save_conditions or [])],
             },
         )
 
