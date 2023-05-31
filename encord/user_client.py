@@ -660,7 +660,7 @@ class EncordUserClient:
             redact_pixels_mode:
                 Specifies which text redaction policy should be applied to pixel data.
             save_conditions:
-                Specifies list of conditions which all have to be true for dicom deidentified file to be saved.
+                Specifies list of conditions which all have to be true for DICOM deidentified file to be saved.
         Returns:
             Function returns list of links pointing to deidentified DICOM files,
             those will be saved to the same bucket and the same directory
