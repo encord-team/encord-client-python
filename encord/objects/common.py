@@ -818,7 +818,7 @@ class SaveDeidentifiedDicomConditionType(Enum):
 
 @dataclass
 class SaveDeidentifiedDicomConditionIn:
-    value: list[str]
+    value: List[str]
     dicom_tag: str
     condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.IN
 
