@@ -259,7 +259,7 @@ class RadioAttribute(Attribute):
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_options_by_title(title, self.options)
-        return filter_by_type(found_items, type_)  # noqa
+        return filter_by_type(found_items, type_)
 
     def add_option(
         self,
@@ -349,7 +349,7 @@ class ChecklistAttribute(Attribute):
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_options_by_title(title, self.options)
-        return filter_by_type(found_items, type_)  # noqa
+        return filter_by_type(found_items, type_)
 
     def add_option(
         self,
@@ -642,7 +642,7 @@ class NestableOption(Option):
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_attributes_by_title(title, self.nested_options)
-        return filter_by_type(found_items, type_)  # noqa
+        return filter_by_type(found_items, type_)
 
     def _encode_nested_options(self) -> list:
         return attributes_to_list_dict(self.nested_options)

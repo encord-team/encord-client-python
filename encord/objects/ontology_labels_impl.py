@@ -170,7 +170,7 @@ class Object:
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_attributes_by_title(title, self.attributes)
-        return filter_by_type(found_items, type_)  # noqa
+        return filter_by_type(found_items, type_)
 
     @classmethod
     def from_dict(cls, d: dict) -> Object:
@@ -310,7 +310,7 @@ class Classification:
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_attributes_by_title(title, self.attributes)
-        return filter_by_type(found_items, type_)  # noqa
+        return filter_by_type(found_items, type_)
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
