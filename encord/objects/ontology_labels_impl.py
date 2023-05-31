@@ -2410,7 +2410,7 @@ class ObjectInstance:
     def delete_answer(
         self,
         attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option]] = None,
+        filter_answer: Optional[Union[str, Option, Iterable[Option]]] = None,
         filter_frame: Optional[int] = None,
     ) -> None:
         """
@@ -2524,9 +2524,17 @@ class ObjectInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
-        if isinstance(frame, str):
-            frame = self._parent.get_frame_number(frame)
-        return self.Annotation(self, frame)
+        if self._parent is None:
+            raise RuntimeError("ObjectInstance needs to be attached to label row to call get_annotation()")
+
+        if isinstance(frame, int):
+            return ObjectInstance.Annotation(self, frame)
+
+        frame_num = self._parent.get_frame_number(frame)
+        if frame_num is None:
+            raise ValueError(f"Can't find image with the has {frame}")
+
+        return ObjectInstance.Annotation(self, frame_num)
 
     def copy(self) -> ObjectInstance:
         """
@@ -2764,7 +2772,11 @@ class ObjectInstance:
         # Probably the above can be flattened out into this class.
 
     def _set_answer_unsafe(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, track_hash: str, ranges: Ranges
+        self,
+        answer: Union[str, Option, Iterable[Option]],
+        attribute: Attribute,
+        track_hash: Optional[str],
+        ranges: Optional[Ranges],
     ) -> None:
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)
