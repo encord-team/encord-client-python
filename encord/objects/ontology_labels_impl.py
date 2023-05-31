@@ -779,7 +779,7 @@ class ClassificationInstance:
             if "lastEditedAt" in d:
                 last_edited_at = parse(d["lastEditedAt"])
             else:
-                last_edited_at = None
+                last_edited_at = datetime.now()
 
             return ClassificationInstance.FrameData(
                 created_at=parse(d["createdAt"]),
@@ -842,6 +842,7 @@ class ClassificationInstance:
         )
 
         if self.is_assigned_to_label_row():
+            assert self._parent is not None  # silence mypy warning
             self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
     def _set_answer_unsafe(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute) -> None:
@@ -993,6 +994,7 @@ class LabelRowV2:
              Please use "workflow_graph_node" property instead.'
             )
 
+        assert self._label_row_read_only_data.annotation_task_status is not None
         return self._label_row_read_only_data.annotation_task_status
 
     @property
@@ -1260,6 +1262,7 @@ class LabelRowV2:
         if bundle is None:
             self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
         else:
+            assert self.label_hash is not None
             bundle.add(
                 operation=self._project_client.save_label_rows,
                 request_reducer=self._batch_save_rows_reducer,
@@ -1283,9 +1286,12 @@ class LabelRowV2:
                 Defaults to the first frame.
         """
         self._check_labelling_is_initalised()
-        if isinstance(frame, str):
-            frame = self.get_frame_number(frame)
-        return self.FrameView(self, self._label_row_read_only_data, frame)
+
+        frame_num = self.get_frame_number(frame) if isinstance(frame, str) else frame
+        if frame_num is None:
+            raise ValueError("Can't get a FrameView for image hash {frame}")
+
+        return LabelRowV2.FrameView(self, self._label_row_read_only_data, frame_num)
 
     def get_frame_views(self) -> List[FrameView]:
         """
@@ -1812,16 +1818,22 @@ class LabelRowV2:
 
         return ret
 
+<<<<<<< HEAD
+    def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> Dict[str, Any]:
+=======
+    def _data_sequence(self, frame_level_data: FrameLevelImageGroupData) -> Union[int, str]:
+        data_type = self._label_row_read_only_data.data_type
+        if data_type == DataType.IMG_GROUP:
+            return str(frame_level_data.frame_number)
+        elif data_type in (DataType.VIDEO, DataType.DICOM, DataType.IMAGE):
+            return frame_level_data.frame_number
+        else:
+            raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+
     def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}
 
         data_type = self._label_row_read_only_data.data_type
-        if data_type == DataType.IMG_GROUP:
-            data_sequence = str(frame_level_data.frame_number)
-        elif data_type in (DataType.VIDEO, DataType.DICOM, DataType.IMAGE):
-            data_sequence = frame_level_data.frame_number
-        else:
-            raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
         ret["data_hash"] = frame_level_data.image_hash
         ret["data_title"] = frame_level_data.image_title
@@ -1830,7 +1842,7 @@ class LabelRowV2:
             ret["data_link"] = frame_level_data.data_link
 
         ret["data_type"] = frame_level_data.file_type
-        ret["data_sequence"] = data_sequence
+        ret["data_sequence"] = self._data_sequence(frame_level_data)
         ret["width"] = frame_level_data.width
         ret["height"] = frame_level_data.height
         ret["labels"] = self._to_encord_labels(frame_level_data)
@@ -2725,7 +2737,7 @@ class ObjectInstance:
             if "lastEditedAt" in d:
                 last_edited_at = parse(d["lastEditedAt"])
             else:
-                last_edited_at = None
+                last_edited_at = datetime.now()
 
             return ObjectInstance.FrameInfo(
                 created_at=parse(d["createdAt"]),
