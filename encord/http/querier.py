@@ -116,7 +116,7 @@ class Querier:
 
         res, context = self._execute(request)
 
-        if res:
+        if res is not None:
             return res
         else:
             raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
