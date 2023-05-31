@@ -488,6 +488,7 @@ def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
         for option in attribute.options:
             if option.is_nestable():
                 text_attributes.extend(_search_for_text_attributes(option.nested_options))
+
     return text_attributes
 
 

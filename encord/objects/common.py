@@ -170,6 +170,12 @@ class Attribute(ABC):
 
         return ret
 
+    def _encode_options(self) -> Optional[list]:
+        ret = list()
+        for option in self.options:
+            ret.append(option.to_dict())
+        return ret
+
     @staticmethod
     def _decode_common_attribute_fields(attribute_dict: Dict[str, Any]) -> Dict[str, Any]:
         return {
@@ -380,11 +386,15 @@ class TextAttribute(Attribute):
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         return None
 
+    @property
+    def options(self) -> Sequence[Option]:
+        return []
+
     def get_child_by_hash(
         self,
         feature_node_hash: str,
         type_: Optional[AThingType] = None,
-    ) -> Union[Attribute, Option]:
+    ) -> AThing:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -721,7 +731,6 @@ def _add_attribute(
     attr = cls(
         name=name, uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, required=required, dynamic=dynamic
     )
-
     attributes.append(attr)
     return attr
 
