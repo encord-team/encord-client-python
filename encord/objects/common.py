@@ -304,7 +304,7 @@ class ChecklistAttribute(Attribute):
         self._options = options if options is not None else []
 
     @property
-    def options(self) -> Sequence[Option]:
+    def options(self) -> Sequence[FlatOption]:
         return self._options
 
     @staticmethod

@@ -3,7 +3,20 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, NoReturn, Optional, Sequence, Set, Union
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    NoReturn,
+    Optional,
+    Sequence,
+    Set,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from encord.exceptions import LabelRowError
 from encord.objects.common import (
@@ -20,13 +33,16 @@ from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Ranges, ranges_to_list
 from encord.objects.utils import _lower_snake_case, short_uuid_str
 
+ValueType = TypeVar("ValueType")
+OntologyType = TypeVar("OntologyType", bound=Attribute)
 
-class Answer(ABC):
+
+class Answer(ABC, Generic[ValueType, OntologyType]):
     """An internal helper class for the LabelRowV2 class. This class is not meant to be used directly by users."""
 
-    _ontology_attribute: Attribute
+    _ontology_attribute: OntologyType
 
-    def __init__(self, ontology_attribute: Attribute, track_hash: Optional[str] = None):
+    def __init__(self, ontology_attribute: OntologyType, track_hash: Optional[str] = None):
         self._answered = False
         self._ontology_attribute = ontology_attribute
         self._track_hash = track_hash or short_uuid_str()
@@ -97,8 +113,16 @@ class Answer(ABC):
             "trackHash": self._track_hash,
         }
 
+    @abstractmethod
+    def get_value(self) -> Optional[ValueType]:
+        pass
 
-class TextAnswer(Answer):
+    @abstractmethod
+    def set(self, value: ValueType) -> Answer:
+        pass
+
+
+class TextAnswer(Answer[str, TextAttribute]):
     _value: Optional[str]
 
     def __init__(self, ontology_attribute: TextAttribute):
@@ -116,8 +140,8 @@ class TextAnswer(Answer):
     def get_value(self) -> Optional[str]:
         if not self.is_answered():
             return None
-        else:
-            return self._value
+
+        return self._value
 
     def copy_from(self, text_answer: TextAnswer):
         if text_answer.ontology_attribute.feature_node_hash != self.ontology_attribute.feature_node_hash:
@@ -167,13 +191,12 @@ class TextAnswer(Answer):
         return f"{self.__class__.__name__}({self._value})"
 
 
-@dataclass
-class RadioAnswer(Answer):
+class RadioAnswer(Answer[NestableOption, RadioAttribute]):
     def __init__(self, ontology_attribute: RadioAttribute):
         super().__init__(ontology_attribute)
         self._value: Optional[NestableOption] = None
 
-    def set(self, value: NestableOption):
+    def set(self, value: NestableOption) -> RadioAnswer:
         if not isinstance(value, NestableOption):
             raise ValueError("RadioAnswer can only be set to a NestableOption.")
 
@@ -188,6 +211,7 @@ class RadioAnswer(Answer):
             )
         self._answered = True
         self._value = value
+        return self
 
     def get_value(self) -> Optional[NestableOption]:
         if not self.is_answered():
@@ -266,7 +290,7 @@ class RadioAnswer(Answer):
 
 
 @dataclass
-class ChecklistAnswer(Answer):
+class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
     """
     Checkboxes behave slightly different from the other answer types. When the checkbox is unanswered, it will be
     the equivalent of not having selected any checkbox answer in the Encord platform.
@@ -302,17 +326,24 @@ class ChecklistAnswer(Answer):
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = True
 
-    def get_options(self) -> List[Option]:
+    def get_options(self) -> List[FlatOption]:
         if not self.is_answered():
             return []
-        else:
-            return [
-                option
-                for option in self._ontology_attribute.options
-                if self._feature_hash_to_answer_map[option.feature_node_hash]
-            ]
 
-    def get_value(self, value: FlatOption) -> bool:
+        return [
+            option
+            for option in self._ontology_attribute.options
+            if self._feature_hash_to_answer_map[option.feature_node_hash]
+        ]
+
+    def set(self, values: Iterable[FlatOption]) -> ChecklistAnswer:
+        self.set_options(values)
+        return self
+
+    def get_value(self) -> Optional[List[FlatOption]]:
+        return self.get_options()
+
+    def get_value_for_option(self, value: FlatOption):
         return self._feature_hash_to_answer_map[value.feature_node_hash]
 
     def copy_from(self, checklist_answer: ChecklistAnswer):
@@ -333,7 +364,7 @@ class ChecklistAnswer(Answer):
                 if not isinstance(option, FlatOption):
                     raise ValueError(f"ChecklistAnswer option has an unexpected type: {type(option)}")
 
-                other_answer = checklist_answer.get_value(option)
+                other_answer = checklist_answer.get_value_for_option(option)
                 self._feature_hash_to_answer_map[feature_node_hash] = other_answer
 
     def _initialise_feature_hash_to_answer_map(self) -> Dict[str, bool]:
@@ -362,10 +393,7 @@ class ChecklistAnswer(Answer):
         checked_options = []
         ontology_attribute = self._ontology_attribute
         for option in ontology_attribute.options:
-            if not isinstance(option, FlatOption):
-                raise ValueError(f"ChecklistAnswer option has an unexpected type: {type(option)}")
-
-            if self.get_value(option):
+            if self.get_value_for_option(option):
                 checked_options.append(option)
 
         answers = []
@@ -439,7 +467,7 @@ def set_answer_for_object(answer_object: Answer, answer_value: Union[str, Option
     elif isinstance(attribute, RadioAttribute):
         answer_object.set(answer_value)
     elif isinstance(attribute, ChecklistAttribute):
-        answer_object.set_options(answer_value)
+        answer_object.set(answer_value)
     else:
         raise ValueError(f"Unknown attribute type: {type(attribute)}")
 
@@ -451,7 +479,7 @@ def get_answer_from_object(answer_object: Answer) -> Union[str, Option, Iterable
     elif isinstance(attribute, RadioAttribute):
         return answer_object.get_value()
     elif isinstance(attribute, ChecklistAttribute):
-        return answer_object.get_options()
+        return answer_object.get_value()
     else:
         raise ValueError(f"Unknown attribute type: {type(attribute)}")
 
@@ -559,7 +587,7 @@ def _infer_attribute_from_answer(
                 "Cannot infer the attribute if a list of answers is empty. Please provide the " "attribute explicitly."
             )
 
-        parent_opt = _search_for_parent(answer[0], attributes)
+        parent_opt = _search_for_parent(cast(Option, answer[0]), attributes)
         if parent_opt is None:
             raise LabelRowError(
                 "Cannot find a corresponding attribute for one of the given answers in the Object ontology. "
