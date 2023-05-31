@@ -19,6 +19,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 from uuid import uuid4
 
@@ -174,7 +175,7 @@ class Object:
 
     @classmethod
     def from_dict(cls, d: dict) -> Object:
-        shape_opt = Shape.from_string(d["shape"])
+        shape_opt = cast(Shape, Shape.from_string(d["shape"]))
         if shape_opt is None:
             raise TypeError(f"The shape '{d['shape']}' of the object '{d}' is not recognised")
 
@@ -425,7 +426,7 @@ class ClassificationInstance:
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
-        created_by: str = None,
+        created_by: Optional[str] = None,
         confidence: float = DEFAULT_CONFIDENCE,
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
         last_edited_at: Optional[datetime] = None,
@@ -483,7 +484,7 @@ class ClassificationInstance:
                 reviews=reviews,
             )
 
-        if self.is_assigned_to_label_row():
+        if self.is_assigned_to_label_row() and self._parent:  # explicit null-check for _parent keeps mypy happy
             self._parent._add_frames_to_classification(self.ontology_item, frames_list)
             self._parent._add_to_frame_to_hashes_map(self)
 
@@ -493,16 +494,24 @@ class ClassificationInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
-        if isinstance(frame, str):
-            frame = self._parent.get_frame_number(frame)
-        return self.Annotation(self, frame)
+        if self._parent is None:
+            raise RuntimeError("ClassificationInstance needs to be attached to label row to call get_annotation()")
+
+        if isinstance(frame, int):
+            return ClassificationInstance.Annotation(self, frame)
+
+        frame_num = self._parent.get_frame_number(frame)
+        if frame_num is None:
+            raise ValueError(f"Can't find image with the has {frame}")
+
+        return ClassificationInstance.Annotation(self, frame_num)
 
     def remove_from_frames(self, frames: Frames) -> None:
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:
             self._frames_to_data.pop(frame)
 
-        if self.is_assigned_to_label_row():
+        if self.is_assigned_to_label_row() and self._parent:  # explicit null check for _parent keeps mypy happy
             self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
             self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
@@ -741,7 +750,10 @@ class ClassificationInstance:
             A read only property about the reviews that happened for this object on this frame.
             """
             self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().reviews
+            reviews = self._get_object_frame_instance_data().reviews
+            if reviews is not None:
+                return reviews
+            return []
 
         def _check_if_frame_view_valid(self) -> None:
             if self._frame not in self._classification_instance._frames_to_data:
@@ -3072,7 +3084,7 @@ class OntologyStructure:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
-        ret = []
+        ret: List[OntologyElement] = []
         for object_ in self.objects:
             if object_.name == title:
                 if does_type_match(object_, type_):
@@ -3118,6 +3130,7 @@ class OntologyStructure:
         Raises:
             KeyError: If the dict is missing a required field.
         """
+
         ret: Dict[str, List[Dict[str, Any]]] = dict()
         ontology_objects: List[Dict[str, Any]] = list()
         ret["objects"] = ontology_objects
