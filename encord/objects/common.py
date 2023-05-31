@@ -77,8 +77,8 @@ class Attribute(ABC):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+        type_: Optional[AThingType] = None,
+    ) -> AThing:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -94,7 +94,7 @@ class Attribute(ABC):
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+    ) -> AThing:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -113,7 +113,7 @@ class Attribute(ABC):
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, Option]]:
+    ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -221,8 +221,8 @@ class RadioAttribute(Attribute):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+        type_: Optional[AThingType] = None,
+    ) -> AThing:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -241,8 +241,8 @@ class RadioAttribute(Attribute):
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, Option]]:
+        type_: Optional[AThingType] = None,
+    ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -311,8 +311,8 @@ class ChecklistAttribute(Attribute):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+        type_: Optional[AThingType] = None,
+    ) -> AThing:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -332,7 +332,7 @@ class ChecklistAttribute(Attribute):
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, Option]]:
+    ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -383,8 +383,8 @@ class TextAttribute(Attribute):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+        type_: Optional[AThingType] = None,
+    ) -> Union[Attribute, Option]:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -401,8 +401,8 @@ class TextAttribute(Attribute):
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, Option]]:
+        type_: Optional[AThingType] = None,
+    ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -463,8 +463,8 @@ class Option(ABC):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+        type_: Optional[AThingType] = None,
+    ) -> AThing:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -479,8 +479,8 @@ class Option(ABC):
     def get_child_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+        type_: Optional[AThingType] = None,
+    ) -> AThing:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -499,7 +499,7 @@ class Option(ABC):
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, Option]]:
+    ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -549,8 +549,8 @@ class FlatOption(Option):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+        type_: Optional[AThingType] = None,
+    ) -> AThing:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -567,8 +567,8 @@ class FlatOption(Option):
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, Option]]:
+        type_: Optional[AThingType] = None,
+    ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -603,8 +603,8 @@ class NestableOption(Option):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, Option]:
+        type_: Optional[AThing] = None,
+    ) -> AThing:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -623,8 +623,8 @@ class NestableOption(Option):
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, Option]]:
+        type_: Optional[AThingType] = None,
+    ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -683,7 +683,7 @@ class NestableOption(Option):
 
 
 def __build_identifiers(
-    existent_items: Iterable[Union[Attribute, Option]],
+    existent_items: List[AThing],
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,
 ) -> Tuple[int, str]:
@@ -746,9 +746,7 @@ def _add_option(
     return option
 
 
-def _get_option_by_hash(
-    feature_node_hash: str, options: Iterable[Option]
-) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, Option, None]:
+def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Optional[AThing]:
     for option_ in options:
         if option_.feature_node_hash == feature_node_hash:
             return option_
@@ -761,9 +759,7 @@ def _get_option_by_hash(
     return None
 
 
-def _get_attribute_by_hash(
-    feature_node_hash: str, attributes: List[Attribute]
-) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, Option, None]:
+def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]) -> Optional[AThing]:
     for attribute in attributes:
         if attribute.feature_node_hash == feature_node_hash:
             return attribute
@@ -776,7 +772,7 @@ def _get_attribute_by_hash(
 
 def _get_options_by_title(
     title: str, options: Iterable[Option]
-) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
+) -> List[AThing]:
     ret = []
     for option_ in options:
         if option_.label == title:
@@ -789,9 +785,7 @@ def _get_options_by_title(
     return ret
 
 
-def _get_attributes_by_title(
-    title: str, attributes: List[Attribute]
-) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, Option]]:
+def _get_attributes_by_title(title: str, attributes: List[Attribute]) -> List[AThing]:
     ret = []
     for attribute in attributes:
         if attribute.name == title:
@@ -803,7 +797,7 @@ def _get_attributes_by_title(
 
 
 def _handle_wrong_number_of_found_items(
-    found_items: List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, Option]],
+    found_items: List[AThing],
     title: str,
     type_: Any,
 ) -> None:
@@ -817,14 +811,15 @@ def _handle_wrong_number_of_found_items(
         )
 
 
+AThing = Union[Attribute, Option]
 AttributeTypes = Union[
     Type[RadioAttribute],
     Type[ChecklistAttribute],
     Type[TextAttribute],
     Type[Attribute],
 ]
-AttributeClasses = Union[RadioAttribute, ChecklistAttribute, TextAttribute, Attribute]
 OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
+AThingType = Union[AttributeTypes, OptionTypes]
 
 
 class DeidentifyRedactTextMode(Enum):
@@ -870,3 +865,5 @@ SaveDeidentifiedDicomCondition = Union[
     SaveDeidentifiedDicomConditionNotSubstr,
     SaveDeidentifiedDicomConditionIn,
 ]
+
+
