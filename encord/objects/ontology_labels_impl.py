@@ -2083,11 +2083,14 @@ class LabelRowV2:
     ) -> None:
         for frame_object_label in objects_list:
             object_hash = frame_object_label["objectHash"]
-            if object_hash not in self._objects_map:
-                object_instance = self._create_new_object_instance(frame_object_label, frame)
-                self.add_object_instance(object_instance)
-            else:
-                self._add_coordinates_to_object_instance(frame_object_label, frame)
+            try:
+                if object_hash not in self._objects_map:
+                    object_instance = self._create_new_object_instance(frame_object_label, frame)
+                    self.add_object_instance(object_instance)
+                else:
+                    self._add_coordinates_to_object_instance(frame_object_label, frame)
+            except Exception as e:
+                print(f"Ignoring object hash {object_hash} because of an error {e}, and moving forward")
 
     def _add_objects_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_answers"].values():
