@@ -656,7 +656,7 @@ class EncordUserClient:
             integration_hash:
                 integration_hash parameter of Encord platform external storage integration
             redact_dicom_tags:
-                Specifies if dicom tags redaction should be enabled.
+                Specifies if DICOM tags redaction should be enabled.
             redact_pixels_mode:
                 Specifies which text redaction policy should be applied to pixel data.
             save_conditions:
