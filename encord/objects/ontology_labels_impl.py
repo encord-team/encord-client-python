@@ -2094,19 +2094,25 @@ class LabelRowV2:
 
     def _add_objects_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_answers"].values():
-            object_hash = answer["objectHash"]
-            object_instance = self._objects_map[object_hash]
+            try:
+                object_hash = answer["objectHash"]
+                object_instance = self._objects_map[object_hash]
 
-            answer_list = answer["classifications"]
-            object_instance.set_answer_from_list(answer_list)
+                answer_list = answer["classifications"]
+                object_instance.set_answer_from_list(answer_list)
+            except Exception as e:
+                print(f"Ignoring object answer for {object_hash} because of an error {e}, and moving forward")
 
     def _add_action_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_actions"].values():
-            object_hash = answer["objectHash"]
-            object_instance = self._objects_map[object_hash]
+            try:
+                object_hash = answer["objectHash"]
+                object_instance = self._objects_map[object_hash]
 
-            answer_list = answer["actions"]
-            object_instance.set_answer_from_list(answer_list)
+                answer_list = answer["actions"]
+                object_instance.set_answer_from_list(answer_list)
+            except Exception as e:
+                print(f"Ignoring action answer for {object_hash} because of an error {e}, and moving forward")
 
     def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
         ontology = self._ontology.structure
