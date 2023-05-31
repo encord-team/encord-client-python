@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+
 from enum import Enum
 from typing import (
     Any,
@@ -301,6 +302,10 @@ class ChecklistAttribute(Attribute):
     ):
         super().__init__(uid, feature_node_hash, name, required, dynamic)
         self._options = options if options is not None else []
+
+    @property
+    def options(self) -> Sequence[Option]:
+        return self._options
 
     @staticmethod
     def _get_property_type_name() -> str:
@@ -611,7 +616,7 @@ class NestableOption(Option):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Optional[OntologyElement] = None,
+        type_: Optional[OntologyElementType] = None,
     ) -> OntologyElement:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
@@ -870,4 +875,3 @@ SaveDeidentifiedDicomCondition = Union[
     SaveDeidentifiedDicomConditionNotSubstr,
     SaveDeidentifiedDicomConditionIn,
 ]
-
