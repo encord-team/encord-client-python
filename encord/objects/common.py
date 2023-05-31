@@ -137,6 +137,7 @@ class Attribute(ABC):
     def from_dict(cls, d: Dict[str, Any]) -> Attribute:
         property_type = d["type"]
         common_attribute_fields = cls._decode_common_attribute_fields(d)
+
         if property_type == RadioAttribute._get_property_type_name():
             return RadioAttribute(
                 **common_attribute_fields,
