@@ -40,7 +40,6 @@ from encord.objects.common import (
     AttributeTypes,
     ChecklistAttribute,
     Option,
-    OptionClasses,
     OptionTypes,
     RadioAttribute,
     Shape,
@@ -124,7 +123,7 @@ class Object:
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, OptionClasses]:
+    ) -> Union[AttributeClasses, Option]:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -144,7 +143,7 @@ class Object:
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, OptionClasses]:
+    ) -> Union[AttributeClasses, Option]:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -162,7 +161,7 @@ class Object:
         self,
         title: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, OptionClasses]]:
+    ) -> List[Union[AttributeClasses, Option]]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -264,7 +263,7 @@ class Classification:
         self,
         feature_node_hash: str,
         type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, OptionClasses]:
+    ) -> Union[AttributeClasses, Option]:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -284,7 +283,7 @@ class Classification:
         self,
         title: str,
         type_: Union[OptionTypes, AttributeTypes, None] = None,
-    ) -> Union[AttributeClasses, OptionClasses]:
+    ) -> Union[AttributeClasses, Option]:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -302,7 +301,7 @@ class Classification:
         self,
         title: str,
         type_: Union[OptionTypes, AttributeTypes, None] = None,
-    ) -> List[Union[AttributeClasses, OptionClasses]]:
+    ) -> List[Union[AttributeClasses, Option]]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -3013,7 +3012,7 @@ class OntologyStructure:
         self,
         feature_node_hash: str,
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
+    ) -> Union[OntologyClasses, AttributeClasses, Option]:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -3047,7 +3046,7 @@ class OntologyStructure:
         self,
         title: str,
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
+    ) -> Union[OntologyClasses, AttributeClasses, Option]:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -3065,7 +3064,7 @@ class OntologyStructure:
         self,
         title: str,
         type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[OntologyClasses, AttributeClasses, OptionClasses]]:
+    ) -> List[Union[OntologyClasses, AttributeClasses, Option]]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
