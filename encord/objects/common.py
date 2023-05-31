@@ -817,14 +817,34 @@ class SaveDeidentifiedDicomConditionType(Enum):
 
 
 @dataclass
-class SaveDeidentifiedDicomCondition:
-    value: str | list[str]
-    condition_type: SaveDeidentifiedDicomConditionType
+class SaveDeidentifiedDicomConditionIn:
+    value: list[str]
     dicom_tag: str
+    condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.IN
 
     def to_dict(self) -> dict:
         return {
             "value": self.value,
-            "condition_type": self.condition_type.value,
             "dicom_tag": self.dicom_tag,
+            "condition_type": self.condition_type.value,
         }
+
+
+@dataclass
+class SaveDeidentifiedDicomConditionNotSubstr:
+    value: str
+    dicom_tag: str
+    condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.NOT_SUBSTR
+
+    def to_dict(self) -> dict:
+        return {
+            "value": self.value,
+            "dicom_tag": self.dicom_tag,
+            "condition_type": self.condition_type.value,
+        }
+
+
+SaveDeidentifiedDicomCondition = Union[
+    SaveDeidentifiedDicomConditionNotSubstr,
+    SaveDeidentifiedDicomConditionIn,
+]
