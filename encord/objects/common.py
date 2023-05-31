@@ -93,7 +93,7 @@ class Attribute(ABC):
     def get_child_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
+        type_: Optional[AThingType] = None,
     ) -> AThing:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
@@ -112,7 +112,7 @@ class Attribute(ABC):
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
+        type_: Optional[AThingType] = None,
     ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
@@ -338,7 +338,7 @@ class ChecklistAttribute(Attribute):
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
+        type_: Optional[AThingType] = None,
     ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
@@ -509,7 +509,7 @@ class Option(ABC):
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
+        type_: Optional[AThingType] = None,
     ) -> List[AThing]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
