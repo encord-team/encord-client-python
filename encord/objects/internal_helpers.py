@@ -74,6 +74,9 @@ class Answer(ABC):
 
         ret = self._to_encord_dict_impl(self.is_dynamic)
         if self.is_dynamic:
+            if ranges is None:
+                raise ValueError("Frame range should be set for dynamic answers")
+
             ret.update(self._get_encord_dynamic_fields(ranges))
 
         return ret
@@ -96,6 +99,8 @@ class Answer(ABC):
 
 
 class TextAnswer(Answer):
+    _value: Optional[str]
+
     def __init__(self, ontology_attribute: TextAttribute):
         super().__init__(ontology_attribute)
         self._value = None
@@ -119,11 +124,14 @@ class TextAnswer(Answer):
             raise ValueError(
                 "Copying from a TextAnswer which is based on a different ontology Attribute is not possible."
             )
-        other_is_answered = text_answer.is_answered()
-        if not other_is_answered:
+
+        if not text_answer.is_answered():
             self.unset()
         else:
             other_answer = text_answer.get_value()
+            if other_answer is None:
+                raise ValueError("Answered TextAnswer value can't be None")
+
             self.set(other_answer)
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
@@ -192,15 +200,23 @@ class RadioAnswer(Answer):
             raise ValueError(
                 "Copying from a RadioAnswer which is based on a different ontology Attribute is not possible."
             )
-        other_is_answered = radio_answer.is_answered()
-        if not other_is_answered:
+
+        if not radio_answer.is_answered():
             self.unset()
         else:
             other_answer = radio_answer.get_value()
+            if other_answer is None:
+                raise ValueError("Answered RadioAnswer value can't be None")
             self.set(other_answer)
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+        if not self.is_answered():
+            raise ValueError("Can't serialise unanswered RadioAnswer")
+
         nestable_option = self._value
+
+        if nestable_option is None:
+            raise ValueError("Answered RadioAnswer value can't be None")
 
         return {
             "name": self.ontology_attribute.name,
@@ -227,6 +243,9 @@ class RadioAnswer(Answer):
 
         answer = answers[0]
         nestable_option = _get_option_by_hash(answer["featureHash"], self.ontology_attribute.options)
+        if not isinstance(nestable_option, NestableOption):
+            raise ValueError("RadioAnswers options must have NestableOption type.")
+
         self.set(nestable_option)
         self.is_manual_annotation = d["manualAnnotation"]
 
@@ -283,7 +302,7 @@ class ChecklistAnswer(Answer):
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = True
 
-    def get_options(self) -> List[FlatOption]:
+    def get_options(self) -> List[Option]:
         if not self.is_answered():
             return []
         else:
@@ -308,6 +327,12 @@ class ChecklistAnswer(Answer):
             self._answered = True
             for feature_node_hash in self._feature_hash_to_answer_map.keys():
                 option = _get_option_by_hash(feature_node_hash, self.ontology_attribute.options)
+                if option is None:
+                    raise ValueError(f"Can't find an option with a feature node hash {feature_node_hash}")
+
+                if not isinstance(option, FlatOption):
+                    raise ValueError(f"ChecklistAnswer option has an unexpected type: {type(option)}")
+
                 other_answer = checklist_answer.get_value(option)
                 self._feature_hash_to_answer_map[feature_node_hash] = other_answer
 
@@ -331,9 +356,15 @@ class ChecklistAnswer(Answer):
             )
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+        if not self.is_answered():
+            raise ValueError("Can't serialise unanswered ChecklistAnswer")
+
         checked_options = []
-        ontology_attribute: ChecklistAttribute = self._ontology_attribute
+        ontology_attribute = self._ontology_attribute
         for option in ontology_attribute.options:
+            if not isinstance(option, FlatOption):
+                raise ValueError(f"ChecklistAnswer option has an unexpected type: {type(option)}")
+
             if self.get_value(option):
                 checked_options.append(option)
 
@@ -363,8 +394,11 @@ class ChecklistAnswer(Answer):
             return
 
         for answer in answers:
-            flat_option = _get_option_by_hash(answer["featureHash"], self.ontology_attribute.options)
-            self.check_options([flat_option])
+            option = _get_option_by_hash(answer["featureHash"], self.ontology_attribute.options)
+            if not isinstance(option, FlatOption):
+                raise ValueError(f"ChecklistAnswer option has an unexpected type: {type(option)}")
+
+            self.check_options([option])
 
         self.is_manual_annotation = d["manualAnnotation"]
         self._answered = True
