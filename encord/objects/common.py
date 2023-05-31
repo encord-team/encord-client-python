@@ -461,14 +461,11 @@ class Option(ABC):
     feature_node_hash: str
     label: str
     value: str
+    nested_options: List[Attribute] = field(default_factory=list)
 
     @abstractmethod
     def is_nestable(self) -> bool:
         pass
-
-    @property
-    def nested_options(self) -> List[Attribute]:
-        return []
 
     @abstractmethod
     def get_child_by_hash(
@@ -757,12 +754,12 @@ def _add_option(
 
 
 def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Optional[OntologyElement]:
-    for option_ in options:
-        if option_.feature_node_hash == feature_node_hash:
-            return option_
+    for option in options:
+        if option.feature_node_hash == feature_node_hash:
+            return option
 
-        if option_.is_nestable():
-            found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
+        if option.is_nestable():
+            found_item = _get_attribute_by_hash(feature_node_hash, option.nested_options)
             if found_item is not None:
                 return found_item
 
