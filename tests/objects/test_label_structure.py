@@ -1,4 +1,5 @@
 import datetime
+import math
 from dataclasses import asdict
 from unittest.mock import Mock, PropertyMock
 
@@ -327,7 +328,7 @@ def test_update_remove_object_instance_coordinates():
     frame_1_view = label_box.get_annotation(1)
     assert sorted([frame.frame for frame in frames]) == [1]
     assert frame_1_view.coordinates == BOX_COORDINATES
-    assert frame_1_view.confidence == DEFAULT_CONFIDENCE
+    assert math.isclose(frame_1_view.confidence, DEFAULT_CONFIDENCE)
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
     box_coordinates_2 = BoundingBoxCoordinates(
@@ -349,12 +350,12 @@ def test_update_remove_object_instance_coordinates():
     assert sorted([frame.frame for frame in frames]) == [1, 2, 3, 4]
     frame_1_view = label_box.get_annotation(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
-    assert frame_1_view.confidence == DEFAULT_CONFIDENCE
+    assert math.isclose(frame_1_view.confidence, DEFAULT_CONFIDENCE)
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
     frame_2_view = label_box.get_annotation(2)
     assert frame_2_view.coordinates == box_coordinates_2
-    assert frame_2_view.confidence == confidence
+    assert math.isclose(frame_2_view.confidence, confidence)
     assert frame_2_view.manual_annotation == manual_annotation
 
     # Remove coordinates
@@ -366,12 +367,12 @@ def test_update_remove_object_instance_coordinates():
     assert sorted([frame.frame for frame in frames]) == [1, 4]
     frame_1_view = label_box.get_annotation(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
-    assert frame_1_view.confidence == DEFAULT_CONFIDENCE
+    assert math.isclose(frame_1_view.confidence, DEFAULT_CONFIDENCE)
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
     frame_4_view = label_box.get_annotation(4)
     assert frame_4_view.coordinates == box_coordinates_2
-    assert frame_4_view.confidence == confidence
+    assert math.isclose(frame_4_view.confidence, confidence)
     assert frame_4_view.manual_annotation == manual_annotation
 
     # Reset coordinates
@@ -396,12 +397,12 @@ def test_update_remove_object_instance_coordinates():
 
     frame_1_view = label_box.get_annotation(1)
     assert frame_1_view.coordinates == BOX_COORDINATES
-    assert frame_1_view.confidence == DEFAULT_CONFIDENCE
+    assert math.isclose(frame_1_view.confidence, DEFAULT_CONFIDENCE)
     assert frame_1_view.manual_annotation == DEFAULT_MANUAL_ANNOTATION
 
     frame_4_view = label_box.get_annotation(4)
     assert frame_4_view.coordinates == box_coordinates_3
-    assert frame_4_view.confidence == new_confidence
+    assert math.isclose(frame_4_view.confidence, new_confidence)
     assert frame_4_view.manual_annotation == manual_annotation
 
 
@@ -563,7 +564,7 @@ def test_classification_instances_frame_view():
     assert frame_view_1.created_at > test_start_timestamp
     assert frame_view_1.last_edited_by is None
     assert frame_view_1.last_edited_at > test_start_timestamp
-    assert frame_view_1.confidence is 1
+    assert math.isclose(frame_view_1.confidence, 1.0)
     assert frame_view_1.manual_annotation is True
     assert frame_view_1.reviews is None
 
@@ -579,7 +580,7 @@ def test_classification_instances_frame_view():
     assert frame_view_1.created_at == specific_time
     assert frame_view_1.last_edited_by == "poseidon@gmail.com"
     assert frame_view_1.last_edited_at == specific_time
-    assert frame_view_1.confidence == 0.5
+    assert math.isclose(frame_view_1.confidence, 0.5)
     assert frame_view_1.manual_annotation == False
 
     classification_instance_1.remove_from_frames(1)

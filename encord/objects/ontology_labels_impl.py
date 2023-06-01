@@ -428,7 +428,7 @@ class ClassificationInstance:
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
         created_by: str = None,
-        confidence: int = DEFAULT_CONFIDENCE,
+        confidence: float = DEFAULT_CONFIDENCE,
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
         last_edited_at: Optional[datetime] = None,
         last_edited_by: Optional[str] = None,
@@ -758,7 +758,7 @@ class ClassificationInstance:
     class FrameData:
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
-        confidence: int = DEFAULT_CONFIDENCE
+        confidence: float = DEFAULT_CONFIDENCE
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
         last_edited_at: datetime = field(default_factory=datetime.now)
         last_edited_by: Optional[str] = None
@@ -785,7 +785,7 @@ class ClassificationInstance:
             self,
             created_at: Optional[datetime] = None,
             created_by: Optional[str] = None,
-            confidence: Optional[int] = None,
+            confidence: Optional[float] = None,
             manual_annotation: Optional[bool] = None,
             last_edited_at: Optional[datetime] = None,
             last_edited_by: Optional[str] = None,
@@ -811,7 +811,7 @@ class ClassificationInstance:
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
-        confidence: Optional[int] = None,
+        confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
         last_edited_at: Optional[datetime] = None,
         last_edited_by: Optional[str] = None,
@@ -1630,7 +1630,7 @@ class LabelRowV2:
             overwrite: bool = False,
             created_at: Optional[datetime] = None,
             created_by: str = None,
-            confidence: int = DEFAULT_CONFIDENCE,
+            confidence: float = DEFAULT_CONFIDENCE,
             manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
             last_edited_at: Optional[datetime] = None,
             last_edited_by: Optional[str] = None,
