@@ -13,7 +13,6 @@ from encord.objects.common import (
     NestableOption,
     Option,
     OptionType,
-    PropertyType,
     RadioAttribute,
     TextAttribute,
     _get_option_by_hash,
@@ -390,12 +389,11 @@ class ChecklistAnswer(Answer):
 
 
 def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
-    property_type = attribute.get_property_type()
-    if property_type == PropertyType.TEXT:
+    if isinstance(attribute, TextAttribute):
         return TextAnswer(attribute)
-    elif property_type == PropertyType.RADIO:
+    elif isinstance(attribute, RadioAttribute):
         return RadioAnswer(attribute)
-    elif property_type == PropertyType.CHECKLIST:
+    elif isinstance(attribute, ChecklistAttribute):
         return ChecklistAnswer(attribute)
     else:
         raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
@@ -487,7 +485,7 @@ def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Op
 def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
     text_attributes: List[Attribute] = list()
     for attribute in attributes:
-        if attribute.get_property_type() == PropertyType.TEXT:
+        if isinstance(attribute, TextAttribute):
             text_attributes.append(attribute)
         elif attribute.has_options_field():
             for option in attribute.options:

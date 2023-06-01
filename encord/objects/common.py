@@ -18,12 +18,6 @@ from encord.orm.project import StringEnum
 NestedID = List[int]
 
 
-class PropertyType(StringEnum):
-    RADIO = "radio"
-    TEXT = "text"
-    CHECKLIST = "checklist"
-
-
 class Shape(StringEnum):
     BOUNDING_BOX = "bounding_box"
     POLYGON = "polygon"
@@ -49,8 +43,9 @@ class Attribute(ABC):
     that are part of an :class:`encord.objects.ontology_object.Object`.
     """
 
+    @staticmethod
     @abstractmethod
-    def get_property_type(self) -> PropertyType:
+    def get_property_type_name() -> str:
         pass
 
     @classmethod
@@ -158,7 +153,7 @@ class Attribute(ABC):
         ret = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
-        ret["type"] = self.get_property_type().value
+        ret["type"] = self.get_property_type_name()
         ret["featureNodeHash"] = self.feature_node_hash
         ret["required"] = self.required
         ret["dynamic"] = self.dynamic
@@ -196,8 +191,9 @@ class RadioAttribute(Attribute):
 
     options: List[NestableOption] = field(default_factory=list)
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.RADIO
+    @staticmethod
+    def get_property_type_name() -> str:
+        return "radio"
 
     @classmethod
     def has_options_field(cls) -> bool:
@@ -269,8 +265,9 @@ class ChecklistAttribute(Attribute):
 
     options: List[FlatOption] = field(default_factory=list)
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.CHECKLIST
+    @staticmethod
+    def get_property_type_name() -> str:
+        return "checklist"
 
     @classmethod
     def has_options_field(cls) -> bool:
@@ -339,8 +336,9 @@ class TextAttribute(Attribute):
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.TEXT
+    @staticmethod
+    def get_property_type_name() -> str:
+        return "text"
 
     @classmethod
     def has_options_field(cls) -> bool:
