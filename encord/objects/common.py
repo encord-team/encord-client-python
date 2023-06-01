@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum
 from typing import Any, List, Optional, Tuple, Type, TypeVar, Union
 
 from encord.exceptions import OntologyError
@@ -404,11 +404,6 @@ def attributes_to_list_dict(attributes: List[Attribute]) -> list:
     return attributes_list
 
 
-class OptionType(Enum):
-    FLAT = auto()
-    NESTABLE = auto()
-
-
 @dataclass
 class Option(ABC):
     """
@@ -420,8 +415,9 @@ class Option(ABC):
     label: str
     value: str
 
+    @property
     @abstractmethod
-    def get_option_type(self) -> OptionType:
+    def is_nestable(self) -> bool:
         pass
 
     @abstractmethod
@@ -508,8 +504,8 @@ class FlatOption(Option):
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
-    def get_option_type(self) -> OptionType:
-        return OptionType.FLAT
+    def is_nestable(self) -> bool:
+        return False
 
     def get_child_by_hash(
         self,
@@ -562,8 +558,8 @@ class NestableOption(Option):
 
     nested_options: List[Attribute] = field(default_factory=list)
 
-    def get_option_type(self) -> OptionType:
-        return OptionType.NESTABLE
+    def is_nestable(self) -> bool:
+        return True
 
     def get_child_by_hash(
         self,
@@ -726,7 +722,7 @@ def _get_option_by_hash(
         if option_.feature_node_hash == feature_node_hash:
             return option_
 
-        if option_.get_option_type() == OptionType.NESTABLE:
+        if option_.is_nestable:
             found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
             if found_item is not None:
                 return found_item
@@ -756,7 +752,7 @@ def _get_options_by_title(
         if option_.label == title:
             ret.append(option_)
 
-        if option_.get_option_type() == OptionType.NESTABLE:
+        if option_.is_nestable:
             found_items = _get_attributes_by_title(title, option_.nested_options)
             ret.extend(found_items)
 

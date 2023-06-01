@@ -12,7 +12,6 @@ from encord.objects.common import (
     FlatOption,
     NestableOption,
     Option,
-    OptionType,
     RadioAttribute,
     TextAttribute,
     _get_option_by_hash,
@@ -432,7 +431,7 @@ def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> 
 
         if attribute.has_options_field():
             for option in attribute.options:
-                if option.get_option_type() == OptionType.NESTABLE:
+                if option.is_nestable:
                     other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
                     ret.extend(other_attributes)
 
@@ -475,7 +474,7 @@ def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Op
             for option in attribute.options:
                 if option == passed_option:
                     return attribute
-                if option.get_option_type() == OptionType.NESTABLE:
+                if option.is_nestable:
                     attribute_opt = _search_for_parent(passed_option, option.nested_options)
                     if attribute_opt is not None:
                         return attribute_opt
@@ -489,7 +488,7 @@ def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
             text_attributes.append(attribute)
         elif attribute.has_options_field():
             for option in attribute.options:
-                if option.get_option_type() == OptionType.NESTABLE:
+                if option.is_nestable:
                     text_attributes.extend(_search_for_text_attributes(option.nested_options))
     return text_attributes
 
