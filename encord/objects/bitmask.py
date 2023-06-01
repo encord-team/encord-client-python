@@ -121,6 +121,13 @@ class BitmaskCoordinates:
 
     @staticmethod
     def from_array(source: Any):
+        """
+        Creates a BitmaskCoordinates object from a NumPy array, or other objects that implement
+        :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`
+
+        For detailed information please refer to :ref:`bitmask tutorial <tutorials/bitmasks:Bitmasks>`
+        """
+
         if source is not None:
             if hasattr(source, "__array_interface__"):
                 arr = source.__array_interface__

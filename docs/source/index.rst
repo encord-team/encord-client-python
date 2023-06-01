@@ -65,6 +65,7 @@ The tutorials are separated into those that relate to *datasets* and those that 
    tutorials/ontologies
    tutorials/projects
    tutorials/workflows
+   tutorials/bitmasks
 
 
 End-to-End Examples
