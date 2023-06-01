@@ -148,14 +148,14 @@ class TextAnswer(Answer):
     def __hash__(self):
         return hash((self._ontology_attribute.feature_node_hash, self._value, type(self).__name__))
 
-    def __eq__(self, other: TextAnswer) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TextAnswer):
             return False
-        else:
-            return (
-                self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
-                and self._value == other._value
-            )
+
+        return (
+            self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
+            and self._value == other._value
+        )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._value})"
@@ -235,14 +235,14 @@ class RadioAnswer(Answer):
     def __hash__(self):
         return hash((self.ontology_attribute.feature_node_hash, self._value, type(self).__name__))
 
-    def __eq__(self, other: RadioAnswer) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, RadioAnswer):
             return False
-        else:
-            return (
-                self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
-                and self._value == other._value
-            )
+
+        return (
+            self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
+            and self._value == other._value
+        )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._value})"
@@ -376,13 +376,13 @@ class ChecklistAnswer(Answer):
         flat_values.sort()
         return hash((tuple(flat_values), type(self).__name__))
 
-    def __eq__(self, other: ChecklistAnswer) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, ChecklistAnswer):
             return False
-        else:
-            flat_values = {(key, value) for key, value in self._feature_hash_to_answer_map.items()}
-            other_flat_values = {(key, value) for key, value in other._feature_hash_to_answer_map.items()}
-            return flat_values == other_flat_values
+
+        flat_values = {(key, value) for key, value in self._feature_hash_to_answer_map.items()}
+        other_flat_values = {(key, value) for key, value in other._feature_hash_to_answer_map.items()}
+        return flat_values == other_flat_values
 
     def __repr__(self):
         flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]

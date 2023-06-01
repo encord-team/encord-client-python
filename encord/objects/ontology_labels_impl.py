@@ -2950,7 +2950,7 @@ class DynamicAnswerManager:
                 ret.add(answer)
         return ret
 
-    def __eq__(self, other: DynamicAnswerManager) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, DynamicAnswerManager):
             return False
         return (
