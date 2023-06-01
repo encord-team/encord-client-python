@@ -45,7 +45,7 @@ class Attribute(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_property_type_name() -> str:
+    def _get_property_type_name() -> str:
         pass
 
     @classmethod
@@ -153,7 +153,7 @@ class Attribute(ABC):
         ret = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
-        ret["type"] = self.get_property_type_name()
+        ret["type"] = self._get_property_type_name()
         ret["featureNodeHash"] = self.feature_node_hash
         ret["required"] = self.required
         ret["dynamic"] = self.dynamic
@@ -192,7 +192,7 @@ class RadioAttribute(Attribute):
     options: List[NestableOption] = field(default_factory=list)
 
     @staticmethod
-    def get_property_type_name() -> str:
+    def _get_property_type_name() -> str:
         return "radio"
 
     @classmethod
@@ -266,7 +266,7 @@ class ChecklistAttribute(Attribute):
     options: List[FlatOption] = field(default_factory=list)
 
     @staticmethod
-    def get_property_type_name() -> str:
+    def _get_property_type_name() -> str:
         return "checklist"
 
     @classmethod
@@ -337,7 +337,7 @@ class TextAttribute(Attribute):
     """
 
     @staticmethod
-    def get_property_type_name() -> str:
+    def _get_property_type_name() -> str:
         return "text"
 
     @classmethod
