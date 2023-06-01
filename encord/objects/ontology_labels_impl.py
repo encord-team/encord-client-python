@@ -23,6 +23,7 @@ from typing import (
 from uuid import uuid4
 
 from dateutil.parser import parse
+from tqdm import tqdm
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
@@ -1104,6 +1105,8 @@ class LabelRowV2:
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
+        print(f"Requested the data: {datetime.now()}")
+
         if bundle is not None:
             self.__batched_initialise(
                 bundle,
@@ -1125,7 +1128,9 @@ class LabelRowV2:
                     include_reviews=include_reviews,
                 )
 
+            print(f"Received the data: {datetime.now()}")
             self.from_labels_dict(label_row_dict)
+            print(f"Parsing finished: {datetime.now()}")
 
     def __batched_initialise(
         self,
@@ -2065,11 +2070,15 @@ class LabelRowV2:
                     data_unit["labels"].get("classifications", []), classification_answers, int(frame)
                 )
             elif data_type in {DataType.VIDEO.value, DataType.DICOM.value}:
-                for frame, frame_data in data_unit["labels"].items():
+                print(f'_parse_labels_from_dict: video -> {len(data_unit["labels"].items())} frames. {datetime.now()}')
+
+                for frame, frame_data in tqdm(data_unit["labels"].items()):
                     self._add_object_instances_from_objects(frame_data["objects"], int(frame))
                     self._add_classification_instances_from_classifications(
                         frame_data["classifications"], classification_answers, int(frame)
                     )
+
+                print(f"All frames processed! {datetime.now()}")
             else:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
@@ -2093,7 +2102,10 @@ class LabelRowV2:
                 print(f"Ignoring object hash {object_hash} because of an error {e}, and moving forward")
 
     def _add_objects_answers(self, label_row_dict: dict):
-        for answer in label_row_dict["object_answers"].values():
+        print(
+            f'_add_objects_answers: {len(label_row_dict["object_answers"].values())} object answers. {datetime.now()}'
+        )
+        for answer in tqdm(label_row_dict["object_answers"].values()):
             try:
                 object_hash = answer["objectHash"]
                 object_instance = self._objects_map[object_hash]
@@ -2102,9 +2114,11 @@ class LabelRowV2:
                 object_instance.set_answer_from_list(answer_list)
             except Exception as e:
                 print(f"Ignoring object answer for {object_hash} because of an error {e}, and moving forward")
+        print(f"_add_objects_answers -> done {datetime.now()}")
 
     def _add_action_answers(self, label_row_dict: dict):
-        for answer in label_row_dict["object_actions"].values():
+        print(f'_add_action_answers: {len(label_row_dict["object_actions"].values())} object actions. {datetime.now()}')
+        for answer in tqdm(label_row_dict["object_actions"].values()):
             try:
                 object_hash = answer["objectHash"]
                 object_instance = self._objects_map[object_hash]
@@ -2113,6 +2127,7 @@ class LabelRowV2:
                 object_instance.set_answer_from_list(answer_list)
             except Exception as e:
                 print(f"Ignoring action answer for {object_hash} because of an error {e}, and moving forward")
+        print(f"_add_objects_answers -> done {datetime.now()}")
 
     def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
         ontology = self._ontology.structure
