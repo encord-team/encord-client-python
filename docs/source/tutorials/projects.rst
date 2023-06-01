@@ -311,9 +311,6 @@ If you are using an an API key you will need the `label_logs.read` permission.
 Models
 ======
 
-.. note::
-    This section is undergoing a review [Monday, May 23rd 2022].
-
 The |sdk| allows you to interact with Encord's advanced model features.
 Our model library includes state-of-the-art classification, object detection, segmentation, and pose estimation models.
 
@@ -524,9 +521,6 @@ Limits on the input values
 Algorithms
 ==========
 
-.. note::
-    This section is undergoing a review [Monday, May 23rd 2022].
-
 The |sdk| allows you to interact with Encord's algorithmic automation features.
 Our library includes sampling, augmentation, transformation and labeling algorithms.
 
@@ -611,9 +605,6 @@ All that is required is a ``<feature_hash>`` and ``object_hash`` for each object
 
 Other Resources
 ===============
-
-.. note::
-    This section is undergoing a review [Monday, May 23rd 2022].
 
 CVAT Integration
 ----------------
