@@ -415,7 +415,6 @@ class Option(ABC):
     label: str
     value: str
 
-    @property
     @abstractmethod
     def is_nestable(self) -> bool:
         pass
@@ -722,7 +721,7 @@ def _get_option_by_hash(
         if option_.feature_node_hash == feature_node_hash:
             return option_
 
-        if option_.is_nestable:
+        if option_.is_nestable():
             found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
             if found_item is not None:
                 return found_item
@@ -752,7 +751,7 @@ def _get_options_by_title(
         if option_.label == title:
             ret.append(option_)
 
-        if option_.is_nestable:
+        if option_.is_nestable():
             found_items = _get_attributes_by_title(title, option_.nested_options)
             ret.extend(found_items)
 
