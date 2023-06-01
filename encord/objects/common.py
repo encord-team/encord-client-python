@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum
 from typing import Any, List, Optional, Tuple, Type, TypeVar, Union
 
 from encord.exceptions import OntologyError
@@ -16,12 +16,6 @@ from encord.objects.utils import (
 from encord.orm.project import StringEnum
 
 NestedID = List[int]
-
-
-class PropertyType(StringEnum):
-    RADIO = "radio"
-    TEXT = "text"
-    CHECKLIST = "checklist"
 
 
 class Shape(StringEnum):
@@ -49,8 +43,9 @@ class Attribute(ABC):
     that are part of an :class:`encord.objects.ontology_object.Object`.
     """
 
+    @staticmethod
     @abstractmethod
-    def get_property_type(self) -> PropertyType:
+    def _get_property_type_name() -> str:
         pass
 
     @classmethod
@@ -158,7 +153,7 @@ class Attribute(ABC):
         ret = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
-        ret["type"] = self.get_property_type().value
+        ret["type"] = self._get_property_type_name()
         ret["featureNodeHash"] = self.feature_node_hash
         ret["required"] = self.required
         ret["dynamic"] = self.dynamic
@@ -196,8 +191,9 @@ class RadioAttribute(Attribute):
 
     options: List[NestableOption] = field(default_factory=list)
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.RADIO
+    @staticmethod
+    def _get_property_type_name() -> str:
+        return "radio"
 
     @classmethod
     def has_options_field(cls) -> bool:
@@ -269,8 +265,9 @@ class ChecklistAttribute(Attribute):
 
     options: List[FlatOption] = field(default_factory=list)
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.CHECKLIST
+    @staticmethod
+    def _get_property_type_name() -> str:
+        return "checklist"
 
     @classmethod
     def has_options_field(cls) -> bool:
@@ -339,8 +336,9 @@ class TextAttribute(Attribute):
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.TEXT
+    @staticmethod
+    def _get_property_type_name() -> str:
+        return "text"
 
     @classmethod
     def has_options_field(cls) -> bool:
@@ -406,11 +404,6 @@ def attributes_to_list_dict(attributes: List[Attribute]) -> list:
     return attributes_list
 
 
-class OptionType(Enum):
-    FLAT = auto()
-    NESTABLE = auto()
-
-
 @dataclass
 class Option(ABC):
     """
@@ -423,7 +416,7 @@ class Option(ABC):
     value: str
 
     @abstractmethod
-    def get_option_type(self) -> OptionType:
+    def is_nestable(self) -> bool:
         pass
 
     @abstractmethod
@@ -510,8 +503,8 @@ class FlatOption(Option):
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
-    def get_option_type(self) -> OptionType:
-        return OptionType.FLAT
+    def is_nestable(self) -> bool:
+        return False
 
     def get_child_by_hash(
         self,
@@ -564,8 +557,8 @@ class NestableOption(Option):
 
     nested_options: List[Attribute] = field(default_factory=list)
 
-    def get_option_type(self) -> OptionType:
-        return OptionType.NESTABLE
+    def is_nestable(self) -> bool:
+        return True
 
     def get_child_by_hash(
         self,
@@ -728,7 +721,7 @@ def _get_option_by_hash(
         if option_.feature_node_hash == feature_node_hash:
             return option_
 
-        if option_.get_option_type() == OptionType.NESTABLE:
+        if option_.is_nestable():
             found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
             if found_item is not None:
                 return found_item
@@ -758,7 +751,7 @@ def _get_options_by_title(
         if option_.label == title:
             ret.append(option_)
 
-        if option_.get_option_type() == OptionType.NESTABLE:
+        if option_.is_nestable():
             found_items = _get_attributes_by_title(title, option_.nested_options)
             ret.extend(found_items)
 
