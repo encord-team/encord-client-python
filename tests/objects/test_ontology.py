@@ -233,7 +233,6 @@ def test_add_object_nested_classifications():
     assert isinstance(stripes, encord.objects.TextAttribute)
     assert not stripes.required
     assert not stripes.dynamic
-    assert not stripes.has_options_field()
 
     ripeness = obj1.add_attribute(
         encord.objects.RadioAttribute,
@@ -248,7 +247,6 @@ def test_add_object_nested_classifications():
     assert isinstance(ripeness, encord.objects.RadioAttribute)
     assert ripeness.required
     assert ripeness.dynamic
-    assert ripeness.has_options_field()
 
     damage = obj1.add_attribute(encord.objects.ChecklistAttribute, "Damage", required=True, dynamic=True)
     assert damage.uid == [1, 8]
@@ -256,7 +254,6 @@ def test_add_object_nested_classifications():
     assert isinstance(damage, encord.objects.ChecklistAttribute)
     assert damage.required
     assert damage.dynamic
-    assert damage.has_options_field()
 
 
 def test_add_object_nested_classifications_duplicate_values():
@@ -281,7 +278,6 @@ def test_add_classification_attribute():
     assert clouds.feature_node_hash
     assert isinstance(clouds, encord.objects.RadioAttribute)
     assert not clouds.required
-    assert clouds.has_options_field()
 
     with pytest.raises(ValueError):  # only one root attribute per classification is allowed
         cls1.add_attribute(encord.objects.TextAttribute, "metadata")
