@@ -77,9 +77,8 @@ Here is an example of copying a project:
             "00000000-bbbb-cccc-eeee-ffffffffffff"  # the <project_hash>
 
 
-.. rubric:: Footnotes
 
-.. [#f1] If you do not copy over the collaborators, then the reviewer and label mapping settings will not be copied over either.
+.. note:: If you do not copy over the collaborators, then the reviewer and label mapping settings will not be copied over either.
 
 
 
