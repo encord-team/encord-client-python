@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 import re
 import uuid
-from typing import Any, List, Optional, TypeVar
+from typing import Any, Iterable, List, Optional, Type, TypeVar
 
 
 def _decode_nested_uid(nested_uid: list) -> str:
@@ -19,12 +19,12 @@ def _lower_snake_case(s: str):
     return s.lower().replace(" ", "_")
 
 
-def check_type(obj: object, type_: Any) -> None:
+def check_type(obj: Any, type_: Optional[Type[Any]]) -> None:
     if not does_type_match(obj, type_):
         raise TypeError(f"Expected {type_}, got {type(obj)}")
 
 
-def does_type_match(obj: object, type_: Any) -> bool:
+def does_type_match(obj: Any, type_: Optional[Type[Any]]) -> bool:
     if type_ is None:
         return True
     if not isinstance(obj, type_):
@@ -35,7 +35,7 @@ def does_type_match(obj: object, type_: Any) -> bool:
 T = TypeVar("T")
 
 
-def filter_by_type(objects: List[object], type_: Optional[T]) -> List[T]:
+def filter_by_type(objects: Iterable[Any], type_: Optional[Type[T]]) -> List[T]:
     return [object_ for object_ in objects if does_type_match(object_, type_)]
 
 
