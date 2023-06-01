@@ -83,7 +83,7 @@ def _rle_to_mask(rle: List[int], size: int) -> bytes:
 
 def _mask_to_rle(mask: bytes) -> List[int]:
     """
-    COCO-compatible raw bitmask to RLE
+    COCO-compatible raw bitmask to COCO-compatible RLE
     """
     rle_counts = []
     c = 0
