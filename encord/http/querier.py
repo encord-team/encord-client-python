@@ -29,21 +29,17 @@ from urllib3 import Retry
 from encord._version import __version__ as encord_version
 from encord.configs import BaseConfig
 from encord.exceptions import *
+from encord.http.common import (
+    HEADER_CLOUD_TRACE_CONTEXT,
+    HEADER_USER_AGENT,
+    RequestContext,
+)
 from encord.http.error_utils import check_error_response
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
 from encord.orm.formatter import Formatter
 
 logger = logging.getLogger(__name__)
-
-HEADER_USER_AGENT = "User-Agent"
-HEADER_CLOUD_TRACE_CONTEXT = "X-Cloud-Trace-Context"
-
-
-@dataclass
-class RequestContext(ExceptionContext):
-    trace_id: Optional[str] = None
-    span_id: Optional[str] = None
 
 
 class Querier:

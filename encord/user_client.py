@@ -23,6 +23,7 @@ from encord.http.utils import (
     upload_images_to_encord,
     upload_to_signed_url_list,
 )
+from encord.http.v2.api_client import ApiClient
 from encord.objects.common import (
     DeidentifyRedactTextMode,
     SaveDeidentifiedDicomCondition,
@@ -78,6 +79,7 @@ class EncordUserClient:
     def __init__(self, user_config: UserConfig, querier: Querier):
         self.user_config = user_config
         self.querier = querier
+        self._api_client = ApiClient(user_config)
 
     def get_dataset(
         self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
@@ -128,7 +130,7 @@ class EncordUserClient:
         config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
         project_ontology = Ontology(querier, config)
 
-        return Project(client, orm_project, project_ontology)
+        return Project(client, orm_project, project_ontology, client_v2=self._api_client)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
