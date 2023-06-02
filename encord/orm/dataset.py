@@ -315,7 +315,7 @@ class DataRow(dict, Formatter):
         """
         An actual width of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
-        :meth:`is_image <encord.data.DataRow.is_image_sequence>` is `False`, because
+        :meth:`is_image_sequence <encord.data.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
         :meth:`images <encord.data.DataRow.images>` to get the height of individual images.
         """
