@@ -1,10 +1,13 @@
 import datetime
-from typing import Iterable, List, Optional, Set, Tuple, Union
+from typing import Generator, Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page, Timer
 from encord.objects import LabelRowV2
+from encord.objects.analytics import CollaboratorTimer
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
@@ -30,8 +33,11 @@ class Project:
     Access project related data and manipulate the project.
     """
 
-    def __init__(self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology):
+    def __init__(
+        self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology, client_v2: ApiClient
+    ):
         self._client = client
+        self._client_v2 = client_v2
         self._project_instance = project_instance
         self._ontology = ontology
 
@@ -958,3 +964,29 @@ class Project:
         See the :class:`encord.http.bundle.Bundle` documentation for more details
         """
         return Bundle()
+
+    def list_collaborator_timers(
+        self, before: Optional[datetime.datetime] = None, after: Optional[datetime.datetime] = None
+    ) -> Generator[CollaboratorTimer, None, None]:
+        params = {
+            "projectHash": self.project_hash,
+            "pageSize": 100,
+            "pageToken": None,
+            "before": before,
+            "after": after,
+        }
+        while True:
+            page = self._client_v2.get("analytics/collaborators/timers", params=params, result_type=Page[Timer])
+
+            for result in page["results"]:
+                yield CollaboratorTimer(
+                    user_email=result["userEmail"],
+                    user_role=ProjectUserRole(result["userRole"]),
+                    data_title=result["dataTitle"],
+                    session_time_seconds=result["sessionTimeSeconds"],
+                )
+
+            if page["nextPageToken"] is not None:
+                params["pageToken"] = page["nextPageToken"]
+            else:
+                break
