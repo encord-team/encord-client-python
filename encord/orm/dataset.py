@@ -315,7 +315,7 @@ class DataRow(dict, Formatter):
         """
         An actual width of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
-        :meth:`is_optimised_image_group <encord.data.DataRow.is_optimised_image_group>` is `False`, because
+        :meth:`is_image <encord.data.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
         :meth:`images <encord.data.DataRow.images>` to get the height of individual images.
         """
@@ -326,7 +326,7 @@ class DataRow(dict, Formatter):
         """
         An actual height of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
-        :meth:`is_optimised_image_group <encord.data.DataRow.is_optimised_image_group>` is `False`, because
+        :meth:`is_image_sequence <encord.data.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
         :meth:`images <encord.data.DataRow.images>` to get the height of individual images.
         """
@@ -388,6 +388,20 @@ class DataRow(dict, Formatter):
         """
         If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
         returns whether this is a performance optimised image group. Returns `None` for other data types.
+
+        DEPRECATED: This method is deprecated and will be removed in uplocming library version.
+        Please usie :meth:`.is_image_sequence` instead
+        """
+        return self.is_image_sequence
+
+    @property
+    def is_image_sequence(self) -> Optional[bool]:
+        """
+        If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
+        returns whether this is an image sequence. Returns `None` for other data types.
+
+        For more details refer to the
+        :ref:`documentation on image sequnces <https://docs.encord.com/datasets/supported-data/#image-sequences>`
         """
         return self["is_optimised_image_group"]
 
