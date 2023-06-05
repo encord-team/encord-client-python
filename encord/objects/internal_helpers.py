@@ -429,11 +429,10 @@ def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> 
             answer = get_default_answer_from_attribute(attribute)
             ret.append(answer)
 
-        if attribute.has_options_field():
-            for option in attribute.options:
-                if option.is_nestable():
-                    other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
-                    ret.extend(other_attributes)
+        for option in attribute.options:
+            if option.is_nestable():
+                other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
+                ret.extend(other_attributes)
 
     return ret
 
@@ -470,14 +469,13 @@ def _search_child_attributes(
 
 def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Optional[Attribute]:
     for attribute in attributes:
-        if attribute.has_options_field():
-            for option in attribute.options:
-                if option == passed_option:
-                    return attribute
-                if option.is_nestable():
-                    attribute_opt = _search_for_parent(passed_option, option.nested_options)
-                    if attribute_opt is not None:
-                        return attribute_opt
+        for option in attribute.options:
+            if option == passed_option:
+                return attribute
+            if option.is_nestable():
+                attribute_opt = _search_for_parent(passed_option, option.nested_options)
+                if attribute_opt is not None:
+                    return attribute_opt
     return None
 
 
@@ -486,10 +484,10 @@ def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
     for attribute in attributes:
         if isinstance(attribute, TextAttribute):
             text_attributes.append(attribute)
-        elif attribute.has_options_field():
-            for option in attribute.options:
-                if option.is_nestable():
-                    text_attributes.extend(_search_for_text_attributes(option.nested_options))
+
+        for option in attribute.options:
+            if option.is_nestable():
+                text_attributes.extend(_search_for_text_attributes(option.nested_options))
     return text_attributes
 
 
