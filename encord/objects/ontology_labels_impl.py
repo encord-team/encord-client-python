@@ -1899,7 +1899,9 @@ class LabelRowV2:
 
         return ret
 
-    def _add_coordinates_to_encord_object(self, coordinates: Coordinates, frame: int, encord_object: Dict[str, Any]) -> None:
+    def _add_coordinates_to_encord_object(
+        self, coordinates: Coordinates, frame: int, encord_object: Dict[str, Any]
+    ) -> None:
         if isinstance(coordinates, BoundingBoxCoordinates):
             encord_object["boundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
