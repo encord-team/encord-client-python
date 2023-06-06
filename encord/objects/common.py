@@ -807,7 +807,8 @@ AttributeTypes = Union[
 OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
 OntologyElementType = Union[AttributeTypes, OptionTypes]
 
-# Just kept for backwards compatibility for now
+# Two types below are kept for the backwards compatibility
+# Please don't use them, as they are going to be removed in the future versions
 AttributeClasses = Union[RadioAttribute, ChecklistAttribute, TextAttribute, Attribute]
 OptionClasses = Union[FlatOption, NestableOption, Option]
 
