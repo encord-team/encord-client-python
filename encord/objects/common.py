@@ -4,7 +4,18 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Iterable, List, Optional, Sequence, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from encord.exceptions import OntologyError
 from encord.objects.utils import (
@@ -97,7 +108,7 @@ class Attribute(ABC):
         _handle_wrong_number_of_found_items(found_items, title, type_)
         return found_items[0]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         ret = self._encode_base()
 
         options = self._encode_options()
@@ -123,7 +134,7 @@ class Attribute(ABC):
         raise NotImplementedError("This method is not implemented for this class")
 
     @classmethod
-    def from_dict(cls, d: dict) -> Attribute:
+    def from_dict(cls, d: Dict[str, Any]) -> Attribute:
         property_type = d["type"]
         common_attribute_fields = cls._decode_common_attribute_fields(d)
         if property_type == RadioAttribute._get_property_type_name():
@@ -148,7 +159,7 @@ class Attribute(ABC):
             f"attribute specific fields or option specific fields. Got both or none of them."
         )
 
-    def _encode_base(self) -> dict:
+    def _encode_base(self) -> Dict[str, Any]:
         ret = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
@@ -160,7 +171,7 @@ class Attribute(ABC):
         return ret
 
     @staticmethod
-    def _decode_common_attribute_fields(attribute_dict: dict) -> dict:
+    def _decode_common_attribute_fields(attribute_dict: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "uid": _attribute_id_from_json_str(attribute_dict["id"]),
             "feature_node_hash": attribute_dict["featureNodeHash"],
@@ -202,7 +213,7 @@ class RadioAttribute(Attribute):
     def _get_property_type_name() -> str:
         return "radio"
 
-    def _encode_options(self) -> Optional[List[dict]]:
+    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         if len(self._options) == 0:
             return None
         return [option.to_dict() for option in self._options]
@@ -288,7 +299,7 @@ class ChecklistAttribute(Attribute):
     def _get_property_type_name() -> str:
         return "checklist"
 
-    def _encode_options(self) -> Optional[List[dict]]:
+    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         if len(self._options) == 0:
             return None
         return [option.to_dict() for option in self._options]
@@ -362,7 +373,7 @@ class TextAttribute(Attribute):
     def _get_property_type_name() -> str:
         return "text"
 
-    def _encode_options(self) -> Optional[List[dict]]:
+    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         return None
 
     def get_child_by_hash(
@@ -411,7 +422,7 @@ def _attribute_id_from_json_str(attribute_id: str) -> NestedID:
     return [int(x) for x in nested_ids]
 
 
-def attribute_from_dict(d: dict) -> Attribute:
+def attribute_from_dict(d: Dict[str, Any]) -> Attribute:
     """Convenience functions as you cannot call static member on union types."""
     return Attribute.from_dict(d)
 
@@ -486,8 +497,8 @@ class Option(ABC):
         """
         raise NotImplementedError("This method is not implemented for this class")
 
-    def to_dict(self) -> dict:
-        ret = dict()
+    def to_dict(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["label"] = self.label
         ret["value"] = self.value
@@ -504,7 +515,7 @@ class Option(ABC):
         pass
 
     @staticmethod
-    def _decode_common_option_fields(option_dict: dict) -> dict:
+    def _decode_common_option_fields(option_dict: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "uid": _attribute_id_from_json_str(option_dict["id"]),
             "label": option_dict["label"],
@@ -818,7 +829,7 @@ class SaveDeidentifiedDicomConditionIn:
     dicom_tag: str
     condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.IN
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "value": self.value,
             "dicom_tag": self.dicom_tag,
@@ -832,7 +843,7 @@ class SaveDeidentifiedDicomConditionNotSubstr:
     dicom_tag: str
     condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.NOT_SUBSTR
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "value": self.value,
             "dicom_tag": self.dicom_tag,
