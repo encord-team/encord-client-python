@@ -252,7 +252,7 @@ class RadioAttribute(Attribute):
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_options_by_title(title, self.options)
-        return filter_by_type(found_items, type_)  # noqa
+        return filter_by_type(found_items, type_)
 
     def add_option(
         self,
@@ -338,7 +338,7 @@ class ChecklistAttribute(Attribute):
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_options_by_title(title, self.options)
-        return filter_by_type(found_items, type_)  # noqa
+        return filter_by_type(found_items, type_)
 
     def add_option(
         self,
@@ -621,7 +621,7 @@ class NestableOption(Option):
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         found_items = _get_attributes_by_title(title, self.nested_options)
-        return filter_by_type(found_items, type_)  # noqa
+        return filter_by_type(found_items, type_)
 
     def _encode_nested_options(self) -> list:
         return attributes_to_list_dict(self.nested_options)
@@ -758,7 +758,7 @@ def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]) 
 
 
 def _get_options_by_title(title: str, options: Iterable[Option]) -> List[OntologyElement]:
-    ret = []
+    ret: List[OntologyElement] = []
     for option_ in options:
         if option_.label == title:
             ret.append(option_)
@@ -771,7 +771,7 @@ def _get_options_by_title(title: str, options: Iterable[Option]) -> List[Ontolog
 
 
 def _get_attributes_by_title(title: str, attributes: List[Attribute]) -> List[OntologyElement]:
-    ret = []
+    ret: List[OntologyElement] = []
     for attribute in attributes:
         if attribute.name == title:
             ret.append(attribute)

@@ -98,7 +98,7 @@ class Answer(ABC):
 class TextAnswer(Answer):
     def __init__(self, ontology_attribute: TextAttribute):
         super().__init__(ontology_attribute)
-        self._value = None
+        self._value: Optional[str] = None
 
     def set(self, value: str) -> TextAnswer:
         """Returns the object itself"""
