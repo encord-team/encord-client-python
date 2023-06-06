@@ -1205,10 +1205,10 @@ class LabelRowV2:
 
         self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
         self._frame_to_hashes = defaultdict(set)
-        self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
+        self._classifications_to_frames = defaultdict(set)
 
-        self._objects_map: Dict[str, ObjectInstance] = dict()
-        self._classifications_map: Dict[str, ClassificationInstance] = dict()
+        self._objects_map = dict()
+        self._classifications_map = dict()
         self._parse_labels_from_dict(label_row_dict)
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
@@ -3112,7 +3112,7 @@ class OntologyStructure:
 
         return OntologyStructure(objects=objects_ret, classifications=classifications_ret)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
         """
         Returns:
             The dict equivalent to the ontology.
@@ -3120,13 +3120,13 @@ class OntologyStructure:
         Raises:
             KeyError: If the dict is missing a required field.
         """
-        ret = dict()
-        ontology_objects = list()
+        ret: Dict[str, List[Dict[str, Any]]] = dict()
+        ontology_objects: List[Dict[str, Any]] = list()
         ret["objects"] = ontology_objects
         for ontology_object in self.objects:
             ontology_objects.append(ontology_object.to_dict())
 
-        ontology_classifications = list()
+        ontology_classifications: List[Dict[str, Any]] = list()
         ret["classifications"] = ontology_classifications
         for ontology_classification in self.classifications:
             ontology_classifications.append(ontology_classification.to_dict())
