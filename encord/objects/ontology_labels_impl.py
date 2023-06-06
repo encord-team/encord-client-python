@@ -2675,7 +2675,7 @@ class ObjectInstance:
             return self._get_object_frame_instance_data().object_frame_instance_info.reviews
 
         @property
-        def is_deleted(self) -> bool:
+        def is_deleted(self) -> Optional[bool]:
             """This property is only relevant for internal use."""
             self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
