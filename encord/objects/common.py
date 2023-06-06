@@ -108,6 +108,15 @@ class Attribute(ABC):
         _handle_wrong_number_of_found_items(found_items, title, type_)
         return found_items[0]
 
+    def to_dict(self) -> Dict[str, Any]:
+        ret = self._encode_base()
+
+        options = self._encode_options()
+        if options is not None:
+            ret["options"] = options
+
+        return ret
+
     @abstractmethod
     def get_children_by_title(
         self,
@@ -123,15 +132,6 @@ class Attribute(ABC):
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
         raise NotImplementedError("This method is not implemented for this class")
-
-    def to_dict(self) -> Dict[str, Any]:
-        ret = self._encode_base()
-
-        options = self._encode_options()
-        if options is not None:
-            ret["options"] = options
-
-        return ret
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> Attribute:
@@ -339,11 +339,7 @@ class ChecklistAttribute(Attribute):
         check_type(found_item, type_)
         return found_item
 
-    def get_children_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
+    def get_children_by_title(self, title: str, type_: Optional[OntologyElementType] = None) -> List[OntologyElement]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -431,7 +427,6 @@ class TextAttribute(Attribute):
         return []
 
 
-OptionAttribute = Union[RadioAttribute, ChecklistAttribute]
 """
 This class is currently in BETA. Its API might change in future minor version releases. 
 """
@@ -507,11 +502,7 @@ class Option(ABC):
         return found_items[0]
 
     @abstractmethod
-    def get_children_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
+    def get_children_by_title(self, title: str, type_: Optional[OntologyElementType] = None) -> List[OntologyElement]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -695,7 +686,7 @@ class NestableOption(Option):
 
 
 def __build_identifiers(
-    existent_items: Sequence[OntologyElement],
+    existent_items: Iterable[OntologyElement],
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,
 ) -> Tuple[int, str]:
@@ -820,6 +811,7 @@ def _handle_wrong_number_of_found_items(
         )
 
 
+OptionAttribute = Union[RadioAttribute, ChecklistAttribute]
 OntologyElement = Union[Attribute, Option]
 AttributeTypes = Union[
     Type[RadioAttribute],
@@ -829,6 +821,11 @@ AttributeTypes = Union[
 ]
 OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
 OntologyElementType = Union[AttributeTypes, OptionTypes]
+
+# Two types below are kept for the backwards compatibility
+# Please don't use them, as they are going to be removed in the future versions
+AttributeClasses = Union[RadioAttribute, ChecklistAttribute, TextAttribute, Attribute]
+OptionClasses = Union[FlatOption, NestableOption, Option]
 
 
 class DeidentifyRedactTextMode(Enum):
