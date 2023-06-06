@@ -34,14 +34,16 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_GET_LIMIT,
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
+from encord.objects.common import AttributeClasses  # pylint: disable=unused-import
+from encord.objects.common import AttributeTypes  # pylint: disable=unused-import
+from encord.objects.common import OptionClasses  # pylint: disable=unused-import
+from encord.objects.common import OptionTypes  # pylint: disable=unused-import
 from encord.objects.common import (
     Attribute,
-    AttributeClasses,
-    AttributeTypes,
     ChecklistAttribute,
+    OntologyElement,
+    OntologyElementType,
     Option,
-    OptionClasses,
-    OptionTypes,
     RadioAttribute,
     Shape,
     TextAttribute,
@@ -123,8 +125,8 @@ class Object:
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, OptionClasses]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> OntologyElement:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -143,8 +145,8 @@ class Object:
     def get_child_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, OptionClasses]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> OntologyElement:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -161,8 +163,8 @@ class Object:
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[AttributeClasses, OptionClasses]]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> List[OntologyElement]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -263,8 +265,8 @@ class Classification:
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[AttributeClasses, OptionClasses]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> OntologyElement:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -283,8 +285,8 @@ class Classification:
     def get_child_by_title(
         self,
         title: str,
-        type_: Union[OptionTypes, AttributeTypes, None] = None,
-    ) -> Union[AttributeClasses, OptionClasses]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> OntologyElement:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -301,8 +303,8 @@ class Classification:
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[OptionTypes, AttributeTypes, None] = None,
-    ) -> List[Union[AttributeClasses, OptionClasses]]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> List[OntologyElement]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -3012,8 +3014,8 @@ class OntologyStructure:
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> OntologyElement:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -3046,8 +3048,8 @@ class OntologyStructure:
     def get_child_by_title(
         self,
         title: str,
-        type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
-    ) -> Union[OntologyClasses, AttributeClasses, OptionClasses]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> OntologyElement:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -3064,8 +3066,8 @@ class OntologyStructure:
     def get_children_by_title(
         self,
         title: str,
-        type_: Union[OntologyTypes, AttributeTypes, OptionTypes, None] = None,
-    ) -> List[Union[OntologyClasses, AttributeClasses, OptionClasses]]:
+        type_: Optional[OntologyElementType] = None,
+    ) -> List[OntologyElement]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
