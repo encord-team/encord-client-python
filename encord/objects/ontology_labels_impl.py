@@ -1818,9 +1818,6 @@ class LabelRowV2:
 
         return ret
 
-<<<<<<< HEAD
-    def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> Dict[str, Any]:
-=======
     def _data_sequence(self, frame_level_data: FrameLevelImageGroupData) -> Union[int, str]:
         data_type = self._label_row_read_only_data.data_type
         if data_type == DataType.IMG_GROUP:
