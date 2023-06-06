@@ -160,7 +160,7 @@ class Attribute(ABC):
         )
 
     def _encode_base(self) -> Dict[str, Any]:
-        ret = dict()
+        ret: Dict[str, Any] = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
         ret["type"] = self._get_property_type_name()

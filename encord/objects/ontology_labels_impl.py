@@ -196,8 +196,8 @@ class Object:
 
         return object_ret
 
-    def to_dict(self) -> dict:
-        ret = dict()
+    def to_dict(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = dict()
         ret["id"] = str(self.uid)
         ret["name"] = self.name
         ret["color"] = self.color
@@ -326,8 +326,8 @@ class Classification:
             attributes=attributes_ret,
         )
 
-    def to_dict(self) -> dict:
-        ret = dict()
+    def to_dict(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = dict()
         ret["id"] = str(self.uid)
         ret["featureNodeHash"] = self.feature_node_hash
 
@@ -3094,7 +3094,7 @@ class OntologyStructure:
         return ret
 
     @classmethod
-    def from_dict(cls, d: dict) -> OntologyStructure:
+    def from_dict(cls, d: Dict[str, Any]) -> OntologyStructure:
         """
         Args:
             d: a JSON blob of an "ontology structure" (e.g. from Encord web app)
