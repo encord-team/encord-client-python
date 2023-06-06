@@ -3,7 +3,19 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, NoReturn, Optional, Sequence, Set, Union
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    NoReturn,
+    Optional,
+    Sequence,
+    Set,
+    TypeVar,
+    Union,
+)
 
 from encord.exceptions import LabelRowError
 from encord.objects.common import (
@@ -20,13 +32,17 @@ from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Ranges, ranges_to_list
 from encord.objects.utils import _lower_snake_case, short_uuid_str
 
+ValueType = TypeVar("ValueType")
+AttributeType = TypeVar("AttributeType", bound=Attribute)
 
-class Answer(ABC):
+
+class Answer(ABC, Generic[ValueType, AttributeType]):
     """An internal helper class for the LabelRowV2 class. This class is not meant to be used directly by users."""
 
-    _ontology_attribute: Attribute
+    _ontology_attribute: AttributeType
+    _value: Optional[ValueType]
 
-    def __init__(self, ontology_attribute: Attribute, track_hash: Optional[str] = None):
+    def __init__(self, ontology_attribute: AttributeType, track_hash: Optional[str] = None):
         self._answered = False
         self._ontology_attribute = ontology_attribute
         self._track_hash = track_hash or short_uuid_str()
@@ -39,6 +55,7 @@ class Answer(ABC):
     def unset(self) -> None:
         """Remove the value from the answer"""
         self._answered = False
+        self._value = None
 
     @property
     def is_dynamic(self) -> bool:
@@ -57,12 +74,23 @@ class Answer(ABC):
         self._is_manual_annotation = value
 
     @property
-    def ontology_attribute(self):
+    def ontology_attribute(self) -> AttributeType:
         return deepcopy(self._ontology_attribute)
 
     @ontology_attribute.setter
     def ontology_attribute(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot reset the ontology attribute of an instantiated answer.")
+
+    @abstractmethod
+    def set(self, value: ValueType) -> None:
+        pass
+
+    def get(self) -> ValueType:
+        if not self.is_answered():
+            raise ValueError("Can't read a value of unanswered Answer object")
+
+        assert self._value is not None, "Value can't be none for the answered Answer object"
+        return self._value
 
     def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict[str, Any]]:
         """
@@ -74,6 +102,9 @@ class Answer(ABC):
 
         ret = self._to_encord_dict_impl(self.is_dynamic)
         if self.is_dynamic:
+            if ranges is None:
+                raise ValueError("Frame range should be set for dynamic answers")
+
             ret.update(self._get_encord_dynamic_fields(ranges))
 
         return ret
@@ -95,18 +126,17 @@ class Answer(ABC):
         }
 
 
-class TextAnswer(Answer):
+class TextAnswer(Answer[str, TextAttribute]):
     def __init__(self, ontology_attribute: TextAttribute):
         super().__init__(ontology_attribute)
         self._value: Optional[str] = None
 
-    def set(self, value: str) -> TextAnswer:
+    def set(self, value: str) -> None:
         """Returns the object itself"""
         if not isinstance(value, str):
             raise ValueError("TextAnswer can only be set to a string.")
         self._value = value
         self._answered = True
-        return self
 
     def get_value(self) -> Optional[str]:
         if not self.is_answered():
@@ -123,7 +153,7 @@ class TextAnswer(Answer):
         if not other_is_answered:
             self.unset()
         else:
-            other_answer = text_answer.get_value()
+            other_answer = text_answer.get()
             self.set(other_answer)
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
@@ -139,7 +169,6 @@ class TextAnswer(Answer):
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a TextAnswer based on a different ontology attribute.")
 
-        self._answered = True
         self.set(d["answers"])
         self.is_manual_annotation = d["manualAnnotation"]
 
@@ -160,7 +189,7 @@ class TextAnswer(Answer):
 
 
 @dataclass
-class RadioAnswer(Answer):
+class RadioAnswer(Answer[NestableOption, RadioAttribute]):
     def __init__(self, ontology_attribute: RadioAttribute):
         super().__init__(ontology_attribute)
         self._value: Optional[NestableOption] = None
@@ -196,7 +225,7 @@ class RadioAnswer(Answer):
         if not other_is_answered:
             self.unset()
         else:
-            other_answer = radio_answer.get_value()
+            other_answer = radio_answer.get()
             self.set(other_answer)
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
@@ -220,7 +249,6 @@ class RadioAnswer(Answer):
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a TextAnswer based on a different ontology attribute.")
 
-        self._answered = True
         answers = d["answers"]
         if len(answers) != 1:
             raise ValueError("RadioAnswers must have exactly one answer.")
@@ -247,7 +275,7 @@ class RadioAnswer(Answer):
 
 
 @dataclass
-class ChecklistAnswer(Answer):
+class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
     """
     Checkboxes behave slightly different from the other answer types. When the checkbox is unanswered, it will be
     the equivalent of not having selected any checkbox answer in the Encord platform.
@@ -271,7 +299,17 @@ class ChecklistAnswer(Answer):
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = False
 
-    def set_options(self, values: Iterable[FlatOption]):
+    def get(self) -> List[FlatOption]:
+        if not self.is_answered():
+            raise ValueError("Can't read a value of unanswered Answer object")
+
+        return [
+            option
+            for option in self._ontology_attribute.options
+            if self._feature_hash_to_answer_map[option.feature_node_hash]
+        ]
+
+    def set(self, values: Iterable[FlatOption]):
         for value in values:
             if not isinstance(value, FlatOption):
                 raise ValueError("ChecklistAnswer can only be set to FlatOptions.")
@@ -283,7 +321,13 @@ class ChecklistAnswer(Answer):
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = True
 
+    def set_options(self, values: Iterable[FlatOption]):
+        # Deprecated: please use :meth:`set` instead
+        return self.set(values)
+
     def get_options(self) -> List[FlatOption]:
+        # Deprecated: please use :meth:`get()` instead
+
         if not self.is_answered():
             return []
         else:
@@ -294,6 +338,10 @@ class ChecklistAnswer(Answer):
             ]
 
     def get_value(self, value: FlatOption) -> bool:
+        # Deprecated: please use :meth:`get_option_value` instead
+        return self.get_option_value(value)
+
+    def get_option_value(self, value: FlatOption) -> bool:
         return self._feature_hash_to_answer_map[value.feature_node_hash]
 
     def copy_from(self, checklist_answer: ChecklistAnswer):
@@ -308,7 +356,7 @@ class ChecklistAnswer(Answer):
             self._answered = True
             for feature_node_hash in self._feature_hash_to_answer_map.keys():
                 option = _get_option_by_hash(feature_node_hash, self.ontology_attribute.options)
-                other_answer = checklist_answer.get_value(option)
+                other_answer = checklist_answer.get_option_value(option)
                 self._feature_hash_to_answer_map[feature_node_hash] = other_answer
 
     def _initialise_feature_hash_to_answer_map(self) -> Dict[str, bool]:
@@ -398,30 +446,6 @@ def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
         raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
 
 
-def set_answer_for_object(answer_object: Answer, answer_value: Union[str, Option, Iterable[Option]]) -> None:
-    attribute = answer_object.ontology_attribute
-    if isinstance(attribute, TextAttribute):
-        answer_object.set(answer_value)
-    elif isinstance(attribute, RadioAttribute):
-        answer_object.set(answer_value)
-    elif isinstance(attribute, ChecklistAttribute):
-        answer_object.set_options(answer_value)
-    else:
-        raise ValueError(f"Unknown attribute type: {type(attribute)}")
-
-
-def get_answer_from_object(answer_object: Answer) -> Union[str, Option, Iterable[Option], None]:
-    attribute = answer_object.ontology_attribute
-    if isinstance(attribute, TextAttribute):
-        return answer_object.get_value()
-    elif isinstance(attribute, RadioAttribute):
-        return answer_object.get_value()
-    elif isinstance(attribute, ChecklistAttribute):
-        return answer_object.get_options()
-    else:
-        raise ValueError(f"Unknown attribute type: {type(attribute)}")
-
-
 def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
     ret: List[Answer] = list()
     for attribute in attributes:
@@ -453,10 +477,10 @@ def _search_child_attributes(
         return False
 
     answer = static_answer_map[search_attribute.feature_node_hash]
-    value = answer.get_value()
-    if value is None:
+    if not answer.is_answered():
         return False
 
+    value = answer.get()
     for option in search_attribute.options:
         if value == option:
             for nested_option in option.nested_options:

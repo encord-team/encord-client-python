@@ -80,12 +80,11 @@ from encord.objects.frames import (
 )
 from encord.objects.internal_helpers import (
     Answer,
+    ValueType,
     _get_static_answer_map,
     _infer_attribute_from_answer,
     _search_child_attributes,
-    get_answer_from_object,
     get_default_answer_from_attribute,
-    set_answer_for_object,
 )
 from encord.objects.utils import (
     _lower_snake_case,
@@ -562,7 +561,7 @@ class ClassificationInstance:
                 "overwrite an existing answer to and attribute."
             )
 
-        set_answer_for_object(static_answer, answer)
+        static_answer.set(answer)
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
@@ -622,8 +621,10 @@ class ClassificationInstance:
             return None
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
+        if not static_answer.is_answered():
+            return None
 
-        return get_answer_from_object(static_answer)
+        return static_answer.get()
 
     def delete_answer(self, attribute: Optional[Attribute] = None) -> None:
         """
@@ -837,9 +838,8 @@ class ClassificationInstance:
         if self.is_assigned_to_label_row():
             self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
-    def _set_answer_unsafe(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute) -> None:
-        static_answer = self._static_answer_map[attribute.feature_node_hash]
-        set_answer_for_object(static_answer, answer)
+    def _set_answer_unsafe(self, answer: ValueType, attribute: Attribute) -> None:
+        self._static_answer_map[attribute.feature_node_hash].set(answer)
 
     def _is_attribute_valid_child_of_classification(self, attribute: Attribute) -> bool:
         return attribute.feature_node_hash in self._static_answer_map
@@ -2353,7 +2353,12 @@ class ObjectInstance:
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
 
-        return get_answer_from_object(static_answer)
+        if not static_answer.is_answered():
+            if isinstance(attribute, ChecklistAttribute):
+                return []
+            return None
+
+        return static_answer.get()
 
     def set_answer(
         self,
@@ -2406,7 +2411,7 @@ class ObjectInstance:
                 "overwrite an existing answer to an attribute."
             )
 
-        set_answer_for_object(static_answer, answer)
+        static_answer.set(answer)
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
@@ -2796,7 +2801,7 @@ class ObjectInstance:
 
         else:
             static_answer = self._static_answer_map[attribute.feature_node_hash]
-            set_answer_for_object(static_answer, answer)
+            static_answer.set(answer)
 
     def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute) -> None:
         if attribute.dynamic:
@@ -2901,8 +2906,7 @@ class DynamicAnswerManager:
             to_remove_answer = None
             for answer_object in self._frames_to_answers[frame]:
                 if filter_answer is not None:
-                    answer_value = get_answer_from_object(answer_object)
-                    if answer_value != filter_answer:
+                    if answer_object.is_answered() and answer_object.get() != filter_answer:
                         continue
 
                 # ideally this would not be a log(n) operation, however these will not be extremely large.
@@ -2935,7 +2939,7 @@ class DynamicAnswerManager:
         self.delete_answer(attribute, frames)
 
         default_answer = get_default_answer_from_attribute(attribute)
-        set_answer_for_object(default_answer, answer)
+        default_answer.set(answer)
 
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:
@@ -2954,14 +2958,16 @@ class DynamicAnswerManager:
         for answer in self._answers_to_frames:
             if answer.ontology_attribute != attribute:
                 continue
-            if not (filter_answer is None or filter_answer == get_answer_from_object(answer)):
+            if not answer.is_answered():
+                continue
+            if not (filter_answer is None or filter_answer == answer.get()):
                 continue
             actual_frames = self._answers_to_frames[answer]
             if not (filter_frames_set is None or len(actual_frames & filter_frames_set) > 0):
                 continue
 
             ranges = frames_to_ranges(self._answers_to_frames[answer])
-            ret.append(AnswerForFrames(answer=get_answer_from_object(answer), ranges=ranges))
+            ret.append(AnswerForFrames(answer=answer.get(), ranges=ranges))
         return ret
 
     def frames(self) -> Iterable[int]:
