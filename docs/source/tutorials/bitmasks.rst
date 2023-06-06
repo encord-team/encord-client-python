@@ -25,7 +25,7 @@ Fol code example illustrates how to download bitmask and save it to a file:
 
 In case there are pre-existing bitmask annotations, previously created by Encord or any other software,
 they can be uploaded to Encord using the SDK.
-The following code example illustrates how to read a bitmask from file and upload it:
+The following code example illustrates how to read a bitmask from a file, and upload it:
 
 .. tabs::
 
