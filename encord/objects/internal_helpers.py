@@ -12,8 +12,6 @@ from encord.objects.common import (
     FlatOption,
     NestableOption,
     Option,
-    OptionType,
-    PropertyType,
     RadioAttribute,
     TextAttribute,
     _get_option_by_hash,
@@ -66,7 +64,7 @@ class Answer(ABC):
     def ontology_attribute(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot reset the ontology attribute of an instantiated answer.")
 
-    def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict]:
+    def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict[str, Any]]:
         """
         A low level helper to convert to the Encord JSON format.
         For most use cases the `get_answer` function should be used instead.
@@ -81,14 +79,14 @@ class Answer(ABC):
         return ret
 
     @abstractmethod
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         pass
 
     @abstractmethod
-    def from_dict(self, d: Dict) -> None:
+    def from_dict(self, d: Dict[str, Any]) -> None:
         pass
 
-    def _get_encord_dynamic_fields(self, ranges: Ranges) -> Dict:
+    def _get_encord_dynamic_fields(self, ranges: Ranges) -> Dict[str, Any]:
         return {
             "dynamic": True,
             "range": ranges_to_list(ranges),
@@ -128,7 +126,7 @@ class TextAnswer(Answer):
             other_answer = text_answer.get_value()
             self.set(other_answer)
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         return {
             "name": self.ontology_attribute.name,
             "value": _lower_snake_case(self.ontology_attribute.name),
@@ -137,7 +135,7 @@ class TextAnswer(Answer):
             "manualAnnotation": self.is_manual_annotation,
         }
 
-    def from_dict(self, d: Dict) -> None:
+    def from_dict(self, d: Dict[str, Any]) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a TextAnswer based on a different ontology attribute.")
 
@@ -148,14 +146,14 @@ class TextAnswer(Answer):
     def __hash__(self):
         return hash((self._ontology_attribute.feature_node_hash, self._value, type(self).__name__))
 
-    def __eq__(self, other: TextAnswer) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TextAnswer):
             return False
-        else:
-            return (
-                self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
-                and self._value == other._value
-            )
+
+        return (
+            self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
+            and self._value == other._value
+        )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._value})"
@@ -201,7 +199,7 @@ class RadioAnswer(Answer):
             other_answer = radio_answer.get_value()
             self.set(other_answer)
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Optional[Dict]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         nestable_option = self._value
 
         return {
@@ -235,14 +233,14 @@ class RadioAnswer(Answer):
     def __hash__(self):
         return hash((self.ontology_attribute.feature_node_hash, self._value, type(self).__name__))
 
-    def __eq__(self, other: RadioAnswer) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, RadioAnswer):
             return False
-        else:
-            return (
-                self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
-                and self._value == other._value
-            )
+
+        return (
+            self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
+            and self._value == other._value
+        )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._value})"
@@ -332,7 +330,7 @@ class ChecklistAnswer(Answer):
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Optional[Dict]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         checked_options = []
         ontology_attribute: ChecklistAttribute = self._ontology_attribute
         for option in ontology_attribute.options:
@@ -356,7 +354,7 @@ class ChecklistAnswer(Answer):
             "manualAnnotation": self.is_manual_annotation,
         }
 
-    def from_dict(self, d: Dict) -> None:
+    def from_dict(self, d: Dict[str, Any]) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a ChecklistAnswer based on a different ontology attribute.")
 
@@ -376,13 +374,13 @@ class ChecklistAnswer(Answer):
         flat_values.sort()
         return hash((tuple(flat_values), type(self).__name__))
 
-    def __eq__(self, other: ChecklistAnswer) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, ChecklistAnswer):
             return False
-        else:
-            flat_values = {(key, value) for key, value in self._feature_hash_to_answer_map.items()}
-            other_flat_values = {(key, value) for key, value in other._feature_hash_to_answer_map.items()}
-            return flat_values == other_flat_values
+
+        flat_values = {(key, value) for key, value in self._feature_hash_to_answer_map.items()}
+        other_flat_values = {(key, value) for key, value in other._feature_hash_to_answer_map.items()}
+        return flat_values == other_flat_values
 
     def __repr__(self):
         flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
@@ -390,12 +388,11 @@ class ChecklistAnswer(Answer):
 
 
 def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
-    property_type = attribute.get_property_type()
-    if property_type == PropertyType.TEXT:
+    if isinstance(attribute, TextAttribute):
         return TextAnswer(attribute)
-    elif property_type == PropertyType.RADIO:
+    elif isinstance(attribute, RadioAttribute):
         return RadioAnswer(attribute)
-    elif property_type == PropertyType.CHECKLIST:
+    elif isinstance(attribute, ChecklistAttribute):
         return ChecklistAnswer(attribute)
     else:
         raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
@@ -432,11 +429,10 @@ def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> 
             answer = get_default_answer_from_attribute(attribute)
             ret.append(answer)
 
-        if attribute.has_options_field():
-            for option in attribute.options:
-                if option.get_option_type() == OptionType.NESTABLE:
-                    other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
-                    ret.extend(other_attributes)
+        for option in attribute.options:
+            if option.is_nestable():
+                other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
+                ret.extend(other_attributes)
 
     return ret
 
@@ -473,26 +469,25 @@ def _search_child_attributes(
 
 def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Optional[Attribute]:
     for attribute in attributes:
-        if attribute.has_options_field():
-            for option in attribute.options:
-                if option == passed_option:
-                    return attribute
-                if option.get_option_type() == OptionType.NESTABLE:
-                    attribute_opt = _search_for_parent(passed_option, option.nested_options)
-                    if attribute_opt is not None:
-                        return attribute_opt
+        for option in attribute.options:
+            if option == passed_option:
+                return attribute
+            if option.is_nestable():
+                attribute_opt = _search_for_parent(passed_option, option.nested_options)
+                if attribute_opt is not None:
+                    return attribute_opt
     return None
 
 
 def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
     text_attributes: List[Attribute] = list()
     for attribute in attributes:
-        if attribute.get_property_type() == PropertyType.TEXT:
+        if isinstance(attribute, TextAttribute):
             text_attributes.append(attribute)
-        elif attribute.has_options_field():
-            for option in attribute.options:
-                if option.get_option_type() == OptionType.NESTABLE:
-                    text_attributes.extend(_search_for_text_attributes(option.nested_options))
+
+        for option in attribute.options:
+            if option.is_nestable():
+                text_attributes.extend(_search_for_text_attributes(option.nested_options))
     return text_attributes
 
 

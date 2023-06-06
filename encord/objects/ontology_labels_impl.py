@@ -197,8 +197,8 @@ class Object:
 
         return object_ret
 
-    def to_dict(self) -> dict:
-        ret = dict()
+    def to_dict(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = dict()
         ret["id"] = str(self.uid)
         ret["name"] = self.name
         ret["color"] = self.color
@@ -327,8 +327,8 @@ class Classification:
             attributes=attributes_ret,
         )
 
-    def to_dict(self) -> dict:
-        ret = dict()
+    def to_dict(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = dict()
         ret["id"] = str(self.uid)
         ret["featureNodeHash"] = self.feature_node_hash
 
@@ -429,7 +429,7 @@ class ClassificationInstance:
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
         created_by: str = None,
-        confidence: int = DEFAULT_CONFIDENCE,
+        confidence: float = DEFAULT_CONFIDENCE,
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
         last_edited_at: Optional[datetime] = None,
         last_edited_by: Optional[str] = None,
@@ -739,7 +739,7 @@ class ClassificationInstance:
             self._get_object_frame_instance_data().manual_annotation = manual_annotation
 
         @property
-        def reviews(self) -> List[dict]:
+        def reviews(self) -> Optional[List[dict]]:
             """
             A read only property about the reviews that happened for this object on this frame.
             """
@@ -759,7 +759,7 @@ class ClassificationInstance:
     class FrameData:
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
-        confidence: int = DEFAULT_CONFIDENCE
+        confidence: float = DEFAULT_CONFIDENCE
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
         last_edited_at: datetime = field(default_factory=datetime.now)
         last_edited_by: Optional[str] = None
@@ -786,7 +786,7 @@ class ClassificationInstance:
             self,
             created_at: Optional[datetime] = None,
             created_by: Optional[str] = None,
-            confidence: Optional[int] = None,
+            confidence: Optional[float] = None,
             manual_annotation: Optional[bool] = None,
             last_edited_at: Optional[datetime] = None,
             last_edited_by: Optional[str] = None,
@@ -812,7 +812,7 @@ class ClassificationInstance:
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
-        confidence: Optional[int] = None,
+        confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
         last_edited_at: Optional[datetime] = None,
         last_edited_by: Optional[str] = None,
@@ -1141,7 +1141,7 @@ class LabelRowV2:
             bundle.add(
                 operation=self._project_client.create_label_rows,
                 request_reducer=self._bundle_create_rows_reducer,
-                result_mapper=BundleResultMapper(
+                result_mapper=BundleResultMapper[OrmLabelRow](
                     result_mapping_predicate=self._bundle_create_rows_mapping_predicate,
                     result_handler=BundleResultHandler(predicate=self.data_hash, handler=self.from_labels_dict),
                 ),
@@ -1154,7 +1154,7 @@ class LabelRowV2:
             bundle.add(
                 operation=self._project_client.get_label_rows,
                 request_reducer=self._bundle_get_rows_reducer,
-                result_mapper=BundleResultMapper(
+                result_mapper=BundleResultMapper[OrmLabelRow](
                     result_mapping_predicate=self._bundle_get_rows_mapping_predicate,
                     result_handler=BundleResultHandler(predicate=self.label_hash, handler=self.from_labels_dict),
                 ),
@@ -1206,10 +1206,10 @@ class LabelRowV2:
 
         self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
         self._frame_to_hashes = defaultdict(set)
-        self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
+        self._classifications_to_frames = defaultdict(set)
 
-        self._objects_map: Dict[str, ObjectInstance] = dict()
-        self._classifications_map: Dict[str, ClassificationInstance] = dict()
+        self._objects_map = dict()
+        self._classifications_map = dict()
         self._parse_labels_from_dict(label_row_dict)
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
@@ -1236,7 +1236,7 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def save(self, bundle: Bundle = None) -> None:
+    def save(self, bundle: Optional[Bundle] = None) -> None:
         """
         Upload the created labels with the Encord server. This will overwrite any labels that someone has created
         in the platform in the meantime.
@@ -1493,14 +1493,14 @@ class LabelRowV2:
         )
         object_instance._parent = None
 
-    def to_encord_dict(self) -> dict:
+    def to_encord_dict(self) -> Dict[str, Any]:
         """
         This is an internal helper function. Likely this should not be used by a user. To upload labels use the
         :meth:`.save()` function.
         """
         self._check_labelling_is_initalised()
 
-        ret = {}
+        ret: Dict[str, Any] = {}
         read_only_data = self._label_row_read_only_data
 
         ret["label_hash"] = read_only_data.label_hash
@@ -1630,8 +1630,8 @@ class LabelRowV2:
             *,
             overwrite: bool = False,
             created_at: Optional[datetime] = None,
-            created_by: str = None,
-            confidence: int = DEFAULT_CONFIDENCE,
+            created_by: Optional[str] = None,
+            confidence: float = DEFAULT_CONFIDENCE,
             manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
             last_edited_at: Optional[datetime] = None,
             last_edited_by: Optional[str] = None,
@@ -1738,8 +1738,8 @@ class LabelRowV2:
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
 
-    def _to_object_answers(self) -> dict:
-        ret = {}
+    def _to_object_answers(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
         for obj in self._objects_map.values():
             all_static_answers = self._get_all_static_answers(obj)
             ret[obj.object_hash] = {
@@ -1748,8 +1748,8 @@ class LabelRowV2:
             }
         return ret
 
-    def _to_object_actions(self) -> dict:
-        ret = {}
+    def _to_object_actions(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
         for obj in self._objects_map.values():
             all_static_answers = self._dynamic_answers_to_encord_dict(obj)
             if len(all_static_answers) == 0:
@@ -1760,8 +1760,8 @@ class LabelRowV2:
             }
         return ret
 
-    def _to_classification_answers(self) -> dict:
-        ret = {}
+    def _to_classification_answers(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
         for classification in self._classifications_map.values():
             classifications = []
 
@@ -1777,7 +1777,7 @@ class LabelRowV2:
         return ret
 
     @staticmethod
-    def _get_all_static_answers(object_instance: ObjectInstance) -> List[dict]:
+    def _get_all_static_answers(object_instance: ObjectInstance) -> List[Dict[str, Any]]:
         """Essentially convert to the JSON format of all the static answers."""
         ret = []
         for answer in object_instance._get_all_static_answers():
@@ -1787,7 +1787,7 @@ class LabelRowV2:
         return ret
 
     @staticmethod
-    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> List[dict]:
+    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> List[Dict[str, Any]]:
         ret = []
         for answer, ranges in object_instance._get_all_dynamic_answers():
             d_opt = answer.to_encord_dict(ranges)
@@ -1795,7 +1795,7 @@ class LabelRowV2:
                 ret.append(d_opt)
         return ret
 
-    def _to_encord_data_units(self) -> dict:
+    def _to_encord_data_units(self) -> Dict[str, Any]:
         ret = {}
         frame_level_data = self._label_row_read_only_data.frame_level_data
         for value in frame_level_data.values():
@@ -1803,8 +1803,8 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> dict:
-        ret = {}
+    def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
 
         data_type = self._label_row_read_only_data.data_type
         if data_type == DataType.IMG_GROUP:
@@ -1833,8 +1833,8 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_labels(self, frame_level_data: FrameLevelImageGroupData) -> dict:
-        ret = {}
+    def _to_encord_labels(self, frame_level_data: FrameLevelImageGroupData) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
         data_type = self._label_row_read_only_data.data_type
 
         if data_type in [DataType.IMAGE, DataType.IMG_GROUP]:
@@ -1847,8 +1847,8 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_label(self, frame: int) -> dict:
-        ret = {}
+    def _to_encord_label(self, frame: int) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
 
         ret["objects"] = self._to_encord_objects_list(frame)
         ret["classifications"] = self._to_encord_classifications_list(frame)
@@ -1869,8 +1869,8 @@ class LabelRowV2:
         self,
         object_: ObjectInstance,
         frame: int,
-    ) -> dict:
-        ret = {}
+    ) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
 
         object_instance_annotation = object_.get_annotation(frame)
         coordinates = object_instance_annotation.coordinates
@@ -1899,7 +1899,7 @@ class LabelRowV2:
 
         return ret
 
-    def _add_coordinates_to_encord_object(self, coordinates: Coordinates, frame: int, encord_object: dict) -> None:
+    def _add_coordinates_to_encord_object(self, coordinates: Coordinates, frame: int, encord_object: Dict[str, Any]) -> None:
         if isinstance(coordinates, BoundingBoxCoordinates):
             encord_object["boundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
@@ -1919,7 +1919,7 @@ class LabelRowV2:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
     def _to_encord_classifications_list(self, frame: int) -> list:
-        ret: List[dict] = []
+        ret: List[Dict[str, Any]] = []
 
         classifications = self.get_classification_instances(filter_frames=frame)
         for classification in classifications:
@@ -1928,8 +1928,8 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> dict:
-        ret = {}
+    def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
 
         annotation = classification.get_annotation(frame)
         classification_feature_hash = classification.ontology_item.feature_node_hash
@@ -2675,7 +2675,7 @@ class ObjectInstance:
             self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation = manual_annotation
 
         @property
-        def reviews(self) -> List[dict]:
+        def reviews(self) -> Optional[List[Dict[str, Any]]]:
             """
             A read only property about the reviews that happened for this object on this frame.
             """
@@ -2683,7 +2683,7 @@ class ObjectInstance:
             return self._get_object_frame_instance_data().object_frame_instance_info.reviews
 
         @property
-        def is_deleted(self) -> bool:
+        def is_deleted(self) -> Optional[bool]:
             """This property is only relevant for internal use."""
             self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
@@ -2736,7 +2736,7 @@ class ObjectInstance:
             last_edited_by: Optional[str] = None,
             confidence: Optional[float] = None,
             manual_annotation: Optional[bool] = None,
-            reviews: Optional[List[dict]] = None,
+            reviews: Optional[List[Dict[str, Any]]] = None,
             is_deleted: Optional[bool] = None,
         ) -> None:
             """Return a new instance with the specified fields updated."""
@@ -2958,7 +2958,7 @@ class DynamicAnswerManager:
                 ret.add(answer)
         return ret
 
-    def __eq__(self, other: DynamicAnswerManager) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, DynamicAnswerManager):
             return False
         return (
@@ -3102,7 +3102,7 @@ class OntologyStructure:
         return ret
 
     @classmethod
-    def from_dict(cls, d: dict) -> OntologyStructure:
+    def from_dict(cls, d: Dict[str, Any]) -> OntologyStructure:
         """
         Args:
             d: a JSON blob of an "ontology structure" (e.g. from Encord web app)
@@ -3120,7 +3120,7 @@ class OntologyStructure:
 
         return OntologyStructure(objects=objects_ret, classifications=classifications_ret)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
         """
         Returns:
             The dict equivalent to the ontology.
@@ -3128,13 +3128,13 @@ class OntologyStructure:
         Raises:
             KeyError: If the dict is missing a required field.
         """
-        ret = dict()
-        ontology_objects = list()
+        ret: Dict[str, List[Dict[str, Any]]] = dict()
+        ontology_objects: List[Dict[str, Any]] = list()
         ret["objects"] = ontology_objects
         for ontology_object in self.objects:
             ontology_objects.append(ontology_object.to_dict())
 
-        ontology_classifications = list()
+        ontology_classifications: List[Dict[str, Any]] = list()
         ret["classifications"] = ontology_classifications
         for ontology_classification in self.classifications:
             ontology_classifications.append(ontology_classification.to_dict())

@@ -3,8 +3,19 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Any, List, Optional, Tuple, Type, TypeVar, Union
+from enum import Enum
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from encord.exceptions import OntologyError
 from encord.objects.utils import (
@@ -18,12 +29,6 @@ from encord.orm.project import StringEnum
 NestedID = List[int]
 
 
-class PropertyType(StringEnum):
-    RADIO = "radio"
-    TEXT = "text"
-    CHECKLIST = "checklist"
-
-
 class Shape(StringEnum):
     BOUNDING_BOX = "bounding_box"
     POLYGON = "polygon"
@@ -34,7 +39,6 @@ class Shape(StringEnum):
     BITMASK = "bitmask"
 
 
-@dataclass
 class Attribute(ABC):
     """
     Base class for shared Attribute fields
@@ -50,13 +54,24 @@ class Attribute(ABC):
     that are part of an :class:`encord.objects.ontology_object.Object`.
     """
 
+    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, dynamic: bool):
+        self.uid = uid
+        self.feature_node_hash = feature_node_hash
+        self.name = name
+        self.required = required
+        self.dynamic = dynamic
+
+    @property
+    def options(self) -> Sequence[Option]:
+        return []
+
+    @staticmethod
     @abstractmethod
-    def get_property_type(self) -> PropertyType:
+    def _get_property_type_name() -> str:
         pass
 
-    @classmethod
     @abstractmethod
-    def has_options_field(cls) -> bool:
+    def _encode_options(self) -> Optional[List[dict]]:
         pass
 
     @abstractmethod
@@ -110,7 +125,7 @@ class Attribute(ABC):
         """
         raise NotImplementedError("This method is not implemented for this class")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         ret = self._encode_base()
 
         options = self._encode_options()
@@ -120,32 +135,22 @@ class Attribute(ABC):
         return ret
 
     @classmethod
-    def from_dict(cls, d: dict) -> Attribute:
+    def from_dict(cls, d: Dict[str, Any]) -> Attribute:
         property_type = d["type"]
         common_attribute_fields = cls._decode_common_attribute_fields(d)
-        if property_type == "radio":
-            options_ret: List[NestableOption] = list()
-            if "options" in d:
-                for options_dict in d["options"]:
-                    options_ret.append(NestableOption.from_dict(options_dict))
-
+        if property_type == RadioAttribute._get_property_type_name():
             return RadioAttribute(
                 **common_attribute_fields,
-                options=options_ret,
+                options=[NestableOption.from_dict(x) for x in d.get("options", [])],
             )
 
-        elif property_type == "checklist":
-            options_ret: List[FlatOption] = list()
-            if "options" in d:
-                for options_dict in d["options"]:
-                    options_ret.append(FlatOption.from_dict(options_dict))
-
+        elif property_type == ChecklistAttribute._get_property_type_name():
             return ChecklistAttribute(
                 **common_attribute_fields,
-                options=options_ret,
+                options=[FlatOption.from_dict(x) for x in d.get("options", [])],
             )
 
-        elif property_type == "text":
+        elif property_type == TextAttribute._get_property_type_name():
             return TextAttribute(
                 **common_attribute_fields,
             )
@@ -155,31 +160,19 @@ class Attribute(ABC):
             f"attribute specific fields or option specific fields. Got both or none of them."
         )
 
-    def _encode_base(self) -> dict:
-        ret = dict()
+    def _encode_base(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
-        ret["type"] = self.get_property_type().value
+        ret["type"] = self._get_property_type_name()
         ret["featureNodeHash"] = self.feature_node_hash
         ret["required"] = self.required
         ret["dynamic"] = self.dynamic
 
         return ret
 
-    def _encode_options(self) -> Optional[list]:
-        # pylint: disable-next=no-member
-        if not self.has_options_field() or not self.options:
-            return None
-
-        self: OptionAttribute
-
-        ret = list()
-        for option in self.options:
-            ret.append(option.to_dict())
-        return ret
-
     @staticmethod
-    def _decode_common_attribute_fields(attribute_dict: dict) -> dict:
+    def _decode_common_attribute_fields(attribute_dict: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "uid": _attribute_id_from_json_str(attribute_dict["id"]),
             "feature_node_hash": attribute_dict["featureNodeHash"],
@@ -188,21 +181,43 @@ class Attribute(ABC):
             "dynamic": attribute_dict.get("dynamic", False),
         }
 
+    def __eq__(self, other: object):
+        return (
+            isinstance(other, Attribute) and self.uid == other.uid and self.feature_node_hash == other.feature_node_hash
+        )
 
-@dataclass
+
 class RadioAttribute(Attribute):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
-    options: List[NestableOption] = field(default_factory=list)
+    _options: List[NestableOption]
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.RADIO
+    def __init__(
+        self,
+        uid: NestedID,
+        feature_node_hash: str,
+        name: str,
+        required: bool,
+        dynamic: bool,
+        options: Optional[List[NestableOption]] = None,
+    ):
+        super().__init__(uid, feature_node_hash, name, required, dynamic)
+        self._options = options if options is not None else []
 
-    @classmethod
-    def has_options_field(cls) -> bool:
-        return True
+    @property
+    def options(self) -> Sequence[Option]:
+        return self._options
+
+    @staticmethod
+    def _get_property_type_name() -> str:
+        return "radio"
+
+    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+        if len(self._options) == 0:
+            return None
+        return [option.to_dict() for option in self._options]
 
     def get_child_by_hash(
         self,
@@ -218,7 +233,7 @@ class RadioAttribute(Attribute):
             feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
             type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
         """
-        found_item = _get_option_by_hash(feature_node_hash, self.options)
+        found_item = _get_option_by_hash(feature_node_hash, self._options)
         if found_item is None:
             raise OntologyError("Item not found.")
         check_type(found_item, type_)
@@ -259,23 +274,40 @@ class RadioAttribute(Attribute):
         Returns:
             a `NestableOption` instance attached to the attribute. This can be further specified by adding nested attributes.
         """
-        return _add_option(self.options, NestableOption, label, self.uid, local_uid, feature_node_hash, value)
+        return _add_option(self._options, NestableOption, label, self.uid, local_uid, feature_node_hash, value)
 
 
-@dataclass
 class ChecklistAttribute(Attribute):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
-    options: List[FlatOption] = field(default_factory=list)
+    _options: List[FlatOption]
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.CHECKLIST
+    def __init__(
+        self,
+        uid: NestedID,
+        feature_node_hash: str,
+        name: str,
+        required: bool,
+        dynamic: bool,
+        options: Optional[List[FlatOption]] = None,
+    ):
+        super().__init__(uid, feature_node_hash, name, required, dynamic)
+        self._options = options if options is not None else []
 
-    @classmethod
-    def has_options_field(cls) -> bool:
-        return True
+    @staticmethod
+    def _get_property_type_name() -> str:
+        return "checklist"
+
+    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+        if len(self._options) == 0:
+            return None
+        return [option.to_dict() for option in self._options]
+
+    @property
+    def options(self) -> Sequence[Option]:
+        return self._options
 
     def get_child_by_hash(
         self,
@@ -291,7 +323,7 @@ class ChecklistAttribute(Attribute):
             feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
             type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
         """
-        found_item = _get_option_by_hash(feature_node_hash, self.options)
+        found_item = _get_option_by_hash(feature_node_hash, self._options)
         if found_item is None:
             raise OntologyError("Item not found.")
         check_type(found_item, type_)
@@ -319,7 +351,7 @@ class ChecklistAttribute(Attribute):
         value: Optional[str] = None,
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
-    ):
+    ) -> FlatOption:
         """
         Args:
             label: user-visible name of the option
@@ -331,21 +363,23 @@ class ChecklistAttribute(Attribute):
         Returns:
             a `FlatOption` instance attached to the attribute.
         """
-        return _add_option(self.options, FlatOption, label, self.uid, local_uid, feature_node_hash, value)
+        return _add_option(self._options, FlatOption, label, self.uid, local_uid, feature_node_hash, value)
 
 
-@dataclass
 class TextAttribute(Attribute):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
-    def get_property_type(self) -> PropertyType:
-        return PropertyType.TEXT
+    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, dynamic: bool):
+        super().__init__(uid, feature_node_hash, name, required, dynamic)
 
-    @classmethod
-    def has_options_field(cls) -> bool:
-        return False
+    @staticmethod
+    def _get_property_type_name() -> str:
+        return "text"
+
+    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+        return None
 
     def get_child_by_hash(
         self,
@@ -394,7 +428,7 @@ def _attribute_id_from_json_str(attribute_id: str) -> NestedID:
     return [int(x) for x in nested_ids]
 
 
-def attribute_from_dict(d: dict) -> Attribute:
+def attribute_from_dict(d: Dict[str, Any]) -> Attribute:
     """Convenience functions as you cannot call static member on union types."""
     return Attribute.from_dict(d)
 
@@ -405,11 +439,6 @@ def attributes_to_list_dict(attributes: List[Attribute]) -> list:
         attributes_list.append(attribute.to_dict())
 
     return attributes_list
-
-
-class OptionType(Enum):
-    FLAT = auto()
-    NESTABLE = auto()
 
 
 @dataclass
@@ -424,7 +453,7 @@ class Option(ABC):
     value: str
 
     @abstractmethod
-    def get_option_type(self) -> OptionType:
+    def is_nestable(self) -> bool:
         pass
 
     @abstractmethod
@@ -478,8 +507,8 @@ class Option(ABC):
         """
         raise NotImplementedError("This method is not implemented for this class")
 
-    def to_dict(self) -> dict:
-        ret = dict()
+    def to_dict(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["label"] = self.label
         ret["value"] = self.value
@@ -496,7 +525,7 @@ class Option(ABC):
         pass
 
     @staticmethod
-    def _decode_common_option_fields(option_dict: dict) -> dict:
+    def _decode_common_option_fields(option_dict: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "uid": _attribute_id_from_json_str(option_dict["id"]),
             "label": option_dict["label"],
@@ -511,8 +540,8 @@ class FlatOption(Option):
     This class is currently in BETA. Its API might change in future minor version releases.
     """
 
-    def get_option_type(self) -> OptionType:
-        return OptionType.FLAT
+    def is_nestable(self) -> bool:
+        return False
 
     def get_child_by_hash(
         self,
@@ -565,8 +594,8 @@ class NestableOption(Option):
 
     nested_options: List[Attribute] = field(default_factory=list)
 
-    def get_option_type(self) -> OptionType:
-        return OptionType.NESTABLE
+    def is_nestable(self) -> bool:
+        return True
 
     def get_child_by_hash(
         self,
@@ -651,7 +680,7 @@ class NestableOption(Option):
 
 
 def __build_identifiers(
-    existent_items: Union[Attribute, Option],
+    existent_items: Iterable[Union[Attribute, Option]],
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,
 ) -> Tuple[int, str]:
@@ -686,18 +715,10 @@ def _add_attribute(
     dynamic: bool = False,
 ) -> T:
     local_uid, feature_node_hash = __build_identifiers(attributes, local_uid, feature_node_hash)
+    attr = cls(
+        name=name, uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, required=required, dynamic=dynamic
+    )
 
-    constructor_params = {
-        "name": name,
-        "uid": parent_uid + [local_uid],
-        "feature_node_hash": feature_node_hash,
-        "required": required,
-        "dynamic": dynamic,
-    }
-
-    if cls.has_options_field():
-        constructor_params["options"] = []
-    attr = cls(**constructor_params)
     attributes.append(attr)
     return attr
 
@@ -706,7 +727,7 @@ OT = TypeVar("OT", bound=Option)
 
 
 def _add_option(
-    options: List[Option],
+    options: List[OT],
     cls: Type[OT],
     label: str,
     parent_uid: List[int],
@@ -723,13 +744,13 @@ def _add_option(
 
 
 def _get_option_by_hash(
-    feature_node_hash: str, options: List[Option]
+    feature_node_hash: str, options: Iterable[Option]
 ) -> Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption, None]:
     for option_ in options:
         if option_.feature_node_hash == feature_node_hash:
             return option_
 
-        if option_.get_option_type() == OptionType.NESTABLE:
+        if option_.is_nestable():
             found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
             if found_item is not None:
                 return found_item
@@ -744,22 +765,21 @@ def _get_attribute_by_hash(
         if attribute.feature_node_hash == feature_node_hash:
             return attribute
 
-        if attribute.has_options_field():
-            found_item = _get_option_by_hash(feature_node_hash, attribute.options)
-            if found_item is not None:
-                return found_item
+        found_item = _get_option_by_hash(feature_node_hash, attribute.options)
+        if found_item is not None:
+            return found_item
     return None
 
 
 def _get_options_by_title(
-    title: str, options: List[Option]
+    title: str, options: Iterable[Option]
 ) -> List[Union[RadioAttribute, ChecklistAttribute, TextAttribute, NestableOption, FlatOption]]:
     ret = []
     for option_ in options:
         if option_.label == title:
             ret.append(option_)
 
-        if option_.get_option_type() == OptionType.NESTABLE:
+        if option_.is_nestable():
             found_items = _get_attributes_by_title(title, option_.nested_options)
             ret.extend(found_items)
 
@@ -774,9 +794,8 @@ def _get_attributes_by_title(
         if attribute.name == title:
             ret.append(attribute)
 
-        if attribute.has_options_field():
-            found_items = _get_options_by_title(title, attribute.options)
-            ret.extend(found_items)
+        found_items = _get_options_by_title(title, attribute.options)
+        ret.extend(found_items)
     return ret
 
 
@@ -804,3 +823,48 @@ AttributeTypes = Union[
 AttributeClasses = Union[RadioAttribute, ChecklistAttribute, TextAttribute, Attribute]
 OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
 OptionClasses = Union[FlatOption, NestableOption, Option]
+
+
+class DeidentifyRedactTextMode(Enum):
+    REDACT_ALL_TEXT = "REDACT_ALL_TEXT"
+    REDACT_NO_TEXT = "REDACT_NO_TEXT"
+    REDACT_SENSITIVE_TEXT = "REDACT_SENSITIVE_TEXT"
+
+
+class SaveDeidentifiedDicomConditionType(Enum):
+    NOT_SUBSTR = "NOT_SUBSTR"
+    IN = "IN"
+
+
+@dataclass
+class SaveDeidentifiedDicomConditionIn:
+    value: List[str]
+    dicom_tag: str
+    condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.IN
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "value": self.value,
+            "dicom_tag": self.dicom_tag,
+            "condition_type": self.condition_type.value,
+        }
+
+
+@dataclass
+class SaveDeidentifiedDicomConditionNotSubstr:
+    value: str
+    dicom_tag: str
+    condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.NOT_SUBSTR
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "value": self.value,
+            "dicom_tag": self.dicom_tag,
+            "condition_type": self.condition_type.value,
+        }
+
+
+SaveDeidentifiedDicomCondition = Union[
+    SaveDeidentifiedDicomConditionNotSubstr,
+    SaveDeidentifiedDicomConditionIn,
+]
