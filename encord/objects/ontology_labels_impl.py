@@ -429,7 +429,7 @@ class ClassificationInstance:
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
-        created_by: str = None,
+        created_by: Optional[str] = None,
         confidence: float = DEFAULT_CONFIDENCE,
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
         last_edited_at: Optional[datetime] = None,
@@ -3076,7 +3076,7 @@ class OntologyStructure:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
-        ret = []
+        ret: List[OntologyElement] = []
         for object_ in self.objects:
             if object_.name == title:
                 if does_type_match(object_, type_):

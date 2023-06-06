@@ -758,7 +758,7 @@ def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]) 
 
 
 def _get_options_by_title(title: str, options: Iterable[Option]) -> List[OntologyElement]:
-    ret = []
+    ret: List[OntologyElement] = []
     for option_ in options:
         if option_.label == title:
             ret.append(option_)
@@ -771,7 +771,7 @@ def _get_options_by_title(title: str, options: Iterable[Option]) -> List[Ontolog
 
 
 def _get_attributes_by_title(title: str, attributes: List[Attribute]) -> List[OntologyElement]:
-    ret = []
+    ret: List[OntologyElement] = []
     for attribute in attributes:
         if attribute.name == title:
             ret.append(attribute)
