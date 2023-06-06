@@ -8,7 +8,7 @@ which is required when bounding boxes and polygons are not providing enough prec
 1. Downloading bitmask annotations from Encord
 ====================================
 
-Encord UI allows to create Bitmask annotations. After labelling is complete, it is possible to download
+The Encord UI allows the creation of Bitmask annotations. After labelling is complete, it is possible to download
 these annotations using the SDK.
 The following code example illustrates how to download and save bitmask labels:
 
