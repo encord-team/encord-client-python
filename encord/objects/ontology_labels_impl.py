@@ -1895,11 +1895,11 @@ class LabelRowV2:
         if object_instance_annotation.is_deleted is not None:
             ret["isDeleted"] = object_instance_annotation.is_deleted
 
-        self._add_coordinates_to_encord_object(coordinates, ret)
+        self._add_coordinates_to_encord_object(coordinates, frame, ret)
 
         return ret
 
-    def _add_coordinates_to_encord_object(self, coordinates: Coordinates, encord_object: dict) -> None:
+    def _add_coordinates_to_encord_object(self, coordinates: Coordinates, frame: int, encord_object: dict) -> None:
         if isinstance(coordinates, BoundingBoxCoordinates):
             encord_object["boundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
@@ -1911,7 +1911,8 @@ class LabelRowV2:
         elif isinstance(coordinates, PointCoordinate):
             encord_object["point"] = coordinates.to_dict()
         elif isinstance(coordinates, BitmaskCoordinates):
-            if not (self.height == coordinates.height and self.width == coordinates.width):
+            frame_view = self.get_frame_view(frame)
+            if not (frame_view.height == coordinates.height and frame_view.width == coordinates.width):
                 raise ValueError("Bitmask resolution doesn't match the media resolution")
             encord_object["bitmask"] = coordinates.to_dict()
         else:
