@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, List, Sequence
 
 from encord.exceptions import EncordException
@@ -99,13 +98,24 @@ def _mask_to_rle(mask: bytes) -> List[int]:
     return rle_counts
 
 
-@dataclass(frozen=True)
 class BitmaskCoordinates:
-    top: int
-    left: int
-    width: int
-    height: int
-    rle_string: str
+    _top: int
+    _left: int
+    _width: int
+    _height: int
+    _rle_string: str
+
+    def __init__(self, top: int, left: int, width: int, height: int, rle_string: str):
+        """
+        The constructor of this object is meant for internal use.
+
+        To construct coordinates from the NumPy array, please use :meth:`from_array` method provided
+        """
+        self._top = top
+        self._left = left
+        self._width = width
+        self._height = height
+        self._rle_string = rle_string
 
     @staticmethod
     def from_dict(d: dict) -> BitmaskCoordinates:
@@ -151,11 +161,11 @@ class BitmaskCoordinates:
 
     def to_dict(self) -> dict:
         return {
-            "top": self.top,
-            "left": self.left,
-            "width": self.width,
-            "height": self.height,
-            "rleString": self.rle_string,
+            "top": self._top,
+            "left": self._left,
+            "width": self._width,
+            "height": self._height,
+            "rleString": self._rle_string,
         }
 
     def to_numpy_array(self):
@@ -173,11 +183,11 @@ class BitmaskCoordinates:
 
     @property
     def __array_interface__(self):
-        rle = _string_to_rle(self.rle_string)
-        data = _rle_to_mask(rle, self.height * self.width)
+        rle = _string_to_rle(self._rle_string)
+        data = _rle_to_mask(rle, self._height * self._width)
         return {
             "version": 3,
             "data": data,
-            "shape": (self.height, self.width),
+            "shape": (self._height, self._width),
             "typestr": "|b1",
         }
