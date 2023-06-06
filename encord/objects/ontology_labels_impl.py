@@ -34,16 +34,16 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_GET_LIMIT,
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
+from encord.objects.common import AttributeClasses  # pylint: disable=unused-import
+from encord.objects.common import AttributeTypes  # pylint: disable=unused-import
+from encord.objects.common import OptionClasses  # pylint: disable=unused-import
+from encord.objects.common import OptionTypes  # pylint: disable=unused-import
 from encord.objects.common import (
     Attribute,
-    AttributeClasses,
-    AttributeTypes,
     ChecklistAttribute,
     OntologyElement,
     OntologyElementType,
     Option,
-    OptionClasses,
-    OptionTypes,
     RadioAttribute,
     Shape,
     TextAttribute,
@@ -103,12 +103,6 @@ from encord.orm.label_row import (
 )
 
 log = logging.getLogger(__name__)
-
-
-assert AttributeClasses
-assert AttributeTypes
-assert OptionClasses
-assert OptionTypes
 
 
 @dataclass
