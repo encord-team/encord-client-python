@@ -2,7 +2,7 @@
 Bitmask annotations
 **********
 
-`Bitmask` is a type of annotation on the Encord platform. It allows to perform pixel-wise segmentation of an image,
+A `Bitmask` is a type of annotation on the Encord platform that allows for pixel-wise segmentation of an image,
 which is required when bounding boxes and polygons are not providing enough precision.
 
 1. Downloading bitmask annotations from Encord
