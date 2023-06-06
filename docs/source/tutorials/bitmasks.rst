@@ -20,7 +20,7 @@ Fol code example illustrates how to download bitmask and save it to a file:
             :language: python
 
 
-2. Uploading bitmasks annotations to Encord
+2. Uploading bitmask annotations to Encord
 ====================================
 
 If there are pre-existing bitmask annotations, previously created in Encord or any other software,
