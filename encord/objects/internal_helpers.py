@@ -64,7 +64,7 @@ class Answer(ABC):
     def ontology_attribute(self, v: Any) -> NoReturn:
         raise RuntimeError("Cannot reset the ontology attribute of an instantiated answer.")
 
-    def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict]:
+    def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict[str, Any]]:
         """
         A low level helper to convert to the Encord JSON format.
         For most use cases the `get_answer` function should be used instead.
@@ -79,14 +79,14 @@ class Answer(ABC):
         return ret
 
     @abstractmethod
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         pass
 
     @abstractmethod
-    def from_dict(self, d: Dict) -> None:
+    def from_dict(self, d: Dict[str, Any]) -> None:
         pass
 
-    def _get_encord_dynamic_fields(self, ranges: Ranges) -> Dict:
+    def _get_encord_dynamic_fields(self, ranges: Ranges) -> Dict[str, Any]:
         return {
             "dynamic": True,
             "range": ranges_to_list(ranges),
@@ -126,7 +126,7 @@ class TextAnswer(Answer):
             other_answer = text_answer.get_value()
             self.set(other_answer)
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         return {
             "name": self.ontology_attribute.name,
             "value": _lower_snake_case(self.ontology_attribute.name),
@@ -135,7 +135,7 @@ class TextAnswer(Answer):
             "manualAnnotation": self.is_manual_annotation,
         }
 
-    def from_dict(self, d: Dict) -> None:
+    def from_dict(self, d: Dict[str, Any]) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a TextAnswer based on a different ontology attribute.")
 
@@ -199,7 +199,7 @@ class RadioAnswer(Answer):
             other_answer = radio_answer.get_value()
             self.set(other_answer)
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Optional[Dict]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         nestable_option = self._value
 
         return {
@@ -330,7 +330,7 @@ class ChecklistAnswer(Answer):
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Optional[Dict]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         checked_options = []
         ontology_attribute: ChecklistAttribute = self._ontology_attribute
         for option in ontology_attribute.options:
@@ -354,7 +354,7 @@ class ChecklistAnswer(Answer):
             "manualAnnotation": self.is_manual_annotation,
         }
 
-    def from_dict(self, d: Dict) -> None:
+    def from_dict(self, d: Dict[str, Any]) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a ChecklistAnswer based on a different ontology attribute.")
 
