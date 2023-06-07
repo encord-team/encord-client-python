@@ -1052,7 +1052,7 @@ class LabelRowV2:
     @property
     def is_labelling_initialised(self) -> bool:
         """
-        Whether you can start labelling or not. If this is `False`, call the member `.initialise_labels()` to
+        Whether you can start labelling or not. If this is `False`, call the member :meth:`.initialise_labels()` to
         read or write specific ObjectInstances or ClassificationInstances.
         """
         return self._is_labelling_initialised
@@ -1524,16 +1524,36 @@ class LabelRowV2:
 
     def workflow_reopen(self) -> None:
         """
-        A label row is returned to the first annotation stage for re-labeling. No data is lost during the call.
+        A label row is returned to the first annotation stage for re-labeling.
         No data will be lost during this call.
-        This method is only relevant for the projects that use the Encord Task Management System 2,
-        and does nothing for other types of projects
+
+        This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
+        feature, and will raise an error for pre-workflow projects.
         """
         if self.label_hash is None:
             # Label has not yet moved from the initial state, nothing to do
             return
 
         self._project_client.workflow_reopen([self.label_hash])
+
+    def workflow_complete(self) -> None:
+        """
+         A label row is moved to the final workflow node, marking it as 'Complete'.
+
+         This method can be called only for labels for which :meth:`.initialise_labels()` was called at least ance, and
+         consequentially the "label_hash" field is not `None`.
+        Please note that labels need not be initialized every time the workflow_complete() method is called.
+
+         This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
+         feature, and will raise an error for projects that don't use Workflows.
+        """
+        if self.label_hash is None:
+            raise LabelRowError(
+                "For this operation you will need to initialise labelling first. Call the .initialise_labels() "
+                "to do so first."
+            )
+
+        self._project_client.workflow_complete([self.label_hash])
 
     class FrameView:
         """

@@ -66,4 +66,26 @@ def test_workflow_reopen(list_label_rows_mock: MagicMock, querier_request_mock: 
     request_data = json.loads(request.data)
 
     assert request_data["query_type"] == "labelworkflowgraphnode"
+    assert request_data["values"]["payload"]["action"] == "reopen"
+    assert request_data["values"]["uid"] == [test_label_row.label_hash]
+
+
+@patch.object(Querier, "_execute")
+@patch.object(EncordClientProject, "list_label_rows")
+def test_workflow_complete(list_label_rows_mock: MagicMock, querier_request_mock: MagicMock, project: Project):
+    label_rows_metadata = [LabelRowMetadata.from_dict(row) for row in LABEL_ROW_METADATA_BLURB]
+    list_label_rows_mock.return_value = label_rows_metadata
+    querier_request_mock.return_value = (True, RequestContext())
+
+    test_label_row = project.list_label_rows_v2()[0]
+
+    test_label_row.workflow_complete()
+
+    querier_request_mock.assert_called_once()
+
+    request = querier_request_mock.call_args[0][0]
+    request_data = json.loads(request.data)
+
+    assert request_data["query_type"] == "labelworkflowgraphnode"
+    assert request_data["values"]["payload"]["action"] == "complete"
     assert request_data["values"]["uid"] == [test_label_row.label_hash]
