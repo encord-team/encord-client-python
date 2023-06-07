@@ -36,6 +36,7 @@ class Shape(StringEnum):
     SKELETON = "skeleton"
     POLYLINE = "polyline"
     ROTATABLE_BOUNDING_BOX = "rotatable_bounding_box"
+    BITMASK = "bitmask"
 
 
 class Attribute(ABC):

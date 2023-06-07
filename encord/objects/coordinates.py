@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Flag, auto
 from typing import Dict, List, Optional, Type, Union
 
+from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
 
 
@@ -186,6 +187,7 @@ Coordinates = Union[
     PolygonCoordinates,
     PolylineCoordinates,
     SkeletonCoordinates,
+    BitmaskCoordinates,
 ]
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.BOUNDING_BOX: BoundingBoxCoordinates,
@@ -194,4 +196,5 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.POLYGON: PolygonCoordinates,
     Shape.POLYLINE: PolylineCoordinates,
     Shape.SKELETON: SkeletonCoordinates,
+    Shape.BITMASK: BitmaskCoordinates,
 }

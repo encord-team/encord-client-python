@@ -62,6 +62,7 @@ from encord.objects.constants import (
 )
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
     PointCoordinate,
@@ -1916,11 +1917,13 @@ class LabelRowV2:
         if object_instance_annotation.is_deleted is not None:
             ret["isDeleted"] = object_instance_annotation.is_deleted
 
-        self._add_coordinates_to_encord_object(coordinates, ret)
+        self._add_coordinates_to_encord_object(coordinates, frame, ret)
 
         return ret
 
-    def _add_coordinates_to_encord_object(self, coordinates: Coordinates, encord_object: Dict[str, Any]) -> None:
+    def _add_coordinates_to_encord_object(
+        self, coordinates: Coordinates, frame: int, encord_object: Dict[str, Any]
+    ) -> None:
         if isinstance(coordinates, BoundingBoxCoordinates):
             encord_object["boundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
@@ -1931,6 +1934,14 @@ class LabelRowV2:
             encord_object["polyline"] = coordinates.to_dict()
         elif isinstance(coordinates, PointCoordinate):
             encord_object["point"] = coordinates.to_dict()
+        elif isinstance(coordinates, BitmaskCoordinates):
+            frame_view = self.get_frame_view(frame)
+            if not (
+                frame_view.height == coordinates._encoded_bitmask.height
+                and frame_view.width == coordinates._encoded_bitmask.width
+            ):
+                raise ValueError("Bitmask resolution doesn't match the media resolution")
+            encord_object["bitmask"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
@@ -2167,6 +2178,8 @@ class LabelRowV2:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
             raise NotImplementedError("Got a skeleton object, which is not supported yet")
+        elif "bitmask" in frame_object_label:
+            return BitmaskCoordinates.from_dict(frame_object_label)
         else:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
 
