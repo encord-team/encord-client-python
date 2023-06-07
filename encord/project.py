@@ -117,8 +117,7 @@ class Project:
     def label_rows(self) -> dict:
         """
         Get the label rows.
-
-        Prefer using the :meth:`encord.orm.label_row.LabelRowMetadata` class to work with the data.
+        DEPRECATED: Prefer using :meth:`list_label_row_v2()` method and :meth:`LabelRowV2` class to work with the data.
 
         .. code::
 
@@ -130,6 +129,10 @@ class Project:
 
         """
         project_instance = self._get_project_instance()
+        if project_instance.label_rows is None:
+            project_descriptor = self._client.get_project(include_labels_metadata=True)
+            project_instance.label_rows = project_descriptor.label_rows
+
         return project_instance.label_rows
 
     def refetch_data(self) -> None:
