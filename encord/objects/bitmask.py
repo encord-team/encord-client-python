@@ -113,7 +113,7 @@ class BitmaskCoordinates:
         Creates a BitmaskCoordinates object from a NumPy array, or other objects that implement
         :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`
 
-         For detailed information please refer to :ref:`bitmask tutorial <tutorials/bitmasks:Bitmasks>`
+        For detailed information please refer to :ref:`bitmask tutorial <tutorials/bitmasks:Bitmasks>`
         """
 
         if isinstance(source, BitmaskCoordinates.EncodedBitmask):
