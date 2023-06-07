@@ -29,6 +29,12 @@ from encord.orm.project import StringEnum
 NestedID = List[int]
 
 
+class PropertyType(StringEnum):
+    RADIO = "radio"
+    TEXT = "text"
+    CHECKLIST = "checklist"
+
+
 class Shape(StringEnum):
     BOUNDING_BOX = "bounding_box"
     POLYGON = "polygon"
@@ -64,6 +70,11 @@ class Attribute(ABC):
     @property
     def options(self) -> Sequence[Option]:
         return []
+
+    @staticmethod
+    @abstractmethod
+    def get_property_type() -> PropertyType:
+        pass
 
     @staticmethod
     @abstractmethod
@@ -211,8 +222,12 @@ class RadioAttribute(Attribute):
         return self._options
 
     @staticmethod
+    def get_property_type() -> PropertyType:
+        return PropertyType.RADIO
+
+    @staticmethod
     def _get_property_type_name() -> str:
-        return "radio"
+        return PropertyType.RADIO.value
 
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         if len(self._options) == 0:
@@ -297,8 +312,12 @@ class ChecklistAttribute(Attribute):
         self._options = options if options is not None else []
 
     @staticmethod
+    def get_property_type() -> PropertyType:
+        return PropertyType.CHECKLIST
+
+    @staticmethod
     def _get_property_type_name() -> str:
-        return "checklist"
+        return PropertyType.CHECKLIST.value
 
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         if len(self._options) == 0:
@@ -371,8 +390,12 @@ class TextAttribute(Attribute):
         super().__init__(uid, feature_node_hash, name, required, dynamic)
 
     @staticmethod
+    def get_property_type() -> PropertyType:
+        return PropertyType.TEXT
+
+    @staticmethod
     def _get_property_type_name() -> str:
-        return "text"
+        return PropertyType.TEXT.value
 
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         return None
