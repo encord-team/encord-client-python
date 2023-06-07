@@ -711,7 +711,7 @@ class EncordClientProject(EncordClient):
     DEPRECATED - prefer using the :class:`encord.project.Project` instead
     """
 
-    def get_project(self, include_labels_metadata=True):
+    def get_project(self, include_labels_metadata=True) -> OrmProject:
         """
         Retrieve project info (pointers to data, labels).
 
