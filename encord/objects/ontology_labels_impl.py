@@ -1536,14 +1536,14 @@ class LabelRowV2:
 
     def workflow_complete(self) -> None:
         """
-        A label row is moved to the final workflow node, marking it as 'Complete'.
+         A label row is moved to the final workflow node, marking it as 'Complete'.
 
-        This method can be called only for labels for which :meth:`.initialise_labels()` was called at least ance, and
-        consequentially the "label_hash" field is not `None`.
-       Please note that labels need not be initialized every time the workflow_complete() method is called.
+         This method can be called only for labels for which :meth:`.initialise_labels()` was called at least ance, and
+         consequentially the "label_hash" field is not `None`.
+        Please note that labels need not be initialized every time the workflow_complete() method is called.
 
-        This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
-        feature, and will raise an error for projects that don't use Workflows.
+         This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
+         feature, and will raise an error for projects that don't use Workflows.
         """
         if self.label_hash is None:
             raise LabelRowError(
