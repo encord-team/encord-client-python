@@ -173,7 +173,7 @@ class BitmaskCoordinates:
         except ImportError:
             raise EncordException("Numpy is required for .to_numpy call.")
 
-        return np.array(self.__array_interface__)
+        return np.array(self)
 
     @property
     def __array_interface__(self):
