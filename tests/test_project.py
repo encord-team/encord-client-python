@@ -11,6 +11,8 @@ from encord.configs import _ENCORD_SSH_KEY_FILE
 from encord.constants.model import Device
 from encord.constants.model_weights import faster_rcnn_R_101_C4_3x
 from encord.exceptions import EncordException
+from encord.orm.label_row import LabelRow
+from encord.orm.project import Project as OrmProject
 from encord.project import Project
 from encord.user_client import EncordUserClient
 
@@ -38,7 +40,7 @@ def teardown_function():
 
 @pytest.fixture
 @patch.object(EncordClientProject, "get_project")
-def project(project_client_mock, ssh_key_file_path):
+def project(project_client_mock: MagicMock, ssh_key_file_path):
     project_client_mock.get_project.return_value = MagicMock()
 
     os.environ[_ENCORD_SSH_KEY_FILE] = ssh_key_file_path
@@ -114,3 +116,29 @@ def test_valid_device(mock_send, project: Project, device):
     )
 
     assert result_inference == response
+
+
+@patch.object(EncordClientProject, "get_project")
+def test_label_rows_property_queries_metadata(project_client_mock: MagicMock, project: Project):
+    project._project_instance.label_rows = None
+
+    project_orm_mock = MagicMock(spec=OrmProject)
+    project_orm_mock.label_rows = [LabelRow({"data_title": "abc"})]
+
+    project_client_mock.return_value = project_orm_mock
+
+    project_client_mock.assert_not_called()
+
+    rows = project.label_rows
+
+    # Expect project data query to happen during the property call
+    project_client_mock.assert_called_once()
+
+    assert project_client_mock.call_args[1] == {"include_labels_metadata": True}
+
+    assert len(rows) == 1
+    assert rows[0].data_title == "abc"
+
+    # Expect label rows metadata to be cached
+    project.label_rows
+    project_client_mock.assert_called_once()
