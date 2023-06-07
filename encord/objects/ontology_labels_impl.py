@@ -860,7 +860,7 @@ class ClassificationInstance:
         already_present_frame = self._parent._is_classification_already_present(self.ontology_item, frames)
         if already_present_frame is not None:
             raise LabelRowError(
-                f"The LabelRowV2, that this classification is part of, already has a classification of the same type "
+                f"The LabelRowV2, that this classification is part of, already has a classification of the same type {self.ontology_item.feature_node_hash} : {self._ontology_classification.attributes[0].name}"
                 f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
                 f"frame per LabelRowV2."
             )
@@ -2227,7 +2227,10 @@ class LabelRowV2:
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
 
-        classification_instance.set_for_frames(frame, **asdict(frame_view))
+        try:
+            classification_instance.set_for_frames(frame, **asdict(frame_view))
+        except Exception as e:
+            print(e)
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
