@@ -99,12 +99,6 @@ def _mask_to_rle(mask: bytes) -> List[int]:
 
 
 class BitmaskCoordinates:
-    _top: int
-    _left: int
-    _width: int
-    _height: int
-    _rle_string: str
-
     def __init__(self, top: int, left: int, width: int, height: int, rle_string: str):
         """
         The constructor of this object is meant for internal use.
