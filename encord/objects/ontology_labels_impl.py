@@ -1543,7 +1543,7 @@ class LabelRowV2:
         It is not required to do that every time though.
 
         This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
-        feature, and will raise an error for pre-workflow projects
+        feature, and will raise an error for projects that don't use Workflows.
         """
         if self.label_hash is None:
             raise LabelRowError(
