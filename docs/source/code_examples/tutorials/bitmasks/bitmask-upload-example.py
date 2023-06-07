@@ -35,7 +35,7 @@ bitmask_ontology_object_instance = bitmask_ontology_object.create_instance()
 # Set the bitmask as coordinates for the annotation
 bitmask_ontology_object_instance.set_for_frames(
     # Create coordinates from provided numpy bitmask
-    coordinates=BitmaskCoordinates.from_array(numpy_coordinates),
+    coordinates=BitmaskCoordinates(numpy_coordinates),
     # Add the bounding box to the first frame
     frames=0,
     # There are multiple additional fields that can be set optionally:
