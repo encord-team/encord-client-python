@@ -1914,7 +1914,10 @@ class LabelRowV2:
             encord_object["point"] = coordinates.to_dict()
         elif isinstance(coordinates, BitmaskCoordinates):
             frame_view = self.get_frame_view(frame)
-            if not (frame_view.height == coordinates.height and frame_view.width == coordinates.width):
+            if not (
+                frame_view.height == coordinates._encoded_bitmask.height
+                and frame_view.width == coordinates._encoded_bitmask.width
+            ):
                 raise ValueError("Bitmask resolution doesn't match the media resolution")
             encord_object["bitmask"] = coordinates.to_dict()
         else:
