@@ -1539,7 +1539,7 @@ class LabelRowV2:
         A label row is returned to the final workflow node.
 
         This method can be called only for labels for which :meth:`.initialise_labels()` was called at least ance, and
-        consequentially "label_hash" field is not `None`.
+        consequentially the "label_hash" field is not `None`.
         It is not required to do that every time though.
 
         This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
