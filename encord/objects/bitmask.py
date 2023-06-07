@@ -104,8 +104,8 @@ class BitmaskCoordinates:
     class EncodedBitmask:
         top: int
         left: int
-        width: int
         height: int
+        width: int
         rle_string: str
 
     def __init__(self, source: Any):
