@@ -119,7 +119,7 @@ class EncordUserClient:
         querier = Querier(config)
         client = EncordClientProject(querier=querier, config=config)
 
-        orm_project = client.get_project()
+        orm_project = client.get_project(include_labels_metadata=False)
 
         # Querying ontology using project querier to avoid permission error,
         # as there might be only read-only ontology structure access in scope of the project,
