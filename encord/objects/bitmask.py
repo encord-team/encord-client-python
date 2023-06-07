@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, List, Sequence
+import dataclasses
+from typing import Any, Dict, List, Sequence
 
 from encord.exceptions import EncordException
 
@@ -9,7 +10,7 @@ def _string_to_rle(s: str) -> List[int]:
     """
     COCO-compatible string to RLE-encoded mask de-serialisation
     """
-    cnts = []
+    cnts: List[int] = []
     p = 0
 
     while p < len(s):
@@ -99,32 +100,15 @@ def _mask_to_rle(mask: bytes) -> List[int]:
 
 
 class BitmaskCoordinates:
-    def __init__(self, top: int, left: int, width: int, height: int, rle_string: str):
-        """
-        The constructor of this object is meant for internal use.
+    @dataclasses.dataclass(frozen=True)
+    class EncodedBitmask:
+        top: int
+        left: int
+        height: int
+        width: int
+        rle_string: str
 
-        To construct coordinates from the NumPy array, please use :meth:`from_array` method provided
-        """
-        self._top = top
-        self._left = left
-        self._width = width
-        self._height = height
-        self._rle_string = rle_string
-
-    @staticmethod
-    def from_dict(d: dict) -> BitmaskCoordinates:
-        bitmask = d["bitmask"]
-
-        return BitmaskCoordinates(
-            top=int(bitmask["top"]),
-            left=int(bitmask["left"]),
-            height=int(bitmask["height"]),
-            width=int(bitmask["width"]),
-            rle_string=bitmask["rleString"],
-        )
-
-    @staticmethod
-    def from_array(source: Any):
+    def __init__(self, source: Any):
         """
         Creates a BitmaskCoordinates object from a NumPy array, or other objects that implement
         :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`
@@ -132,6 +116,26 @@ class BitmaskCoordinates:
         For detailed information please refer to :ref:`bitmask tutorial <tutorials/bitmasks:Bitmasks>`
         """
 
+        if isinstance(source, BitmaskCoordinates.EncodedBitmask):
+            self._encoded_bitmask = source
+        else:
+            self._encoded_bitmask = BitmaskCoordinates._from_array(source)
+
+    @staticmethod
+    def from_dict(d: Dict[str, Any]) -> BitmaskCoordinates:
+        bitmask = d["bitmask"]
+        return BitmaskCoordinates(
+            BitmaskCoordinates.EncodedBitmask(
+                top=int(bitmask["top"]),
+                left=int(bitmask["top"]),
+                height=int(bitmask["height"]),
+                width=int(bitmask["width"]),
+                rle_string=bitmask["rleString"],
+            )
+        )
+
+    @staticmethod
+    def _from_array(source: Any) -> BitmaskCoordinates.EncodedBitmask:
         if source is not None:
             if hasattr(source, "__array_interface__"):
                 arr = source.__array_interface__
@@ -149,17 +153,19 @@ class BitmaskCoordinates:
                 rle = _mask_to_rle(raw_data)
                 rle_string = _rle_to_string(rle)
 
-                return BitmaskCoordinates(top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string)
+                return BitmaskCoordinates.EncodedBitmask(
+                    top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string
+                )
 
         raise EncordException(f"Can't import bitmask from {source.__class__}")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         return {
-            "top": self._top,
-            "left": self._left,
-            "width": self._width,
-            "height": self._height,
-            "rleString": self._rle_string,
+            "top": self._encoded_bitmask.top,
+            "left": self._encoded_bitmask.left,
+            "width": self._encoded_bitmask.width,
+            "height": self._encoded_bitmask.height,
+            "rleString": self._encoded_bitmask.rle_string,
         }
 
     def to_numpy_array(self):
@@ -177,11 +183,11 @@ class BitmaskCoordinates:
 
     @property
     def __array_interface__(self):
-        rle = _string_to_rle(self._rle_string)
-        data = _rle_to_mask(rle, self._height * self._width)
+        rle = _string_to_rle(self._encoded_bitmask.rle_string)
+        data = _rle_to_mask(rle, self._encoded_bitmask.height * self._encoded_bitmask.width)
         return {
             "version": 3,
             "data": data,
-            "shape": (self._height, self._width),
+            "shape": (self._encoded_bitmask.height, self._encoded_bitmask.width),
             "typestr": "|b1",
         }
