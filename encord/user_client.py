@@ -296,6 +296,7 @@ class EncordUserClient:
         project_description: str = "",
         ontology_hash: str = "",
         workflow_settings: ProjectWorkflowSettings = ManualReviewWorkflowSettings(),
+        workflow_template_hash: Optional[str] = None,
     ) -> str:
         """
         Creates a new project and returns its uid ('project_hash')
@@ -306,7 +307,7 @@ class EncordUserClient:
             project_description: the optional description of the project
             ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
             workflow_settings: selects and configures the type of the quality control workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
-
+            workflow_template_hash: project will be created using a workflow created from the template provided
         Returns:
             the uid of the project.
         """
@@ -321,6 +322,9 @@ class EncordUserClient:
             project["source_projects"] = workflow_settings.source_projects
         if ontology_hash and len(ontology_hash):
             project["ontology_hash"] = ontology_hash
+
+        if workflow_template_hash is not None:
+            project["workflow_template_id"] = workflow_template_hash
 
         return self.querier.basic_setter(OrmProject, uid=None, payload=project)
 
