@@ -2177,13 +2177,18 @@ class LabelRowV2:
     ):
         for frame_classification_label in classifications_list:
             classification_hash = frame_classification_label["classificationHash"]
-            if classification_hash not in self._classifications_map:
-                classification_instance = self._create_new_classification_instance(
-                    frame_classification_label, frame, classification_answers
+            try:
+                if classification_hash not in self._classifications_map:
+                    classification_instance = self._create_new_classification_instance(
+                        frame_classification_label, frame, classification_answers
+                    )
+                    self.add_classification_instance(classification_instance)
+                else:
+                    self._add_frames_to_classification_instance(frame_classification_label, frame)
+            except Exception as e:
+                print(
+                    f"Failed to _add_classification_instances_from_classifications: {e}. Classification hash: {classification_hash}, frame: {frame}"
                 )
-                self.add_classification_instance(classification_instance)
-            else:
-                self._add_frames_to_classification_instance(frame_classification_label, frame)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = dict()
