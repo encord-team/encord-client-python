@@ -2809,9 +2809,13 @@ class ObjectInstance:
         if isinstance(attribute, TextAttribute):
             self._set_answer_unsafe(answer_dict["answers"], attribute, track_hash, ranges)
         elif isinstance(attribute, RadioAttribute):
-            feature_hash = answer_dict["answers"][0]["featureHash"]
-            option = _get_option_by_hash(feature_hash, attribute.options)
-            self._set_answer_unsafe(option, attribute, track_hash, ranges)
+            if len(answer_dict["answers"]) == 1:
+                # When classification is removed in UI, it keeps the entry about the classification,
+                # but removes the answers.
+                # Thus an empty answers array is equivalent to "no such attribute", and such attribute should be ignored
+                feature_hash = answer_dict["answers"][0]["featureHash"]
+                option = _get_option_by_hash(feature_hash, attribute.options)
+                self._set_answer_unsafe(option, attribute, track_hash, ranges)
         elif isinstance(attribute, ChecklistAttribute):
             options = []
             for answer in answer_dict["answers"]:
