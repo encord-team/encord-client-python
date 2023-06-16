@@ -680,7 +680,11 @@ class Project:
         return self._client.get_websocket_url()
 
     def get_label_logs(
-        self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
+        self,
+        user_hash: Optional[str] = None,
+        data_hash: Optional[str] = None,
+        from_unix_seconds: Optional[int] = None,
+        to_unix_seconds: Optional[int] = None,
     ) -> List[LabelLog]:
         """
         Get label logs, which represent the actions taken in the UI to create labels.

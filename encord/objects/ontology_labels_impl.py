@@ -2435,7 +2435,7 @@ class ObjectInstance:
     def delete_answer(
         self,
         attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option]] = None,
+        filter_answer: Optional[Union[str, Option, Iterable[Option]]] = None,
         filter_frame: Optional[int] = None,
     ) -> None:
         """
