@@ -19,7 +19,7 @@ from typing import Optional
 
 @dataclass
 class ExceptionContext:
-    timestamp: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(tz=timezone.utc).isoformat())
 
     def __str__(self):
         return " ".join(
