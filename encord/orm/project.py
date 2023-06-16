@@ -12,6 +12,8 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from __future__ import annotations
+
 import datetime
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -259,10 +261,13 @@ class StringEnum(Enum):
     Use this enum class if you need the helper that creates the enum instance from a string.
     """
 
+    def __str__(self):
+        return self.name
+
     @classmethod
-    def from_string(cls, string: str) -> Optional["StringEnum"]:
+    def from_string(cls, value: str) -> Optional[StringEnum]:
         # pylint: disable-next=no-member
-        return cls._value2member_map_.get(string)
+        return cls._value2member_map_.get(value)
 
 
 class ReviewMode(StringEnum):

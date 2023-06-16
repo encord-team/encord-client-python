@@ -19,7 +19,7 @@ import json
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from dateutil import parser
@@ -766,8 +766,11 @@ class StorageLocation(IntEnum):
             return "AZURE_STR"
         elif self == StorageLocation.OTC:
             return "OTC_STR"
+        else:
+            return "NEW_STORAGE"
 
-    def _missing_(cls) -> StorageLocation:
+    @classmethod
+    def _missing_(cls, value: Any) -> StorageLocation:
         return StorageLocation.NEW_STORAGE
 
 
@@ -917,7 +920,7 @@ class ReEncodeVideoTask(Formatter):
     """A re encode video object with supporting information."""
 
     status: str
-    result: List[ReEncodeVideoTaskResult] = None
+    result: Optional[List[ReEncodeVideoTaskResult]] = None
 
     @classmethod
     def from_dict(cls, json_dict: Dict):
