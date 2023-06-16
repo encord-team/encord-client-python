@@ -307,7 +307,7 @@ class EncordUserClient:
             project_description: the optional description of the project
             ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
             workflow_settings: selects and configures the type of the quality control workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
-            workflow_template_hash: project will be created using a workflow created from the template provided
+            workflow_template_hash: project will be created using a workflow based on the template provided.
         Returns:
             the uid of the project.
         """
