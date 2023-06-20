@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 from encord.orm.project import StringEnum
 
 
@@ -12,11 +16,11 @@ class DataType(StringEnum):
     MISSING_DATA_TYPE = "_MISSING_DATA_TYPE_"
 
     @classmethod
-    def _missing_(cls, value: str) -> "DataType":
+    def _missing_(cls, value: Any) -> DataType:
         return cls.MISSING_DATA_TYPE
 
     @staticmethod
-    def from_upper_case_string(string: str) -> "DataType":
+    def from_upper_case_string(string: str) -> DataType:
         for data_type in DataType:
             if string == data_type.to_upper_case_string():
                 return data_type

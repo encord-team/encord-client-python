@@ -131,7 +131,7 @@ class UserConfig(BaseConfig):
 
         """
         key_bytes = ssh_private_key.encode()
-        password_bytes = password and password.encode()
+        password_bytes = password.encode() if password else None
         private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
 
         if isinstance(private_key, Ed25519PrivateKey):

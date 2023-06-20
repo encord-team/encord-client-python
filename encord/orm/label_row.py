@@ -231,7 +231,7 @@ class LabelStatus(Enum):
     """
 
     @classmethod
-    def _missing_(cls, value):
+    def _missing_(cls, value: Any) -> LabelStatus:
         return cls.MISSING_LABEL_STATUS
 
 

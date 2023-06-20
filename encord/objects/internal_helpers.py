@@ -230,6 +230,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         nestable_option = self._value
+        assert nestable_option is not None  # Check is performed earlier, so just to silence mypy
 
         return {
             "name": self.ontology_attribute.name,

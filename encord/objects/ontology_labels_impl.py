@@ -488,6 +488,7 @@ class ClassificationInstance:
             )
 
         if self.is_assigned_to_label_row():
+            assert self._parent is not None
             self._parent._add_frames_to_classification(self.ontology_item, frames_list)
             self._parent._add_to_frame_to_hashes_map(self)
 
@@ -507,6 +508,7 @@ class ClassificationInstance:
             self._frames_to_data.pop(frame)
 
         if self.is_assigned_to_label_row():
+            assert self._parent is not None
             self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
             self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
@@ -840,6 +842,7 @@ class ClassificationInstance:
         )
 
         if self.is_assigned_to_label_row():
+            assert self._parent is not None
             self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
     def _set_answer_unsafe(self, answer: ValueType, attribute: Attribute) -> None:
@@ -2444,7 +2447,7 @@ class ObjectInstance:
     def delete_answer(
         self,
         attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option]] = None,
+        filter_answer: Optional[Union[str, Option, Iterable[Option]]] = None,
         filter_frame: Optional[int] = None,
     ) -> None:
         """
