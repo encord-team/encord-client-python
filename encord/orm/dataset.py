@@ -767,7 +767,7 @@ class StorageLocation(IntEnum):
         elif self == StorageLocation.OTC:
             return "OTC_STR"
         else:
-            return "NEW_STORAGE"
+            raise NotImplementedError(f"Unknown storage location id: {self}")
 
     @classmethod
     def _missing_(cls, value: Any) -> StorageLocation:
