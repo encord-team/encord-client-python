@@ -766,8 +766,6 @@ class StorageLocation(IntEnum):
             return "AZURE_STR"
         elif self == StorageLocation.OTC:
             return "OTC_STR"
-        else:
-            raise NotImplementedError(f"Unknown storage location id: {self}")
 
     @classmethod
     def _missing_(cls, value: Any) -> StorageLocation:
