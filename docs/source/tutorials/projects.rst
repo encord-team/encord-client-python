@@ -12,18 +12,11 @@ Make sure that you have associated a :xref:`public-private_key_pair` with |compa
 If not you can do so by following the :ref:`authentication:User authentication` tutorial.
 
 Creating a Project
-==================
+====================
 
-You can create a new project using the :meth:`create_project() <.EncordUserClient.create_project>` method that takes three parameters:
+You can create a new project using the :meth:`create_project() <.EncordUserClient.create_project>` method.
 
-* :meth:`project_title <.EncordUserClient.create_project>`: the title of the project as a string
-
-* :meth:`dataset_ids <.EncordUserClient.create_project>`: a list of ``<dataset_hash>`` strings for the datasets to add to the project.
-  For more details on creating datasets, see :ref:`tutorials/datasets:Creating a dataset`.
-  This can be set to an empty list
-
-* :meth:`project_description <.EncordUserClient.create_project>`: the description of the project as a string.
-  This parameter is optional
+------------
 
 :meth:`create_project() <.EncordUserClient.create_project>` will return the ``<project_hash>`` of the created project.
 The user that calls this method becomes the admin of the project.

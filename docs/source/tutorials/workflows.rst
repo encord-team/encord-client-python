@@ -9,13 +9,15 @@ Please note that we are rolling this feature out into open availability in `Beta
 in development and will be added progressively. 
 
 1. Creating a `Workflow` project
-====================================
+===================================
 
-At the moment `Workflow` projects have to be created using the Encord web-app. 
-Please see our tutorial on how to `create Workflow projects <https://docs.encord.com/projects/workflows/creating-and-configuring-workflows/>`_ to learn how this is done.
+Creating `Workflow` projects using the SDK is only possible using workflow templates. However, templates can only be created using the Encord web-app - please see our tutorial on how to `create Workflow templates <https://docs.encord.com/projects/workflows/workflows/>`_ to learn more. 
+
+Once the template has been created, use the 'template ID' as the `template hash` parameter in the :meth:`create_project() <.EncordUserClient.create_project>` method.
+
 
 2. Attributes for `Workflow` projects
-====================================
+======================================
 
 Please note that the attributes outlined below can only be used when working with `Workflow` projects. 
 
