@@ -1,5 +1,5 @@
 import platform
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import requests
@@ -21,8 +21,7 @@ from encord.http.v2.request_signer import sign_request
 class ApiClient:
     def __init__(self, config: UserConfig):
         self._config = config
-        # self._base_url = urljoin(self._config.domain, "v2/public/")
-        self._base_url = "http://localhost:6969/v2/public/"
+        self._base_url = urljoin(self._config.domain, "v2/public/")
 
     @staticmethod
     def _exception_context_from_response(response: Response) -> RequestContext:
@@ -41,7 +40,7 @@ class ApiClient:
     def _user_agent():
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
-    def get(self, path: str, params: Optional[Dict[str, str]] = None, result_type=None):
+    def get(self, path: str, params: Optional[Dict[str, str]] = None, result_type=None) -> Dict[str, Any]:
         req = requests.Request(
             method="GET",
             url=urljoin(self._base_url, path),
