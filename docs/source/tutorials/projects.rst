@@ -14,26 +14,7 @@ If not you can do so by following the :ref:`authentication:User authentication` 
 Creating a Project
 ====================
 
-You can create a new project using the :meth:`create_project() <.EncordUserClient.create_project>` method, which requires at least parameters:
-
-* :meth:`project_title <.EncordUserClient.create_project>`: the title of the project as a string
-
-* :meth:`dataset_ids <.EncordUserClient.create_project>`: a list of ``<dataset_hash>`` strings for the datasets to add to the project. Please note that this can be set to an empty list.
-  For more details on creating datasets, see :ref:`tutorials/datasets:Creating a dataset`.
-
-In addition to the required parameters above, there are a number of optional parameters you can add to your project:
-
-* :meth:`project_description <.EncordUserClient.create_project>`: the description of the project as a string.
-  This parameter is optional
-
-* :meth:`ontology_hash <.EncordUserClient.create_project>`: the ontology ID. Please note that ontologies can only be created using the encord web-app. 
-  This parameter is optional, and will default to a new empty ontology if omitted.
-
-* :meth:`workflow_settings <.EncordUserClient.create_project>`: used to control select and configure the type of quality control workflow to be used. Please click the method for more details. 
-  This parameter is optional, and will default to manual review QA if omitted.
-
-* :meth:`workflow_template_hash <.EncordUserClient.create_project>`: the ID of the workflow template to be used. Please note that workflow templates can only be created using the encord web-app. Please see `our documentation <https://docs.encord.com/projects/workflows/workflows/>`_ for more details
-  This parameter is optional, and will default to manual review QA if omitted.
+You can create a new project using the :meth:`create_project() <.EncordUserClient.create_project>` method.
 
 ------------
 
