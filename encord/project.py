@@ -5,7 +5,7 @@ from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page, Timer
+from encord.http.v2.payloads import Page
 from encord.objects import LabelRowV2
 from encord.objects.analytics import CollaboratorTimer
 from encord.ontology import Ontology
@@ -976,7 +976,9 @@ class Project:
             "after": after,
         }
         while True:
-            page = self._client_v2.get("analytics/collaborators/timers", params=params, result_type=Page[Timer])
+            page = self._client_v2.get(
+                "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
+            )
 
             for result in page["results"]:
                 yield CollaboratorTimer(
