@@ -17,6 +17,7 @@ from typing import (
     Union,
 )
 
+from encord.common.enum import StringEnum
 from encord.exceptions import OntologyError
 from encord.objects.utils import (
     _decode_nested_uid,
@@ -24,7 +25,6 @@ from encord.objects.utils import (
     filter_by_type,
     short_uuid_str,
 )
-from encord.orm.project import StringEnum
 
 NestedID = List[int]
 

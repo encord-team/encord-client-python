@@ -24,13 +24,12 @@ from uuid import UUID
 
 from dateutil import parser
 
+from encord.common.constants import DATETIME_STRING_FORMAT
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
 from encord.utilities.common import _get_dict_without_none_keys
-
-DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class DatasetUserRole(IntEnum):

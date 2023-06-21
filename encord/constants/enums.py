@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from encord.orm.project import StringEnum
+from encord.common.enum import StringEnum
 
 
 class DataType(StringEnum):

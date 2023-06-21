@@ -18,7 +18,7 @@ import platform
 import random
 import uuid
 from contextlib import contextmanager
-from typing import Any, Generator, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Generator, List, Tuple, Type, TypeVar
 
 import requests
 import requests.exceptions

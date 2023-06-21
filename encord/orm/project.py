@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
+from encord.common.enum import StringEnum
 from encord.orm import base_orm
 
 
@@ -100,7 +101,7 @@ class Project(base_orm.BaseORM):
 
                 label_rows = project.get_label_rows(created_labels_list, get_signed_url=False)
         """
-        labels = self.to_dic().get("label_rows")
+        labels = self.to_dic().get("label_rows", [])
         res = []
         for label in labels:
             res.append(label.get("label_hash"))
@@ -254,20 +255,6 @@ Currently one of:
     :class:`ManualReviewWorkflowSettings`: a workflow with optional manual reviews
     :class:`BenchmarkQaWorkflowSettings`: annotators are presented with "benchmark" or "honeypot" data
 """
-
-
-class StringEnum(Enum):
-    """
-    Use this enum class if you need the helper that creates the enum instance from a string.
-    """
-
-    def __str__(self):
-        return self.name
-
-    @classmethod
-    def from_string(cls, value: str) -> Optional[StringEnum]:
-        # pylint: disable-next=no-member
-        return cls._value2member_map_.get(value)
 
 
 class ReviewMode(StringEnum):

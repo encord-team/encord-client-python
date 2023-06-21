@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-import dateutil
+from dateutil import parser as datetime_parser
 
 # add this for backward compatible class comparisons
 # pylint: disable-next=import-error
@@ -231,8 +231,8 @@ class EncordUserClient:
         data = self.querier.get_multiple(DatasetWithUserRole, payload={"filter": properties_filter})
 
         def convert_dates(dataset):
-            dataset["created_at"] = dateutil.parser.isoparse(dataset["created_at"])
-            dataset["last_edited_at"] = dateutil.parser.isoparse(dataset["last_edited_at"])
+            dataset["created_at"] = datetime_parser.isoparse(dataset["created_at"])
+            dataset["last_edited_at"] = datetime_parser.isoparse(dataset["last_edited_at"])
             return dataset
 
         return [
@@ -614,7 +614,7 @@ class EncordUserClient:
 
             if clause.value.endswith("before") or clause.value.endswith("after"):
                 if isinstance(val, str):
-                    val = dateutil.parser.isoparse(val)
+                    val = datetime_parser.isoparse(val)
                 if isinstance(val, datetime):
                     val = val.isoformat()
                 else:
