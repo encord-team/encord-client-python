@@ -40,11 +40,19 @@ class ApiClient:
     def _user_agent():
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
+    def _headers(self):
+        return {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "application/json",
+            HEADER_USER_AGENT: self._user_agent(),
+        }
+
     def get(self, path: str, params: Optional[Dict[str, str]] = None, result_type=None) -> Dict[str, Any]:
         req = requests.Request(
             method="GET",
             url=urljoin(self._base_url, path),
-            headers={HEADER_USER_AGENT: self._user_agent()},
+            headers=self._headers(),
             params=params,
         ).prepare()
 
