@@ -4,7 +4,7 @@ from encord.utilities.project_user import ProjectUserRole
 
 
 @dataclass
-class CollaboratorTimer:
+class CollaboratorSessions:
     user_email: str
     user_role: ProjectUserRole
     data_title: str
