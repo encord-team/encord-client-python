@@ -965,7 +965,7 @@ class Project:
         """
         return Bundle()
 
-    def list_collaborator_timers(
+    def list_collaborator_sessions(
         self, before: Optional[datetime.datetime] = None, after: Optional[datetime.datetime] = None
     ) -> Generator[CollaboratorTimer, None, None]:
         params = {
