@@ -3,7 +3,7 @@ Working with the LabelRowV2
 ===========================
 
 The :class:`encord.objects.LabelRowV2` class is a wrapper around the Encord label row data format. It
-provides a convenient way to read, create, and manipulate labels.
+provides a convenient way to read, create, and manipulate labels. It also also the recommended way to export labels via the SDK.
 """
 
 # %%

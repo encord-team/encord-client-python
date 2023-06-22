@@ -158,10 +158,9 @@ Note how all users get assigned the same role.
 The return value is a list of :class:`.ProjectUser`.
 Each :class:`.ProjectUser` contains information about email, :class:`.ProjectUserRole` and ``<project_hash>``.
 
-Managing a project
+Project details
 ==================
-Your default choice for interacting with a project is via the :ref:`authentication:User authentication`.
-
+To obtain details about your project, you first need to complete the :ref:`authentication:User authentication` and create a 'project' object. The code snippet below shows how to do this using the project id.
 
 .. tabs::
 
@@ -171,6 +170,17 @@ Your default choice for interacting with a project is via the :ref:`authenticati
             :language: python
 
 
+Collaborator session information
+---------------------------------
+
+Use the :meth:`list_collaborator_sessions() <.EncordUserClient.list_collaborator_sessions>` method on a 'project' object to obtain session information for each collaborator that has worked on the project within a specified range of dates. 
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/list_collaborator_sessions.py
+            :language: python
 
 Data
 ====
