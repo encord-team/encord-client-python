@@ -152,7 +152,7 @@ class TrainingMetadata(Formatter):
 class ModelRow(base_orm.BaseORM):
     """
     A model row contains a set of features and a model (resnet18, resnet34, resnet50, resnet101, resnet152,
-    vgg16, vgg19, yolov5, faster_rcnn, mask_rcnn).
+    vgg16, vgg19, faster_rcnn, mask_rcnn).
 
     ORM:
 
