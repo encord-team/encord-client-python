@@ -20,22 +20,6 @@ fast_ai = ModelTrainingWeights(
     {"model": AutomationModels.FAST_AI.value, "training_config_link": "", "training_weights_link": ""}
 )
 
-yolov5x = ModelTrainingWeights(
-    {
-        "model": AutomationModels.YOLOV5.value,
-        "training_config_link": "https://storage.googleapis.com/aws_model_backup/yolov5x.yml",
-        "training_weights_link": "https://storage.googleapis.com/aws_model_backup/yolov5x.pt",
-    }
-)
-
-yolov5s = ModelTrainingWeights(
-    {
-        "model": AutomationModels.YOLOV5.value,
-        "training_config_link": "https://storage.googleapis.com/aws_model_backup/yolov5s.yml",
-        "training_weights_link": "https://storage.googleapis.com/aws_model_backup/yolov5s.pt",
-    }
-)
-
 faster_rcnn_R_50_C4_1x = ModelTrainingWeights(
     {
         "model": AutomationModels.FASTER_RCNN.value,

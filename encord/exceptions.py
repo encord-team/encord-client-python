@@ -160,7 +160,7 @@ class ModelWeightsInconsistentError(EncordException):
     """
     Exception thrown when an attempted model training iteration has a different
     type of weights than what is recorded (i.e. if type of model_hash (uid) is faster_rcnn,
-    but is attempted trained with yolov5 weights).
+    but is attempted trained with different model weights).
     """
 
     pass

@@ -346,7 +346,6 @@ The following models are available, and are all imported using ``from encord.con
     VGG19 = "vgg19"
 
     # Object detection
-    YOLOV5 = "yolov5"
     FASTER_RCNN = "faster_rcnn"
 
     # Instance segmentation
@@ -396,10 +395,6 @@ The following pre-trained weights are available for training and are all importe
 
     # Fast AI (classification)
     fast_ai
-
-    # Yolo V5 (object detection)
-    yolov5x
-    yolov5s
 
     # Faster RCNN (object detection)
     faster_rcnn_R_50_C4_1x
