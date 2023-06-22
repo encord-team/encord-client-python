@@ -1,6 +1,6 @@
 import base64
-import datetime
 import hashlib
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Union
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -40,7 +40,7 @@ def sign_request(request: PreparedRequest, key_id: str, private_key: Ed25519Priv
 
     content_digest = _sfv_str("sha-256", hashlib.sha256(_request_body_bytes(request)).digest())
     signature_params: Dict[str, Union[str, int]] = {
-        "created": int(datetime.datetime.now().timestamp()),
+        "created": int(datetime.now().timestamp()),
         "keyid": key_id,
         "alg": "ed25519",
     }

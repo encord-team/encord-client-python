@@ -7,7 +7,7 @@ from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.objects import LabelRowV2
-from encord.objects.analytics import CollaboratorTimer
+from encord.objects.analytics import CollaboratorSession
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
@@ -967,7 +967,7 @@ class Project:
 
     def list_collaborator_sessions(
         self, before: Optional[datetime.datetime] = None, after: Optional[datetime.datetime] = None
-    ) -> Generator[CollaboratorTimer, None, None]:
+    ) -> Generator[CollaboratorSession, None, None]:
         params = {
             "projectHash": self.project_hash,
             "pageSize": 100,
@@ -977,11 +977,11 @@ class Project:
         }
         while True:
             page = self._client_v2.get(
-                "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
+                "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorSession]
             )
 
             for result in page["results"]:
-                yield CollaboratorTimer(
+                yield CollaboratorSession(
                     user_email=result["userEmail"],
                     user_role=ProjectUserRole(result["userRole"]),
                     data_title=result["dataTitle"],
