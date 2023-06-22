@@ -47,7 +47,7 @@ def sign_request(request: PreparedRequest, key_id: str, private_key: Ed25519Priv
 
     signature_elements = {
         "@method": request.method.upper(),
-        "@target-uri": request.url,
+        "@request-target": request.path_url,
         "content-digest": content_digest,
     }
 
