@@ -7,7 +7,7 @@ from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.objects import LabelRowV2
-from encord.objects.analytics import CollaboratorSession
+from encord.objects.analytics import CollaboratorTimer
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
@@ -965,27 +965,31 @@ class Project:
         """
         return Bundle()
 
-    def list_collaborator_sessions(
-        self, before: Optional[datetime.datetime] = None, after: Optional[datetime.datetime] = None
-    ) -> Generator[CollaboratorSession, None, None]:
+    def list_collaborator_timers(
+        self,
+        before: Optional[datetime.datetime] = None,
+        after: Optional[datetime.datetime] = None,
+        group_by_data_unit: bool = True,
+    ) -> Generator[CollaboratorTimer, None, None]:
         params = {
             "projectHash": self.project_hash,
             "pageSize": 100,
             "pageToken": None,
             "before": before,
             "after": after,
+            "groupBy": "dataUnit" if group_by_data_unit else "project",
         }
         while True:
             page = self._client_v2.get(
-                "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorSession]
+                "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
             )
 
             for result in page["results"]:
-                yield CollaboratorSession(
+                yield CollaboratorTimer(
                     user_email=result["userEmail"],
                     user_role=ProjectUserRole(result["userRole"]),
                     data_title=result["dataTitle"],
-                    session_time_seconds=result["sessionTimeSeconds"],
+                    time_seconds=result["timeSeconds"],
                 )
 
             if page["nextPageToken"] is not None:
