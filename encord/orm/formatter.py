@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Any, Dict, Type, TypeVar
+
+T = TypeVar("T", bound="Formatter")
 
 
 class Formatter(ABC):
     @classmethod
     @abstractmethod
-    def from_dict(cls, json_dict: Dict):
+    def from_dict(cls: Type[T], json_dict: Dict[str, Any]) -> T:
         pass

@@ -1,5 +1,5 @@
 import platform
-from typing import Any, Dict, Optional
+from typing import Optional, Type, TypeVar
 from urllib.parse import urljoin
 
 import requests
@@ -16,6 +16,9 @@ from encord.http.common import (
 )
 from encord.http.utils import create_new_session
 from encord.http.v2.request_signer import sign_request
+from encord.orm.base_dto import BaseDTO
+
+T = TypeVar("T")
 
 
 class ApiClient:
@@ -48,12 +51,10 @@ class ApiClient:
             HEADER_USER_AGENT: self._user_agent(),
         }
 
-    def get(self, path: str, params: Optional[Dict[str, str]] = None, result_type=None) -> Dict[str, Any]:
+    def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T]) -> T:
+        params_dict = params.to_dict() if params is not None else None
         req = requests.Request(
-            method="GET",
-            url=urljoin(self._base_url, path),
-            headers=self._headers(),
-            params=params,
+            method="GET", url=urljoin(self._base_url, path), headers=self._headers(), params=params_dict
         ).prepare()
 
         req = sign_request(req, self._config.public_key_hex, self._config.private_key)
@@ -74,7 +75,7 @@ class ApiClient:
             except Exception as e:
                 raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
 
-            return res_json
+            return result_type.from_dict(res_json)
 
     @staticmethod
     def _handle_error(response: Response, context: RequestContext):
