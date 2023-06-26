@@ -789,7 +789,7 @@ class ClassificationInstance:
             if "lastEditedAt" in d:
                 last_edited_at = parse(d["lastEditedAt"])
             else:
-                last_edited_at = None
+                last_edited_at = datetime.now()
 
             return ClassificationInstance.FrameData(
                 created_at=parse(d["createdAt"]),
