@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from dateutil import parser as datetime_parser
 
@@ -211,7 +211,7 @@ class EncordUserClient:
         created_after: Optional[Union[str, datetime]] = None,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
-    ) -> List[Dict]:
+    ) -> List[Dict[str, Any]]:
         """
         List either all (if called with no arguments) or matching datasets the user has access to.
 
