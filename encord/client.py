@@ -1101,19 +1101,20 @@ class EncordClientProject(EncordClient):
                 )
 
         if isinstance(device, Device):
-            device = device.value
-
-        if device is None or not Device.has_value(device):  # Backward compatibility with string options
-            raise encord.exceptions.EncordException(
-                message="You must pass a device from the `from encord.constants.model.Device` Enum to run inference."
-            )
+            device_string = device.value
+        else:
+            if device is None or not Device.has_value(device):  # Backward compatibility with string options
+                raise encord.exceptions.EncordException(
+                    message="You must pass a device from the `from encord.constants.model.Device` Enum to run inference."
+                )
+            device_string = device
 
         inference_params = ModelInferenceParams(
             {
                 "files": files,
                 "conf_thresh": conf_thresh,
                 "iou_thresh": iou_thresh,
-                "device": device,
+                "device": device_string,
                 "detection_frame_range": detection_frame_range,
                 "allocation_enabled": allocation_enabled,
                 "data_hashes": data_hashes,
