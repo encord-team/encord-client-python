@@ -11,7 +11,9 @@ from dateutil import parser as datetime_parser
 
 # add this for backward compatible class comparisons
 # pylint: disable-next=import-error
-from cord.utilities.client_utilities import LocalImport as CordLocalImport
+from cord.utilities.client_utilities import (
+    LocalImport as CordLocalImport,  # type: ignore
+)
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
