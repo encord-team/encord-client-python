@@ -7,6 +7,7 @@ from enum import Enum
 from typing import (
     Any,
     Dict,
+    Generic,
     Iterable,
     List,
     Optional,
@@ -17,6 +18,7 @@ from typing import (
     Union,
 )
 
+from encord.common.enum import StringEnum
 from encord.exceptions import OntologyError
 from encord.objects.utils import (
     _decode_nested_uid,
@@ -24,7 +26,6 @@ from encord.objects.utils import (
     filter_by_type,
     short_uuid_str,
 )
-from encord.orm.project import StringEnum
 
 NestedID = List[int]
 
@@ -45,7 +46,10 @@ class Shape(StringEnum):
     BITMASK = "bitmask"
 
 
-class Attribute(ABC):
+OptionType = TypeVar("OptionType", bound="Option")
+
+
+class Attribute(ABC, Generic[OptionType]):
     """
     Base class for shared Attribute fields
     """
@@ -68,7 +72,7 @@ class Attribute(ABC):
         self.dynamic = dynamic
 
     @property
-    def options(self) -> Sequence[Option]:
+    def options(self) -> Sequence[OptionType]:
         return []
 
     @staticmethod
@@ -198,7 +202,7 @@ class Attribute(ABC):
         )
 
 
-class RadioAttribute(Attribute):
+class RadioAttribute(Attribute["NestableOption"]):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
@@ -218,7 +222,7 @@ class RadioAttribute(Attribute):
         self._options = options if options is not None else []
 
     @property
-    def options(self) -> Sequence[Option]:
+    def options(self) -> Sequence[NestableOption]:
         return self._options
 
     @staticmethod
@@ -292,7 +296,7 @@ class RadioAttribute(Attribute):
         return _add_option(self._options, NestableOption, label, self.uid, local_uid, feature_node_hash, value)
 
 
-class ChecklistAttribute(Attribute):
+class ChecklistAttribute(Attribute["FlatOption"]):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """
@@ -325,7 +329,7 @@ class ChecklistAttribute(Attribute):
         return [option.to_dict() for option in self._options]
 
     @property
-    def options(self) -> Sequence[Option]:
+    def options(self) -> Sequence[FlatOption]:
         return self._options
 
     def get_child_by_hash(
@@ -381,7 +385,7 @@ class ChecklistAttribute(Attribute):
         return _add_option(self._options, FlatOption, label, self.uid, local_uid, feature_node_hash, value)
 
 
-class TextAttribute(Attribute):
+class TextAttribute(Attribute["FlatOption"]):
     """
     This class is currently in BETA. Its API might change in future minor version releases.
     """

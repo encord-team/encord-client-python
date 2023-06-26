@@ -14,10 +14,9 @@
 from __future__ import annotations
 
 # pylint: disable=unused-import
-from encord.objects.ontology_labels_impl import (
-    DATETIME_STRING_FORMAT,
-    Ontology,
-    OntologyUserRole,
-)
+from encord.common.constants import DATETIME_STRING_FORMAT
+
+# pylint: disable=unused-import
+from encord.objects.ontology_labels_impl import Ontology, OntologyUserRole
 
 # Importing here for backwards compatibility

@@ -572,7 +572,7 @@ class ClassificationInstance:
         Sets the answer for the classification from a dictionary.
 
         Args:
-            answer_dict: The dictionary to set the answer from.
+            answers_list: The list to set the answer from.
         """
 
         for answer_dict in answers_list:
@@ -993,6 +993,8 @@ class LabelRowV2:
              Please use "workflow_graph_node" property instead.'
             )
 
+        assert self._label_row_read_only_data.annotation_task_status is not None  # Never None for Workflow projects
+
         return self._label_row_read_only_data.annotation_task_status
 
     @property
@@ -1260,6 +1262,7 @@ class LabelRowV2:
         if bundle is None:
             self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
         else:
+            assert self.label_hash is not None  # Checked earlier, assert is mostly to silence mypy
             bundle.add(
                 operation=self._project_client.save_label_rows,
                 request_reducer=self._batch_save_rows_reducer,
@@ -1728,7 +1731,7 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class FrameLevelImageGroupData:
-        """This is an internal helper class. A user should not directly interract with it."""
+        """This is an internal helper class. A user should not directly interact with it."""
 
         image_hash: str
         image_title: str
@@ -1740,7 +1743,7 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class LabelRowReadOnlyData:
-        """This is an internal helper class. A user should not directly interract with it."""
+        """This is an internal helper class. A user should not directly interact with it."""
 
         label_hash: Optional[str]
         """This is None if the label row does not have any labels and was not initialised for labelling."""
@@ -2376,7 +2379,7 @@ class ObjectInstance:
     ) -> None:
         """
         Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
-        UI after drowing the ObjectInstance. There is only one answer per ObjectInstance per Attribute, unless
+        UI after drawing the ObjectInstance. There is only one answer per ObjectInstance per Attribute, unless
         the attribute is dynamic (check the args list for more instructions on how to set dynamic answers).
 
         Args:
@@ -2427,7 +2430,7 @@ class ObjectInstance:
         Sets the answer for the classification from a dictionary.
 
         Args:
-            answer_dict: The dictionary to set the answer from.
+            answers_list: The list of dictionaries to set the answer from.
         """
 
         for answer_dict in answers_list:
@@ -2754,7 +2757,7 @@ class ObjectInstance:
             if "lastEditedAt" in d:
                 last_edited_at = parse(d["lastEditedAt"])
             else:
-                last_edited_at = None
+                last_edited_at = datetime.now()
 
             return ObjectInstance.FrameInfo(
                 created_at=parse(d["createdAt"]),
@@ -3303,9 +3306,6 @@ class OntologyStructure:
         cls = Classification(uid, feature_node_hash, list())
         self.classifications.append(cls)
         return cls
-
-
-DATETIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class OntologyUserRole(IntEnum):
