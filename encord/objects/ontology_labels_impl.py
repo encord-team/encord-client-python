@@ -1855,7 +1855,7 @@ class LabelRowV2:
 
         data_type = self._label_row_read_only_data.data_type
         if data_type == DataType.IMG_GROUP:
-            data_sequence = str(frame_level_data.frame_number)
+            data_sequence: str | int = str(frame_level_data.frame_number)
         elif data_type in (DataType.VIDEO, DataType.DICOM, DataType.IMAGE):
             data_sequence = frame_level_data.frame_number
         else:
