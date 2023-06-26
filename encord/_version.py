@@ -3,6 +3,6 @@ try:
     import importlib.metadata as importlib_metadata
 except ImportError:
     # For everyone else
-    import importlib_metadata  # type: ignore
+    import importlib_metadata  # type: ignore[no-redef]
 
 __version__ = importlib_metadata.version("encord")
