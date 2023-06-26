@@ -2827,7 +2827,11 @@ class ObjectInstance:
         # Probably the above can be flattened out into this class.
 
     def _set_answer_unsafe(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, track_hash: str, ranges: Ranges
+        self,
+        answer: Union[str, Option, Iterable[Option]],
+        attribute: Attribute,
+        track_hash: str,
+        ranges: Optional[Ranges],
     ) -> None:
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)
