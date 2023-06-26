@@ -498,9 +498,19 @@ class ClassificationInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
+        if not self._parent:
+            raise LabelRowError(
+                "Cannot get annotation for a classification instance that is not assigned to a label row."
+            )
+
         if isinstance(frame, str):
-            frame = self._parent.get_frame_number(frame)
-        return self.Annotation(self, frame)
+            frame_num = self._parent.get_frame_number(frame)
+            if frame_num is None:
+                raise LabelRowError(f"Image hash {frame} is not present in the label row.")
+        else:
+            frame_num = frame
+
+        return self.Annotation(self, frame_num)
 
     def remove_from_frames(self, frames: Frames) -> None:
         frame_list = frames_class_to_frames_list(frames)
@@ -1287,8 +1297,13 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
         if isinstance(frame, str):
-            frame = self.get_frame_number(frame)
-        return self.FrameView(self, self._label_row_read_only_data, frame)
+            frame_num = self.get_frame_number(frame)
+            if frame_num is None:
+                raise LabelRowError(f"Image hash {frame} not found in the label row")
+        else:
+            frame_num = frame
+
+        return self.FrameView(self, self._label_row_read_only_data, frame_num)
 
     def get_frame_views(self) -> List[FrameView]:
         """
@@ -2564,9 +2579,17 @@ class ObjectInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
+        if not self._parent:
+            raise LabelRowError("Cannot get annotation for an object instance that is not assigned to a label row.")
+
         if isinstance(frame, str):
-            frame = self._parent.get_frame_number(frame)
-        return self.Annotation(self, frame)
+            frame_num = self._parent.get_frame_number(frame)
+            if frame_num is None:
+                raise LabelRowError(f"Image hash {frame} is not present in the label row.")
+        else:
+            frame_num = frame
+
+        return self.Annotation(self, frame_num)
 
     def copy(self) -> ObjectInstance:
         """
