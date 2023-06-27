@@ -1,8 +1,9 @@
 from typing import Any, Dict, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from pydantic.generics import GenericModel
 
+from encord.exceptions import EncordException
 from encord.objects.utils import _snake_to_camel
 from encord.orm.base_dto.base_dto_interface import BaseDTOInterface, T
 
@@ -15,7 +16,10 @@ class BaseDTO(BaseDTOInterface, BaseModel):
 
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
-        return cls.parse_obj(d)  # type: ignore[attr-defined]
+        try:
+            return cls.parse_obj(d)  # type: ignore[attr-defined]
+        except ValidationError as e:
+            raise EncordException(message=str(e)) from e
 
     def to_dict(self) -> Dict[str, Any]:
         return self.dict(by_alias=True)  # type: ignore[attr-defined]
@@ -32,7 +36,10 @@ class GenericBaseDTO(BaseDTOInterface, GenericModel):
 
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
-        return cls.parse_obj(d)  # type: ignore[attr-defined]
+        try:
+            return cls.parse_obj(d)  # type: ignore[attr-defined]
+        except ValidationError as e:
+            raise EncordException(message=str(e)) from e
 
     def to_dict(self) -> Dict[str, Any]:
         return self.dict(by_alias=True)  # type: ignore[attr-defined]
