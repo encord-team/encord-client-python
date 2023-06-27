@@ -88,9 +88,9 @@ class Querier:
         if issubclass(object_type, Formatter):
             return object_type.from_dict(item)
         elif dataclasses.is_dataclass(object_type):
-            return object_type(**item)
+            return object_type(**item)  # type: ignore
         else:
-            return object_type(item)
+            return object_type(item)  # type: ignore
 
     def basic_delete(self, db_object_type: Type[T], uid=None):
         """Single DB object getter."""
