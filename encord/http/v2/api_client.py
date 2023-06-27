@@ -9,13 +9,14 @@ from requests.exceptions import JSONDecodeError
 
 from encord._version import __version__ as encord_version
 from encord.configs import UserConfig
-from encord.exceptions import RequestException
+from encord.exceptions import RequestException, UnknownException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     HEADER_USER_AGENT,
     RequestContext,
 )
 from encord.http.utils import create_new_session
+from encord.http.v2.error_utils import handle_error_response
 from encord.http.v2.request_signer import sign_request
 from encord.orm.base_dto import BaseDTO
 
@@ -86,6 +87,6 @@ class ApiClient:
     def _handle_error(response: Response, context: RequestContext):
         try:
             description = response.json()
-            raise RequestException(message=description["message"], context=context)
+            handle_error_response(response.status_code, context=context, message=description["message"])
         except JSONDecodeError as e:
-            raise RequestException(message="Unexpected server response", context=context) from e
+            raise UnknownException(message="Unexpected server response", context=context) from e
