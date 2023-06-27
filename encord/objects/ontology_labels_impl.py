@@ -498,12 +498,14 @@ class ClassificationInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
-        if not self._parent:
-            raise LabelRowError(
-                "Cannot get annotation for a classification instance that is not assigned to a label row."
-            )
-
         if isinstance(frame, str):
+            # TODO: this check should be consistent for both string and integer frames,
+            #       but currently it is not possible due to the parsing logic
+            if not self._parent:
+                raise LabelRowError(
+                    "Cannot get annotation for a classification instance that is not assigned to a label row."
+                )
+
             frame_num = self._parent.get_frame_number(frame)
             if frame_num is None:
                 raise LabelRowError(f"Image hash {frame} is not present in the label row.")
@@ -2579,10 +2581,13 @@ class ObjectInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
-        if not self._parent:
-            raise LabelRowError("Cannot get annotation for an object instance that is not assigned to a label row.")
 
         if isinstance(frame, str):
+            # TODO: this check should be consistent for both string and integer frames,
+            #       but currently it is not possible due to the parsing logic
+            if not self._parent:
+                raise LabelRowError("Cannot get annotation for an object instance that is not assigned to a label row.")
+
             frame_num = self._parent.get_frame_number(frame)
             if frame_num is None:
                 raise LabelRowError(f"Image hash {frame} is not present in the label row.")
