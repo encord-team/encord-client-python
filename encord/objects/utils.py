@@ -20,8 +20,8 @@ def _lower_snake_case(s: str):
 
 
 def _snake_to_camel(snake_case_str: str) -> str:
-    components = snake_case_str.split("_")
-    return components[0].lower() + "".join(x.title() for x in components[1:])
+    camel = re.sub("([0-9A-Za-z])_(?=[0-9A-Z])", lambda m: m.group(1), snake_case_str.title())
+    return re.sub("(^_*[A-Z])", lambda m: m.group(1).lower(), camel)
 
 
 def check_type(obj: Any, type_: Optional[Type[Any]]) -> None:
