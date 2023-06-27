@@ -1,4 +1,5 @@
 import platform
+from pathlib import Path
 from typing import Optional, Type, TypeVar
 from urllib.parse import urljoin
 
@@ -24,7 +25,8 @@ T = TypeVar("T")
 class ApiClient:
     def __init__(self, config: UserConfig):
         self._config = config
-        self._base_url = urljoin(self._config.domain, "v2/public/")
+        self._domain = self._config.domain
+        self._base_path = Path("v2/public/")
 
     @staticmethod
     def _exception_context_from_response(response: Response) -> RequestContext:
@@ -43,6 +45,9 @@ class ApiClient:
     def _user_agent():
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
+    def _bulid_url(self, path: Path) -> str:
+        return urljoin(self._domain, str(self._base_path / path))
+
     def _headers(self):
         return {
             "Accept": "application/json",
@@ -51,10 +56,10 @@ class ApiClient:
             HEADER_USER_AGENT: self._user_agent(),
         }
 
-    def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T]) -> T:
+    def get(self, path: Path, params: Optional[BaseDTO], result_type: Type[T]) -> T:
         params_dict = params.to_dict() if params is not None else None
         req = requests.Request(
-            method="GET", url=urljoin(self._base_url, path), headers=self._headers(), params=params_dict
+            method="GET", url=self._bulid_url(path), headers=self._headers(), params=params_dict
         ).prepare()
 
         req = sign_request(req, self._config.public_key_hex, self._config.private_key)

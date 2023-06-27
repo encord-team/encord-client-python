@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
@@ -999,7 +1000,7 @@ class Project:
 
         while True:
             page = self._client_v2.get(
-                "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
+                Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
             )
 
             for result in page.results:
