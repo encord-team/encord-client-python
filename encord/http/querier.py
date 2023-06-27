@@ -159,7 +159,7 @@ class Querier:
         except Exception:
             return RequestContext()
 
-    def _request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
+    def _request(self, method: QueryMethods, db_object_type: Type[T], uid, timeout, payload=None):
         request = Request(method, db_object_type, uid, timeout, self._config.connect_timeout, payload)
 
         request.headers = self._config.define_headers(request.data)
@@ -174,7 +174,7 @@ class Querier:
             logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)
 
         req = requests.Request(
-            method=request.http_method,
+            method=str(request.http_method),
             url=self._config.endpoint,
             headers=request.headers,
             data=request.data,
