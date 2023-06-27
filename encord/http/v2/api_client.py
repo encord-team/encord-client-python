@@ -9,7 +9,7 @@ from requests.exceptions import JSONDecodeError
 
 from encord._version import __version__ as encord_version
 from encord.configs import UserConfig
-from encord.exceptions import RequestException, UnknownException
+from encord.exceptions import RequestException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     HEADER_USER_AGENT,
@@ -89,4 +89,4 @@ class ApiClient:
             description = response.json()
             handle_error_response(response.status_code, context=context, message=description["message"])
         except JSONDecodeError as e:
-            raise UnknownException(message="Unexpected server response", context=context) from e
+            handle_error_response(response.status_code, context=context)
