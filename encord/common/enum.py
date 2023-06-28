@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Optional, cast
 
 
 class StringEnum(Enum):
@@ -15,4 +15,4 @@ class StringEnum(Enum):
     @classmethod
     def from_string(cls, value: str) -> Optional[StringEnum]:
         # pylint: disable-next=no-member
-        return cls._value2member_map_.get(value)
+        return cast(StringEnum, cls._value2member_map_.get(value))

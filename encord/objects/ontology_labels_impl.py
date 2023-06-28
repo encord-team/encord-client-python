@@ -499,8 +499,20 @@ class ClassificationInstance:
                 Defaults to the first frame.
         """
         if isinstance(frame, str):
-            frame = self._parent.get_frame_number(frame)
-        return self.Annotation(self, frame)
+            # TODO: this check should be consistent for both string and integer frames,
+            #       but currently it is not possible due to the parsing logic
+            if not self._parent:
+                raise LabelRowError(
+                    "Cannot get annotation for a classification instance that is not assigned to a label row."
+                )
+
+            frame_num = self._parent.get_frame_number(frame)
+            if frame_num is None:
+                raise LabelRowError(f"Image hash {frame} is not present in the label row.")
+        else:
+            frame_num = frame
+
+        return self.Annotation(self, frame_num)
 
     def remove_from_frames(self, frames: Frames) -> None:
         frame_list = frames_class_to_frames_list(frames)
@@ -528,7 +540,7 @@ class ClassificationInstance:
 
     def set_answer(
         self,
-        answer: Union[str, Option, Iterable[Option]],
+        answer: Union[str, Option, Sequence[Option]],
         attribute: Optional[Attribute] = None,
         overwrite: bool = False,
     ) -> None:
@@ -779,7 +791,7 @@ class ClassificationInstance:
             if "lastEditedAt" in d:
                 last_edited_at = parse(d["lastEditedAt"])
             else:
-                last_edited_at = None
+                last_edited_at = datetime.now()
 
             return ClassificationInstance.FrameData(
                 created_at=parse(d["createdAt"]),
@@ -1287,8 +1299,13 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
         if isinstance(frame, str):
-            frame = self.get_frame_number(frame)
-        return self.FrameView(self, self._label_row_read_only_data, frame)
+            frame_num = self.get_frame_number(frame)
+            if frame_num is None:
+                raise LabelRowError(f"Image hash {frame} not found in the label row")
+        else:
+            frame_num = frame
+
+        return self.FrameView(self, self._label_row_read_only_data, frame_num)
 
     def get_frame_views(self) -> List[FrameView]:
         """
@@ -1840,7 +1857,7 @@ class LabelRowV2:
 
         data_type = self._label_row_read_only_data.data_type
         if data_type == DataType.IMG_GROUP:
-            data_sequence = str(frame_level_data.frame_number)
+            data_sequence: Union[str, int] = str(frame_level_data.frame_number)
         elif data_type in (DataType.VIDEO, DataType.DICOM, DataType.IMAGE):
             data_sequence = frame_level_data.frame_number
         else:
@@ -2564,9 +2581,20 @@ class ObjectInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
+
         if isinstance(frame, str):
-            frame = self._parent.get_frame_number(frame)
-        return self.Annotation(self, frame)
+            # TODO: this check should be consistent for both string and integer frames,
+            #       but currently it is not possible due to the parsing logic
+            if not self._parent:
+                raise LabelRowError("Cannot get annotation for an object instance that is not assigned to a label row.")
+
+            frame_num = self._parent.get_frame_number(frame)
+            if frame_num is None:
+                raise LabelRowError(f"Image hash {frame} is not present in the label row.")
+        else:
+            frame_num = frame
+
+        return self.Annotation(self, frame_num)
 
     def copy(self) -> ObjectInstance:
         """
@@ -2804,7 +2832,11 @@ class ObjectInstance:
         # Probably the above can be flattened out into this class.
 
     def _set_answer_unsafe(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, track_hash: str, ranges: Ranges
+        self,
+        answer: Union[str, Option, Iterable[Option]],
+        attribute: Attribute,
+        track_hash: str,
+        ranges: Optional[Ranges],
     ) -> None:
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)

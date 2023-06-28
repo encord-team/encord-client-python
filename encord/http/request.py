@@ -26,7 +26,7 @@ class Request(object):
 
     def __init__(
         self,
-        query_method,
+        query_method: QueryMethods,
         db_object_type,
         uid,
         timeout,
@@ -37,7 +37,7 @@ class Request(object):
         self.data: str = json.dumps(
             {
                 "query_type": db_object_type.__name__.lower(),
-                "query_method": query_method,
+                "query_method": str(query_method),
                 "values": {
                     "uid": uid,
                     "payload": payload,

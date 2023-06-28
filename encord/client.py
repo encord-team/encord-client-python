@@ -44,7 +44,7 @@ import uuid
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union, cast
 
 import requests
 
@@ -53,6 +53,7 @@ from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import *
+from encord.exceptions import EncordException
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
@@ -1100,20 +1101,12 @@ class EncordClientProject(EncordClient):
                     }
                 )
 
-        if isinstance(device, Device):
-            device = device.value
-
-        if device is None or not Device.has_value(device):  # Backward compatibility with string options
-            raise encord.exceptions.EncordException(
-                message="You must pass a device from the `from encord.constants.model.Device` Enum to run inference."
-            )
-
         inference_params = ModelInferenceParams(
             {
                 "files": files,
                 "conf_thresh": conf_thresh,
                 "iou_thresh": iou_thresh,
-                "device": device,
+                "device": _device_to_string(device),
                 "detection_frame_range": detection_frame_range,
                 "allocation_enabled": allocation_enabled,
                 "data_hashes": data_hashes,
@@ -1158,21 +1151,13 @@ class EncordClientProject(EncordClient):
                 message="You must pass weights from the `encord.constants.model_weights` module to train a model."
             )
 
-        if isinstance(device, Device):
-            device = device.value
-
-        if device is None or not Device.has_value(device):  # Backward compatibility with string options
-            raise encord.exceptions.EncordException(
-                message="You must pass a device from the `from encord.constants.model.Device` Enum to train a model."
-            )
-
         training_params = ModelTrainingParams(
             {
                 "label_rows": label_rows,
                 "epochs": epochs,
                 "batch_size": batch_size,
                 "weights": weights,
-                "device": device,
+                "device": _device_to_string(device),
             }
         )
 
@@ -1318,6 +1303,15 @@ class EncordClientProject(EncordClient):
             label_hashes,
             payload=LabelWorkflowGraphNodePayload({"action": WorkflowAction.COMPLETE.value}),
         )
+
+
+def _device_to_string(device: Device) -> str:
+    if not isinstance(device, Device):
+        if device is None or not Device.has_value(device):  # Backward compatibility with string options
+            raise EncordException(message="You must pass a device from the `from encord.constants.model.Device` enum.")
+        return cast(str, device)
+
+    return device.value
 
 
 CordClientProject = EncordClientProject
