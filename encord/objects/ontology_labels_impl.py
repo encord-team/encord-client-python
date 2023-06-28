@@ -19,6 +19,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 from uuid import uuid4
 
@@ -42,14 +43,14 @@ from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
     OntologyElement,
-    OntologyElementType,
     Option,
     RadioAttribute,
     Shape,
     TextAttribute,
     _add_attribute,
     _get_attribute_by_hash,
-    _get_attributes_by_title,
+    _get_element_by_hash,
+    _get_elements_by_title,
     _get_option_by_hash,
     _handle_wrong_number_of_found_items,
     attribute_from_dict,
@@ -90,8 +91,8 @@ from encord.objects.utils import (
     _lower_snake_case,
     check_email,
     check_type,
+    checked_cast,
     does_type_match,
-    filter_by_type,
     short_uuid_str,
 )
 from encord.orm.formatter import Formatter
@@ -103,6 +104,9 @@ from encord.orm.label_row import (
 )
 
 log = logging.getLogger(__name__)
+
+
+OntologyElementT = TypeVar("OntologyElementT", bound=OntologyElement)
 
 
 @dataclass
@@ -125,8 +129,8 @@ class Object:
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
+        type_: Optional[OntologyElementT] = None,
+    ) -> OntologyElementT:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -136,7 +140,7 @@ class Object:
             feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
             type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
         """
-        found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
+        found_item = _get_element_by_hash(feature_node_hash, self.attributes)
         if found_item is None:
             raise OntologyError("Item not found.")
         check_type(found_item, type_)
@@ -145,8 +149,8 @@ class Object:
     def get_child_by_title(
         self,
         title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> OntologyElementT:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -163,8 +167,8 @@ class Object:
     def get_children_by_title(
         self,
         title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> List[OntologyElementT]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -173,8 +177,7 @@ class Object:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
-        found_items = _get_attributes_by_title(title, self.attributes)
-        return filter_by_type(found_items, type_)
+        return _get_elements_by_title(title, self.attributes, type_=type_)
 
     @classmethod
     def from_dict(cls, d: dict) -> Object:
@@ -265,8 +268,8 @@ class Classification:
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
+        type_: Optional[OntologyElementT] = None,
+    ) -> OntologyElementT:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -276,7 +279,7 @@ class Classification:
             feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
             type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
         """
-        found_item = _get_attribute_by_hash(feature_node_hash, self.attributes)
+        found_item = _get_element_by_hash(feature_node_hash, self.attributes)
         if found_item is None:
             raise OntologyError("Item not found.")
         check_type(found_item, type_)
@@ -285,8 +288,8 @@ class Classification:
     def get_child_by_title(
         self,
         title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> OntologyElementT:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -303,8 +306,8 @@ class Classification:
     def get_children_by_title(
         self,
         title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> List[OntologyElementT]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -313,8 +316,7 @@ class Classification:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
-        found_items = _get_attributes_by_title(title, self.attributes)
-        return filter_by_type(found_items, type_)
+        return _get_elements_by_title(title, self.attributes, type_=type_)
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
@@ -1925,7 +1927,7 @@ class LabelRowV2:
         object_instance_annotation = object_.get_annotation(frame)
         coordinates = object_instance_annotation.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
-        ontology_object = self._ontology.structure.get_child_by_hash(ontology_hash)
+        ontology_object = self._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
 
         ret["name"] = ontology_object.name
         ret["color"] = ontology_object.color
@@ -1988,9 +1990,11 @@ class LabelRowV2:
 
         annotation = classification.get_annotation(frame)
         classification_feature_hash = classification.ontology_item.feature_node_hash
-        ontology_classification = self._ontology.structure.get_child_by_hash(classification_feature_hash)
+        ontology_classification = self._ontology.structure.get_child_by_hash(
+            classification_feature_hash, type_=Classification
+        )
         attribute_hash = classification.ontology_item.attributes[0].feature_node_hash
-        ontology_attribute = self._ontology.structure.get_child_by_hash(attribute_hash)
+        ontology_attribute = self._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
 
         ret["name"] = ontology_attribute.name
         ret["value"] = _lower_snake_case(ontology_attribute.name)
@@ -2172,7 +2176,7 @@ class LabelRowV2:
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
 
-        label_class = ontology.get_child_by_hash(feature_hash)
+        label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
         coordinates = self._get_coordinates(frame_object_label)
@@ -2247,7 +2251,7 @@ class LabelRowV2:
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
 
-        label_class = self._ontology.structure.get_child_by_hash(feature_hash)
+        label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
@@ -3098,11 +3102,13 @@ class OntologyStructure:
     objects: List[Object] = field(default_factory=list)
     classifications: List[Classification] = field(default_factory=list)
 
+    OntologyElementTX = TypeVar("OntologyElementTX", bound=Union[OntologyElement, Object, Classification])
+
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
+        type_: Optional[Type[OntologyElementTX]] = None,
+    ) -> OntologyElementTX:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -3114,29 +3120,25 @@ class OntologyStructure:
         """
         for object_ in self.objects:
             if object_.feature_node_hash == feature_node_hash:
-                check_type(object_, type_)
-                return object_
-            found_item = _get_attribute_by_hash(feature_node_hash, object_.attributes)
+                return checked_cast(object_, type_)
+            found_item = _get_element_by_hash(feature_node_hash, object_.attributes)
             if found_item is not None:
-                check_type(found_item, type_)
-                return found_item
+                return checked_cast(found_item, type_)
 
         for classification in self.classifications:
             if classification.feature_node_hash == feature_node_hash:
-                check_type(classification, type_)
-                return classification
-            found_item = _get_attribute_by_hash(feature_node_hash, classification.attributes)
+                return checked_cast(classification, type_)
+            found_item = _get_element_by_hash(feature_node_hash, classification.attributes)
             if found_item is not None:
-                check_type(found_item, type_)
-                return found_item
+                return checked_cast(found_item, type_)
 
-        raise OntologyError("Item not found.")
+        raise OntologyError(f"Item not found: Failed to find item with hash {feature_node_hash} in the ontology.")
 
     def get_child_by_title(
         self,
         title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> OntologyElementT:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -3153,8 +3155,8 @@ class OntologyStructure:
     def get_children_by_title(
         self,
         title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> List[OntologyElementT]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -3163,22 +3165,18 @@ class OntologyStructure:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
-        ret: List[OntologyElement] = []
+        ret: List[OntologyElementT] = []
         for object_ in self.objects:
-            if object_.name == title:
-                if does_type_match(object_, type_):
-                    ret.append(object_)
-            found_items = _get_attributes_by_title(title, object_.attributes)
-            filtered_items = filter_by_type(found_items, type_)
-            ret.extend(filtered_items)
+            if object_.name == title and does_type_match(object_, type_):
+                ret.append(cast(OntologyElementT, object_))
+            found_items = _get_elements_by_title(title, object_.attributes, type_=type_)
+            ret.extend(found_items)
 
         for classification in self.classifications:
-            if classification.attributes[0].name == title:
-                if does_type_match(classification, type_):
-                    ret.append(classification)
-            found_items = _get_attributes_by_title(title, classification.attributes)
-            filtered_items = filter_by_type(found_items, type_)
-            ret.extend(filtered_items)
+            if classification.attributes[0].name == title and does_type_match(classification, type_):
+                ret.append(cast(OntologyElementT, classification))
+            found_items = _get_elements_by_title(title, classification.attributes, type_=type_)
+            ret.extend(found_items)
 
         return ret
 

@@ -16,6 +16,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 from encord.common.enum import StringEnum
@@ -23,7 +24,8 @@ from encord.exceptions import OntologyError
 from encord.objects.utils import (
     _decode_nested_uid,
     check_type,
-    filter_by_type,
+    checked_cast,
+    does_type_match,
     short_uuid_str,
 )
 
@@ -47,15 +49,82 @@ class Shape(StringEnum):
 
 
 OptionType = TypeVar("OptionType", bound="Option")
+OntologyElementT = TypeVar("OntologyElementT", bound="OntologyElement")
 
 
-class Attribute(ABC, Generic[OptionType]):
+@dataclass
+class OntologyElement(ABC):
+    uid: NestedID
+    feature_node_hash: str
+
+    @property
+    def children(self) -> Sequence[OntologyElement]:
+        return []
+
+    @property
+    @abstractmethod
+    def title(self) -> str:
+        raise NotImplementedError("This method is not implemented for this class")
+
+    def get_child_by_hash(
+        self,
+        feature_node_hash: str,
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> OntologyElementT:
+        """
+        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
+        an invalid state. Throws if nothing is found or if the type is not matched.
+
+        Args:
+            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+        """
+        found_item = _get_element_by_hash(feature_node_hash, self.children)
+        if found_item is None:
+            raise OntologyError("Item not found.")
+        check_type(found_item, type_)
+        return found_item
+
+    def get_children_by_title(
+        self,
+        title: str,
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> List[OntologyElementT]:
+        """
+        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
+        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
+
+        Args:
+            title: The exact title of the child node to search for in the ontology.
+            type_: The expected type of the item. Only nodes that match this type will be returned.
+        """
+        return _get_elements_by_title(title, self.children, type_=type_)
+
+    def get_child_by_title(
+        self,
+        title: str,
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> OntologyElementT:
+        """
+        Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
+        than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
+        will be thrown as well.
+
+        Args:
+            title: The exact title of the child node to search for in the ontology.
+            type_: The expected type of the child node. Only a node that matches this type will be returned.
+        """
+        found_items = self.get_children_by_title(title, type_)
+        _handle_wrong_number_of_found_items(found_items, title, type_)
+        return found_items[0]
+
+
+class Attribute(OntologyElement, Generic[OptionType]):
     """
     Base class for shared Attribute fields
     """
 
-    uid: NestedID
-    feature_node_hash: str
     name: str
     required: bool
     dynamic: bool
@@ -65,8 +134,7 @@ class Attribute(ABC, Generic[OptionType]):
     """
 
     def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, dynamic: bool):
-        self.uid = uid
-        self.feature_node_hash = feature_node_hash
+        super().__init__(uid=uid, feature_node_hash=feature_node_hash)
         self.name = name
         self.required = required
         self.dynamic = dynamic
@@ -74,6 +142,10 @@ class Attribute(ABC, Generic[OptionType]):
     @property
     def options(self) -> Sequence[OptionType]:
         return []
+
+    @property
+    def title(self) -> str:
+        return self.name
 
     @staticmethod
     @abstractmethod
@@ -89,41 +161,6 @@ class Attribute(ABC, Generic[OptionType]):
     def _encode_options(self) -> Optional[List[dict]]:
         pass
 
-    @abstractmethod
-    def get_child_by_hash(
-        self,
-        feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
-        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
-        an invalid state. Throws if nothing is found or if the type is not matched.
-
-        Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
-            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
-        """
-        raise NotImplementedError("This method is not implemented for this class")
-
-    def get_child_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
-        than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
-        will be thrown as well.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the child node. Only a node that matches this type will be returned.
-        """
-        found_items = self.get_children_by_title(title, type_)
-        _handle_wrong_number_of_found_items(found_items, title, type_)
-        return found_items[0]
-
     def to_dict(self) -> Dict[str, Any]:
         ret = self._encode_base()
 
@@ -132,22 +169,6 @@ class Attribute(ABC, Generic[OptionType]):
             ret["options"] = options
 
         return ret
-
-    @abstractmethod
-    def get_children_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
-        """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
-        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the item. Only nodes that match this type will be returned.
-        """
-        raise NotImplementedError("This method is not implemented for this class")
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> Attribute:
@@ -225,6 +246,10 @@ class RadioAttribute(Attribute["NestableOption"]):
     def options(self) -> Sequence[NestableOption]:
         return self._options
 
+    @property
+    def children(self) -> Sequence[OntologyElement]:
+        return self._options
+
     @staticmethod
     def get_property_type() -> PropertyType:
         return PropertyType.RADIO
@@ -237,42 +262,6 @@ class RadioAttribute(Attribute["NestableOption"]):
         if len(self._options) == 0:
             return None
         return [option.to_dict() for option in self._options]
-
-    def get_child_by_hash(
-        self,
-        feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
-        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
-        an invalid state. Throws if nothing is found or if the type is not matched.
-
-        Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
-            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
-        """
-        found_item = _get_option_by_hash(feature_node_hash, self._options)
-        if found_item is None:
-            raise OntologyError("Item not found.")
-        check_type(found_item, type_)
-        return found_item
-
-    def get_children_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
-        """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
-        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the item. Only nodes that match this type will be returned.
-        """
-        found_items = _get_options_by_title(title, self.options)
-        return filter_by_type(found_items, type_)
 
     def add_option(
         self,
@@ -332,37 +321,9 @@ class ChecklistAttribute(Attribute["FlatOption"]):
     def options(self) -> Sequence[FlatOption]:
         return self._options
 
-    def get_child_by_hash(
-        self,
-        feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
-        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
-        an invalid state. Throws if nothing is found or if the type is not matched.
-
-        Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
-            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
-        """
-        found_item = _get_option_by_hash(feature_node_hash, self._options)
-        if found_item is None:
-            raise OntologyError("Item not found.")
-        check_type(found_item, type_)
-        return found_item
-
-    def get_children_by_title(self, title: str, type_: Optional[OntologyElementType] = None) -> List[OntologyElement]:
-        """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
-        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the item. Only nodes that match this type will be returned.
-        """
-        found_items = _get_options_by_title(title, self.options)
-        return filter_by_type(found_items, type_)
+    @property
+    def children(self) -> Sequence[OntologyElement]:
+        return self._options
 
     def add_option(
         self,
@@ -404,41 +365,6 @@ class TextAttribute(Attribute["FlatOption"]):
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         return None
 
-    def get_child_by_hash(
-        self,
-        feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
-        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
-        an invalid state. Throws if nothing is found or if the type is not matched.
-
-        For TextAttributes this will always throw as they have no children.
-
-        Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
-            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
-        """
-        raise OntologyError("No nested options available for text attributes.")
-
-    def get_children_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
-        """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
-        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
-
-        For TextAttributes this will always return an empty list.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the item. Only nodes that match this type will be returned.
-        """
-        return []
-
 
 """
 This class is currently in BETA. Its API might change in future minor version releases. 
@@ -464,65 +390,25 @@ def attributes_to_list_dict(attributes: List[Attribute]) -> list:
 
 
 @dataclass
-class Option(ABC):
+class Option(OntologyElement):
     """
     Base class for shared Option fields
     """
 
-    uid: NestedID
-    feature_node_hash: str
     label: str
     value: str
 
+    @property
+    def title(self) -> str:
+        return self.label
+
     @abstractmethod
     def is_nestable(self) -> bool:
-        pass
-
-    @abstractmethod
-    def get_child_by_hash(
-        self,
-        feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
-        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
-        an invalid state. Throws if nothing is found or if the type is not matched.
-
-        Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
-            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
-        """
         raise NotImplementedError("This method is not implemented for this class")
 
-    def get_child_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
-        than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
-        will be thrown as well.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the child node. Only a node that matches this type will be returned.
-        """
-        found_items = self.get_children_by_title(title, type_)
-        _handle_wrong_number_of_found_items(found_items, title, type_)
-        return found_items[0]
-
+    @property
     @abstractmethod
-    def get_children_by_title(self, title: str, type_: Optional[OntologyElementType] = None) -> List[OntologyElement]:
-        """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
-        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the item. Only nodes that match this type will be returned.
-        """
+    def attributes(self) -> List[Attribute]:
         raise NotImplementedError("This method is not implemented for this class")
 
     def to_dict(self) -> Dict[str, Any]:
@@ -561,39 +447,8 @@ class FlatOption(Option):
     def is_nestable(self) -> bool:
         return False
 
-    def get_child_by_hash(
-        self,
-        feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
-        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
-        an invalid state. Throws if nothing is found or if the type is not matched.
-
-        For FlatOptions this will always throw as they have no children.
-
-        Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
-            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
-        """
-        raise OntologyError("No nested attributes for flat options.")
-
-    def get_children_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
-        """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
-        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
-
-        For FlatOptions this will always return an empty list.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the item. Only nodes that match this type will be returned.
-        """
+    @property
+    def attributes(self) -> List[Attribute]:
         return []
 
     @classmethod
@@ -615,41 +470,13 @@ class NestableOption(Option):
     def is_nestable(self) -> bool:
         return True
 
-    def get_child_by_hash(
-        self,
-        feature_node_hash: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> OntologyElement:
-        """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
-        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
-        an invalid state. Throws if nothing is found or if the type is not matched.
+    @property
+    def attributes(self) -> List[Attribute]:
+        return self.nested_options
 
-        Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
-            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
-        """
-        found_item = _get_attribute_by_hash(feature_node_hash, self.nested_options)
-        if found_item is None:
-            raise OntologyError("Item not found.")
-        check_type(found_item, type_)
-        return found_item
-
-    def get_children_by_title(
-        self,
-        title: str,
-        type_: Optional[OntologyElementType] = None,
-    ) -> List[OntologyElement]:
-        """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
-        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
-
-        Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the item. Only nodes that match this type will be returned.
-        """
-        found_items = _get_attributes_by_title(title, self.nested_options)
-        return filter_by_type(found_items, type_)
+    @property
+    def children(self) -> Sequence[OntologyElement]:
+        return self.nested_options
 
     def _encode_nested_options(self) -> list:
         return attributes_to_list_dict(self.nested_options)
@@ -761,56 +588,44 @@ def _add_option(
     return option
 
 
-def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Optional[OntologyElement]:
-    for option_ in options:
-        if option_.feature_node_hash == feature_node_hash:
-            return option_
+def _get_element_by_hash(
+    feature_node_hash: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyElementT]] = None
+) -> Optional[OntologyElementT]:
+    for element in elements:
+        if element.feature_node_hash == feature_node_hash:
+            return checked_cast(element, type_)
 
-        if option_.is_nestable():
-            found_item = _get_attribute_by_hash(feature_node_hash, option_.nested_options)
-            if found_item is not None:
-                return found_item
-
-    return None
-
-
-def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]) -> Optional[OntologyElement]:
-    for attribute in attributes:
-        if attribute.feature_node_hash == feature_node_hash:
-            return attribute
-
-        found_item = _get_option_by_hash(feature_node_hash, attribute.options)
+        found_item = _get_element_by_hash(feature_node_hash, element.children, type_=type_)
         if found_item is not None:
             return found_item
+
     return None
 
 
-def _get_options_by_title(title: str, options: Iterable[Option]) -> List[OntologyElement]:
-    ret: List[OntologyElement] = []
-    for option_ in options:
-        if option_.label == title:
-            ret.append(option_)
+def _get_elements_by_title(
+    title: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyElementT]] = None
+) -> List[OntologyElementT]:
+    res: List[OntologyElementT] = []
+    for element in elements:
+        if element.title == title and does_type_match(element, type_):
+            res.append(cast(OntologyElementT, element))
 
-        if option_.is_nestable():
-            found_items = _get_attributes_by_title(title, option_.nested_options)
-            ret.extend(found_items)
+        found_items = _get_elements_by_title(title, element.children, type_=type_)
+        res.extend(found_items)
 
-    return ret
+    return res
 
 
-def _get_attributes_by_title(title: str, attributes: List[Attribute]) -> List[OntologyElement]:
-    ret: List[OntologyElement] = []
-    for attribute in attributes:
-        if attribute.name == title:
-            ret.append(attribute)
+def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Optional[Option]:
+    return _get_element_by_hash(feature_node_hash, options, type_=Option)
 
-        found_items = _get_options_by_title(title, attribute.options)
-        ret.extend(found_items)
-    return ret
+
+def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]) -> Optional[Attribute]:
+    return _get_element_by_hash(feature_node_hash, attributes, type_=Attribute)
 
 
 def _handle_wrong_number_of_found_items(
-    found_items: List[OntologyElement],
+    found_items: Sequence[OntologyElement],
     title: str,
     type_: Any,
 ) -> None:
@@ -825,7 +640,6 @@ def _handle_wrong_number_of_found_items(
 
 
 OptionAttribute = Union[RadioAttribute, ChecklistAttribute]
-OntologyElement = Union[Attribute, Option]
 AttributeTypes = Union[
     Type[RadioAttribute],
     Type[ChecklistAttribute],
@@ -833,7 +647,6 @@ AttributeTypes = Union[
     Type[Attribute],
 ]
 OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
-OntologyElementType = Union[AttributeTypes, OptionTypes]
 
 # Two types below are kept for the backwards compatibility
 # Please don't use them, as they are going to be removed in the future versions
