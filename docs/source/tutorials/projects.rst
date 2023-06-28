@@ -173,13 +173,13 @@ To obtain details about your project, you first need to complete the :ref:`authe
 Collaborator session information
 ---------------------------------
 
-Use the :meth:`list_collaborator_sessions() <.EncordUserClient.list_collaborator_sessions>` method on a 'project' object to obtain session information for each collaborator that has worked on the project within a specified range of dates. 
+Use the :meth:`list_collaborator_timers() <.EncordUserClient.list_collaborator_timers>` method on a 'project' object to obtain session information for each collaborator that has worked on the project within a specified range of dates.
 
 .. tabs::
 
     .. tab:: Code
 
-        .. literalinclude:: /code_examples/tutorials/projects/list_collaborator_sessions.py
+        .. literalinclude:: /code_examples/tutorials/projects/list_collaborator_timers.py
             :language: python
 
 Data
