@@ -1,11 +1,19 @@
 import datetime
+from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
 from encord.objects import LabelRowV2
 from encord.ontology import Ontology
+from encord.orm.analytics import (
+    CollaboratorTimer,
+    CollaboratorTimerParams,
+    CollaboratorTimersGroupBy,
+)
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
@@ -30,8 +38,11 @@ class Project:
     Access project related data and manipulate the project.
     """
 
-    def __init__(self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology):
+    def __init__(
+        self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology, client_v2: ApiClient
+    ):
         self._client = client
+        self._client_v2 = client_v2
         self._project_instance = project_instance
         self._ontology = ontology
 
@@ -958,3 +969,44 @@ class Project:
         See the :class:`encord.http.bundle.Bundle` documentation for more details
         """
         return Bundle()
+
+    def list_collaborator_timers(
+        self,
+        after: datetime.datetime,
+        before: Optional[datetime.datetime] = None,
+        group_by_data_unit: bool = True,
+    ) -> Iterable[CollaboratorTimer]:
+        """
+        Provides information about time spent for each collaborator that has worked on the project within a specified
+        range of dates.
+
+        Args:
+             after: the beginning of the period of interest.
+             before: the end of period of interest.
+             group_by_data_unit: if True, time spent by a collaborator for each data unit is provided separately,
+                                 and if False, all time spent in the scope of the project is aggregated together.
+
+        Returns:
+            Iterable[CollaboratorTimer]
+        """
+
+        params = CollaboratorTimerParams(
+            project_hash=self.project_hash,
+            after=after,
+            before=before,
+            group_by=CollaboratorTimersGroupBy.DATA_UNIT if group_by_data_unit else CollaboratorTimersGroupBy.PROJECT,
+            page_size=100,
+        )
+
+        while True:
+            page = self._client_v2.get(
+                Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
+            )
+
+            for result in page.results:
+                yield result
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
