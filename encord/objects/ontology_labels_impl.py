@@ -490,7 +490,7 @@ class ClassificationInstance:
         if self.is_assigned_to_label_row():
             assert self._parent is not None
             self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-            self._parent._add_to_frame_to_hashes_map(self)
+            self._parent._add_to_frame_to_hashes_map(self, frames_list)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
@@ -1394,7 +1394,8 @@ class LabelRowV2:
         self._objects_map[object_hash] = object_instance
         object_instance._parent = self
 
-        self._add_to_frame_to_hashes_map(object_instance)
+        frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
+        self._add_to_frame_to_hashes_map(object_instance, frames)
 
     def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
         """
@@ -1415,10 +1416,12 @@ class LabelRowV2:
                 "not part of any LabelRowV2."
             )
 
+        frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
+
         classification_hash = classification_instance.classification_hash
         already_present_frame = self._is_classification_already_present(
             classification_instance.ontology_item,
-            _frame_views_to_frame_numbers(classification_instance.get_annotations()),
+            frames,
         )
         if classification_hash in self._classifications_map and not force:
             raise LabelRowError(
@@ -1438,10 +1441,8 @@ class LabelRowV2:
         self._classifications_map[classification_hash] = classification_instance
         classification_instance._parent = self
 
-        self._classifications_to_frames[classification_instance.ontology_item].update(
-            set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
-        )
-        self._add_to_frame_to_hashes_map(classification_instance)
+        self._classifications_to_frames[classification_instance.ontology_item].update(frames)
+        self._add_to_frame_to_hashes_map(classification_instance, frames)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
         """Remove a classification instance from a label row."""
@@ -2024,10 +2025,11 @@ class LabelRowV2:
         for frame in frames:
             present_frames.remove(frame)
 
-    def _add_to_frame_to_hashes_map(self, label_item: Union[ObjectInstance, ClassificationInstance]) -> None:
-        """This can be called by the ObjectInstance."""
-        for frame_view in label_item.get_annotations():
-            self.add_to_single_frame_to_hashes_map(label_item, frame_view.frame)
+    def _add_to_frame_to_hashes_map(
+        self, label_item: Union[ObjectInstance, ClassificationInstance], frames: Iterable[int]
+    ) -> None:
+        for frame in frames:
+            self.add_to_single_frame_to_hashes_map(label_item, frame)
 
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
