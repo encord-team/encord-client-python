@@ -54,7 +54,6 @@ OntologyElementT = TypeVar("OntologyElementT", bound="OntologyElement")
 
 @dataclass
 class OntologyElement(ABC):
-    uid: NestedID
     feature_node_hash: str
 
     @property
@@ -120,7 +119,12 @@ class OntologyElement(ABC):
         return found_items[0]
 
 
-class Attribute(OntologyElement, Generic[OptionType]):
+@dataclass
+class OntologyNestedElement(OntologyElement):
+    uid: NestedID
+
+
+class Attribute(OntologyNestedElement, Generic[OptionType]):
     """
     Base class for shared Attribute fields
     """
@@ -390,7 +394,7 @@ def attributes_to_list_dict(attributes: List[Attribute]) -> list:
 
 
 @dataclass
-class Option(OntologyElement):
+class Option(OntologyNestedElement):
     """
     Base class for shared Option fields
     """
@@ -525,7 +529,7 @@ class NestableOption(Option):
 
 
 def __build_identifiers(
-    existent_items: Iterable[OntologyElement],
+    existent_items: Iterable[OntologyNestedElement],
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,
 ) -> Tuple[int, str]:
@@ -583,7 +587,7 @@ def _add_option(
     local_uid, feature_node_hash = __build_identifiers(options, local_uid, feature_node_hash)
     if not value:
         value = re.sub(r"[\s]", "_", label).lower()
-    option = cls(parent_uid + [local_uid], feature_node_hash, label, value)
+    option = cls(uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value)
     options.append(option)
     return option
 
