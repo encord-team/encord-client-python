@@ -549,6 +549,7 @@ def _infer_attribute_from_answer(
                 "Cannot infer the attribute if a list of answers is empty. Please provide the " "attribute explicitly."
             )
 
+        assert isinstance(answer[0], Option)  # Narrowing type here as sequence can contain only Options
         parent_opt = _search_for_parent(answer[0], attributes)
         if parent_opt is None:
             raise LabelRowError(
