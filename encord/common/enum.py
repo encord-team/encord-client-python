@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional, cast
+from typing import Optional, Type, TypeVar, cast
+
+T = TypeVar("T", bound="StringEnum")
 
 
 class StringEnum(Enum):
@@ -13,6 +15,6 @@ class StringEnum(Enum):
         return self.name
 
     @classmethod
-    def from_string(cls, value: str) -> Optional[StringEnum]:
+    def from_string(cls: Type[T], value: str) -> Optional[T]:
         # pylint: disable-next=no-member
-        return cast(StringEnum, cls._value2member_map_.get(value))
+        return cast(T, cls._value2member_map_.get(value))
