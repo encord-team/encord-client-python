@@ -525,7 +525,7 @@ class DataRows(dict, Formatter):
         )
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> DataRow:
+    def from_dict(cls, json_dict: Dict) -> DataRow:  # type: ignore[override]
         return DataRow.from_dict(json_dict)
 
 
