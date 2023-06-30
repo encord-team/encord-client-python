@@ -43,6 +43,7 @@ from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
     OntologyElement,
+    OntologyNestedElement,
     Option,
     RadioAttribute,
     Shape,
@@ -102,9 +103,6 @@ from encord.orm.label_row import (
 )
 
 log = logging.getLogger(__name__)
-
-
-OntologyElementT = TypeVar("OntologyElementT", bound=OntologyElement)
 
 
 @dataclass
@@ -3001,7 +2999,7 @@ AVAILABLE_COLORS = (
 )
 
 
-OntologyElementTX = TypeVar("OntologyElementTX", bound=Union[OntologyElement, Object, Classification])
+OntologyElementT = TypeVar("OntologyElementT", bound=OntologyElement)
 
 
 @dataclass
@@ -3016,8 +3014,8 @@ class OntologyStructure:
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Optional[Type[OntologyElementTX]] = None,
-    ) -> OntologyElementTX:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> OntologyElementT:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -3042,13 +3040,13 @@ class OntologyStructure:
             if found_item is not None:
                 return checked_cast(found_item, type_)
 
-        raise OntologyError(f"Item not found: Failed to find item with hash {feature_node_hash} in the ontology.")
+        raise OntologyError(f"Item not found: can't find an item with a hash {feature_node_hash} in the ontology.")
 
     def get_child_by_title(
         self,
         title: str,
-        type_: Optional[Type[OntologyElementTX]] = None,
-    ) -> OntologyElementTX:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> OntologyElementT:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -3065,8 +3063,8 @@ class OntologyStructure:
     def get_children_by_title(
         self,
         title: str,
-        type_: Optional[Type[OntologyElementTX]] = None,
-    ) -> List[OntologyElementTX]:
+        type_: Optional[Type[OntologyElementT]] = None,
+    ) -> List[OntologyElementT]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -3075,12 +3073,12 @@ class OntologyStructure:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the item. Only nodes that match this type will be returned.
         """
-        ret: List[Union[Object, Classification, OntologyElement]] = []
+        ret: List[OntologyElement] = []
         for object_ in self.objects:
             if object_.title == title and does_type_match(object_, type_):
                 ret.append(object_)
 
-            if type_ is None or issubclass(type_, OntologyElement):
+            if type_ is None or issubclass(type_, OntologyNestedElement):
                 found_items = object_.get_children_by_title(title, type_=type_)
                 ret.extend(found_items)
 
@@ -3088,12 +3086,13 @@ class OntologyStructure:
             if classification.title == title and does_type_match(classification, type_):
                 ret.append(classification)
 
-            if type_ is None or issubclass(type_, OntologyElement):
+            if type_ is None or issubclass(type_, OntologyNestedElement):
                 found_items = classification.get_children_by_title(title, type_=type_)
                 ret.extend(found_items)
 
-        assert type_ is None or all(isinstance(item, type_) for item in ret)
-        return cast(List[OntologyElementTX], ret)
+        # type checks in the code above guarantee the type conformity of the return value
+        # but there is no obvious way to tell that to mypy, so just casting here for now
+        return cast(List[OntologyElementT], ret)
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> OntologyStructure:

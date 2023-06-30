@@ -259,7 +259,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
             answer["featureHash"], self.ontology_attribute.options, type_=NestableOption
         )
         if nestable_option is None:
-            raise ValueError(f"Item not found: can't find and option with a feature hash {answer['featureHash']}")
+            raise ValueError(f"Item not found: can't find an option with a feature hash {answer['featureHash']}")
 
         self.set(nestable_option)
         self.is_manual_annotation = d["manualAnnotation"]
@@ -363,7 +363,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             for feature_node_hash in self._feature_hash_to_answer_map.keys():
                 option = _get_element_by_hash(feature_node_hash, self.ontology_attribute.options, type_=FlatOption)
                 if option is None:
-                    raise RuntimeError(f"Item not found: can't find and option with a feature hash {feature_node_hash}")
+                    raise RuntimeError(f"Item not found: can't find an option with a feature hash {feature_node_hash}")
                 other_answer = checklist_answer.get_option_value(option)
                 self._feature_hash_to_answer_map[feature_node_hash] = other_answer
 
@@ -421,7 +421,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
         for answer in answers:
             flat_option = _get_element_by_hash(answer["featureHash"], self.ontology_attribute.options, type_=FlatOption)
             if flat_option is None:
-                raise ValueError(f"Item not found: can't find an Option with a feature hash {answer['featureHash']}")
+                raise ValueError(f"Item not found: can't find an option with a feature hash {answer['featureHash']}")
 
             self.check_options([flat_option])
 
@@ -513,8 +513,8 @@ def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Op
     return None
 
 
-def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
-    text_attributes: List[Attribute] = list()
+def _search_for_text_attributes(attributes: List[Attribute]) -> List[TextAttribute]:
+    text_attributes: List[TextAttribute] = list()
     for attribute in attributes:
         if isinstance(attribute, TextAttribute):
             text_attributes.append(attribute)

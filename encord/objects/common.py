@@ -49,7 +49,7 @@ class Shape(StringEnum):
 
 
 OptionType = TypeVar("OptionType", bound="Option")
-OntologyElementT = TypeVar("OntologyElementT", bound="OntologyElement")
+OntologyNestedElementT = TypeVar("OntologyNestedElementT", bound="OntologyNestedElement")
 
 
 @dataclass
@@ -68,8 +68,8 @@ class OntologyElement(ABC):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Optional[Type[OntologyElementT]] = None,
-    ) -> OntologyElementT:
+        type_: Optional[Type[OntologyNestedElementT]] = None,
+    ) -> OntologyNestedElementT:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -88,8 +88,8 @@ class OntologyElement(ABC):
     def get_children_by_title(
         self,
         title: str,
-        type_: Optional[Type[OntologyElementT]] = None,
-    ) -> List[OntologyElementT]:
+        type_: Optional[Type[OntologyNestedElementT]] = None,
+    ) -> List[OntologyNestedElementT]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -103,8 +103,8 @@ class OntologyElement(ABC):
     def get_child_by_title(
         self,
         title: str,
-        type_: Optional[Type[OntologyElementT]] = None,
-    ) -> OntologyElementT:
+        type_: Optional[Type[OntologyNestedElementT]] = None,
+    ) -> OntologyNestedElementT:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
@@ -593,8 +593,8 @@ def _add_option(
 
 
 def _get_element_by_hash(
-    feature_node_hash: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyElementT]] = None
-) -> Optional[OntologyElementT]:
+    feature_node_hash: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
+) -> Optional[OntologyNestedElementT]:
     for element in elements:
         if element.feature_node_hash == feature_node_hash:
             return checked_cast(element, type_)
@@ -607,12 +607,12 @@ def _get_element_by_hash(
 
 
 def _get_elements_by_title(
-    title: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyElementT]] = None
-) -> List[OntologyElementT]:
-    res: List[OntologyElementT] = []
+    title: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
+) -> List[OntologyNestedElementT]:
+    res: List[OntologyNestedElementT] = []
     for element in elements:
         if element.title == title and does_type_match(element, type_):
-            res.append(cast(OntologyElementT, element))
+            res.append(cast(OntologyNestedElementT, element))
 
         found_items = _get_elements_by_title(title, element.children, type_=type_)
         res.extend(found_items)
