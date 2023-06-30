@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import (
     Any,
@@ -75,7 +74,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
 
     @property
     def ontology_attribute(self) -> AttributeType:
-        return deepcopy(self._ontology_attribute)
+        return self._ontology_attribute
 
     @ontology_attribute.setter
     def ontology_attribute(self, v: Any) -> NoReturn:
