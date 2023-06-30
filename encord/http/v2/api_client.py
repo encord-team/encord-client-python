@@ -18,9 +18,9 @@ from encord.http.common import (
 from encord.http.utils import create_new_session
 from encord.http.v2.error_utils import handle_error_response
 from encord.http.v2.request_signer import sign_request
-from encord.orm.base_dto import BaseDTO
+from encord.orm.base_dto import BaseDTO, BaseDTOInterface
 
-T = TypeVar("T")
+T = TypeVar("T", bound=BaseDTOInterface)
 
 
 class ApiClient:

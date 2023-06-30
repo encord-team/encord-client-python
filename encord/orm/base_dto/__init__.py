@@ -1,3 +1,5 @@
+from encord.orm.base_dto.base_dto_interface import BaseDTOInterface
+
 try:
     # For Python 3.8 and later
     import importlib.metadata as importlib_metadata
