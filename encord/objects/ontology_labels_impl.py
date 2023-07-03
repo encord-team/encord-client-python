@@ -401,7 +401,7 @@ class ClassificationInstance:
 
     @property
     def ontology_item(self) -> Classification:
-        return deepcopy(self._ontology_classification)
+        return self._ontology_classification
 
     @property
     def classification_name(self) -> str:
@@ -2319,8 +2319,8 @@ class ObjectInstance:
         return self._object_hash
 
     @property
-    def ontology_item(self) -> Any:
-        return deepcopy(self._ontology_object)
+    def ontology_item(self) -> Object:
+        return self._ontology_object
 
     @property
     def feature_hash(self) -> str:
