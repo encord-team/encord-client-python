@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 import re
 import uuid
-from typing import Any, Iterable, List, Optional, Type, TypeVar
+from typing import Any, Iterable, List, Optional, Type, TypeVar, cast
 
 
 def _decode_nested_uid(nested_uid: list) -> str:
@@ -38,6 +38,11 @@ def does_type_match(obj: Any, type_: Optional[Type[Any]]) -> bool:
 
 
 T = TypeVar("T")
+
+
+def checked_cast(obj: Any, type_: Optional[Type[T]]) -> T:
+    check_type(obj, type_)
+    return cast(T, obj)
 
 
 def filter_by_type(objects: Iterable[Any], type_: Optional[Type[T]]) -> List[T]:

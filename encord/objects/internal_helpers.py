@@ -25,7 +25,7 @@ from encord.objects.common import (
     Option,
     RadioAttribute,
     TextAttribute,
-    _get_option_by_hash,
+    _get_element_by_hash,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Ranges, ranges_to_list
@@ -254,7 +254,12 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
             raise ValueError("RadioAnswers must have exactly one answer.")
 
         answer = answers[0]
-        nestable_option = _get_option_by_hash(answer["featureHash"], self.ontology_attribute.options)
+        nestable_option = _get_element_by_hash(
+            answer["featureHash"], self.ontology_attribute.options, type_=NestableOption
+        )
+        if nestable_option is None:
+            raise ValueError(f"Item not found: can't find an option with a feature hash {answer['featureHash']}")
+
         self.set(nestable_option)
         self.is_manual_annotation = d["manualAnnotation"]
 
@@ -355,7 +360,9 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
         else:
             self._answered = True
             for feature_node_hash in self._feature_hash_to_answer_map.keys():
-                option = _get_option_by_hash(feature_node_hash, self.ontology_attribute.options)
+                option = _get_element_by_hash(feature_node_hash, self.ontology_attribute.options, type_=FlatOption)
+                if option is None:
+                    raise RuntimeError(f"Item not found: can't find an option with a feature hash {feature_node_hash}")
                 other_answer = checklist_answer.get_option_value(option)
                 self._feature_hash_to_answer_map[feature_node_hash] = other_answer
 
@@ -411,7 +418,10 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             return
 
         for answer in answers:
-            flat_option = _get_option_by_hash(answer["featureHash"], self.ontology_attribute.options)
+            flat_option = _get_element_by_hash(answer["featureHash"], self.ontology_attribute.options, type_=FlatOption)
+            if flat_option is None:
+                raise ValueError(f"Item not found: can't find an option with a feature hash {answer['featureHash']}")
+
             self.check_options([flat_option])
 
         self.is_manual_annotation = d["manualAnnotation"]
@@ -454,9 +464,8 @@ def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> 
             ret.append(answer)
 
         for option in attribute.options:
-            if option.is_nestable():
-                other_attributes = _get_default_static_answers_from_attributes(option.nested_options)
-                ret.extend(other_attributes)
+            other_attributes = _get_default_static_answers_from_attributes(option.attributes)
+            ret.extend(other_attributes)
 
     return ret
 
@@ -496,22 +505,21 @@ def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Op
         for option in attribute.options:
             if option == passed_option:
                 return attribute
-            if option.is_nestable():
-                attribute_opt = _search_for_parent(passed_option, option.nested_options)
-                if attribute_opt is not None:
-                    return attribute_opt
+
+            attribute_opt = _search_for_parent(passed_option, option.attributes)
+            if attribute_opt is not None:
+                return attribute_opt
     return None
 
 
-def _search_for_text_attributes(attributes: List[Attribute]) -> List[Attribute]:
-    text_attributes: List[Attribute] = list()
+def _search_for_text_attributes(attributes: List[Attribute]) -> List[TextAttribute]:
+    text_attributes: List[TextAttribute] = list()
     for attribute in attributes:
         if isinstance(attribute, TextAttribute):
             text_attributes.append(attribute)
 
         for option in attribute.options:
-            if option.is_nestable():
-                text_attributes.extend(_search_for_text_attributes(option.nested_options))
+            text_attributes.extend(_search_for_text_attributes(option.attributes))
     return text_attributes
 
 
