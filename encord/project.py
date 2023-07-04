@@ -91,7 +91,7 @@ class Project:
         """
         Get the ontology of the project.
 
-        BETA: Prefer using the :class:`encord.objects.ontology_structure.OntologyStructure` class to work with the data.
+        DEPRECATED: Prefer using the :class:`encord.objects.ontology_structure.OntologyStructure` class to work with the data.
 
         .. code::
 

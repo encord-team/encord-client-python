@@ -228,10 +228,6 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
 
 
 class RadioAttribute(Attribute["NestableOption"]):
-    """
-    This class is currently in BETA. Its API might change in future minor version releases.
-    """
-
     _options: List[NestableOption]
 
     def __init__(
@@ -290,10 +286,6 @@ class RadioAttribute(Attribute["NestableOption"]):
 
 
 class ChecklistAttribute(Attribute["FlatOption"]):
-    """
-    This class is currently in BETA. Its API might change in future minor version releases.
-    """
-
     _options: List[FlatOption]
 
     def __init__(
@@ -351,10 +343,6 @@ class ChecklistAttribute(Attribute["FlatOption"]):
 
 
 class TextAttribute(Attribute["FlatOption"]):
-    """
-    This class is currently in BETA. Its API might change in future minor version releases.
-    """
-
     def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, dynamic: bool):
         super().__init__(uid, feature_node_hash, name, required, dynamic)
 
@@ -368,11 +356,6 @@ class TextAttribute(Attribute["FlatOption"]):
 
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         return None
-
-
-"""
-This class is currently in BETA. Its API might change in future minor version releases. 
-"""
 
 
 def _attribute_id_from_json_str(attribute_id: str) -> NestedID:
@@ -444,10 +427,6 @@ class Option(OntologyNestedElement):
 
 @dataclass
 class FlatOption(Option):
-    """
-    This class is currently in BETA. Its API might change in future minor version releases.
-    """
-
     def is_nestable(self) -> bool:
         return False
 
@@ -465,10 +444,6 @@ class FlatOption(Option):
 
 @dataclass
 class NestableOption(Option):
-    """
-    This class is currently in BETA. Its API might change in future minor version releases.
-    """
-
     nested_options: List[Attribute] = field(default_factory=list)
 
     def is_nestable(self) -> bool:

@@ -107,10 +107,6 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Object(OntologyElement):
-    """
-    This class is currently in BETA. Its API might change in future minor version releases.
-    """
-
     uid: int
     name: str
     color: str
@@ -202,8 +198,6 @@ class Object(OntologyElement):
 @dataclass
 class Classification(OntologyElement):
     """
-    This class is currently in BETA. Its API might change in future minor version releases.
-
     Represents a whole-image classification as part of Ontology structure. Wraps a single Attribute that describes
     the image in general rather than an individual object.
     """
@@ -3004,10 +2998,6 @@ OntologyElementT = TypeVar("OntologyElementT", bound=OntologyElement)
 
 @dataclass
 class OntologyStructure:
-    """
-    This class is currently in BETA. Its API might change in future minor version releases.
-    """
-
     objects: List[Object] = field(default_factory=list)
     classifications: List[Classification] = field(default_factory=list)
 
