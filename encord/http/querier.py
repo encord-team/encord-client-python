@@ -82,7 +82,7 @@ class Querier:
     @staticmethod
     def _parse_response(object_type: Type[T], item: dict) -> T:
         if issubclass(object_type, Formatter):
-            return object_type.from_dict(item)
+            return object_type.from_dict(item)  # type: ignore
         elif dataclasses.is_dataclass(object_type):
             return object_type(**item)  # type: ignore
         else:
