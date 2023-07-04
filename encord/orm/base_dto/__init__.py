@@ -1,11 +1,6 @@
-from encord.orm.base_dto.base_dto_interface import BaseDTOInterface
+import importlib.metadata as importlib_metadata
 
-try:
-    # For Python 3.8 and later
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    # For everyone else
-    import importlib_metadata  # type: ignore[no-redef]
+from encord.orm.base_dto.base_dto_interface import BaseDTOInterface
 
 pydantic_version_str = importlib_metadata.version("pydantic")
 
