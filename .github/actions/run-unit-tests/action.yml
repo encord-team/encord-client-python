@@ -4,7 +4,7 @@ description: 'Run the unit tests for a given Python version'
 inputs:
   python-version:
     description: 'Python version to use'
-    default: 3.7.12
+    default: 3.8.16
     required: false
   poetry-version:
     description: 'Poetry version to use'
