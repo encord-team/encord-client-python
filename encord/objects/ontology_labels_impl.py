@@ -1534,7 +1534,7 @@ class LabelRowV2:
             elif self._label_row_read_only_data.width is not None:
                 return self._label_row_read_only_data.width
             else:
-                raise LabelRowError("Width is expected but not set for this data type")
+                raise LabelRowError(f"Width is expected but not set for the data type {self._label_row.data_type}")
 
         @property
         def height(self) -> int:
@@ -1543,7 +1543,7 @@ class LabelRowV2:
             elif self._label_row_read_only_data.height is not None:
                 return self._label_row_read_only_data.height
             else:
-                raise LabelRowError("Height is expected but not set for this data type")
+                raise LabelRowError(f"Height is expected but not set for the data type {self._label_row.data_type}")
 
         @property
         def data_link(self) -> Optional[str]:
