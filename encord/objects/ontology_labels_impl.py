@@ -1531,17 +1531,19 @@ class LabelRowV2:
         def width(self) -> int:
             if self._label_row.data_type in [DataType.IMG_GROUP]:
                 return self._frame_level_data().width
-            else:
-                assert self._label_row_read_only_data.width is not None
+            elif self._label_row_read_only_data.width is not None:
                 return self._label_row_read_only_data.width
+            else:
+                raise LabelRowError("Width is expected but not set for this data type")
 
         @property
         def height(self) -> int:
             if self._label_row.data_type in [DataType.IMG_GROUP]:
                 return self._frame_level_data().height
-            else:
-                assert self._label_row_read_only_data.height is not None
+            elif self._label_row_read_only_data.height is not None:
                 return self._label_row_read_only_data.height
+            else:
+                raise LabelRowError("Height is expected but not set for this data type")
 
         @property
         def data_link(self) -> Optional[str]:
