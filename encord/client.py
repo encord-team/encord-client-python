@@ -290,7 +290,7 @@ class EncordClientDataset(EncordClient):
     @staticmethod
     def initialise_with_config(
         config: ApiKeyConfig, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
-    ) -> Union[EncordClientProject, EncordClientDataset]:
+    ) -> EncordClientDataset:
         """
         Create and initialize a Encord client from a Encord config instance.
 
