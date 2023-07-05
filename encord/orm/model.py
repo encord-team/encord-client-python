@@ -121,7 +121,7 @@ class TrainingMetadata(Formatter):
     model_iteration_uid: str
     created_at: Optional[datetime] = None
     training_final_loss: Optional[float] = None
-    model_training_labels: Optional[List[ModelTrainingLabel]] = None
+    model_training_labels: Optional[ModelTrainingLabel] = None
 
     @classmethod
     def from_dict(cls, json_dict: dict):
@@ -141,7 +141,7 @@ class TrainingMetadata(Formatter):
         return parse(created_at)
 
     @staticmethod
-    def get_model_training_labels(json_dict: dict) -> Optional[List[ModelTrainingLabel]]:
+    def get_model_training_labels(json_dict: dict) -> Optional[ModelTrainingLabel]:
         model_training_labels = json_dict["model_training_labels"]
         if model_training_labels is None:
             return None

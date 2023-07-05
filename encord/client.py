@@ -290,7 +290,7 @@ class EncordClientDataset(EncordClient):
     @staticmethod
     def initialise_with_config(
         config: ApiKeyConfig, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
-    ) -> Union[EncordClientProject, EncordClientDataset]:
+    ) -> EncordClientDataset:
         """
         Create and initialize a Encord client from a Encord config instance.
 
@@ -371,18 +371,21 @@ class EncordClientDataset(EncordClient):
         created_before = parse_datetime("created_before", created_before)
         created_after = parse_datetime("created_after", created_after)
 
-        data_rows = self._querier.get_multiple(
-            DataRows,
-            payload={
-                "title_eq": title_eq,
-                "title_like": title_like,
-                "created_before": created_before,
-                "created_after": created_after,
-                "data_types": [data_type.to_upper_case_string() for data_type in data_types]
-                if data_types is not None
-                else None,
-                "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
-            },
+        data_rows = cast(
+            List[DataRow],
+            self._querier.get_multiple(
+                DataRows,
+                payload={
+                    "title_eq": title_eq,
+                    "title_like": title_like,
+                    "created_before": created_before,
+                    "created_after": created_after,
+                    "data_types": [data_type.to_upper_case_string() for data_type in data_types]
+                    if data_types is not None
+                    else None,
+                    "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
+                },
+            ),
         )
 
         for row in data_rows:

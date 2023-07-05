@@ -2771,13 +2771,13 @@ class ObjectInstance:
                 # but removes the answers.
                 # Thus an empty answers array is equivalent to "no such attribute", and such attribute should be ignored
                 feature_hash = answer_dict["answers"][0]["featureHash"]
-                option = _get_option_by_hash(feature_hash, attribute.options)
+                option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 self._set_answer_unsafe(option, attribute, track_hash, ranges)
         elif isinstance(attribute, ChecklistAttribute):
             options = []
             for answer in answer_dict["answers"]:
                 feature_hash = answer["featureHash"]
-                option = _get_option_by_hash(feature_hash, attribute.options)
+                option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 options.append(option)
             self._set_answer_unsafe(options, attribute, track_hash, ranges)
         else:

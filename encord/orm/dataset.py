@@ -423,12 +423,14 @@ class DataRow(dict, Formatter):
         """
         if self["_querier"] is not None:
             if images_data_fetch_options is not None:
-                images_data_fetch_options = dataclasses.asdict(images_data_fetch_options)
+                images_data_fetch_options_dict = dataclasses.asdict(images_data_fetch_options)
+            else:
+                images_data_fetch_options_dict = None
 
             payload = {
                 "additional_data": {
                     "signed_url": signed_url,
-                    "images_data_fetch_options": images_data_fetch_options,
+                    "images_data_fetch_options": images_data_fetch_options_dict,
                     "client_metadata": client_metadata,
                 }
             }
@@ -754,7 +756,7 @@ class StorageLocation(IntEnum):
     def from_str(string_location: str) -> StorageLocation:
         return STORAGE_LOCATION_BY_STR[string_location]
 
-    def get_str(self) -> str:
+    def get_str(self) -> str:  # type: ignore[return]
         if self == StorageLocation.CORD_STORAGE:
             return "CORD_STORAGE"
         elif self == StorageLocation.AWS:
