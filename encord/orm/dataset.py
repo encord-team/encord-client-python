@@ -423,12 +423,14 @@ class DataRow(dict, Formatter):
         """
         if self["_querier"] is not None:
             if images_data_fetch_options is not None:
-                images_data_fetch_options = dataclasses.asdict(images_data_fetch_options)
+                images_data_fetch_options_dict = dataclasses.asdict(images_data_fetch_options)
+            else:
+                images_data_fetch_options_dict = None
 
             payload = {
                 "additional_data": {
                     "signed_url": signed_url,
-                    "images_data_fetch_options": images_data_fetch_options,
+                    "images_data_fetch_options": images_data_fetch_options_dict,
                     "client_metadata": client_metadata,
                 }
             }
