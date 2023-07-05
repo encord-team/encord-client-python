@@ -756,7 +756,7 @@ class StorageLocation(IntEnum):
     def from_str(string_location: str) -> StorageLocation:
         return STORAGE_LOCATION_BY_STR[string_location]
 
-    def get_str(self) -> str:
+    def get_str(self) -> str:  # type: ignore[return]
         if self == StorageLocation.CORD_STORAGE:
             return "CORD_STORAGE"
         elif self == StorageLocation.AWS:
