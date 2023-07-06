@@ -30,7 +30,6 @@ from encord.objects.common import (
     DeidentifyRedactTextMode,
     SaveDeidentifiedDicomCondition,
 )
-from encord.objects.ontology_labels_impl import Ontology as OrmOntology
 from encord.objects.ontology_labels_impl import OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
@@ -47,6 +46,7 @@ from encord.orm.dataset import (
     StorageLocation,
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
     CvatExportType,

@@ -427,6 +427,17 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
         return f"{self.__class__.__name__}({flat_values})"
 
 
+def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
+    if isinstance(attribute, TextAttribute):
+        return TextAnswer(attribute)
+    elif isinstance(attribute, RadioAttribute):
+        return RadioAnswer(attribute)
+    elif isinstance(attribute, ChecklistAttribute):
+        return ChecklistAnswer(attribute)
+    else:
+        raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
+
+
 def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
     ret: List[Answer] = list()
     for attribute in attributes:
