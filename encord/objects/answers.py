@@ -11,8 +11,10 @@ from encord.objects.attributes import (
     TextAttribute,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
+from encord.objects.frames import Ranges, ranges_to_list
+from encord.objects.ontology_element import _get_element_by_hash
 from encord.objects.options import FlatOption, NestableOption, Option
-from encord.objects.utils import short_uuid_str
+from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 ValueType = TypeVar("ValueType")
 AttributeType = TypeVar("AttributeType", bound=Attribute)
@@ -180,10 +182,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
         if not isinstance(value, NestableOption):
             raise ValueError("RadioAnswer can only be set to a NestableOption.")
 
-        passed = False
-        for child in self._ontology_attribute.options:
-            if value.feature_node_hash == child.feature_node_hash:
-                passed = True
+        passed = any(value.feature_node_hash == child.feature_node_hash for child in self._ontology_attribute.options)
         if not passed:
             raise ValueError(
                 f"The supplied NestableOption `{value}` is not a child of the RadioAttribute that "

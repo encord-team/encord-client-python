@@ -73,27 +73,6 @@ def __build_identifiers(
 
 
 T = TypeVar("T", bound=Attribute)
-
-
-def _add_attribute(
-    attributes: List[Attribute],
-    cls: Type[T],
-    name: str,
-    parent_uid: List[int],
-    local_uid: Optional[int] = None,
-    feature_node_hash: Optional[str] = None,
-    required: bool = False,
-    dynamic: bool = False,
-) -> T:
-    local_uid, feature_node_hash = __build_identifiers(attributes, local_uid, feature_node_hash)
-    attr = cls(
-        name=name, uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, required=required, dynamic=dynamic
-    )
-
-    attributes.append(attr)
-    return attr
-
-
 OT = TypeVar("OT", bound=Option)
 
 

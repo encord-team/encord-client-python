@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Sequence, Type, TypeVar
 
-from encord.objects.common import NestedID, OntologyNestedElement, OntologyElement, PropertyType, _attribute_id_from_json_str
+from encord.objects.common import (
+    NestedID,
+    PropertyType,
+    __build_identifiers,
+    _attribute_id_from_json_str,
+)
+from encord.objects.ontology_element import OntologyElement, OntologyNestedElement
 from encord.objects.utils import _decode_nested_uid
 
 OptionType = TypeVar("OptionType", bound="Option")
@@ -243,7 +249,6 @@ class TextAttribute(Attribute["FlatOption"]):
         return None
 
 
-
 def attributes_to_list_dict(attributes: List[Attribute]) -> list:
     return [attribute.to_dict() for attribute in attributes]
 
@@ -251,3 +256,22 @@ def attributes_to_list_dict(attributes: List[Attribute]) -> list:
 def attribute_from_dict(d: Dict[str, Any]) -> Attribute:
     """Convenience functions as you cannot call static member on union types."""
     return Attribute.from_dict(d)
+
+
+def _add_attribute(
+    attributes: List[Attribute],
+    cls: Type[T],
+    name: str,
+    parent_uid: List[int],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+    required: bool = False,
+    dynamic: bool = False,
+) -> T:
+    local_uid, feature_node_hash = __build_identifiers(attributes, local_uid, feature_node_hash)
+    attr = cls(
+        name=name, uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, required=required, dynamic=dynamic
+    )
+
+    attributes.append(attr)
+    return attr

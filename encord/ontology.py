@@ -1,10 +1,10 @@
 import datetime
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from encord.configs import SshConfig
 from encord.http.querier import Querier
-from encord.objects.ontology_labels_impl import Ontology as OrmOntology
-from encord.objects.ontology_labels_impl import OntologyStructure
+from encord.objects.ontology_structure import Ontology as OrmOntology
+from encord.objects.ontology_structure import OntologyStructure
 
 
 class Ontology:
@@ -88,7 +88,7 @@ class Ontology:
         Sync local state to the server, if updates are made to structure, title or description fields
         """
         if self._ontology_instance:
-            payload = dict(**self._ontology_instance)
+            payload: Dict[str, Any] = dict(**self._ontology_instance)
             payload["editor"] = self._ontology_instance.structure.to_dict()  # we're using internal/legacy name here
             payload.pop("structure", None)
             self._querier.basic_put(OrmOntology, self._config.resource_id, payload)

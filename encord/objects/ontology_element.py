@@ -8,6 +8,7 @@ from encord.exceptions import OntologyError
 from encord.objects.common import NestedID
 from encord.objects.utils import check_type, checked_cast, does_type_match
 
+OntologyElementT = TypeVar("OntologyElementT", bound="OntologyElement")
 OntologyNestedElementT = TypeVar("OntologyNestedElementT", bound="OntologyNestedElement")
 
 

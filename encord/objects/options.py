@@ -6,10 +6,12 @@ from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
 
 from encord.objects.attributes import (
     Attribute,
+    _add_attribute,
     attribute_from_dict,
     attributes_to_list_dict,
 )
-from encord.objects.common import OntologyNestedElement, _attribute_id_from_json_str
+from encord.objects.common import _attribute_id_from_json_str
+from encord.objects.ontology_element import OntologyElement, OntologyNestedElement
 from encord.objects.utils import _decode_nested_uid
 
 T = TypeVar("T", bound=Attribute)
