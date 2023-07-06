@@ -257,17 +257,18 @@ def attribute_from_dict(d: Dict[str, Any]) -> Attribute:
     """Convenience functions as you cannot call static member on union types."""
     return Attribute.from_dict(d)
 
+AttributeT = TypeVar("AttributeT", bound=Attribute)
 
 def _add_attribute(
     attributes: List[Attribute],
-    cls: Type[T],
+    cls: Type[AttributeT],
     name: str,
     parent_uid: List[int],
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,
     required: bool = False,
     dynamic: bool = False,
-) -> T:
+) -> AttributeT:
     local_uid, feature_node_hash = __build_identifiers(attributes, local_uid, feature_node_hash)
     attr = cls(
         name=name, uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, required=required, dynamic=dynamic
