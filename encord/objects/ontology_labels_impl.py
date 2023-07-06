@@ -36,21 +36,25 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
 from encord.objects.common import (
-    Attribute,
-    ChecklistAttribute,
     OntologyElement,
     OntologyNestedElement,
-    Option,
-    RadioAttribute,
     Shape,
-    TextAttribute,
     _add_attribute,
     _get_attribute_by_hash,
     _get_element_by_hash,
     _get_option_by_hash,
     _handle_wrong_number_of_found_items,
-    attribute_from_dict,
-    attributes_to_list_dict,
+)
+from encord.objects.options import (
+    Option,
+)
+from encord.objects.attributes import (
+Attribute,
+ChecklistAttribute,
+RadioAttribute,
+TextAttribute,
+attributes_to_list_dict,
+attribute_from_dict
 )
 from encord.objects.constants import (
     DATETIME_LONG_STRING_FORMAT,

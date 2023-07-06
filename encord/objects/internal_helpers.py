@@ -11,9 +11,6 @@ from typing import (
 
 from encord.exceptions import LabelRowError
 
-ValueType = TypeVar("ValueType")
-AttributeType = TypeVar("AttributeType", bound=Attribute)
-
 
 def _search_child_attributes(
     passed_attribute: Attribute, search_attribute: Attribute, static_answer_map: Dict[str, Answer]

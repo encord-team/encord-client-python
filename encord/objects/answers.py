@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic, Optional, NoReturn, Any, Dict, List, Iterable
+from typing import TypeVar, Generic, Optional, NoReturn, Any, Dict, List, Iterable, Set
 from abc import ABC, abstractmethod
 
 from encord.objects.attributes import Attribute, TextAttribute, RadioAttribute, ChecklistAttribute

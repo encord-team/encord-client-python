@@ -1,11 +1,16 @@
 from encord.objects.common import (
-    ChecklistAttribute,
+    Shape,
+)
+from encord.objects.options import (
     FlatOption,
     NestableOption,
-    RadioAttribute,
-    Shape,
-    TextAttribute,
 )
+from encord.objects.attributes import (
+ChecklistAttribute,
+TextAttribute,
+RadioAttribute,
+)
+
 from encord.objects.ontology_labels_impl import (
     AnswerForFrames,
     Classification,

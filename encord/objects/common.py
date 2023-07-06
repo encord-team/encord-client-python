@@ -125,19 +125,6 @@ def _attribute_id_from_json_str(attribute_id: str) -> NestedID:
     return [int(x) for x in nested_ids]
 
 
-def attribute_from_dict(d: Dict[str, Any]) -> Attribute:
-    """Convenience functions as you cannot call static member on union types."""
-    return Attribute.from_dict(d)
-
-
-def attributes_to_list_dict(attributes: List[Attribute]) -> list:
-    attributes_list = list()
-    for attribute in attributes:
-        attributes_list.append(attribute.to_dict())
-
-    return attributes_list
-
-
 def __build_identifiers(
     existent_items: Iterable[OntologyNestedElement],
     local_uid: Optional[int] = None,

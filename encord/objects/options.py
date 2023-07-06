@@ -5,7 +5,11 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
 
 from encord.objects.attributes import Attribute
-from encord.objects.common import NestedID, OntologyNestedElement
+from encord.objects.common import OntologyNestedElement, _attribute_id_from_json_str
+from encord.objects.utils import _decode_nested_uid
+
+
+T = TypeVar("T", bound=Attribute)
 
 
 @dataclass
