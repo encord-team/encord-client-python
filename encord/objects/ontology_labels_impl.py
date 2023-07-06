@@ -5,7 +5,6 @@ from collections import defaultdict
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from enum import IntEnum
 from typing import (
     Any,
     Dict,
@@ -17,9 +16,7 @@ from typing import (
     Set,
     Tuple,
     Type,
-    TypeVar,
     Union,
-    cast,
 )
 
 from dateutil.parser import parse
@@ -27,7 +24,7 @@ from dateutil.parser import parse
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.constants.enums import DataType
-from encord.exceptions import LabelRowError, OntologyError, WrongProjectTypeError
+from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper
 from encord.http.limits import (
     LABEL_ROW_BUNDLE_CREATE_LIMIT,
@@ -44,7 +41,6 @@ from encord.objects.attributes import (
     ChecklistAttribute,
     RadioAttribute,
     TextAttribute,
-    _add_attribute,
 )
 from encord.objects.classification import Classification
 from encord.objects.common import _get_attribute_by_hash, _get_option_by_hash
