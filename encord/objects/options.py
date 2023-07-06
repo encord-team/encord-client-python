@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import re
 from abc import abstractmethod
 from dataclasses import dataclass, field
@@ -10,7 +11,8 @@ from encord.objects.attributes import (
     attribute_from_dict,
     attributes_to_list_dict,
 )
-from encord.objects.common import _attribute_id_from_json_str, __build_identifiers
+from encord.objects.common import _attribute_id_from_json_str
+from encord.objects.internal_helpers import __build_identifiers
 from encord.objects.ontology_element import OntologyElement, OntologyNestedElement
 from encord.objects.utils import _decode_nested_uid
 
@@ -142,7 +144,6 @@ class NestableOption(Option):
 
     def __hash__(self):
         return hash(self.feature_node_hash)
-
 
 
 OptionT = TypeVar("OptionT", bound=Option)

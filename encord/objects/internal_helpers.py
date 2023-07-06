@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Sequence, TypeVar, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, TypeVar, Union
 
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer
 from encord.objects.attributes import Attribute, RadioAttribute, TextAttribute
+from encord.objects.ontology_element import OntologyNestedElement, _get_element_by_hash
 from encord.objects.options import Option
+from encord.objects.utils import short_uuid_str
 
 
 def _search_child_attributes(
@@ -106,3 +108,33 @@ def _infer_attribute_from_answer(
 
     else:
         raise NotImplementedError(f"The answer type is not supported for answer `{answer}` of type {type(answer)}.")
+
+
+def __build_identifiers(
+    existent_items: Iterable[OntologyNestedElement],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+) -> Tuple[int, str]:
+    if local_uid is None:
+        if existent_items:
+            local_uid = max([item.uid[-1] for item in existent_items]) + 1
+        else:
+            local_uid = 1
+    else:
+        if any([item.uid[-1] == local_uid for item in existent_items]):
+            raise ValueError(f"Duplicate uid '{local_uid}'")
+
+    if feature_node_hash is None:
+        feature_node_hash = short_uuid_str()
+    elif any([item.feature_node_hash == feature_node_hash for item in existent_items]):
+        raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+    return local_uid, feature_node_hash
+
+
+def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Optional[Option]:
+    return _get_element_by_hash(feature_node_hash, options, type_=Option)
+
+
+def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]) -> Optional[Attribute]:
+    return _get_element_by_hash(feature_node_hash, attributes, type_=Attribute)
