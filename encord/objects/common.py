@@ -253,21 +253,6 @@ def _handle_wrong_number_of_found_items(
         )
 
 
-OptionAttribute = Union[RadioAttribute, ChecklistAttribute]
-AttributeTypes = Union[
-    Type[RadioAttribute],
-    Type[ChecklistAttribute],
-    Type[TextAttribute],
-    Type[Attribute],
-]
-OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
-
-# Two types below are kept for the backwards compatibility
-# Please don't use them, as they are going to be removed in the future versions
-AttributeClasses = Union[RadioAttribute, ChecklistAttribute, TextAttribute, Attribute]
-OptionClasses = Union[FlatOption, NestableOption, Option]
-
-
 class DeidentifyRedactTextMode(Enum):
     REDACT_ALL_TEXT = "REDACT_ALL_TEXT"
     REDACT_NO_TEXT = "REDACT_NO_TEXT"
