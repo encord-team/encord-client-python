@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic, Optional, NoReturn, Any, Dict, List, Iterable, Set
 from abc import ABC, abstractmethod
-
-from encord.objects.attributes import Attribute, TextAttribute, RadioAttribute, ChecklistAttribute
-from encord.objects.options import Option, FlatOption, NestableOption
 from dataclasses import dataclass
+from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar
 
+from encord.objects.attributes import (
+    Attribute,
+    ChecklistAttribute,
+    RadioAttribute,
+    TextAttribute,
+)
+from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
+from encord.objects.options import FlatOption, NestableOption, Option
+from encord.objects.utils import short_uuid_str
 
 ValueType = TypeVar("ValueType")
 AttributeType = TypeVar("AttributeType", bound=Attribute)
@@ -420,9 +426,6 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
     def __repr__(self):
         flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
         return f"{self.__class__.__name__}({flat_values})"
-
-
-
 
 
 def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
