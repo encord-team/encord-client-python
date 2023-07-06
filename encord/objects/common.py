@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import re
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import (
     Any,
     Dict,
-    Generic,
     Iterable,
     List,
     Optional,
@@ -22,7 +21,6 @@ from typing import (
 from encord.common.enum import StringEnum
 from encord.exceptions import OntologyError
 from encord.objects.utils import (
-    _decode_nested_uid,
     check_type,
     checked_cast,
     does_type_match,
@@ -48,9 +46,7 @@ class Shape(StringEnum):
     BITMASK = "bitmask"
 
 
-OptionType = TypeVar("OptionType", bound="Option")
 OntologyNestedElementT = TypeVar("OntologyNestedElementT", bound="OntologyNestedElement")
-
 
 @dataclass
 class OntologyElement(ABC):

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from abc import abstractmethod
 from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar
 
-from encord.objects.common import NestedID, OntologyNestedElement
+from encord.objects.common import NestedID, OntologyNestedElement, OntologyElement, PropertyType
 
 OptionType = TypeVar("OptionType", bound="Option")
 

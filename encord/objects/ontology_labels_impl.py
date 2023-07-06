@@ -102,6 +102,9 @@ from encord.orm.label_row import (
     WorkflowGraphNode,
 )
 
+from encord.objects.ontology_object import Object
+from encord.objects.classification import Classification
+
 log = logging.getLogger(__name__)
 
 
