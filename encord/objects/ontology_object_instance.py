@@ -5,14 +5,24 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
+from dateutil.parser import parse
+
+from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer, _get_static_answer_map
-from encord.objects.attributes import Attribute, ChecklistAttribute
+from encord.objects.attributes import (
+    Attribute,
+    ChecklistAttribute,
+    RadioAttribute,
+    TextAttribute,
+)
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.dynamic_answer_manager import DynamicAnswerManager
+from encord.objects.frames import Frames
 from encord.objects.internal_helpers import (
     _get_attribute_by_hash,
     _infer_attribute_from_answer,
+    _search_child_attributes,
 )
 from encord.objects.options import Option
 from encord.objects.utils import check_email, short_uuid_str
