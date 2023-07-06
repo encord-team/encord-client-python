@@ -72,27 +72,6 @@ def __build_identifiers(
     return local_uid, feature_node_hash
 
 
-T = TypeVar("T", bound=Attribute)
-OT = TypeVar("OT", bound=Option)
-
-
-def _add_option(
-    options: List[OT],
-    cls: Type[OT],
-    label: str,
-    parent_uid: List[int],
-    local_uid: Optional[int] = None,
-    feature_node_hash: Optional[str] = None,
-    value: Optional[str] = None,
-) -> OT:
-    local_uid, feature_node_hash = __build_identifiers(options, local_uid, feature_node_hash)
-    if not value:
-        value = re.sub(r"[\s]", "_", label).lower()
-    option = cls(uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value)
-    options.append(option)
-    return option
-
-
 def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Optional[Option]:
     return _get_element_by_hash(feature_node_hash, options, type_=Option)
 

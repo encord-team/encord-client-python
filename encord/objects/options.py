@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import re
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
@@ -10,7 +10,7 @@ from encord.objects.attributes import (
     attribute_from_dict,
     attributes_to_list_dict,
 )
-from encord.objects.common import _attribute_id_from_json_str
+from encord.objects.common import _attribute_id_from_json_str, __build_identifiers
 from encord.objects.ontology_element import OntologyElement, OntologyNestedElement
 from encord.objects.utils import _decode_nested_uid
 
@@ -142,3 +142,24 @@ class NestableOption(Option):
 
     def __hash__(self):
         return hash(self.feature_node_hash)
+
+
+
+OptionT = TypeVar("OptionT", bound=Option)
+
+
+def _add_option(
+    options: List[OptionT],
+    cls: Type[OptionT],
+    label: str,
+    parent_uid: List[int],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+    value: Optional[str] = None,
+) -> OptionT:
+    local_uid, feature_node_hash = __build_identifiers(options, local_uid, feature_node_hash)
+    if not value:
+        value = re.sub(r"[\s]", "_", label).lower()
+    option = cls(uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value)
+    options.append(option)
+    return option
