@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 env:
-  UNIT_TEST_REPORT_PYTHON_3_7: unit-test-report-python3_7.xml
   UNIT_TEST_REPORT_PYTHON_3_8: unit-test-report-python3_8.xml
   UNIT_TEST_REPORT_PYTHON_3_9: unit-test-report-python3_9.xml
   UNIT_TEST_REPORT_PYTHON_3_10: unit-test-report-python3_10.xml
@@ -25,19 +24,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests-python-3-7:
-    name: Run unit tests for Python 3.7
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Run unit tests for Python 3.7
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.7.12
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
-
   unit-tests-python-3-8:
     name: Run unit tests for Python 3.8
     runs-on: ubuntu-20.04
@@ -48,7 +34,7 @@ jobs:
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.8.12
+          python-version: 3.8.16
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
 
   unit-tests-python-3-9:
@@ -122,12 +108,6 @@ jobs:
       if: success() || failure()
 
       steps:
-        - name: Download unit test report Python 3.7
-          uses: actions/download-artifact@v2
-          with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}
-
         - name: Download unit test report Python 3.8
           uses: actions/download-artifact@v2
           with:
@@ -157,12 +137,6 @@ jobs:
           with:
             name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
             path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-
-        - name: Publish unit test report Python 3.7
-          uses: EnricoMi/publish-unit-test-result-action@v1
-          with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_7 }}/*.xml
-            check_name: Unit test report
 
         - name: Publish unit test report Python 3.8
           uses: EnricoMi/publish-unit-test-result-action@v1
