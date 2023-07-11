@@ -17,17 +17,23 @@ from encord.objects.attributes import (
     TextAttribute,
 )
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.dynamic_answer_manager import DynamicAnswerManager, AnswersForFrames
-from encord.objects.frames import Frames
+from encord.objects.coordinates import Coordinates
+from encord.objects.dynamic_answer_manager import AnswersForFrames, DynamicAnswerManager
+from encord.objects.frames import (
+    Frames,
+    Ranges,
+    frames_class_to_frames_list,
+    ranges_list_to_ranges,
+)
 from encord.objects.internal_helpers import (
     _get_attribute_by_hash,
     _infer_attribute_from_answer,
     _search_child_attributes,
 )
+from encord.objects.ontology_object import Object
 from encord.objects.options import Option
 from encord.objects.utils import check_email, short_uuid_str
-from encord.objects.frames import ranges_list_to_ranges, frames_class_to_frames_list, Range, Ranges
-from encord.objects.coordinates import Coordinates
+
 
 class ObjectInstance:
     """

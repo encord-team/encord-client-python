@@ -7,7 +7,8 @@ from unittest.mock import Mock
 
 from deepdiff import DeepDiff
 
-from encord.objects.ontology_labels_impl import LabelRowV2, OntologyStructure
+from encord.objects import LabelRowV2
+from encord.objects.ontology_labels_impl import OntologyStructure
 from encord.orm.label_row import LabelRowMetadata
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data import (
