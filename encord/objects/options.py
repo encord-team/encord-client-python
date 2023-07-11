@@ -16,7 +16,7 @@ from encord.objects.internal_helpers import __build_identifiers
 from encord.objects.ontology_element import OntologyElement, OntologyNestedElement
 from encord.objects.utils import _decode_nested_uid
 
-T = TypeVar("T", bound=Attribute)
+AttributeT = TypeVar("AttributeT", bound=Attribute)
 
 
 @dataclass
@@ -116,12 +116,12 @@ class NestableOption(Option):
 
     def add_nested_option(
         self,
-        cls: Type[T],
+        cls: Type[AttributeT],
         name: str,
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
         required: bool = False,
-    ) -> T:
+    ) -> AttributeT:
         """
         Adds a nested attribute to a RadioAttribute option.
 

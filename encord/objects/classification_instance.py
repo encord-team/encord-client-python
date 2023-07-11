@@ -15,8 +15,9 @@ from encord.objects.attributes import (
     RadioAttribute,
     TextAttribute,
 )
+from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames
+from encord.objects.frames import Frames, frames_class_to_frames_list
 from encord.objects.internal_helpers import (
     _get_attribute_by_hash,
     _get_option_by_hash,
@@ -24,14 +25,7 @@ from encord.objects.internal_helpers import (
     _search_child_attributes,
 )
 from encord.objects.options import Option
-from encord.objects.utils import (
-    check_email,
-    check_type,
-    checked_cast,
-    does_type_match,
-    short_uuid_str,
-)
-from encord.objects.frames import frames_class_to_frames_list
+from encord.objects.utils import check_email, short_uuid_str
 
 
 class ClassificationInstance:
