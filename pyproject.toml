@@ -77,3 +77,6 @@ recursive = true
 remove-all-unused-imports = true
 remove-duplicate-keys = true
 remove-unused-variables = true
+
+[tool.mypy]
+plugins = ["numpy.typing.mypy_plugin"]
