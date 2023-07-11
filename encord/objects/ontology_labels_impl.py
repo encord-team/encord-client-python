@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import (
@@ -10,16 +9,12 @@ from typing import (
     Dict,
     Iterable,
     List,
-    NoReturn,
     Optional,
     Sequence,
     Set,
-    Tuple,
     Type,
     Union,
 )
-
-from dateutil.parser import parse
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
@@ -31,16 +26,8 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_GET_LIMIT,
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
-from encord.objects.answers import (
-    Answer,
-    _get_static_answer_map,
-    get_default_answer_from_attribute,
-)
 from encord.objects.attributes import (
     Attribute,
-    ChecklistAttribute,
-    RadioAttribute,
-    TextAttribute,
 )
 from encord.objects.classification import Classification
 from encord.objects.constants import (
@@ -60,30 +47,14 @@ from encord.objects.coordinates import (
 )
 from encord.objects.frames import (
     Frames,
-    Range,
-    Ranges,
     frames_class_to_frames_list,
-    frames_to_ranges,
-    ranges_list_to_ranges,
-)
-from encord.objects.internal_helpers import (
-    _get_attribute_by_hash,
-    _get_option_by_hash,
-    _infer_attribute_from_answer,
-    _search_child_attributes,
 )
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.options import Option
 from encord.objects.utils import (
     _lower_snake_case,
-    check_email,
-    checked_cast,
-    does_type_match,
-    short_uuid_str,
 )
 from encord.ontology import Ontology
-from encord.orm.formatter import Formatter
 from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRowMetadata,
@@ -1485,19 +1456,6 @@ class LabelRowV2:
 
     def __repr__(self) -> str:
         return f"LabelRowV2(label_hash={self.label_hash}, data_hash={self.data_hash}, data_title={self.data_title})"
-
-
-@dataclass
-class AnswerForFrames:
-    answer: Union[str, Option, Iterable[Option]]
-    ranges: Ranges
-    """
-    The ranges are essentially a run length encoding of the frames where the unique answer is set.
-    They are sorted in ascending order.
-    """
-
-
-AnswersForFrames = List[AnswerForFrames]
 
 
 def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:

@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from collections import defaultdict
 from copy import deepcopy
+from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from encord.objects.answers import Answer, get_default_answer_from_attribute
 from encord.objects.attributes import Attribute
 from encord.objects.options import Option
+
+from encord.objects.frames import Frames, Ranges, Range, frames_to_ranges, frames_class_to_frames_list
 
 
 class DynamicAnswerManager:
@@ -147,3 +150,16 @@ class DynamicAnswerManager:
 
     def __hash__(self) -> int:
         return hash(id(self))
+
+
+@dataclass
+class AnswerForFrames:
+    answer: Union[str, Option, Iterable[Option]]
+    ranges: Ranges
+    """
+    The ranges are essentially a run length encoding of the frames where the unique answer is set.
+    They are sorted in ascending order.
+    """
+
+
+AnswersForFrames = List[AnswerForFrames]

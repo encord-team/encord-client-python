@@ -31,6 +31,7 @@ from encord.objects.utils import (
     does_type_match,
     short_uuid_str,
 )
+from encord.objects.frames import frames_class_to_frames_list
 
 
 class ClassificationInstance:
