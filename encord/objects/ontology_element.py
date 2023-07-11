@@ -75,7 +75,7 @@ class OntologyElement(ABC):
             type_: The expected type of the child node. Only a node that matches this type will be returned.
         """
         found_items = self.get_children_by_title(title, type_)
-        _handle_wrong_number_of_found_items(found_items, title, type_)
+        _assert_singular_list(found_items, title, type_)
         return found_items[0]
 
 
@@ -112,7 +112,7 @@ def _get_element_by_hash(
     return None
 
 
-def _handle_wrong_number_of_found_items(
+def _assert_singular_list(
     found_items: Sequence[OntologyElement],
     title: str,
     type_: Any,
