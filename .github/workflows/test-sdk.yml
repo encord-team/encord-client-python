@@ -98,7 +98,6 @@ jobs:
       name: Publish test reports
       runs-on: ubuntu-20.04
       needs: [
-        unit-tests-python-3-7,
         unit-tests-python-3-8, 
         unit-tests-python-3-9, 
         unit-tests-python-3-10,
