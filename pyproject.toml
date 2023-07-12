@@ -4,9 +4,8 @@ version = "0.1.85"
 description = "Encord Python SDK Client"
 authors = ["Cord Technologies Limited <hello@encord.com>"]
 license = "Apache Software License"
-keywords = ["cord", "encord"]
+keywords = ["encord"]
 packages = [
-    { include = "cord"},
     { include = "encord"},
 ]
 readme = "README.md"
