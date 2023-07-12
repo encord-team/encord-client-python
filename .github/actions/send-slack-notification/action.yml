@@ -30,7 +30,7 @@ runs:
       run: |
         echo "${{ github.event.head_commit.message }}" > message.txt
         sed -z 's/\n/\\n/g' message.txt > newmessage.txt
-        echo "::set-output name=message::$(cat newmessage.txt)"
+        echo "message=$(cat newmessage.txt)" >> $GITHUB_OUTPUT
       shell: bash
 
     - uses: slackapi/slack-github-action@v1.18.0

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -19,6 +19,16 @@ from enum import Enum
 from typing import Set, cast
 
 
+class Device(Enum):
+    CUDA = "cuda"
+    CPU = "cpu"
+
+    @classmethod
+    def has_value(cls, value) -> bool:
+        # pylint: disable-next=no-member
+        return value in cls._value2member_map_
+
+
 class AutomationModels(Enum):
     FAST_AI = "fast_ai"
     RESNET18 = "resnet18"
@@ -28,7 +38,6 @@ class AutomationModels(Enum):
     RESNET152 = "resnet152"
     VGG16 = "vgg16"
     VGG19 = "vgg19"
-    YOLOV5 = "yolov5"
     FASTER_RCNN = "faster_rcnn"
     MASK_RCNN = "mask_rcnn"
 
@@ -58,7 +67,7 @@ class AutomationModels(Enum):
             Model types that can be used with bounding_box type
             ``<feature_node_hashes>`` from the ``objects`` part of the project ontology.
         """
-        return {AutomationModels.YOLOV5, AutomationModels.FASTER_RCNN}
+        return {AutomationModels.FASTER_RCNN}
 
     @staticmethod
     def instance_segmentation_options() -> Set[AutomationModels]:
@@ -71,6 +80,7 @@ class AutomationModels(Enum):
 
     @classmethod
     def has_value(cls, value) -> bool:
+        # pylint: disable-next=no-member
         return value in cls._value2member_map_
 
 
@@ -83,6 +93,5 @@ RESNET101 = cast(str, AutomationModels.RESNET101.value)
 RESNET152 = cast(str, AutomationModels.RESNET152.value)
 VGG16 = cast(str, AutomationModels.VGG16.value)
 VGG19 = cast(str, AutomationModels.VGG19.value)
-YOLOV5 = cast(str, AutomationModels.YOLOV5.value)
 FASTER_RCNN = cast(str, AutomationModels.FASTER_RCNN.value)
 MASK_RCNN = cast(str, AutomationModels.MASK_RCNN.value)

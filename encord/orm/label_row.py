@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -14,10 +14,11 @@
 # under the License.
 from __future__ import annotations
 
+import datetime
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
@@ -171,15 +172,19 @@ class LabelRow(base_orm.BaseORM):
     DB_FIELDS = OrderedDict(
         [
             ("label_hash", str),
+            ("created_at", str),
+            ("last_edited_at", str),
             ("dataset_hash", str),
             ("dataset_title", str),
             ("data_title", str),
+            ("data_hash", str),
             ("data_type", str),
             ("data_units", dict),
             ("object_answers", dict),
             ("classification_answers", dict),
             ("object_actions", dict),
             ("label_status", str),
+            ("annotation_task_status", str),
         ]
     )
 
@@ -200,6 +205,17 @@ class AnnotationTaskStatus(Enum):
     COMPLETED = "COMPLETED"
 
 
+class ShadowDataState(Enum):
+    """Specifies the kind of data to fetch when working with a BenchmarkQa project"""
+
+    ALL_DATA = "ALL_DATA"
+    """ Fetch all the label rows """
+    SHADOW_DATA = "SHADOW_DATA"
+    """ Only fetch the label rows that were submitted against "shadow data": the annotator's view of the benchmark """
+    NOT_SHADOW_DATA = "NOT_SHADOW_DATA"
+    """ Only fetch the label rows for "production" data """
+
+
 class LabelStatus(Enum):
     NOT_LABELLED = "NOT_LABELLED"
     LABEL_IN_PROGRESS = "LABEL_IN_PROGRESS"
@@ -208,31 +224,97 @@ class LabelStatus(Enum):
     REVIEWED = "REVIEWED"
     REVIEWED_TWICE = "REVIEWED_TWICE"
 
+    MISSING_LABEL_STATUS = "_MISSING_LABEL_STATUS_"
+    """
+    This value will be displayed if the Encord platform has a new label status and your SDK version does not understand
+    it yet. Please update your SDK to the latest version.
+    """
+
+    @classmethod
+    def _missing_(cls, value: Any) -> LabelStatus:
+        return cls.MISSING_LABEL_STATUS
+
+
+@dataclass(frozen=True)
+class WorkflowGraphNode:
+    uuid: str
+    title: str
+
+    @classmethod
+    def from_optional_dict(cls, json_dict: Optional[Dict]) -> Optional[WorkflowGraphNode]:
+        if json_dict is None:
+            return None
+        return WorkflowGraphNode(uuid=json_dict["uuid"], title=json_dict["title"])
+
 
 @dataclass(frozen=True)
 class LabelRowMetadata(Formatter):
     """
-    Contains helpful information about a LabelRow.
+    Contains helpful information about a label row.
     """
 
-    label_hash: str
+    label_hash: Optional[str]
+    """Only present if the label row is initiated"""
+    created_at: Optional[datetime.datetime]
+    """Only present if the label row is initiated"""
+    last_edited_at: Optional[datetime.datetime]
+    """Only present if the label row is initiated"""
+
     data_hash: str
     dataset_hash: str
+    dataset_title: str
     data_title: str
     data_type: str
+    data_link: Optional[str]
+    """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
-    annotation_task_status: AnnotationTaskStatus
+    """Can be `None` for TMS2 projects"""
+    annotation_task_status: Optional[AnnotationTaskStatus]
+    """Only available for TMS2 project"""
+    workflow_graph_node: Optional[WorkflowGraphNode]
+    is_shadow_data: bool
+    number_of_frames: int
+    duration: Optional[float]
+    """Only available for the VIDEO data_type"""
+    frames_per_second: Optional[int]
+    """Only available for the VIDEO data_type"""
+    height: Optional[int]
+    width: Optional[int]
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
+        created_at = json_dict.get("created_at", None)
+        if created_at is not None:
+            created_at = datetime.datetime.fromisoformat(created_at)
+        last_edited_at = json_dict.get("last_edited_at", None)
+        if last_edited_at is not None:
+            last_edited_at = datetime.datetime.fromisoformat(last_edited_at)
+
+        annotation_task_status = (
+            AnnotationTaskStatus(json_dict["annotation_task_status"])
+            if json_dict["annotation_task_status"] is not None
+            else None
+        )
+
         return LabelRowMetadata(
-            json_dict["label_hash"],
-            json_dict["data_hash"],
-            json_dict["dataset_hash"],
-            json_dict["data_title"],
-            json_dict["data_type"],
-            LabelStatus(json_dict["label_status"]),
-            AnnotationTaskStatus(json_dict["annotation_task_status"]),
+            label_hash=json_dict.get("label_hash", None),
+            created_at=created_at,
+            last_edited_at=last_edited_at,
+            data_hash=json_dict["data_hash"],
+            dataset_hash=json_dict["dataset_hash"],
+            dataset_title=json_dict["dataset_title"],
+            data_title=json_dict["data_title"],
+            data_type=json_dict["data_type"],
+            data_link=json_dict["data_link"],
+            label_status=LabelStatus(json_dict["label_status"]),
+            annotation_task_status=annotation_task_status,
+            workflow_graph_node=WorkflowGraphNode.from_optional_dict(json_dict.get("workflow_graph_node")),
+            is_shadow_data=json_dict.get("is_shadow_data", False),
+            number_of_frames=json_dict["number_of_frames"],
+            duration=json_dict.get("duration", None),
+            frames_per_second=json_dict.get("frames_per_second", None),
+            height=json_dict.get("height"),
+            width=json_dict.get("width"),
         )
 
     @classmethod
@@ -241,3 +323,18 @@ class LabelRowMetadata(Formatter):
         for i in json_list:
             ret.append(cls.from_dict(i))
         return ret
+
+    def to_dict(self) -> dict:
+        """
+        Returns:
+            The dict equivalent of LabelRowMetadata.
+        """
+
+        def transform(value: Any):
+            if isinstance(value, Enum):
+                return value.value
+            elif isinstance(value, datetime.datetime):
+                return value.isoformat()
+            return value
+
+        return {k: transform(v) for k, v in asdict(self).items()}

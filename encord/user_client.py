@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import base64
-import datetime
 import logging
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-import dateutil
+from dateutil import parser as datetime_parser
 
-# add this for backward compatible class comparisons
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
@@ -21,25 +20,41 @@ from encord.http.utils import (
     upload_images_to_encord,
     upload_to_signed_url_list,
 )
-from encord.objects.ontology_structure import OntologyStructure
+from encord.http.v2.api_client import ApiClient
+from encord.objects.common import (
+    DeidentifyRedactTextMode,
+    SaveDeidentifiedDicomCondition,
+)
+from encord.objects.ontology_labels_impl import Ontology as OrmOntology
+from encord.objects.ontology_labels_impl import OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.dataset import CreateDatasetResponse
+from encord.orm.dataset import DEFAULT_DATASET_ACCESS_SETTINGS, CreateDatasetResponse
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset import (
+    DatasetAccessSettings,
     DatasetAPIKey,
     DatasetInfo,
     DatasetScope,
     DatasetUserRole,
+    DicomDeidentifyTask,
     Images,
-    SignedImagesURL,
     StorageLocation,
 )
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
-from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.project import CvatExportType
+from encord.orm.project import (
+    BenchmarkQaWorkflowSettings,
+    CvatExportType,
+    ManualReviewWorkflowSettings,
+)
 from encord.orm.project import Project as OrmProject
-from encord.orm.project import ProjectImporter, ProjectImporterCvatInfo, ReviewMode
+from encord.orm.project import (
+    ProjectImporter,
+    ProjectImporterCvatInfo,
+    ProjectWorkflowSettings,
+    ProjectWorkflowType,
+    ReviewMode,
+)
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.project import Project
@@ -61,8 +76,11 @@ class EncordUserClient:
     def __init__(self, user_config: UserConfig, querier: Querier):
         self.user_config = user_config
         self.querier = querier
+        self._api_client = ApiClient(user_config)
 
-    def get_dataset(self, dataset_hash: str) -> Dataset:
+    def get_dataset(
+        self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
+    ) -> Dataset:
         """
         Get the Project class to access project fields and manipulate a project.
 
@@ -74,10 +92,11 @@ class EncordUserClient:
 
         Args:
             dataset_hash: The Dataset ID
+            dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
         """
         config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         querier = Querier(config)
-        client = EncordClientDataset(querier=querier, config=config)
+        client = EncordClientDataset(querier=querier, config=config, dataset_access_settings=dataset_access_settings)
         return Dataset(client)
 
     def get_project(self, project_hash: str) -> Project:
@@ -98,7 +117,17 @@ class EncordUserClient:
         config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
         querier = Querier(config)
         client = EncordClientProject(querier=querier, config=config)
-        return Project(client)
+
+        orm_project = client.get_project(include_labels_metadata=False)
+
+        # Querying ontology using project querier to avoid permission error,
+        # as there might be only read-only ontology structure access in scope of the project,
+        # not full access, that is implied by get_ontology method
+        ontology_hash = orm_project["ontology_hash"]
+        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
+        project_ontology = Ontology(querier, config)
+
+        return Project(client, orm_project, project_ontology, client_v2=self._api_client)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
@@ -179,7 +208,7 @@ class EncordUserClient:
         created_after: Optional[Union[str, datetime]] = None,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
-    ) -> List[Dict]:
+    ) -> List[Dict[str, Any]]:
         """
         List either all (if called with no arguments) or matching datasets the user has access to.
 
@@ -201,8 +230,8 @@ class EncordUserClient:
         data = self.querier.get_multiple(DatasetWithUserRole, payload={"filter": properties_filter})
 
         def convert_dates(dataset):
-            dataset["created_at"] = dateutil.parser.isoparse(dataset["created_at"])
-            dataset["last_edited_at"] = dateutil.parser.isoparse(dataset["last_edited_at"])
+            dataset["created_at"] = datetime_parser.isoparse(dataset["created_at"])
+            dataset["last_edited_at"] = datetime_parser.isoparse(dataset["last_edited_at"])
             return dataset
 
         return [
@@ -213,7 +242,7 @@ class EncordUserClient:
     @staticmethod
     def create_with_ssh_private_key(
         ssh_private_key: Optional[str] = None,
-        password: str = None,
+        password: Optional[str] = None,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
     ) -> EncordUserClient:
@@ -260,15 +289,41 @@ class EncordUserClient:
         return [{"project": OrmProject(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
     def create_project(
-        self, project_title: str, dataset_hashes: List[str], project_description: str = "", ontology_hash: str = ""
+        self,
+        project_title: str,
+        dataset_hashes: List[str],
+        project_description: str = "",
+        ontology_hash: str = "",
+        workflow_settings: ProjectWorkflowSettings = ManualReviewWorkflowSettings(),
+        workflow_template_hash: Optional[str] = None,
     ) -> str:
+        """
+        Creates a new project and returns its uid ('project_hash')
+
+        Args:
+            project_title: the title of the project
+            dataset_hashes: a list of the dataset uids that the project will use
+            project_description: the optional description of the project
+            ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
+            workflow_settings: selects and configures the type of the quality control workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
+            workflow_template_hash: project will be created using a workflow based on the template provided.
+        Returns:
+            the uid of the project.
+        """
         project = {
             "title": project_title,
             "description": project_description,
             "dataset_hashes": dataset_hashes,
+            "workflow_type": ProjectWorkflowType.MANUAL_QA.value,
         }
+        if isinstance(workflow_settings, BenchmarkQaWorkflowSettings):
+            project["workflow_type"] = ProjectWorkflowType.BENCHMARK_QA.value
+            project["source_projects"] = workflow_settings.source_projects
         if ontology_hash and len(ontology_hash):
             project["ontology_hash"] = ontology_hash
+
+        if workflow_template_hash is not None:
+            project["workflow_template_id"] = workflow_template_hash
 
         return self.querier.basic_setter(OrmProject, uid=None, payload=project)
 
@@ -287,13 +342,21 @@ class EncordUserClient:
     def get_or_create_project_api_key(self, project_hash: str) -> str:
         return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
 
-    def get_dataset_client(self, dataset_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
+    def get_dataset_client(
+        self,
+        dataset_hash: str,
+        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
+        **kwargs,
+    ) -> EncordClientDataset:
         """
         DEPRECATED - prefer using :meth:`get_dataset()` instead.
         """
         dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
-        return EncordClient.initialise(
-            dataset_hash, dataset_api_key.api_key, requests_settings=self.user_config.requests_settings, **kwargs
+        return EncordClientDataset.initialise(
+            dataset_hash,
+            dataset_api_key.api_key,
+            requests_settings=self.user_config.requests_settings,
+            dataset_access_settings=dataset_access_settings,
         )
 
     def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
@@ -311,6 +374,8 @@ class EncordUserClient:
         dataset_name: str,
         review_mode: ReviewMode = ReviewMode.LABELLED,
         max_workers: Optional[int] = None,
+        *,
+        transform_bounding_boxes_to_polygons=False,
     ) -> Union[CvatImporterSuccess, CvatImporterError]:
         """
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
@@ -327,6 +392,8 @@ class EncordUserClient:
                     See the `ReviewMode` documentation for more details.
             max_workers:
                 DEPRECATED: This argument will be ignored
+            transform_bounding_boxes_to_polygons:
+                All instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
 
         Returns:
             CvatImporterSuccess: If the project was successfully imported.
@@ -336,7 +403,7 @@ class EncordUserClient:
             ValueError:
                 If the CVAT directory has an invalid format.
         """
-        if not (type(import_method) == LocalImport):
+        if not isinstance(import_method, LocalImport):
             raise ValueError("Only local imports are currently supported ")
 
         cvat_directory_path = import_method.file_path
@@ -353,10 +420,12 @@ class EncordUserClient:
         with annotations_file_path.open("rb") as f:
             annotations_base64 = base64.b64encode(f.read()).decode("utf-8")
 
-        images_paths = self.__get_images_paths(annotations_base64, images_directory_path)
+        images_paths, used_base_path = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(images_paths, dataset_name)
+        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(
+            images_paths, used_base_path, dataset_name
+        )
         log.info("Image upload completed.")
 
         payload = {
@@ -366,6 +435,7 @@ class EncordUserClient:
             "dataset_hash": dataset_hash,
             "image_title_to_image_hash_map": image_title_to_image_hash_map,
             "review_mode": review_mode.value,
+            "transform_bounding_boxes_to_polygons": transform_bounding_boxes_to_polygons,
         }
 
         log.info("Starting project import. This may take a few minutes.")
@@ -384,7 +454,7 @@ class EncordUserClient:
         else:
             raise ValueError("The api server responded with an invalid payload.")
 
-    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> List[Path]:
+    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> Tuple[List[Path], Path]:
         payload = {"annotations_base64": annotations_base64}
         project_info = self.querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
         if "error" in project_info:
@@ -397,19 +467,34 @@ class EncordUserClient:
             if default_path not in list(images_directory_path.iterdir()):
                 raise ValueError("The expected directory 'default' was not found.")
 
+            used_base_path = default_path
+            # NOTE: it is possible that here we also need to use the __get_recursive_image_paths
             images = list(default_path.iterdir())
+
         elif export_type == CvatExportType.TASK.value:
-            images = list(images_directory_path.iterdir())
+            used_base_path = images_directory_path
+            images = self.__get_recursive_image_paths(images_directory_path)
         else:
             raise ValueError(
                 f"Received an unexpected response `{project_info}` from the server. Project import aborted."
             )
 
         if not images:
-            raise ValueError(f"No images found in the provided data folder.")
-        return images
+            raise ValueError("No images found in the provided data folder.")
+        return images, used_base_path
 
-    def __upload_cvat_images(self, images_paths: List[Path], dataset_name: str) -> Tuple[str, Dict[str, str]]:
+    @staticmethod
+    def __get_recursive_image_paths(images_directory_path: Path) -> List[Path]:
+        """Recursively get all the images in all the sub folders."""
+        ret = []
+        for file in images_directory_path.glob("**/*"):
+            if file.is_file():
+                ret.append(file)
+        return ret
+
+    def __upload_cvat_images(
+        self, images_paths: List[Path], used_base_path: Path, dataset_name: str
+    ) -> Tuple[str, Dict[str, str]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -430,9 +515,15 @@ class EncordUserClient:
         successful_uploads = upload_to_signed_url_list(
             file_path_strings, self.user_config, querier, Images, CloudUploadSettings()
         )
+        if len(images_paths) != len(successful_uploads):
+            raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
+
         upload_images_to_encord(successful_uploads, querier)
 
-        image_title_to_image_hash_map = dict(map(lambda x: (x.title, x.data_hash), successful_uploads))
+        image_title_to_image_hash_map = {}
+        for image_path, successful_upload in zip(images_paths, successful_uploads):
+            trimmed_image_path_str = str(image_path.relative_to(used_base_path))
+            image_title_to_image_hash_map[trimmed_image_path_str] = successful_upload.data_hash
 
         return dataset_hash, image_title_to_image_hash_map
 
@@ -482,7 +573,9 @@ class EncordUserClient:
             )
         return retval
 
-    def create_ontology(self, title: str, description: str = "", structure: OntologyStructure = None) -> Ontology:
+    def create_ontology(
+        self, title: str, description: str = "", structure: Optional[OntologyStructure] = None
+    ) -> Ontology:
         structure_dict = structure.to_dict() if structure else dict()
         ontology = {
             "title": title,
@@ -506,7 +599,7 @@ class EncordUserClient:
         ret = dict()
 
         # be relaxed with what we receive: translate raw strings to enum values
-        for (clause, val) in properties_filter.items():
+        for clause, val in properties_filter.items():
             if val is None:
                 continue
 
@@ -520,8 +613,8 @@ class EncordUserClient:
 
             if clause.value.endswith("before") or clause.value.endswith("after"):
                 if isinstance(val, str):
-                    val = dateutil.parser.isoparse(val)
-                if isinstance(val, datetime.datetime):
+                    val = datetime_parser.isoparse(val)
+                if isinstance(val, datetime):
                     val = val.isoformat()
                 else:
                     raise ValueError(f"Value for {clause.name} filter should be a datetime")
@@ -529,6 +622,67 @@ class EncordUserClient:
             ret[clause.value] = val
 
         return ret
+
+    def deidentify_dicom_files(
+        self,
+        dicom_urls: List[str],
+        integration_hash: str,
+        redact_dicom_tags: bool = True,
+        redact_pixels_mode: DeidentifyRedactTextMode = DeidentifyRedactTextMode.REDACT_NO_TEXT,
+        save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,
+    ) -> List[str]:
+        """
+        Deidentify DICOM files in external storage.
+        Given links to DICOM files pointing to AWS, GCP, AZURE or OTC, for example:
+        [ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]
+        Function executes deidentification on those files, it removes all
+        DICOM tags (https://dicom.nema.org/medical/Dicom/2017e/output/chtml/part06/chapter_6.html)
+        from metadata except for:
+
+        * x00080018 SOPInstanceUID
+        * x00100010 PatientName
+        * x00180050 SliceThickness
+        * x00180088 SpacingBetweenSlices
+        * x0020000d StudyInstanceUID
+        * x0020000e SeriesInstanceUID
+        * x00200032 ImagePositionPatient
+        * x00200037 ImageOrientationPatient
+        * x00280008 NumberOfFrames
+        * x00281050 WindowCenter
+        * x00281051 WindowWidth
+        * x00520014 ALinePixelSpacing
+
+        Args:
+            self: Encord client object.
+            dicom_urls: a list of urls to DICOM files, e.g.
+                `[ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]`
+            integration_hash:
+                integration_hash parameter of Encord platform external storage integration
+            redact_dicom_tags:
+                Specifies if DICOM tags redaction should be enabled.
+            redact_pixels_mode:
+                Specifies which text redaction policy should be applied to pixel data.
+            save_conditions:
+                Specifies a list of conditions which all have to be true for DICOM deidentified file to be saved.
+        Returns:
+            Function returns list of links pointing to deidentified DICOM files,
+            those will be saved to the same bucket and the same directory
+            as original files with prefix ( deid_{timestamp}_ ).
+            Example output:
+            `[ "https://s3.region-code.amazonaws.com/bucket-name/deid_167294769118005312_dicom-file-input.dcm" ]`
+
+        """
+
+        return self.querier.basic_setter(
+            DicomDeidentifyTask,
+            uid=integration_hash,
+            payload={
+                "dicom_urls": dicom_urls,
+                "redact_dicom_tags": redact_dicom_tags,
+                "redact_pixels_mode": redact_pixels_mode.value,
+                "save_conditions": [x.to_dict() for x in (save_conditions or [])],
+            },
+        )
 
 
 class ListingFilter(Enum):

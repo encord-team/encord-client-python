@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -103,6 +103,7 @@ class UserConfig(BaseConfig):
 
         return {
             "Accept": "application/json",
+            "Accept-Encoding": "gzip",
             "Content-Type": "application/json",
             "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
         }
@@ -130,7 +131,7 @@ class UserConfig(BaseConfig):
 
         """
         key_bytes = ssh_private_key.encode()
-        password_bytes = password and password.encode()
+        password_bytes = password.encode() if password else None
         private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
 
         if isinstance(private_key, Ed25519PrivateKey):
@@ -152,7 +153,6 @@ class Config(BaseConfig):
         websocket_endpoint: str = WEBSOCKET_ENDPOINT,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
-
         if resource_id is None:
             resource_id = get_env_resource_id()
 
@@ -217,7 +217,7 @@ def get_env_ssh_key() -> str:
                 f"Failed to load private ssh key."
             )
 
-        with open(ssh_file) as f:
+        with open(ssh_file, encoding="ascii") as f:
             return f.read()
 
     # == 2. Look for raw key
@@ -251,6 +251,7 @@ class ApiKeyConfig(Config):
         self.api_key = api_key
         self._headers = {
             "Accept": "application/json",
+            "Accept-Encoding": "gzip",
             "Content-Type": "application/json",
             "ResourceID": resource_id,
             "Authorization": self.api_key,
@@ -295,6 +296,7 @@ class SshConfig(Config):
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "Accept-Encoding": "gzip",
             "ResourceID": self.resource_id,
             "ResourceType": self._resource_type,
             "Authorization": _get_ssh_authorization_header(self._user_config.public_key_hex, signature),

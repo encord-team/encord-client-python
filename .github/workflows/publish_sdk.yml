@@ -5,8 +5,8 @@ on:
     types: [ published ]
 
 env:
-  PYTHON: 3.7.12
-  POETRY: 1.1.12
+  PYTHON: 3.8
+  POETRY: 1.5.0
   PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
 concurrency:
@@ -16,13 +16,13 @@ concurrency:
 jobs:
   publish-sdk:
     name: Publish SDK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON }}
 
@@ -46,14 +46,14 @@ jobs:
 
   send-slack-notification:
     name: Send notification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: [ publish-sdk ]
     if: always()
     env:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Get workflow status
         uses: technote-space/workflow-conclusion-action@v2

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -41,13 +41,13 @@ def construct_answer_dictionaries(label_row):
         if LABELS in data_unit:
             labels = data_unit.get(LABELS)
 
-            if data_type == DataType.IMG_GROUP.value:  # Go through images
-                items = labels.get(OBJECTS) + labels.get(CLASSIFICATIONS)
+            if data_type in {DataType.IMG_GROUP.value, DataType.IMAGE.value}:  # Go through images
+                items = labels.get(OBJECTS, {}) + labels.get(CLASSIFICATIONS, {})
                 add_answers_to_items(items, classification_answers, object_answers)
 
-            elif data_type == DataType.VIDEO.value:
+            elif data_type in (DataType.VIDEO.value, DataType.DICOM.value):
                 for frame in labels:  # Go through frames
-                    items = labels[frame].get(OBJECTS) + labels[frame].get(CLASSIFICATIONS)
+                    items = labels[frame].get(OBJECTS, {}) + labels[frame].get(CLASSIFICATIONS, {})
                     add_answers_to_items(items, classification_answers, object_answers)
 
     label_row[OBJECT_ANSWERS] = object_answers

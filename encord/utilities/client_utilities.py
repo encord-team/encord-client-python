@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -13,13 +13,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import pprint
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from typing import List, Union
+from typing import List, Optional, Set, TypeVar, Union
 
-import dateutil
+from dateutil import parser as datetime_parser
 
 
 def pretty_print(data):
@@ -120,12 +120,22 @@ class CvatImporterError:
     issues: Issues
 
 
-def parse_datetime(key, val):
+def parse_datetime(key: str, val: Optional[Union[str, datetime]]) -> Optional[str]:
     if not val:
         return None
     if isinstance(val, str):
-        return dateutil.parser.isoparse(val)
-    if isinstance(val, datetime.datetime):
+        return datetime_parser.isoparse(val).isoformat()
+    if isinstance(val, datetime):
         return val.isoformat()
     else:
         raise ValueError(f"Value for {key} should be a datetime")
+
+
+T = TypeVar("T")
+
+
+def optional_set_to_list(s: Optional[Set[T]]) -> Optional[List[T]]:
+    if s is None:
+        return s
+    else:
+        return list(s)

@@ -12,18 +12,11 @@ Make sure that you have associated a :xref:`public-private_key_pair` with |compa
 If not you can do so by following the :ref:`authentication:User authentication` tutorial.
 
 Creating a Project
-==================
+====================
 
-You can create a new project using the :meth:`create_project() <.EncordUserClient.create_project>` method that takes three parameters:
+You can create a new project using the :meth:`create_project() <.EncordUserClient.create_project>` method.
 
-* :meth:`project_title <.EncordUserClient.create_project>`: the title of the project as a string
-
-* :meth:`dataset_ids <.EncordUserClient.create_project>`: a list of ``<dataset_hash>`` strings for the datasets to add to the project.
-  For more details on creating datasets, see :ref:`tutorials/datasets:Creating a dataset`.
-  This can be set to an empty list
-
-* :meth:`project_description <.EncordUserClient.create_project>`: the description of the project as a string.
-  This parameter is optional
+------------
 
 :meth:`create_project() <.EncordUserClient.create_project>` will return the ``<project_hash>`` of the created project.
 The user that calls this method becomes the admin of the project.
@@ -77,9 +70,8 @@ Here is an example of copying a project:
             "00000000-bbbb-cccc-eeee-ffffffffffff"  # the <project_hash>
 
 
-.. rubric:: Footnotes
 
-.. [#f1] If you do not copy over the collaborators, then the reviewer and label mapping settings will not be copied over either.
+.. note:: If you do not copy over the collaborators, then the reviewer and label mapping settings will not be copied over either.
 
 
 
@@ -166,10 +158,9 @@ Note how all users get assigned the same role.
 The return value is a list of :class:`.ProjectUser`.
 Each :class:`.ProjectUser` contains information about email, :class:`.ProjectUserRole` and ``<project_hash>``.
 
-Managing a project
+Project details
 ==================
-Your default choice for interacting with a project is via the :ref:`authentication:User authentication`.
-
+To obtain details about your project, you first need to complete the :ref:`authentication:User authentication` and create a 'project' object. The code snippet below shows how to do this using the project id.
 
 .. tabs::
 
@@ -179,6 +170,17 @@ Your default choice for interacting with a project is via the :ref:`authenticati
             :language: python
 
 
+Collaborator session information
+---------------------------------
+
+Use the :meth:`list_collaborator_timers() <.EncordUserClient.list_collaborator_timers>` method on a 'project' object to obtain session information for each collaborator that has worked on the project within a specified range of dates.
+
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/list_collaborator_timers.py
+            :language: python
 
 Data
 ====
@@ -239,383 +241,18 @@ To get those hashes, you can follow the example in :ref:`tutorials/datasets:List
 
 Ontology
 ========
-A central component of a project is the |ontology|.
-The ontology essentially defines the label structure of a given project.
-For a |platform| description of the |ontology|, please see :xref:`configure_label_editor_(ontology)`.
 
+A central component of a project is the ontology - an in-depth description of which can be found `here <https://docs.encord.com/ontologies/overview>`_.
 
-Fetching a project's ontology
------------------------------
+Ontologies are top-level entities that can be attached to projects that provide a template structure for labels. 
+Please note that while a project can only have a single ontology attached to it, one ontology can be attached to multiple projects.
 
-You can fetch the |ontology| of an existing project for viewing via the |sdk|.
-For a |platform|-related description of the |ontology|, please see :xref:`configure_label_editor_(ontology)`.
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/projects/fetching_project_ontology.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            {"classifications": [{"attributes": [{"featureNodeHash": "237c442f",
-                                                  "id": "1.1",
-                                                  "name": "Radio Example",
-                                                  "options": [{"featureNodeHash": "00fe752c",
-                                                               "id": "1.1.1",
-                                                               "label": "Cat",
-                                                               "value": "cat"},
-                                                              {"featureNodeHash": "0538f289",
-                                                               "id": "1.1.2",
-                                                               "label": "Dog",
-                                                               "value": "dog"},
-                                                              {"featureNodeHash": "4d2c4767",
-                                                               "id": "1.1.3",
-                                                               "label": "Horse",
-                                                               "value": "horse"}],
-                                                  "required": False,
-                                                  "type": "radio"}],
-                                  "featureNodeHash": "21b68c3b",
-                                  "id": "1"},
-                                 {"attributes": [{"featureNodeHash": "d7c2ad1b",
-                                                  "id": "2.1",
-                                                  "name": "Checkbox example",
-                                                  "options": [{"featureNodeHash": "88903c98",
-                                                               "id": "2.1.1",
-                                                               "label": "check 1: are "
-                                                                        "there people in "
-                                                                        "the image",
-                                                               "value": "check_1:_are_there_people_in_the_image"},
-                                                              {"featureNodeHash": "a5c19b1b",
-                                                               "id": "2.1.2",
-                                                               "label": "check if there is "
-                                                                        "a pink elephant "
-                                                                        "with cat eyes in "
-                                                                        "the image",
-                                                               "value": "check_if_there_is_a_pink_elephant_with_cat_eyes_in_the_image"}],
-                                                  "required": False,
-                                                  "type": "checklist"}],
-                                  "featureNodeHash": "59151c93",
-                                  "id": "2"},
-                                 {"attributes": [{"featureNodeHash": "2afbce16",
-                                                  "id": "3.1",
-                                                  "name": "Text example",
-                                                  "required": False,
-                                                  "type": "text"}],
-                                  "featureNodeHash": "8161c61a",
-                                  "id": "3"}],
-             "objects": [{"color": "#D33115",
-                          "featureNodeHash": "41d0a534",
-                          "id": "1",
-                          "name": "cat",
-                          "shape": "polygon"},
-                         {"color": "#FCDC00",
-                          "featureNodeHash": "edf21536",
-                          "id": "2",
-                          "name": "bus",
-                          "shape": "polygon"},
-                         {"color": "#DBDF00",
-                          "featureNodeHash": "2a9ab898",
-                          "id": "3",
-                          "name": "airplane",
-                          "shape": "bounding_box"},
-                         {"color": "#A4DD00",
-                          "featureNodeHash": "56996de1",
-                          "id": "4",
-                          "name": "bird",
-                          "shape": "point"}]}
-
-
-Adding components to a project ontology
----------------------------------------
-
-The ontology has two types of components, classifications and objects.
-
-Classifications relate to whole frames.
-For example, if you want to be able to annotate whether an image is of a cat or a dog as a whole, you will add an animal classification with options "Cat" and "Dog."
-
-Objects, on the other hand, are specific to locations in a frame.
-For example, if you want to annotate where the dog is in the image, you would add a dog object to the ontology.
-Objects are located using a graphical annotation, such as a bounding box or a polygon, indicating where the dog is.
-
-
-Adding a classification to an ontology
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here we are in the "cat vs. dog" scenario from above.
-Classifications for cats and dogs are added to an ontology using the :meth:`add_classification() <encord.project.Project.add_classification>` method.
-
-The :meth:`add_classification() <encord.project.Project.add_classification>` method takes the following parameters:
-
-* ``name``: the description of the classification as a string
-* ``classification_type``: a value from the :class:`.ClassificationType` enum.
-* ``required``: a boolean value specifying whether the classification is mandatory
-* ``options``: a list of options that the annotator can choose from in case of :class:`CHECKLIST <.ClassificationType>`/:class:`RADIO <.ClassificationType>`.
-  Omit this parameter if adding a ``TEXT`` classification.
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/projects/adding_classifications_to_a_project_ontology.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            True  # False if unsuccessful
-
-
-
-Adding an object to an ontology
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here we are in the "where is the dog" scenario.
-Objects are added to an existing ontology using the :meth:`add_object() <encord.project.Project.add_object>` method.
-
-The :meth:`add_object() <encord.project.Project.add_object>` method takes the following parameters:
-
-* ``name``: the description of the object as a string
-* ``shape``: the shape of the object used to annotate it of type :class:`.ObjectShape` enum
-
-
-.. tabs::
-
-    .. tab:: Code
-
-        .. literalinclude:: /code_examples/tutorials/projects/adding_objects_to_a_project_ontology.py
-            :language: python
-
-    .. tab:: Example output
-
-        .. code-block:: python
-
-            True  # False if unsuccessful
-
+- To access the ontology you can use the :meth:`~encord.user_client.EncordUserClient.get_ontology()` method, that allows you to work with its `structure` property.
+- The structure comes as the :class:`~encord.ontology.ontology_labels_impl.OntologyStructure` class which has good self documenting examples on how to be used.
 
 Labels
 ======
-
-.. note::
-    This section is undergoing a review [Monday, May 23rd 2022].
-
-A label row has this structure:
-
-.. code-block::
-
-    {
-        "label_hash": "<label_hash>",
-        "data_title": "<data_title>",
-        "data_type": "<data_type>",
-        "data_units": { ... },
-        "object_answers": { ... },
-        "classification_answers": { ... },
-        "label_status": "<label_status>",
-    }
-
-A label row contains a single data unit or a collection of data units together with associated labels, and is specific to a data asset with type video or image group.
-
-#.  A label row with a data asset of type ``video`` contains a single data unit.
-#.  A label row with a data asset of type ``img_group`` contains any number of data units.
-
-A data unit can have any number of vector labels (e.g. bounding box, polygon, polyline, keypoint) and classifications.
-
-Getting label rows
-------------------
-
-A project's ``<label_hash>`` is found in the project information ``project``, which also contain information about the ``data_title``, ``data_type`` and ``label_status``.
-
-.. code-block::
-
-    {
-        ...,
-        "label_rows": [{
-            "label_hash": "<label_hash>",
-            "data_hash": "<data_hash>",
-            "dataset_hash": "<dataset_hash>",
-            "dataset_title": "<sample_dataset_title>",
-            "data_title": "example.mp4",
-            "data_type": "VIDEO",
-            "label_status": "LABELLED",
-            "annotation_task_status": "IN_REVIEW"
-        },
-        # ...
-        ]
-    }
-
-
-Use the :class:`encord.project.Project` to fetch individual label objects.
-
-.. code-block::
-
-    label = project.get_label_row("<label_hash>")
-
-Use the :meth:`project.get_labels_list() <encord.orm.project.Project.get_labels_list>` method to get a list of label hashes (``<label_hash>``) in a project and fetch all project labels.
-
-.. code-block::
-
-    project_orm = project.get_project()
-
-    label_rows = []
-    for label_hash in project_orm.get_labels_list():
-        lb = project.get_label_row(label_hash)
-        label_rows.append(lb)
-
-The label row object contains data units with signed URLs (``<data_link>``) to the labeled data asset.
-
-.. code-block::
-
-    {
-        "label_hash": "<label_hash>",
-        "data_hash": "data_hash",
-        "data_type": "sample_data_type",
-        "data_units": {
-            ...,
-            "<data_unit_hash>": {
-                "data_hash": "<data_unit_hash>",
-                "data_title": "Example title",
-                "data_link": "<data_link>",
-                "data_type": "img_group",  # or "video"
-                "data_fps": "<fps>" # For videos
-                "data_sequence": "<data_sequence>",  # defines order of data units
-                "labels": { ... },
-            },
-        },
-        "object_answers": { ... },
-        "classification_answers": { ... }
-    }
-
-
-For the ``img_group`` data type, the ``labels`` dictionary contains ``objects`` and ``classifications``.
-
-.. code-block::
-
-    {
-        "objects": {
-            [{object 1}, {object 2}, ...]
-        }
-        "classifications": {
-            [{classification 1}, {classification 2}, ...]
-        }
-    }
-
-
-For the ``video`` data type, the ``labels`` dictionary contains a series of frames.
-
-.. code-block::
-
-    {
-        "<frame>": {
-            "objects": {
-                [{object 1}, {object 2}, ...]
-            }
-            "classifications": {
-                [{classification 1}, {classification 2}, ...]
-            }
-        },
-        ...
-    }
-
-
-The objects and classifications answer dictionaries contain 'answers' attributes that describe the object or classification.
-This is to avoid storing the information at every frame in the label dictionary.
-The ``object answers`` dictionary is in the form:
-
-.. code-block::
-
-    {
-        "objectHash": {
-            "objectHash": objectHash,
-            "classifications": [{answer 1}, {answer 2}, ...]
-        },
-        ...
-    }
-
-The ``classification answers`` dictionary is in the form:
-
-.. code-block::
-
-    {
-        "classificationHash": {
-            "classificationHash": classificationHash,
-            "classifications": [{answer 1}, {answer 2}, ...]
-        },
-        ...
-    }
-
-
-Saving label rows
------------------
-
-Labels are saved to their ``<label_hash>`` from a label row instance.
-To save labels for the data which was not labeled before, follow the steps under :ref:`tutorials/projects:Creating a label row` below.
-
-.. code-block::
-
-    project.save_label_row('<label_hash>', sample_label)
-
-Label rows have to be saved in the same format as fetched.
-The function :meth:`construct_answer_dictionaries() <encord.utilities.label_utilities.construct_answer_dictionaries>` helps construct answer dictionaries for all objects and classifications in the label row if they do not exist, returning a label row object with updated object and classification answer dictionaries.
-
-.. code-block:: python
-
-    from encord.utilities.label_utilities import construct_answer_dictionaries
-
-    sample_label = project.get_label_row("sample_label_uid")
-    updated_label = label_utilities.construct_answer_dictionaries(sample_label)
-    project.save_label_row(sample_label["label_hash"], updated_label)
-
-
-Creating a label row
---------------------
-
-If you want to save labels to a unit of data (``video``, ``img_group``) for which a label row (and thus a ``<label_hash>``) does not yet exist, you need to first create a label row associated with the data.
-
-#. Get the data_hash ``<data_hash>`` that you want to create labels for.
-   To do this, request all label rows and note the ones that are NOT_LABELLED under 'label_status' (or, where ``<label_hash>`` is None):
-
-   .. code-block:: python
-
-       print(project.label_rows)
-
-   In this example project, we have two videos.
-   The first is not labeled so you can use its ``<data_hash>`` uid to create a new label row for this video.
-
-
-   .. code-block::
-
-       [
-         {
-         "label_hash": None,
-         "data_hash": "<data_hash>",
-         "data_title": "sample_video_1.mp4",
-         "cord_type": 0,
-         "data_type": "VIDEO",
-         "label_status": "NOT_LABELLED"
-         },
-         {
-         "label_hash": "<label_hash>",
-         "data_hash": "<data_hash>",
-         "data_title": "sample_video_2.mp4',
-         "cord_type": 0,
-         "data_type": "VIDEO",
-         "label_status": "LABELLED"
-         }
-       ]
-
-
-#. Create the label row:
-
-    .. code-block:: python
-
-        data_hash = label_row["data_hash"]
-        my_label_row = project.create_label_row(data_hash)
-
-
-    The label row will have the expected structure and can be updated as needed.
-    You can retrieve its uid via ``my_label_row.label_hash`` and run other operations such as get and save.
+Check the end to end tutorials for a guide on how to read, construct, and save labels.
 
 Submitting a label row for review
 ---------------------------------
@@ -628,61 +265,53 @@ The following method can be used to submit a label row for review.
 
 The above method will submit the annotation task corresponding to the label row and create the review tasks corresponding to it based on the sampling rate in the project settings.
 
-Getting data rows
------------------
-
-A data row contains a data unit, or a collection of data units, and has attributes ``<data_hash>``, ``video``, and ``images``.
-
-.. code-block::
-
-    {
-        "data_hash": <data_hash>,
-        "video": video,
-        "images": [ images ],
-    }
-
-
-#. A data row with a data asset of type ``video`` contains a single data unit in the form of a video
-#. A data row with a data asset of type ``img_group`` contains as many data units as there are images in the group
-
-
-.. code-block:: python
-
-    # type: Tuple[Optional[dict], Optional[List[dict]]
-    video, images = project.get_data("<data_hash>", generate_signed_url=True)
-
-You can optionally return signed URLs for timed public access to that resource (default is False).
-
 Reviewing label logs
 --------------------
 
-You can query information about a project's labels by using the :meth:`get_label_logs() <encord.project.Project.get_label_logs>` method of a corresponding :class:`~encord.project.Project`.
-You will need an API key with the ``label_logs.read`` permission.
-The :meth:`get_label_logs() <encord.project.Project.get_label_logs>` method takes a number of optional parameters to narrow down the retrieved logs:
+While the :meth:`get_label_row() <encord.project.Project.get_label_row>` will gives static information about the labels at the point in time, the :meth:`get_label_logs() <encord.project.Project.get_label_logs>` gives you an actions log that was created in the UI to create all the current labels.
+Those actions include for example adding, editing, and deleting labels.
+Check the :meth:`Action <encord.orm.label_log.Action>` `Enum` for all possible actions.
 
-.. code-block::
+Possible use cases of consuming these actions would be to gather performance statistics around labelling.
 
-    logs = project.get_label_logs(user_hash=<user_hash>)
-    for log in logs:
-        print(log)
+Check the signature of the :meth:`get_label_logs() <encord.project.Project.get_label_logs>` function to see different ways to narrow down the response.
 
-.. code-block::
+If you are using an an API key you will need the `label_logs.read` permission.
 
-    def get_label_logs(
-        self,
-        user_hash: str = None,
-        data_hash: str = None,
-        from_unix_seconds: int = None,
-        to_unix_seconds: int = None
-        )
-        -> List[LabelLog]
+.. tabs::
+
+    .. tab:: Code
+
+        .. code-block::
+
+            # print first log
+            logs = project.get_label_logs(data_hash="7d452929-9d2a-4aac-9010-4aa1dc8d4806")
+            for log in logs:
+                print(log)
+                break
+
+    .. tab:: Example output
+
+        .. code-block::
+
+            LabelLog(
+                    log_hash=None,
+                    user_hash=None,
+                    user_email="xxxxx@cord.tech",
+                    annotation_hash="2t5kCNyw",
+                    identifier="2t5kCNyw",
+                    data_hash="7d452929-9d2a-4aac-9010-4aa1dc8d4806",
+                    feature_hash="KOYgD/K3",
+                    action=0,
+                    label_name="Text classification",
+                    time_taken=1482,
+                    created_at="2022-11-30 17:27:10",
+                    frame=1,
+                )
 
 
 Models
 ======
-
-.. note::
-    This section is undergoing a review [Monday, May 23rd 2022].
 
 The |sdk| allows you to interact with Encord's advanced model features.
 Our model library includes state-of-the-art classification, object detection, segmentation, and pose estimation models.
@@ -727,7 +356,6 @@ The following models are available, and are all imported using ``from encord.con
     VGG19 = "vgg19"
 
     # Object detection
-    YOLOV5 = "yolov5"
     FASTER_RCNN = "faster_rcnn"
 
     # Instance segmentation
@@ -753,16 +381,18 @@ Click on the *Training API details* button to toggle a code snippet with model t
 .. code-block::
 
     from encord.constants.model_weights import *
+    from encord.constants.model import Device
 
     # Run training and print resulting model iteration object
     model_iteration = project.model_train(
-      <model_uid>,
+      "<model_uid>",
       label_rows=["<label_row_1>", "<label_row_2>", ...], # Label row uid's
       epochs=500, # Number of passes through training dataset.
       batch_size=24, # Number of training examples utilized in one iteration.
-      weights=fast_ai, # Model weights.
-      device="cuda" # Device (CPU or CUDA/GPU, default is CUDA).
+      weights=fast_rcnn_R_50_FPN_1x, # Model weights.
+      device=Device.CUDA # (CPU or CUDA/GPU, default is CUDA).
     )
+
     print(model_iteration)
 
 
@@ -775,10 +405,6 @@ The following pre-trained weights are available for training and are all importe
 
     # Fast AI (classification)
     fast_ai
-
-    # Yolo V5 (object detection)
-    yolov5x
-    yolov5s
 
     # Faster RCNN (object detection)
     faster_rcnn_R_50_C4_1x
@@ -892,9 +518,6 @@ Limits on the input values
 Algorithms
 ==========
 
-.. note::
-    This section is undergoing a review [Monday, May 23rd 2022].
-
 The |sdk| allows you to interact with Encord's algorithmic automation features.
 Our library includes sampling, augmentation, transformation and labeling algorithms.
 
@@ -980,9 +603,6 @@ All that is required is a ``<feature_hash>`` and ``object_hash`` for each object
 Other Resources
 ===============
 
-.. note::
-    This section is undergoing a review [Monday, May 23rd 2022].
-
 CVAT Integration
 ----------------
 
@@ -1028,25 +648,43 @@ Once this is downloaded, you can unzip the file to create a directory which cont
 Importing with the |sdk|
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block::
+.. note::
+    As imports can take quite some time, we recommend increasing the :class:`.EncordUserClient` request timeouts as described here :ref:`tutorials/configurations:Network configurations`.
 
-    ssh_key = os.environ.get("SSH_KEY")
-    user_client = EncordUserClient.create_with_ssh_private_key(ssh_key)
 
-    # We have placed the unzipped Pizza Project directory into a
-    # `data` folder relative to this script
-    data_folder = "data/Pizza Project"
-    dataset_name = "Pizza Images Dataset"
-    cvat_importer_ret = user_client.create_project_from_cvat(
-        LocalImport(file_path=data_folder),
-        dataset_name
-    )
 
-    # Check if the import was a success and inspect the return value
-    if type(cvat_importer_ret) == CvatImporterSuccess:
-        print(f"project_hash = {cvat_importer_ret.project_hash}")
-        print(f"dataset_hash = {cvat_importer_ret.dataset_hash}")
-        print(f"issues = {cvat_importer_ret.issues}")
+.. tabs::
+
+    .. tab:: Code
+
+        .. literalinclude:: /code_examples/tutorials/projects/cvat_importer.py
+            :language: python
+
+    .. tab:: Example output
+
+        .. code-block:: python
+
+            project_hash = "0a5c5a7e-da96-44c1-a355-a53259c0e73e"
+            dataset_hash = "bd19ef7c-b698-434f-a7cc-d3c01fc5da3e"
+            encord.utilities.client_utilities.Issues(
+                errors=[],
+                warnings=[
+                    encord.utilities.client_utilities.Issue(
+                        issue_type='In Encord a specific label can only have one possible shape. If '
+                            'the same label is used for multiple shapes, multiple labels need '
+                            'to be created.',
+                        instances=[
+                            "The label `not_yet_annotated` was used for multiple shapes "
+                            "`[<CvatShape.POLYGON: 'polygon'>, <CvatShape.TAG: 'tag'>]`. "
+                            "Each shape which is translatable to Encord will lead to a "
+                            "distinct editor entry."
+                        ]
+                    )
+                ],
+                infos=[]
+            )
+            issues = None
+
 
 If the return object is a :class:`.CvatImporterSuccess`, you can open the web app and will find that the project was already added.
 

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -14,20 +14,27 @@
 # under the License.
 import dataclasses
 import logging
-from random import random
-from typing import List, Type, TypeVar
-from urllib.error import URLError
+import platform
+import random
+import uuid
+from contextlib import contextmanager
+from typing import Any, Generator, List, Tuple, Type, TypeVar
 
 import requests
 import requests.exceptions
-from requests import Session
+from requests import Response, Session
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util import Retry
+from urllib3 import Retry
 
+from encord._version import __version__ as encord_version
 from encord.configs import BaseConfig
 from encord.exceptions import *
+from encord.http.common import (
+    HEADER_CLOUD_TRACE_CONTEXT,
+    HEADER_USER_AGENT,
+    RequestContext,
+)
 from encord.http.error_utils import check_error_response
-from encord.http.helpers import retry_on_network_errors
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
 from encord.orm.formatter import Formatter
@@ -42,48 +49,60 @@ class Querier:
 
     def __init__(self, config: BaseConfig):
         self._config = config
-        self._session: Session = self.create_new_session()
 
     def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
         """Single DB object getter."""
-        request = self.request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
-        res = self.execute(request)
+        request = self._request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
+        res, context = self._execute(request)
         if res:
-            if issubclass(db_object_type, Formatter):
-                return db_object_type.from_dict(res)
-            elif dataclasses.is_dataclass(db_object_type):
-                return db_object_type(**res)
-            else:
-                return db_object_type(res)
+            return self._parse_response(db_object_type, res)
         else:
-            raise ResourceNotFoundError("Resource not found.")
+            raise ResourceNotFoundError("Resource not found.", context=context)
 
     def get_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
-        request = self.request(QueryMethods.GET, object_type, uid, self._config.read_timeout, payload=payload)
-        result = self.execute(request)
+        return self._request_multiple(QueryMethods.GET, object_type, uid, payload)
+
+    def post_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
+        return self._request_multiple(QueryMethods.POST, object_type, uid, payload)
+
+    def put_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
+        return self._request_multiple(QueryMethods.PUT, object_type, uid, payload)
+
+    def _request_multiple(self, method: QueryMethods, object_type: Type[T], uid: List[str], payload=None) -> List[T]:
+        request = self._request(method, object_type, uid, self._config.read_timeout, payload=payload)
+        result, context = self._execute(request)
 
         if result is not None:
-            if issubclass(object_type, Formatter):
-                return [object_type.from_dict(item) for item in result]
-            else:
-                return [object_type(**item) for item in result]
+            return [self._parse_response(object_type, item) for item in result]
         else:
-            raise ResourceNotFoundError(f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]")
+            raise ResourceNotFoundError(
+                f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]", context=context
+            )
+
+    @staticmethod
+    def _parse_response(object_type: Type[T], item: dict) -> T:
+        if issubclass(object_type, Formatter):
+            return object_type.from_dict(item)  # type: ignore
+        elif dataclasses.is_dataclass(object_type):
+            return object_type(**item)  # type: ignore
+        else:
+            return object_type(item)  # type: ignore
 
     def basic_delete(self, db_object_type: Type[T], uid=None):
         """Single DB object getter."""
-        request = self.request(
+        request = self._request(
             QueryMethods.DELETE,
             db_object_type,
             uid,
             self._config.read_timeout,
         )
 
-        return self.execute(request)
+        res, _ = self._execute(request)
+        return res
 
     def basic_setter(self, db_object_type: Type[T], uid, payload):
         """Single DB object setter."""
-        request = self.request(
+        request = self._request(
             QueryMethods.POST,
             db_object_type,
             uid,
@@ -91,16 +110,16 @@ class Querier:
             payload=payload,
         )
 
-        res = self.execute(request)
+        res, context = self._execute(request)
 
-        if res:
+        if res is not None:
             return res
         else:
-            raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
+            raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
 
     def basic_put(self, db_object_type, uid, payload, enable_logging=True):
         """Single DB object put request."""
-        request = self.request(
+        request = self._request(
             QueryMethods.PUT,
             db_object_type,
             uid,
@@ -108,26 +127,50 @@ class Querier:
             payload=payload,
         )
 
-        res = self.execute(request, enable_logging)
+        res, context = self._execute(request, enable_logging)
 
         if res:
             return res
         else:
-            raise RequestException("Setting %s with uid %s failed." % (db_object_type, uid))
+            raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
 
-    def request(self, method, db_object_type: Type[T], uid, timeout, payload=None):
+    @staticmethod
+    def _user_agent():
+        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
+
+    @staticmethod
+    def _tracing_id() -> str:
+        return f"{uuid.uuid4().hex}/{random.randint(1, 2**63 - 1)};o=1"
+
+    @staticmethod
+    def _exception_context_from_response(response: Response) -> RequestContext:
+        try:
+            x_cloud_trace_context = response.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
+            if x_cloud_trace_context is None:
+                return RequestContext()
+
+            x_cloud_trace_context = x_cloud_trace_context.split(";")[0]
+            trace_id, span_id = (x_cloud_trace_context.split("/") + [None, None])[:2]
+            return RequestContext(trace_id=trace_id, span_id=span_id)
+        except Exception:
+            return RequestContext()
+
+    def _request(self, method: QueryMethods, db_object_type: Type[T], uid, timeout, payload=None):
         request = Request(method, db_object_type, uid, timeout, self._config.connect_timeout, payload)
 
         request.headers = self._config.define_headers(request.data)
+        request.headers[HEADER_USER_AGENT] = self._user_agent()
+        request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
+
         return request
 
-    def execute(self, request, enable_logging=True):
+    def _execute(self, request: Request, enable_logging=True) -> Tuple[Any, RequestContext]:
         """Execute a request."""
         if enable_logging:
             logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)
 
         req = requests.Request(
-            method=request.http_method,
+            method=str(request.http_method),
             url=self._config.endpoint,
             headers=request.headers,
             data=request.data,
@@ -135,33 +178,33 @@ class Querier:
 
         timeouts = (request.connect_timeout, request.timeout)
 
-        @retry_on_network_errors
-        def _do_request(req, timeouts: tuple):
-            return self._session.send(req, timeout=timeouts)
+        req_settings = self._config.requests_settings
+        with create_new_session(
+            max_retries=req_settings.max_retries, backoff_factor=req_settings.backoff_factor
+        ) as session:
+            res = session.send(req, timeout=timeouts)
+            context = self._exception_context_from_response(res)
 
-        res = _do_request(
-            req,
-            timeouts,
-            max_retries=self._config.requests_settings.max_retries,
-            backoff_factor=self._config.requests_settings.backoff_factor,
-        )
+            try:
+                res_json = res.json()
+            except Exception as e:
+                raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
 
-        try:
-            res_json = res.json()
-        except Exception as e:
-            raise EncordException("Error parsing JSON response: %s" % res.text) from e
-
+        # pylint: disable-next=no-member
         if res_json.get("status") != requests.codes.ok:
             response = res_json.get("response")
             extra_payload = res_json.get("payload")
-            check_error_response(response, extra_payload)
+            check_error_response(response, context, extra_payload)
 
-        return res_json.get("response")
+        return res_json.get("response"), context
 
-    @staticmethod
-    def create_new_session() -> Session:
-        session = Session()
 
-        session.mount("https://", HTTPAdapter(max_retries=Retry(connect=0)))
+@contextmanager
+def create_new_session(max_retries: Optional[int] = None, backoff_factor: float = 0) -> Generator[Session, None, None]:
+    retry_policy = Retry(total=max_retries, connect=max_retries, read=max_retries, backoff_factor=backoff_factor)
 
-        return session
+    with Session() as session:
+        session.mount("http://", HTTPAdapter(max_retries=retry_policy))
+        session.mount("https://", HTTPAdapter(max_retries=retry_policy))
+
+        yield session

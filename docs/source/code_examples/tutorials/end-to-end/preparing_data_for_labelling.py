@@ -18,17 +18,24 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.utilities.project_user import ProjectUserRole
 
-#%%
+# %%
 # Authenticating
 # --------------
-# To interact with Encord, you need to authenticate a client. You can find more details
-# :ref:`here <authentication:Authentication>`.
+# .. note::
+#
+#   To interact with Encord, you **need to first authenticate a client**. You can find more details
+#   :ref:`here <authentication:User authentication>`.
+#
 
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
-    "<your_private_key>"
-)
+# Authentication: adapt the following line to your private key path
+private_key_path = Path.home() / ".ssh" / "id_ed25519"
 
-#%%
+with private_key_path.open() as f:
+    private_key = f.read()
+
+user_client = EncordUserClient.create_with_ssh_private_key(private_key)
+
+# %%
 # 1. Creating and populating the dataset
 # --------------------------------------
 # This section shows how to create a dataset and add both videos and images to the
@@ -61,7 +68,7 @@ video_files = [
 for v in video_files:
     dataset.upload_video(v)
 
-#%%
+# %%
 # 2. Listing available data in the dataset
 # ----------------------------------------
 
@@ -72,7 +79,7 @@ for data_row in dataset.data_rows:
         f"title: '{data_row.title}'"
     )
 
-#%%
+# %%
 # The code will produce an output similar to the following:
 #
 # .. code-block:: text
@@ -81,7 +88,7 @@ for data_row in dataset.data_rows:
 #     data-hash: '<data_hash>', data-type: DataType.VIDEO, title: 'video1.mp4'
 #
 
-#%%
+# %%
 # 3. Creating project with an ontology
 # ------------------------------------
 
@@ -121,7 +128,7 @@ project.add_classification(
     # Note no `options` defined for text classifications.
 )
 
-#%%
+# %%
 # 4. Adding your team to the project
 # ----------------------------------
 # To allow annotators, reviewers and team managers to access your project, they need to
@@ -145,6 +152,6 @@ project.add_users(
     user_role=ProjectUserRole.TEAM_MANAGER,
 )
 
-#%%
+# %%
 # At this point, your data is ready to be annotated with the project-specific
 # information defined in the project ontology.

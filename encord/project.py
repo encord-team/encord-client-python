@@ -1,12 +1,31 @@
 import datetime
-from typing import Iterable, List, Optional, Tuple, Union
+from pathlib import Path
+from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
-from encord.constants.model import AutomationModels
+from encord.constants.model import AutomationModels, Device
+from encord.http.bundle import Bundle
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
+from encord.objects import LabelRowV2
+from encord.ontology import Ontology
+from encord.orm.analytics import (
+    CollaboratorTimer,
+    CollaboratorTimerParams,
+    CollaboratorTimersGroupBy,
+)
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
 from encord.orm.label_log import LabelLog
-from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from encord.orm.label_row import (
+    AnnotationTaskStatus,
+    LabelRow,
+    LabelRowMetadata,
+    LabelStatus,
+    ShadowDataState,
+)
+from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
+from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -19,9 +38,13 @@ class Project:
     Access project related data and manipulate the project.
     """
 
-    def __init__(self, client: EncordClientProject):
+    def __init__(
+        self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology, client_v2: ApiClient
+    ):
         self._client = client
-        self._project_instance: Optional[OrmProject] = None
+        self._client_v2 = client_v2
+        self._project_instance = project_instance
+        self._ontology = ontology
 
     @property
     def project_hash(self) -> str:
@@ -68,15 +91,15 @@ class Project:
         """
         Get the ontology of the project.
 
-        BETA: Prefer using the :meth:`encord.objects.ontology.Ontology` class to work with the data.
+        DEPRECATED: Prefer using the :class:`encord.objects.ontology_structure.OntologyStructure` class to work with the data.
 
         .. code::
 
-            from encord.object.ontology import Ontology
+            from encord.objects.ontology_structure import OntologyStructure
 
             project = user_client.get_project("<project_hash>")
 
-            ontology = Ontology.from_dict(project.ontology)
+            ontology = OntologyStructure.from_dict(project.ontology)
 
         """
         project_instance = self._get_project_instance()
@@ -91,7 +114,7 @@ class Project:
 
         .. code::
 
-            from encord.object.project import ProjectDataset
+            from encord.objects.project import ProjectDataset
 
             project = user_client.get_project("<project_hash>")
 
@@ -105,8 +128,7 @@ class Project:
     def label_rows(self) -> dict:
         """
         Get the label rows.
-
-        Prefer using the :meth:`encord.orm.label_row.LabelRowMetadata` class to work with the data.
+        DEPRECATED: Prefer using :meth:`list_label_row_v2()` method and :meth:`LabelRowV2` class to work with the data.
 
         .. code::
 
@@ -118,6 +140,10 @@ class Project:
 
         """
         project_instance = self._get_project_instance()
+        if project_instance.label_rows is None:
+            project_descriptor = self._client.get_project(include_labels_metadata=True)
+            project_instance.label_rows = project_descriptor.label_rows
+
         return project_instance.label_rows
 
     def refetch_data(self) -> None:
@@ -127,37 +153,65 @@ class Project:
         """
         self._project_instance = self.get_project()
 
+    def refetch_ontology(self) -> None:
+        """
+        Update the ontology for the project to reflect changes on the backend
+        """
+        self._ontology.refetch_data()
+
     def get_project(self) -> OrmProject:
         """
         This function is exposed for convenience. You are encouraged to use the property accessors instead.
         """
         return self._client.get_project()
 
-    def list_label_rows(
+    def list_label_rows_v2(
         self,
+        data_hashes: Optional[List[str]] = None,
+        label_hashes: Optional[List[str]] = None,
         edited_before: Optional[Union[str, datetime.datetime]] = None,
         edited_after: Optional[Union[str, datetime.datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
-    ) -> List[LabelRowMetadata]:
-        return self._client.list_label_rows(edited_before, edited_after, label_statuses)
-
-    def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
+        shadow_data_state: Optional[ShadowDataState] = None,
+        data_title_eq: Optional[str] = None,
+        data_title_like: Optional[str] = None,
+        workflow_graph_node_title_eq: Optional[str] = None,
+        workflow_graph_node_title_like: Optional[str] = None,
+    ) -> List[LabelRowV2]:
         """
-        Set the label status for a label row to a desired value.
-
         Args:
-            self: Encord client object.
-            label_hash: unique identifier of the label row whose status is to be updated.
-            label_status: the new status that needs to be set.
+            data_hashes: List of data hashes to filter by.
+            label_hashes: List of label hashes to filter by.
+            edited_before: Optionally filter to only rows last edited before the specified time
+            edited_after: Optionally filter to only rows last edited after the specified time
+            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es
+            shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
+            data_title_eq: Optionally filter by exact title match
+            data_title_like: Optionally filter by fuzzy title match; SQL syntax
+            workflow_graph_node_title_eq: Optionally filter by exact match with workflow node title
+            workflow_graph_node_title_like: Optionally filter by fuzzy match with workflow node title; SQL syntax
 
         Returns:
-            Bool.
-
-        Raises:
-            AuthorisationError: If the label_hash provided is invalid or not a member of the project.
-            UnknownError: If an error occurs while updating the status.
+            A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows
         """
-        return self._client.set_label_status(label_hash, label_status)
+        label_row_metadatas = self._client.list_label_rows(
+            edited_before,
+            edited_after,
+            label_statuses,
+            shadow_data_state,
+            data_hashes=data_hashes,
+            label_hashes=label_hashes,
+            include_uninitialised_labels=True,
+            data_title_eq=data_title_eq,
+            data_title_like=data_title_like,
+            workflow_graph_node_title_eq=workflow_graph_node_title_eq,
+            workflow_graph_node_title_like=workflow_graph_node_title_like,
+        )
+
+        label_rows = [
+            LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
+        ]
+        return label_rows
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """
@@ -177,7 +231,16 @@ class Project:
         """
         return self._client.add_users(user_emails, user_role)
 
-    def copy_project(self, copy_datasets=False, copy_collaborators=False, copy_models=False) -> str:
+    def copy_project(
+        self,
+        copy_datasets: Union[bool, CopyDatasetOptions] = False,
+        copy_collaborators=False,
+        copy_models=False,
+        *,
+        copy_labels: Optional[CopyLabelsOptions] = None,
+        new_title: Optional[str] = None,
+        new_description: Optional[str] = None,
+    ) -> str:
         """
         Copy the current project into a new one with copied contents including settings, datasets and users.
         Labels and models are optional.
@@ -189,6 +252,9 @@ class Project:
                                 If label and/or annotator reviewer mapping is set, this will also be copied over
             copy_models: currently if True, all models with their training information will be copied into the new
                          project
+            copy_labels: options for copying labels, defined in `CopyLabelsOptions`
+            new_title: when provided, will be used as the title for the new project.
+            new_description: when provided, will be used as the title for the new project.
 
         Returns:
             the EntityId of the newly created project
@@ -198,81 +264,20 @@ class Project:
             ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while copying the project.
         """
-        return self._client.copy_project(copy_datasets, copy_collaborators, copy_models)
-
-    def get_label_row(self, uid: str, get_signed_url: bool = True):
-        """
-        Retrieve label row.
-
-        Args:
-            uid: A label_hash   (uid) string.
-            get_signed_url: By default the operation returns a signed URL for the underlying data asset. This can be
-            expensive so it can optionally be turned off
-
-        Returns:
-            LabelRow: A label row instance.
-
-        Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
-            UnknownError: If an error occurs while retrieving the label.
-            OperationNotAllowed: If the read operation is not allowed by the API key.
-        """
-        return self._client.get_label_row(uid, get_signed_url)
-
-    def save_label_row(self, uid, label):
-        """
-        Save existing label row.
-
-        If you have a series of frame labels and have not updated answer
-        dictionaries, call the construct_answer_dictionaries utilities function
-        to do so prior to saving labels.
-
-        Args:
-            uid: A label_hash (uid) string.
-            label: A label row instance.
-
-        Returns:
-            Bool.
-
-        Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
-            UnknownError: If an error occurs while saving the label.
-            OperationNotAllowed: If the write operation is not allowed by the API key.
-            AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
-            CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
-        """
-        return self._client.save_label_row(uid, label)
-
-    def create_label_row(self, uid: str):
-        """
-        Create a label row (for data in a project not previously been labeled).
-
-        Args:
-            uid: the data_hash (uid) of the data unit being labeled.
-                Available in client.get_project().get('label_rows')
-                where label_status is NOT_LABELLED.
-
-        Returns:
-            LabelRow: A label row instance.
-
-        Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            UnknownError: If an error occurs while saving the label.
-            OperationNotAllowed: If the write operation is not allowed by the API key.
-            AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
-            CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
-            ResourceExistsError: If a label row already exists for this project data. Avoids overriding existing work.
-        """
-        return self._client.create_label_row(uid)
+        return self._client.copy_project(
+            new_title=new_title,
+            new_description=new_description,
+            copy_datasets=copy_datasets,
+            copy_collaborators=copy_collaborators,
+            copy_models=copy_models,
+            copy_labels=copy_labels,
+        )
 
     def submit_label_row_for_review(self, uid: str):
         """
         Submit a label row for review.
+
+        **Note:** this method is not supported for the workflow-based projects. See the documentation about the workflows
 
         Args:
             uid: A label_hash (uid) string.
@@ -305,7 +310,9 @@ class Project:
             UnknownError: If an error occurs while adding the datasets to the project.
             OperationNotAllowed: If the write operation is not allowed by the API key.
         """
-        return self._client.add_datasets(dataset_hashes)
+        res = self._client.add_datasets(dataset_hashes)
+        self._invalidate_project_instance()
+        return res
 
     def remove_datasets(self, dataset_hashes: List[str]) -> bool:
         """
@@ -324,7 +331,9 @@ class Project:
             UnknownError: If an error occurs while removing the datasets from the project.
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
-        return self._client.remove_datasets(dataset_hashes)
+        res = self._client.remove_datasets(dataset_hashes)
+        self._invalidate_project_instance()
+        return res
 
     def get_project_ontology(self) -> LegacyOntology:
         """
@@ -352,7 +361,9 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call
         """
-        return self._client.add_object(name, shape)
+        res = self._client.add_object(name, shape)
+        self._invalidate_project_instance()
+        return res
 
     def add_classification(
         self,
@@ -379,7 +390,49 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call
         """
-        return self._client.add_classification(name, classification_type, required, options)
+        res = self._client.add_classification(name, classification_type, required, options)
+        self._invalidate_project_instance()
+        return res
+
+    def list_models(self) -> List[ModelConfiguration]:
+        """
+        List all models that are associated with the project. Use the
+        :meth:`encord.project.Project.get_training_metadata` to get more metadata about each training instance.
+
+        .. code::
+
+            from encord.utilities.project_utilities import get_all_model_iteration_uids
+
+            project = client_instance.get_project(<project_hash>)
+
+            model_configurations = project.list_models()
+            all_model_iteration_uids = get_all_model_iteration_uids(model_configurations)
+            training_metadata = project.get_training_metadata(
+                all_model_iteration_uids,
+                get_model_training_labels=True,
+            )
+        """
+        return self._client.list_models()
+
+    def get_training_metadata(
+        self,
+        model_iteration_uids: Iterable[str],
+        get_created_at: bool = False,
+        get_training_final_loss: bool = False,
+        get_model_training_labels: bool = False,
+    ) -> List[TrainingMetadata]:
+        """
+        Given a list of model_iteration_uids, get some metadata around each model_iteration.
+
+        Args:
+            model_iteration_uids: The model iteration uids
+            get_created_at: Whether the `created_at` field should be retrieved.
+            get_training_final_loss: Whether the `training_final_loss` field should be retrieved.
+            get_model_training_labels: Whether the `model_training_labels` field should be retrieved.
+        """
+        return self._client.get_training_metadata(
+            model_iteration_uids, get_created_at, get_training_final_loss, get_model_training_labels
+        )
 
     def create_model_row(
         self,
@@ -432,19 +485,22 @@ class Project:
 
     def model_inference(
         self,
-        uid,
-        file_paths=None,
-        base64_strings=None,
-        conf_thresh=0.6,
-        iou_thresh=0.3,
-        device="cuda",
-        detection_frame_range=None,
-        allocation_enabled=False,
-        data_hashes=None,
-        rdp_thresh=0.005,
+        uid: str,
+        file_paths: Optional[List[str]] = None,
+        base64_strings: Optional[List[bytes]] = None,
+        conf_thresh: float = 0.6,
+        iou_thresh: float = 0.3,
+        device: Device = Device.CUDA,
+        detection_frame_range: Optional[List[int]] = None,
+        allocation_enabled: bool = False,
+        data_hashes: Optional[List[str]] = None,
+        rdp_thresh: float = 0.005,
     ):
         """
         Run inference with model trained on the platform.
+
+        The image(s)/video(s) can be provided either as local file paths, base64 strings, or as data hashes if the
+        data is already uploaded on the Encord platform.
 
         Args:
             uid: A model_iteration_hash (uid) string.
@@ -484,7 +540,15 @@ class Project:
             rdp_thresh,
         )
 
-    def model_train(self, uid, label_rows=None, epochs=None, batch_size=24, weights=None, device="cuda"):
+    def model_train(
+        self,
+        uid: str,
+        label_rows: Optional[List[str]] = None,
+        epochs: Optional[int] = None,
+        batch_size: int = 24,
+        weights: Optional[ModelTrainingWeights] = None,
+        device: Device = Device.CUDA,
+    ):
         """
         Train a model created on the platform.
 
@@ -627,14 +691,322 @@ class Project:
         return self._client.get_websocket_url()
 
     def get_label_logs(
-        self, user_hash: str = None, data_hash: str = None, from_unix_seconds: int = None, to_unix_seconds: int = None
+        self,
+        user_hash: Optional[str] = None,
+        data_hash: Optional[str] = None,
+        from_unix_seconds: Optional[int] = None,
+        to_unix_seconds: Optional[int] = None,
     ) -> List[LabelLog]:
+        """
+        Get label logs, which represent the actions taken in the UI to create labels.
+
+        All arguments can be left as `None` if no filtering should be applied.
+
+        Args:
+            user_hash: Filter the label logs by the user.
+            data_hash: Filter the label logs by the data_hash.
+            from_unix_seconds: Filter the label logs to only include labels after this timestamp.
+            from_unix_seconds: Filter the label logs to only include labels before this timestamp.
+        """
         return self._client.get_label_logs(user_hash, data_hash, from_unix_seconds, to_unix_seconds)
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._client.get_cloud_integrations()
 
+    def list_label_rows(
+        self,
+        edited_before: Optional[Union[str, datetime.datetime]] = None,
+        edited_after: Optional[Union[str, datetime.datetime]] = None,
+        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        shadow_data_state: Optional[ShadowDataState] = None,
+        *,
+        include_uninitialised_labels=False,
+        label_hashes: Optional[List[str]] = None,
+        data_hashes: Optional[List[str]] = None,
+    ) -> List[LabelRowMetadata]:
+        """
+        DEPRECATED - use `list_label_rows_v2` to manage label rows instead.
+
+        Args:
+            edited_before: Optionally filter to only rows last edited before the specified time
+            edited_after: Optionally filter to only rows last edited after the specified time
+            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`
+            shadow_data_state: On Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`
+            include_uninitialised_labels: Whether to return only label rows that are "created" and have a label_hash
+                (default). If set to `True`, this will return all label rows, including those that do not have a
+                label_hash.
+            data_hashes: List of data hashes to filter by.
+            label_hashes: List of label hashes to filter by.
+
+        Returns:
+            A list of :class:`~encord.orm.label_row.LabelRowMetadata` instances for all the matching label rows
+
+        Raises:
+            UnknownError: If an error occurs while retrieving the data.
+        """
+        return self._client.list_label_rows(
+            edited_before,
+            edited_after,
+            label_statuses,
+            shadow_data_state,
+            include_uninitialised_labels=include_uninitialised_labels,
+            label_hashes=label_hashes,
+            data_hashes=data_hashes,
+        )
+
+    def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
+        """
+        DEPRECATED - this function is currently not maintained.
+
+        Set the label status for a label row to a desired value.
+
+        Args:
+            self: Encord client object.
+            label_hash: unique identifier of the label row whose status is to be updated.
+            label_status: the new status that needs to be set.
+
+        Returns:
+            Bool.
+
+        Raises:
+            AuthorisationError: If the label_hash provided is invalid or not a member of the project.
+            UnknownError: If an error occurs while updating the status.
+        """
+        return self._client.set_label_status(label_hash, label_status)
+
+    def get_label_row(
+        self,
+        uid: str,
+        get_signed_url: bool = True,
+        *,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_reviews: bool = False,
+    ) -> LabelRow:
+        """
+        DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+
+        Retrieve label row. If you need to retrieve multiple label rows, prefer using
+        :meth:`encord.project.Project.get_label_rows` instead.
+
+        A code example using the `include_object_feature_hashes` and `include_classification_feature_hashes`
+        filters can be found in :meth:`encord.project.Project.get_label_row`.
+
+
+        Args:
+            uid: A label_hash   (uid) string.
+            get_signed_url: Whether to generate signed urls to the data asset. Generating these should be disabled
+                if the signed urls are not used to speed up the request.
+            include_object_feature_hashes: If None all the objects will be included. Otherwise, only objects labels
+                will be included of which the feature_hash has been added.
+            include_classification_feature_hashes: If None all the classifications will be included. Otherwise, only
+                classification labels will be included of which the feature_hash has been added.
+            include_reviews: Whether to request read only information about the reviews of the label row.
+
+        Returns:
+            LabelRow: A label row instance.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
+            UnknownError: If an error occurs while retrieving the label.
+            OperationNotAllowed: If the read operation is not allowed by the API key.
+        """
+        return self._client.get_label_row(
+            uid,
+            get_signed_url,
+            include_object_feature_hashes=include_object_feature_hashes,
+            include_classification_feature_hashes=include_classification_feature_hashes,
+            include_reviews=include_reviews,
+        )
+
+    def get_label_rows(
+        self,
+        uids: List[str],
+        get_signed_url: bool = True,
+        *,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_reviews: bool = False,
+    ) -> List[LabelRow]:
+        """
+        DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+
+        Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
+
+        This return is undefined behaviour if any of the uids are invalid (i.e. it may randomly fail or randomly
+        succeed and should not be relied upon).
+
+        .. code::
+
+                # Code example of using the object filters.
+                from encord.objects.common import Shape
+                from encord.objects.ontology_structure import OntologyStructure
+
+                project = ... # assuming you already have instantiated this Project object
+
+                # Get all feature hashes of the objects which are of type `Shape.BOUNDING_BOX`
+                ontology = OntologyStructure.from_dict(project.ontology)
+                only_bounding_box_feature_hashes = set()
+                for object_ in ontology.objects:
+                    if object_.shape == Shape.BOUNDING_BOX:
+                        only_bounding_box_feature_hashes.add(object_.feature_node_hash)
+
+                no_classification_feature_hashes = set()  # deliberately left empty
+
+                # Get all labels of tasks that have already been initiated.
+                # Include only labels of bounding boxes and exclude all
+                # classifications
+                label_hashes = []
+                for label_row in project.label_rows:
+                    # Trying to run `get_label_row` on a label_row without a `label_hash` would fail.
+                    if label_row["label_hash"] is not None:
+                        label_hashes.append(label_row["label_hash"])
+
+                all_labels = project.get_label_rows(
+                    label_hashes,
+                    include_object_feature_hashes=only_bounding_box_feature_hashes,
+                    include_classification_feature_hashes=no_classification_feature_hashes,
+                )
+
+        Args:
+             uids:
+                A list of label_hash (uid).
+             get_signed_url:
+                Whether to generate signed urls to the data asset. Generating these should be disabled
+                if the signed urls are not used to speed up the request.
+            include_object_feature_hashes:
+                If None all the objects will be included. Otherwise, only objects labels
+                will be included of which the feature_hash has been added.
+            include_classification_feature_hashes:
+                If None all the classifications will be included. Otherwise, only
+                classification labels will be included of which the feature_hash has been added.
+            include_reviews: Whether to request read only information about the reviews of the label row.
+
+        Raises:
+            MultiLabelLimitError: If too many labels were requested. Check the error's `maximum_labels_allowed` field
+                to read the most up to date error limit.
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
+            UnknownError: If an error occurs while retrieving the label.
+            OperationNotAllowed: If the read operation is not allowed by the API key.
+        """
+        return self._client.get_label_rows(
+            uids,
+            get_signed_url,
+            include_object_feature_hashes=include_object_feature_hashes,
+            include_classification_feature_hashes=include_classification_feature_hashes,
+            include_reviews=include_reviews,
+        )
+
+    def save_label_row(self, uid, label):
+        """
+        DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+
+        Save existing label row.
+
+        If you have a series of frame labels and have not updated answer
+        dictionaries, call the construct_answer_dictionaries utilities function
+        to do so prior to saving labels.
+
+        Args:
+            uid: A label_hash (uid) string.
+            label: A label row instance.
+
+        Returns:
+            Bool.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
+            UnknownError: If an error occurs while saving the label.
+            OperationNotAllowed: If the write operation is not allowed by the API key.
+            AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
+            CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
+        """
+        return self._client.save_label_row(uid, label)
+
+    def create_label_row(self, uid: str):
+        """
+        DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+
+        Create a label row (for data in a project not previously been labeled).
+
+        Args:
+            uid: the data_hash (uid) of the data unit being labeled.
+                Available in client.get_project().get('label_rows')
+                where label_status is NOT_LABELLED.
+
+        Returns:
+            LabelRow: A label row instance.
+
+        Raises:
+            AuthenticationError: If the project API key is invalid.
+            AuthorisationError: If access to the specified resource is restricted.
+            UnknownError: If an error occurs while saving the label.
+            OperationNotAllowed: If the write operation is not allowed by the API key.
+            AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
+            CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
+            ResourceExistsError: If a label row already exists for this project data. Avoids overriding existing work.
+        """
+        return self._client.create_label_row(uid)
+
     def _get_project_instance(self):
         if self._project_instance is None:
             self._project_instance = self.get_project()
         return self._project_instance
+
+    def _invalidate_project_instance(self):
+        self._project_instance = None
+
+    def create_bundle(self) -> Bundle:
+        """
+        Initialises a bundle to reduce amount of network calls performed by the Encord SDK
+
+        See the :class:`encord.http.bundle.Bundle` documentation for more details
+        """
+        return Bundle()
+
+    def list_collaborator_timers(
+        self,
+        after: datetime.datetime,
+        before: Optional[datetime.datetime] = None,
+        group_by_data_unit: bool = True,
+    ) -> Iterable[CollaboratorTimer]:
+        """
+        Provides information about time spent for each collaborator that has worked on the project within a specified
+        range of dates.
+
+        Args:
+             after: the beginning of the period of interest.
+             before: the end of period of interest.
+             group_by_data_unit: if True, time spent by a collaborator for each data unit is provided separately,
+                                 and if False, all time spent in the scope of the project is aggregated together.
+
+        Returns:
+            Iterable[CollaboratorTimer]
+        """
+
+        params = CollaboratorTimerParams(
+            project_hash=self.project_hash,
+            after=after,
+            before=before,
+            group_by=CollaboratorTimersGroupBy.DATA_UNIT if group_by_data_unit else CollaboratorTimersGroupBy.PROJECT,
+            page_size=100,
+        )
+
+        while True:
+            page = self._client_v2.get(
+                Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
+            )
+
+            for result in page.results:
+                yield result
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break

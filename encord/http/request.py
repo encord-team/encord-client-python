@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,7 @@
 # under the License.
 
 import json
-from typing import Dict
+from typing import Dict, Optional
 
 from encord.http.query_methods import QueryMethods
 
@@ -26,18 +26,18 @@ class Request(object):
 
     def __init__(
         self,
-        query_method,
+        query_method: QueryMethods,
         db_object_type,
         uid,
         timeout,
         connect_timeout,
         payload,
-    ):
+    ) -> None:
         self.http_method = QueryMethods.POST
         self.data: str = json.dumps(
             {
                 "query_type": db_object_type.__name__.lower(),
-                "query_method": query_method,
+                "query_method": str(query_method),
                 "values": {
                     "uid": uid,
                     "payload": payload,
@@ -47,7 +47,7 @@ class Request(object):
         self.timeout = timeout
         self.connect_timeout = connect_timeout
 
-        self.headers: Dict = None
+        self.headers: Optional[Dict] = None
 
     def __str__(self):
         return f"Request({self.http_method}, {self.data}, {self.headers}, {self.timeout}, {self.connect_timeout})"

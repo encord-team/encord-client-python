@@ -1,8 +1,9 @@
 """
-Reading project labels
-======================
+DEPRECATED - Reading project labels
+===================================
 
-Use this script to read labels from your Encord project.
+This tutorial introduces a deprecated script to read labels from you Encord project. You are encouraged to
+use the tools introduced in the Working with the LabelRowV2 section instead.
 
 Imports and authentication
 --------------------------
@@ -11,6 +12,7 @@ Imports and authentication
 # sphinx_gallery_thumbnail_path = 'images/end-to-end-thumbs/product-data.svg'
 from dataclasses import dataclass
 from functools import partial
+from pathlib import Path
 from typing import Callable, Generator, List, Optional
 
 from encord import EncordUserClient
@@ -18,14 +20,20 @@ from encord.orm.project import Project as OrmProject
 from encord.project import Project
 from encord.project_ontology.object_type import ObjectShape
 
-#%%
-# To interact with Encord, you need to authenticate a client. You can find more details
-# :ref:`here <authentication:Authentication>`.
+# %%
+# .. note::
+#
+#   To interact with Encord, you need to authenticate a client. You can find more details
+#   :ref:`here <authentication:User authentication>`.
+#
 
-# Authenticate
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
-    "<your_private_key>"
-)
+# Authentication: adapt the following line to your private key path
+private_key_path = Path.home() / ".ssh" / "id_ed25519"
+
+with private_key_path.open() as f:
+    private_key = f.read()
+
+user_client = EncordUserClient.create_with_ssh_private_key(private_key)
 
 # Find project to work with based on title.
 project_orm: OrmProject = next(
@@ -100,7 +108,7 @@ class AnnotationObject:
     frame: Optional[int] = None
 
 
-#%%
+# %%
 # Then we define a function which iterates over all objects of a label row fetched with
 # :meth:`.EncordClientProject.get_label_row()`. The function has a callable argument
 # used to filter which objects should be returned.
@@ -140,7 +148,7 @@ def iterate_over_objects(
                     yield AnnotationObject(object, file_name, url, frame)
 
 
-#%%
+# %%
 # Then we can define a function, which is used to choose which objects to include.
 
 
@@ -169,7 +177,7 @@ include_object_fn_bbox: Callable[[dict], bool] = partial(
     include_object_fn_base, object_type=ObjectShape.BOUNDING_BOX
 )
 
-#%%
+# %%
 # Now we can use the iterator and the filter to collect the objects.
 
 reviewed_bounding_boxes: List[AnnotationObject] = []
@@ -177,7 +185,10 @@ for label_row in project.label_rows:
     if not label_row["label_hash"]:  # No objects in this label row yet.
         continue
 
-    label_row_details = project.get_label_row(label_row["label_hash"])
+    # Only set the `include_reviews` flag to `True` if the reviews payload is needed.
+    label_row_details = project.get_label_row(
+        label_row["label_hash"], include_reviews=True
+    )
     reviewed_bounding_boxes += list(
         iterate_over_objects(label_row_details, include_object_fn_bbox)
     )

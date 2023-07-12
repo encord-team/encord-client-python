@@ -4,6 +4,8 @@ from dataclasses import dataclass
 @dataclass
 class ClassificationOption:
     """
+    DEPRECATED: prefer using :class:`encord.ontology.Ontology`
+
     A dataclass which holds nested options for the :class:`.ClassificationAttribute`.
     """
 

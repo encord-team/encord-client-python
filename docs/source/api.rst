@@ -19,37 +19,33 @@ Dataset
     :members:
     :undoc-members:
 
-Client
-------------
-.. automodule:: encord.client
+Ontology
+--------
+.. automodule:: encord.ontology
     :members:
     :undoc-members:
 
-..
-    FHV: I don't know why this i here?
-    Utilities - User Client
-    ------------------------
-    .. automodule:: encord.utilities.user_client_utilities
-        :members:
-        :undoc-members:
+Ontology Structure
+------------------
+
+.. autoclass:: encord.objects.ontology_labels_impl.OntologyStructure
+    :members:
+    :undoc-members:
+
+.. autoclass:: encord.objects.ontology_labels_impl.Object
+    :members:
+    :undoc-members:
+
+.. autoclass:: encord.objects.ontology_labels_impl.Classification
+    :members:
+    :undoc-members:
 
 Encord Objects
 ---------------
-.. automodule:: encord.objects.ontology
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.objects.ontology_object
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.objects.classification
-    :members:
-    :undoc-members:
-
 .. automodule:: encord.objects.common
     :members:
     :undoc-members:
+    :inherited-members:
 
 .. automodule:: encord.objects.utils
     :members:
@@ -59,37 +55,38 @@ Encord Objects
     :members:
     :undoc-members:
 
-
-Project Ontology
-----------------
-.. automodule:: encord.project_ontology.classification_attribute
+Label Row V2
+--------------------
+.. autoclass:: encord.objects.LabelRowV2
     :members:
     :undoc-members:
 
-.. automodule:: encord.project_ontology.classification_option
+Label ObjectInstance
+------------------------------------
+
+.. autoclass:: encord.objects.ObjectInstance
     :members:
     :undoc-members:
 
-.. automodule:: encord.project_ontology.classification_type
+Label ClassificationInstance
+------------------------------------
+.. autoclass:: encord.objects.ClassificationInstance
     :members:
     :undoc-members:
 
-.. automodule:: encord.project_ontology.object_type
+.. autoclass:: encord.objects.AnswerForFrames
     :members:
     :undoc-members:
 
-.. automodule:: encord.project_ontology.ontology
+Label Frame Utilities
+----------------------
+.. autoclass:: encord.objects.frames.Frames
+
+.. autoclass:: encord.objects.frames.Ranges
+
+.. automodule:: encord.objects.frames
     :members:
     :undoc-members:
-
-.. automodule:: encord.project_ontology.ontology_classification
-    :members:
-    :undoc-members:
-
-.. automodule:: encord.project_ontology.ontology_object
-    :members:
-    :undoc-members:
-
 
 Utilities - Client
 ------------------------
@@ -161,6 +158,14 @@ Utilities - Other
     :members:
     :undoc-members:
 
+.. automodule:: encord.utilities.project_utilities
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.constants.enums
+    :members:
+    :undoc-members:
+
 Configs
 ------------
 .. automodule:: encord.configs
@@ -176,3 +181,55 @@ Exceptions
     :members:
     :undoc-members:
 
+Helpers
+------------
+.. autoclass:: encord.http.bundle.Bundle
+    :members:
+
+DEPRECATED Client
+-----------------
+Using this client is deprecated. You are encouraged to use the :class:`~encord.project.Project` and :class:`~encord.dataset.Dataset` instead.
+
+.. automodule:: encord.client
+    :members:
+    :undoc-members:
+
+..
+    FHV: I don't know why this i here?
+    Utilities - User Client
+    ------------------------
+    .. automodule:: encord.utilities.user_client_utilities
+        :members:
+        :undoc-members:
+
+DEPRECATED: Project Ontology
+----------------------------
+Note that these classes are DEPRECATED and the :class:`encord.ontology.Ontology` should be used instead.
+
+.. automodule:: encord.project_ontology.classification_attribute
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.classification_option
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.classification_type
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.object_type
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology_classification
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.project_ontology.ontology_object
+    :members:
+    :undoc-members:

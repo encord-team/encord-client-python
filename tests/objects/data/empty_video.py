@@ -1,0 +1,30 @@
+labels = {
+    "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
+    "created_at": "2023-02-09 14:12:03",
+    "last_edited_at": "2023-02-09 14:12:03",
+    "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",
+    "dataset_hash": "b0d93919-a5e8-4418-8dd5-2c51e3977de8",
+    "dataset_title": "Dataset with 2 frame video",
+    "data_title": "two-frame-video.mp4",
+    "data_type": "video",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
+    "object_answers": {},
+    "classification_answers": {},
+    "object_actions": {},
+    "label_status": "LABEL_IN_PROGRESS",
+    "data_units": {
+        "cd57cf5c-2541-4a46-a836-444540ee987a": {
+            "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",
+            "data_title": "two-frame-video.mp4",
+            "data_link": "cord-videos-dev/lFW59RQ9jcT4vHZeG14m8QWJKug1/cd57cf5c-2541-4a46-a836-444540ee987a",
+            "data_type": "video/mp4",
+            "data_sequence": 0,
+            "width": 1200,
+            "height": 924,
+            "labels": {},
+            "data_duration": 0.08,
+            "data_fps": 25.0,
+        }
+    },
+}

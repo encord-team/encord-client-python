@@ -1,8 +1,9 @@
 """
-Saving project labels
-=====================
+DEPRECATED - Saving project labels
+==================================
 
-Use this script to save your local labels to your Encord project.
+This tutorial introduces a deprecated script to save labels to your Encord project. You are encouraged to
+use the tools introduced in the Working with the LabelRowV2 section instead.
 
 The code uses a couple of utility functions for constructing dictionaries following the
 structure of Encord label rows and finding ontology dictionaries from the Encord
@@ -15,26 +16,25 @@ ontology. You can safely skip those details.
 """
 # sphinx_gallery_thumbnail_path = 'images/end-to-end-thumbs/Artboard 10.svg'
 
-import uuid
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pytz
+
+from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 GMT_TIMEZONE = pytz.timezone("GMT")
 DATETIME_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
 Point = Union[Tuple[float, float], List[float]]
 BBOX_KEYS = {"x", "y", "h", "w"}
 
+
 # === UTILITIES === #
 def __get_timestamp():
     now = datetime.now()
     new_timezone_timestamp = now.astimezone(GMT_TIMEZONE)
     return new_timezone_timestamp.strftime(DATETIME_STRING_FORMAT)
-
-
-def __lower_snake_case(s: str):
-    return "_".join(s.lower().split())
 
 
 def make_object_dict(
@@ -62,12 +62,12 @@ def make_object_dict(
     :type object_hash: If you want the object to have the same id across frames (for
         videos only), you can specify the object hash, which need to be
         an eight-character hex string (e.g., use
-        ``str(uuid.uuid4())[:8]`` or the ``objectHash`` from an
+        ``short_uuid_str()`` or the ``objectHash`` from an
         associated object.
     :returns: An object dictionary conforming with the Encord label row data format.
     """
     if object_hash is None:
-        object_hash = str(uuid.uuid4())[:8]
+        object_hash = short_uuid_str()
 
     timestamp: str = __get_timestamp()
     shape: str = ontology_object.get("shape")
@@ -75,7 +75,7 @@ def make_object_dict(
     object_dict = {
         "name": ontology_object["name"],
         "color": ontology_object["color"],
-        "value": __lower_snake_case(ontology_object["name"]),
+        "value": _lower_snake_case(ontology_object["name"]),
         "createdAt": timestamp,
         "createdBy": "robot@cord.tech",
         "confidence": 1,
@@ -85,7 +85,6 @@ def make_object_dict(
         "lastEditedBy": "robot@encord.com",
         "shape": shape,
         "manualAnnotation": False,
-        "reviews": [],
     }
 
     if shape in ["polygon", "polyline"]:
@@ -171,7 +170,7 @@ def make_classification_dict_and_answer_dict(
               row data format.
     """
     if classification_hash is None:
-        classification_hash = str(uuid.uuid4())[:8]
+        classification_hash = short_uuid_str()
 
     if isinstance(answers, dict):
         answers = [answers]
@@ -181,11 +180,7 @@ def make_classification_dict_and_answer_dict(
         for answer in answers:
             try:
                 attribute = next(
-                    (
-                        attr
-                        for attr in ontology_class["attributes"]
-                        if answer in attr["options"]
-                    )
+                    (attr for attr in ontology_class["attributes"])
                 )
             except StopIteration:
                 raise ValueError(
@@ -201,14 +196,8 @@ def make_classification_dict_and_answer_dict(
 
     else:  # Text attribute
         try:
-            attribute = next(
-                (
-                    attr
-                    for attr in ontology_class["attributes"]
-                    if attr["type"] == "text"
-                )
-            )
-            answers_list = [answers]
+            attribute = ontology_class
+            answers_list = answers
         except StopIteration:
             raise ValueError(
                 f"Couldn't find ontology with type text for the string answer {answers}"
@@ -222,7 +211,6 @@ def make_classification_dict_and_answer_dict(
         "featureHash": ontology_class["featureNodeHash"],
         "manualAnnotation": False,
         "name": attribute["name"],
-        "reviews": [],
         "value": __lower_snake_case(attribute["name"]),
     }
 
@@ -288,7 +276,7 @@ def find_ontology_classification(
     for classification in ontology["classifications"]:
         for attribute in classification["attributes"]:
             if attribute["name"].lower() == encord_name.lower():
-                top_level_attribute = attribute
+                top_level_attribute = classification
                 break
         if top_level_attribute:
             break
@@ -299,19 +287,19 @@ def find_ontology_classification(
         )
 
     options = {
-        o[0]: __find_option(top_level_attribute, o[1])
+        o[0]: __find_option(top_level_attribute["attributes"][0], o[1])
         for o in local_to_encord_classifications.get("options", [])
     }
     return {"classification": top_level_attribute, "options": options}
 
 
-#%%
+# %%
 #
 # .. raw:: html
 #
 #    </details>
 
-#%%
+# %%
 # Imports and authentication
 # --------------------------
 # First, import dependencies and authenticate a project manager.
@@ -320,10 +308,20 @@ from encord import EncordUserClient, Project
 from encord.orm.project import Project as OrmProject
 from encord.utilities.label_utilities import construct_answer_dictionaries
 
-# Authenticate
-user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
-    "<your_private_key>"
-)
+# %%
+# .. note::
+#
+#   To interact with Encord, you need to authenticate a client. You can find more details
+#   :ref:`here <authentication:User authentication>`.
+#
+
+# Authentication: adapt the following line to your private key path
+private_key_path = Path.home() / ".ssh" / "id_ed25519"
+
+with private_key_path.open() as f:
+    private_key = f.read()
+
+user_client = EncordUserClient.create_with_ssh_private_key(private_key)
 
 # Find project to work with based on title.
 project_orm: OrmProject = next(
@@ -336,7 +334,7 @@ project: Project = user_client.get_project(project_orm.project_hash)
 
 ontology = project.ontology
 
-#%%
+# %%
 # Saving objects
 # --------------
 #
@@ -368,7 +366,7 @@ ontology = project.ontology
 #     Type: point           Name: Ant (key-point)
 #
 
-#%%
+# %%
 # Below, is an example of how to define your own mapping between your local object
 # identifiers and Encord ontology objects. Note that the keys in the dictionary could
 # be any type of keys. So if your local object types are defined by integers, for
@@ -387,7 +385,7 @@ local_to_encord_ont_objects = {
     for k, v in LOCAL_TO_ENCORD_NAMES.items()
 }
 
-#%%
+# %%
 # 2. Saving objects to Encord
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
@@ -441,7 +439,7 @@ local_objects = [
     # ...
 ]
 
-#%%
+# %%
 # The data is saved by the following code example.
 
 # Title of video to which the local objects are associated
@@ -497,7 +495,7 @@ for local_frame_level_objects in local_objects:
 label_row = construct_answer_dictionaries(label_row)
 project.save_label_row(label_row["label_hash"], label_row)
 
-#%%
+# %%
 # **Saving objects to label rows with image groups**
 #
 # Suppose you have the following local data that you want to save to Encord.
@@ -539,7 +537,7 @@ local_objects = {
     # ...
 }
 
-#%%
+# %%
 # The data is saved by the following code example.
 
 # Take any label row, which contains images with names from `local_objects`.
@@ -585,7 +583,7 @@ label_row = construct_answer_dictionaries(label_row)
 project.save_label_row(label_row["label_hash"], label_row)
 
 
-#%%
+# %%
 # Saving classifications
 # ----------------------
 # The workflow is very similar for classifications. Much of the code will be
@@ -655,7 +653,7 @@ local_to_encord_ont_classifications = {  # NEW
     for k, v in LOCAL_TO_ENCORD_NAMES.items()
 }
 
-#%%
+# %%
 # 2. Saving classifications to Encord
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # As the structure of label rows depends on the type of data in the label row, there are
@@ -703,7 +701,7 @@ local_classifications = [  # NEW
     # ...
 ]
 
-#%%
+# %%
 # The data is saved by the following code example.
 
 # Title of video for which the objects are associated
@@ -739,7 +737,7 @@ for local_frame_level_classifications in local_classifications:
     # Uncomment this line if you want to overwrite the classifications on the platform
     # encord_frame_labels["classifications"] = []
 
-    for local_class in local_frame_level_classifications["objects"]:
+    for local_class in local_frame_level_classifications["classification"]:
         local_class_type: str = local_class["type"]
 
         # NEW start
@@ -772,8 +770,25 @@ for local_frame_level_classifications in local_classifications:
             answers,
             classification_hash=classification_hash,
         )
-        # Add to existing classifications in this frame.
-        encord_frame_labels["classifications"].append(encord_class_dict)
+
+        # Check if the same annotation already exist, if it exists, replace it with the local annotation
+        frame_classifications = encord_labels[str(frame)]["classifications"]
+        label_already_exist = False
+        for i in range(len(frame_classifications)):
+            if (
+                frame_classifications[i]["name"]
+                == encord_classification["name"]
+            ):
+                classification_answers.pop(
+                    frame_classifications[i]["classificationHash"]
+                )
+                frame_classifications[i] = encord_class_dict
+                label_already_exist = True
+                break
+        if not label_already_exist:
+            encord_labels[str(frame)]["classifications"].append(
+                encord_class_dict
+            )
 
         if classification_hash is None:  # Save answers once for each track id.
             classification_answers[
@@ -790,7 +805,7 @@ for local_frame_level_classifications in local_classifications:
 label_row = construct_answer_dictionaries(label_row)
 project.save_label_row(label_row["label_hash"], label_row)
 
-#%%
+# %%
 # **Saving classification to label rows with image groups**
 #
 # Suppose you have the following local data that you want to save to Encord.
@@ -821,7 +836,7 @@ local_classifications = {
     # ...
 }
 
-#%%
+# %%
 # The data is saved by the following code example.
 
 

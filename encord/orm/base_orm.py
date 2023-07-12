@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Cord Technologies Limited
+# Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -62,7 +62,7 @@ class BaseORM(dict):
             super().__init__(**value)
         except Exception as e:
             logger.error("Error init", exc_info=True)
-            raise Exception("Convert failed {}".format(str(e)))
+            raise Exception(f"Convert failed {e}")
 
     def __getattr__(self, name):
         """
@@ -78,7 +78,7 @@ class BaseORM(dict):
             except KeyError:
                 return None
         else:
-            raise AttributeError("Attribute does not exist: {}".format(name))
+            raise AttributeError(f"Attribute does not exist: {name}")
 
     def __setattr__(self, name, value):
         """
@@ -90,7 +90,7 @@ class BaseORM(dict):
         if name in self.DB_FIELDS and (value is None or isinstance(value, self.DB_FIELDS[name])):
             self[name] = value
         else:
-            raise AttributeError("Attribute name or type not match: {}".format(name))
+            raise AttributeError(f"Attribute name or type not match: {name}")
 
     def __delattr__(self, name):
         if name in self and name in self.DB_FIELDS:
@@ -155,5 +155,5 @@ class BaseListORM(list):
                 values.append(v)
             except Exception as e:
                 logger.error("Error init", exc_info=True)
-                raise Exception("Convert failed {}".format(str(e)))
+                raise Exception(f"Convert failed {e}")
         super().__init__(values)

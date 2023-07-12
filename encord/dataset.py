@@ -1,12 +1,22 @@
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, TextIO, Union
 
 from encord.client import EncordClientDataset
+from encord.constants.enums import DataType
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import AddPrivateDataResponse, DataRow
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset import ImageGroupOCR, StorageLocation
+from encord.orm.dataset import (
+    DatasetAccessSettings,
+    DatasetDataLongPolling,
+    DatasetUser,
+    DatasetUserRole,
+    Image,
+    ImageGroupOCR,
+    StorageLocation,
+)
 
 
 class Dataset:
@@ -16,7 +26,7 @@ class Dataset:
 
     def __init__(self, client: EncordClientDataset):
         self._client = client
-        self._dataset_instance = None
+        self._dataset_instance: Optional[OrmDataset] = None
 
     @property
     def dataset_hash(self) -> str:
@@ -43,8 +53,46 @@ class Dataset:
 
     @property
     def data_rows(self) -> List[DataRow]:
+        """
+        Part of the response of this function can be configured by the
+        :meth:`encord.dataset.Dataset.set_access_settings` method.
+
+        .. code::
+
+            dataset.set_access_settings(DatasetAccessSettings(fetch_client_metadata=True))
+            print(dataset.data_rows)
+        """
         dataset_instance = self._get_dataset_instance()
         return dataset_instance.data_rows
+
+    def list_data_rows(
+        self,
+        title_eq: Optional[str] = None,
+        title_like: Optional[str] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        data_types: Optional[List[DataType]] = None,
+    ) -> List[DataRow]:
+        """
+        Retrieve dataset rows (pointers to data, labels).
+
+        Args:
+            title_eq: optional exact title row filter
+            title_like: optional fuzzy title row filter; SQL syntax
+            created_before: optional datetime row filter
+            created_after: optional datetime row filter
+            data_types: optional data types row filter
+
+        Returns:
+            List[DataRow]: A list of DataRows object that match the filter
+
+        Raises:
+            AuthorisationError: If the dataset API key is invalid.
+            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
+            UnknownError: If an error occurs while retrieving the dataset.
+        """
+
+        return self._client.list_data_rows(title_eq, title_like, created_before, created_after, data_types)
 
     def refetch_data(self) -> None:
         """
@@ -59,15 +107,43 @@ class Dataset:
         """
         return self._client.get_dataset()
 
-    def upload_video(self, file_path: str, cloud_upload_settings: CloudUploadSettings = CloudUploadSettings()):
+    def set_access_settings(self, dataset_access_settings: DatasetAccessSettings, *, refetch_data: bool = True) -> None:
+        """
+        Args:
+            dataset_access_settings: The access settings to use going forward
+            refetch_data: Whether a `refetch_data()` call should follow the update of the dataset access settings.
+        """
+        self._client.set_access_settings(dataset_access_settings)
+        if refetch_data:
+            self.refetch_data()
+
+    def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
+        """
+        Add users to dataset. If the user was already added, this operation will succeed but the `user_role` will be
+        unchanged. The existing `user_role` will be reflected in the `DatasetUser` instance.
+
+        Args:
+            user_emails: list of user emails to be added
+            user_role: the user role to assign to all users
+        """
+        return self._client.add_users(user_emails, user_role)
+
+    def upload_video(
+        self,
+        file_path: str,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        title: Optional[str] = None,
+    ):
         """
         Upload video to Encord storage.
 
         Args:
-            self: Encord client object.
             file_path: path to video e.g. '/home/user/data/video.mp4'
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title:
+                The video title. If unspecified, this will be the file name. This title should include an extension.
+                For example "encord_video.mp4".
 
         Returns:
             Bool.
@@ -76,25 +152,35 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.upload_video(file_path, cloud_upload_settings=cloud_upload_settings)
+        return self._client.upload_video(file_path, cloud_upload_settings=cloud_upload_settings, title=title)
 
     def create_image_group(
         self,
         file_paths: Iterable[str],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        title: Optional[str] = None,
+        *,
+        create_video: bool = True,
     ):
         """
-        Create an image group in Encord storage.
+        Create an image group in Encord storage. Choose this type of image upload for sequential images. Else, you can
+        choose the :meth:`.Dataset.upload_image` function.
 
         Args:
-            self: Encord client object.
             file_paths: a list of paths to images, e.g.
                 ['/home/user/data/img1.png', '/home/user/data/img2.png']
             max_workers:
                 DEPRECATED: This argument will be ignored
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title:
+                The title of the image group. If unspecified this will be randomly generated for you. This title should
+                NOT include an extension. For example "encord_image_group".
+            create_video:
+                A flag specifying how image groups are stored. If `True`, a compressed video will be created from
+                the image groups. `True` was the previous default support. If `False`, the images
+                are saved as a sequence of images.
 
         Returns:
             Bool.
@@ -103,15 +189,66 @@ class Dataset:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.create_image_group(file_paths, cloud_upload_settings=cloud_upload_settings)
+        return self._client.create_image_group(
+            file_paths,
+            cloud_upload_settings=cloud_upload_settings,
+            title=title,
+            create_video=create_video,
+        )
+
+    def create_dicom_series(
+        self,
+        file_paths: List[str],
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        title: Optional[str] = None,
+    ):
+        """
+        Upload a DICOM series to Encord storage
+
+        Args:
+            file_paths: a list of paths to DICOM files, e.g.
+                ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title:
+                The title of the DICOM series. If unspecified this will be randomly generated for you. This title should
+                NOT include an extension. For example "encord_image_group".
+        Returns:
+            Bool.
+
+        Raises:
+            UploadOperationNotSupportedError: If trying to upload to external
+                                              datasets (e.g. S3/GPC/Azure)
+        """
+        return self._client.create_dicom_series(file_paths, cloud_upload_settings=cloud_upload_settings, title=title)
+
+    def upload_image(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ) -> Image:
+        """
+        Upload a single image to Encord storage. If your images are sequential we recommend creating an image group via
+        the :meth:`.Dataset.create_image_group` function. For more information please compare
+        https://docs.encord.com/docs/annotate/editor/images and https://docs.encord.com/docs/annotate/editor/videos
+
+        Args:
+            file_path: The file path to the image
+            title: The image title. If unspecified, this will be the file name. This title should include an extension.
+                For example "encord_image.png".
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        """
+        return self._client.upload_image(file_path, title, cloud_upload_settings)
 
     def delete_image_group(self, data_hash: str):
         """
-        Create an image group in Encord storage.
+        Delete an image group in Encord storage.
 
         Args:
-            self: Encord client object.
-            data_hash: the hash of the image group you'd like to delete
+            data_hash: the hash of the image group to delete
         """
         return self._client.delete_image_group(data_hash)
 
@@ -120,7 +257,6 @@ class Dataset:
         Delete a video/image group from a dataset.
 
         Args:
-            self: Encord client object.
             data_hashes: list of hash of the videos/image_groups you'd like to delete, all should belong to the same
              dataset
         """
@@ -133,23 +269,83 @@ class Dataset:
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
         """
-        Append data hosted on private clouds to existing dataset
+        Append data hosted on a private cloud to an existing dataset.
+
+        For a more complete example of safe uploads, please follow the guide found in our docs under
+        :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud
+        <tutorials/datasets:Adding data from a private cloud>`
 
         Args:
-            integration_id: str
-                EntityId of the cloud integration to be used when accessing those files
+            integration_id:
+                The `EntityId` of the cloud integration you wish to use.
             private_files:
-                A str path or Path object to a json file, json str or python dictionary of the files you wish to add
-            ignore_errors: bool, optional
-                Ignore individual errors when trying to access the specified files
+                A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
+            ignore_errors:
+                When set to `True`, this will prevent individual errors from stopping the upload process.
         Returns:
             add_private_data_response List of DatasetDataInfo objects containing data_hash and title
 
         """
         return self._client.add_private_data_to_dataset(integration_id, private_files, ignore_errors)
 
+    def add_private_data_to_dataset_start(
+        self,
+        integration_id: str,
+        private_files: Union[str, Dict, Path, TextIO],
+        ignore_errors: bool = False,
+    ) -> str:
+        """
+        Append data hosted on a private cloud to an existing dataset.
+
+        This method inititalizes the upload in Encord's backend.
+        Once the upload id has been returned, you can exit the terminal
+        while the job continues uninterrupted.
+
+        You can check upload job status at any point using
+        the :meth:`add_private_data_to_dataset_get_result` method.
+        This can be done in a separate python session to the one
+        where the upload was initialized.
+
+        Args:
+            integration_id:
+                The `EntityId` of the cloud integration you wish to use.
+            private_files:
+                A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
+            ignore_errors:
+                When set to `True`, this will prevent individual errors from stopping the upload process.
+        Returns:
+            str
+                `upload_job_id` - UUID Identifier of upload job.
+                This id enables the user to track the job progress via SDK, or web app.
+        """
+        return self._client.add_private_data_to_dataset_start(integration_id, private_files, ignore_errors)
+
+    def add_private_data_to_dataset_get_result(
+        self,
+        upload_job_id: str,
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> DatasetDataLongPolling:
+        """
+        Fetch data upload status, perform long polling process for `timeout_seconds`.
+
+        Args:
+            upload_job_id:
+                UUID Identifier of upload job. This id enables the user to track the job progress via SDK, or web app.
+            timeout_seconds:
+                Number of seconds the method will wait while waiting for a response.
+                If `timeout_seconds == 0`, only a single checking request is performed.
+                Response will be immediately returned.
+        Returns:
+            DatasetDataLongPolling
+                Response containing details about job status, errors and progress.
+        """
+        return self._client.add_private_data_to_dataset_get_result(upload_job_id, timeout_seconds)
+
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """
+        DEPRECATED: Use the individual setter properties of the respective :class:`encord.orm.dataset.DataRow`
+        instance instead. These can be retrieved via the :meth:`.Dataset.data_rows` function.
+
         Update a data item
 
         Args:
@@ -168,7 +364,6 @@ class Dataset:
         Launches an async task that can re-encode a list of videos.
 
         Args:
-            self: Encord client object.
             data_hashes: list of hash of the videos you'd like to re_encode, all should belong to the same
              dataset
         Returns:
@@ -182,7 +377,6 @@ class Dataset:
         Returns the status of an existing async task which is aimed at re-encoding videos.
 
         Args:
-            self: Encord client object.
             job_id: id of the async task that was launched to re-encode the videos
 
         Returns:

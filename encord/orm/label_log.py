@@ -9,13 +9,15 @@ from enum import IntEnum
 class LabelLog:
     log_hash: str
     user_hash: str
-    annotation_hash: str
+    user_email: str
+    annotation_hash: str  # Legacy value. Replaced by identifier.
+    identifier: str
     data_hash: str
     feature_hash: str
     action: Action
     label_name: str
     time_taken: int
-    created_at: datetime.datetime
+    created_at: datetime
     frame: int
 
 
@@ -42,3 +44,13 @@ class Action(IntEnum):
     CLICK_BRIGHTNESS = 20
     CLICK_HOTKEYS = 21
     CLICK_SETTINGS = 22
+    ADD_ATTRIBUTE = 23
+    EDIT_ATTRIBUTE = 24
+    DELETE_ATTRIBUTE = 25
+    APPROVE_NESTED_ATTRIBUTE = 26
+    REJECT_NESTED_ATTRIBUTE = 27
+    SUBMIT_LABEL = 28
+    SUBMIT_NESTED_ATTRIBUTE = 29
+    BUFFERING_OVERLAY_SHOWN = 30
+    BITRATE_WARNING_SHOWN = 31
+    SEEKING_OVERLAY_SHOWN = 32
