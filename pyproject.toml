@@ -79,4 +79,4 @@ remove-duplicate-keys = true
 remove-unused-variables = true
 
 [tool.mypy]
-plugins = ["numpy.typing.mypy_plugin"]
+ignore_missing_imports = true
