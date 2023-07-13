@@ -49,3 +49,8 @@ repos:
         entry: poetry run pylint
         language: system
         files: ^encord/.*
+      - id: mypy
+        name: mypy
+        entry: poetry run mypy
+        language: system
+        files: ^encord/.*py$
