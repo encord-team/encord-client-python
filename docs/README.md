@@ -57,10 +57,10 @@ Whenever you add a new public class or function, this documentation should be re
     ```json
     "create_project_on_platform": {
         "user_text": "Create Project on Platform",
-        "url": "https://docs.encord.com/docs/projects/new-project"
+        "url": "https://docs.encord.com/docs/annotate-annotation-projects#creating-annotation-projects"
     }
     ```
-    Using ``:xref:`create_project_on_platform` `` will be transformed into [Create Project on Platform](https://docs.encord.com/docs/projects/new-project) at built time.  
+    Using ``:xref:`create_project_on_platform` `` will be transformed into [Create Project on Platform](https://docs.encord.com/docs/annotate-annotation-projects#creating-annotation-projects) at built time.  
     __NB:__ There is a script that allows you to easily add a link to the json form the
     commandline. Simply run `./add_link` and it will query the necessary information and
     (naively) check for duplicates.

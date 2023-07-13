@@ -231,7 +231,7 @@ class Dataset:
         """
         Upload a single image to Encord storage. If your images are sequential we recommend creating an image group via
         the :meth:`.Dataset.create_image_group` function. For more information please compare
-        https://docs.encord.com/docs/annotate/editor/images and https://docs.encord.com/docs/annotate/editor/videos
+        https://docs.encord.com/docs/annotate-images and https://docs.encord.com/docs/annotate-videos
 
         Args:
             file_path: The file path to the image

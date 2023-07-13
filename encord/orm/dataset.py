@@ -400,7 +400,7 @@ class DataRow(dict, Formatter):
         returns whether this is an image sequence. Returns `None` for other data types.
 
         For more details refer to the
-        :ref:`documentation on image sequnces <https://docs.encord.com/datasets/supported-data/#image-sequences>`
+        :ref:`documentation on image sequnces <https://docs.encord.com/docs/annotate-supported-data#image-sequences>`
         """
         return self["is_optimised_image_group"]
 
