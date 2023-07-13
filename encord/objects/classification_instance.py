@@ -506,7 +506,7 @@ class ClassificationInstance:
 
         if self.is_assigned_to_label_row():
             assert self._parent is not None
-            self._parent.add_to_single_frame_to_hashes_map(self, frame)
+            self._parent._add_to_single_frame_to_hashes_map(self, frame)
 
     def _set_answer_unsafe(self, answer: Answer, attribute: Attribute) -> None:
         self._static_answer_map[attribute.feature_node_hash].set(answer)

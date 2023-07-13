@@ -578,7 +578,7 @@ class LabelRowV2:
         for actual_frame in actual_frames:
             all_frames.remove(actual_frame)
 
-    def add_to_single_frame_to_hashes_map(
+    def _add_to_single_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
     ) -> None:
         """This is an internal function, it is not meant to be called by the SDK user."""
@@ -1158,7 +1158,7 @@ class LabelRowV2:
         self, label_item: Union[ObjectInstance, ClassificationInstance], frames: Iterable[int]
     ) -> None:
         for frame in frames:
-            self.add_to_single_frame_to_hashes_map(label_item, frame)
+            self._add_to_single_frame_to_hashes_map(label_item, frame)
 
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:

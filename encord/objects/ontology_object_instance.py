@@ -9,7 +9,6 @@ from dateutil.parser import parse
 
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
-from encord.objects import Object
 from encord.objects.answers import Answer, _get_static_answer_map
 from encord.objects.attributes import (
     Attribute,
@@ -319,7 +318,7 @@ class ObjectInstance:
             existing_frame_data.coordinates = coordinates
 
             if self._parent:
-                self._parent.add_to_single_frame_to_hashes_map(self, frame)
+                self._parent._add_to_single_frame_to_hashes_map(self, frame)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
