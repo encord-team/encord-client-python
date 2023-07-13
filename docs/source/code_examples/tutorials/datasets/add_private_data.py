@@ -19,7 +19,7 @@ integration: str = integrations[integration_idx].id
 
 use_simple_api: bool = True
 
-# Check our documentation here: https://docs.encord.com/datasets/private-cloud-integration/#json-format
+# Check our documentation here: https://docs.encord.com/docs/annotate-private-cloud-integration#json-format
 # to make sure you upload your data in the correct format
 
 if use_simple_api:

@@ -2,7 +2,7 @@
 Ontologies
 ********
 
-A central component of a project is the ontology - an in-depth description of which can be found `here <https://docs.encord.com/ontologies/overview>`_.
+A central component of a project is the ontology - an in-depth description of which can be found `here <https://docs.encord.com/docs/annotate-ontologies>`_.
 
 Ontologies are top-level entities that can be attached to projects that provide a template structure for labels. 
 Please note that while a project can only have a single ontology attached to it, one ontology can be attached to multiple projects.

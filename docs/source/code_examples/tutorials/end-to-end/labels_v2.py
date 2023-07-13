@@ -98,7 +98,7 @@ first_label_row.save()
 # ---------------------------------
 # The :class:`encord.objects.LabelRowV2` class works with its corresponding ontology. If you add object instances
 # or classification instances, these will be created from the ontology. You can read more about object instances
-# here: https://docs.encord.com/ontologies/use/#objects
+# here: https://docs.encord.com/docs/annotate-working-with-ontologies#objects
 #
 # You can think of an object instance as a visual label in the label editor. One bounding box would be one object
 # instance.
@@ -239,7 +239,7 @@ for label_row_frame_view in first_label_row.get_frame_views():
 # cannot create have more than one classification instance of the same type on the same frame and that there is
 # no coordinates to be set for classification instances.
 #
-# You can read more about classification instances here: https://docs.encord.com/ontologies/use/#classifications
+# You can read more about classification instances here: https://docs.encord.com/docs/annotate-working-with-ontologies#classifications
 #
 # Get the ontology classification
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -279,8 +279,8 @@ assert all_classification_instances[0] == text_classification_instance
 # ------------------------------------------------------
 #
 # Both object instances and classification instances can have attributes. You can read more about examples
-# using these links: https://docs.encord.com/annotate/editor/images#frame-classification and
-# https://docs.encord.com/annotate/editor/images#frame-classification
+# using these links: https://docs.encord.com/docs/annotate-label-editor#instances-and-frame-labels and
+# https://docs.encord.com/docs/annotate-images#frame-classification
 #
 # In the ontology you might have already configured text, radio, or checklist attributes for your object/classification.
 # With the LabelRowV2, you can set or get the values of these attributes. Here, we refer to as "setting or getting an
@@ -386,7 +386,7 @@ assert scenery_classification_instance.get_answer() == mountains_option
 
 # %%
 # Radio attributes can also be nested. You can read more about nested options here:
-# https://docs.encord.com/ontologies/use/#nested-classifications
+# https://docs.encord.com/docs/annotate-working-with-ontologies#nested-classifications
 #
 # Let's say that if you have the Mountains scenery, there is an additional radio classification called "Mountains count"
 # with the answers "One", "Two", and "Many". Continuing the example above, you can set the nested answer like this:
@@ -443,7 +443,7 @@ assert (
 # --------------------------------------
 #
 # Dynamic attributes are attributes for object instances where the answer can change in each frame.
-# You can read more about them here: https://docs.encord.com/annotate/editor/videos/#dynamic-classification
+# You can read more about them here: https://docs.encord.com/docs/annotate-videos#dynamic-classification
 #
 # These behave very similarly to static attributes, however, they expect that a frame is passed to the `set_answer`
 # which will set the answer for the specific frame.

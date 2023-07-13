@@ -31,7 +31,7 @@ pip install encord
 ```
 
 Then, generate an public-private key pair, and upload the public key to [Encord website](https://www.encord.com/).
-Detailed guide can be found in the [dedicated manual](https://docs.encord.com/admins/settings/public-keys/).
+Detailed guide can be found in the [dedicated manual](https://docs.encord.com/docs/annotate-public-keys).
 
 Passing the private key to the factory, you can initialise the Encord client directly.
 
