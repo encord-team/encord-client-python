@@ -24,7 +24,6 @@ from encord.objects.constants import (
     DEFAULT_MANUAL_ANNOTATION,
 )
 from encord.objects.coordinates import (
-    ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
     BoundingBoxCoordinates,
     Coordinates,
     PointCoordinate,
@@ -1428,14 +1427,6 @@ class BundledCreateRowsPayload:
 class BundledSaveRowsPayload:
     uids: List[str]
     payload: List[Dict]
-
-
-def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
-    expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
-    if not isinstance(coordinates, expected_coordinate_type):
-        raise LabelRowError(
-            f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
-        )
 
 
 def _frame_views_to_frame_numbers(

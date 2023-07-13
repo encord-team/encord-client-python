@@ -9,6 +9,7 @@ from dateutil.parser import parse
 
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
+from encord.objects import Object
 from encord.objects.answers import Answer, _get_static_answer_map
 from encord.objects.attributes import (
     Attribute,
@@ -17,7 +18,10 @@ from encord.objects.attributes import (
     TextAttribute,
 )
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.coordinates import Coordinates
+from encord.objects.coordinates import (
+    ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    Coordinates,
+)
 from encord.objects.dynamic_answer_manager import AnswersForFrames, DynamicAnswerManager
 from encord.objects.frames import (
     Frames,
@@ -650,3 +654,11 @@ class ObjectInstance:
 
     def __lt__(self, other: ObjectInstance) -> bool:
         return self._object_hash < other._object_hash
+
+
+def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
+    expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
+    if not isinstance(coordinates, expected_coordinate_type):
+        raise LabelRowError(
+            f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
+        )
