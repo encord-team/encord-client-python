@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 from abc import abstractmethod
 from typing import Any, Dict, Generic, List, Optional, Sequence, Type, TypeVar
 
@@ -8,7 +9,10 @@ from encord.objects.internal_helpers import __build_identifiers
 from encord.objects.ontology_element import OntologyNestedElement
 from encord.objects.utils import _decode_nested_uid
 
-OptionType = TypeVar("OptionType", bound="Option")
+if typing.TYPE_CHECKING:
+    from encord.objects import Option
+
+OptionType = TypeVar("OptionType", bound=Option)
 
 
 class Attribute(OntologyNestedElement, Generic[OptionType]):

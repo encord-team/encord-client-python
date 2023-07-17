@@ -101,3 +101,6 @@ class Object(OntologyElement):
             ValueError: if specified `local_uid` or `feature_node_hash` violate uniqueness constraints
         """
         return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required, dynamic)
+
+
+from encord.objects import ObjectInstance

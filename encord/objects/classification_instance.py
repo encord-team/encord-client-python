@@ -4,7 +4,17 @@ from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, NoReturn, Optional, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    NoReturn,
+    Optional,
+    Sequence,
+    Union,
+)
 
 from dateutil.parser import parse
 
@@ -28,6 +38,9 @@ from encord.objects.internal_helpers import (
 )
 from encord.objects.options import Option
 from encord.objects.utils import check_email, short_uuid_str
+
+if TYPE_CHECKING:
+    from encord.objects import LabelRowV2
 
 
 class ClassificationInstance:

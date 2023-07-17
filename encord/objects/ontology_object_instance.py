@@ -3,7 +3,17 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from dateutil.parser import parse
 
@@ -36,6 +46,9 @@ from encord.objects.internal_helpers import (
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
 from encord.objects.utils import check_email, short_uuid_str
+
+if TYPE_CHECKING:
+    from encord.objects import LabelRowV2
 
 
 class ObjectInstance:
@@ -661,3 +674,7 @@ def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> 
         raise LabelRowError(
             f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
         )
+
+
+def _frame_views_to_frame_numbers(frame_views: Iterable[ObjectInstance.Annotation]) -> List[int]:
+    return [frame_view.frame for frame_view in frame_views]

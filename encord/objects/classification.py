@@ -92,3 +92,6 @@ class Classification(OntologyElement):
 
     def __hash__(self):
         return hash(self.feature_node_hash)
+
+
+from encord.objects import ClassificationInstance

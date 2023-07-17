@@ -7,9 +7,14 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from encord.objects.answers import Answer, get_default_answer_from_attribute
 from encord.objects.attributes import Attribute
+from encord.objects.frames import (
+    Frames,
+    Range,
+    Ranges,
+    frames_class_to_frames_list,
+    frames_to_ranges,
+)
 from encord.objects.options import Option
-
-from encord.objects.frames import Frames, Ranges, Range, frames_to_ranges, frames_class_to_frames_list
 
 
 class DynamicAnswerManager:
@@ -163,3 +168,6 @@ class AnswerForFrames:
 
 
 AnswersForFrames = List[AnswerForFrames]
+
+
+from encord.objects import ObjectInstance
