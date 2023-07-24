@@ -12,6 +12,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
     TypeVar,
     Union,
 )
@@ -29,6 +30,7 @@ from encord.objects.common import (
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Ranges, ranges_to_list
+from encord.objects.ontology_element import OntologyNestedElement
 from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 ValueType = TypeVar("ValueType")
@@ -574,3 +576,25 @@ def _infer_attribute_from_answer(
 
     else:
         raise NotImplementedError(f"The answer type is not supported for answer `{answer}` of type {type(answer)}.")
+
+
+def __build_identifiers(
+    existent_items: Iterable[OntologyNestedElement],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+) -> Tuple[int, str]:
+    if local_uid is None:
+        if existent_items:
+            local_uid = max([item.uid[-1] for item in existent_items]) + 1
+        else:
+            local_uid = 1
+    else:
+        if any([item.uid[-1] == local_uid for item in existent_items]):
+            raise ValueError(f"Duplicate uid '{local_uid}'")
+
+    if feature_node_hash is None:
+        feature_node_hash = short_uuid_str()
+    elif any([item.feature_node_hash == feature_node_hash for item in existent_items]):
+        raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+    return local_uid, feature_node_hash
