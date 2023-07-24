@@ -215,26 +215,8 @@ class EncordClient(object):
                 message=f"API key [{config.api_key}] is not associated with a project or dataset"
             )
 
-    def __getattr__(self, name):
-        """Overriding __getattr__."""
-        value = self.__dict__.get(name)
-        if not value:
-            self_type = type(self).__name__
-            if self_type == "CordClientDataset" and name in EncordClientProject.__dict__.keys():
-                raise encord.exceptions.EncordException(message=f"{name} is implemented in Projects, not Datasets.")
-            elif self_type == "CordClientProject" and name in EncordClientDataset.__dict__.keys():
-                raise encord.exceptions.EncordException(message=f"{name} is implemented in Datasets, not Projects.")
-            elif name == "items":
-                pass
-            else:
-                raise encord.exceptions.EncordException(message=f"{name} is not implemented.")
-        return value
-
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)
-
-
-CordClient = EncordClient
 
 
 class EncordClientDataset(EncordClient):
@@ -705,9 +687,6 @@ class EncordClientDataset(EncordClient):
         response = self._querier.get_multiple(ImageGroupOCR, payload=payload)
 
         return response
-
-
-CordClientDataset = EncordClientDataset
 
 
 class EncordClientProject(EncordClient):
