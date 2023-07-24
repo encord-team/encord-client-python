@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 
 import requests
 from requests import Response
-from requests.exceptions import JSONDecodeError
 
 from encord._version import __version__ as encord_version
 from encord.configs import UserConfig
@@ -88,5 +87,5 @@ class ApiClient:
         try:
             description = response.json()
             handle_error_response(response.status_code, context=context, message=description["message"])
-        except JSONDecodeError as e:
+        except Exception:
             handle_error_response(response.status_code, context=context)
