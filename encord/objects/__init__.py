@@ -8,10 +8,6 @@ from encord.objects.common import (
     Shape,
     TextAttribute,
 )
-from encord.objects.ontology_labels_impl import (
-    AnswerForFrames,
-    LabelRowV2,
-    Object,
-    ObjectInstance,
-    OntologyStructure,
-)
+from encord.objects.ontology_labels_impl import LabelRowV2, OntologyStructure
+from encord.objects.ontology_object import Object
+from encord.objects.ontology_object_instance import AnswerForFrames, ObjectInstance

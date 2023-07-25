@@ -20,11 +20,13 @@ from dateutil.parser import parse
 
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
-from encord.objects import ChecklistAttribute, RadioAttribute, TextAttribute
 from encord.objects.classification import Classification
 from encord.objects.common import (
     Attribute,
+    ChecklistAttribute,
     Option,
+    RadioAttribute,
+    TextAttribute,
     _get_attribute_by_hash,
     _get_option_by_hash,
 )

@@ -49,7 +49,7 @@ CHECKLIST_ATTRIBUTE = encord.objects.ChecklistAttribute(
 )
 
 
-OBJECT_2 = encord.objects.Object(
+OBJECT_2 = encord.objects.ontology_object.Object(
     uid=2,
     name="Nose",
     color="#E27300",
@@ -83,7 +83,7 @@ RADIO_ATTRIBUTE_2 = encord.objects.RadioAttribute(
     dynamic=False,
     options=[NESTABLE_OPTION_3],
 )
-OBJECT_3 = encord.objects.Object(
+OBJECT_3 = encord.objects.ontology_object.Object(
     uid=3,
     name="Example",
     color="#FE9200",
@@ -370,12 +370,12 @@ def build_expected_ontology():
 def test_ontology_getters():
     # Object
     assert EXPECTED_ONTOLOGY.get_child_by_hash(OBJECT_1.feature_node_hash) == OBJECT_1
-    assert EXPECTED_ONTOLOGY.get_child_by_hash(OBJECT_1.feature_node_hash, encord.objects.Object)
+    assert EXPECTED_ONTOLOGY.get_child_by_hash(OBJECT_1.feature_node_hash, encord.objects.ontology_object.Object)
     with pytest.raises(TypeError):
         EXPECTED_ONTOLOGY.get_child_by_hash(OBJECT_1.feature_node_hash, encord.objects.TextAttribute)
 
     assert EXPECTED_ONTOLOGY.get_children_by_title(OBJECT_1.name) == [OBJECT_1]
-    assert EXPECTED_ONTOLOGY.get_children_by_title(OBJECT_1.name, encord.objects.Object) == [OBJECT_1]
+    assert EXPECTED_ONTOLOGY.get_children_by_title(OBJECT_1.name, encord.objects.ontology_object.Object) == [OBJECT_1]
     assert EXPECTED_ONTOLOGY.get_children_by_title(OBJECT_1.name, encord.objects.Classification) == []
 
     # Option
