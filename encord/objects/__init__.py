@@ -1,3 +1,5 @@
+from encord.objects.classification import Classification
+from encord.objects.classification_instance import ClassificationInstance
 from encord.objects.common import (
     ChecklistAttribute,
     FlatOption,
@@ -8,8 +10,6 @@ from encord.objects.common import (
 )
 from encord.objects.ontology_labels_impl import (
     AnswerForFrames,
-    Classification,
-    ClassificationInstance,
     LabelRowV2,
     Object,
     ObjectInstance,
