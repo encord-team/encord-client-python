@@ -12,19 +12,19 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Tuple,
     Type,
     TypeVar,
     Union,
 )
 
 from encord.common.enum import StringEnum
-from encord.objects.internal_helpers import __build_identifiers
 from encord.objects.ontology_element import (
     OntologyElement,
     OntologyNestedElement,
     _get_element_by_hash,
 )
-from encord.objects.utils import _decode_nested_uid
+from encord.objects.utils import _decode_nested_uid, short_uuid_str
 
 NestedID = List[int]
 
@@ -535,3 +535,25 @@ SaveDeidentifiedDicomCondition = Union[
     SaveDeidentifiedDicomConditionNotSubstr,
     SaveDeidentifiedDicomConditionIn,
 ]
+
+
+def __build_identifiers(
+    existent_items: Iterable[OntologyNestedElement],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+) -> Tuple[int, str]:
+    if local_uid is None:
+        if existent_items:
+            local_uid = max([item.uid[-1] for item in existent_items]) + 1
+        else:
+            local_uid = 1
+    else:
+        if any([item.uid[-1] == local_uid for item in existent_items]):
+            raise ValueError(f"Duplicate uid '{local_uid}'")
+
+    if feature_node_hash is None:
+        feature_node_hash = short_uuid_str()
+    elif any([item.feature_node_hash == feature_node_hash for item in existent_items]):
+        raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+    return local_uid, feature_node_hash
