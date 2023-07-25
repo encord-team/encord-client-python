@@ -75,7 +75,7 @@ class OntologyElement(ABC):
             type_: The expected type of the child node. Only a node that matches this type will be returned.
         """
         found_items = self.get_children_by_title(title, type_)
-        _assert_singular_list(found_items, title, type_)
+        _assert_singular_results_list(found_items, title, type_)
         return found_items[0]
 
 
@@ -84,7 +84,7 @@ class OntologyNestedElement(OntologyElement):
     uid: NestedID
 
 
-def _assert_singular_list(
+def _assert_singular_results_list(
     found_items: Sequence[OntologyElement],
     title: str,
     type_: Any,
