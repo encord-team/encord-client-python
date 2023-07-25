@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, List, Optional, Sequence, Type, TypeVar
+from typing import Any, Iterable, List, Optional, Sequence, Type, TypeVar, cast
 
 from encord.exceptions import OntologyError
-from encord.objects.common import NestedID, _get_element_by_hash, _get_elements_by_title
-from encord.objects.utils import check_type
+from encord.objects.common import NestedID
+from encord.objects.utils import check_type, checked_cast, does_type_match
 
 OntologyElementT = TypeVar("OntologyElementT", bound="OntologyElement")
 OntologyNestedElementT = TypeVar("OntologyNestedElementT", bound="OntologyNestedElement")
@@ -97,3 +97,31 @@ def _assert_singular_list(
             f"Use the `get_children_by_title` or `get_child_by_hash` function instead. "
             f"The found items are `{found_items}`."
         )
+
+
+def _get_element_by_hash(
+    feature_node_hash: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
+) -> Optional[OntologyNestedElementT]:
+    for element in elements:
+        if element.feature_node_hash == feature_node_hash:
+            return checked_cast(element, type_)
+
+        found_item = _get_element_by_hash(feature_node_hash, element.children, type_=type_)
+        if found_item is not None:
+            return found_item
+
+    return None
+
+
+def _get_elements_by_title(
+    title: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
+) -> List[OntologyNestedElementT]:
+    res: List[OntologyNestedElementT] = []
+    for element in elements:
+        if element.title == title and does_type_match(element, type_):
+            res.append(cast(OntologyNestedElementT, element))
+
+        found_items = _get_elements_by_title(title, element.children, type_=type_)
+        res.extend(found_items)
+
+    return res

@@ -15,7 +15,6 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    cast,
 )
 
 from encord.common.enum import StringEnum
@@ -23,9 +22,9 @@ from encord.objects.internal_helpers import __build_identifiers
 from encord.objects.ontology_element import (
     OntologyElement,
     OntologyNestedElement,
-    OntologyNestedElementT,
+    _get_element_by_hash,
 )
-from encord.objects.utils import _decode_nested_uid, checked_cast, does_type_match
+from encord.objects.utils import _decode_nested_uid
 
 NestedID = List[int]
 
@@ -468,34 +467,6 @@ def _add_option(
     option = cls(uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value)
     options.append(option)
     return option
-
-
-def _get_element_by_hash(
-    feature_node_hash: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
-) -> Optional[OntologyNestedElementT]:
-    for element in elements:
-        if element.feature_node_hash == feature_node_hash:
-            return checked_cast(element, type_)
-
-        found_item = _get_element_by_hash(feature_node_hash, element.children, type_=type_)
-        if found_item is not None:
-            return found_item
-
-    return None
-
-
-def _get_elements_by_title(
-    title: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
-) -> List[OntologyNestedElementT]:
-    res: List[OntologyNestedElementT] = []
-    for element in elements:
-        if element.title == title and does_type_match(element, type_):
-            res.append(cast(OntologyNestedElementT, element))
-
-        found_items = _get_elements_by_title(title, element.children, type_=type_)
-        res.extend(found_items)
-
-    return res
 
 
 def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Optional[Option]:
