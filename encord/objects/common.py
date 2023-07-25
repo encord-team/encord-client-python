@@ -427,6 +427,28 @@ class NestableOption(Option):
         return hash(self.feature_node_hash)
 
 
+def __build_identifiers(
+    existent_items: Iterable[OntologyNestedElement],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+) -> Tuple[int, str]:
+    if local_uid is None:
+        if existent_items:
+            local_uid = max([item.uid[-1] for item in existent_items]) + 1
+        else:
+            local_uid = 1
+    else:
+        if any([item.uid[-1] == local_uid for item in existent_items]):
+            raise ValueError(f"Duplicate uid '{local_uid}'")
+
+    if feature_node_hash is None:
+        feature_node_hash = short_uuid_str()
+    elif any([item.feature_node_hash == feature_node_hash for item in existent_items]):
+        raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+    return local_uid, feature_node_hash
+
+
 T = TypeVar("T", bound=Attribute)
 
 
@@ -535,25 +557,3 @@ SaveDeidentifiedDicomCondition = Union[
     SaveDeidentifiedDicomConditionNotSubstr,
     SaveDeidentifiedDicomConditionIn,
 ]
-
-
-def __build_identifiers(
-    existent_items: Iterable[OntologyNestedElement],
-    local_uid: Optional[int] = None,
-    feature_node_hash: Optional[str] = None,
-) -> Tuple[int, str]:
-    if local_uid is None:
-        if existent_items:
-            local_uid = max([item.uid[-1] for item in existent_items]) + 1
-        else:
-            local_uid = 1
-    else:
-        if any([item.uid[-1] == local_uid for item in existent_items]):
-            raise ValueError(f"Duplicate uid '{local_uid}'")
-
-    if feature_node_hash is None:
-        feature_node_hash = short_uuid_str()
-    elif any([item.feature_node_hash == feature_node_hash for item in existent_items]):
-        raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
-
-    return local_uid, feature_node_hash
