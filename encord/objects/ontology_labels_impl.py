@@ -86,7 +86,7 @@ from encord.objects.internal_helpers import (
 )
 from encord.objects.ontology_element import (
     OntologyElement,
-    _assert_singular_results_list,
+    _assert_singular_result_list,
     _get_element_by_hash,
 )
 from encord.objects.utils import (
@@ -3053,7 +3053,7 @@ class OntologyStructure:
             type_: The expected type of the child node. Only a node that matches this type will be returned.
         """
         found_items = self.get_children_by_title(title, type_)
-        _assert_singular_results_list(found_items, title, type_)
+        _assert_singular_result_list(found_items, title, type_)
         return found_items[0]
 
     def get_children_by_title(
