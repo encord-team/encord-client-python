@@ -6,7 +6,6 @@ import pytest
 
 import encord.objects
 import encord.objects.classification
-import encord.objects.ontology_object
 import encord.objects.ontology_structure
 from encord.objects.common import Shape
 from encord.objects.utils import short_uuid_str
@@ -17,7 +16,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 # intentionally using a different import for backwards compatibility check
-OBJECT_1 = encord.objects.ontology_object.Object(
+OBJECT_1 = encord.objects.Object(
     uid=1,
     name="Eye",
     color="#D33115",
@@ -115,7 +114,7 @@ RADIO_ATTRIBUTE_3 = encord.objects.RadioAttribute(
     options=[NESTABLE_OPTION_1, NESTABLE_OPTION_2],
 )
 # intentionally using a different import for backwards compatibility check
-CLASSIFICATION_1 = encord.objects.classification.Classification(
+CLASSIFICATION_1 = encord.objects.Classification(
     uid=1,
     feature_node_hash="a39d81c0",
     attributes=[RADIO_ATTRIBUTE_3],

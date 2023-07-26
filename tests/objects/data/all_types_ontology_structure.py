@@ -1,3 +1,4 @@
+from encord.objects import Object
 from encord.objects.common import (
     ChecklistAttribute,
     FlatOption,
@@ -6,11 +7,7 @@ from encord.objects.common import (
     Shape,
     TextAttribute,
 )
-from encord.objects.ontology_labels_impl import (
-    Classification,
-    Object,
-    OntologyStructure,
-)
+from encord.objects.ontology_labels_impl import Classification, OntologyStructure
 
 all_types_structure = OntologyStructure(
     objects=[
