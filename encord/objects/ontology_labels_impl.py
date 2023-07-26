@@ -42,7 +42,6 @@ from encord.objects.common import OptionTypes  # pylint: disable=unused-import
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
-    OntologyElement,
     OntologyNestedElement,
     Option,
     RadioAttribute,
@@ -50,9 +49,7 @@ from encord.objects.common import (
     TextAttribute,
     _add_attribute,
     _get_attribute_by_hash,
-    _get_element_by_hash,
     _get_option_by_hash,
-    _handle_wrong_number_of_found_items,
     attribute_from_dict,
     attributes_to_list_dict,
 )
@@ -86,6 +83,11 @@ from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
     get_default_answer_from_attribute,
+)
+from encord.objects.ontology_element import (
+    OntologyElement,
+    _assert_singular_result_list,
+    _get_element_by_hash,
 )
 from encord.objects.utils import (
     _lower_snake_case,
@@ -3051,7 +3053,7 @@ class OntologyStructure:
             type_: The expected type of the child node. Only a node that matches this type will be returned.
         """
         found_items = self.get_children_by_title(title, type_)
-        _handle_wrong_number_of_found_items(found_items, title, type_)
+        _assert_singular_result_list(found_items, title, type_)
         return found_items[0]
 
     def get_children_by_title(

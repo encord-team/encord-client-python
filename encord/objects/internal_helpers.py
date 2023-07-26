@@ -25,10 +25,10 @@ from encord.objects.common import (
     Option,
     RadioAttribute,
     TextAttribute,
-    _get_element_by_hash,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Ranges, ranges_to_list
+from encord.objects.ontology_element import _get_element_by_hash
 from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 ValueType = TypeVar("ValueType")
