@@ -88,7 +88,7 @@ from encord.orm.dataset import (
     SingleImage,
     Video,
 )
-from encord.orm.label_log import LabelLog, LabelLogParameters
+from encord.orm.label_log import LabelLog, LabelLogParams
 from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRow,
@@ -1246,22 +1246,26 @@ class EncordClientProject(EncordClient):
         """
         This function is documented in :meth:`encord.project.Project.get_label_logs`.
         """
+        if after is not None:
+            if from_unix_seconds is not None:
+                raise ValueError("Only one of 'from_unix_seconds' and 'after' parameters should be specified")
 
-        # Flag for backwards compatibility
-        include_user_email_and_interface_key = True
+            from_unix_seconds = int(after.timestamp())
 
-        function_arguments = locals()
+        if before is not None:
+            if to_unix_seconds is not None:
+                raise ValueError("Only one of 'to_unix_seconds' and 'before' parameters should be specified")
 
-        query_payload = {k: v for (k, v) in function_arguments.items() if k != "self" and v is not None}
+            to_unix_seconds = int(before.timestamp())
 
-        payload = LabelLogParameters(
+        payload = LabelLogParams(
             user_hash=user_hash,
             data_hash=data_hash,
             to_unix_seconds=to_unix_seconds,
             from_unix_seconds=from_unix_seconds,
         )
 
-        return self._querier.get_multiple(LabelLog, payload=query_payload)
+        return self._querier.get_multiple(LabelLog, payload=payload)
 
     def __set_project_ontology(self, ontology: Ontology) -> bool:
         """

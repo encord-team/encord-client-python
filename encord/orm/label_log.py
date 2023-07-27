@@ -58,8 +58,10 @@ class Action(IntEnum):
     SEEKING_OVERLAY_SHOWN = 32
 
 
-class LabelLogParameters(BaseDTO):
+class LabelLogParams(BaseDTO):
     user_hash: str
     data_hash: str
     to_unix_seconds: int
     from_unix_seconds: int
+    # Flag for backwards compatibility
+    include_user_email_and_interface_key: bool = True
