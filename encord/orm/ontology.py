@@ -21,10 +21,7 @@ from encord.common.constants import DATETIME_STRING_FORMAT
 from encord.objects import OntologyStructure
 from encord.orm.formatter import Formatter
 
-# pylint: disable=unused-import
 
-
-# Importing here for backwards compatibility
 class OntologyUserRole(IntEnum):
     ADMIN = 0
     USER = 1

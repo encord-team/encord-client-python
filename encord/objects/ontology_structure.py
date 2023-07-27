@@ -16,10 +16,7 @@ from encord.objects.ontology_element import (
 )
 from encord.objects.utils import checked_cast, does_type_match
 
-# pylint: disable-next=unused-import
 
-
-# Importing here for backwards compatibility
 @dataclass
 class OntologyStructure:
     objects: List[Object] = field(default_factory=list)
