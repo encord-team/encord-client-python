@@ -1,8 +1,8 @@
 import pytest
 
-from tests.fixtures import ontology, user_client
+from tests.fixtures import ontology, project, user_client
 
-assert user_client and ontology  # Need to import all fixtures
+assert project and user_client and ontology  # Need to import all fixtures
 
 import json
 from datetime import datetime
