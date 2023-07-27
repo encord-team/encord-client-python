@@ -38,13 +38,13 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.utils import _lower_snake_case
+from encord.ontology import Ontology
 from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRowMetadata,
     LabelStatus,
     WorkflowGraphNode,
 )
-from encord.orm.ontology import Ontology
 
 log = logging.getLogger(__name__)
 
