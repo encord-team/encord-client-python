@@ -7,7 +7,7 @@ from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
-from encord.objects import LabelRowV2
+from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.analytics import (
     CollaboratorTimer,
@@ -91,19 +91,24 @@ class Project:
         """
         Get the ontology of the project.
 
-        DEPRECATED: Prefer using the :class:`encord.objects.ontology_structure.OntologyStructure` class to work with the data.
-
-        .. code::
-
-            from encord.objects.ontology_structure import OntologyStructure
-
-            project = user_client.get_project("<project_hash>")
-
-            ontology = OntologyStructure.from_dict(project.ontology)
-
+        DEPRECATED: Prefer using the :meth:`encord.Project.ontology_structure` method.
         """
         project_instance = self._get_project_instance()
         return project_instance.editor_ontology
+
+    @property
+    def ontology_hash(self) -> str:
+        """
+        Get the ontology hash of the project's ontology.
+        """
+        return self._ontology.ontology_hash
+
+    @property
+    def ontology_structure(self) -> OntologyStructure:
+        """
+        Get the ontology structure of the project's ontology.
+        """
+        return self._ontology.structure
 
     @property
     def datasets(self) -> list:
