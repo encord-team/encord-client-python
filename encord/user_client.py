@@ -630,6 +630,7 @@ class EncordUserClient:
         redact_dicom_tags: bool = True,
         redact_pixels_mode: DeidentifyRedactTextMode = DeidentifyRedactTextMode.REDACT_NO_TEXT,
         save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,
+        upload_file_prefix: str = "",
     ) -> List[str]:
         """
         Deidentify DICOM files in external storage.
@@ -664,6 +665,8 @@ class EncordUserClient:
                 Specifies which text redaction policy should be applied to pixel data.
             save_conditions:
                 Specifies a list of conditions which all have to be true for DICOM deidentified file to be saved.
+            upload_file_prefix:
+                Specifies a prefix that will be added to all files uploaded to customer bucket.
         Returns:
             Function returns list of links pointing to deidentified DICOM files,
             those will be saved to the same bucket and the same directory
@@ -681,6 +684,7 @@ class EncordUserClient:
                 "redact_dicom_tags": redact_dicom_tags,
                 "redact_pixels_mode": redact_pixels_mode.value,
                 "save_conditions": [x.to_dict() for x in (save_conditions or [])],
+                "upload_file_prefix": upload_file_prefix,
             },
         )
 
