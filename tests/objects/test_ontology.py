@@ -121,15 +121,13 @@ CLASSIFICATION_1 = encord.objects.Classification(
 )
 
 # intentionally using a different import for backwards compatibility check
-EXPECTED_ONTOLOGY: encord.objects.ontology_structure.OntologyStructure = (
-    encord.objects.ontology_structure.OntologyStructure(
-        objects=[
-            OBJECT_1,
-            OBJECT_2,
-            OBJECT_3,
-        ],
-        classifications=[CLASSIFICATION_1],
-    )
+EXPECTED_ONTOLOGY: encord.objects.OntologyStructure = encord.objects.OntologyStructure(
+    objects=[
+        OBJECT_1,
+        OBJECT_2,
+        OBJECT_3,
+    ],
+    classifications=[CLASSIFICATION_1],
 )
 
 
@@ -140,7 +138,7 @@ def test_json_to_ontology():
         editor_dict = json.load(f)
 
     # WHEN
-    actual = encord.objects.ontology_structure.OntologyStructure.from_dict(editor_dict)
+    actual = encord.objects.OntologyStructure.from_dict(editor_dict)
 
     # THEN
     assert EXPECTED_ONTOLOGY == actual
@@ -160,7 +158,7 @@ def test_ontology_to_json():
 
 
 def test_add_classification():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     cls1 = ontology.add_classification()
     assert cls1.uid == 1
     assert cls1.feature_node_hash
@@ -179,7 +177,7 @@ def test_add_classification():
 
 
 def test_add_classification_duplicate_values():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_classification(1, "12345678")
     with pytest.raises(ValueError):
         obj2 = ontology.add_classification(1)
@@ -190,7 +188,7 @@ def test_add_classification_duplicate_values():
 
 
 def test_add_object():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX)
     assert obj1.uid == 1
     assert obj1.color
@@ -214,7 +212,7 @@ def test_add_object():
 
 
 def test_add_object_duplicate_values():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
     with pytest.raises(ValueError):
         obj2 = ontology.add_object("Orange", Shape.BOUNDING_BOX, 1)
@@ -225,7 +223,7 @@ def test_add_object_duplicate_values():
 
 
 def test_add_object_nested_classifications():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
 
     stripes = obj1.add_attribute(encord.objects.TextAttribute, "Stripes")
@@ -258,7 +256,7 @@ def test_add_object_nested_classifications():
 
 
 def test_add_object_nested_classifications_duplicate_values():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
 
     attr1 = obj1.add_attribute(encord.objects.TextAttribute, "Stripes")
@@ -271,7 +269,7 @@ def test_add_object_nested_classifications_duplicate_values():
 
 
 def test_add_classification_attribute():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     cls1 = ontology.add_classification()
 
     clouds = cls1.add_attribute(encord.objects.RadioAttribute, "Cloud cover")
@@ -285,7 +283,7 @@ def test_add_classification_attribute():
 
 
 def test_build_checkbox_options():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     cls1 = ontology.add_classification()
 
     clouds = cls1.add_attribute(encord.objects.ChecklistAttribute, "Cloud cover")
@@ -303,7 +301,7 @@ def test_build_checkbox_options():
 
 
 def test_build_nested_options():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
     cls1 = ontology.add_classification()
 
     clouds = cls1.add_attribute(encord.objects.RadioAttribute, "Cloud cover")
@@ -322,7 +320,7 @@ def test_build_nested_options():
 
 
 def build_expected_ontology():
-    ontology = encord.objects.ontology_structure.OntologyStructure()
+    ontology = encord.objects.OntologyStructure()
 
     eye = ontology.add_object(
         name="Eye",
