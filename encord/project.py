@@ -716,7 +716,7 @@ class Project:
             from_unix_seconds: Filter the label logs to only include labels after this timestamp. **Deprecated**: use parameter **after** instead
             to_unix_seconds: Filter the label logs to only include labels before this timestamp. **Deprecated**: use parameter **before** instead
             after: Filter the label logs to only include labels after the specified time.
-            before: Filter the label logs to only include labels after the specified time.
+            before: Filter the label logs to only include labels before the specified time.
         """
         return self._client.get_label_logs(user_hash, data_hash, from_unix_seconds, to_unix_seconds, after, before)
 
