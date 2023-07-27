@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import IntEnum
 
+from encord.orm.base_dto import BaseDTO
+
 
 @dataclass(frozen=True)
 class LabelLog:
@@ -54,3 +56,10 @@ class Action(IntEnum):
     BUFFERING_OVERLAY_SHOWN = 30
     BITRATE_WARNING_SHOWN = 31
     SEEKING_OVERLAY_SHOWN = 32
+
+
+class LabelLogParameters(BaseDTO):
+    user_hash: str
+    data_hash: str
+    to_unix_seconds: int
+    from_unix_seconds: int

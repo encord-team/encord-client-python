@@ -88,7 +88,7 @@ from encord.orm.dataset import (
     SingleImage,
     Video,
 )
-from encord.orm.label_log import LabelLog
+from encord.orm.label_log import LabelLog, LabelLogParameters
 from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRow,
@@ -1240,6 +1240,8 @@ class EncordClientProject(EncordClient):
         data_hash: Optional[str] = None,
         from_unix_seconds: Optional[int] = None,
         to_unix_seconds: Optional[int] = None,
+        after: Optional[datetime] = None,
+        before: Optional[datetime] = None,
     ) -> List[LabelLog]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_logs`.
@@ -1251,6 +1253,13 @@ class EncordClientProject(EncordClient):
         function_arguments = locals()
 
         query_payload = {k: v for (k, v) in function_arguments.items() if k != "self" and v is not None}
+
+        payload = LabelLogParameters(
+            user_hash=user_hash,
+            data_hash=data_hash,
+            to_unix_seconds=to_unix_seconds,
+            from_unix_seconds=from_unix_seconds,
+        )
 
         return self._querier.get_multiple(LabelLog, payload=query_payload)
 
