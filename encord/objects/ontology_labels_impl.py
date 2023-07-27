@@ -16,7 +16,6 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_GET_LIMIT,
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
-from encord.objects import OntologyStructure
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
 from encord.objects.common import Attribute
@@ -37,6 +36,7 @@ from encord.objects.coordinates import (
 from encord.objects.frames import Frames, frames_class_to_frames_list
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
+from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.utils import _lower_snake_case
 from encord.orm.label_row import (
     AnnotationTaskStatus,

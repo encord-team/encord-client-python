@@ -18,7 +18,7 @@ from typing import Dict, Optional
 
 # pylint: disable=unused-import
 from encord.common.constants import DATETIME_STRING_FORMAT
-from encord.objects import OntologyStructure
+from encord.objects.ontology_structure import OntologyStructure
 from encord.orm.formatter import Formatter
 
 

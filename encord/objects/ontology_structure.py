@@ -5,7 +5,8 @@ from typing import Any, Dict, List, Optional, Type, cast
 from uuid import uuid4
 
 from encord.exceptions import OntologyError
-from encord.objects import Classification, Object, Shape
+from encord.objects.classification import Classification
+from encord.objects.common import Shape
 from encord.objects.constants import AVAILABLE_COLORS
 from encord.objects.ontology_element import (
     OntologyElement,
@@ -14,6 +15,7 @@ from encord.objects.ontology_element import (
     _assert_singular_result_list,
     _get_element_by_hash,
 )
+from encord.objects.ontology_object import Object
 from encord.objects.utils import checked_cast, does_type_match
 
 
