@@ -8,9 +8,9 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from encord import EncordUserClient, Project
 from encord.client import EncordClientProject
 from encord.http.querier import Querier, RequestContext
-from encord.objects.ontology_labels_impl import Ontology as OrmOntology
 from encord.ontology import Ontology
 from encord.orm.label_row import LabelRowMetadata
+from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import Project as OrmProject
 from tests.test_data.label_rows_metadata_blurb import LABEL_ROW_METADATA_BLURB
 from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
