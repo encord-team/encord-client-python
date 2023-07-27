@@ -19,8 +19,8 @@ class BaseDTO(BaseDTOInterface, BaseModel):
         except ValidationError as e:
             raise EncordException(message=str(e)) from e
 
-    def to_dict(self) -> Dict[str, Any]:
-        return self.model_dump(by_alias=True)  # type: ignore[attr-defined]
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        return self.model_dump(by_alias=by_alias, exclude_none=exclude_none)  # type: ignore[attr-defined]
 
 
 DataT = TypeVar("DataT")
@@ -36,5 +36,5 @@ class GenericBaseDTO(BaseDTOInterface, BaseModel):
         except ValidationError as e:
             raise EncordException(message=str(e)) from e
 
-    def to_dict(self) -> Dict[str, Any]:
-        return self.model_dump(by_alias=True)  # type: ignore[attr-defined]
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        return self.model_dump(by_alias=by_alias, exclude_none=exclude_none)  # type: ignore[attr-defined]

@@ -1265,7 +1265,7 @@ class EncordClientProject(EncordClient):
             from_unix_seconds=from_unix_seconds,
         )
 
-        return self._querier.get_multiple(LabelLog, payload=payload)
+        return self._querier.get_multiple(LabelLog, payload=payload.to_dict(by_alias=False))
 
     def __set_project_ontology(self, ontology: Ontology) -> bool:
         """
