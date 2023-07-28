@@ -11,5 +11,5 @@ class BaseDTOInterface(ABC):
         pass
 
     @abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
         pass

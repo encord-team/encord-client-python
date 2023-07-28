@@ -3,15 +3,15 @@ from typing import Any, Dict, Type, TypeVar
 from pydantic import BaseModel, ValidationError
 from pydantic.generics import GenericModel
 
+from encord.common.utils import snake_to_camel
 from encord.exceptions import EncordException
-from encord.objects.utils import _snake_to_camel
 from encord.orm.base_dto.base_dto_interface import BaseDTOInterface, T
 
 
 class BaseDTO(BaseDTOInterface, BaseModel):
     class Config:
         allow_extra = True
-        alias_generator = _snake_to_camel
+        alias_generator = snake_to_camel
         allow_population_by_field_name = True
 
     @classmethod
@@ -21,8 +21,8 @@ class BaseDTO(BaseDTOInterface, BaseModel):
         except ValidationError as e:
             raise EncordException(message=str(e)) from e
 
-    def to_dict(self) -> Dict[str, Any]:
-        return self.dict(by_alias=True)  # type: ignore[attr-defined]
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        return self.dict(by_alias=by_alias, exclude_none=exclude_none)  # type: ignore[attr-defined]
 
 
 DataT = TypeVar("DataT")
@@ -31,7 +31,7 @@ DataT = TypeVar("DataT")
 class GenericBaseDTO(BaseDTOInterface, GenericModel):
     class Config:
         allow_extra = True
-        alias_generator = _snake_to_camel
+        alias_generator = snake_to_camel
         allow_population_by_field_name = True
 
     @classmethod
@@ -41,5 +41,5 @@ class GenericBaseDTO(BaseDTOInterface, GenericModel):
         except ValidationError as e:
             raise EncordException(message=str(e)) from e
 
-    def to_dict(self) -> Dict[str, Any]:
-        return self.dict(by_alias=True)  # type: ignore[attr-defined]
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        return self.dict(by_alias=by_alias, exclude_none=exclude_none)  # type: ignore[attr-defined]

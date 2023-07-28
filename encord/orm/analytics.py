@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import Optional
 
-from encord.objects.utils import _snake_to_camel
+from encord.common.utils import snake_to_camel
 from encord.orm.base_dto import BaseDTO
 from encord.utilities.project_user import ProjectUserRole
 
@@ -10,7 +10,7 @@ from encord.utilities.project_user import ProjectUserRole
 class CamelStrEnum(str, Enum):
     # noinspection PyMethodParameters
     def _generate_next_value_(name, start, count, last_values) -> str:  # type: ignore
-        return _snake_to_camel(name)
+        return snake_to_camel(name)
 
 
 class CollaboratorTimersGroupBy(CamelStrEnum):

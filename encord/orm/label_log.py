@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import IntEnum
+from typing import Optional
+
+from encord.orm.base_dto import BaseDTO
 
 
 @dataclass(frozen=True)
@@ -54,3 +57,12 @@ class Action(IntEnum):
     BUFFERING_OVERLAY_SHOWN = 30
     BITRATE_WARNING_SHOWN = 31
     SEEKING_OVERLAY_SHOWN = 32
+
+
+class LabelLogParams(BaseDTO):
+    user_hash: Optional[str]
+    data_hash: Optional[str]
+    to_unix_seconds: Optional[int]
+    from_unix_seconds: Optional[int]
+    # Flag for backwards compatibility
+    include_user_email_and_interface_key: bool = True
