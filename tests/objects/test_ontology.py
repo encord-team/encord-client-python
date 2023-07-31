@@ -121,7 +121,7 @@ CLASSIFICATION_1 = encord.objects.Classification(
 )
 
 # intentionally using a different import for backwards compatibility check
-EXPECTED_ONTOLOGY: encord.objects.ontology_structure.OntologyStructure = encord.objects.OntologyStructure(
+EXPECTED_ONTOLOGY: encord.objects.OntologyStructure = encord.objects.OntologyStructure(
     objects=[
         OBJECT_1,
         OBJECT_2,

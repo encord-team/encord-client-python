@@ -6,8 +6,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from encord import EncordUserClient
 from encord.client import EncordClientProject
-from encord.objects.ontology_labels_impl import Ontology as OrmOntology
 from encord.ontology import Ontology
+from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import Project as OrmProject
 from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
