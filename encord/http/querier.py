@@ -23,8 +23,7 @@ from typing import Any, Generator, List, Tuple, Type, TypeVar
 import requests
 import requests.exceptions
 from requests import Response, Session
-from requests.adapters import HTTPAdapter
-from urllib3 import Retry
+from requests.adapters import HTTPAdapter, Retry
 
 from encord._version import __version__ as encord_version
 from encord.configs import BaseConfig
