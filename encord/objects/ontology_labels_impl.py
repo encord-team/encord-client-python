@@ -19,7 +19,8 @@ from encord.http.limits import (
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
 from encord.objects.common import Attribute
-from encord.objects.constants import (
+from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
+    AVAILABLE_COLORS,
     DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
@@ -44,6 +45,9 @@ from encord.orm.label_row import (
     LabelRowMetadata,
     LabelStatus,
     WorkflowGraphNode,
+)
+from encord.orm.ontology import (  # pylint: disable=unused-import # for backward compatibility
+    OntologyUserRole,
 )
 
 log = logging.getLogger(__name__)
