@@ -22,13 +22,11 @@ object_with_bitmask_annotation = label_row.get_frame_views()[
 bitmask_annotation = object_with_bitmask_annotation.get_annotations()[0]
 
 # Convert bitmask to a numpy array
-bitmask_annotation_array = bitmask_annotation.coordinates.to_numpy_array()
-
 # Obtained array is a binary mask, so to work with it as an image,
 # it is necessary to convert it to a different datatype and scale
+bitmask = bitmask_annotation.coordinates.to_numpy_array().astype(np.uint8)
 
-numpy_coordinates_to_write = bitmask_annotation_array.astype(np.uint8)
-numpy_coordinates_to_write[numpy_coordinates_to_write == 1] = 255
+bitmask[bitmask == 1] = 255
 
 # And now we can save the mask as a grayscale image
-cv2.imwrite("./mask_as_an_image.png", numpy_coordinates_to_write)
+cv2.imwrite("./mask_as_an_image.png", bitmask)
