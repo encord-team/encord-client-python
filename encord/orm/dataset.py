@@ -756,7 +756,7 @@ class StorageLocation(IntEnum):
     def from_str(string_location: str) -> StorageLocation:
         return STORAGE_LOCATION_BY_STR[string_location]
 
-    def get_str(self) -> str:  # type: ignore[return]
+    def get_str(self) -> str:
         if self == StorageLocation.CORD_STORAGE:
             return "CORD_STORAGE"
         elif self == StorageLocation.AWS:
@@ -767,6 +767,8 @@ class StorageLocation(IntEnum):
             return "AZURE_STR"
         elif self == StorageLocation.OTC:
             return "OTC_STR"
+        else:
+            return "NEW_STORAGE"
 
     @classmethod
     def _missing_(cls, value: Any) -> StorageLocation:
