@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
+from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
@@ -130,6 +131,7 @@ class Project:
         return project_instance.datasets
 
     @property
+    @deprecated("0.1.69", "list_label_row_v2()")
     def label_rows(self) -> dict:
         """
         Get the label rows.
