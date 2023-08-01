@@ -74,6 +74,7 @@ jobs:
           check_name: Unit test report
 
   review:
+    name: Automated code review by OpenAI
     runs-on: ubuntu-latest
     steps:
       - uses: coderabbitai/ai-pr-reviewer@1.5.0
