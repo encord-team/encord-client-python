@@ -20,6 +20,7 @@ from dateutil.parser import parse
 
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
+from encord.objects.answers import Answer, ValueType, _get_static_answer_map
 from encord.objects.classification import Classification
 from encord.objects.common import (
     Attribute,
@@ -33,9 +34,6 @@ from encord.objects.common import (
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Frames, frames_class_to_frames_list
 from encord.objects.internal_helpers import (
-    Answer,
-    ValueType,
-    _get_static_answer_map,
     _infer_attribute_from_answer,
     _search_child_attributes,
 )
