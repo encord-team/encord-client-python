@@ -77,7 +77,7 @@ jobs:
     name: Automated code review by OpenAI
     runs-on: ubuntu-latest
     steps:
-      - uses: coderabbitai/ai-pr-reviewer@1.5.0
+      - uses: coderabbitai/ai-pr-reviewer@1.9.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
