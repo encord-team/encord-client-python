@@ -45,7 +45,7 @@ class ApiClient:
     def _user_agent():
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
-    def _bulid_url(self, path: Path) -> str:
+    def _build_url(self, path: Path) -> str:
         return urljoin(self._domain, str(self._base_path / path))
 
     def _headers(self):
@@ -59,7 +59,7 @@ class ApiClient:
     def get(self, path: Path, params: Optional[BaseDTO], result_type: Type[T]) -> T:
         params_dict = params.to_dict() if params is not None else None
         req = requests.Request(
-            method="GET", url=self._bulid_url(path), headers=self._headers(), params=params_dict
+            method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
 
         req = sign_request(req, self._config.public_key_hex, self._config.private_key)
