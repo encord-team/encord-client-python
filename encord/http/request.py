@@ -14,7 +14,7 @@
 # under the License.
 
 import json
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.http.query_methods import QueryMethods
 
@@ -27,11 +27,11 @@ class Request(object):
     def __init__(
         self,
         query_method: QueryMethods,
-        db_object_type,
-        uid,
-        timeout,
-        connect_timeout,
-        payload,
+        db_object_type: Type,
+        uid: Optional[Union[str, List[str]]],
+        timeout: int,
+        connect_timeout: int,
+        payload: Optional[Dict[str, Any]],
     ) -> None:
         self.http_method = QueryMethods.POST
         self.data: str = json.dumps(
