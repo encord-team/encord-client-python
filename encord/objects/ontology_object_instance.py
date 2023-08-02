@@ -21,6 +21,11 @@ from dateutil.parser import parse
 
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
+from encord.objects.answers import (
+    Answer,
+    _get_static_answer_map,
+    get_default_answer_from_attribute,
+)
 from encord.objects.common import (
     Attribute,
     ChecklistAttribute,
@@ -43,11 +48,8 @@ from encord.objects.frames import (
     ranges_list_to_ranges,
 )
 from encord.objects.internal_helpers import (
-    Answer,
-    _get_static_answer_map,
     _infer_attribute_from_answer,
     _search_child_attributes,
-    get_default_answer_from_attribute,
 )
 from encord.objects.ontology_object import Object
 from encord.objects.utils import check_email, short_uuid_str
