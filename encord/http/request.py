@@ -14,12 +14,14 @@
 # under the License.
 
 import json
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.http.query_methods import QueryMethods
 
+UIDType = Union[None, int, str, Dict[str, str], Dict[str, object], List[int], List[str], List[Dict[str, str]]]
 
-class Request(object):
+
+class Request:
     """
     Request object. Takes query parameters and prepares them for execution.
     """
@@ -27,11 +29,11 @@ class Request(object):
     def __init__(
         self,
         query_method: QueryMethods,
-        db_object_type,
-        uid,
-        timeout,
-        connect_timeout,
-        payload,
+        db_object_type: Type,
+        uid: UIDType,
+        timeout: int,
+        connect_timeout: int,
+        payload: Union[None, Dict[str, Any], List[Dict[str, Any]]],
     ) -> None:
         self.http_method = QueryMethods.POST
         self.data: str = json.dumps(
