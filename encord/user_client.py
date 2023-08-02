@@ -244,8 +244,28 @@ class EncordUserClient:
         ssh_private_key: Optional[str] = None,
         password: Optional[str] = None,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        ssh_private_key_path: Optional[str | Path] = None,
         **kwargs,
     ) -> EncordUserClient:
+        """
+        Creates an instance of EncordUserClient authenticated with private SSH key.
+        Accepts the private key content, path to key file, that can be provided as method parameters or as following environment variables:
+
+        * **ENCORD_SSH_KEY**: environment variable with the private key content
+        * **ENCORD_SSH_KEY_FILE**: environment variable with the path to the key file
+
+        Args:
+            ssh_private_key: the private key content
+            ssh_private_key_path: the pah to the private key file
+            password: private key password
+        """
+
+        if ssh_private_key_path is not None:
+            if isinstance(ssh_private_key_path, str):
+                ssh_private_key_path = Path(ssh_private_key_path)
+
+            ssh_private_key = ssh_private_key_path.read_text(encoding="ascii")
+
         if not ssh_private_key:
             ssh_private_key = get_env_ssh_key()
 
