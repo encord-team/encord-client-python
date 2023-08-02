@@ -64,5 +64,6 @@ class LabelLogParams(BaseDTO):
     data_hash: Optional[str]
     to_unix_seconds: Optional[int]
     from_unix_seconds: Optional[int]
+    user_email: Optional[str]
     # Flag for backwards compatibility
     include_user_email_and_interface_key: bool = True

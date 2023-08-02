@@ -1242,6 +1242,7 @@ class EncordClientProject(EncordClient):
         to_unix_seconds: Optional[int] = None,
         after: Optional[datetime] = None,
         before: Optional[datetime] = None,
+        user_email: Optional[str] = None,
     ) -> List[LabelLog]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_logs`.
@@ -1260,6 +1261,7 @@ class EncordClientProject(EncordClient):
 
         payload = LabelLogParams(
             user_hash=user_hash,
+            user_email=user_email,
             data_hash=data_hash,
             to_unix_seconds=to_unix_seconds,
             from_unix_seconds=from_unix_seconds,
