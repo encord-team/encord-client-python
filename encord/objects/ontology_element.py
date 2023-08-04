@@ -2,18 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    cast,
-)
+from typing import Any, Iterable, List, Optional, Sequence, Tuple, Type, TypeVar, cast
 
 from encord.exceptions import OntologyError
 from encord.objects.utils import (
@@ -23,8 +12,7 @@ from encord.objects.utils import (
     short_uuid_str,
 )
 
-if TYPE_CHECKING:
-    from encord.objects.common import NestedID
+NestedID = List[int]
 
 OntologyElementT = TypeVar("OntologyElementT", bound="OntologyElement")
 OntologyNestedElementT = TypeVar("OntologyNestedElementT", bound="OntologyNestedElement")

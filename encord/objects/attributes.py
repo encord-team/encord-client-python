@@ -4,6 +4,7 @@ from abc import abstractmethod
 from typing import Any, Dict, Generic, List, Optional, Sequence, Type, TypeVar
 
 from encord.objects.ontology_element import (
+    NestedID,
     OntologyElement,
     OntologyNestedElement,
     __build_identifiers,
@@ -282,7 +283,7 @@ def attributes_to_list_dict(attributes: List[Attribute]) -> List[Dict[str, Any]]
     return [attribute.to_dict() for attribute in attributes]
 
 
-from encord.objects.common import NestedID, PropertyType
+from encord.objects.common import PropertyType
 from encord.objects.options import (  # pylint: disable=unused-import
     FlatOption,
     NestableOption,

@@ -5,21 +5,20 @@ from enum import Enum
 from typing import Any, Dict, List, Union
 
 from encord.common.enum import StringEnum
-
-# Attributes and Options imports need to be here for backwards compatibility
 from encord.objects.attributes import (  # pylint: disable=unused-import
     Attribute,
     ChecklistAttribute,
     RadioAttribute,
     TextAttribute,
 )
+
+# Following imports need to be here for backwards compatibility
+from encord.objects.ontology_element import NestedID  # pylint: disable=unused-import
 from encord.objects.options import (  # pylint: disable=unused-import
     FlatOption,
     NestableOption,
     Option,
 )
-
-NestedID = List[int]
 
 
 class PropertyType(StringEnum):
