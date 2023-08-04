@@ -375,7 +375,7 @@ class EncordClientDataset(EncordClient):
 
         return data_rows
 
-    def set_access_settings(self, dataset_access_settings=DatasetAccessSettings) -> None:
+    def set_access_settings(self, dataset_access_settings: DatasetAccessSettings) -> None:
         self._dataset_access_settings = dataset_access_settings
 
     def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:

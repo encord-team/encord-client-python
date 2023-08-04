@@ -83,7 +83,7 @@ def range_to_frames(range_: Range) -> List[int]:
     Args:
         range_: The single Range
     """
-    return [i for i in range(range_.start, range_.end + 1)]
+    return list(range(range_.start, range_.end + 1))
 
 
 def ranges_to_frames(range_list: Ranges) -> List[int]:
@@ -122,11 +122,9 @@ def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
     elif isinstance(frames_class, Range):
         return range_to_frames(frames_class)
     elif isinstance(frames_class, list):
-        if all([isinstance(x, int) for x in frames_class]):
+        if all(isinstance(x, int) for x in frames_class):
             return cast(List[int], sorted(list(set(frames_class))))
-        elif all([isinstance(x, Range) for x in frames_class]):
+        elif all(isinstance(x, Range) for x in frames_class):
             return ranges_to_frames(cast(List[Range], frames_class))
-        else:
-            raise RuntimeError("Unexpected type for frames.")
-    else:
-        raise RuntimeError("Unexpected type for frames.")
+
+    raise RuntimeError("Unexpected type for frames.")

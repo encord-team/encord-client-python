@@ -18,12 +18,15 @@ import os
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
-import cryptography
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    PublicFormat,
+    load_ssh_private_key,
+)
 
 import encord.exceptions
 from encord.constants.string_constants import ALL_RESOURCE_TYPES
@@ -132,7 +135,7 @@ class UserConfig(BaseConfig):
         """
         key_bytes = ssh_private_key.encode()
         password_bytes = password.encode() if password else None
-        private_key = cryptography.hazmat.primitives.serialization.load_ssh_private_key(key_bytes, password_bytes)
+        private_key = load_ssh_private_key(key_bytes, password_bytes)
 
         if isinstance(private_key, Ed25519PrivateKey):
             return UserConfig(private_key, requests_settings=requests_settings, **kwargs)

@@ -117,7 +117,7 @@ def check_error_response(response, context=None, payload=None):
 
     if response == RESOURCE_EXISTS_ERROR:
         raise ResourceExistsError(
-            "Trying to create a resource that already exists. " "Payload for this failure is: " + str(payload),
+            f"Trying to create a resource that already exists. Payload for this failure is: {payload}",
             context=context,
         )
 
@@ -134,14 +134,11 @@ def check_error_response(response, context=None, payload=None):
 
     if response == INVALID_ARGUMENTS_ERROR:
         default_message = "Some of the arguments to the SDK function were invalid."
-        if payload is None:
-            message = default_message
-        else:
-            message = payload
+        message = default_message if payload is None else payload
         raise InvalidArgumentsError(message, context=context)
 
     if response == MULTI_LABEL_LIMIT_ERROR:
-        maximum_labels_allowed = payload["maximum_labels_allowed"]
+        maximum_labels_allowed = payload.get("maximum_labels_allowed", 100) if payload is not None else 100
         raise MultiLabelLimitError(
             f"Too many labels were requested. The limit is {maximum_labels_allowed}. Please reduce the amount "
             "of requested labels to stay under the reported limit.",
@@ -151,10 +148,7 @@ def check_error_response(response, context=None, payload=None):
 
     if response == WRONG_PROJECT_TYPE_ERROR:
         default_message = "Operation is not supported by the project type"
-        if payload is None:
-            message = default_message
-        else:
-            message = payload
+        message = default_message if payload is None else payload
         raise WrongProjectTypeError(message, context=context)
 
     payload_string = ""

@@ -7,7 +7,7 @@ from encord.objects.ontology_element import (
     NestedID,
     OntologyElement,
     OntologyNestedElement,
-    __build_identifiers,
+    _build_identifiers,
     _decode_nested_uid,
     _get_element_by_hash,
     _nested_id_from_json_str,
@@ -266,7 +266,7 @@ def _add_attribute(
     required: bool = False,
     dynamic: bool = False,
 ) -> AttributeType:
-    local_uid, feature_node_hash = __build_identifiers(attributes, local_uid, feature_node_hash)
+    local_uid, feature_node_hash = _build_identifiers(attributes, local_uid, feature_node_hash)
     attr = cls(
         name=name, uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, required=required, dynamic=dynamic
     )
