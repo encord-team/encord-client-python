@@ -4,7 +4,8 @@ from typing import Dict, List, Optional, Sequence, Union
 
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer
-from encord.objects.common import Attribute, Option, RadioAttribute, TextAttribute
+from encord.objects.attributes import Attribute, RadioAttribute, TextAttribute
+from encord.objects.options import Option
 
 
 def _search_child_attributes(

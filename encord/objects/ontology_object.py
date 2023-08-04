@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
 
-from encord.objects.common import (
+from encord.objects.attributes import (
     Attribute,
-    Shape,
     _add_attribute,
     attribute_from_dict,
     attributes_to_list_dict,
 )
+from encord.objects.common import Shape
 from encord.objects.ontology_element import OntologyElement
 
 

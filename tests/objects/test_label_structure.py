@@ -8,19 +8,16 @@ import pytest
 from encord.exceptions import LabelRowError, OntologyError
 from encord.objects import (
     AnswerForFrames,
+    ChecklistAttribute,
     Classification,
     ClassificationInstance,
     LabelRowV2,
     Object,
     ObjectInstance,
-)
-from encord.objects.common import (
-    Attribute,
-    ChecklistAttribute,
-    Option,
     RadioAttribute,
     TextAttribute,
 )
+from encord.objects.attributes import Attribute
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     BoundingBoxCoordinates,
@@ -28,6 +25,7 @@ from encord.objects.coordinates import (
     PolygonCoordinates,
 )
 from encord.objects.frames import Range
+from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data.all_types_ontology_structure import all_types_structure
