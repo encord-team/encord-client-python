@@ -2,16 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Union
 
 from encord.common.enum import StringEnum
-from encord.objects.attributes import (
+
+# Attributes and Options imports need to be here for backwards compatibility
+from encord.objects.attributes import (  # pylint: disable=unused-import
     Attribute,
     ChecklistAttribute,
     RadioAttribute,
     TextAttribute,
 )
-from encord.objects.options import FlatOption, NestableOption, Option
+from encord.objects.options import (  # pylint: disable=unused-import
+    FlatOption,
+    NestableOption,
+    Option,
+)
 
 NestedID = List[int]
 
@@ -30,25 +36,6 @@ class Shape(StringEnum):
     POLYLINE = "polyline"
     ROTATABLE_BOUNDING_BOX = "rotatable_bounding_box"
     BITMASK = "bitmask"
-
-
-OptionType = TypeVar("OptionType", bound="Option")
-
-T = TypeVar("T", bound=Attribute)
-
-OptionAttribute = Union[RadioAttribute, ChecklistAttribute]
-AttributeTypes = Union[
-    Type[RadioAttribute],
-    Type[ChecklistAttribute],
-    Type[TextAttribute],
-    Type[Attribute],
-]
-OptionTypes = Union[Type[FlatOption], Type[NestableOption], Type[Option]]
-
-# Two types below are kept for the backwards compatibility
-# Please don't use them, as they are going to be removed in the future versions
-AttributeClasses = Union[RadioAttribute, ChecklistAttribute, TextAttribute, Attribute]
-OptionClasses = Union[FlatOption, NestableOption, Option]
 
 
 class DeidentifyRedactTextMode(Enum):
