@@ -5,8 +5,10 @@ import os
 import pytest
 
 import encord.objects
+import encord.objects.attributes
 import encord.objects.classification
 import encord.objects.ontology_structure
+import encord.objects.options
 from encord.objects.common import Shape
 from encord.objects.utils import short_uuid_str
 
@@ -58,7 +60,7 @@ OBJECT_2 = encord.objects.Object(
 )
 
 # intentionally using a different import for backwards compatibility check
-RADIO_ATTRIBUTE_1 = encord.objects.common.RadioAttribute(
+RADIO_ATTRIBUTE_1 = encord.objects.RadioAttribute(
     uid=[4, 1, 1, 1],
     feature_node_hash="59204845",
     name="Leaf",
