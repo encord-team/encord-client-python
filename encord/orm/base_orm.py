@@ -96,7 +96,7 @@ class BaseORM(dict):
         if name in self and name in self.DB_FIELDS:
             del self[name]
         else:
-            super().__delattr__(self, name)
+            super().__delattr__(name)
 
     @staticmethod
     def from_db_row(row, db_field):

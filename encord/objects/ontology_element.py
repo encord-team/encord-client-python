@@ -138,7 +138,7 @@ def _nested_id_from_json_str(attribute_id: str) -> NestedID:
     return [int(x) for x in nested_ids]
 
 
-def __build_identifiers(
+def _build_identifiers(
     existent_items: Iterable[OntologyNestedElement],
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,

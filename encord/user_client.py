@@ -725,6 +725,3 @@ class ListingFilter(Enum):
     CREATED_AFTER = "created_after"
     EDITED_BEFORE = "edited_before"
     EDITED_AFTER = "edited_after"
-
-
-CordUserClient = EncordUserClient

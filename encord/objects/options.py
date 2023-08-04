@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Type, TypeVar
 from encord.objects.ontology_element import (
     OntologyElement,
     OntologyNestedElement,
-    __build_identifiers,
+    _build_identifiers,
     _decode_nested_uid,
     _get_element_by_hash,
     _nested_id_from_json_str,
@@ -157,7 +157,7 @@ def _add_option(
     feature_node_hash: Optional[str] = None,
     value: Optional[str] = None,
 ) -> OT:
-    local_uid, feature_node_hash = __build_identifiers(options, local_uid, feature_node_hash)
+    local_uid, feature_node_hash = _build_identifiers(options, local_uid, feature_node_hash)
     if not value:
         value = re.sub(r"\s", "_", label).lower()
     option = cls(uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value)

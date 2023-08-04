@@ -597,7 +597,6 @@ class ObjectInstance:
         self,
         answer: Union[str, Option, Iterable[Option]],
         attribute: Attribute,
-        track_hash: str,
         ranges: Optional[Ranges],
     ) -> None:
         if attribute.dynamic:
@@ -609,14 +608,12 @@ class ObjectInstance:
 
     def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute) -> None:
         if attribute.dynamic:
-            track_hash = answer_dict["trackHash"]
             ranges = ranges_list_to_ranges(answer_dict["range"])
         else:
-            track_hash = None
             ranges = None
 
         if isinstance(attribute, TextAttribute):
-            self._set_answer_unsafe(answer_dict["answers"], attribute, track_hash, ranges)
+            self._set_answer_unsafe(answer_dict["answers"], attribute, ranges)
         elif isinstance(attribute, RadioAttribute):
             if len(answer_dict["answers"]) == 1:
                 # When classification is removed in UI, it keeps the entry about the classification,
@@ -624,14 +621,14 @@ class ObjectInstance:
                 # Thus an empty answers array is equivalent to "no such attribute", and such attribute should be ignored
                 feature_hash = answer_dict["answers"][0]["featureHash"]
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
-                self._set_answer_unsafe(option, attribute, track_hash, ranges)
+                self._set_answer_unsafe(option, attribute, ranges)
         elif isinstance(attribute, ChecklistAttribute):
             options = []
             for answer in answer_dict["answers"]:
                 feature_hash = answer["featureHash"]
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 options.append(option)
-            self._set_answer_unsafe(options, attribute, track_hash, ranges)
+            self._set_answer_unsafe(options, attribute, ranges)
         else:
             raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 

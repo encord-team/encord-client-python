@@ -65,7 +65,7 @@ class LocalImport:
     file_path: str
 
 
-ImportMethod = Union[LocalImport]
+ImportMethod = LocalImport
 """Using images/videos in cloud storage as an alternative import method will be supported in the future."""
 
 
