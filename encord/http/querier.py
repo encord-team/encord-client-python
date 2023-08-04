@@ -67,7 +67,7 @@ class Querier:
     def put_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
         return self._request_multiple(QueryMethods.PUT, object_type, uid, payload)
 
-    def _request_multiple(self, method: QueryMethods, object_type: Type[T], uid: List[str], payload=None) -> List[T]:
+    def _request_multiple(self, method: QueryMethods, object_type: Type[T], uid, payload=None) -> List[T]:
         request = self._request(method, object_type, uid, self._config.read_timeout, payload=payload)
         result, context = self._execute(request)
 
