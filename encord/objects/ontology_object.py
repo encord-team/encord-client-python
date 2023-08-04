@@ -40,12 +40,10 @@ class Object(OntologyElement):
         if shape_opt is None:
             raise TypeError(f"The shape '{d['shape']}' of the object '{d}' is not recognised")
 
-        attributes_ret: List[Attribute] = list()
-        if "attributes" in d:
-            for attribute_dict in d["attributes"]:
-                attributes_ret.append(attribute_from_dict(attribute_dict))
-
-        object_ret = Object(
+        attributes_ret: List[Attribute] = [
+            attribute_from_dict(attribute_dict) for attribute_dict in d.get("attributes", [])
+        ]
+        return Object(
             uid=int(d["id"]),
             name=d["name"],
             color=d["color"],
@@ -54,18 +52,15 @@ class Object(OntologyElement):
             attributes=attributes_ret,
         )
 
-        return object_ret
-
     def to_dict(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = dict()
-        ret["id"] = str(self.uid)
-        ret["name"] = self.name
-        ret["color"] = self.color
-        ret["shape"] = self.shape.value
-        ret["featureNodeHash"] = self.feature_node_hash
-
-        attributes_list = attributes_to_list_dict(self.attributes)
-        if attributes_list:
+        ret: Dict[str, Any] = {
+            "id": str(self.uid),
+            "name": self.name,
+            "color": self.color,
+            "shape": self.shape.value,
+            "featureNodeHash": self.feature_node_hash,
+        }
+        if attributes_list := attributes_to_list_dict(self.attributes):
             ret["attributes"] = attributes_list
 
         return ret

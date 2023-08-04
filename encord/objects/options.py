@@ -44,8 +44,7 @@ class Option(OntologyNestedElement):
         ret["value"] = self.value
         ret["featureNodeHash"] = self.feature_node_hash
 
-        nested_options = self._encode_nested_options()
-        if nested_options:
+        if nested_options := self._encode_nested_options():
             ret["options"] = nested_options
 
         return ret
@@ -104,10 +103,7 @@ class NestableOption(Option):
 
     @classmethod
     def from_dict(cls, d: dict) -> NestableOption:
-        nested_options_ret: List[Attribute] = list()
-        if "options" in d:
-            for nested_option in d["options"]:
-                nested_options_ret.append(attribute_from_dict(nested_option))
+        nested_options_ret = [attribute_from_dict(nested_option) for nested_option in d.get("options", [])]
         return NestableOption(
             **cls._decode_common_option_fields(d),
             nested_options=nested_options_ret,

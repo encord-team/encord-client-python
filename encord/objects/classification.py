@@ -37,10 +37,7 @@ class Classification(OntologyElement):
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
-        attributes_ret: List[Attribute] = list()
-        for attribute_dict in d["attributes"]:
-            attributes_ret.append(attribute_from_dict(attribute_dict))
-
+        attributes_ret: List[Attribute] = [attribute_from_dict(attribute_dict) for attribute_dict in d["attributes"]]
         return Classification(
             uid=int(d["id"]),
             feature_node_hash=d["featureNodeHash"],
@@ -48,12 +45,11 @@ class Classification(OntologyElement):
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = dict()
-        ret["id"] = str(self.uid)
-        ret["featureNodeHash"] = self.feature_node_hash
-
-        attributes_list = attributes_to_list_dict(self.attributes)
-        if attributes_list:
+        ret: Dict[str, Any] = {
+            "id": str(self.uid),
+            "featureNodeHash": self.feature_node_hash,
+        }
+        if attributes_list := attributes_to_list_dict(self.attributes):
             ret["attributes"] = attributes_list
 
         return ret

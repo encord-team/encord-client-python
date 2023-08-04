@@ -110,10 +110,7 @@ class PolygonCoordinates:
         return PolygonCoordinates(values=values)
 
     def to_dict(self) -> dict:
-        ret = {}
-        for idx, value in enumerate(self.values):
-            ret[str(idx)] = {"x": value.x, "y": value.y}
-        return ret
+        return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
 
 
 @dataclass(frozen=True)
@@ -138,10 +135,7 @@ class PolylineCoordinates:
         return PolylineCoordinates(values=values)
 
     def to_dict(self) -> dict:
-        ret = {}
-        for idx, value in enumerate(self.values):
-            ret[str(idx)] = {"x": value.x, "y": value.y}
-        return ret
+        return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
 
 
 class Visibility(Flag):
