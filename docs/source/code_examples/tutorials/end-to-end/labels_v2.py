@@ -21,9 +21,9 @@ from encord.objects import (
     Object,
     ObjectInstance,
     OntologyStructure,
+    Option,
     RadioAttribute,
 )
-from encord.objects.common import Option
 from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.frames import Range
 from encord.orm.project import Project as OrmProject
