@@ -170,3 +170,7 @@ def __build_identifiers(
         raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
 
     return local_uid, feature_node_hash
+
+
+def _decode_nested_uid(nested_uid: list) -> str:
+    return ".".join([str(uid) for uid in nested_uid])

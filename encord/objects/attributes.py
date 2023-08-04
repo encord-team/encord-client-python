@@ -7,10 +7,10 @@ from encord.objects.ontology_element import (
     OntologyElement,
     OntologyNestedElement,
     __build_identifiers,
+    _decode_nested_uid,
     _get_element_by_hash,
     _nested_id_from_json_str,
 )
-from encord.objects.utils import _decode_nested_uid
 
 OptionType = TypeVar("OptionType", bound="Option")
 AttributeType = TypeVar("AttributeType", bound="Attribute")
