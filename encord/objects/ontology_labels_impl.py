@@ -16,9 +16,9 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_GET_LIMIT,
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
+from encord.objects.attributes import Attribute
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
-from encord.objects.common import Attribute
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
     AVAILABLE_COLORS,
     DATETIME_LONG_STRING_FORMAT,

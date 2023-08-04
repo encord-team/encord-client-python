@@ -4,17 +4,16 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar
 
-from encord.objects.common import (
+from encord.objects.attributes import (
     Attribute,
     ChecklistAttribute,
-    FlatOption,
-    NestableOption,
     RadioAttribute,
     TextAttribute,
 )
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Ranges, ranges_to_list
 from encord.objects.ontology_element import _get_element_by_hash
+from encord.objects.options import FlatOption, NestableOption
 from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 ValueType = TypeVar("ValueType")

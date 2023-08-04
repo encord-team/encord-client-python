@@ -21,19 +21,13 @@ from dateutil.parser import parse
 
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
+from encord.objects import ChecklistAttribute, RadioAttribute, TextAttribute
 from encord.objects.answers import (
     Answer,
     _get_static_answer_map,
     get_default_answer_from_attribute,
 )
-from encord.objects.common import (
-    Attribute,
-    ChecklistAttribute,
-    Option,
-    RadioAttribute,
-    TextAttribute,
-    _get_attribute_by_hash,
-)
+from encord.objects.attributes import Attribute, _get_attribute_by_hash
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
@@ -52,6 +46,7 @@ from encord.objects.internal_helpers import (
     _search_child_attributes,
 )
 from encord.objects.ontology_object import Object
+from encord.objects.options import Option
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:

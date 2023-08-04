@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
 
-from encord.objects.common import (
+from encord.objects.attributes import (
     Attribute,
     _add_attribute,
     attribute_from_dict,

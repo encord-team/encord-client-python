@@ -9,13 +9,19 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Tuple,
     Type,
     TypeVar,
     cast,
 )
 
 from encord.exceptions import OntologyError
-from encord.objects.utils import check_type, checked_cast, does_type_match
+from encord.objects.utils import (
+    check_type,
+    checked_cast,
+    does_type_match,
+    short_uuid_str,
+)
 
 if TYPE_CHECKING:
     from encord.objects.common import NestedID
@@ -137,3 +143,30 @@ def _get_elements_by_title(
         res.extend(found_items)
 
     return res
+
+
+def _nested_id_from_json_str(attribute_id: str) -> NestedID:
+    nested_ids = attribute_id.split(".")
+    return [int(x) for x in nested_ids]
+
+
+def __build_identifiers(
+    existent_items: Iterable[OntologyNestedElement],
+    local_uid: Optional[int] = None,
+    feature_node_hash: Optional[str] = None,
+) -> Tuple[int, str]:
+    if local_uid is None:
+        if existent_items:
+            local_uid = max([item.uid[-1] for item in existent_items]) + 1
+        else:
+            local_uid = 1
+    else:
+        if any([item.uid[-1] == local_uid for item in existent_items]):
+            raise ValueError(f"Duplicate uid '{local_uid}'")
+
+    if feature_node_hash is None:
+        feature_node_hash = short_uuid_str()
+    elif any([item.feature_node_hash == feature_node_hash for item in existent_items]):
+        raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
+
+    return local_uid, feature_node_hash
