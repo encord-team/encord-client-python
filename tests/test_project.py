@@ -1,5 +1,5 @@
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from cryptography.hazmat.primitives import serialization
@@ -120,12 +120,13 @@ def test_valid_device(mock_send, project: Project, device):
 
 @patch.object(EncordClientProject, "get_project")
 def test_label_rows_property_queries_metadata(project_client_mock: MagicMock, project: Project):
-    project._project_instance.label_rows = None
+    project_current_orm_mock = MagicMock(spec=OrmProject)
+    type(project_current_orm_mock).label_rows = PropertyMock(return_value=None)
+    project._project_instance = project_current_orm_mock
 
     project_orm_mock = MagicMock(spec=OrmProject)
-    project_orm_mock.label_rows = [LabelRow({"data_title": "abc"})]
-
     project_client_mock.return_value = project_orm_mock
+    type(project_orm_mock).label_rows = PropertyMock(return_value=[LabelRow({"data_title": "abc"})])
 
     project_client_mock.assert_not_called()
 
@@ -139,6 +140,6 @@ def test_label_rows_property_queries_metadata(project_client_mock: MagicMock, pr
     assert len(rows) == 1
     assert rows[0].data_title == "abc"
 
-    # Expect label rows metadata to be cached
-    project.label_rows
+    # Expect label rows metadata to be cached, so data query doesn't happen again
+    _ = project.label_rows
     project_client_mock.assert_called_once()
