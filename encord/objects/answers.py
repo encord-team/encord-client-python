@@ -442,5 +442,4 @@ def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> 
 
 def _get_static_answer_map(attributes: List[Attribute]) -> Dict[str, Answer]:
     answers = _get_default_static_answers_from_attributes(attributes)
-    answer_map = {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
-    return answer_map
+    return {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
