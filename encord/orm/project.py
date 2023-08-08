@@ -105,15 +105,15 @@ class Project(base_orm.BaseORM):
         return [label.get("label_hash") for label in labels]
 
     @property
-    def project_hash(self):
+    def project_hash(self) -> str:
         return self["project_hash"]
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self["title"]
 
     @property
-    def description(self):
+    def description(self) -> str:
         return self["description"]
 
     @property
@@ -129,12 +129,20 @@ class Project(base_orm.BaseORM):
         return self["label_rows"]
 
     @property
-    def ontology_hash(self):
+    def ontology_hash(self) -> str:
         return self["ontology_hash"]
 
     @property
     def source_projects(self):
         return self["source_projects"]
+
+    @property
+    def created_at(self) -> datetime.datetime:
+        return self["created_at"]
+
+    @property
+    def last_edited_at(self) -> datetime.datetime:
+        return self["last_edited_at"]
 
 
 class ProjectCopy:
