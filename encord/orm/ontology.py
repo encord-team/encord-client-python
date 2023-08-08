@@ -13,6 +13,7 @@
 # under the License.
 from __future__ import annotations
 
+from datetime import datetime
 from enum import IntEnum
 from typing import Dict, Optional
 
@@ -33,6 +34,8 @@ class Ontology(dict, Formatter):
         title: str,
         structure: OntologyStructure,
         ontology_hash: str,
+        created_at: datetime,
+        last_edited_at: datetime,
         description: Optional[str] = None,
     ):
         """
@@ -52,6 +55,8 @@ class Ontology(dict, Formatter):
                 "title": title,
                 "description": description,
                 "structure": structure,
+                "created_at": created_at,
+                "last_edited_at": last_edited_at,
             }
         )
 
@@ -83,6 +88,14 @@ class Ontology(dict, Formatter):
     def structure(self, value: OntologyStructure) -> None:
         self["structure"] = value
 
+    @property
+    def created_at(self) -> datetime:
+        return self["created_at"]
+
+    @property
+    def last_edited_at(self) -> datetime:
+        return self["last_edited_at"]
+
     @classmethod
     def from_dict(cls, json_dict: Dict) -> Ontology:
         return Ontology(
@@ -90,4 +103,6 @@ class Ontology(dict, Formatter):
             description=json_dict["description"],
             ontology_hash=json_dict["ontology_hash"],
             structure=OntologyStructure.from_dict(json_dict["editor"]),
+            created_at=json_dict["created_at"],
+            last_edited_at=json_dict["last_edited_at"],
         )

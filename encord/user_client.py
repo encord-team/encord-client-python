@@ -126,14 +126,17 @@ class EncordUserClient:
         # not full access, that is implied by get_ontology method
         ontology_hash = orm_project["ontology_hash"]
         config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
-        project_ontology = Ontology(querier, config)
+
+        orm_ontology = querier.basic_getter(OrmOntology, config.resource_id)
+        project_ontology = Ontology(querier, config, orm_ontology)
 
         return Project(client, orm_project, project_ontology, client_v2=self._api_client)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
         querier = Querier(config)
-        return Ontology(querier, config)
+        orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
+        return Ontology(querier, config, orm_ontology)
 
     def create_private_dataset(
         self,
