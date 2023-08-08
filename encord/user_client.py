@@ -97,7 +97,8 @@ class EncordUserClient:
         config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         querier = Querier(config)
         client = EncordClientDataset(querier=querier, config=config, dataset_access_settings=dataset_access_settings)
-        return Dataset(client)
+        orm_dataset = client.get_dataset()
+        return Dataset(client, orm_dataset)
 
     def get_project(self, project_hash: str) -> Project:
         """
