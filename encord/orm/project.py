@@ -102,10 +102,7 @@ class Project(base_orm.BaseORM):
                 label_rows = project.get_label_rows(created_labels_list, get_signed_url=False)
         """
         labels = self.to_dic().get("label_rows", [])
-        res = []
-        for label in labels:
-            res.append(label.get("label_hash"))
-        return res
+        return [label.get("label_hash") for label in labels]
 
     @property
     def project_hash(self):
