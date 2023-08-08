@@ -106,10 +106,7 @@ class BaseORM(dict):
         :param db_field:
         :return:
         """
-        temp_dict = {}
-        for i, attribute in enumerate(db_field):
-            temp_dict[attribute] = row[i]
-        return temp_dict
+        return {attribute: row[i] for i, attribute in enumerate(db_field)}
 
     def to_dic(self, time_str: bool = True):
         """
@@ -125,7 +122,7 @@ class BaseORM(dict):
         """
         res = {}
         for k, v in self.items():
-            if isinstance(v, datetime.datetime) and time_str is True:
+            if isinstance(v, datetime.datetime) and time_str:
                 v = v.strftime("%Y-%m-%d %H:%M:%S")
             elif isinstance(v, dict):
                 v = json.dumps(v)
