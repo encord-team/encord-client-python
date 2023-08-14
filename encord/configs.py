@@ -28,8 +28,12 @@ from cryptography.hazmat.primitives.serialization import (
     load_ssh_private_key,
 )
 
-import encord.exceptions
 from encord.constants.string_constants import ALL_RESOURCE_TYPES
+from encord.exceptions import (
+    AuthenticationError,
+    InitialisationError,
+    ResourceNotFoundError,
+)
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 
 ENCORD_DOMAIN = "https://api.encord.com"
@@ -52,11 +56,9 @@ _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 READ_TIMEOUT = 180  # In seconds
 WRITE_TIMEOUT = 180  # In seconds
-CONNECT_TIMEOUT = 180  # In seconds
+CONNECT_TIMEOUT = 5  # In seconds
 
 logger = logging.getLogger(__name__)
-
-from encord.exceptions import ResourceNotFoundError
 
 
 class BaseConfig(ABC):
@@ -178,7 +180,7 @@ def get_env_resource_id() -> str:
     project_id = os.environ.get(_ENCORD_PROJECT_ID) or os.environ.get(_CORD_PROJECT_ID)
     dataset_id = os.environ.get(_ENCORD_DATASET_ID) or os.environ.get(_CORD_DATASET_ID)
     if (project_id is not None) and (dataset_id is not None):
-        raise encord.exceptions.InitialisationError(
+        raise InitialisationError(
             message=(
                 "Found both Project EntityId and Dataset EntityId in os.environ. "
                 "Please initialise EncordClient by passing resource_id."
@@ -192,7 +194,7 @@ def get_env_resource_id() -> str:
         resource_id = dataset_id
 
     else:
-        raise encord.exceptions.AuthenticationError(message="Project EntityId or dataset EntityId not provided")
+        raise AuthenticationError(message="Project EntityId or dataset EntityId not provided")
 
     return resource_id
 
@@ -200,7 +202,7 @@ def get_env_resource_id() -> str:
 def get_env_api_key() -> str:
     api_key = os.environ.get(_ENCORD_API_KEY) or os.environ.get(_CORD_API_KEY)
     if api_key is None:
-        raise encord.exceptions.AuthenticationError(message="API key not provided")
+        raise AuthenticationError(message="API key not provided")
 
     return api_key
 

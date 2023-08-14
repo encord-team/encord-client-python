@@ -22,17 +22,19 @@ from typing import Any, Generator, List, Tuple, Type, TypeVar
 
 import requests
 import requests.exceptions
-from requests import Response, Session
+from requests import Session
 from requests.adapters import HTTPAdapter, Retry
+from requests.exceptions import ConnectionError, HTTPError, ReadTimeout
 
 from encord._version import __version__ as encord_version
 from encord.configs import BaseConfig
-from encord.exceptions import *
+from encord.exceptions import MaxRetriesError, RequestException, ResourceNotFoundError
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     HEADER_USER_AGENT,
     RequestContext,
 )
+from encord.http.constants import RequestsSettings
 from encord.http.error_utils import check_error_response
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request
@@ -134,7 +136,7 @@ class Querier:
             raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
 
     @staticmethod
-    def _user_agent():
+    def _user_agent() -> str:
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
     @staticmethod
@@ -142,9 +144,9 @@ class Querier:
         return f"{uuid.uuid4().hex}/{random.randint(1, 2**63 - 1)};o=1"
 
     @staticmethod
-    def _exception_context_from_response(response: Response) -> RequestContext:
+    def _exception_context(request: requests.PreparedRequest) -> RequestContext:
         try:
-            x_cloud_trace_context = response.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
+            x_cloud_trace_context = request.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
             if x_cloud_trace_context is None:
                 return RequestContext()
 
@@ -163,6 +165,37 @@ class Querier:
 
         return request
 
+    def _requests_settings(self, request: Request):
+        if request.http_method == QueryMethods.GET:
+            return self._config.requests_settings
+
+        return RequestsSettings(
+            max_retries=0,
+            max_connection_retries=self._config.requests_settings.max_connection_retries,
+            backoff_factor=self._config.requests_settings.backoff_factor,
+        )
+
+    def _retried_execute(
+        self, session: Session, request: Request, req: requests.PreparedRequest
+    ) -> Tuple[Any, RequestContext]:
+        context = self._exception_context(req)
+        for attempts_left in range(self._requests_settings(request).max_retries, -1, -1):
+            try:
+                res = session.send(req, timeout=(request.connect_timeout, request.timeout))
+                res.raise_for_status()
+
+                try:
+                    return res.json(), context
+                except Exception as e:
+                    raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
+
+            except (ConnectionError, ReadTimeout, HTTPError) as e:
+                # Retrying only GET requests
+                if attempts_left == 0 or request.http_method != QueryMethods.GET.value:
+                    raise RequestException("Request failed.", context=context) from e
+
+        raise MaxRetriesError("Out of retry attempts.", context=context)
+
     def _execute(self, request: Request, enable_logging=True) -> Tuple[Any, RequestContext]:
         """Execute a request."""
         if enable_logging:
@@ -175,19 +208,8 @@ class Querier:
             data=request.data,
         ).prepare()
 
-        timeouts = (request.connect_timeout, request.timeout)
-
-        req_settings = self._config.requests_settings
-        with create_new_session(
-            max_retries=req_settings.max_retries, backoff_factor=req_settings.backoff_factor
-        ) as session:
-            res = session.send(req, timeout=timeouts)
-            context = self._exception_context_from_response(res)
-
-            try:
-                res_json = res.json()
-            except Exception as e:
-                raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
+        with create_new_session(self._requests_settings(request)) as session:
+            res_json, context = self._retried_execute(session, request, req)
 
         # pylint: disable-next=no-member
         if res_json.get("status") != requests.codes.ok:
@@ -199,8 +221,13 @@ class Querier:
 
 
 @contextmanager
-def create_new_session(max_retries: Optional[int] = None, backoff_factor: float = 0) -> Generator[Session, None, None]:
-    retry_policy = Retry(total=max_retries, connect=max_retries, read=max_retries, backoff_factor=backoff_factor)
+def create_new_session(requests_settings: RequestsSettings) -> Generator[Session, None, None]:
+    retry_policy = Retry(
+        allowed_methods=[QueryMethods.POST.value],
+        connect=requests_settings.max_connection_retries,
+        read=0,  # Don't use built in retry as we have explicit one for read requests
+        backoff_factor=requests_settings.backoff_factor,
+    )
 
     with Session() as session:
         session.mount("http://", HTTPAdapter(max_retries=retry_policy))

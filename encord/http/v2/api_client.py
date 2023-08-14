@@ -1,10 +1,12 @@
 import platform
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional, Type, TypeVar
+from typing import Any, Generator, List, Optional, Tuple, Type, TypeVar
 from urllib.parse import urljoin
 
 import requests
-from requests import Response
+from requests import Response, Session
+from requests.adapters import HTTPAdapter, Retry
 
 from encord._version import __version__ as encord_version
 from encord.configs import UserConfig
@@ -14,7 +16,7 @@ from encord.http.common import (
     HEADER_USER_AGENT,
     RequestContext,
 )
-from encord.http.utils import create_new_session
+from encord.http.constants import RequestsSettings
 from encord.http.v2.error_utils import handle_error_response
 from encord.http.v2.request_signer import sign_request
 from encord.orm.base_dto import BaseDTO, BaseDTOInterface
@@ -65,10 +67,7 @@ class ApiClient:
         req = sign_request(req, self._config.public_key_hex, self._config.private_key)
 
         timeouts = (self._config.write_timeout, self._config.read_timeout)
-        req_settings = self._config.requests_settings
-        with create_new_session(
-            max_retries=req_settings.max_retries, backoff_factor=req_settings.backoff_factor
-        ) as session:
+        with create_new_session(self._config.requests_settings) as session:
             res = session.send(req, timeout=timeouts)
             context = self._exception_context_from_response(res)
 
@@ -89,3 +88,17 @@ class ApiClient:
             handle_error_response(response.status_code, context=context, message=description["message"])
         except Exception:
             handle_error_response(response.status_code, context=context)
+
+
+@contextmanager
+def create_new_session(requests_settings: RequestsSettings) -> Generator[Session, None, None]:
+    retry_policy = Retry(
+        total=requests_settings.max_retries,
+        backoff_factor=requests_settings.backoff_factor,
+    )
+
+    with Session() as session:
+        session.mount("http://", HTTPAdapter(max_retries=retry_policy))
+        session.mount("https://", HTTPAdapter(max_retries=retry_policy))
+
+        yield session

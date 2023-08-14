@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError
+from encord.http.constants import RequestsSettings
 from encord.http.querier import Querier, create_new_session
 from encord.orm.dataset import (
     DicomSeries,
@@ -148,7 +149,9 @@ def _upload_single_file(
     backoff_factor: float,
     cache_max_age: int = CACHE_DURATION_IN_SECONDS,
 ) -> None:
-    with create_new_session(max_retries=max_retries, backoff_factor=backoff_factor) as session:
+    with create_new_session(
+        RequestsSettings(max_connection_retries=max_retries, backoff_factor=backoff_factor)
+    ) as session:
         url = signed_url["signed_url"]
 
         with open(file_path, "rb") as f:

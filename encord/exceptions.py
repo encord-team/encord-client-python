@@ -86,6 +86,12 @@ class RequestException(EncordException):
     pass
 
 
+class MaxRetriesError(RequestException):
+    """Exception thrown when all retry attempts are exhausted"""
+
+    pass
+
+
 class UnknownException(EncordException):
     """Unknown error."""
 
