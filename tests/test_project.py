@@ -1,4 +1,3 @@
-import os
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -7,14 +6,15 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from requests import Session
 
 from encord.client import EncordClientProject
-from encord.configs import _ENCORD_SSH_KEY_FILE
 from encord.constants.model import Device
 from encord.constants.model_weights import faster_rcnn_R_101_C4_3x
 from encord.exceptions import EncordException
 from encord.orm.label_row import LabelRow
 from encord.orm.project import Project as OrmProject
 from encord.project import Project
-from encord.user_client import EncordUserClient
+from tests.fixtures import ontology, project, user_client
+
+assert user_client and project and ontology
 
 PRIVATE_KEY = (
     Ed25519PrivateKey.generate()
@@ -26,27 +26,6 @@ PRIVATE_KEY = (
     .decode("utf-8")
 )
 UID = "d958ddbb-fcd0-477a-adf9-de14431dbbd2"
-
-
-@pytest.fixture
-def ssh_key_file_path():
-    return os.path.join(os.path.dirname(__file__), "resources/test_key")
-
-
-def teardown_function():
-    if _ENCORD_SSH_KEY_FILE in os.environ:
-        del os.environ[_ENCORD_SSH_KEY_FILE]
-
-
-@pytest.fixture
-@patch.object(EncordClientProject, "get_project")
-def project(project_client_mock: MagicMock, ssh_key_file_path):
-    project_client_mock.get_project.return_value = MagicMock()
-
-    os.environ[_ENCORD_SSH_KEY_FILE] = ssh_key_file_path
-    user_client = EncordUserClient.create_with_ssh_private_key()
-    assert isinstance(user_client, EncordUserClient)
-    return user_client.get_project("test_project")
 
 
 @pytest.mark.parametrize("weights", [None, "invalid-weight"])

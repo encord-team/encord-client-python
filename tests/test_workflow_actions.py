@@ -1,19 +1,17 @@
 import json
 from unittest.mock import MagicMock, patch
 
-import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from encord import EncordUserClient, Project
+from encord import Project
 from encord.client import EncordClientProject
 from encord.http.querier import Querier, RequestContext
-from encord.ontology import Ontology
 from encord.orm.label_row import LabelRowMetadata
-from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.project import Project as OrmProject
+from tests.fixtures import ontology, project, user_client
 from tests.test_data.label_rows_metadata_blurb import LABEL_ROW_METADATA_BLURB
-from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
+
+assert user_client and project and ontology
 
 DUMMY_PRIVATE_KEY = (
     Ed25519PrivateKey.generate()
@@ -24,29 +22,6 @@ DUMMY_PRIVATE_KEY = (
     )
     .decode("utf-8")
 )
-
-
-@pytest.fixture
-def client():
-    client = EncordUserClient.create_with_ssh_private_key(DUMMY_PRIVATE_KEY)
-    return client
-
-
-@pytest.fixture
-def ontology():
-    ontology = Ontology(None, None, OrmOntology.from_dict(ONTOLOGY_BLURB))
-    return ontology
-
-
-@pytest.fixture
-@patch.object(EncordClientProject, "get_project")
-def project(client_project_mock, client: EncordUserClient, ontology: Ontology):
-    client_project_mock.return_value = OrmProject(
-        {"ontology_hash": "dummy-ontology-hash", "project_hash": "dummy-project-hash"}
-    )
-    project = client.get_project("dummy-project-hash")
-    project._ontology = ontology
-    return project
 
 
 @patch.object(Querier, "_execute")
