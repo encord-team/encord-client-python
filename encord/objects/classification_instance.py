@@ -192,10 +192,7 @@ class ClassificationInstance:
         Returns:
             A list of `ClassificationInstance.Annotation` in order of available frames.
         """
-        ret = []
-        for frame_num in sorted(self._frames_to_data.keys()):
-            ret.append(self.get_annotation(frame_num))
-        return ret
+        return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
 
     def is_valid(self) -> None:
         if not len(self._frames_to_data) > 0:

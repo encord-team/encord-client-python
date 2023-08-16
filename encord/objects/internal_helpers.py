@@ -45,7 +45,7 @@ def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Op
 
 
 def _search_for_text_attributes(attributes: List[Attribute]) -> List[TextAttribute]:
-    text_attributes: List[TextAttribute] = list()
+    text_attributes: List[TextAttribute] = []
     for attribute in attributes:
         if isinstance(attribute, TextAttribute):
             text_attributes.append(attribute)

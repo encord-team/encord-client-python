@@ -175,7 +175,7 @@ class BitmaskCoordinates:
         Numpy needs to be installed for this call to work
         """
         try:
-            import numpy as np
+            import numpy as np  # type: ignore[missing-import]
         except ImportError:
             raise EncordException("Numpy is required for .to_numpy call.")
 

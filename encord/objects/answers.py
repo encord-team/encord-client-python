@@ -182,10 +182,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
         if not isinstance(value, NestableOption):
             raise ValueError("RadioAnswer can only be set to a NestableOption.")
 
-        passed = False
-        for child in self._ontology_attribute.options:
-            if value.feature_node_hash == child.feature_node_hash:
-                passed = True
+        passed = any(value.feature_node_hash == child.feature_node_hash for child in self._ontology_attribute.options)
         if not passed:
             raise ValueError(
                 f"The supplied NestableOption `{value}` is not a child of the RadioAttribute that "
@@ -352,16 +349,10 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
                 self._feature_hash_to_answer_map[feature_node_hash] = other_answer
 
     def _initialise_feature_hash_to_answer_map(self) -> Dict[str, bool]:
-        ret: Dict[str, bool] = {}
-        for child in self._ontology_attribute.options:
-            ret[child.feature_node_hash] = False
-        return ret
+        return {child.feature_node_hash: False for child in self._ontology_attribute.options}
 
     def _initialise_ontology_options_feature_hashes(self) -> Set[str]:
-        ret: Set[str] = set()
-        for child in self._ontology_attribute.options:
-            ret.add(child.feature_node_hash)
-        return ret
+        return {child.feature_node_hash for child in self._ontology_attribute.options}
 
     def _verify_flat_option(self, value: FlatOption) -> None:
         if value.feature_node_hash not in self._ontology_options_feature_hashes:
@@ -371,21 +362,16 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             )
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
-        checked_options = []
         ontology_attribute: ChecklistAttribute = self._ontology_attribute
-        for option in ontology_attribute.options:
-            if self.get_value(option):
-                checked_options.append(option)
-
-        answers = []
-        for option in checked_options:
-            answers.append(
-                {
-                    "name": option.label,
-                    "value": option.value,
-                    "featureHash": option.feature_node_hash,
-                }
-            )
+        checked_options = [option for option in ontology_attribute.options if self.get_value(option)]
+        answers = [
+            {
+                "name": option.label,
+                "value": option.value,
+                "featureHash": option.feature_node_hash,
+            }
+            for option in checked_options
+        ]
         return {
             "name": self.ontology_attribute.name,
             "value": _lower_snake_case(self.ontology_attribute.name),
@@ -413,20 +399,19 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
         self._answered = True
 
     def __hash__(self):
-        flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
-        flat_values.sort()
+        flat_values = sorted(self._feature_hash_to_answer_map.items())
         return hash((tuple(flat_values), type(self).__name__))
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ChecklistAnswer):
             return False
 
-        flat_values = {(key, value) for key, value in self._feature_hash_to_answer_map.items()}
-        other_flat_values = {(key, value) for key, value in other._feature_hash_to_answer_map.items()}
+        flat_values = set(self._feature_hash_to_answer_map.items())
+        other_flat_values = set(other._feature_hash_to_answer_map.items())
         return flat_values == other_flat_values
 
     def __repr__(self):
-        flat_values = [(key, value) for key, value in self._feature_hash_to_answer_map.items()]
+        flat_values = list(self._feature_hash_to_answer_map.items())
         return f"{self.__class__.__name__}({flat_values})"
 
 
@@ -442,7 +427,7 @@ def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
 
 
 def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
-    ret: List[Answer] = list()
+    ret: List[Answer] = []
     for attribute in attributes:
         if not attribute.dynamic:
             answer = get_default_answer_from_attribute(attribute)
@@ -457,5 +442,4 @@ def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> 
 
 def _get_static_answer_map(attributes: List[Attribute]) -> Dict[str, Answer]:
     answers = _get_default_static_answers_from_attributes(attributes)
-    answer_map = {answer.ontology_attribute.feature_node_hash: answer for answer in answers}
-    return answer_map
+    return {answer.ontology_attribute.feature_node_hash: answer for answer in answers}

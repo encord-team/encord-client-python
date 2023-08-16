@@ -1177,10 +1177,7 @@ class LabelRowV2:
         self, classification: Classification, frames: Iterable[int]
     ) -> Optional[int]:
         present_frames = self._classifications_to_frames.get(classification, set())
-        for frame in frames:
-            if frame in present_frames:
-                return frame
-        return None
+        return next((frame for frame in frames if frame in present_frames), None)
 
     def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         self._classifications_to_frames[classification].update(set(frames))
@@ -1264,8 +1261,8 @@ class LabelRowV2:
             data_hash=label_row_dict["data_hash"],
             data_type=data_type,
             label_status=LabelStatus(label_row_dict["label_status"]),
-            annotation_task_status=label_row_dict.get("annotation_task_status", None),
-            workflow_graph_node=label_row_dict.get("workflow_graph_node", None),
+            annotation_task_status=label_row_dict.get("annotation_task_status"),
+            workflow_graph_node=label_row_dict.get("workflow_graph_node"),
             is_shadow_data=self.is_shadow_data,
             created_at=label_row_dict["created_at"],
             last_edited_at=label_row_dict["last_edited_at"],
@@ -1289,7 +1286,9 @@ class LabelRowV2:
                 frame = int(data_unit["data_sequence"])
                 self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
                 self._add_classification_instances_from_classifications(
-                    data_unit["labels"].get("classifications", []), classification_answers, int(frame)
+                    data_unit["labels"].get("classifications", []),
+                    classification_answers,
+                    frame,
                 )
             elif data_type in {DataType.VIDEO.value, DataType.DICOM.value}:
                 for frame, frame_data in data_unit["labels"].items():
@@ -1391,8 +1390,8 @@ class LabelRowV2:
                 self._add_frames_to_classification_instance(frame_classification_label, frame)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
-        frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = dict()
-        for _, payload in label_row_data_units.items():
+        frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
+        for payload in label_row_data_units.values():
             frame_number = int(payload["data_sequence"])
             frame_level_image_group_data = self.FrameLevelImageGroupData(
                 image_hash=payload["data_hash"],

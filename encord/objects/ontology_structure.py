@@ -116,14 +116,10 @@ class OntologyStructure:
         Raises:
             KeyError: If the dict is missing a required field.
         """
-        objects_ret: List[Object] = list()
-        for object_dict in d["objects"]:
-            objects_ret.append(Object.from_dict(object_dict))
-
-        classifications_ret: List[Classification] = list()
-        for classification_dict in d["classifications"]:
-            classifications_ret.append(Classification.from_dict(classification_dict))
-
+        objects_ret = [Object.from_dict(object_dict) for object_dict in d["objects"]]
+        classifications_ret = [
+            Classification.from_dict(classification_dict) for classification_dict in d["classifications"]
+        ]
         return OntologyStructure(objects=objects_ret, classifications=classifications_ret)
 
     def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:

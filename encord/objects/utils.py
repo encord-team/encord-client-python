@@ -21,11 +21,7 @@ def check_type(obj: Any, type_: Optional[Type[Any]]) -> None:
 
 
 def does_type_match(obj: Any, type_: Optional[Type[Any]]) -> bool:
-    if type_ is None:
-        return True
-    if not isinstance(obj, type_):
-        return False
-    return True
+    return True if type_ is None else isinstance(obj, type_)
 
 
 T = TypeVar("T")

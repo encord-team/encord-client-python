@@ -60,7 +60,7 @@ class ObjectInstance:
 
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
-        self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = dict()
+        self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
         self._object_hash = object_hash or short_uuid_str()
         self._parent: Optional[LabelRowV2] = None
         """This member should only be manipulated by a LabelRowV2"""
@@ -377,10 +377,7 @@ class ObjectInstance:
         Returns:
             A list of `ObjectInstance.Annotation` in order of available frames.
         """
-        ret = []
-        for frame_num in sorted(self._frames_to_instance_data.keys()):
-            ret.append(self.get_annotation(frame_num))
-        return ret
+        return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def remove_from_frames(self, frames: Frames):
         """Ensure that it will be removed from all frames."""
@@ -694,12 +691,10 @@ class DynamicAnswerManager:
         # ^ I might not need this object but only need the _get_dynamic_answers object.
 
     def is_valid_dynamic_attribute(self, attribute: Attribute) -> bool:
-        feature_node_hash = attribute.feature_node_hash
-
-        for answer in self._dynamic_uninitialised_answer_options:
-            if answer.ontology_attribute.feature_node_hash == feature_node_hash:
-                return True
-        return False
+        return any(
+            answer.ontology_attribute.feature_node_hash == attribute.feature_node_hash
+            for answer in self._dynamic_uninitialised_answer_options
+        )
 
     def delete_answer(
         self,
@@ -785,10 +780,7 @@ class DynamicAnswerManager:
 
     def get_all_answers(self) -> List[Tuple[Answer, Ranges]]:
         """Returns all answers that are set."""
-        ret = []
-        for answer, frames in self._answers_to_frames.items():
-            ret.append((answer, frames_to_ranges(frames)))
-        return ret
+        return [(answer, frames_to_ranges(frames)) for answer, frames in self._answers_to_frames.items()]
 
     def copy(self) -> DynamicAnswerManager:
         ret = DynamicAnswerManager(self._object_instance)
