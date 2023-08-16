@@ -123,7 +123,7 @@ def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
         return range_to_frames(frames_class)
     elif isinstance(frames_class, list):
         if all(isinstance(x, int) for x in frames_class):
-            return cast(List[int], sorted(list(set(frames_class))))
+            return sorted(list(set(cast(List[int], frames_class))))
         elif all(isinstance(x, Range) for x in frames_class):
             return ranges_to_frames(cast(List[Range], frames_class))
 
