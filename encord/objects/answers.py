@@ -367,7 +367,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         ontology_attribute: ChecklistAttribute = self._ontology_attribute
-        checked_options = [option for option in ontology_attribute.options if self.get_value(option)]
+        checked_options = [option for option in ontology_attribute.options if self.get_option_value(option)]
         answers = [
             {
                 "name": option.label,
