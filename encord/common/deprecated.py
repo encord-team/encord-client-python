@@ -1,8 +1,6 @@
 import functools
 import warnings
 
-warnings.simplefilter("always", DeprecationWarning)
-
 
 def deprecated(version, alternative=None):
     def decorator(func):
