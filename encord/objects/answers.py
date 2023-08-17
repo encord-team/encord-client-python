@@ -309,12 +309,12 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = True
 
-    @deprecated("0.1.80", alternative=".set(options)")
+    @deprecated("0.1.91", alternative=".set(options)")
     def set_options(self, values: Iterable[FlatOption]):
         # Deprecated: please use :meth:`set` instead
         return self.set(values)
 
-    @deprecated("0.1.80", alternative=".get()")
+    @deprecated("0.1.91", alternative=".get()")
     def get_options(self) -> List[FlatOption]:
         # Deprecated: please use :meth:`get()` instead
 
@@ -327,7 +327,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
                 if self._feature_hash_to_answer_map[option.feature_node_hash]
             ]
 
-    @deprecated("0.1.80", alternative=".get_option_value(option)")
+    @deprecated("0.1.91", alternative=".get_option_value(option)")
     def get_value(self, value: FlatOption) -> bool:
         # Deprecated: please use :meth:`get_option_value` instead
         return self.get_option_value(value)
