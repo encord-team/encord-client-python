@@ -49,27 +49,29 @@ class Querier:
     def __init__(self, config: BaseConfig):
         self._config = config
 
-    def basic_getter(self, db_object_type: Type[T], uid=None, payload=None) -> T:
+    def basic_getter(self, db_object_type: Type[T], uid=None, payload=None, retryable=False) -> T:
         """Single DB object getter."""
         request = self._request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
-        res, context = self._execute(request)
+        res, context = self._execute(request, retryable=retryable)
         if res:
             return self._parse_response(db_object_type, res)
         else:
             raise ResourceNotFoundError("Resource not found.", context=context)
 
-    def get_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
-        return self._request_multiple(QueryMethods.GET, object_type, uid, payload)
+    def get_multiple(self, object_type: Type[T], uid=None, payload=None, retryable=False) -> List[T]:
+        return self._request_multiple(QueryMethods.GET, object_type, uid, payload, retryable=retryable)
 
-    def post_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
-        return self._request_multiple(QueryMethods.POST, object_type, uid, payload)
+    def post_multiple(self, object_type: Type[T], uid=None, payload=None, retryable=False) -> List[T]:
+        return self._request_multiple(QueryMethods.POST, object_type, uid, payload, retryable=retryable)
 
-    def put_multiple(self, object_type: Type[T], uid=None, payload=None) -> List[T]:
-        return self._request_multiple(QueryMethods.PUT, object_type, uid, payload)
+    def put_multiple(self, object_type: Type[T], uid=None, payload=None, retryable=False) -> List[T]:
+        return self._request_multiple(QueryMethods.PUT, object_type, uid, payload, retryable=retryable)
 
-    def _request_multiple(self, method: QueryMethods, object_type: Type[T], uid, payload=None) -> List[T]:
+    def _request_multiple(
+        self, method: QueryMethods, object_type: Type[T], uid, payload=None, retryable=False
+    ) -> List[T]:
         request = self._request(method, object_type, uid, self._config.read_timeout, payload=payload)
-        result, context = self._execute(request)
+        result, context = self._execute(request, retryable=retryable)
 
         if result is not None:
             return [self._parse_response(object_type, item) for item in result]
@@ -87,7 +89,7 @@ class Querier:
         else:
             return object_type(item)  # type: ignore
 
-    def basic_delete(self, db_object_type: Type[T], uid=None):
+    def basic_delete(self, db_object_type: Type[T], uid=None, retryable=False):
         """Single DB object getter."""
         request = self._request(
             QueryMethods.DELETE,
@@ -96,7 +98,7 @@ class Querier:
             self._config.read_timeout,
         )
 
-        res, _ = self._execute(request)
+        res, _ = self._execute(request, retryable=retryable)
         return res
 
     def basic_setter(self, db_object_type: Type[T], uid, payload, retryable=False):
@@ -109,14 +111,14 @@ class Querier:
             payload=payload,
         )
 
-        res, context = self._execute(request)
+        res, context = self._execute(request, retryable=retryable)
 
         if res is not None:
             return res
         else:
             raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
 
-    def basic_put(self, db_object_type, uid, payload, enable_logging=True):
+    def basic_put(self, db_object_type, uid, payload, retryable=False, enable_logging=True):
         """Single DB object put request."""
         request = self._request(
             QueryMethods.PUT,
@@ -126,7 +128,7 @@ class Querier:
             payload=payload,
         )
 
-        res, context = self._execute(request, enable_logging)
+        res, context = self._execute(request, retryable=retryable, enable_logging=enable_logging)
 
         if res:
             return res
