@@ -99,7 +99,7 @@ class Querier:
         res, _ = self._execute(request)
         return res
 
-    def basic_setter(self, db_object_type: Type[T], uid, payload):
+    def basic_setter(self, db_object_type: Type[T], uid, payload, retryable=False):
         """Single DB object setter."""
         request = self._request(
             QueryMethods.POST,
@@ -181,7 +181,9 @@ class Querier:
 
         req_settings = self._config.requests_settings
         with create_new_session(
-            max_retries=req_settings.max_retries, backoff_factor=req_settings.backoff_factor
+            max_retries=req_settings.max_retries,
+            backoff_factor=req_settings.backoff_factor,
+            connect_retries=req_settings.connection_retries,
         ) as session:
             res = session.send(req, timeout=timeouts)
 
@@ -200,8 +202,10 @@ class Querier:
 
 
 @contextmanager
-def create_new_session(max_retries: Optional[int] = None, backoff_factor: float = 0) -> Generator[Session, None, None]:
-    retry_policy = Retry(total=max_retries, connect=max_retries, read=max_retries, backoff_factor=backoff_factor)
+def create_new_session(
+    max_retries: Optional[int] = None, backoff_factor: float = 0, connect_retries=3
+) -> Generator[Session, None, None]:
+    retry_policy = Retry(connect=connect_retries, read=max_retries, backoff_factor=backoff_factor)
 
     with Session() as session:
         session.mount("http://", HTTPAdapter(max_retries=retry_policy))

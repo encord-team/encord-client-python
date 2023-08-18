@@ -52,7 +52,7 @@ _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 READ_TIMEOUT = 180  # In seconds
 WRITE_TIMEOUT = 180  # In seconds
-CONNECT_TIMEOUT = 180  # In seconds
+CONNECT_TIMEOUT = 5  # In seconds
 
 logger = logging.getLogger(__name__)
 
