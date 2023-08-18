@@ -709,7 +709,9 @@ class EncordClientProject(EncordClient):
             ResourceNotFoundError: If no project exists by the specified project EntityId.
             UnknownError: If an error occurs while retrieving the project.
         """
-        return self._querier.basic_getter(OrmProject, payload={"include_labels_metadata": include_labels_metadata})
+        return self._querier.basic_getter(
+            OrmProject, payload={"include_labels_metadata": include_labels_metadata}, retryable=True
+        )
 
     def list_label_rows(
         self,
