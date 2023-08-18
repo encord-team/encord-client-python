@@ -24,6 +24,7 @@ requests = "^2.25.0"
 cryptography = ">=3.4.8"
 tqdm = "^4.32.1"
 pydantic = ">=1.7.0"
+pyyaml = "^6.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.2"
