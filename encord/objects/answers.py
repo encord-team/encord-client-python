@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar
 
+from encord.common.deprecated import deprecated
 from encord.objects.attributes import (
     Attribute,
     ChecklistAttribute,
@@ -314,10 +315,12 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = True
 
+    @deprecated("0.1.91", alternative=".set(options)")
     def set_options(self, values: Iterable[FlatOption]):
         # Deprecated: please use :meth:`set` instead
         return self.set(values)
 
+    @deprecated("0.1.91", alternative=".get()")
     def get_options(self) -> List[FlatOption]:
         # Deprecated: please use :meth:`get()` instead
 
@@ -330,6 +333,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
                 if self._feature_hash_to_answer_map[option.feature_node_hash]
             ]
 
+    @deprecated("0.1.91", alternative=".get_option_value(option)")
     def get_value(self, value: FlatOption) -> bool:
         # Deprecated: please use :meth:`get_option_value` instead
         return self.get_option_value(value)
@@ -369,7 +373,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
 
     def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
         ontology_attribute: ChecklistAttribute = self._ontology_attribute
-        checked_options = [option for option in ontology_attribute.options if self.get_value(option)]
+        checked_options = [option for option in ontology_attribute.options if self.get_option_value(option)]
         answers = [
             {
                 "name": option.label,
