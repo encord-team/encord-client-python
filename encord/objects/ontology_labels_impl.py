@@ -251,10 +251,10 @@ class LabelRowV2:
         bundle: Optional[Bundle] = None,
     ) -> None:
         """
-        Call this function to start reading or writing labels. This will fetch the labels that are currently stored
-        in the Encord server. If you only want to inspect a subset of labels, you can filter them. Please note that if
-        you filter the labels, and upload them later, you will effectively delete all the labels that had been filtered
-        previously.
+        Call this function to download or export labels stored on the Encord server, as well as to perform any other
+        reading or writing operations. If you only want to inspect a subset of labels, you can filter them.
+        Please note that if you filter the labels, and upload them later, you will effectively delete all the labels
+        that were previously filtered.
 
         If the label was not yet in progress, this will set the label status to `LabelStatus.LABEL_IN_PROGRESS`.
 

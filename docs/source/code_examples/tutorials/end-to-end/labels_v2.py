@@ -3,7 +3,7 @@ Working with the LabelRowV2
 ===========================
 
 The :class:`encord.objects.LabelRowV2` class is a wrapper around the Encord label row data format. It
-provides a convenient way to read, create, and manipulate labels. It also also the recommended way to export labels via the SDK.
+provides a convenient way to read, create, and manipulate labels.
 """
 
 # %%
@@ -21,9 +21,9 @@ from encord.objects import (
     Object,
     ObjectInstance,
     OntologyStructure,
-    Option,
     RadioAttribute,
 )
+from encord.objects.common import Option
 from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.frames import Range
 from encord.orm.project import Project as OrmProject
@@ -77,8 +77,8 @@ for label_row in label_rows:
 # Starting to read or write labels
 # --------------------------------
 #
-# To start reading or writing labels, you need to call the :meth:`~encord.objects.LabelRowV2.initialise_labels`
-# method which will download the state of the label from the Encord server and create a label hash if none exists.
+# To download or export labels, or perform any other function that includes reading or writing labels call the :meth:`~encord.objects.LabelRowV2.initialise_labels`
+# method, which will download the state of the label from the Encord server and create a label hash if none exists.
 #
 # Once this method has been called, you can create your first label.
 
