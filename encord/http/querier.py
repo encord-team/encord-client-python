@@ -22,7 +22,7 @@ from typing import Any, Generator, List, Tuple, Type, TypeVar
 
 import requests
 import requests.exceptions
-from requests import Response, Session
+from requests import Session
 from requests.adapters import HTTPAdapter, Retry
 
 from encord._version import __version__ as encord_version
@@ -142,9 +142,9 @@ class Querier:
         return f"{uuid.uuid4().hex}/{random.randint(1, 2**63 - 1)};o=1"
 
     @staticmethod
-    def _exception_context_from_response(response: Response) -> RequestContext:
+    def _exception_context(request: requests.PreparedRequest) -> RequestContext:
         try:
-            x_cloud_trace_context = response.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
+            x_cloud_trace_context = request.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
             if x_cloud_trace_context is None:
                 return RequestContext()
 
@@ -175,6 +175,8 @@ class Querier:
             data=request.data,
         ).prepare()
 
+        context = self._exception_context(req)
+
         timeouts = (request.connect_timeout, request.timeout)
 
         req_settings = self._config.requests_settings
@@ -182,7 +184,6 @@ class Querier:
             max_retries=req_settings.max_retries, backoff_factor=req_settings.backoff_factor
         ) as session:
             res = session.send(req, timeout=timeouts)
-            context = self._exception_context_from_response(res)
 
             try:
                 res_json = res.json()
