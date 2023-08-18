@@ -749,7 +749,7 @@ class EncordClientProject(EncordClient):
             "workflow_graph_node_title_eq": workflow_graph_node_title_eq,
             "workflow_graph_node_title_like": workflow_graph_node_title_like,
         }
-        return self._querier.get_multiple(LabelRowMetadata, payload=payload)
+        return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
 
     def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
         """
@@ -833,7 +833,7 @@ class EncordClientProject(EncordClient):
             "include_reviews": include_reviews,
         }
 
-        return self._querier.basic_getter(LabelRow, uid, payload=payload)
+        return self._querier.basic_getter(LabelRow, uid, payload=payload, retryable=True)
 
     def get_label_rows(
         self,
@@ -855,14 +855,14 @@ class EncordClientProject(EncordClient):
             "include_reviews": include_reviews,
         }
 
-        return self._querier.get_multiple(LabelRow, uids, payload=payload)
+        return self._querier.get_multiple(LabelRow, uids, payload=payload, retryable=True)
 
     def save_label_row(self, uid, label):
         """
         This function is documented in :meth:`encord.project.Project.save_label_row`.
         """
         label = LabelRow(label)
-        return self._querier.basic_setter(LabelRow, uid, payload=label)
+        return self._querier.basic_setter(LabelRow, uid, payload=label, retryable=True)
 
     def save_label_rows(self, uids: List[str], payload=List[LabelRow]):
         """
@@ -881,7 +881,7 @@ class EncordClientProject(EncordClient):
             "multi_request": True,
             "labels": payload,
         }
-        return self._querier.basic_setter(LabelRow, uid=uids, payload=payload)
+        return self._querier.basic_setter(LabelRow, uid=uids, payload=payload, retryable=True)
 
     def create_label_row(self, uid):
         """
