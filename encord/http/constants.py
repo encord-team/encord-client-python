@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
 DEFAULT_CONNECTION_RETRIES = 3
-DEFAULT_MAX_RETRIES = 0
-DEFAULT_BACKOFF_FACTOR = 0.1
+DEFAULT_MAX_RETRIES = 3
+DEFAULT_BACKOFF_FACTOR = 1.5
 
 
 @dataclass
@@ -12,7 +12,7 @@ class RequestsSettings:
     """
 
     max_retries: int = DEFAULT_MAX_RETRIES
-    """Number of allowed retries when a request is sent."""
+    """Number of allowed retries when a request is sent. It only affects idempotent retryable requests."""
 
     backoff_factor: float = DEFAULT_BACKOFF_FACTOR
     """With each retry, there will be a sleep of backoff_factor * (2 ** (retry_number - 1) )"""

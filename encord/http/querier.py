@@ -163,7 +163,7 @@ class Querier:
 
         return request
 
-    def _execute(self, request: Request, enable_logging=True) -> Tuple[Any, RequestContext]:
+    def _execute(self, request: Request, retryable=False, enable_logging=True) -> Tuple[Any, RequestContext]:
         """Execute a request."""
         if enable_logging:
             logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)
@@ -181,7 +181,7 @@ class Querier:
 
         req_settings = self._config.requests_settings
         with create_new_session(
-            max_retries=req_settings.max_retries,
+            max_retries=req_settings.max_retries if retryable else 0,
             backoff_factor=req_settings.backoff_factor,
             connect_retries=req_settings.connection_retries,
         ) as session:
@@ -205,7 +205,15 @@ class Querier:
 def create_new_session(
     max_retries: Optional[int] = None, backoff_factor: float = 0, connect_retries=3
 ) -> Generator[Session, None, None]:
-    retry_policy = Retry(connect=connect_retries, read=max_retries, backoff_factor=backoff_factor)
+    retry_policy = Retry(
+        connect=connect_retries,
+        read=max_retries,
+        status=max_retries,  # type: ignore
+        other=max_retries,  # type: ignore
+        allowed_methods=["POST"],  # we're using post everywhere
+        status_forcelist=[413, 429, 500, 503],
+        backoff_factor=backoff_factor,
+    )
 
     with Session() as session:
         session.mount("http://", HTTPAdapter(max_retries=retry_policy))
