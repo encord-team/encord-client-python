@@ -52,7 +52,12 @@ import encord.exceptions
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
-from encord.constants.string_constants import *
+from encord.constants.string_constants import (
+    FITTED_BOUNDING_BOX,
+    INTERPOLATION,
+    TYPE_DATASET,
+    TYPE_PROJECT,
+)
 from encord.exceptions import EncordException
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
