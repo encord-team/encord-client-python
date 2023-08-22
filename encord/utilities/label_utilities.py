@@ -12,6 +12,8 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from typing import Dict, cast
+
 from encord.constants.enums import DataType
 from encord.constants.string_constants import (
     CLASSIFICATION_ANSWERS,
@@ -38,7 +40,7 @@ def construct_answer_dictionaries(label_row):
     """
     label_row = LabelRow(label_row)  # Cast to label row ORM
     data_type = label_row.data_type
-    data_units = label_row.data_units
+    data_units = cast(Dict[str, Dict[str, Dict]], label_row.data_units)
 
     object_answers = label_row.object_answers
     classification_answers = label_row.classification_answers
@@ -47,7 +49,7 @@ def construct_answer_dictionaries(label_row):
         data_unit = data_units[du]
 
         if LABELS in data_unit:
-            labels = data_unit.get(LABELS)
+            labels = data_unit[LABELS]
 
             if data_type in {DataType.IMG_GROUP.value, DataType.IMAGE.value}:  # Go through images
                 items = labels.get(OBJECTS, {}) + labels.get(CLASSIFICATIONS, {})
