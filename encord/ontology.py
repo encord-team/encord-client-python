@@ -1,5 +1,4 @@
 import datetime
-from typing import Optional
 
 from encord.configs import SshConfig
 from encord.http.querier import Querier
@@ -13,68 +12,60 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, config: SshConfig, instance: Optional[OrmOntology] = None):
+    def __init__(self, querier: Querier, config: SshConfig, instance: OrmOntology):
         self._querier = querier
         self._config = config
-        self._ontology_instance: Optional[OrmOntology] = instance
+        self._ontology_instance = instance
 
     @property
     def ontology_hash(self) -> str:
         """
         Get the ontology hash (i.e. the Ontology ID).
         """
-        ontology_instance = self._get_ontology_instance()
-        return ontology_instance.ontology_hash
+        return self._ontology_instance.ontology_hash
 
     @property
     def title(self) -> str:
         """
         Get the title of the ontology.
         """
-        ontology_instance = self._get_ontology_instance()
-        return ontology_instance.title
+        return self._ontology_instance.title
 
     @title.setter
     def title(self, value: str) -> None:
-        ontology_instance = self._get_ontology_instance()
-        ontology_instance.title = value
+        self._ontology_instance.title = value
 
     @property
     def description(self) -> str:
         """
         Get the description of the ontology.
         """
-        ontology_instance = self._get_ontology_instance()
-        return ontology_instance.description
+        return self._ontology_instance.description
 
     @description.setter
     def description(self, value: str) -> None:
-        ontology_instance = self._get_ontology_instance()
-        ontology_instance.description = value
+        self._ontology_instance.description = value
 
     @property
     def created_at(self) -> datetime.datetime:
         """
         Get the time the ontology was created at.
         """
-        ontology_instance = self._get_ontology_instance()
-        return ontology_instance.created_at
+        return self._ontology_instance.created_at
 
     @property
     def last_edited_at(self) -> datetime.datetime:
         """
         Get the time the ontology was last edited at.
         """
-        ontology_instance = self._get_ontology_instance()
-        return ontology_instance.last_edited_at
+        return self._ontology_instance.last_edited_at
 
     @property
     def structure(self) -> OntologyStructure:
         """
         Get the structure of the ontology.
         """
-        ontology_instance = self._get_ontology_instance()
-        return ontology_instance.structure
+        return self._ontology_instance.structure
 
     def refetch_data(self) -> None:
         """
@@ -95,8 +86,3 @@ class Ontology:
 
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._config.resource_id)
-
-    def _get_ontology_instance(self):
-        if self._ontology_instance is None:
-            self._ontology_instance = self._get_ontology()
-        return self._ontology_instance

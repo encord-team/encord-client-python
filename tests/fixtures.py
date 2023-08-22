@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from encord import EncordUserClient
 from encord.client import EncordClientProject
+from encord.http.querier import Querier
 from encord.ontology import Ontology
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import Project as OrmProject
@@ -36,10 +37,13 @@ def user_client():
 
 @pytest.fixture
 @patch.object(EncordClientProject, "get_project")
-def project(client_project_mock, user_client: EncordUserClient, ontology: Ontology):
+@patch.object(Querier, "basic_getter")
+def project(querier_mock: Querier, client_project_mock, user_client: EncordUserClient, ontology: Ontology):
+    querier_mock.return_value = OrmOntology.from_dict(ONTOLOGY_BLURB)
+
     client_project_mock.return_value = OrmProject(
         {"ontology_hash": "dummy-ontology-hash", "project_hash": "dummy-project-hash"}
     )
+
     project = user_client.get_project("dummy-project-hash")
-    project._ontology = ontology
     return project

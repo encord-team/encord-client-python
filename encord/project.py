@@ -51,40 +51,35 @@ class Project:
         """
         Get the project hash (i.e. the Project ID).
         """
-        project_instance = self._get_project_instance()
-        return project_instance.project_hash
+        return self._project_instance.project_hash
 
     @property
     def title(self) -> str:
         """
         Get the title of the project.
         """
-        project_instance = self._get_project_instance()
-        return project_instance.title
+        return self._project_instance.title
 
     @property
     def description(self) -> str:
         """
         Get the description of the project.
         """
-        project_instance = self._get_project_instance()
-        return project_instance.description
+        return self._project_instance.description
 
     @property
     def created_at(self) -> datetime.datetime:
         """
         Get the time the project was created at.
         """
-        project_instance = self._get_project_instance()
-        return project_instance.created_at
+        return self._project_instance.created_at
 
     @property
     def last_edited_at(self) -> datetime.datetime:
         """
         Get the time the project was last edited at.
         """
-        project_instance = self._get_project_instance()
-        return project_instance.last_edited_at
+        return self._project_instance.last_edited_at
 
     @property
     def ontology(self) -> dict:
@@ -93,8 +88,7 @@ class Project:
 
         DEPRECATED: Prefer using the :meth:`encord.Project.ontology_structure` method.
         """
-        project_instance = self._get_project_instance()
-        return project_instance.editor_ontology
+        return self._project_instance.editor_ontology
 
     @property
     def ontology_hash(self) -> str:
@@ -126,8 +120,7 @@ class Project:
             project_datasets = ProjectDataset.from_list(project.datasets)
 
         """
-        project_instance = self._get_project_instance()
-        return project_instance.datasets
+        return self._project_instance.datasets
 
     @property
     def label_rows(self) -> dict:
@@ -144,19 +137,16 @@ class Project:
             label_rows = LabelRowMetadata.from_list(project.label_rows)
 
         """
-        project_instance = self._get_project_instance()
-        if project_instance.label_rows is None:
-            project_descriptor = self._client.get_project(include_labels_metadata=True)
-            project_instance.label_rows = project_descriptor.label_rows
-
-        return project_instance.label_rows
+        if self._project_instance.label_rows is None:
+            self._project_instance = self._client.get_project(include_labels_metadata=True)
+        return self._project_instance.label_rows
 
     def refetch_data(self) -> None:
         """
         The Project class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be dirty.
         """
-        self._project_instance = self.get_project()
+        self._project_instance = self._client.get_project()
 
     def refetch_ontology(self) -> None:
         """
@@ -316,7 +306,7 @@ class Project:
             OperationNotAllowed: If the write operation is not allowed by the API key.
         """
         res = self._client.add_datasets(dataset_hashes)
-        self._invalidate_project_instance()
+        self.refetch_data()
         return res
 
     def remove_datasets(self, dataset_hashes: List[str]) -> bool:
@@ -337,7 +327,7 @@ class Project:
             OperationNotAllowed: If the operation is not allowed by the API key.
         """
         res = self._client.remove_datasets(dataset_hashes)
-        self._invalidate_project_instance()
+        self.refetch_data()
         return res
 
     def get_project_ontology(self) -> LegacyOntology:
@@ -367,7 +357,7 @@ class Project:
             ValueError: If invalid arguments are supplied in the function call
         """
         res = self._client.add_object(name, shape)
-        self._invalidate_project_instance()
+        self.refetch_data()
         return res
 
     def add_classification(
@@ -396,7 +386,7 @@ class Project:
             ValueError: If invalid arguments are supplied in the function call
         """
         res = self._client.add_classification(name, classification_type, required, options)
-        self._invalidate_project_instance()
+        self.refetch_data()
         return res
 
     def list_models(self) -> List[ModelConfiguration]:
@@ -966,14 +956,6 @@ class Project:
             ResourceExistsError: If a label row already exists for this project data. Avoids overriding existing work.
         """
         return self._client.create_label_row(uid)
-
-    def _get_project_instance(self):
-        if self._project_instance is None:
-            self._project_instance = self.get_project()
-        return self._project_instance
-
-    def _invalidate_project_instance(self):
-        self._project_instance = None
 
     def create_bundle(self) -> Bundle:
         """

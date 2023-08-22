@@ -24,32 +24,28 @@ class Dataset:
     Access dataset related data and manipulate the dataset.
     """
 
-    def __init__(self, client: EncordClientDataset):
+    def __init__(self, client: EncordClientDataset, orm_dataset: OrmDataset):
         self._client = client
-        self._dataset_instance: Optional[OrmDataset] = None
+        self._dataset_instance = orm_dataset
 
     @property
     def dataset_hash(self) -> str:
         """
         Get the dataset hash (i.e. the Dataset ID).
         """
-        dataset_instance = self._get_dataset_instance()
-        return dataset_instance.dataset_hash
+        return self._dataset_instance.dataset_hash
 
     @property
     def title(self) -> str:
-        dataset_instance = self._get_dataset_instance()
-        return dataset_instance.title
+        return self._dataset_instance.title
 
     @property
     def description(self) -> str:
-        dataset_instance = self._get_dataset_instance()
-        return dataset_instance.description
+        return self._dataset_instance.description
 
     @property
     def storage_location(self) -> StorageLocation:
-        dataset_instance = self._get_dataset_instance()
-        return dataset_instance.storage_location
+        return self._dataset_instance.storage_location
 
     @property
     def data_rows(self) -> List[DataRow]:
@@ -62,8 +58,7 @@ class Dataset:
             dataset.set_access_settings(DatasetAccessSettings(fetch_client_metadata=True))
             print(dataset.data_rows)
         """
-        dataset_instance = self._get_dataset_instance()
-        return dataset_instance.data_rows
+        return self._dataset_instance.data_rows
 
     def list_data_rows(
         self,
@@ -99,7 +94,7 @@ class Dataset:
         The Dataset class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be dirty.
         """
-        self._dataset_instance = self.get_dataset()
+        self._dataset_instance = self._client.get_dataset()
 
     def get_dataset(self) -> OrmDataset:
         """
@@ -399,8 +394,3 @@ class Dataset:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._client.get_cloud_integrations()
-
-    def _get_dataset_instance(self):
-        if self._dataset_instance is None:
-            self._dataset_instance = self.get_dataset()
-        return self._dataset_instance

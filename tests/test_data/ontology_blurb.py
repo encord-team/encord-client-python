@@ -2,6 +2,8 @@ ONTOLOGY_BLURB = {
     "ontology_hash": "bab95d1e-3070-48fb-9d40-ad168b55310e",
     "title": "Test ontology",
     "description": "",
+    "created_at": "Thu, 18 Feb 2021 22:24:59 GMT",
+    "last_edited_at": "Thu, 18 Feb 2021 22:24:59 GMT",
     "editor": {
         "objects": [
             {
