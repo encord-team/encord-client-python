@@ -13,7 +13,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 from encord.constants.enums import DataType
-from encord.constants.string_constants import *
+from encord.constants.string_constants import (
+    CLASSIFICATION_ANSWERS,
+    CLASSIFICATION_HASH,
+    CLASSIFICATIONS,
+    LABELS,
+    OBJECT_ANSWERS,
+    OBJECT_HASH,
+    OBJECTS,
+)
 from encord.orm.label_row import LabelRow
 
 
