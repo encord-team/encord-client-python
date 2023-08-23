@@ -74,10 +74,9 @@ for label_row in label_rows:
 # You can find more examples around all the available read properties by inspecting the properties of the
 # :class:`~encord.objects.LabelRowV2` class.
 #
-# Starting to read or write labels
+# Exporting labels
 # --------------------------------
-#
-# To download or export labels, or perform any other function that includes reading or writing labels call the :meth:`~encord.objects.LabelRowV2.initialise_labels`
+# To export or download labels, or perform any other function that includes reading or writing labels, call the :meth:`~encord.objects.LabelRowV2.initialise_labels`
 # method, which will download the state of the label from the Encord server and create a label hash if none exists.
 #
 # Once this method has been called, you can create your first label.
@@ -87,7 +86,17 @@ first_label_row: LabelRowV2 = label_rows[0]
 first_label_row.initialise_labels()
 # ^ Check the reference for possible arguments
 
-# Code to add/manipulate some labels
+# %%
+# Saving labels
+# --------------------------------
+# Once :meth:`~encord.objects.LabelRowV2.initialise_labels` has been called, you can create your first label.
+
+first_label_row: LabelRowV2 = label_rows[0]
+
+first_label_row.initialise_labels()
+# ^ Check the reference for possible arguments
+
+# Code to add/manipulate some labels goes here
 ...
 
 # Once you have added new labels, you will need to call .save() to upload all labels to the server.
