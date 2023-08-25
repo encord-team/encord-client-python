@@ -212,7 +212,7 @@ def create_new_session(
         read=max_retries,
         status=max_retries,  # type: ignore
         other=max_retries,  # type: ignore
-        allowed_methods=["POST"],  # we're using post everywhere
+        allowed_methods=["POST"],  # type: ignore # we're using post everywhere
         status_forcelist=[413, 429, 500, 503],
         backoff_factor=backoff_factor,
     )

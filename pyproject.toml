@@ -25,7 +25,7 @@ cryptography = ">=3.4.8"
 tqdm = "^4.32.1"
 pydantic = ">=1.7.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^6.1.2"
 pre-commit = "^3.3.0"
 black = "^23.3.0"
@@ -43,10 +43,11 @@ deepdiff = "^6.2.1"
 types-requests = "^2.25.0"
 pylint = "^2.13.9"
 autoflake = "^2.1.1"
-mypy = "^1.4.1"
+mypy = "^1.5.1"
 types-python-dateutil = "^2.8.19"
 types-tqdm = "^4.32.1"
 pyyaml = "^6.0.1"
+pyright = "^1.1.324"
 
 [build-system]
 requires = ["poetry-core>=1.3.2"]

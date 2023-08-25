@@ -54,3 +54,8 @@ repos:
         entry: poetry run mypy
         language: system
         files: ^encord/.*py$
+      - id: pyright
+        name: pyright
+        entry: poetry run pyright
+        language: system
+        files: ^encord/.*py$
