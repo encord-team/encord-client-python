@@ -1270,8 +1270,8 @@ class EncordClientProject(EncordClient):
             user_hash=user_hash,
             user_email=user_email,
             data_hash=data_hash,
-            to_unix_seconds=to_unix_seconds,
-            from_unix_seconds=from_unix_seconds,
+            end_timestamp=to_unix_seconds,
+            start_timestamp=from_unix_seconds,
         )
 
         return self._querier.get_multiple(LabelLog, payload=payload.to_dict(by_alias=False))

@@ -62,8 +62,8 @@ class Action(IntEnum):
 class LabelLogParams(BaseDTO):
     user_hash: Optional[str]
     data_hash: Optional[str]
-    to_unix_seconds: Optional[int]
-    from_unix_seconds: Optional[int]
+    start_timestamp: Optional[int]
+    end_timestamp: Optional[int]
     user_email: Optional[str]
     # Flag for backwards compatibility
     include_user_email_and_interface_key: bool = True
