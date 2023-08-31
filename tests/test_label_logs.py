@@ -39,8 +39,8 @@ def test_get_label_logs_filter_by_datetime(querier_mock: MagicMock, project: Pro
     assert not DeepDiff(
         request_data["values"]["payload"],
         {
-            "from_unix_seconds": int(after_time.timestamp()),
-            "to_unix_seconds": int(before_time.timestamp()),
+            "start_timestamp": int(after_time.timestamp()),
+            "end_timestamp": int(before_time.timestamp()),
             "include_user_email_and_interface_key": True,
         },
         ignore_order=True,
@@ -64,8 +64,8 @@ def test_get_label_logs_filter_by_unix_timestamp(querier_mock: MagicMock, projec
     assert not DeepDiff(
         request_data["values"]["payload"],
         {
-            "from_unix_seconds": after_timestamp,
-            "to_unix_seconds": before_timestamp,
+            "start_timestamp": after_timestamp,
+            "end_timestamp": before_timestamp,
             "include_user_email_and_interface_key": True,
         },
         ignore_order=True,
