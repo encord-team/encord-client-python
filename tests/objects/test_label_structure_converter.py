@@ -17,6 +17,7 @@ from tests.objects.data import (
     image_group_with_reviews,
     native_image_data,
     video_with_dynamic_classifications,
+    video_with_dynamic_classifications_ui_constructed,
 )
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.dicom_labels import dicom_labels
@@ -161,6 +162,29 @@ def test_dynamic_classifications():
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(ontology_with_many_dynamic_classifications))
     label_row.from_labels_dict(video_with_dynamic_classifications.labels)
+
+    actual = label_row.to_encord_dict()
+
+    deep_diff_enhanced(
+        actual,
+        video_with_dynamic_classifications.labels,
+        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
+        # Ideally this will be fixed "properly"
+        exclude_regex_paths=["\['trackHash'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+    )
+
+
+def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_by_ui():
+    # The way how UI and SDK represent the checklist answers is somewhat different,
+    # So testing that SDK can deal with whatever UI throws at it.
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = 0.08
+    label_row_metadata_dict["frames_per_second"] = 25.0
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(ontology_with_many_dynamic_classifications))
+
+    label_row.from_labels_dict(video_with_dynamic_classifications_ui_constructed.labels)
 
     actual = label_row.to_encord_dict()
 
