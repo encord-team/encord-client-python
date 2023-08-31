@@ -212,6 +212,8 @@ class ObjectInstance:
             answers_list: The list of dictionaries to set the answer from.
         """
 
+        grouped_answers = defaultdict(list)
+
         for answer_dict in answers_list:
             attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_object.attributes)
             if attribute is None:
@@ -224,7 +226,87 @@ class ObjectInstance:
                     "Cannot create a valid LabelRow."
                 )
 
-            self._set_answer_from_dict(answer_dict, attribute)
+            grouped_answers[attribute.feature_node_hash].append(answer_dict)
+
+        #
+        # UI structures answers for checkboxes differently from SDK.
+        # It has separate answer dict with the same feature hash rather than just one dict with multiple answers,
+        # as SDK expects.
+        # So until we aligned the models, we need to introduce additional adaptation layer, that groups separate
+        # dictionaries with one answer into one with multiple answer.
+        # This is a hotfix rather than a proper solution.
+        # TODO: agree on a one correct way to represent the checklist response, and change the SDK accordingly.
+        #
+
+        for feature_hash, answers_list in grouped_answers.items():
+            attribute = _get_attribute_by_hash(feature_hash, self._ontology_object.attributes)
+            assert attribute  # we already checked that attribute is not null above. So just silencing this for now
+            self._set_answer_from_grouped_list(attribute, answers_list)
+
+    def _merge_answers_to_non_overlapping_ranges(
+        self, ranges: List[Tuple[Range, List[Option]]]
+    ) -> List[Tuple[Range, List[Option]]]:
+        ranges.sort(key=lambda x: x[0].start)
+
+        result_ranges = []
+        current_start = ranges[0][0].start
+        current_end = ranges[0][0].end
+        current_labels = ranges[0][1]
+
+        for i in range(1, len(ranges)):
+            next_start = ranges[i][0].start
+            next_end = ranges[i][0].end
+            next_labels = ranges[i][1]
+
+            # If the next range starts within the current range
+            if next_start <= current_end:
+                if next_start >= current_start:
+                    result_ranges.append((Range(current_start, next_start), current_labels.copy()))
+                    current_labels.extend(next_labels)
+                    current_start = next_start
+
+                if next_end > current_end:
+                    current_end = next_end
+
+            else:
+                result_ranges.append((Range(current_start, current_end), current_labels))
+                current_start, current_end = next_start, next_end
+                current_labels = next_labels
+
+        # Append the last range
+        result_ranges.append((Range(current_start, current_end), current_labels))
+
+        return result_ranges
+
+    def _set_answer_from_grouped_list(self, attribute: Attribute, answers_list: List[Dict[str, Any]]) -> None:
+        if isinstance(attribute, ChecklistAttribute):
+            if not attribute.dynamic:
+                options = []
+                for answer_dict in answers_list:
+                    for answer in answer_dict["answers"]:
+                        feature_hash = answer["featureHash"]
+                        option = attribute.get_child_by_hash(feature_hash, type_=Option)
+                        options.append(option)
+
+                self._set_answer_unsafe(options, attribute, None)
+            else:
+                ranges = []
+
+                for answer_dict in answers_list:
+                    options = [
+                        attribute.get_child_by_hash(answer["featureHash"], type_=Option)
+                        for answer in answer_dict["answers"]
+                    ]
+
+                    for frame_range in ranges_list_to_ranges(answer_dict["range"]):
+                        ranges.append((frame_range, options))
+
+                converted = self._merge_answers_to_non_overlapping_ranges(ranges)
+                for range, options in converted:
+                    self._set_answer_unsafe(options, attribute, [range])
+        else:
+            for answer in answers_list:
+                self._set_answer_from_dict(answer, attribute)
 
     def delete_answer(
         self,
