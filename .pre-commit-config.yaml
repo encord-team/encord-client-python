@@ -44,6 +44,11 @@ repos:
         entry: poetry run isort --sp=pyproject.toml
         language: system
         files: ^docs/source/code_examples/.*py$
+      - id: pyright
+        name: pyright
+        entry: poetry run pyright
+        language: system
+        files: ^encord/.*py$
       - id: pylint
         name: pylint
         entry: poetry run pylint
@@ -52,10 +57,5 @@ repos:
       - id: mypy
         name: mypy
         entry: poetry run mypy
-        language: system
-        files: ^encord/.*py$
-      - id: pyright
-        name: pyright
-        entry: poetry run pyright
         language: system
         files: ^encord/.*py$
