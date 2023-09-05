@@ -35,6 +35,7 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
 )
 from encord.objects.frames import Frames, frames_class_to_frames_list
+from encord.objects.metadata import DicomAnnotationData, DicomSeriesMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
@@ -99,6 +100,9 @@ class LabelRowV2:
 
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
+
+        self._metadata: Optional[DicomSeriesMetadata] = None
+        self._frame_metadata: defaultdict[int, Optional[DicomAnnotationData]] = defaultdict()
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
 
@@ -449,6 +453,17 @@ class LabelRowV2:
         bundle_payload.uids += payload.uids
         bundle_payload.payload += payload.payload
         return bundle_payload
+
+    @property
+    def metadata(self) -> Optional[DicomSeriesMetadata]:
+        """
+        Metadata for the given data type.
+        Currently only supported for DICOM, and will return `None` for other formats.
+
+        Label row needs to be initialised before using this property
+        """
+        self._check_labelling_is_initalised()
+        return self._metadata
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
         """
@@ -801,6 +816,15 @@ class LabelRowV2:
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
                 raise LabelRowError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
             return self._frame_level_data().data_link
+
+        @property
+        def metadata(self) -> Optional[DicomAnnotationData]:
+            """
+            Annotation metadata.
+            Particular format depends on the data type.
+            Currently only supported for DICOM, and will return `None` for other formats.
+            """
+            return self._label_row._frame_metadata[self._frame]
 
         def add_object_instance(
             self,
@@ -1281,8 +1305,8 @@ class LabelRowV2:
         classification_answers = label_row_dict["classification_answers"]
 
         for data_unit in label_row_dict["data_units"].values():
-            data_type = label_row_dict["data_type"]
-            if data_type in {DataType.IMG_GROUP.value, DataType.IMAGE.value}:
+            data_type = DataType(label_row_dict["data_type"])
+            if data_type in {DataType.IMG_GROUP, DataType.IMAGE}:
                 frame = int(data_unit["data_sequence"])
                 self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
                 self._add_classification_instances_from_classifications(
@@ -1290,17 +1314,39 @@ class LabelRowV2:
                     classification_answers,
                     frame,
                 )
-            elif data_type in {DataType.VIDEO.value, DataType.DICOM.value}:
+            elif data_type in {DataType.VIDEO, DataType.DICOM}:
                 for frame, frame_data in data_unit["labels"].items():
-                    self._add_object_instances_from_objects(frame_data["objects"], int(frame))
+                    frame_num = int(frame)
+                    self._add_object_instances_from_objects(frame_data["objects"], frame_num)
                     self._add_classification_instances_from_classifications(
-                        frame_data["classifications"], classification_answers, int(frame)
+                        frame_data["classifications"], classification_answers, frame_num
                     )
+                    self._add_frame_metadata(frame_num, frame_data.get("metadata"))
             else:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
+            self._add_data_unit_metadata(data_type, data_unit.get("metadata"))
+
         self._add_objects_answers(label_row_dict)
         self._add_action_answers(label_row_dict)
+
+    def _add_frame_metadata(self, frame: int, metadata: Optional[Dict[str, str]]):
+        if metadata is not None:
+            self._frame_metadata[frame] = DicomAnnotationData.from_dict(metadata)
+        else:
+            self._frame_metadata[frame] = None
+
+    def _add_data_unit_metadata(self, data_type: DataType, metadata: Optional[Dict[str, str]]) -> None:
+        if metadata is None:
+            self._metadata = None
+            return
+
+        if data_type == DataType.DICOM:
+            self._metadata = DicomSeriesMetadata.from_dict(metadata)
+        else:
+            log.warning(
+                f"Unexpected metadata for the data type: {data_type}. Please update the Encord SDK to the latest version."
+            )
 
     def _add_object_instances_from_objects(
         self,
