@@ -125,7 +125,6 @@ class Project:
         return self._project_instance.datasets
 
     @property
-    @deprecated(version="0.1.95", alternative=".list_label_rows_v2()")
     def label_rows(self) -> dict:
         """
         Get the label rows.
@@ -828,7 +827,6 @@ class Project:
             include_reviews=include_reviews,
         )
 
-    @deprecated(version="0.1.95", alternative=".list_label_rows_v2()")
     def get_label_rows(
         self,
         uids: List[str],
