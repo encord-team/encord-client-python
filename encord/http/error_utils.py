@@ -103,12 +103,12 @@ def check_error_response(response, context=None, payload=None):
 
     if response == UPLOAD_OPERATION_NOT_SUPPORTED_ERROR:
         raise UploadOperationNotSupportedError(
-            "Uploading a file to an external (e.g. S3/GCP/Azure) dataset is not " "permitted.", context=context
+            "Uploading a file to an external (e.g. S3/GCP/Azure) dataset is not permitted.", context=context
         )
 
     if response == DETECTION_RANGE_INVALID_ERROR:
         raise DetectionRangeInvalidError(
-            "The detection range is invalid (e.g. less than 0, or" " higher than num frames in the video)",
+            "The detection range is invalid (e.g. less than 0, or higher than num frames in the video)",
             context=context,
         )
 
