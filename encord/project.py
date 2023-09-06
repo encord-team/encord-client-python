@@ -828,6 +828,7 @@ class Project:
             include_reviews=include_reviews,
         )
 
+    @deprecated(version="0.1.95", alternative=".list_label_row_v2()")
     def get_label_rows(
         self,
         uids: List[str],
