@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from encord.client import EncordClientProject
+from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
@@ -82,6 +83,7 @@ class Project:
         return self._project_instance.last_edited_at
 
     @property
+    @deprecated(version="0.1.95", alternative=".ontology_structure")
     def ontology(self) -> dict:
         """
         Get the ontology of the project.
@@ -126,7 +128,7 @@ class Project:
     def label_rows(self) -> dict:
         """
         Get the label rows.
-        DEPRECATED: Prefer using :meth:`list_label_row_v2()` method and :meth:`LabelRowV2` class to work with the data.
+        DEPRECATED: Prefer using :meth:`list_label_rows_v2()` method and :meth:`LabelRowV2` class to work with the data.
 
         .. code::
 
@@ -330,9 +332,10 @@ class Project:
         self.refetch_data()
         return res
 
+    @deprecated(version="0.1.95", alternative=".ontology_structure")
     def get_project_ontology(self) -> LegacyOntology:
         """
-        DEPRECATED - prefer using the `ontology` property accessor instead.
+        DEPRECATED - prefer using the `ontology_structure` property accessor instead.
         """
         return self._client.get_project_ontology()
 
