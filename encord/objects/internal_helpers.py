@@ -85,7 +85,7 @@ def _infer_attribute_from_answer(
     elif isinstance(answer, Sequence):
         if len(answer) == 0:
             raise LabelRowError(
-                "Cannot infer the attribute if a list of answers is empty. Please provide the " "attribute explicitly."
+                "Cannot infer the attribute if a list of answers is empty. Please provide the attribute explicitly."
             )
 
         assert isinstance(answer[0], Option)  # Narrowing type here as sequence can contain only Options

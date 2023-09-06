@@ -145,7 +145,7 @@ class BitmaskCoordinates:
 
                 if data_type != "|b1":
                     raise EncordException(
-                        "Bitmask should be an array of boolean values. " "For numpy array call .astype(bool)."
+                        "Bitmask should be an array of boolean values. For numpy array call .astype(bool)."
                     )
 
                 raw_data = data if isinstance(data, bytes) else source.tobytes()
