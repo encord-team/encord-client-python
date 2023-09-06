@@ -125,11 +125,11 @@ class Project:
         return self._project_instance.datasets
 
     @property
-    @deprecated(version="0.1.95", alternative=".list_label_row_v2()")
+    @deprecated(version="0.1.95", alternative=".list_label_rows_v2()")
     def label_rows(self) -> dict:
         """
         Get the label rows.
-        DEPRECATED: Prefer using :meth:`list_label_row_v2()` method and :meth:`LabelRowV2` class to work with the data.
+        DEPRECATED: Prefer using :meth:`list_label_rows_v2()` method and :meth:`LabelRowV2` class to work with the data.
 
         .. code::
 
@@ -828,7 +828,7 @@ class Project:
             include_reviews=include_reviews,
         )
 
-    @deprecated(version="0.1.95", alternative=".list_label_row_v2()")
+    @deprecated(version="0.1.95", alternative=".list_label_rows_v2()")
     def get_label_rows(
         self,
         uids: List[str],
