@@ -35,7 +35,7 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
 )
 from encord.objects.frames import Frames, frames_class_to_frames_list
-from encord.objects.metadata import DicomAnnotationData, DicomSeriesMetadata
+from encord.objects.metadata import DICOMAnnotationMetadata, DICOMSeriesMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
@@ -101,8 +101,8 @@ class LabelRowV2:
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
 
-        self._metadata: Optional[DicomSeriesMetadata] = None
-        self._frame_metadata: defaultdict[int, Optional[DicomAnnotationData]] = defaultdict()
+        self._metadata: Optional[DICOMSeriesMetadata] = None
+        self._frame_metadata: defaultdict[int, Optional[DICOMAnnotationMetadata]] = defaultdict()
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
 
@@ -455,7 +455,7 @@ class LabelRowV2:
         return bundle_payload
 
     @property
-    def metadata(self) -> Optional[DicomSeriesMetadata]:
+    def metadata(self) -> Optional[DICOMSeriesMetadata]:
         """
         Metadata for the given data type.
         Currently only supported for DICOM, and will return `None` for other formats.
@@ -818,7 +818,7 @@ class LabelRowV2:
             return self._frame_level_data().data_link
 
         @property
-        def metadata(self) -> Optional[DicomAnnotationData]:
+        def metadata(self) -> Optional[DICOMAnnotationMetadata]:
             """
             Annotation metadata.
             Particular format depends on the data type.
@@ -1332,7 +1332,7 @@ class LabelRowV2:
 
     def _add_frame_metadata(self, frame: int, metadata: Optional[Dict[str, str]]):
         if metadata is not None:
-            self._frame_metadata[frame] = DicomAnnotationData.from_dict(metadata)
+            self._frame_metadata[frame] = DICOMAnnotationMetadata.from_dict(metadata)
         else:
             self._frame_metadata[frame] = None
 
@@ -1342,7 +1342,7 @@ class LabelRowV2:
             return
 
         if data_type == DataType.DICOM:
-            self._metadata = DicomSeriesMetadata.from_dict(metadata)
+            self._metadata = DICOMSeriesMetadata.from_dict(metadata)
         else:
             log.warning(
                 f"Unexpected metadata for the data type: {data_type}. Please update the Encord SDK to the latest version."
