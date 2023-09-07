@@ -15,7 +15,7 @@ class DICOMSeriesMetadata(BaseDTO):
 
 class DICOMSliceMetadata(BaseDTO):
     """
-    Metadata for annotation in a DICOM series
+    Metadata for a slice in a DICOM series
     """
 
     dicom_instance_uid: str
