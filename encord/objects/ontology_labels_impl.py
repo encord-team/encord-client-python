@@ -394,6 +394,9 @@ class LabelRowV2:
         self._frame_to_hashes = defaultdict(set)
         self._classifications_to_frames = defaultdict(set)
 
+        self._metadata = None
+        self._frame_metadata = defaultdict(lambda: None)
+
         self._objects_map = dict()
         self._classifications_map = dict()
         self._parse_labels_from_dict(label_row_dict)
