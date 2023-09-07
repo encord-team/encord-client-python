@@ -13,7 +13,7 @@ class DICOMSeriesMetadata(BaseDTO):
     series_uid: str
 
 
-class DICOMAnnotationMetadata(BaseDTO):
+class DICOMSliceMetadata(BaseDTO):
     """
     Metadata for annotation in a DICOM series
     """

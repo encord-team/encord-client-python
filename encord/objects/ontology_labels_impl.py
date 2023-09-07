@@ -35,7 +35,7 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
 )
 from encord.objects.frames import Frames, frames_class_to_frames_list
-from encord.objects.metadata import DICOMAnnotationMetadata, DICOMSeriesMetadata
+from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
@@ -102,7 +102,7 @@ class LabelRowV2:
         # ^ frames to object and classification hashes
 
         self._metadata: Optional[DICOMSeriesMetadata] = None
-        self._frame_metadata: defaultdict[int, Optional[DICOMAnnotationMetadata]] = defaultdict(lambda: None)
+        self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
 
@@ -821,7 +821,7 @@ class LabelRowV2:
             return self._frame_level_data().data_link
 
         @property
-        def metadata(self) -> Optional[DICOMAnnotationMetadata]:
+        def metadata(self) -> Optional[DICOMSliceMetadata]:
             """
             Annotation metadata.
             Particular format depends on the data type.
@@ -1335,7 +1335,7 @@ class LabelRowV2:
 
     def _add_frame_metadata(self, frame: int, metadata: Optional[Dict[str, str]]):
         if metadata is not None:
-            self._frame_metadata[frame] = DICOMAnnotationMetadata.from_dict(metadata)
+            self._frame_metadata[frame] = DICOMSliceMetadata.from_dict(metadata)
         else:
             self._frame_metadata[frame] = None
 

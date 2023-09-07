@@ -4,7 +4,7 @@ from unittest.mock import Mock, PropertyMock
 import pytest
 
 from encord.objects import LabelRowV2, Object, Shape
-from encord.objects.metadata import DICOMAnnotationMetadata, DICOMSeriesMetadata
+from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.ontology import Ontology
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 from tests.objects.data.dicom_labels_with_metadata import (
@@ -58,4 +58,4 @@ def test_label_row_metadata_accessor(ontology, label_row_metadata):
     for frame_view in label_row.get_frame_views():
         frame_metadata = frame_view.metadata
         assert frame_metadata is not None
-        assert isinstance(frame_metadata, DICOMAnnotationMetadata)
+        assert isinstance(frame_metadata, DICOMSliceMetadata)

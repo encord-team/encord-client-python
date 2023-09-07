@@ -2,6 +2,7 @@ from encord.objects.attributes import ChecklistAttribute, RadioAttribute, TextAt
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
 from encord.objects.common import Shape
+from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import AnswerForFrames, ObjectInstance
