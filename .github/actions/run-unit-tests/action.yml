@@ -42,8 +42,7 @@ runs:
 
       - name: Run tests
         run: |
-          source .venv/bin/activate
-          python -m pytest tests --verbose --junitxml=${{ inputs.test-report-file }}
+          poetry run python -m pytest tests --verbose --junitxml=${{ inputs.test-report-file }}
         shell: bash
 
       - name: Upload report
