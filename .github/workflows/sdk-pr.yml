@@ -52,13 +52,12 @@ jobs:
           key: unit-${{ hashFiles('poetry.lock') }}-${{ env.PYTHON }}-1
 
       - name: Install dependencies
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        if: $${{ steps.cached-poetry.outputs.cache-hit != 'true' }}
         run: poetry install --no-interaction
 
       - name: Run tests
         run: |
-          source .venv/bin/activate
-          python -m pytest tests --verbose --junitxml=${{ env.UNIT_TEST_REPORT }}
+          poetry run python -m pytest tests --verbose --junitxml=${{ env.UNIT_TEST_REPORT }}
 
       - name: Upload report
         uses: actions/upload-artifact@v3
