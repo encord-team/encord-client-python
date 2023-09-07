@@ -102,7 +102,7 @@ class LabelRowV2:
         # ^ frames to object and classification hashes
 
         self._metadata: Optional[DICOMSeriesMetadata] = None
-        self._frame_metadata: defaultdict[int, Optional[DICOMAnnotationMetadata]] = defaultdict()
+        self._frame_metadata: defaultdict[int, Optional[DICOMAnnotationMetadata]] = defaultdict(lambda: None)
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
 
