@@ -2,8 +2,10 @@ from datetime import datetime
 from unittest.mock import Mock, PropertyMock
 
 import pytest
+from deepdiff import DeepDiff
 
-from encord.objects import LabelRowV2, Object, Shape
+from encord.objects import LabelRowV2, Object, ObjectInstance, Shape
+from encord.objects.frames import Range
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.ontology import Ontology
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
@@ -59,3 +61,61 @@ def test_label_row_metadata_accessor(ontology, label_row_metadata):
         frame_metadata = frame_view.metadata
         assert frame_metadata is not None
         assert isinstance(frame_metadata, DICOMSliceMetadata)
+
+
+def test_checklist_parsing_merging_single_frame_events(ontology, label_row_metadata):
+    answer_ranges = [
+        (Range(start=536, end=536), ["abcDeFGH"]),
+        (Range(start=1695, end=1695), ["abcDeFGH"]),
+        (Range(start=541, end=541), ["xGvnZsqe"]),
+        (Range(start=1730, end=1730), ["xGvnZsqe"]),
+        (Range(start=1695, end=1695), ["lMT3lsvM"]),
+    ]
+
+    merged_result = ObjectInstance._merge_answers_to_non_overlapping_ranges(answer_ranges)
+    expected_results = [
+        (Range(start=536, end=536), {"abcDeFGH"}),
+        (Range(start=541, end=541), {"xGvnZsqe"}),
+        (Range(start=1695, end=1695), {"abcDeFGH", "lMT3lsvM"}),
+        (Range(start=1730, end=1730), {"xGvnZsqe"}),
+    ]
+
+    assert not DeepDiff(merged_result, expected_results)
+
+
+def test_checklist_parsing_merging_included_events(ontology, label_row_metadata):
+    answer_ranges = [
+        (Range(start=0, end=100), ["abcDeFGH"]),
+        (Range(start=10, end=90), ["xGvnZsqe"]),
+        (Range(start=20, end=80), ["nMakrEgd"]),
+    ]
+
+    merged_result = ObjectInstance._merge_answers_to_non_overlapping_ranges(answer_ranges)
+    expected_results = [
+        (Range(start=0, end=9), {"abcDeFGH"}),
+        (Range(start=10, end=19), {"abcDeFGH", "xGvnZsqe"}),
+        (Range(start=20, end=80), {"abcDeFGH", "xGvnZsqe", "nMakrEgd"}),
+        (Range(start=81, end=90), {"abcDeFGH", "xGvnZsqe"}),
+        (Range(start=91, end=100), {"abcDeFGH"}),
+    ]
+
+    assert not DeepDiff(merged_result, expected_results)
+
+
+def test_checklist_parsing_merging_overlapped_events(ontology, label_row_metadata):
+    answer_ranges = [
+        (Range(start=0, end=60), ["abcDeFGH"]),
+        (Range(start=40, end=80), ["xGvnZsqe"]),
+        (Range(start=20, end=100), ["nMakrEgd"]),
+    ]
+
+    merged_result = ObjectInstance._merge_answers_to_non_overlapping_ranges(answer_ranges)
+    expected_results = [
+        (Range(start=0, end=19), {"abcDeFGH"}),
+        (Range(start=20, end=39), {"abcDeFGH", "nMakrEgd"}),
+        (Range(start=40, end=60), {"abcDeFGH", "nMakrEgd", "xGvnZsqe"}),
+        (Range(start=61, end=80), {"xGvnZsqe", "nMakrEgd"}),
+        (Range(start=81, end=100), {"nMakrEgd"}),
+    ]
+
+    assert not DeepDiff(merged_result, expected_results)

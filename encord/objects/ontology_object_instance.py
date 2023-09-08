@@ -243,40 +243,46 @@ class ObjectInstance:
             assert attribute  # we already checked that attribute is not null above. So just silencing this for now
             self._set_answer_from_grouped_list(attribute, answers_list)
 
-    def _merge_answers_to_non_overlapping_ranges(
-        self, ranges: List[Tuple[Range, List[Option]]]
-    ) -> List[Tuple[Range, List[Option]]]:
+    @staticmethod
+    def _merge_answers_to_non_overlapping_ranges(ranges: List[Tuple[Range, Set[str]]]) -> List[Tuple[Range, Set[str]]]:
         ranges.sort(key=lambda x: x[0].start)
 
-        result_ranges = []
-        current_start = ranges[0][0].start
-        current_end = ranges[0][0].end
-        current_labels = ranges[0][1]
+        edges: List[Tuple[int, bool, Set[str]]] = []
+        for r, option_ids in ranges:
+            edges.extend(((r.start, True, set(option_ids)), (r.end, False, set(option_ids))))
+        edges.sort(key=lambda x: x[0])
 
-        for i in range(1, len(ranges)):
-            next_start = ranges[i][0].start
-            next_end = ranges[i][0].end
-            next_labels = ranges[i][1]
+        result_ranges: Dict[Tuple[int, int], Tuple[Range, Set[str]]] = {}
 
-            # If the next range starts within the current range
-            if next_start <= current_end:
-                if next_start >= current_start:
-                    result_ranges.append((Range(current_start, next_start), current_labels.copy()))
-                    current_labels.extend(next_labels)
-                    current_start = next_start
+        prev = 0
+        prev_state: Set[str] = set()
+        prev_close = False
 
-                if next_end > current_end:
-                    current_end = next_end
-
+        for frame_num, is_start, options in edges:
+            if is_start:
+                new_state = prev_state.union(options)
+                start = prev
+                end = frame_num - int((len(prev_state) > 0))
+                prev_close = False
             else:
-                result_ranges.append((Range(current_start, current_end), current_labels))
-                current_start, current_end = next_start, next_end
-                current_labels = next_labels
+                start = prev + int(prev_close)
+                end = frame_num
+                prev_close = True
+                new_state = prev_state.difference(options)
 
-        # Append the last range
-        result_ranges.append((Range(current_start, current_end), current_labels))
+            if len(prev_state) > 0:
+                if (start, end) in result_ranges:
+                    result_ranges[(start, end)][1].update(prev_state.copy())
+                else:
+                    result_ranges[(start, end)] = (
+                        Range(start, end),
+                        prev_state.copy(),
+                    )
 
-        return result_ranges
+            prev_state = new_state
+            prev = frame_num
+
+        return list(result_ranges.values())
 
     def _set_answer_from_grouped_list(self, attribute: Attribute, answers_list: List[Dict[str, Any]]) -> None:
         if isinstance(attribute, ChecklistAttribute):
@@ -290,20 +296,22 @@ class ObjectInstance:
 
                 self._set_answer_unsafe(options, attribute, None)
             else:
+                all_feature_hashes: Set[str] = set()
                 ranges = []
-
                 for answer_dict in answers_list:
-                    options = [
-                        attribute.get_child_by_hash(answer["featureHash"], type_=Option)
-                        for answer in answer_dict["answers"]
-                    ]
-
+                    feature_hashes: Set[str] = {answer["featureHash"] for answer in answer_dict["answers"]}
+                    all_feature_hashes.update(feature_hashes)
                     for frame_range in ranges_list_to_ranges(answer_dict["range"]):
-                        ranges.append((frame_range, options))
+                        ranges.append((frame_range, feature_hashes))
 
-                converted = self._merge_answers_to_non_overlapping_ranges(ranges)
-                for range, options in converted:
-                    self._set_answer_unsafe(options, attribute, [range])
+                options_cache = {
+                    feature_hash: attribute.get_child_by_hash(feature_hash, type_=Option)
+                    for feature_hash in all_feature_hashes
+                }
+
+                for frame_range, feature_hashes in self._merge_answers_to_non_overlapping_ranges(ranges):
+                    options = [options_cache[feature_hash] for feature_hash in feature_hashes]
+                    self._set_answer_unsafe(options, attribute, [frame_range])
         else:
             for answer in answers_list:
                 self._set_answer_from_dict(answer, attribute)
