@@ -297,7 +297,7 @@ class DataRow(dict, Formatter):
     def client_metadata(self) -> Optional[dict]:
         """
         The currently cached client metadata. To cache the client metadata, use the
-        :meth:`~encord.orm.dataset.DataRow.fetch()` function.
+        :meth:`~encord.orm.dataset.DataRow._data()` function.
 
         The setter updates the custom client metadata. This queues a request for the backend which will
         be executed on a call of :meth:`.DataRow.upload`.
@@ -388,8 +388,8 @@ class DataRow(dict, Formatter):
         If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
         returns whether this is a performance optimised image group. Returns `None` for other data types.
 
-        DEPRECATED: This method is deprecated and will be removed in uplocming library version.
-        Please usie :meth:`.is_image_sequence` instead
+        DEPRECATED: This method is deprecated and will be removed in the upcoming library version.
+        Please use :meth:`.is_image_sequence` instead
         """
         return self.is_image_sequence
 
@@ -400,7 +400,7 @@ class DataRow(dict, Formatter):
         returns whether this is an image sequence. Returns `None` for other data types.
 
         For more details refer to the
-        :ref:`documentation on image sequnces <https://docs.encord.com/docs/annotate-supported-data#image-sequences>`
+        :ref:`documentation on image sequences <https://docs.encord.com/docs/annotate-supported-data#image-sequences>`
         """
         return self["is_optimised_image_group"]
 
