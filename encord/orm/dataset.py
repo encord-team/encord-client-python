@@ -350,7 +350,7 @@ class DataRow(dict, Formatter):
     def signed_url(self) -> Optional[str]:
         """
         The cached signed url of the given data asset. To cache the signed url, use the
-        :meth:`~encord.orm.dataset.DataRow.fetch()` function.
+        :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
         """
         return self["signed_url"]
 
