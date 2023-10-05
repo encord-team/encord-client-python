@@ -868,6 +868,7 @@ class Image(base_orm.BaseORM):
     DB_FIELDS = OrderedDict(
         [
             ("data_hash", str),
+            ("image_hash", str),
             ("title", str),
             ("file_link", str),
         ]
