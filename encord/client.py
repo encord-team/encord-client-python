@@ -142,7 +142,7 @@ from encord.utilities.client_utilities import optional_set_to_list, parse_dateti
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 LONG_POLLING_RESPONSE_RETRY_N = 3
-LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 3
+LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
 LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 
 logger = logging.getLogger(__name__)
