@@ -1001,8 +1001,7 @@ class Project:
                 Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
             )
 
-            for result in page.results:
-                yield result
+            yield from page.results
 
             if page.next_page_token is not None:
                 params.page_token = page.next_page_token
