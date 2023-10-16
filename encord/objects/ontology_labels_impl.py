@@ -1003,13 +1003,8 @@ class LabelRowV2:
     def _to_classification_answers(self) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}
         for classification in self._classifications_map.values():
-            classifications = []
-
             all_static_answers = classification.get_all_static_answers()
-            for answer in all_static_answers:
-                if answer.is_answered():
-                    classifications.append(answer.to_encord_dict())
-
+            classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
             ret[classification.classification_hash] = {
                 "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
@@ -1036,12 +1031,8 @@ class LabelRowV2:
         return ret
 
     def _to_encord_data_units(self) -> Dict[str, Any]:
-        ret = {}
         frame_level_data = self._label_row_read_only_data.frame_level_data
-        for value in frame_level_data.values():
-            ret[value.image_hash] = self._to_encord_data_unit(value)
-
-        return ret
+        return {value.image_hash: self._to_encord_data_unit(value) for value in frame_level_data.values()}
 
     def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}

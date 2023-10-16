@@ -513,11 +513,7 @@ class EncordUserClient:
     @staticmethod
     def __get_recursive_image_paths(images_directory_path: Path) -> List[Path]:
         """Recursively get all the images in all the sub folders."""
-        ret = []
-        for file in images_directory_path.glob("**/*"):
-            if file.is_file():
-                ret.append(file)
-        return ret
+        return [file for file in images_directory_path.glob("**/*") if file.is_file()]
 
     def __upload_cvat_images(
         self, images_paths: List[Path], used_base_path: Path, dataset_name: str
