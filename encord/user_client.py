@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from dateutil import parser as datetime_parser
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
+from encord.common.deprecated import deprecated
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
@@ -366,6 +367,7 @@ class EncordUserClient:
     def get_or_create_project_api_key(self, project_hash: str) -> str:
         return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
 
+    @deprecated("0.1.98", ".get_dataset()")
     def get_dataset_client(
         self,
         dataset_hash: str,
@@ -383,6 +385,7 @@ class EncordUserClient:
             dataset_access_settings=dataset_access_settings,
         )
 
+    @deprecated("0.1.98", ".get_project()")
     def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
         """
         DEPRECATED - prefer using :meth:`get_project()` instead.

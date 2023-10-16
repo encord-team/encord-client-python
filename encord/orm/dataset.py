@@ -25,6 +25,7 @@ from uuid import UUID
 from dateutil import parser
 
 from encord.common.constants import DATETIME_STRING_FORMAT
+from encord.common.deprecated import deprecated
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
@@ -383,6 +384,7 @@ class DataRow(dict, Formatter):
         return self["images_data"]
 
     @property
+    @deprecated("0.1.98", ".is_image_sequence")
     def is_optimised_image_group(self) -> Optional[bool]:
         """
         If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
