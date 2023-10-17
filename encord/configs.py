@@ -50,10 +50,6 @@ _ENCORD_API_KEY = "ENCORD_API_KEY"
 _ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
 _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
-READ_TIMEOUT = 180  # In seconds
-WRITE_TIMEOUT = 180  # In seconds
-CONNECT_TIMEOUT = 180  # In seconds
-
 logger = logging.getLogger(__name__)
 
 from encord.exceptions import ResourceNotFoundError
@@ -61,9 +57,9 @@ from encord.exceptions import ResourceNotFoundError
 
 class BaseConfig(ABC):
     def __init__(self, endpoint: str, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS):
-        self.read_timeout: int = READ_TIMEOUT
-        self.write_timeout: int = WRITE_TIMEOUT
-        self.connect_timeout: int = CONNECT_TIMEOUT
+        self.read_timeout: int = requests_settings.read_timeout
+        self.write_timeout: int = requests_settings.write_timeout
+        self.connect_timeout: int = requests_settings.connection_timeout
 
         self.endpoint: str = endpoint
         self.requests_settings = requests_settings

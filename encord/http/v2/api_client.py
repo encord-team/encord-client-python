@@ -64,10 +64,12 @@ class ApiClient:
 
         req = sign_request(req, self._config.public_key_hex, self._config.private_key)
 
-        timeouts = (self._config.write_timeout, self._config.read_timeout)
+        timeouts = (self._config.connect_timeout, self._config.read_timeout)
         req_settings = self._config.requests_settings
         with create_new_session(
-            max_retries=req_settings.max_retries, backoff_factor=req_settings.backoff_factor
+            max_retries=req_settings.max_retries,
+            backoff_factor=req_settings.backoff_factor,
+            connect_retries=req_settings.connection_retries,
         ) as session:
             res = session.send(req, timeout=timeouts)
             context = self._exception_context_from_response(res)
