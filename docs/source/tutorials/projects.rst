@@ -122,6 +122,9 @@ Users can be added to an existing project using their emails.
 You can specify the role of the users being added using the :class:`.ProjectUserRole` enum.
 You can find more details of the different roles in the :class:`doc-strings <.ProjectUserRole>`.
 
+> 👍 Tip
+>For collaborative teams using our SDK, we recommend creating shared service accounts and creating SSH keys for those shared accounts. For example, to have several people create ontologies, datasets, and projects programatically, create an email account for use with Encord (for example, encord-admins@mycompany.com) and generate an SSH for that email account.
+
 Below is an example of how to add two new annotators to the project.
 Note how all users get assigned the same role.
 
