@@ -11,6 +11,9 @@ The user authenticated to interact with the |company| platform.
 The user has access to the resources and capabilities that are also available on the |platform|.
 For a |platform| specific description of capabilities, please refer to the :xref:`docs_main_entry`.
 
+> 👍 Tip
+>For collaborative teams using our SDK, we recommend creating shared service accounts and creating SSH keys for those shared accounts. For example, to have several people create ontologies, datasets, and projects programatically, create an email account for use with Encord (for example, encord-admins@mycompany.com) and generate an SSH for that email account.
+
 Dataset
 =======
 The space where the data itself lives.

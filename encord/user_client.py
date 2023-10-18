@@ -83,9 +83,9 @@ class EncordUserClient:
         self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
     ) -> Dataset:
         """
-        Get the Project class to access project fields and manipulate a project.
+        Get the Dataset class to access dataset fields and manipulate a dataset.
 
-        You will only have access to this project if you are one of the following
+        You only have access to this project if you are one of the following
 
             * Dataset admin
 
