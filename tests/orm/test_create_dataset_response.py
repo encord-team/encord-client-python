@@ -1,5 +1,5 @@
 """Unit tests for the dataset class"""
-
+import uuid
 
 from encord.orm.dataset import CreateDatasetResponse, StorageLocation
 
@@ -7,12 +7,16 @@ DATASET_RESPONSE_JSON = {
     "title": "CVAT imported baking dataset",
     "type": 0,
     "dataset_hash": "460505dd-89ea-485a-b4ea-417558a26889",
+    "backing_folder_uuid": "434df998-3aac-423d-bc29-1af33040e583",
     "user_hash": "yiA5JxmLEGSoEcJAuxr3AJdDDXE2",
 }
 
 
 def test_create_dataset_response_conversions():
     create_dataset_response = CreateDatasetResponse.from_dict(DATASET_RESPONSE_JSON)
+
+    assert isinstance(create_dataset_response["backing_folder_uuid"], uuid.UUID)
+    create_dataset_response["backing_folder_uuid"] = str(create_dataset_response["backing_folder_uuid"])
 
     assert create_dataset_response == DATASET_RESPONSE_JSON
 

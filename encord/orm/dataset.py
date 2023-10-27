@@ -476,7 +476,8 @@ class DataRow(dict, Formatter):
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
         data_type = DataType.from_upper_case_string(json_dict["data_type"])
-        backing_item_uuid = UUID(json_dict["backing_item_uuid"]) if "backing_item_uuid" in json_dict else None
+        backing_item_uuid_value = json_dict.get("backing_item_uuid")
+        backing_item_uuid = UUID(backing_item_uuid_value) if backing_item_uuid_value in json_dict else None
 
         return DataRow(
             uid=json_dict["data_hash"],
