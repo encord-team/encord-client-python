@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, TextIO, Union
+from uuid import UUID
 
 from encord.client import EncordClientDataset
 from encord.constants.enums import DataType
@@ -46,6 +47,10 @@ class Dataset:
     @property
     def storage_location(self) -> StorageLocation:
         return self._dataset_instance.storage_location
+
+    @property
+    def backing_folder_uuid(self) -> Optional[UUID]:
+        return self._dataset_instance.backing_folder_uuid
 
     @property
     def data_rows(self) -> List[DataRow]:
@@ -237,6 +242,9 @@ class Dataset:
 
         """
         return self._client.upload_image(file_path, title, cloud_upload_settings)
+
+    def link_items(self, item_uuids: List[UUID]) -> List[DataRow]:
+        return self._client.link_items(item_uuids)
 
     def delete_image_group(self, data_hash: str):
         """

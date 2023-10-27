@@ -155,6 +155,7 @@ class EncordUserClient:
         dataset_title: str,
         dataset_type: StorageLocation,
         dataset_description: Optional[str] = None,
+        create_backing_folder: bool = True,
     ) -> CreateDatasetResponse:
         """
         Args:
@@ -170,6 +171,7 @@ class EncordUserClient:
         dataset = {
             "title": dataset_title,
             "type": dataset_type,
+            "create_backing_folder": create_backing_folder,
         }
 
         if dataset_description:
