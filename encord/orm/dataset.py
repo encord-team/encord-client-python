@@ -202,6 +202,7 @@ class DataRow(dict, Formatter):
         images_data: Optional[List[dict]],
         signed_url: Optional[str],
         is_optimised_image_group: Optional[bool],
+        backing_item_uuid: Optional[UUID],
     ):
         parsed_images = None
         if images_data is not None:
@@ -227,6 +228,7 @@ class DataRow(dict, Formatter):
                 "images_data": parsed_images,
                 "signed_url": signed_url,
                 "is_optimised_image_group": is_optimised_image_group,
+                "backing_item_uuid": backing_item_uuid,
                 "_dirty_fields": [],
             }
         )
@@ -406,6 +408,13 @@ class DataRow(dict, Formatter):
         """
         return self["is_optimised_image_group"]
 
+    @property
+    def backing_item_uuid(self) -> UUID:
+        backing_item_uuid: Optional[UUID] = self.get("backing_item_uuid")
+        if not backing_item_uuid:
+            raise NotImplementedError("Storage API is not yet implemented by the service")
+        return backing_item_uuid
+
     def refetch_data(
         self,
         *,
@@ -467,6 +476,8 @@ class DataRow(dict, Formatter):
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DataRow:
         data_type = DataType.from_upper_case_string(json_dict["data_type"])
+        backing_item_uuid_value = json_dict.get("backing_item_uuid")
+        backing_item_uuid = UUID(backing_item_uuid_value) if backing_item_uuid_value else None
 
         return DataRow(
             uid=json_dict["data_hash"],
@@ -486,6 +497,7 @@ class DataRow(dict, Formatter):
             duration=json_dict["duration"],
             signed_url=json_dict.get("signed_url"),
             is_optimised_image_group=json_dict.get("is_optimised_image_group"),
+            backing_item_uuid=backing_item_uuid,
             images_data=json_dict.get("images_data"),
         )
 
@@ -546,6 +558,7 @@ class DatasetInfo:
     type: int
     created_at: datetime
     last_edited_at: datetime
+    backing_folder_uuid: Optional[UUID] = None
 
 
 class Dataset(dict, Formatter):
@@ -556,6 +569,7 @@ class Dataset(dict, Formatter):
         data_rows: List[DataRow],
         dataset_hash: str,
         description: Optional[str] = None,
+        backing_folder_uuid: Optional[UUID] = None,
     ):
         """
         DEPRECATED - prefer using the :class:`encord.dataset.Dataset` class instead.
@@ -575,6 +589,7 @@ class Dataset(dict, Formatter):
                 "description": description,
                 "dataset_type": storage_location,
                 "data_rows": data_rows,
+                "backing_folder_uuid": backing_folder_uuid,
             }
         )
 
@@ -614,13 +629,24 @@ class Dataset(dict, Formatter):
     def data_rows(self, value: List[DataRow]) -> None:
         self["data_rows"] = value
 
+    @property
+    def backing_folder_uuid(self) -> Optional[UUID]:
+        return self["backing_folder_uuid"]
+
+    @backing_folder_uuid.setter
+    def backing_folder_uuid(self, value: Optional[UUID]) -> None:
+        self["backing_folder_uuid"] = value
+
     @classmethod
     def from_dict(cls, json_dict: Dict) -> Dataset:
+        backing_folder_uuid_value = json_dict.get("backing_folder_uuid")
+
         return Dataset(
             title=json_dict["title"],
             description=json_dict["description"],
             storage_location=json_dict["dataset_type"],
             dataset_hash=json_dict["dataset_hash"],
+            backing_folder_uuid=UUID(backing_folder_uuid_value) if backing_folder_uuid_value else None,
             data_rows=DataRow.from_dict_list(json_dict.get("data_rows", [])),
         )
 
@@ -629,10 +655,16 @@ class Dataset(dict, Formatter):
 class DatasetDataInfo(Formatter):
     data_hash: str
     title: str
+    backing_item_uuid: Optional[UUID]
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> DatasetDataInfo:
-        return DatasetDataInfo(json_dict["data_hash"], json_dict["title"])
+        backing_item_uuid_value = json_dict.get("backing_item_uuid")
+        return DatasetDataInfo(
+            json_dict["data_hash"],
+            json_dict["title"],
+            UUID(backing_item_uuid_value) if backing_item_uuid_value else None,
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -679,6 +711,7 @@ class CreateDatasetResponse(dict, Formatter):
         storage_location: int,
         dataset_hash: str,
         user_hash: str,
+        backing_folder_uuid: Optional[UUID],
     ):
         """
         This class has dict-style accessors for backwards compatibility.
@@ -696,6 +729,7 @@ class CreateDatasetResponse(dict, Formatter):
                 "type": storage_location,
                 "dataset_hash": dataset_hash,
                 "user_hash": user_hash,
+                "backing_folder_uuid": backing_folder_uuid,
             }
         )
 
@@ -731,13 +765,23 @@ class CreateDatasetResponse(dict, Formatter):
     def user_hash(self, value: str) -> None:
         self["user_hash"] = value
 
+    @property
+    def backing_folder_uuid(self) -> Optional[UUID]:
+        return self["backing_folder_uuid"]
+
+    @backing_folder_uuid.setter
+    def backing_folder_uuid(self, value: Optional[UUID]) -> None:
+        self["backing_folder_uuid"] = value
+
     @classmethod
     def from_dict(cls, json_dict: Dict) -> CreateDatasetResponse:
+        backing_folder_uuid_value = json_dict.get("backing_folder_uuid")
         return CreateDatasetResponse(
             title=json_dict["title"],
             storage_location=json_dict["type"],
             dataset_hash=json_dict["dataset_hash"],
             user_hash=json_dict["user_hash"],
+            backing_folder_uuid=UUID(backing_folder_uuid_value) if backing_folder_uuid_value else None,
         )
 
 
@@ -835,16 +879,11 @@ class SignedDicomsURL(base_orm.BaseListORM):
 class Video(base_orm.BaseORM):
     """A video object with supporting information."""
 
-    DB_FIELDS = OrderedDict(
-        [
-            ("data_hash", str),
-            ("title", str),
-            ("file_link", str),
-        ]
-    )
+    DB_FIELDS = OrderedDict([("data_hash", str), ("title", str), ("file_link", str), ("backing_item_uuid", UUID)])
 
     NON_UPDATABLE_FIELDS = {
         "data_hash",
+        "backing_item_uuid",
     }
 
 
@@ -1015,15 +1054,14 @@ class DatasetDataLongPolling(Formatter):
     def from_dict(cls, json_dict: Dict) -> DatasetDataLongPolling:
         return DatasetDataLongPolling(
             status=LongPollingStatus(json_dict["status"]),
-            data_hashes_with_titles=[
-                DatasetDataInfo(
-                    data_hash=x["data_hash"],
-                    title=x["title"],
-                )
-                for x in json_dict["data_hashes_with_titles"]
-            ],
+            data_hashes_with_titles=[DatasetDataInfo.from_dict(x) for x in json_dict["data_hashes_with_titles"]],
             errors=json_dict["errors"],
             units_pending_count=json_dict["units_pending_count"],
             units_done_count=json_dict["units_done_count"],
             units_error_count=json_dict["units_error_count"],
         )
+
+
+@dataclasses.dataclass(frozen=True)
+class DatasetLinkItems:
+    pass

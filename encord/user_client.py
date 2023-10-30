@@ -155,6 +155,7 @@ class EncordUserClient:
         dataset_title: str,
         dataset_type: StorageLocation,
         dataset_description: Optional[str] = None,
+        create_backing_folder: bool = True,
     ) -> CreateDatasetResponse:
         """
         Args:
@@ -170,6 +171,7 @@ class EncordUserClient:
         dataset = {
             "title": dataset_title,
             "type": dataset_type,
+            "create_backing_folder": create_backing_folder,
         }
 
         if dataset_description:
@@ -232,7 +234,13 @@ class EncordUserClient:
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
-        data = self.querier.get_multiple(DatasetWithUserRole, payload={"filter": properties_filter})
+        data = self.querier.get_multiple(
+            DatasetWithUserRole,
+            payload={
+                "filter": properties_filter,
+                "enable_storage_api": True,
+            },
+        )
 
         def convert_dates(dataset):
             dataset["created_at"] = datetime_parser.isoparse(dataset["created_at"])

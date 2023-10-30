@@ -80,6 +80,7 @@ from encord.orm.dataset import (
     DatasetAccessSettings,
     DatasetData,
     DatasetDataLongPolling,
+    DatasetLinkItems,
     DatasetUser,
     DatasetUserRole,
     DatasetUsers,
@@ -525,6 +526,13 @@ class EncordClientDataset(EncordClient):
             return Image({"data_hash": upload["data_hash"], "title": upload["title"], "file_link": upload["file_link"]})
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
+
+    def link_items(self, item_uuids: List[uuid.UUID]) -> List[DataRow]:
+        return self._querier.basic_setter(
+            DatasetLinkItems,
+            uid=self._config.resource_id,
+            payload={"item_uuids": [str(item_uuid) for item_uuid in item_uuids]},
+        )
 
     def delete_image_group(self, data_hash: str):
         """

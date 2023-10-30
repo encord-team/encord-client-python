@@ -14,9 +14,11 @@ DATASET_JSON = {
     "title": "CVAT imported baking dataset",
     "description": "Suiting description",
     "dataset_type": "CORD_STORAGE",
+    "backing_folder_uuid": None,
     "data_rows": [
         {
             "data_hash": "87fb7247-794b-4dad-b378-4e574723c05e",
+            "backing_item_uuid": None,
             "data_title": "image-group-12dca",
             "created_at": "2022-01-05 18:51:05",
             "last_edited_at": "2022-01-05 19:23:56",
