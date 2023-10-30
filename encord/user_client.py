@@ -234,7 +234,13 @@ class EncordUserClient:
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
-        data = self.querier.get_multiple(DatasetWithUserRole, payload={"filter": properties_filter})
+        data = self.querier.get_multiple(
+            DatasetWithUserRole,
+            payload={
+                "filter": properties_filter,
+                "enable_storage_api": True,
+            },
+        )
 
         def convert_dates(dataset):
             dataset["created_at"] = datetime_parser.isoparse(dataset["created_at"])
