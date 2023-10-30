@@ -473,13 +473,7 @@ class DataRow(dict, Formatter):
         else:
             raise EncordException("Could not upload data. The DataRow is in an invalid state.")
 
-    @classmethod
-    def from_dict(cls, json_dict: Dict) -> DataRow:
-        data_type = DataType.from_upper_case_string(json_dict["data_type"])
-        backing_item_uuid_value = json_dict.get("backing_item_uuid")
-        backing_item_uuid = UUID(backing_item_uuid_value) if backing_item_uuid_value in json_dict else None
-
-        return DataRow(
+        backing_item_uuid = UUID(backing_item_uuid_value) if backing_item_uuid_value else None
             uid=json_dict["data_hash"],
             title=json_dict["data_title"],
             # The API server currently returns upper-cased DataType strings.
