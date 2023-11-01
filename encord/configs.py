@@ -59,7 +59,7 @@ class BaseConfig(ABC):
     def __init__(self, endpoint: str, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS):
         self.read_timeout: int = requests_settings.read_timeout
         self.write_timeout: int = requests_settings.write_timeout
-        self.connect_timeout: int = requests_settings.connection_timeout
+        self.connect_timeout: int = requests_settings.connect_timeout
 
         self.endpoint: str = endpoint
         self.requests_settings = requests_settings

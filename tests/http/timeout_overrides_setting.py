@@ -75,7 +75,7 @@ def stub_responses(*args, **kwargs) -> MagicMock:
 def verify_timeout_and_reset(mock: MagicMock, requests_settings: RequestsSettings, expected_call_count=1) -> None:
     assert mock.call_count == expected_call_count
     assert all(
-        call[1]["timeout"] == (requests_settings.connection_timeout, requests_settings.read_timeout)
+        call[1]["timeout"] == (requests_settings.connect_timeout, requests_settings.read_timeout)
         for call in mock.call_args_list
     )
 
@@ -85,7 +85,7 @@ def verify_timeout_and_reset(mock: MagicMock, requests_settings: RequestsSetting
 @patch.object(Session, "send")
 def test_request_timeout_settings_correctly_propagated(send: MagicMock, api_client: ApiClient):
     requests_settings = RequestsSettings(
-        connection_timeout=1001,
+        connect_timeout=1001,
         read_timeout=1002,
         write_timeout=1003,
     )

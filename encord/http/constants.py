@@ -24,7 +24,7 @@ class RequestsSettings:
     connection_retries: int = DEFAULT_CONNECTION_RETRIES
     """Number of allowed retries to establish TCP connection when a request is sent."""
 
-    connection_timeout: int = DEFAULT_CONNECT_TIMEOUT
+    connect_timeout: int = DEFAULT_CONNECT_TIMEOUT
     """Maximum number of seconds from connection establishment to the first byte of response received"""
 
     read_timeout: int = DEFAULT_READ_TIMEOUT
