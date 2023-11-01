@@ -156,7 +156,7 @@ class Querier:
         except Exception:
             return RequestContext()
 
-    def _request(self, method: QueryMethods, db_object_type: Type[T], uid, timeout, payload=None):
+    def _request(self, method: QueryMethods, db_object_type: Type[T], uid, timeout: int, payload=None) -> Request:
         request = Request(method, db_object_type, uid, timeout, self._config.connect_timeout, payload)
 
         request.headers = self._config.define_headers(request.data)
@@ -205,7 +205,7 @@ class Querier:
 
 @contextmanager
 def create_new_session(
-    max_retries: Optional[int] = None, backoff_factor: float = 0, connect_retries=3
+    max_retries: Optional[int], backoff_factor: float, connect_retries
 ) -> Generator[Session, None, None]:
     retry_policy = Retry(
         connect=connect_retries,

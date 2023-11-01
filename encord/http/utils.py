@@ -148,7 +148,9 @@ def _upload_single_file(
     backoff_factor: float,
     cache_max_age: int = CACHE_DURATION_IN_SECONDS,
 ) -> None:
-    with create_new_session(max_retries=max_retries, backoff_factor=backoff_factor) as session:
+    with create_new_session(
+        max_retries=max_retries, backoff_factor=backoff_factor, connect_retries=max_retries
+    ) as session:
         url = signed_url["signed_url"]
 
         with open(file_path, "rb") as f:
