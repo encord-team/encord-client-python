@@ -336,6 +336,7 @@ class EncordClientDataset(EncordClient):
         created_before: Optional[Union[str, datetime]] = None,
         created_after: Optional[Union[str, datetime]] = None,
         data_types: Optional[List[DataType]] = None,
+        data_hashes: Optional[List[str]] = None,
     ) -> List[DataRow]:
         """
         Retrieve dataset rows (pointers to data, labels).
@@ -346,6 +347,7 @@ class EncordClientDataset(EncordClient):
             created_before: optional datetime row filter
             created_after: optional datetime row filter
             data_types: optional data types row filter
+            data_hashes: optional list of individual data unit hashes to include
 
         Returns:
             List[DataRow]: A list of DataRows object that match the filter
@@ -372,6 +374,7 @@ class EncordClientDataset(EncordClient):
                     if data_types is not None
                     else None,
                     "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
+                    "data_hashes": data_hashes,
                 },
             ),
         )
