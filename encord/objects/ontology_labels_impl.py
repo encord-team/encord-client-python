@@ -1149,7 +1149,7 @@ class LabelRowV2:
                 frame_view.height == coordinates._encoded_bitmask.height
                 and frame_view.width == coordinates._encoded_bitmask.width
             ):
-                raise ValueError("Bitmask resolution doesn't match the media resolution")
+                raise ValueError("Bitmask dimensions don't match the media dimensions")
             encord_object["bitmask"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
