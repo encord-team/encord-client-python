@@ -136,26 +136,28 @@ class BitmaskCoordinates:
 
     @staticmethod
     def _from_array(source: Any) -> BitmaskCoordinates.EncodedBitmask:
-        if source is not None:
-            if hasattr(source, "__array_interface__"):
-                arr = source.__array_interface__
-                data_type = arr["typestr"]
-                data = arr["data"]
-                shape = arr["shape"]
+        if source is not None and hasattr(source, "__array_interface__"):
+            arr = source.__array_interface__
+            data_type = arr["typestr"]
+            data = arr["data"]
+            shape = arr["shape"]
 
-                if data_type != "|b1":
-                    raise EncordException(
-                        "Bitmask should be an array of boolean values. For numpy array call .astype(bool)."
-                    )
+            if len(shape) != 2:
+                raise EncordException("Bitmask should be a 2-dimensional array.")
 
-                raw_data = data if isinstance(data, bytes) else source.tobytes()
-
-                rle = _mask_to_rle(raw_data)
-                rle_string = _rle_to_string(rle)
-
-                return BitmaskCoordinates.EncodedBitmask(
-                    top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string
+            if data_type != "|b1":
+                raise EncordException(
+                    "Bitmask should be an array of boolean values. For numpy array call .astype(bool)."
                 )
+
+            raw_data = data if isinstance(data, bytes) else source.tobytes()
+
+            rle = _mask_to_rle(raw_data)
+            rle_string = _rle_to_string(rle)
+
+            return BitmaskCoordinates.EncodedBitmask(
+                top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string
+            )
 
         raise EncordException(f"Can't import bitmask from {source.__class__}")
 
