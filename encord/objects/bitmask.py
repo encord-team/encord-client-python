@@ -136,28 +136,29 @@ class BitmaskCoordinates:
 
     @staticmethod
     def _from_array(source: Any) -> BitmaskCoordinates.EncodedBitmask:
-        if source is not None:
-            if hasattr(source, "__array_interface__"):
-                arr = source.__array_interface__
-                data_type = arr["typestr"]
-                data = arr["data"]
-                shape = arr["shape"]
+        if source is None:
+            raise EncordException("Bitmask can't be created from None")
 
-                if data_type != "|b1":
-                    raise EncordException(
-                        "Bitmask should be an array of boolean values. For numpy array call .astype(bool)."
-                    )
+        if not hasattr(source, "__array_interface__"):
+            raise EncordException(f"Can't import bitmask from {source.__class__}")
 
-                raw_data = data if isinstance(data, bytes) else source.tobytes()
+        arr = source.__array_interface__
+        data_type = arr["typestr"]
+        data = arr["data"]
+        shape = arr["shape"]
 
-                rle = _mask_to_rle(raw_data)
-                rle_string = _rle_to_string(rle)
+        if len(shape) != 2:
+            raise EncordException("Bitmask should be a 2-dimensional array.")
 
-                return BitmaskCoordinates.EncodedBitmask(
-                    top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string
-                )
+        if data_type != "|b1":
+            raise EncordException("Bitmask should be an array of boolean values. For numpy array call .astype(bool).")
 
-        raise EncordException(f"Can't import bitmask from {source.__class__}")
+        raw_data = data if isinstance(data, bytes) else source.tobytes()
+
+        rle = _mask_to_rle(raw_data)
+        rle_string = _rle_to_string(rle)
+
+        return BitmaskCoordinates.EncodedBitmask(top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -170,14 +171,14 @@ class BitmaskCoordinates:
 
     def to_numpy_array(self):
         """
-        Converts the mask to numpy array with dtype bool.
+        Converts the mask to a 2D numpy array with dtype bool.
 
-        Numpy needs to be installed for this call to work
+        Numpy needs to be installed for this call to work.
         """
         try:
             import numpy as np  # type: ignore[missing-import]
-        except ImportError:
-            raise EncordException("Numpy is required for .to_numpy call.")
+        except ImportError as e:
+            raise EncordException("Numpy is required for .to_numpy_array call.") from e
 
         return np.array(self)
 
