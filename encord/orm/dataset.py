@@ -795,7 +795,7 @@ class StorageLocation(IntEnum):
     NEW_STORAGE = -99
     """
     This is a placeholder for a new storage location that is not yet supported by your SDK version.
-    Please update your SDK to the latest version. 
+    Please update your SDK to the latest version.
     """
 
     @staticmethod
@@ -995,7 +995,7 @@ DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
 class ImagesDataFetchOptions:
     fetch_signed_urls: bool = False
     """
-    Whether to fetch signed urls for each individual image. Only set this to true if you need to download the 
+    Whether to fetch signed urls for each individual image. Only set this to true if you need to download the
     images.
     """
 

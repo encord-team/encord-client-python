@@ -29,4 +29,3 @@ To overwrite the read, write, and connect timeout you can do the following:
 
         .. literalinclude:: /code_examples/tutorials/configurations/overwrite_timeouts.py
             :language: python
-
