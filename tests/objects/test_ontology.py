@@ -182,9 +182,9 @@ def test_add_classification_duplicate_values():
     ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_classification(1, "12345678")
     with pytest.raises(ValueError):
-        obj2 = ontology.add_classification(1)
+        _ = ontology.add_classification(1)
     with pytest.raises(ValueError):
-        obj2 = ontology.add_classification(2, feature_node_hash=obj1.feature_node_hash)
+        _ = ontology.add_classification(2, feature_node_hash=obj1.feature_node_hash)
 
     assert len(ontology.classifications) == 1
 
@@ -217,9 +217,9 @@ def test_add_object_duplicate_values():
     ontology = encord.objects.OntologyStructure()
     obj1 = ontology.add_object("Apple", Shape.BOUNDING_BOX, 1, "#000000", "12345678")
     with pytest.raises(ValueError):
-        obj2 = ontology.add_object("Orange", Shape.BOUNDING_BOX, 1)
+        _ = ontology.add_object("Orange", Shape.BOUNDING_BOX, 1)
     with pytest.raises(ValueError):
-        obj2 = ontology.add_object("Orange", Shape.BOUNDING_BOX, feature_node_hash=obj1.feature_node_hash)
+        _ = ontology.add_object("Orange", Shape.BOUNDING_BOX, feature_node_hash=obj1.feature_node_hash)
 
     assert len(ontology.objects) == 1
 
@@ -324,7 +324,7 @@ def test_build_nested_options():
 def build_expected_ontology():
     ontology = encord.objects.OntologyStructure()
 
-    eye = ontology.add_object(
+    _ = ontology.add_object(
         name="Eye",
         color="#D33115",
         shape=encord.objects.Shape.BOUNDING_BOX,
@@ -354,7 +354,7 @@ def build_expected_ontology():
         encord.objects.RadioAttribute, feature_node_hash="cabfedb5", name="Radio with options"
     )
     nested = radio.add_option(feature_node_hash="5d102ce6", label="Nested Option")
-    leaf = nested.add_nested_option(encord.objects.RadioAttribute, feature_node_hash="59204845", name="Leaf")
+    _ = nested.add_nested_option(encord.objects.RadioAttribute, feature_node_hash="59204845", name="Leaf")
     cls = ontology.add_classification(feature_node_hash="a39d81c0")
     cat_standing = cls.add_attribute(
         encord.objects.RadioAttribute,

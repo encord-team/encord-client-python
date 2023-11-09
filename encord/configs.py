@@ -30,6 +30,7 @@ from cryptography.hazmat.primitives.serialization import (
 
 import encord.exceptions
 from encord.constants.string_constants import ALL_RESOURCE_TYPES
+from encord.exceptions import ResourceNotFoundError
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 
 ENCORD_DOMAIN = "https://api.encord.com"
@@ -51,8 +52,6 @@ _ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
 _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 logger = logging.getLogger(__name__)
-
-from encord.exceptions import ResourceNotFoundError
 
 
 class BaseConfig(ABC):

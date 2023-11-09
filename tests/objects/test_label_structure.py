@@ -579,7 +579,7 @@ def test_classification_instances_frame_view():
     assert frame_view_1.last_edited_by == "poseidon@gmail.com"
     assert frame_view_1.last_edited_at == specific_time
     assert math.isclose(frame_view_1.confidence, 0.5)
-    assert frame_view_1.manual_annotation == False
+    assert not frame_view_1.manual_annotation
 
     classification_instance_1.remove_from_frames(1)
 

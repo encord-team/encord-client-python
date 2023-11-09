@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -11,7 +11,7 @@ class ProjectDataset:
     description: str
 
     @staticmethod
-    def from_dict(d: dict) -> ProjectDataset:
+    def from_dict(d: Dict[str, Any]) -> ProjectDataset:
         return ProjectDataset(
             dataset_hash=d["dataset_hash"],
             title=d["title"],
@@ -19,5 +19,5 @@ class ProjectDataset:
         )
 
     @classmethod
-    def from_list(cls, l: list) -> List[ProjectDataset]:
-        return [cls.from_dict(i) for i in l]
+    def from_list(cls, dataset_list: List[Dict[str, Any]]) -> List[ProjectDataset]:
+        return [cls.from_dict(i) for i in dataset_list]

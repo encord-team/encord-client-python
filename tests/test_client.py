@@ -1,20 +1,9 @@
-import uuid
-
 import pytest
 
 from encord.client import EncordClient
-from encord.configs import EncordConfig
-from encord.exceptions import (
-    AuthenticationError,
-    AuthorisationError,
-    OperationNotAllowed,
-)
+from encord.exceptions import AuthenticationError, AuthorisationError
 from encord.orm.label_row import LabelRow
 from encord.orm.project import Project
-from tests.test_data.img_group_test_blurb import IMG_GROUP_TEST_BLURB
-from tests.test_data.interpolation_test_blurb import INTERPOLATION_TEST_BLURB
-
-# from tests.test_data.test_blurb import TEST_BLURB
 
 # Dummy keys, can be used and abused
 LABEL_READ_WRITE_KEY = "Igr3RTx7B4gJbHZM0eyjOXaPr7jg22Fw22AQbYT0nQM"
@@ -40,37 +29,11 @@ def test_initialise(keys):
     assert isinstance(EncordClient.initialise(resource_id=keys[0], api_key=keys[1]), EncordClient)
 
 
-@pytest.mark.skip(reason="test not maintained")
-def test_initialise_with_config(keys):
-    config = EncordConfig(resource_id=keys[0], api_key=keys[1])
-    assert isinstance(EncordClient.initialise_with_config(config), EncordClient)
-
-
 def test_missing_key(keys):
     with pytest.raises(expected_exception=AuthenticationError) as excinfo:
         EncordClient.initialise(resource_id=keys[0])
 
     assert excinfo.value.message == "API key not provided"
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_missing_resource_id(keys):
-    with pytest.raises(expected_exception=AuthenticationError) as excinfo:
-        EncordClient.initialise(api_key=keys[1])
-
-    assert excinfo.value.message == "Project ID or dataset ID not provided"
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_invalid_key(keys):
-    with pytest.raises(expected_exception=AuthenticationError):
-        EncordClient.initialise(keys[0], uuid.uuid4())
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_invalid_resource_id(keys):
-    with pytest.raises(expected_exception=AuthenticationError):
-        EncordClient.initialise(uuid.uuid4(), keys[1])
 
 
 def test_get_project(client):
@@ -84,44 +47,3 @@ def test_get_label_blurb(keys, client):
 def test_get_label_with_invalid_id_throws_authorisation_exception(client):
     with pytest.raises(expected_exception=AuthorisationError):
         client.get_label_row("test")
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_get_label_with_write_key_throws_operation_not_allowed_exception(keys):
-    client = EncordClient.initialise(keys[0], LABEL_WRITE_KEY)
-
-    with pytest.raises(expected_exception=OperationNotAllowed):
-        client.get_label_row(keys[2])
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_save_video_label_row(keys, client):
-    blurb = client.save_label_row(keys[2], TEST_BLURB)
-    assert blurb is True
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_save_img_group_label_row(keys, client):
-    blurb = client.save_label_row(keys[3], IMG_GROUP_TEST_BLURB)
-    assert blurb is True
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_save_label_with_invalid_id_throws_authorisation_exception(keys, client):
-    with pytest.raises(expected_exception=AuthorisationError):
-        client.save_label_row("test", TEST_BLURB)
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_save_label_with_read_key_throws_operation_not_allowed_exception(keys):
-    client = EncordClient.initialise(keys[0], LABEL_READ_KEY)
-
-    with pytest.raises(expected_exception=OperationNotAllowed):
-        client.save_label_row(keys[2], TEST_BLURB)
-
-
-@pytest.mark.skip(reason="test not maintained")
-def test_object_interpolation_with_polygons(keys):
-    client = EncordClient.initialise(keys[0], LABEL_READ_KEY)
-    objects = client.object_interpolation(INTERPOLATION_TEST_BLURB, ["60f75ddb-aa68-4654-8c85-f6959dbb62eb"])
-    assert isinstance(objects, dict)

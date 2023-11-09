@@ -39,13 +39,13 @@ def teardown_function():
 def test_initialise_without_env_variables_or_arguments():
     assert _ENCORD_SSH_KEY not in os.environ
     assert _ENCORD_SSH_KEY_FILE not in os.environ
-    with pytest.raises(expected_exception=encord.exceptions.ResourceNotFoundError) as excinfo:
+    with pytest.raises(expected_exception=encord.exceptions.ResourceNotFoundError):
         EncordUserClient.create_with_ssh_private_key()
 
 
 def test_initialise_with_wrong_ssh_file_path():
     os.environ[_ENCORD_SSH_KEY_FILE] = "some_wrong/file/path"
-    with pytest.raises(expected_exception=encord.exceptions.ResourceNotFoundError) as excinfo:
+    with pytest.raises(expected_exception=encord.exceptions.ResourceNotFoundError):
         EncordUserClient.create_with_ssh_private_key()
 
 
@@ -68,12 +68,12 @@ def test_initialise_with_correct_ssh_file_content_from_env(ssh_key_content):
 
 
 def test_initialise_with_wrong_ssh_file_content():
-    with pytest.raises(expected_exception=ValueError) as excinfo:
+    with pytest.raises(expected_exception=ValueError):
         EncordUserClient.create_with_ssh_private_key("Some random content.")
 
 
 def test_initialise_with_wrong_ssh_file_content_from_env():
     assert _ENCORD_SSH_KEY_FILE not in os.environ
     os.environ[_ENCORD_SSH_KEY] = "Some random content."
-    with pytest.raises(expected_exception=ValueError) as excinfo:
+    with pytest.raises(expected_exception=ValueError):
         EncordUserClient.create_with_ssh_private_key()
