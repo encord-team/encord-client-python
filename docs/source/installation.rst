@@ -22,4 +22,3 @@ The |sdk| is available through ``pypi`` and is installed with the following comm
     Please contact us if you have any difficulties with the migration.
 
 When you have successfully installed the |sdk|, you can go to the :ref:`authentication:Authentication` page to learn how to use authentication to interact with the |sdk|.
-

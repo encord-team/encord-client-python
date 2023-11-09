@@ -34,11 +34,11 @@ def test_deserialise_payload_ok_on_correct_payload(send: MagicMock, api_client: 
     res = Response()
     res.status_code = 200
     res._content = b"""
-    { 
+    {
         "user_email": "noone@nowhere.com",
         "user_role": 0,
         "data_title": "some title",
-        "time_seconds": 123.456 
+        "time_seconds": 123.456
     }
     """
     send.return_value = res
@@ -56,7 +56,7 @@ def test_deserialise_payload_ok_on_extra_keys(send: MagicMock, api_client: ApiCl
     res = Response()
     res.status_code = 200
     res._content = b"""
-    { 
+    {
         "user_email": "noone@nowhere.com",
         "user_role": 0,
         "data_title": "some title",

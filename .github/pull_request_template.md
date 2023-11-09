@@ -16,7 +16,7 @@ _There should be enough internal documentation for a product owner to write cust
 
 # Tests
 
-_Make a quick statement and post any relevant links of CI / test results. If the testing infrastructure isn’t yet in-place, note that instead._ 
+_Make a quick statement and post any relevant links of CI / test results. If the testing infrastructure isn’t yet in-place, note that instead._
 
 - _What are the critical unit tests?_
 - _Explain the Integration Tests such that it’s clear Correctness is satisfied. Link to test results if possible._
