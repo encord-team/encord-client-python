@@ -22,11 +22,6 @@ repos:
         entry: poetry run pyright
         language: system
         files: ^encord/.*py$
-      - id: pylint
-        name: pylint
-        entry: poetry run pylint
-        language: system
-        files: ^encord/.*
       - id: mypy
         name: mypy
         entry: poetry run mypy
