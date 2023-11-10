@@ -28,20 +28,17 @@ pydantic = ">=1.7.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.1"
 pre-commit = "^3.3.0"
-black = "^23.7.0"
 sphinx-tabs = "^3.3.1"
 sphinx-autodoc-typehints = "1.15.2"
 sphinx-codeautolink = "^0.10.0"
 sphinx-copybutton = "^0.5.0"
 sphinx-toolbox = "^3.4.0"
 prettyprinter = "0.18.0"
-isort = "^5.12.0"
 pydata-sphinx-theme = "^0.8.1"
 sphinx-gallery = "^0.10.1"
 deepdiff = "^6.2.1"
 types-requests = "^2.25.0"
 pylint = "^2.17.5"
-autoflake = "^2.2.1"
 mypy = "^1.5.1"
 types-python-dateutil = "^2.8.19"
 types-tqdm = "^4.32.1"
@@ -86,4 +83,5 @@ ignore_missing_imports = true
 target-version = "py38"
 line-length = 120
 ignore = ["F401", "E402"]
+extend-select = ["W", "Q", "I"]
 exclude = ['docs']
