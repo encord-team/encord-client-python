@@ -662,7 +662,7 @@ class EncordClientDataset(EncordClient):
                     print("Processed all files, dataset data linking and task creation is performed, please wait")
 
                 failed_requests_count = 0
-            except requests.exceptions.RequestException:
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
                 failed_requests_count += 1
 
                 if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
