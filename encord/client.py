@@ -74,9 +74,6 @@ from encord.orm.dataset import (
     AddPrivateDataResponse,
     DataRow,
     DataRows,
-)
-from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset import (
     DatasetAccessSettings,
     DatasetData,
     DatasetDataLongPolling,
@@ -94,6 +91,7 @@ from encord.orm.dataset import (
     SingleImage,
     Video,
 )
+from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.label_log import LabelLog, LabelLogParams
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -123,14 +121,12 @@ from encord.orm.project import (
     CopyDatasetOptions,
     CopyLabelsOptions,
     CopyProjectPayload,
-)
-from encord.orm.project import Project as OrmProject
-from encord.orm.project import (
     ProjectCopy,
     ProjectCopyOptions,
     ProjectDataset,
     ProjectUsers,
 )
+from encord.orm.project import Project as OrmProject
 from encord.orm.workflow import (
     LabelWorkflowGraphNode,
     LabelWorkflowGraphNodePayload,
