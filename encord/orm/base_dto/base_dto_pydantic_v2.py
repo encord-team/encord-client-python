@@ -1,8 +1,11 @@
 from typing import Any, Dict, Type, TypeVar
 
 # TODO: invent some dependency version dependent type checking to get rid of this ignore
-from pydantic import ConfigDict  # type: ignore[attr-defined]
-from pydantic import BaseModel, ValidationError
+from pydantic import (  # type: ignore[attr-defined]
+    BaseModel,
+    ConfigDict,  # type: ignore[attr-defined]
+    ValidationError,
+)
 
 from encord.common.utils import snake_to_camel
 from encord.exceptions import EncordException

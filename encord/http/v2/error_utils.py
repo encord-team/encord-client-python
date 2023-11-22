@@ -1,4 +1,10 @@
-from encord.exceptions import *
+from encord.exceptions import (
+    AuthenticationError,
+    AuthorisationError,
+    MethodNotAllowedError,
+    ResourceNotFoundError,
+    UnknownException,
+)
 
 HTTP_UNAUTHORIZED = 401
 HTTP_FORBIDDEN = 403

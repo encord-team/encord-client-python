@@ -75,7 +75,7 @@ def test_serialise_image_group_with_classifications():
     deep_diff_enhanced(
         image_group_labels,
         actual,
-        exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
     # TODO: I'm only not comparing dates because of timezone differences. This should be done properly.
     #  Probably I can just save timezone information to ensure that going back will not crash the timezone.
@@ -96,7 +96,7 @@ def test_serialise_video():
     deep_diff_enhanced(
         actual,
         data_1.labels,
-        exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
 
 
@@ -115,7 +115,7 @@ def test_serialise_image_with_object_answers():
     deep_diff_enhanced(
         actual,
         native_image_data.labels,
-        exclude_regex_paths=["\['reviews'\]", "\['isDeleted'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
 
 
@@ -148,7 +148,7 @@ def test_serialise_dicom_with_dynamic_classifications():
         dicom_labels,
         # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
         # Ideally this will be fixed "properly"
-        exclude_regex_paths=["\['trackHash'\]", "\['data_links'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]", r"\['data_links'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
     # NOTE: likely we do not care about the trackHash. If we end up caring about it, we'll have to ensure that we can
     #  set it from parsing the data and keep it around when setting new answers for example.
@@ -170,7 +170,7 @@ def test_dynamic_classifications():
         video_with_dynamic_classifications.labels,
         # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
         # Ideally this will be fixed "properly"
-        exclude_regex_paths=["\['trackHash'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
 
 
@@ -193,7 +193,7 @@ def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_b
         video_with_dynamic_classifications.labels,
         # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
         # Ideally this will be fixed "properly"
-        exclude_regex_paths=["\['trackHash'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
 
 
@@ -257,5 +257,5 @@ def test_label_row_with_reviews():
         actual,
         # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
         # Ideally this will be fixed "properly"
-        exclude_regex_paths=["\['trackHash'\]", "\['createdAt'\]", "\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )

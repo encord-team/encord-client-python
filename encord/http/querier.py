@@ -18,7 +18,7 @@ import platform
 import random
 import uuid
 from contextlib import contextmanager
-from typing import Any, Generator, List, Tuple, Type, TypeVar
+from typing import Any, Generator, List, Optional, Tuple, Type, TypeVar
 
 import requests
 import requests.exceptions
@@ -27,7 +27,7 @@ from requests.adapters import HTTPAdapter, Retry
 
 from encord._version import __version__ as encord_version
 from encord.configs import BaseConfig
-from encord.exceptions import *
+from encord.exceptions import RequestException, ResourceNotFoundError
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     HEADER_USER_AGENT,

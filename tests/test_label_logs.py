@@ -1,18 +1,16 @@
-import pytest
-
-from tests.fixtures import ontology, project, user_client
-
-assert project and user_client and ontology  # Need to import all fixtures
-
 import json
 from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
 from deepdiff import DeepDiff
 
 from encord.http.querier import Querier, RequestContext
 from encord.project import Project
+from tests.fixtures import ontology, project, user_client
+
+assert project and user_client and ontology  # Need to import all fixtures
 
 
 def get_mocked_answer(payload: Any) -> MagicMock:

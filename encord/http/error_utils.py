@@ -13,7 +13,31 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from encord.exceptions import *
+from encord.exceptions import (
+    AnswerDictionaryError,
+    AuthenticationError,
+    AuthorisationError,
+    CorruptedLabelError,
+    DetectionRangeInvalidError,
+    DuplicateSshKeyError,
+    FeatureDoesNotExistError,
+    FileSizeNotSupportedError,
+    FileTypeNotSupportedError,
+    GenericServerError,
+    InvalidArgumentsError,
+    InvalidDateFormatError,
+    MethodNotAllowedError,
+    ModelFeaturesInconsistentError,
+    ModelWeightsInconsistentError,
+    MultiLabelLimitError,
+    OperationNotAllowed,
+    ResourceExistsError,
+    ResourceNotFoundError,
+    SshKeyNotFound,
+    UnknownException,
+    UploadOperationNotSupportedError,
+    WrongProjectTypeError,
+)
 
 # Error messages
 AUTHENTICATION_ERROR = ["AUTHENTICATION_ERROR"]
