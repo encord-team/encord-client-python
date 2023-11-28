@@ -4,6 +4,7 @@ import logging
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
 
 from encord.client import EncordClientProject
@@ -228,6 +229,20 @@ class LabelRowV2:
         for this data type.
         """
         return self._label_row_read_only_data.height
+
+    @property
+    def priority(self) -> Optional[float]:
+        """
+        Get workflow priority for the task associated with the data unit.
+
+        This property only works for workflow-based project.
+
+        It is None for label rows in "complete" state.
+        """
+        if not self.__is_tms2_project:
+            raise WrongProjectTypeError('"priority" property only works with workflow-based projects.')
+
+        return self._label_row_read_only_data.priority
 
     @property
     def ontology_structure(self) -> OntologyStructure:
@@ -974,6 +989,7 @@ class LabelRowV2:
         width: Optional[int]
         height: Optional[int]
         data_link: Optional[str]
+        priority: Optional[float]
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
@@ -1237,6 +1253,7 @@ class LabelRowV2:
             number_of_frames=label_row_metadata.number_of_frames,
             width=label_row_metadata.width,
             height=label_row_metadata.height,
+            priority=label_row_metadata.priority,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -1293,6 +1310,7 @@ class LabelRowV2:
             data_link=data_link,
             height=height,
             width=width,
+            priority=label_row_dict.get("priority"),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
