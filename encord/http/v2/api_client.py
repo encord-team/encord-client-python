@@ -4,7 +4,7 @@ from typing import Optional, Type, TypeVar
 from urllib.parse import urljoin
 
 import requests
-from requests import Response
+from requests import PreparedRequest, Response
 
 from encord._version import __version__ as encord_version
 from encord.configs import UserConfig
@@ -62,6 +62,23 @@ class ApiClient:
             method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
 
+        return self._request(req, result_type=result_type)
+
+    def post(
+        self, path: Path, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
+    ) -> T:
+        params_dict = params.to_dict() if params is not None else None
+        req = requests.Request(
+            method="POST",
+            url=self._build_url(path),
+            headers=self._headers(),
+            params=params_dict,
+            json=payload.to_dict() if payload is not None else None,
+        ).prepare()
+
+        return self._request(req, result_type=result_type)
+
+    def _request(self, req: PreparedRequest, result_type: Optional[Type[T]]):
         req = sign_request(req, self._config.public_key_hex, self._config.private_key)
 
         timeouts = (self._config.connect_timeout, self._config.read_timeout)
@@ -82,12 +99,15 @@ class ApiClient:
             except Exception as e:
                 raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
 
+            if result_type is None:
+                return None
+
             return result_type.from_dict(res_json)
 
     @staticmethod
     def _handle_error(response: Response, context: RequestContext):
         try:
             description = response.json()
-            handle_error_response(response.status_code, context=context, message=description["message"])
+            handle_error_response(response.status_code, context=context, message=description.get("message"))
         except Exception:
             handle_error_response(response.status_code, context=context)

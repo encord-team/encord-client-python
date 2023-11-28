@@ -17,6 +17,7 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_GET_LIMIT,
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
+from encord.http.v2.api_client import ApiClient
 from encord.objects.attributes import Attribute
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
@@ -51,6 +52,7 @@ from encord.orm.label_row import (
 from encord.orm.ontology import (  # pylint: disable=unused-import # for backward compatibility
     OntologyUserRole,
 )
+from encord.orm.project import TaskPriorityParam
 
 log = logging.getLogger(__name__)
 
@@ -88,8 +90,13 @@ class LabelRowV2:
     """
 
     def __init__(
-        self, label_row_metadata: LabelRowMetadata, project_client: EncordClientProject, ontology: Ontology
+        self,
+        label_row_metadata: LabelRowMetadata,
+        project_client: EncordClientProject,
+        ontology: Ontology,
+        api_client: ApiClient,
     ) -> None:
+        self._api_client = api_client
         self._project_client = project_client
         self._ontology = ontology
 
@@ -775,6 +782,26 @@ class LabelRowV2:
             )
 
         self._project_client.workflow_complete([self.label_hash])
+
+    def set_priority(self, priority: float, bundle: Optional[Bundle] = None) -> None:
+        """
+        Set priority for task in workflow project.
+
+        Args:
+            priority: float value from 0.0 to 1.0, where 1.0 is the highest priority
+            bundle: if passed, priorities are set in bundled way to multiple LabelRowV2 objects that share the same bundle object at once.
+        """
+        if not self.__is_tms2_project:
+            raise WrongProjectTypeError("Setting priority only possible for workflow-based projects")
+
+        payload = TaskPriorityParam(priorities=[(self.data_hash, priority)])
+
+        self._api_client.post(
+            Path(f"projects/{self._project_client.project_hash}/priorities"),
+            params=None,
+            payload=payload,
+            result_type=None,
+        )
 
     class FrameView:
         """

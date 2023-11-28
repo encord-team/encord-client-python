@@ -18,10 +18,12 @@ import datetime
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
+from uuid import UUID
 
 from encord.common.enum import StringEnum
 from encord.orm import base_orm
+from encord.orm.base_dto import BaseDTO
 
 
 class Project(base_orm.BaseORM):
@@ -77,6 +79,7 @@ class Project(base_orm.BaseORM):
             ("label_rows", (list, str)),
             ("ontology_hash", str),
             ("source_projects", list),
+            ("workflow_manager_uuid", str),
         ]
     )
 
@@ -143,6 +146,10 @@ class Project(base_orm.BaseORM):
     @property
     def last_edited_at(self) -> datetime.datetime:
         return self["last_edited_at"]
+
+    @property
+    def workflow_manager_uuid(self) -> UUID:
+        return self["workflow_manager_uuid"]
 
 
 class ProjectCopy:
@@ -300,3 +307,7 @@ class ProjectImporterCvatInfo(base_orm.BaseORM):
             ("export_type", CvatExportType),
         ]
     )
+
+
+class TaskPriorityParam(BaseDTO):
+    priorities: List[Tuple[str, float]]

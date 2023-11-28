@@ -706,6 +706,10 @@ class EncordClientProject(EncordClient):
     DEPRECATED - prefer using the :class:`encord.project.Project` instead
     """
 
+    @property
+    def project_hash(self) -> str:
+        return self._querier._config.resource_id  # type: ignore[attr-defined]
+
     def get_project(self, include_labels_metadata=True) -> OrmProject:
         """
         Retrieve project info (pointers to data, labels).
