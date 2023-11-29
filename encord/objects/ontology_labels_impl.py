@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
 
@@ -1382,7 +1382,18 @@ class LabelRowV2:
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
-        object_instance.set_for_frames(coordinates=coordinates, frames=frame, **asdict(object_frame_instance_info))
+        object_instance.set_for_frames(
+            coordinates=coordinates,
+            frames=frame,
+            created_at=object_frame_instance_info.created_at,
+            created_by=object_frame_instance_info.created_by,
+            last_edited_at=object_frame_instance_info.last_edited_at,
+            last_edited_by=object_frame_instance_info.last_edited_by,
+            confidence=object_frame_instance_info.confidence,
+            manual_annotation=object_frame_instance_info.manual_annotation,
+            reviews=object_frame_instance_info.reviews,
+            is_deleted=object_frame_instance_info.is_deleted,
+        )
         return object_instance
 
     def _add_coordinates_to_object_instance(
@@ -1396,7 +1407,18 @@ class LabelRowV2:
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
-        object_instance.set_for_frames(coordinates=coordinates, frames=frame, **asdict(object_frame_instance_info))
+        object_instance.set_for_frames(
+            coordinates=coordinates,
+            frames=frame,
+            created_at=object_frame_instance_info.created_at,
+            created_by=object_frame_instance_info.created_by,
+            last_edited_at=object_frame_instance_info.last_edited_at,
+            last_edited_by=object_frame_instance_info.last_edited_by,
+            confidence=object_frame_instance_info.confidence,
+            manual_annotation=object_frame_instance_info.manual_annotation,
+            reviews=object_frame_instance_info.reviews,
+            is_deleted=object_frame_instance_info.is_deleted,
+        )
 
     def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
         if "boundingBox" in frame_object_label:
@@ -1455,7 +1477,17 @@ class LabelRowV2:
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
-        classification_instance.set_for_frames(frame, **asdict(frame_view))
+        classification_instance.set_for_frames(
+            frame,
+            created_at=frame_view.created_at,
+            created_by=frame_view.created_by,
+            confidence=frame_view.confidence,
+            manual_annotation=frame_view.manual_annotation,
+            last_edited_at=frame_view.last_edited_at,
+            last_edited_by=frame_view.last_edited_by,
+            reviews=frame_view.reviews,
+        )
+
         answers_dict = classification_answers[classification_hash]["classifications"]
         self._add_static_answers_from_dict(classification_instance, answers_dict)
 
@@ -1470,8 +1502,16 @@ class LabelRowV2:
         object_hash = frame_classification_label["classificationHash"]
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
-
-        classification_instance.set_for_frames(frame, **asdict(frame_view))
+        classification_instance.set_for_frames(
+            frame,
+            created_at=frame_view.created_at,
+            created_by=frame_view.created_by,
+            confidence=frame_view.confidence,
+            manual_annotation=frame_view.manual_annotation,
+            last_edited_at=frame_view.last_edited_at,
+            last_edited_by=frame_view.last_edited_by,
+            reviews=frame_view.reviews,
+        )
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
