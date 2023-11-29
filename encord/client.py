@@ -135,7 +135,7 @@ from encord.orm.workflow import (
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology
-from encord.utilities.client_utilities import optional_set_to_list, parse_datetime
+from encord.utilities.client_utilities import optional_datetime_to_iso_str, optional_set_to_list
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 LONG_POLLING_RESPONSE_RETRY_N = 3
@@ -354,8 +354,8 @@ class EncordClientDataset(EncordClient):
             UnknownError: If an error occurs while retrieving the dataset.
         """
 
-        created_before = parse_datetime("created_before", created_before)
-        created_after = parse_datetime("created_after", created_after)
+        created_before = optional_datetime_to_iso_str("created_before", created_before)
+        created_after = optional_datetime_to_iso_str("created_after", created_after)
 
         data_rows = cast(
             List[DataRow],
@@ -747,8 +747,8 @@ class EncordClientProject(EncordClient):
         label_statuses_values = (
             [label_status.value for label_status in label_statuses] if label_statuses is not None else None
         )
-        edited_before = parse_datetime("edited_before", edited_before)
-        edited_after = parse_datetime("edited_after", edited_after)
+        edited_before = optional_datetime_to_iso_str("edited_before", edited_before)
+        edited_after = optional_datetime_to_iso_str("edited_after", edited_after)
 
         payload = {
             "edited_before": edited_before,

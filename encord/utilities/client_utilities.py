@@ -19,7 +19,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Set, TypeVar, Union
 
-from dateutil import parser as datetime_parser
+from encord.common.time_parser import parse_datetime
 
 
 def pretty_print(data):
@@ -120,11 +120,11 @@ class CvatImporterError:
     issues: Issues
 
 
-def parse_datetime(key: str, val: Optional[Union[str, datetime]]) -> Optional[str]:
+def optional_datetime_to_iso_str(key: str, val: Optional[Union[str, datetime]]) -> Optional[str]:
     if not val:
         return None
     if isinstance(val, str):
-        return datetime_parser.isoparse(val).isoformat()
+        return parse_datetime(val).isoformat()
     if isinstance(val, datetime):
         return val.isoformat()
     else:
