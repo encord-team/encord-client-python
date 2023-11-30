@@ -2,6 +2,8 @@ from datetime import datetime
 
 from dateutil import parser
 
+from encord.common.constants import DATETIME_LONG_STRING_FORMAT
+
 
 def parse_datetime(time_string: str) -> datetime:
     """
@@ -14,7 +16,7 @@ def parse_datetime(time_string: str) -> datetime:
     and falling back to the most complicated logic only in case of all other attempt have failed.
     """
     try:
-        return datetime.strptime(time_string, "%a, %d %b %Y %H:%M:%S %Z")
+        return datetime.strptime(time_string, DATETIME_LONG_STRING_FORMAT)
     except Exception:
         pass
 
