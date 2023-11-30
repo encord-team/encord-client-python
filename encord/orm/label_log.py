@@ -5,23 +5,8 @@ from datetime import datetime
 from enum import IntEnum
 from typing import Optional
 
+from encord.common.deprecated import deprecated
 from encord.orm.base_dto import BaseDTO
-
-
-@dataclass(frozen=True)
-class LabelLog:
-    log_hash: str
-    user_hash: str
-    user_email: str
-    annotation_hash: str  # Legacy value. Replaced by identifier.
-    identifier: str
-    data_hash: str
-    feature_hash: str
-    action: Action
-    label_name: str
-    time_taken: int
-    created_at: datetime
-    frame: int
 
 
 class Action(IntEnum):
@@ -57,6 +42,25 @@ class Action(IntEnum):
     BUFFERING_OVERLAY_SHOWN = 30
     BITRATE_WARNING_SHOWN = 31
     SEEKING_OVERLAY_SHOWN = 32
+
+
+class LabelLog(BaseDTO):
+    log_hash: str
+    user_hash: str
+    user_email: str
+    data_hash: str
+    action: Action
+    created_at: datetime
+    identifier: Optional[str]
+    feature_hash: Optional[str]
+    label_name: Optional[str]
+    time_taken: Optional[int]
+    frame: Optional[int]
+
+    @property
+    @deprecated(version="0.1.100", alternative="LabelLog.identifier")
+    def annotation_hash(self) -> Optional[str]:
+        return self.identifier
 
 
 class LabelLogParams(BaseDTO):
