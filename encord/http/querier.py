@@ -18,8 +18,7 @@ import platform
 import random
 import uuid
 from contextlib import contextmanager
-
-from typing import Any, Generator, List, Optional, Tuple, Type, TypeVar, Dict, Union
+from typing import Any, Dict, Generator, List, Optional, Tuple, Type, TypeVar, Union
 
 import requests
 import requests.exceptions
@@ -53,7 +52,9 @@ class Querier:
     def __init__(self, config: BaseConfig):
         self._config = config
 
-    def basic_getter(self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False) -> T:
+    def basic_getter(
+        self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+    ) -> T:
         """Single DB object getter."""
         request = self._request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
         res, context = self._execute(request, retryable=retryable)
@@ -62,13 +63,19 @@ class Querier:
         else:
             raise ResourceNotFoundError("Resource not found.", context=context)
 
-    def get_multiple(self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False) -> List[T]:
+    def get_multiple(
+        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+    ) -> List[T]:
         return self._request_multiple(QueryMethods.GET, object_type, uid, payload)
 
-    def post_multiple(self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False) -> List[T]:
+    def post_multiple(
+        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+    ) -> List[T]:
         return self._request_multiple(QueryMethods.POST, object_type, uid, payload)
 
-    def put_multiple(self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False) -> List[T]:
+    def put_multiple(
+        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+    ) -> List[T]:
         return self._request_multiple(QueryMethods.PUT, object_type, uid, payload)
 
     def _request_multiple(
@@ -94,7 +101,6 @@ class Querier:
             return object_type(**item)  # type: ignore
         else:
             return object_type(item)  # type: ignore
-
 
     @staticmethod
     def _serialise_payload(payload: PayloadType) -> Optional[Dict[str, Any]]:
@@ -132,7 +138,7 @@ class Querier:
         else:
             raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
 
-    def basic_put(self, db_object_type, uid, payload: PayloadType, enable_logging: bool = True, enable_logging=True):
+    def basic_put(self, db_object_type, uid, payload: PayloadType, retryable: bool = True, enable_logging: bool = True):
         """Single DB object put request."""
         request = self._request(
             QueryMethods.PUT,
@@ -182,7 +188,6 @@ class Querier:
         request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
 
         return request
-
 
     def _execute(self, request: Request, retryable=False, enable_logging: bool = True) -> Tuple[Any, RequestContext]:
         """Execute a request."""
