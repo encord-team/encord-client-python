@@ -51,6 +51,7 @@ from encord.orm.label_row import (
 from encord.orm.ontology import (  # pylint: disable=unused-import # for backward compatibility
     OntologyUserRole,
 )
+from encord.orm.project import TaskPriorityParams
 
 log = logging.getLogger(__name__)
 
@@ -88,7 +89,10 @@ class LabelRowV2:
     """
 
     def __init__(
-        self, label_row_metadata: LabelRowMetadata, project_client: EncordClientProject, ontology: Ontology
+        self,
+        label_row_metadata: LabelRowMetadata,
+        project_client: EncordClientProject,
+        ontology: Ontology,
     ) -> None:
         self._project_client = project_client
         self._ontology = ontology
@@ -148,7 +152,7 @@ class LabelRowV2:
 
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
-                '"label"_status property returns incorrect results for workflow-based projects.\
+                '"label_status" property returns incorrect results for workflow-based projects.\
              Please use "workflow_graph_node" property instead.'
             )
 
@@ -776,6 +780,20 @@ class LabelRowV2:
 
         self._project_client.workflow_complete([self.label_hash])
 
+    def set_priority(self, priority: float) -> None:
+        """
+        Set priority for task in workflow project.
+
+        Args:
+            priority: float value from 0.0 to 1.0, where 1.0 is the highest priority
+        """
+        if not self.__is_tms2_project:
+            raise WrongProjectTypeError("Setting priority only possible for workflow-based projects")
+
+        params = TaskPriorityParams(priorities=[(self.data_hash, priority)])
+
+        self._project_client.workflow_set_priority(params)
+
     class FrameView:
         """
         This class can be used to inspect what object/classification instances are on a given frame or
@@ -1288,7 +1306,7 @@ class LabelRowV2:
         else:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
-        return self.LabelRowReadOnlyData(
+        return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
             dataset_hash=label_row_dict["dataset_hash"],
             dataset_title=label_row_dict["dataset_title"],
@@ -1297,7 +1315,9 @@ class LabelRowV2:
             data_type=data_type,
             label_status=LabelStatus(label_row_dict["label_status"]),
             annotation_task_status=label_row_dict.get("annotation_task_status"),
-            workflow_graph_node=label_row_dict.get("workflow_graph_node"),
+            workflow_graph_node=label_row_dict.get(
+                "workflow_graph_node", self._label_row_read_only_data.workflow_graph_node
+            ),
             is_shadow_data=self.is_shadow_data,
             created_at=label_row_dict["created_at"],
             last_edited_at=label_row_dict["last_edited_at"],
@@ -1310,7 +1330,7 @@ class LabelRowV2:
             data_link=data_link,
             height=height,
             width=width,
-            priority=label_row_dict.get("priority"),
+            priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):

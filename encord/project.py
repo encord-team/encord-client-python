@@ -7,7 +7,6 @@ from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.analytics import (
@@ -39,11 +38,8 @@ class Project:
     Access project related data and manipulate the project.
     """
 
-    def __init__(
-        self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology, client_v2: ApiClient
-    ):
+    def __init__(self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology):
         self._client = client
-        self._client_v2 = client_v2
         self._project_instance = project_instance
         self._ontology = ontology
 
@@ -997,9 +993,7 @@ class Project:
         )
 
         while True:
-            page = self._client_v2.get(
-                Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
-            )
+            page = self._client.get_collaborator_timers_page(params)
 
             yield from page.results
 
