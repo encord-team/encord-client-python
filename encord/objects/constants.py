@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+# for backwards compatibility
+from encord.common.constants import DATETIME_LONG_STRING_FORMAT
+
 DEFAULT_CONFIDENCE = 1.0
 DEFAULT_MANUAL_ANNOTATION = True
-DATETIME_LONG_STRING_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
 AVAILABLE_COLORS = (
     "#D33115",
     "#E27300",

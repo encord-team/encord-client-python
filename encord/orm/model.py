@@ -18,8 +18,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from dateutil.parser import parse
-
+from encord.common.time_parser import parse_datetime
 from encord.constants.model import AutomationModels
 from encord.exceptions import EncordException
 from encord.orm import base_orm
@@ -138,7 +137,7 @@ class TrainingMetadata(Formatter):
         if created_at is None:
             return None
 
-        return parse(created_at)
+        return parse_datetime(created_at)
 
     @staticmethod
     def get_model_training_labels(json_dict: dict) -> Optional[ModelTrainingLabel]:

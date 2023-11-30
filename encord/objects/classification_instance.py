@@ -16,8 +16,7 @@ from typing import (
     Union,
 )
 
-from dateutil.parser import parse
-
+from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer, ValueType, _get_static_answer_map
@@ -449,12 +448,12 @@ class ClassificationInstance:
         @staticmethod
         def from_dict(d: dict) -> ClassificationInstance.FrameData:
             if "lastEditedAt" in d:
-                last_edited_at = parse(d["lastEditedAt"])
+                last_edited_at = parse_datetime(d["lastEditedAt"])
             else:
                 last_edited_at = datetime.now()
 
             return ClassificationInstance.FrameData(
-                created_at=parse(d["createdAt"]),
+                created_at=parse_datetime(d["createdAt"]),
                 created_by=d["createdBy"],
                 confidence=d["confidence"],
                 manual_annotation=d["manualAnnotation"],

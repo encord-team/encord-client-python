@@ -7,10 +7,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from dateutil import parser as datetime_parser
-
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.common.deprecated import deprecated
+from encord.common.time_parser import parse_datetime
 from encord.configs import SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
@@ -242,8 +241,8 @@ class EncordUserClient:
         )
 
         def convert_dates(dataset):
-            dataset["created_at"] = datetime_parser.isoparse(dataset["created_at"])
-            dataset["last_edited_at"] = datetime_parser.isoparse(dataset["last_edited_at"])
+            dataset["created_at"] = parse_datetime(dataset["created_at"])
+            dataset["last_edited_at"] = parse_datetime(dataset["last_edited_at"])
             return dataset
 
         return [
@@ -643,7 +642,7 @@ class EncordUserClient:
 
             if clause.value.endswith("before") or clause.value.endswith("after"):
                 if isinstance(val, str):
-                    val = datetime_parser.isoparse(val)
+                    val = parse_datetime(val)
                 if isinstance(val, datetime):
                     val = val.isoformat()
                 else:

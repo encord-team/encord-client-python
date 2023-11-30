@@ -4,8 +4,7 @@
 from datetime import datetime
 from typing import Set
 
-from dateutil import parser
-
+from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.orm.dataset import Dataset, StorageLocation
 
@@ -61,10 +60,10 @@ def test_dataset_fields():
 
     assert data_row.uid == data_row_json["data_hash"]
     assert data_row.title == data_row_json["data_title"]
-    assert data_row.created_at == parser.parse(data_row_json["created_at"])
+    assert data_row.created_at == parse_datetime(data_row_json["created_at"])
     assert data_row.data_type == DataType.from_upper_case_string(data_row_json["data_type"])
     assert data_row.client_metadata == data_row_json["client_metadata"]
-    assert data_row.last_edited_at == parser.parse(data_row_json["last_edited_at"])
+    assert data_row.last_edited_at == parse_datetime(data_row_json["last_edited_at"])
     assert data_row.width == data_row_json["width"]
     assert data_row.height == data_row_json["height"]
     assert data_row.file_link == data_row_json["file_link"]

@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from encord import Project
+from encord.common.time_parser import parse_datetime
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.analytics import (
@@ -31,7 +32,7 @@ def construct_timer(
 
 @patch.object(ApiClient, "get")
 def test_project_collaborator_timers_empty_page(api_client_get: MagicMock, project: Project):
-    after_time = datetime.fromisoformat("2023-01-01T21:00:00")
+    after_time = parse_datetime("2023-01-01T21:00:00")
 
     api_client_get.return_value = Page[CollaboratorTimer](results=[])
 
@@ -43,7 +44,7 @@ def test_project_collaborator_timers_empty_page(api_client_get: MagicMock, proje
 
 @patch.object(ApiClient, "get")
 def test_project_collaborator_timers_single_page(api_client_get: MagicMock, project: Project):
-    after_time = datetime.fromisoformat("2023-01-01T21:00:00")
+    after_time = parse_datetime("2023-01-01T21:00:00")
 
     return_value = Page[CollaboratorTimer](
         results=[
@@ -72,7 +73,7 @@ def test_project_collaborator_timers_single_page(api_client_get: MagicMock, proj
 
 @patch.object(ApiClient, "get")
 def test_project_collaborator_timers_multi_page(api_client_get: MagicMock, project: Project):
-    after_time = datetime.fromisoformat("2023-01-01T21:00:00")
+    after_time = parse_datetime("2023-01-01T21:00:00")
 
     return_value_page_1 = Page[CollaboratorTimer](
         results=[

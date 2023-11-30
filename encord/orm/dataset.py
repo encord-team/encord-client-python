@@ -22,10 +22,9 @@ from enum import Enum, IntEnum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from dateutil import parser
-
 from encord.common.constants import DATETIME_STRING_FORMAT
 from encord.common.deprecated import deprecated
+from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
@@ -155,8 +154,8 @@ class ImageData:
             file_size=json_dict["file_size"],
             image_hash=json_dict["image_hash"],
             storage_location=json_dict["storage_location"],
-            created_at=parser.parse(json_dict["created_at"]),
-            last_edited_at=parser.parse(json_dict["last_edited_at"]),
+            created_at=parse_datetime(json_dict["created_at"]),
+            last_edited_at=parse_datetime(json_dict["last_edited_at"]),
             height=json_dict["height"],
             width=json_dict["width"],
             signed_url=json_dict.get("signed_url"),
@@ -270,7 +269,7 @@ class DataRow(dict, Formatter):
 
     @property
     def created_at(self) -> datetime:
-        return parser.parse(self["created_at"])
+        return parse_datetime(self["created_at"])
 
     @created_at.setter
     def created_at(self, value: datetime) -> None:
@@ -336,7 +335,7 @@ class DataRow(dict, Formatter):
 
     @property
     def last_edited_at(self) -> datetime:
-        return parser.parse(self["last_edited_at"])
+        return parse_datetime(self["last_edited_at"])
 
     @property
     def file_link(self) -> Optional[str]:
@@ -484,9 +483,9 @@ class DataRow(dict, Formatter):
             title=json_dict["data_title"],
             # The API server currently returns upper-cased DataType strings.
             data_type=data_type,
-            created_at=parser.parse(json_dict["created_at"]),
+            created_at=parse_datetime(json_dict["created_at"]),
             client_metadata=json_dict.get("client_metadata"),
-            last_edited_at=parser.parse(json_dict["last_edited_at"]),
+            last_edited_at=parse_datetime(json_dict["last_edited_at"]),
             width=json_dict["width"],
             height=json_dict["height"],
             file_link=json_dict["file_link"],
