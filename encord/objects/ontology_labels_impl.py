@@ -780,13 +780,12 @@ class LabelRowV2:
 
         self._project_client.workflow_complete([self.label_hash])
 
-    def set_priority(self, priority: float, bundle: Optional[Bundle] = None) -> None:
+    def set_priority(self, priority: float) -> None:
         """
         Set priority for task in workflow project.
 
         Args:
             priority: float value from 0.0 to 1.0, where 1.0 is the highest priority
-            bundle: if passed, priorities are set in bundled way to multiple LabelRowV2 objects that share the same bundle object at once.
         """
         if not self.__is_tms2_project:
             raise WrongProjectTypeError("Setting priority only possible for workflow-based projects")
