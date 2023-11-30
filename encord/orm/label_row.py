@@ -280,6 +280,8 @@ class LabelRowMetadata(Formatter):
     """Only available for the VIDEO data_type"""
     height: Optional[int]
     width: Optional[int]
+    priority: Optional[float] = None
+    """Only available for not complete tasks"""
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -315,6 +317,7 @@ class LabelRowMetadata(Formatter):
             frames_per_second=json_dict.get("frames_per_second", None),
             height=json_dict.get("height"),
             width=json_dict.get("width"),
+            priority=json_dict.get("priority"),
         )
 
     @classmethod
