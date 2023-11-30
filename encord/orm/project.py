@@ -309,5 +309,5 @@ class ProjectImporterCvatInfo(base_orm.BaseORM):
     )
 
 
-class TaskPriorityParam(BaseDTO):
+class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]

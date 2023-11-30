@@ -116,7 +116,7 @@ class EncordUserClient:
         """
         config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
         querier = Querier(config)
-        client = EncordClientProject(querier=querier, config=config)
+        client = EncordClientProject(querier=querier, config=config, api_client=self._api_client)
 
         orm_project = client.get_project(include_labels_metadata=False)
 
@@ -129,7 +129,7 @@ class EncordUserClient:
         orm_ontology = querier.basic_getter(OrmOntology, config.resource_id)
         project_ontology = Ontology(querier, config, orm_ontology)
 
-        return Project(client, orm_project, project_ontology, client_v2=self._api_client)
+        return Project(client, orm_project, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)

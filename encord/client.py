@@ -49,7 +49,7 @@ from typing import Iterable, List, Optional, Tuple, Union, cast
 import requests
 
 import encord.exceptions
-from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig
+from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig, SshConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import (
@@ -66,6 +66,13 @@ from encord.http.utils import (
     upload_images_to_encord,
     upload_to_signed_url_list,
     upload_video_to_encord,
+)
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
+from encord.orm.analytics import (
+    CollaboratorTimer,
+    CollaboratorTimerParams,
+    CollaboratorTimersGroupBy,
 )
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.cloud_integration import CloudIntegration
@@ -125,6 +132,7 @@ from encord.orm.project import (
     ProjectCopyOptions,
     ProjectDataset,
     ProjectUsers,
+    TaskPriorityParams,
 )
 from encord.orm.project import Project as OrmProject
 from encord.orm.workflow import (
@@ -145,15 +153,27 @@ LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 logger = logging.getLogger(__name__)
 
 
-class EncordClient(object):
+class EncordClient:
     """
     Encord client. Allows you to query db items associated
     with a project (e.g. label rows, datasets).
     """
 
-    def __init__(self, querier: Querier, config: Config):
+    def __init__(self, querier: Querier, config: Config, api_client: Optional[ApiClient] = None):
         self._querier = querier
         self._config: Config = config
+        self._api_client = api_client
+
+    def _get_api_client(self) -> ApiClient:
+        if not isinstance(self._config, SshConfig):
+            raise EncordException(
+                "This functionality requires private SSH key authentication. API keys are not supported."
+            )
+
+        if not self._api_client:
+            raise RuntimeError("ApiClient should exist when authenticated with SSH key.")
+
+        return self._api_client
 
     @staticmethod
     def initialise(
@@ -708,7 +728,7 @@ class EncordClientProject(EncordClient):
 
     @property
     def project_hash(self) -> str:
-        return self._querier._config.resource_id  # type: ignore[attr-defined]
+        return self._config.resource_id  # type: ignore[attr-defined]
 
     def get_project(self, include_labels_metadata=True) -> OrmProject:
         """
@@ -1317,6 +1337,19 @@ class EncordClientProject(EncordClient):
             LabelWorkflowGraphNode,
             label_hashes,
             payload=LabelWorkflowGraphNodePayload({"action": WorkflowAction.COMPLETE.value}),
+        )
+
+    def workflow_set_priority(self, params: TaskPriorityParams) -> None:
+        self._get_api_client().post(
+            Path(f"projects/{self.project_hash}/priorities"),
+            params=None,
+            payload=params,
+            result_type=None,
+        )
+
+    def get_collaborator_timers_page(self, params: CollaboratorTimerParams) -> Page[CollaboratorTimer]:
+        return self._get_api_client().get(
+            Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
         )
 
 

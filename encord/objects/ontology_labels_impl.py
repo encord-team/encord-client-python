@@ -17,7 +17,6 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_GET_LIMIT,
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
-from encord.http.v2.api_client import ApiClient
 from encord.objects.attributes import Attribute
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
@@ -52,7 +51,7 @@ from encord.orm.label_row import (
 from encord.orm.ontology import (  # pylint: disable=unused-import # for backward compatibility
     OntologyUserRole,
 )
-from encord.orm.project import TaskPriorityParam
+from encord.orm.project import TaskPriorityParams
 
 log = logging.getLogger(__name__)
 
@@ -94,9 +93,7 @@ class LabelRowV2:
         label_row_metadata: LabelRowMetadata,
         project_client: EncordClientProject,
         ontology: Ontology,
-        api_client: ApiClient,
     ) -> None:
-        self._api_client = api_client
         self._project_client = project_client
         self._ontology = ontology
 
@@ -794,14 +791,9 @@ class LabelRowV2:
         if not self.__is_tms2_project:
             raise WrongProjectTypeError("Setting priority only possible for workflow-based projects")
 
-        payload = TaskPriorityParam(priorities=[(self.data_hash, priority)])
+        params = TaskPriorityParams(priorities=[(self.data_hash, priority)])
 
-        self._api_client.post(
-            Path(f"projects/{self._project_client.project_hash}/priorities"),
-            params=None,
-            payload=payload,
-            result_type=None,
-        )
+        self._project_client.workflow_set_priority(params)
 
     class FrameView:
         """
