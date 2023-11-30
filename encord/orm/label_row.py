@@ -20,6 +20,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from encord.common.time_parser import parse_datetime
 from encord.orm import base_orm
 from encord.orm.formatter import Formatter
 
@@ -285,10 +286,10 @@ class LabelRowMetadata(Formatter):
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
         created_at = json_dict.get("created_at", None)
         if created_at is not None:
-            created_at = datetime.datetime.fromisoformat(created_at)
+            created_at = parse_datetime(created_at)
         last_edited_at = json_dict.get("last_edited_at", None)
         if last_edited_at is not None:
-            last_edited_at = datetime.datetime.fromisoformat(last_edited_at)
+            last_edited_at = parse_datetime(last_edited_at)
 
         annotation_task_status = (
             AnnotationTaskStatus(json_dict["annotation_task_status"])

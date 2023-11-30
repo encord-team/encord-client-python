@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from deepdiff import DeepDiff
 
+from encord.common.time_parser import parse_datetime
 from encord.http.querier import Querier, RequestContext
 from encord.project import Project
 from tests.fixtures import ontology, project, user_client
@@ -22,8 +23,8 @@ def get_mocked_answer(payload: Any) -> MagicMock:
 
 @patch.object(Querier, "_execute")
 def test_get_label_logs_filter_by_datetime(querier_mock: MagicMock, project: Project):
-    after_time = datetime.fromisoformat("2023-01-01T21:00:00")
-    before_time = datetime.fromisoformat("2023-01-02T21:00:00")
+    after_time = parse_datetime("2023-01-01T21:00:00")
+    before_time = parse_datetime("2023-01-02T21:00:00")
     querier_mock.return_value = ([], RequestContext())
 
     _ = project.get_label_logs(after=after_time, before=before_time)
