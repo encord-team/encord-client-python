@@ -1,4 +1,6 @@
 import platform
+import random
+import uuid
 from pathlib import Path
 from typing import Optional, Type, TypeVar
 from urllib.parse import urljoin
@@ -42,8 +44,25 @@ class ApiClient:
             return RequestContext()
 
     @staticmethod
+    def _exception_context(request: requests.PreparedRequest) -> RequestContext:
+        try:
+            x_cloud_trace_context = request.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
+            if x_cloud_trace_context is None:
+                return RequestContext()
+
+            x_cloud_trace_context = x_cloud_trace_context.split(";")[0]
+            trace_id, span_id = (x_cloud_trace_context.split("/") + [None, None])[:2]
+            return RequestContext(trace_id=trace_id, span_id=span_id)
+        except Exception:
+            return RequestContext()
+
+    @staticmethod
     def _user_agent():
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
+
+    @staticmethod
+    def _tracing_id() -> str:
+        return f"{uuid.uuid4().hex}/{random.randint(1, 2**63 - 1)};o=1"
 
     def _build_url(self, path: Path) -> str:
         return urljoin(self._domain, str(self._base_path / path))
@@ -54,6 +73,7 @@ class ApiClient:
             "Accept-Encoding": "gzip",
             "Content-Type": "application/json",
             HEADER_USER_AGENT: self._user_agent(),
+            HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
     def get(self, path: Path, params: Optional[BaseDTO], result_type: Type[T]) -> T:
@@ -88,8 +108,9 @@ class ApiClient:
             backoff_factor=req_settings.backoff_factor,
             connect_retries=req_settings.connection_retries,
         ) as session:
+            context = self._exception_context(req)
+
             res = session.send(req, timeout=timeouts)
-            context = self._exception_context_from_response(res)
 
             if res.status_code != 200:
                 self._handle_error(res, context)
