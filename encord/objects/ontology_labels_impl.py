@@ -155,7 +155,7 @@ class LabelRowV2:
 
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
-                '"label"_status property returns incorrect results for workflow-based projects.\
+                '"label_status" property returns incorrect results for workflow-based projects.\
              Please use "workflow_graph_node" property instead.'
             )
 
@@ -1315,7 +1315,7 @@ class LabelRowV2:
         else:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
-        return self.LabelRowReadOnlyData(
+        return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
             dataset_hash=label_row_dict["dataset_hash"],
             dataset_title=label_row_dict["dataset_title"],
@@ -1324,7 +1324,9 @@ class LabelRowV2:
             data_type=data_type,
             label_status=LabelStatus(label_row_dict["label_status"]),
             annotation_task_status=label_row_dict.get("annotation_task_status"),
-            workflow_graph_node=label_row_dict.get("workflow_graph_node"),
+            workflow_graph_node=label_row_dict.get(
+                "workflow_graph_node", self._label_row_read_only_data.workflow_graph_node
+            ),
             is_shadow_data=self.is_shadow_data,
             created_at=label_row_dict["created_at"],
             last_edited_at=label_row_dict["last_edited_at"],
@@ -1337,7 +1339,7 @@ class LabelRowV2:
             data_link=data_link,
             height=height,
             width=width,
-            priority=label_row_dict.get("priority"),
+            priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
