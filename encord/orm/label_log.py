@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import IntEnum
 from typing import Optional
 
+from encord.common.deprecated import deprecated
 from encord.orm.base_dto import BaseDTO
 
 
@@ -54,7 +55,11 @@ class LabelLog(BaseDTO):
     label_name: Optional[str]
     time_taken: Optional[int]
     frame: Optional[int]
-    annotation_hash: Optional[str]  # Legacy value. Replaced by identifier.
+
+    @property
+    @deprecated(version="0.1.99", alternative="LabelLog.identifier")
+    def annotation_hash(self) -> Optional[str]:
+        return self.identifier
 
 
 class LabelLogParams(BaseDTO):

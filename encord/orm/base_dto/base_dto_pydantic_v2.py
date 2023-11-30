@@ -13,7 +13,7 @@ from encord.orm.base_dto.base_dto_interface import BaseDTOInterface, T
 
 
 class BaseDTO(BaseDTOInterface, BaseModel):
-    model_config = ConfigDict(extra="allow", populate_by_name=True, alias_generator=snake_to_camel)
+    model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)
 
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
@@ -30,7 +30,7 @@ DataT = TypeVar("DataT")
 
 
 class GenericBaseDTO(BaseDTOInterface, BaseModel):
-    model_config = ConfigDict(extra="allow", populate_by_name=True, alias_generator=snake_to_camel)
+    model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)
 
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
