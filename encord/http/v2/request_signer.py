@@ -39,8 +39,11 @@ def sign_request(request: PreparedRequest, key_id: str, private_key: Ed25519Priv
     assert request.method is not None
 
     content_digest = _sfv_str("sha-256", hashlib.sha256(_request_body_bytes(request)).digest())
+    # Moving 'created' time to be a bit in the past, since sometimes requests are failing
+    # due to the clock skew.
+    # This is to be fixed on server side and removed from here.
     signature_params: Dict[str, Union[str, int]] = {
-        "created": int(datetime.now().timestamp()),
+        "created": int(datetime.now().timestamp()) - 30,
         "keyid": key_id,
         "alg": "ed25519",
     }
