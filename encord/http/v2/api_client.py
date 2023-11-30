@@ -82,7 +82,7 @@ class ApiClient:
             method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
 
-        return self._request(req, result_type=result_type)
+        return self._request(req, result_type=result_type)  # type: ignore
 
     def post(
         self, path: Path, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
@@ -96,7 +96,7 @@ class ApiClient:
             json=payload.to_dict() if payload is not None else None,
         ).prepare()
 
-        return self._request(req, result_type=result_type)
+        return self._request(req, result_type=result_type)  # type: ignore
 
     def _request(self, req: PreparedRequest, result_type: Optional[Type[T]]):
         req = sign_request(req, self._config.public_key_hex, self._config.private_key)
