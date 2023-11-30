@@ -62,13 +62,13 @@ def test_serialise_image_group_with_classifications():
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(empty_image_group_ontology), Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(empty_image_group_ontology))
     label_row.from_labels_dict(empty_image_group_labels)
 
     actual = label_row.to_encord_dict()
     assert empty_image_group_labels == actual
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(image_group_ontology), Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(image_group_ontology))
     label_row.from_labels_dict(image_group_labels)
 
     actual = label_row.to_encord_dict()
@@ -87,7 +87,7 @@ def test_serialise_video():
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(data_1.ontology), Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(data_1.ontology))
     label_row.from_labels_dict(data_1.labels)
 
     # TODO: also check at this point whether the internal data is correct.
@@ -107,7 +107,7 @@ def test_serialise_image_with_object_answers():
     label_row_metadata_dict["number_of_frames"] = 1
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types), Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
     label_row.from_labels_dict(native_image_data.labels)
 
     actual = label_row.to_encord_dict()
@@ -126,7 +126,7 @@ def test_serialise_dicom_with_dynamic_classifications():
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(dynamic_classifications_ontology), Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(dynamic_classifications_ontology))
     assert label_row.number_of_frames == label_row_metadata.number_of_frames
     assert label_row.duration == label_row_metadata.duration
     assert label_row.fps == label_row_metadata.frames_per_second
@@ -160,9 +160,7 @@ def test_dynamic_classifications():
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(
-        label_row_metadata, Mock(), ontology_from_dict(ontology_with_many_dynamic_classifications), Mock()
-    )
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(ontology_with_many_dynamic_classifications))
     label_row.from_labels_dict(video_with_dynamic_classifications.labels)
 
     actual = label_row.to_encord_dict()
@@ -184,9 +182,7 @@ def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_b
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(
-        label_row_metadata, Mock(), ontology_from_dict(ontology_with_many_dynamic_classifications), Mock()
-    )
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(ontology_with_many_dynamic_classifications))
 
     label_row.from_labels_dict(video_with_dynamic_classifications_ui_constructed.labels)
 
@@ -210,7 +206,7 @@ def test_uninitialised_label_row():
     label_row_metadata_dict["last_edited_at"] = None
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types), Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
 
     assert label_row.label_hash is None
     assert label_row.created_at is None
@@ -245,7 +241,7 @@ def test_label_row_with_reviews():
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types), Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
     label_row.from_labels_dict(image_group_with_reviews.labels)
 
     first_object = label_row.get_object_instances()[0]

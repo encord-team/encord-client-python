@@ -134,7 +134,7 @@ def test_create_object_instance_one_coordinate_multiframe():
 
 
 def test_create_a_label_row_from_empty_image_group_label_row_dict(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
 
     with pytest.raises(LabelRowError):
         label_row.get_classification_instances()
@@ -146,7 +146,7 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict(ontology):
 
 
 def test_add_object_instance_to_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     object_instance = ObjectInstance(box_ontology_item)
@@ -164,7 +164,7 @@ def test_add_object_instance_to_label_row(ontology):
 
 
 def test_add_remove_access_object_instances_in_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     object_instance_1 = ObjectInstance(box_ontology_item)
@@ -202,7 +202,7 @@ def test_add_remove_access_object_instances_in_label_row(ontology):
 
 
 def test_filter_for_objects(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -253,7 +253,7 @@ def test_add_wrong_coordinates():
 
 
 def test_get_object_instances_by_frames(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -292,10 +292,10 @@ def test_get_object_instances_by_frames(ontology):
 
 
 def test_adding_object_instance_to_multiple_frames_fails(ontology):
-    label_row_1 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row_1 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row_1.from_labels_dict(empty_image_group_labels)
 
-    label_row_2 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row_2 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row_2.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -405,7 +405,7 @@ def test_update_remove_object_instance_coordinates():
 
 
 def test_removing_coordinates_from_object_removes_it_from_parent(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -591,7 +591,7 @@ def test_classification_instances_frame_view():
 
 
 def test_add_and_get_classification_instances_to_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology, Mock())
+    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     classification_instance_1 = ClassificationInstance(text_classification)
@@ -920,7 +920,7 @@ def test_frame_view(ontology):
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology, Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
 
     assert label_row.number_of_frames == label_row_metadata.number_of_frames
 
@@ -968,7 +968,7 @@ def test_classification_can_be_added_edited_and_removed(ontology):
     label_row_metadata_dict["number_of_frames"] = 2
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology, Mock())
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)  # initialise the labels.
 
     classification_instance = ClassificationInstance(checklist_classification)
