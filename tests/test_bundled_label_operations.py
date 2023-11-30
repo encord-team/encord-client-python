@@ -42,10 +42,15 @@ def get_response_by_data_hash(data_hash: str):
 
 
 def get_valid_label_rows(project: Project):
-    label_rows = []
-    for r in LABEL_ROW_METADATA_BLURB:
-        label_rows.append(LabelRowV2(LabelRowMetadata.from_dict(r), project._client, project._ontology))
-
+    label_rows = [
+        LabelRowV2(
+            LabelRowMetadata.from_dict(r),
+            project._client,
+            project._ontology,
+            project._client_v2,
+        )
+        for r in LABEL_ROW_METADATA_BLURB
+    ]
     for r, v in zip(label_rows, LABEL_ROW_BLURB):
         assert r.data_hash == v["data_hash"]
         r.from_labels_dict(v)

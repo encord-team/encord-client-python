@@ -50,7 +50,7 @@ def label_row_metadata() -> LabelRowMetadata:
 
 
 def test_label_row_metadata_accessor(ontology, label_row_metadata):
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology, Mock())
     label_row.from_labels_dict(DICOM_LABELS_WITH_METADATA_TEST_BLURB)
 
     row_metadata = label_row.metadata
