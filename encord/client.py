@@ -462,7 +462,7 @@ class EncordClientDataset(EncordClient):
         image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
         res = self._querier.basic_setter(
             ImageGroup,
-            uid=image_hash_list,
+            uid=image_hash_list,  # type: ignore
             payload={
                 "image_group_title": title,
                 "create_video": create_video,
@@ -1326,7 +1326,7 @@ class EncordClientProject(EncordClient):
         self._querier.basic_setter(
             LabelWorkflowGraphNode,
             label_hashes,
-            payload=LabelWorkflowGraphNodePayload({"action": WorkflowAction.REOPEN.value}),
+            payload=LabelWorkflowGraphNodePayload(action=WorkflowAction.REOPEN),
         )
 
     def workflow_complete(self, label_hashes: List[str]) -> None:
@@ -1336,7 +1336,7 @@ class EncordClientProject(EncordClient):
         self._querier.basic_setter(
             LabelWorkflowGraphNode,
             label_hashes,
-            payload=LabelWorkflowGraphNodePayload({"action": WorkflowAction.COMPLETE.value}),
+            payload=LabelWorkflowGraphNodePayload(action=WorkflowAction.COMPLETE),
         )
 
     def workflow_set_priority(self, params: TaskPriorityParams) -> None:
