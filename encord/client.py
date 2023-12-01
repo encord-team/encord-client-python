@@ -462,7 +462,7 @@ class EncordClientDataset(EncordClient):
         image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
         res = self._querier.basic_setter(
             ImageGroup,
-            uid=image_hash_list,
+            uid=image_hash_list,  # type: ignore
             payload={
                 "image_group_title": title,
                 "create_video": create_video,
