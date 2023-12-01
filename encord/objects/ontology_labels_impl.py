@@ -215,6 +215,8 @@ class LabelRowV2:
         The data link in either your cloud storage or the encord storage to the underlying object. This will be `None`
         for DICOM series or image groups that have been created without performance optimisations, as there is no
         single underlying file for these data types.
+
+        This property will contain signed url if :meth:`.initialise_labels` was called with `include_signed_url=True`.
         """
         return self._label_row_read_only_data.data_link
 
@@ -272,6 +274,8 @@ class LabelRowV2:
         include_reviews: bool = False,
         overwrite: bool = False,
         bundle: Optional[Bundle] = None,
+        *,
+        include_signed_url: bool = False,
     ) -> None:
         """
         Call this function to download or export labels stored on the Encord server, as well as to perform any other
@@ -303,6 +307,8 @@ class LabelRowV2:
                 already initialised, this function will throw an error.
             bundle: If not passed, initialisation is performed independently. If passed, it will be delayed and
                 initialised along with other objects in the same bundle.
+            include_signed_url: if set to true, :attr:`.data_link` property will contain signed url.
+                See documentation for :attr:`.data_link` for more details.
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -314,7 +320,7 @@ class LabelRowV2:
             self.__batched_initialise(
                 bundle,
                 uid=self.label_hash,
-                get_signed_url=False,
+                get_signed_url=include_signed_url,
                 include_object_feature_hashes=include_object_feature_hashes,
                 include_classification_feature_hashes=include_classification_feature_hashes,
                 include_reviews=include_reviews,
@@ -325,7 +331,7 @@ class LabelRowV2:
             else:
                 label_row_dict = self._project_client.get_label_row(
                     uid=self.label_hash,
-                    get_signed_url=False,
+                    get_signed_url=include_signed_url,
                     include_object_feature_hashes=include_object_feature_hashes,
                     include_classification_feature_hashes=include_classification_feature_hashes,
                     include_reviews=include_reviews,
@@ -767,7 +773,7 @@ class LabelRowV2:
 
          This method can be called only for labels for which :meth:`.initialise_labels()` was called at least ance, and
          consequentially the "label_hash" field is not `None`.
-        Please note that labels need not be initialized every time the workflow_complete() method is called.
+        Please note that labels need not be initialised every time the workflow_complete() method is called.
 
          This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
          feature, and will raise an error for projects that don't use Workflows.
