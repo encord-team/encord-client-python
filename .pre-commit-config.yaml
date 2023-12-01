@@ -17,11 +17,6 @@ repos:
       - id: ruff-format
   - repo: local
     hooks:
-      - id: pyright
-        name: pyright
-        entry: poetry run pyright
-        language: system
-        files: ^encord/.*py$
       - id: mypy
         name: mypy
         entry: poetry run mypy
