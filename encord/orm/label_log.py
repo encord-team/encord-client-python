@@ -59,6 +59,10 @@ class LabelLog(BaseDTO):
     @property
     @deprecated(version="0.1.100", alternative="LabelLog.identifier")
     def annotation_hash(self) -> Optional[str]:
+        """
+        DEPRECATED: this field is only provided for backwards compatibility, and will be removed in the future versions.
+        Please use :attr:`identifier <LabelLog.identifier>` instead.
+        """
         return self.identifier
 
 
