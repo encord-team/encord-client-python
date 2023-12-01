@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "encord"
-version = "0.1.98"
+version = "0.1.99"
 description = "Encord Python SDK Client"
 authors = ["Cord Technologies Limited <hello@encord.com>"]
 license = "Apache Software License"
