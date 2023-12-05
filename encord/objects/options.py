@@ -5,6 +5,7 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Type, TypeVar
 
+from encord.common.deprecated import deprecated
 from encord.objects.ontology_element import (
     OntologyElement,
     OntologyNestedElement,
@@ -109,7 +110,24 @@ class NestableOption(Option):
             nested_options=nested_options_ret,
         )
 
+    @deprecated(version="0.1.100", alternative=".add_nested_attribute")
     def add_nested_option(
+        self,
+        cls: Type[AttributeType],
+        name: str,
+        local_uid: Optional[int] = None,
+        feature_node_hash: Optional[str] = None,
+        required: bool = False,
+    ) -> AttributeType:
+        """
+        This method is deprecated, please use :meth:`.add_nested_option` instead.
+        There is no functional difference between these methods.
+        """
+        return self.add_nested_attribute(
+            cls=cls, name=name, local_uid=local_uid, feature_node_hash=feature_node_hash, required=required
+        )
+
+    def add_nested_attribute(
         self,
         cls: Type[AttributeType],
         name: str,
