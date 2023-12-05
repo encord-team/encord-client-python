@@ -1569,6 +1569,6 @@ class LabelRowV2:
 
 
 def _frame_views_to_frame_numbers(
-    frame_views: Sequence[Union[ObjectInstance.Annotation, ClassificationInstance.Annotation, LabelRowV2.FrameView]]
+    frame_views: Sequence[Union[ObjectInstance.Annotation, ClassificationInstance.Annotation, LabelRowV2.FrameView]],
 ) -> List[int]:
     return [frame_view.frame for frame_view in frame_views]
