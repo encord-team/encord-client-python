@@ -313,8 +313,8 @@ def test_build_nested_options():
     assert isinstance(one, encord.objects.NestableOption)
     assert isinstance(two, encord.objects.NestableOption)
 
-    detail1 = one.add_nested_option(encord.objects.RadioAttribute, "detail one")
-    one.add_nested_option(encord.objects.TextAttribute, "detail two")
+    detail1 = one.add_nested_attribute(encord.objects.RadioAttribute, "detail one")
+    one.add_nested_attribute(encord.objects.TextAttribute, "detail two")
 
     detail1value1 = detail1.add_option("value 1")
     assert isinstance(detail1value1, encord.objects.NestableOption)
@@ -354,7 +354,7 @@ def build_expected_ontology():
         encord.objects.RadioAttribute, feature_node_hash="cabfedb5", name="Radio with options"
     )
     nested = radio.add_option(feature_node_hash="5d102ce6", label="Nested Option")
-    _ = nested.add_nested_option(encord.objects.RadioAttribute, feature_node_hash="59204845", name="Leaf")
+    _ = nested.add_nested_attribute(encord.objects.RadioAttribute, feature_node_hash="59204845", name="Leaf")
     cls = ontology.add_classification(feature_node_hash="a39d81c0")
     cat_standing = cls.add_attribute(
         encord.objects.RadioAttribute,
