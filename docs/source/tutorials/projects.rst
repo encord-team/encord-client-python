@@ -640,12 +640,6 @@ Then in the popup, please ensure that images are saved too:
     Export Project.
 
 
-.. note::
-    Choose the "CVAT for images 1.1" export format for images and the "CVAT for video 1.1" export format for videos.
-
-    If your project contains videos and images, you can only choose the "CVAT for images 1.1" in which case you will loose interpolation information across video frames.
-
-
 Once this is downloaded, you can unzip the file to create a directory which contains all your images/videos, together with an `annotations.xml` file which contains your CVAT ontology, CVAT labels, and CVAT tags (which are the equivalent of Encord Classifications for entire images/frames).
 
 Importing with the |sdk|
