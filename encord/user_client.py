@@ -461,6 +461,13 @@ class EncordUserClient:
         )
         log.info("Image upload completed.")
 
+        # This is a bit hacky, but allows more flexibility for CVAT project imports
+        if import_method.map_filename_to_cvat_name:
+            image_title_to_image_hash_map = {
+                import_method.map_filename_to_cvat_name(key): value
+                for key, value in image_title_to_image_hash_map.items()
+            }
+
         payload = {
             "cvat": {
                 "annotations_base64": annotations_base64,
