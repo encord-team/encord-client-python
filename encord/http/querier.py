@@ -52,7 +52,7 @@ class Querier:
         self._config = config
 
     def basic_getter(
-        self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+        self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
     ) -> T:
         """Single DB object getter."""
         request = self._request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
@@ -63,9 +63,9 @@ class Querier:
             raise ResourceNotFoundError("Resource not found.", context=context)
 
     def get_multiple(
-        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
     ) -> List[T]:
-        return self._request_multiple(QueryMethods.GET, object_type, uid, payload)
+        return self._request_multiple(QueryMethods.GET, object_type, uid, payload, retryable=retryable)
 
     def post_multiple(
         self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
@@ -237,7 +237,7 @@ def create_new_session(
         read=max_retries,
         status=max_retries,  # type: ignore
         other=max_retries,  # type: ignore
-        allowed_methods=["POST"],  # type: ignore # we're using post everywhere
+        allowed_methods=["POST", "PUT", "GET"],  # type: ignore  # post is there since we use it for idempotent ops too.
         status_forcelist=[413, 429, 500, 503],
         backoff_factor=backoff_factor,
     )
