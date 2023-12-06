@@ -311,3 +311,12 @@ class ProjectImporterCvatInfo(base_orm.BaseORM):
 
 class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
+
+
+class GetLabelRowsCocoParams(BaseDTO):
+    label_hashes: List[str] | None
+    get_signed_url: bool
+
+
+class GetLabelRowsCocoResponse(BaseDTO):
+    result: dict

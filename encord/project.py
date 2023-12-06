@@ -1,4 +1,5 @@
 import datetime
+import typing
 from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
@@ -25,7 +26,7 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions
+from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, GetLabelRowsCocoParams
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -205,6 +206,43 @@ class Project:
             LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
         ]
         return label_rows
+
+    def get_label_rows_coco(
+        self,
+        label_hashes: Optional[List[str]] = None,
+        get_signed_url: bool = False,
+    ) -> dict:
+        """
+        Retrieve label rows in COCO (Common Objects in Context) format.
+
+        Args:
+            label_hashes (Optional[List[str]]): A list of label hashes to filter the results.
+            get_signed_url (bool): Flag to indicate whether to include signed URLs for label rows.
+
+        Returns:
+            dict: A dictionary containing label rows in COCO format.
+
+        Note:
+            - If `label_hashes` is None, all label rows will be retrieved.
+            - If `get_signed_url` is True, signed URLs for label rows will be included in the response.
+
+        Example:
+            >>> result = project.get_label_rows_coco()
+            >>> print(result)
+            {
+                "info": {...},
+                "categories": [...],
+                "images": [...],
+                "annotations": [],
+            }
+        """
+
+        return self._client.get_label_rows_coco(
+            GetLabelRowsCocoParams(
+                label_hashes=label_hashes,
+                get_signed_url=get_signed_url,
+            )
+        )
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """

@@ -128,6 +128,8 @@ from encord.orm.project import (
     CopyDatasetOptions,
     CopyLabelsOptions,
     CopyProjectPayload,
+    GetLabelRowsCocoParams,
+    GetLabelRowsCocoResponse,
     ProjectCopy,
     ProjectCopyOptions,
     ProjectDataset,
@@ -1350,6 +1352,18 @@ class EncordClientProject(EncordClient):
     def get_collaborator_timers_page(self, params: CollaboratorTimerParams) -> Page[CollaboratorTimer]:
         return self._get_api_client().get(
             Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
+        )
+
+    def get_label_rows_coco(self, params: GetLabelRowsCocoParams) -> dict:
+        return (
+            self._get_api_client()
+            .post(
+                Path(f"projects/{self.project_hash}/label-rows-coco"),
+                params=None,
+                payload=params,
+                result_type=GetLabelRowsCocoResponse,
+            )
+            .result
         )
 
 
