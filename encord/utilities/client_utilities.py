@@ -17,7 +17,7 @@ import pprint
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Set, TypeVar, Union
+from typing import Callable, List, Optional, Set, TypeVar, Union
 
 from encord.common.time_parser import parse_datetime
 
@@ -58,11 +58,17 @@ class APIKeyScopes(Enum):
 @dataclass
 class LocalImport:
     """
-    file_path: Supply the path of the exported folder which contains the images and `annotations.xml` file. Make
-    sure to select "Save images" when exporting your CVAT Task or Project.
+    file_path:
+        Supply the path of the exported folder which contains the images and `annotations.xml` file. Make
+        sure to select "Save images" when exporting your CVAT Task or Project.
+    transform_file_names:
+        Encord expects that file names (including their relative paths), exactly matches the
+        "name" parameter of CVAT image.
+        If it is not, user can supply transform_file_names function that maps filename to the image name.
     """
 
     file_path: str
+    map_filename_to_cvat_name: Optional[Callable[[str], str]] = None
 
 
 ImportMethod = LocalImport
