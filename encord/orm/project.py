@@ -314,7 +314,7 @@ class TaskPriorityParams(BaseDTO):
 
 
 class GetLabelRowsCocoParams(BaseDTO):
-    label_hashes: List[str] | None
+    label_hashes: Optional[List[str]]
     get_signed_url: bool
 
 
