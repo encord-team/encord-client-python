@@ -331,12 +331,15 @@ class Project:
     @deprecated(version="0.1.95", alternative=".ontology_structure")
     def get_project_ontology(self) -> LegacyOntology:
         """
-        DEPRECATED - prefer using the `ontology_structure` property accessor instead.
+        DEPRECATED: prefer using the `ontology_structure` property accessor instead.
         """
         return self._client.get_project_ontology()
 
+    @deprecated("0.1.102", alternative="Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
         """
+        DEPRECATED: prefer using :class:`Ontology <encord.ontology.Ontology>` to manipulate ontology.
+
         Add object to an ontology.
 
         ATTENTION: this legacy method will affect all the projects sharing the same ontology
@@ -359,6 +362,7 @@ class Project:
         self.refetch_data()
         return res
 
+    @deprecated("0.1.102", alternative="Ontology class")
     def add_classification(
         self,
         name: str,
@@ -367,6 +371,8 @@ class Project:
         options: Optional[Iterable[str]] = None,
     ):
         """
+        DEPRECATED: prefer using :class:`Ontology <encord.ontology.Ontology>` to manipulate ontology.
+
         Add classification to an ontology.
 
         ATTENTION: this legacy method will affect all the projects sharing the same ontology
