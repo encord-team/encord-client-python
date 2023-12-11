@@ -474,7 +474,7 @@ class EncordUserClient:
             },
             "dataset_hash": dataset_hash,
             "image_title_to_image_hash_map": image_title_to_image_hash_map,
-            "review_mode": review_mode.value,
+            "review_mode": review_mode,
             "transform_bounding_boxes_to_polygons": transform_bounding_boxes_to_polygons,
         }
 
@@ -502,7 +502,7 @@ class EncordUserClient:
             raise ValueError(message)
 
         export_type = project_info["success"]["export_type"]
-        if export_type == CvatExportType.PROJECT.value:
+        if export_type == CvatExportType.PROJECT:
             default_path = images_directory_path.joinpath("default")
             if default_path not in list(images_directory_path.iterdir()):
                 raise ValueError("The expected directory 'default' was not found.")
@@ -511,7 +511,7 @@ class EncordUserClient:
             # NOTE: it is possible that here we also need to use the __get_recursive_image_paths
             images = list(default_path.iterdir())
 
-        elif export_type == CvatExportType.TASK.value:
+        elif export_type == CvatExportType.TASK:
             used_base_path = images_directory_path
             images = self.__get_recursive_image_paths(images_directory_path)
         else:

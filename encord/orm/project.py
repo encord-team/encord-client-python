@@ -269,7 +269,7 @@ Currently one of:
 """
 
 
-class ReviewMode(StringEnum):
+class ReviewMode(str, Enum):
     """
     UNLABELLED:
         The labels are added to the images. However, the one person must still go over
@@ -287,26 +287,18 @@ class ReviewMode(StringEnum):
     REVIEWED = "reviewed"
 
 
-class ProjectImporter(base_orm.BaseORM):
-    DB_FIELDS = OrderedDict(
-        [
-            ("project_hash", Optional[str]),
-            ("errors", list),
-        ]
-    )
-
-
-class CvatExportType(Enum):
+class CvatExportType(str, Enum):
     PROJECT = "project"
     TASK = "task"
 
 
-class ProjectImporterCvatInfo(base_orm.BaseORM):
-    DB_FIELDS = OrderedDict(
-        [
-            ("export_type", CvatExportType),
-        ]
-    )
+class ProjectImporter(BaseDTO):
+    project_hash: Optional[str]
+    errors: List[str]
+
+
+class ProjectImporterCvatInfo(BaseDTO):
+    export_type: CvatExportType
 
 
 class TaskPriorityParams(BaseDTO):
