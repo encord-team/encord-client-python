@@ -172,8 +172,8 @@ def bundled_operation(
     result_mapper: Optional[BundleResultMapper] = None,
     limit: int = LABEL_ROW_BUNDLE_DEFAULT_LIMIT,
 ) -> None:
+    assert is_dataclass(payload), "Bundling only works with dataclasses"
     if not bundle:
-        assert is_dataclass(payload), "Bundling only works with dataclasses"
         result = operation(**asdict(payload))
         if result_mapper:
             assert len(result) == 1, "Expected a singular request for singular request!"
