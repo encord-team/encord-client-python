@@ -11,13 +11,21 @@ from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError, WrongProjectTypeError
-from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper
+from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.limits import (
     LABEL_ROW_BUNDLE_CREATE_LIMIT,
     LABEL_ROW_BUNDLE_GET_LIMIT,
     LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
 from encord.objects.attributes import Attribute
+from encord.objects.bundled_operations import (
+    BundledCreateRowsPayload,
+    BundledGetRowsPayload,
+    BundledSaveRowsPayload,
+    BundledSetPriorityPayload,
+    BundledWorkflowCompletePayload,
+    BundledWorkflowReopenPayload,
+)
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
@@ -57,26 +65,6 @@ log = logging.getLogger(__name__)
 
 OntologyTypes = Union[Type[Object], Type[Classification]]
 OntologyClasses = Union[Object, Classification]
-
-
-@dataclass
-class BundledGetRowsPayload:
-    uids: List[str]
-    get_signed_url: bool
-    include_object_feature_hashes: Optional[Set[str]]
-    include_classification_feature_hashes: Optional[Set[str]]
-    include_reviews: bool
-
-
-@dataclass
-class BundledCreateRowsPayload:
-    uids: List[str]
-
-
-@dataclass
-class BundledSaveRowsPayload:
-    uids: List[str]
-    payload: List[Dict]
 
 
 class LabelRowV2:
@@ -316,90 +304,37 @@ class LabelRowV2:
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
-        if bundle is not None:
-            self.__batched_initialise(
+        if not self.label_hash:
+            # If label_hash is None, it means we need to explicitly create the label row first
+            bundled_operation(
                 bundle,
-                uid=self.label_hash,
-                get_signed_url=include_signed_url,
-                include_object_feature_hashes=include_object_feature_hashes,
-                include_classification_feature_hashes=include_classification_feature_hashes,
-                include_reviews=include_reviews,
-            )
-        else:
-            if self.label_hash is None:
-                label_row_dict = self._project_client.create_label_row(self.data_hash)
-            else:
-                label_row_dict = self._project_client.get_label_row(
-                    uid=self.label_hash,
-                    get_signed_url=include_signed_url,
-                    include_object_feature_hashes=include_object_feature_hashes,
-                    include_classification_feature_hashes=include_classification_feature_hashes,
-                    include_reviews=include_reviews,
-                )
-
-            self.from_labels_dict(label_row_dict)
-
-    def __batched_initialise(
-        self,
-        bundle: Bundle,
-        uid,
-        get_signed_url,
-        include_object_feature_hashes,
-        include_classification_feature_hashes,
-        include_reviews,
-    ):
-        if self.label_hash is None:
-            bundle.add(
                 operation=self._project_client.create_label_rows,
-                request_reducer=self._bundle_create_rows_reducer,
-                result_mapper=BundleResultMapper[OrmLabelRow](
-                    result_mapping_predicate=self._bundle_create_rows_mapping_predicate,
-                    result_handler=BundleResultHandler(predicate=self.data_hash, handler=self.from_labels_dict),
-                ),
                 payload=BundledCreateRowsPayload(
                     uids=[self.data_hash],
+                ),
+                result_mapper=BundleResultMapper[OrmLabelRow](
+                    result_mapping_predicate=lambda r: r["data_hash"],
+                    result_handler=BundleResultHandler(predicate=self.data_hash, handler=self.from_labels_dict),
                 ),
                 limit=LABEL_ROW_BUNDLE_CREATE_LIMIT,
             )
         else:
-            bundle.add(
+            bundled_operation(
+                bundle,
                 operation=self._project_client.get_label_rows,
-                request_reducer=self._bundle_get_rows_reducer,
-                result_mapper=BundleResultMapper[OrmLabelRow](
-                    result_mapping_predicate=self._bundle_get_rows_mapping_predicate,
-                    result_handler=BundleResultHandler(predicate=self.label_hash, handler=self.from_labels_dict),
-                ),
                 payload=BundledGetRowsPayload(
-                    uids=[uid],
-                    get_signed_url=get_signed_url,
+                    uids=[self.label_hash],
+                    get_signed_url=include_signed_url,
                     include_object_feature_hashes=include_object_feature_hashes,
                     include_classification_feature_hashes=include_classification_feature_hashes,
                     include_reviews=include_reviews,
                 ),
+                result_mapper=BundleResultMapper[OrmLabelRow](
+                    result_mapping_predicate=lambda r: r["label_hash"],
+                    result_handler=BundleResultHandler(predicate=self.label_hash, handler=self.from_labels_dict),
+                ),
                 limit=LABEL_ROW_BUNDLE_GET_LIMIT,
             )
-
-    @staticmethod
-    def _bundle_create_rows_reducer(
-        bundle_payload: BundledCreateRowsPayload, payload: BundledCreateRowsPayload
-    ) -> BundledCreateRowsPayload:
-        bundle_payload.uids += payload.uids
-        return bundle_payload
-
-    @staticmethod
-    def _bundle_get_rows_reducer(
-        bundle_payload: BundledGetRowsPayload, payload: BundledGetRowsPayload
-    ) -> BundledGetRowsPayload:
-        bundle_payload.uids += payload.uids
-        return bundle_payload
-
-    @staticmethod
-    def _bundle_get_rows_mapping_predicate(entry: OrmLabelRow) -> str:
-        return entry["label_hash"]
-
-    @staticmethod
-    def _bundle_create_rows_mapping_predicate(entry: OrmLabelRow) -> str:
-        return entry["data_hash"]
 
     def from_labels_dict(self, label_row_dict: dict) -> None:
         """
@@ -459,28 +394,13 @@ class LabelRowV2:
             bundle: if not passed, save is executed immediately. If passed, it is executed as a part of the bundle
         """
         self._check_labelling_is_initalised()
+        assert self.label_hash is not None  # Checked earlier, assert is just to silence mypy
 
-        dict_labels = self.to_encord_dict()
-
-        if bundle is None:
-            self._project_client.save_label_row(uid=self.label_hash, label=dict_labels)
-        else:
-            assert self.label_hash is not None  # Checked earlier, assert is mostly to silence mypy
-            bundle.add(
-                operation=self._project_client.save_label_rows,
-                request_reducer=self._batch_save_rows_reducer,
-                result_mapper=None,
-                payload=BundledSaveRowsPayload(uids=[self.label_hash], payload=[dict_labels]),
-                limit=LABEL_ROW_BUNDLE_SAVE_LIMIT,
-            )
-
-    @staticmethod
-    def _batch_save_rows_reducer(
-        bundle_payload: BundledSaveRowsPayload, payload: BundledSaveRowsPayload
-    ) -> BundledSaveRowsPayload:
-        bundle_payload.uids += payload.uids
-        bundle_payload.payload += payload.payload
-        return bundle_payload
+        bundled_operation(
+            bundle,
+            self._project_client.save_label_rows,
+            payload=BundledSaveRowsPayload(uids=[self.label_hash], payload=[self.to_encord_dict()]),
+        )
 
     @property
     def metadata(self) -> Optional[DICOMSeriesMetadata]:
@@ -753,7 +673,7 @@ class LabelRowV2:
 
         return ret
 
-    def workflow_reopen(self) -> None:
+    def workflow_reopen(self, bundle: Optional[Bundle] = None) -> None:
         """
         A label row is returned to the first annotation stage for re-labeling.
         No data will be lost during this call.
@@ -765,9 +685,13 @@ class LabelRowV2:
             # Label has not yet moved from the initial state, nothing to do
             return
 
-        self._project_client.workflow_reopen([self.label_hash])
+        bundled_operation(
+            bundle,
+            self._project_client.workflow_reopen,
+            payload=BundledWorkflowReopenPayload(label_hashes=[self.label_hash]),
+        )
 
-    def workflow_complete(self) -> None:
+    def workflow_complete(self, bundle: Optional[Bundle] = None) -> None:
         """
          A label row is moved to the final workflow node, marking it as 'Complete'.
 
@@ -784,21 +708,28 @@ class LabelRowV2:
                 "to do so first."
             )
 
-        self._project_client.workflow_complete([self.label_hash])
+        bundled_operation(
+            bundle,
+            self._project_client.workflow_complete,
+            payload=BundledWorkflowCompletePayload(label_hashes=[self.label_hash]),
+        )
 
-    def set_priority(self, priority: float) -> None:
+    def set_priority(self, priority: float, bundle: Optional[Bundle] = None) -> None:
         """
         Set priority for task in workflow project.
 
         Args:
             priority: float value from 0.0 to 1.0, where 1.0 is the highest priority
+            bundle: optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
         """
         if not self.__is_tms2_project:
             raise WrongProjectTypeError("Setting priority only possible for workflow-based projects")
 
-        params = TaskPriorityParams(priorities=[(self.data_hash, priority)])
-
-        self._project_client.workflow_set_priority(params)
+        bundled_operation(
+            bundle,
+            self._project_client.workflow_set_priority,
+            payload=BundledSetPriorityPayload(priorities=[(self.data_hash, priority)]),
+        )
 
     class FrameView:
         """

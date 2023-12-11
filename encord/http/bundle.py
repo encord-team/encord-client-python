@@ -1,9 +1,30 @@
+from __future__ import annotations
+
+import dataclasses
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, is_dataclass
 from functools import reduce
-from typing import Callable, Dict, Generator, Generic, List, Optional, TypeVar
+from typing import Callable, ClassVar, Dict, Generator, Generic, List, Optional, Protocol, Type, TypeVar
+
+from encord.http.limits import LABEL_ROW_BUNDLE_DEFAULT_LIMIT
 
 log = logging.getLogger(__name__)
+
+BundlablePayloadT = TypeVar("BundlablePayloadT", bound="BundlablePayload")
+
+
+class BundlablePayload(Protocol[BundlablePayloadT]):
+    """
+    All payloads that work with bundles need to provide "add" method
+    that would allow bundler to combine multiple payloads into one or few aggregates.
+    """
+
+    # This line ensures we're only allowing dataclasses for now
+    __dataclass_fields__: ClassVar[Dict]
+
+    def add(self, other: BundlablePayloadT) -> BundlablePayloadT:
+        ...
+
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -21,29 +42,27 @@ class BundleResultMapper(Generic[T]):
     result_handler: BundleResultHandler[T]
 
 
-class BundledOperation(Generic[T, R]):
+class BundledOperation(Generic[BundlablePayloadT, R]):
     def __init__(
         self,
         operation: Callable[..., List[R]],
-        request_reducer: Callable[[T, T], T],
         result_mapper: Optional[Callable[[R], str]],
         limit: int,
     ) -> None:
         self.operation = operation
-        self.request_reducer = request_reducer
         self.result_mapper = result_mapper
         self.limit = limit
-        self.payloads: List[T] = []
-        self.result_handlers: Dict[str, Callable[[T], None]] = dict()
+        self.payloads: List[BundlablePayloadT] = []
+        self.result_handlers: Dict[str, Callable[[BundlablePayloadT], None]] = {}
 
-    def append(self, payload: T, result_handler: Optional[BundleResultHandler]):
+    def append(self, payload: BundlablePayloadT, result_handler: Optional[BundleResultHandler]):
         self.payloads.append(payload)
         if result_handler is not None:
             self.result_handlers[result_handler.predicate] = result_handler.handler
 
-    def get_bundled_payload(self) -> Generator[T, None, None]:
+    def get_bundled_payload(self) -> Generator[BundlablePayloadT, None, None]:
         for i in range(0, len(self.payloads), self.limit):
-            yield reduce(self.request_reducer, self.payloads[i : i + self.limit])
+            yield reduce(lambda x, y: x.add(y), self.payloads[i : i + self.limit])
 
 
 class Bundle:
@@ -87,26 +106,27 @@ class Bundle:
     """
 
     def __init__(self) -> None:
-        self._operations: Dict[Callable, BundledOperation] = dict()
+        self._operations: Dict[Callable, BundledOperation] = {}
 
     def __register_operation(
         self,
+        payload_type: Type[BundlablePayloadT],
         operation: Callable[..., List[R]],
-        request_reducer: Callable[[T, T], T],
         result_mapping_predicate: Optional[Callable[[R], str]],
         limit: int,
-    ) -> BundledOperation[T, R]:
+    ) -> BundledOperation[BundlablePayloadT, R]:
         if operation not in self._operations:
-            self._operations[operation] = BundledOperation(operation, request_reducer, result_mapping_predicate, limit)
+            self._operations[operation] = BundledOperation[BundlablePayloadT, R](
+                operation, result_mapping_predicate, limit
+            )
 
         return self._operations[operation]
 
     def add(
         self,
         operation: Callable[..., List[R]],
-        request_reducer: Callable[[T, T], T],
         result_mapper: Optional[BundleResultMapper[R]],
-        payload: T,
+        payload: BundlablePayloadT,
         limit: int,
     ) -> None:
         """
@@ -114,9 +134,9 @@ class Bundle:
 
         Adds an operation to a bundle for delayed execution.
         """
-        result_mapping_predicate = result_mapper.result_mapping_predicate if result_mapper is not None else None
-        result_handler = result_mapper.result_handler if result_mapper is not None else None
-        self.__register_operation(operation, request_reducer, result_mapping_predicate, limit).append(
+        result_mapping_getter = result_mapper.result_mapping_predicate if result_mapper else None
+        result_handler = result_mapper.result_handler if result_mapper else None
+        self.__register_operation(type(payload), operation, result_mapping_getter, limit).append(
             payload, result_handler
         )
 
@@ -143,3 +163,26 @@ class Bundle:
             log.warning(f"Cancelling operation due to exception: {exc_type.__name__}")
         else:
             self.execute()
+
+
+def bundled_operation(
+    bundle,
+    operation,
+    payload: BundlablePayloadT,
+    result_mapper: Optional[BundleResultMapper] = None,
+    limit: int = LABEL_ROW_BUNDLE_DEFAULT_LIMIT,
+) -> None:
+    if not bundle:
+        assert is_dataclass(payload), "Bundling only works with dataclasses"
+        result = operation(**asdict(payload))
+        if result_mapper:
+            assert len(result) == 1, "Expected a singular request for singular request!"
+            assert result_mapper.result_mapping_predicate(result[0]) == result_mapper.result_handler.predicate
+            result_mapper.result_handler.handler(result[0])
+    else:
+        bundle.add(
+            operation=operation,
+            result_mapper=result_mapper,
+            payload=payload,
+            limit=limit,
+        )
