@@ -147,6 +147,9 @@ Utilities - ORM classes
 .. automodule:: encord.orm.project_with_user_role
     :members:
     :undoc-members:
+.. automodule:: encord.orm.analytics
+    :members:
+    :undoc-members:
 
 Utilities - Other
 -----------------

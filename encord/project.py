@@ -985,9 +985,6 @@ class Project:
              before: the end of period of interest.
              group_by_data_unit: if True, time spent by a collaborator for each data unit is provided separately,
                                  and if False, all time spent in the scope of the project is aggregated together.
-
-        Returns:
-            Iterable[CollaboratorTimer]
         """
 
         params = CollaboratorTimerParams(
