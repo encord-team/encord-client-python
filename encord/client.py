@@ -1339,11 +1339,11 @@ class EncordClientProject(EncordClient):
             payload=LabelWorkflowGraphNodePayload(action=WorkflowAction.COMPLETE),
         )
 
-    def workflow_set_priority(self, params: TaskPriorityParams) -> None:
+    def workflow_set_priority(self, priorities: List[Tuple[str, float]]) -> None:
         self._get_api_client().post(
             Path(f"projects/{self.project_hash}/priorities"),
             params=None,
-            payload=params,
+            payload=TaskPriorityParams(priorities=priorities),
             result_type=None,
         )
 
