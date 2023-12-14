@@ -133,7 +133,8 @@ class ClassificationInstance:
 
         frames_list = frames_class_to_frames_list(frames)
 
-        self._check_classification_already_present(frames_list)
+        if self._check_classification_already_present(frames_list):
+            return
 
         for frame in frames_list:
             self._check_within_range(frame)
@@ -534,16 +535,13 @@ class ClassificationInstance:
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
-    def _check_classification_already_present(self, frames: Iterable[int]) -> None:
+    def _check_classification_already_present(self, frames: Iterable[int]) -> bool:
         if self._parent is None:
-            return
+            return False
         already_present_frame = self._parent._is_classification_already_present(self.ontology_item, frames)
         if already_present_frame is not None:
-            raise LabelRowError(
-                f"The LabelRowV2, that this classification is part of, already has a classification of the same type "
-                f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
-                f"frame per LabelRowV2."
-            )
+            return True
+        return False
 
     def __repr__(self):
         return (
