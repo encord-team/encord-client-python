@@ -121,6 +121,7 @@ class Project:
         return self._project_instance.datasets
 
     @property
+    @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
     def label_rows(self) -> dict:
         """
         Get the label rows.
@@ -721,6 +722,7 @@ class Project:
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._client.get_cloud_integrations()
 
+    @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
     def list_label_rows(
         self,
         edited_before: Optional[Union[str, datetime.datetime]] = None,

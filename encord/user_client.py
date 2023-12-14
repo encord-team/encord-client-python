@@ -137,6 +137,7 @@ class EncordUserClient:
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
         return Ontology(querier, config, orm_ontology)
 
+    @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
         self,
         dataset_title: str,
