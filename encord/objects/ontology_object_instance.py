@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -396,9 +397,8 @@ class ObjectInstance:
             existing_frame_data = self._frames_to_instance_data.get(frame)
 
             if overwrite is False and existing_frame_data is not None:
-                raise LabelRowError(
-                    "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
-                )
+                logging.warning(f'Skipping overwrite for {frame} in {frames_list}')
+                return
 
             check_coordinate_type(coordinates, self._ontology_object)
             self.check_within_range(frame)
