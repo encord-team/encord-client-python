@@ -118,16 +118,21 @@ class BitmaskCoordinates:
 
         if isinstance(source, BitmaskCoordinates.EncodedBitmask):
             self._encoded_bitmask = source
+        elif (
+            isinstance(source, dict)
+            and len(set(source.keys()).intersection({"top", "left", "height", "width", "rle_string"})) == 5
+        ):
+            self._encoded_bitmask = BitmaskCoordinates.EncodedBitmask(**source)
         else:
             self._encoded_bitmask = BitmaskCoordinates._from_array(source)
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> BitmaskCoordinates:
-        bitmask = d["bitmask"]
+        bitmask = d["bitmask"] if "bitmask" in d else d  # Backward compatibility
         return BitmaskCoordinates(
             BitmaskCoordinates.EncodedBitmask(
                 top=int(bitmask["top"]),
-                left=int(bitmask["top"]),
+                left=int(bitmask["left"]),
                 height=int(bitmask["height"]),
                 width=int(bitmask["width"]),
                 rle_string=bitmask["rleString"],
