@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -134,21 +135,25 @@ class ClassificationInstance:
         frames_list = frames_class_to_frames_list(frames)
 
         if self._check_classification_already_present(frames_list):
+            logging.warning(f'Skipping {frames_list}')
             return
 
         for frame in frames_list:
-            self._check_within_range(frame)
-            self._set_frame_and_frame_data(
-                frame,
-                overwrite=overwrite,
-                created_at=created_at,
-                created_by=created_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                reviews=reviews,
-            )
+            if self._check_within_range(frame):
+                self._set_frame_and_frame_data(
+                    frame,
+                    overwrite=overwrite,
+                    created_at=created_at,
+                    created_by=created_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    reviews=reviews,
+                )
+            else:
+                logging.warning(f'Cutting {frame} in {frames_list}')
+                return
 
         if self.is_assigned_to_label_row():
             assert self._parent is not None
@@ -529,11 +534,10 @@ class ClassificationInstance:
         top_attribute = ontology_classification.attributes[0]
         return _search_child_attributes(attribute, top_attribute, self._static_answer_map)
 
-    def _check_within_range(self, frame: int) -> None:
+    def _check_within_range(self, frame: int) -> bool:
         if frame < 0 or frame >= self._last_frame:
-            raise LabelRowError(
-                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
-            )
+            return False
+        return True
 
     def _check_classification_already_present(self, frames: Iterable[int]) -> bool:
         if self._parent is None:

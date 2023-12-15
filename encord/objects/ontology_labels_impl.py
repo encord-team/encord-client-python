@@ -1422,7 +1422,8 @@ class LabelRowV2:
                 classification_instance = self._create_new_classification_instance(
                     frame_classification_label, frame, classification_answers
                 )
-                self.add_classification_instance(classification_instance)
+                if classification_instance:
+                    self.add_classification_instance(classification_instance)
             else:
                 self._add_frames_to_classification_instance(frame_classification_label, frame)
 
@@ -1444,7 +1445,7 @@ class LabelRowV2:
 
     def _create_new_classification_instance(
         self, frame_classification_label: dict, frame: int, classification_answers: dict
-    ) -> ClassificationInstance:
+    ) -> ClassificationInstance | None:
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
 
@@ -1463,7 +1464,10 @@ class LabelRowV2:
             reviews=frame_view.reviews,
         )
 
-        answers_dict = classification_answers[classification_hash]["classifications"]
+        answers_dict = classification_answers.get(classification_hash, {}).get("classifications")
+        if not answers_dict:
+            logging.warning(f'Skipping {classification_hash}')
+            return None
         self._add_static_answers_from_dict(classification_instance, answers_dict)
 
         return classification_instance
