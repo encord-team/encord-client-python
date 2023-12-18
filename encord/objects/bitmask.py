@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import dataclasses
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from encord.exceptions import EncordException
+from encord.orm.base_dto import BaseDTO
 
 
 def _string_to_rle(s: str) -> List[int]:
@@ -100,44 +100,45 @@ def _mask_to_rle(mask: bytes) -> List[int]:
 
 
 class BitmaskCoordinates:
-    @dataclasses.dataclass(frozen=True)
-    class EncodedBitmask:
+    class EncodedBitmask(BaseDTO):
         top: int
         left: int
         height: int
         width: int
         rle_string: str
 
+        @staticmethod
+        def try_from_dict(d: Dict[str, Any]) -> Optional[BitmaskCoordinates.EncodedBitmask]:
+            try:
+                return BitmaskCoordinates.EncodedBitmask.from_dict(d)
+            except EncordException:
+                return None
+
     def __init__(self, source: Any):
         """
         Creates a BitmaskCoordinates object from a NumPy array, or other objects that implement
-        :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`
+        :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`,
+        such as Pillow images.
 
         For detailed information please refer to :ref:`bitmask tutorial <tutorials/bitmasks:Bitmasks>`
         """
 
         if isinstance(source, BitmaskCoordinates.EncodedBitmask):
             self._encoded_bitmask = source
-        elif (
-            isinstance(source, dict)
-            and len(set(source.keys()).intersection({"top", "left", "height", "width", "rle_string"})) == 5
-        ):
-            self._encoded_bitmask = BitmaskCoordinates.EncodedBitmask(**source)
+        elif bitmask := BitmaskCoordinates.EncodedBitmask.try_from_dict(source):
+            self._encoded_bitmask = bitmask
         else:
             self._encoded_bitmask = BitmaskCoordinates._from_array(source)
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> BitmaskCoordinates:
-        bitmask = d["bitmask"] if "bitmask" in d else d  # Backward compatibility
-        return BitmaskCoordinates(
-            BitmaskCoordinates.EncodedBitmask(
-                top=int(bitmask["top"]),
-                left=int(bitmask["left"]),
-                height=int(bitmask["height"]),
-                width=int(bitmask["width"]),
-                rle_string=bitmask["rleString"],
-            )
-        )
+        """
+        This method is used to construct object from Encord bitmask dictionary format.
+        In most cases external users don't need it. Please consider just passing bitmask numpy array compatible object
+        to the BitmaskCoordinates constructor.
+        """
+        bitmask = d.get("bitmask") or d  # Backward compatibility
+        return BitmaskCoordinates(BitmaskCoordinates.EncodedBitmask.from_dict(bitmask))
 
     @staticmethod
     def _from_array(source: Any) -> BitmaskCoordinates.EncodedBitmask:
@@ -166,13 +167,13 @@ class BitmaskCoordinates:
         return BitmaskCoordinates.EncodedBitmask(top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "top": self._encoded_bitmask.top,
-            "left": self._encoded_bitmask.left,
-            "width": self._encoded_bitmask.width,
-            "height": self._encoded_bitmask.height,
-            "rleString": self._encoded_bitmask.rle_string,
-        }
+        """
+        This method is used to serialise the object to Encord bitmask dictionary format.
+        In most cases external users don't need it. Please consider using .to_numpy_array method, or just pass this
+        BitmaskCoordinates objects to a constructor of any class that supports numpy array protocol,
+        such as NumPy array, Pillow image, etc.
+        """
+        return self._encoded_bitmask.to_dict()
 
     def to_numpy_array(self):
         """
