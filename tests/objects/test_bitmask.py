@@ -1,4 +1,7 @@
+import numpy as np
+
 from encord.objects.bitmask import (
+    BitmaskCoordinates,
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,
@@ -46,3 +49,29 @@ def test_rle_to_mask():
     rle = _string_to_rle(encoded_str)
     mask = _rle_to_mask(rle, size=resolution)
     assert len(mask) == resolution
+
+
+def test_mask_roundtrip():
+    orig_mask = np.zeros((2000, 3000), dtype=bool)
+    orig_mask[:1000, 1000:] = 1
+    orig_mask[1000:, :1000] = 1
+
+    mask_coordinates = BitmaskCoordinates(orig_mask)
+
+    new_mask = mask_coordinates.to_numpy_array()
+    assert np.allclose(orig_mask, new_mask)
+
+    new_mask_using_constructor = np.array(mask_coordinates)
+    assert np.allclose(orig_mask, new_mask_using_constructor)
+
+
+def test_mask_rle_mask_roundtrip():
+    orig_mask = np.zeros((2000, 3000), dtype=bool)
+    orig_mask[:1000, 1000:] = 1
+    orig_mask[1000:, :1000] = 1
+
+    mask_coordinates = BitmaskCoordinates(orig_mask)
+    mask_dict = mask_coordinates.to_dict()
+
+    new_mask = BitmaskCoordinates.from_dict(mask_dict).to_numpy_array()
+    assert np.allclose(orig_mask, new_mask)
