@@ -297,23 +297,23 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             if self._feature_hash_to_answer_map[option.feature_node_hash]
         ]
 
-    def set(self, values: Iterable[FlatOption]):
-        if not isinstance(values, Iterable):
+    def set(self, value: Iterable[FlatOption]):
+        if not isinstance(value, Iterable):
             raise ValueError(
                 "Checklist attribute answer should be an iterable of FlatOption values. "
                 "For setting a single option, consider wrapping it in a list: [value]."
             )
 
-        for value in values:
-            if not isinstance(value, FlatOption):
+        for value_ in value:
+            if not isinstance(value_, FlatOption):
                 raise ValueError("Checklist attribute values can only be set to FlatOption.")
 
         self._answered = True
         for key in self._feature_hash_to_answer_map.keys():
             self._feature_hash_to_answer_map[key] = False
-        for value in values:
-            self._verify_flat_option(value)
-            self._feature_hash_to_answer_map[value.feature_node_hash] = True
+        for value_ in value:
+            self._verify_flat_option(value_)
+            self._feature_hash_to_answer_map[value_.feature_node_hash] = True
 
     @deprecated("0.1.91", alternative=".set(options)")
     def set_options(self, values: Iterable[FlatOption]):

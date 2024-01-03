@@ -902,7 +902,7 @@ class EncordClientProject(EncordClient):
         label = LabelRow(label)
         return self._querier.basic_setter(LabelRow, uid, payload=label, retryable=True)
 
-    def save_label_rows(self, uids: List[str], payload=List[LabelRow]):
+    def save_label_rows(self, uids: List[str], payload: List[LabelRow]):
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -915,11 +915,11 @@ class EncordClientProject(EncordClient):
         Returns:
             None
         """
-        payload = {
+        multirequest_payload = {
             "multi_request": True,
             "labels": payload,
         }
-        return self._querier.basic_setter(LabelRow, uid=uids, payload=payload, retryable=True)
+        return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
     def create_label_row(self, uid):
         """
