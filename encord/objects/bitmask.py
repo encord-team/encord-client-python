@@ -1,9 +1,24 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Protocol, Sequence, Union, runtime_checkable
 
 from encord.exceptions import EncordException
 from encord.orm.base_dto import BaseDTO
+
+
+@runtime_checkable
+class ArrayProtocol(Protocol):
+    """
+    Protocol for any object implementing
+    :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`
+    """
+
+    @property
+    def __array_interface__(self) -> Dict[str, Any]:
+        ...
+
+    def tobytes(self) -> bytes:
+        ...
 
 
 def _string_to_rle(s: str) -> List[int]:
@@ -114,7 +129,7 @@ class BitmaskCoordinates:
             except EncordException:
                 return None
 
-    def __init__(self, source: Any):
+    def __init__(self, source: Union[ArrayProtocol, BitmaskCoordinates.EncodedBitmask, Dict[str, Any]]):
         """
         Creates a BitmaskCoordinates object from a NumPy array, or other objects that implement
         :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`,
@@ -125,10 +140,12 @@ class BitmaskCoordinates:
 
         if isinstance(source, BitmaskCoordinates.EncodedBitmask):
             self._encoded_bitmask = source
+        elif isinstance(source, ArrayProtocol):
+            self._encoded_bitmask = BitmaskCoordinates._from_array(source)
         elif bitmask := BitmaskCoordinates.EncodedBitmask.try_from_dict(source):
             self._encoded_bitmask = bitmask
         else:
-            self._encoded_bitmask = BitmaskCoordinates._from_array(source)
+            raise ValueError(f"Failed to create BitmaskCoordinates from an object of type {type(source)}")
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> BitmaskCoordinates:
@@ -141,7 +158,7 @@ class BitmaskCoordinates:
         return BitmaskCoordinates(BitmaskCoordinates.EncodedBitmask.from_dict(bitmask))
 
     @staticmethod
-    def _from_array(source: Any) -> BitmaskCoordinates.EncodedBitmask:
+    def _from_array(source: ArrayProtocol) -> BitmaskCoordinates.EncodedBitmask:
         if source is None:
             raise EncordException("Bitmask can't be created from None")
 
