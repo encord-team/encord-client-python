@@ -143,7 +143,7 @@ from encord.orm.workflow import (
 )
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
-from encord.project_ontology.ontology import Ontology
+from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.client_utilities import optional_datetime_to_iso_str, optional_set_to_list
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
@@ -959,10 +959,10 @@ class EncordClientProject(EncordClient):
         """
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
 
-    def get_project_ontology(self) -> Ontology:
+    def get_project_ontology(self) -> LegacyOntology:
         project = self.get_project()
         ontology = project["editor_ontology"]
-        return Ontology.from_dict(ontology)
+        return LegacyOntology.from_dict(ontology)
 
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
@@ -1308,7 +1308,7 @@ class EncordClientProject(EncordClient):
 
         return self._querier.get_multiple(LabelLog, payload=payload.to_dict(by_alias=False))
 
-    def __set_project_ontology(self, ontology: Ontology) -> bool:
+    def __set_project_ontology(self, ontology: LegacyOntology) -> bool:
         """
         Save updated project ontology
         Args:
