@@ -119,19 +119,7 @@ class PolylineCoordinates:
 
     @staticmethod
     def from_dict(d: dict) -> PolylineCoordinates:
-        polyline = d["polyline"]
-        values: List[PointCoordinate] = []
-
-        sorted_dict_value_tuples = sorted((int(key), value) for key, value in polyline.items())
-        sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
-
-        for value in sorted_dict_values:
-            point_coordinate = PointCoordinate(
-                x=value["x"],
-                y=value["y"],
-            )
-            values.append(point_coordinate)
-
+        values = [PointCoordinate(**p) for p in d["polyline"]]
         return PolylineCoordinates(values=values)
 
     def to_dict(self) -> dict:
