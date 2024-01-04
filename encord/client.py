@@ -49,6 +49,7 @@ from typing import Iterable, List, Optional, Tuple, Union, cast
 import requests
 
 import encord.exceptions
+from encord.common.deprecated import deprecated
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig, SshConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
@@ -963,17 +964,19 @@ class EncordClientProject(EncordClient):
         ontology = project["editor_ontology"]
         return Ontology.from_dict(ontology)
 
+    @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
         """
         This function is documented in :meth:`encord.project.Project.add_object`.
         """
-        if len(name) == 0:
+        if not name:
             raise ValueError("Ontology object name is empty")
 
         ontology = self.get_project_ontology()
         ontology.add_object(name, shape)
         return self.__set_project_ontology(ontology)
 
+    @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_classification(
         self,
         name: str,
@@ -984,7 +987,7 @@ class EncordClientProject(EncordClient):
         """
         This function is documented in :meth:`encord.project.Project.add_classification`.
         """
-        if len(name) == 0:
+        if not name:
             raise ValueError("Ontology classification name is empty")
 
         ontology = self.get_project_ontology()

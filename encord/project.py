@@ -336,7 +336,7 @@ class Project:
         """
         return self._client.get_project_ontology()
 
-    @deprecated("0.1.102", alternative="Ontology class")
+    @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
         """
         DEPRECATED: prefer using :class:`Ontology <encord.ontology.Ontology>` to manipulate ontology.
@@ -363,7 +363,7 @@ class Project:
         self.refetch_data()
         return res
 
-    @deprecated("0.1.102", alternative="Ontology class")
+    @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_classification(
         self,
         name: str,
