@@ -1,8 +1,6 @@
-from dataclasses import dataclass
 from enum import IntEnum
-from typing import Dict
 
-from encord.orm.formatter import Formatter
+from encord.orm.base_dto import BaseDTO
 
 
 class ProjectUserRole(IntEnum):
@@ -13,12 +11,7 @@ class ProjectUserRole(IntEnum):
     TEAM_MANAGER = 4
 
 
-@dataclass(frozen=True)
-class ProjectUser(Formatter):
+class ProjectUser(BaseDTO):
     user_email: str
     user_role: ProjectUserRole
     project_hash: str
-
-    @classmethod
-    def from_dict(cls, json_dict: Dict):
-        return ProjectUser(json_dict["user_email"], ProjectUserRole(json_dict["user_role"]), json_dict["project_hash"])

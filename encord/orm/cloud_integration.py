@@ -1,7 +1,6 @@
-from dataclasses import dataclass
+from encord.orm.base_dto import BaseDTO
 
 
-@dataclass(frozen=True)
-class CloudIntegration:
+class CloudIntegration(BaseDTO):
     id: str
     title: str
