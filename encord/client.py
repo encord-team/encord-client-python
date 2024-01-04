@@ -49,6 +49,7 @@ from typing import Iterable, List, Optional, Tuple, Union, cast
 import requests
 
 import encord.exceptions
+from encord.common.deprecated import deprecated
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig, SshConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
@@ -142,7 +143,7 @@ from encord.orm.workflow import (
 )
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
-from encord.project_ontology.ontology import Ontology
+from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.client_utilities import optional_datetime_to_iso_str, optional_set_to_list
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
@@ -958,22 +959,24 @@ class EncordClientProject(EncordClient):
         """
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
 
-    def get_project_ontology(self) -> Ontology:
+    def get_project_ontology(self) -> LegacyOntology:
         project = self.get_project()
         ontology = project["editor_ontology"]
-        return Ontology.from_dict(ontology)
+        return LegacyOntology.from_dict(ontology)
 
+    @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
         """
         This function is documented in :meth:`encord.project.Project.add_object`.
         """
-        if len(name) == 0:
+        if not name:
             raise ValueError("Ontology object name is empty")
 
         ontology = self.get_project_ontology()
         ontology.add_object(name, shape)
         return self.__set_project_ontology(ontology)
 
+    @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_classification(
         self,
         name: str,
@@ -984,7 +987,7 @@ class EncordClientProject(EncordClient):
         """
         This function is documented in :meth:`encord.project.Project.add_classification`.
         """
-        if len(name) == 0:
+        if not name:
             raise ValueError("Ontology classification name is empty")
 
         ontology = self.get_project_ontology()
@@ -1305,7 +1308,7 @@ class EncordClientProject(EncordClient):
 
         return self._querier.get_multiple(LabelLog, payload=payload.to_dict(by_alias=False))
 
-    def __set_project_ontology(self, ontology: Ontology) -> bool:
+    def __set_project_ontology(self, ontology: LegacyOntology) -> bool:
         """
         Save updated project ontology
         Args:
