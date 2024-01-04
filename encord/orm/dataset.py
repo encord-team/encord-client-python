@@ -28,6 +28,7 @@ from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
+from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 from encord.utilities.common import _get_dict_without_none_keys
 
@@ -37,19 +38,10 @@ class DatasetUserRole(IntEnum):
     USER = 1
 
 
-@dataclasses.dataclass(frozen=True)
-class DatasetUser(Formatter):
+class DatasetUser(BaseDTO):
     user_email: str
     user_role: DatasetUserRole
     dataset_hash: str
-
-    @classmethod
-    def from_dict(cls, json_dict: Dict):
-        return DatasetUser(
-            user_email=json_dict["user_email"],
-            user_role=DatasetUserRole(json_dict["user_role"]),
-            dataset_hash=json_dict["dataset_hash"],
-        )
 
 
 class DatasetUsers:

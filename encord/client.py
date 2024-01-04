@@ -804,10 +804,9 @@ class EncordClientProject(EncordClient):
         """
 
         payload = {"user_emails": user_emails, "user_role": user_role}
-
         users = self._querier.basic_setter(ProjectUsers, self._config.resource_id, payload=payload)
 
-        return list(map(lambda user: ProjectUser.from_dict(user), users))
+        return [ProjectUser.from_dict(user) for user in users]
 
     def copy_project(
         self,
