@@ -6,7 +6,7 @@ from typing import Optional, Type, TypeVar, cast
 T = TypeVar("T", bound="StringEnum")
 
 
-class StringEnum(Enum):
+class StringEnum(str, Enum):
     """
     Use this enum class if you need the helper that creates the enum instance from a string.
     """

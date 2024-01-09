@@ -49,11 +49,6 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
     def get_property_type() -> PropertyType:
         pass
 
-    @staticmethod
-    @abstractmethod
-    def _get_property_type_name() -> str:
-        pass
-
     @abstractmethod
     def _encode_options(self) -> Optional[List[dict]]:
         pass
@@ -71,19 +66,19 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
     def from_dict(cls, d: Dict[str, Any]) -> Attribute:
         property_type = d["type"]
         common_attribute_fields = cls._decode_common_attribute_fields(d)
-        if property_type == RadioAttribute._get_property_type_name():
+        if property_type == RadioAttribute.get_property_type():
             return RadioAttribute(
                 **common_attribute_fields,
                 options=[NestableOption.from_dict(x) for x in d.get("options", [])],
             )
 
-        elif property_type == ChecklistAttribute._get_property_type_name():
+        elif property_type == ChecklistAttribute.get_property_type():
             return ChecklistAttribute(
                 **common_attribute_fields,
                 options=[FlatOption.from_dict(x) for x in d.get("options", [])],
             )
 
-        elif property_type == TextAttribute._get_property_type_name():
+        elif property_type == TextAttribute.get_property_type():
             return TextAttribute(
                 **common_attribute_fields,
             )
@@ -97,7 +92,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
         ret: Dict[str, Any] = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
-        ret["type"] = self._get_property_type_name()
+        ret["type"] = self.get_property_type()
         ret["featureNodeHash"] = self.feature_node_hash
         ret["required"] = self.required
         ret["dynamic"] = self.dynamic
@@ -147,10 +142,6 @@ class RadioAttribute(Attribute["NestableOption"]):
     def get_property_type() -> PropertyType:
         return PropertyType.RADIO
 
-    @staticmethod
-    def _get_property_type_name() -> str:
-        return PropertyType.RADIO.value
-
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         if len(self._options) == 0:
             return None
@@ -197,10 +188,6 @@ class ChecklistAttribute(Attribute["FlatOption"]):
     def get_property_type() -> PropertyType:
         return PropertyType.CHECKLIST
 
-    @staticmethod
-    def _get_property_type_name() -> str:
-        return PropertyType.CHECKLIST.value
-
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         if len(self._options) == 0:
             return None
@@ -242,10 +229,6 @@ class TextAttribute(Attribute["FlatOption"]):
     @staticmethod
     def get_property_type() -> PropertyType:
         return PropertyType.TEXT
-
-    @staticmethod
-    def _get_property_type_name() -> str:
-        return PropertyType.TEXT.value
 
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
         return None
