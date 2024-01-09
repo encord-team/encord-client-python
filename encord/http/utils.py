@@ -2,7 +2,7 @@ import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
-from typing import Iterable, List, Optional, Type, TypeVar, Union
+from typing import Iterable, List, Optional, Type, Union
 
 from tqdm import tqdm
 
@@ -44,9 +44,6 @@ class CloudUploadSettings:
     after retries. For example, upon creation of a large image group, you might want to create the image group
     even if a few images were not successfully uploaded. The unsuccessfully uploaded images will then be logged.
     """
-
-
-OrmT = TypeVar("OrmT")
 
 
 def _get_content_type(orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]], file_path: str) -> Optional[str]:
