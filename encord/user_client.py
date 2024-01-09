@@ -613,7 +613,7 @@ class EncordUserClient:
     def create_ontology(
         self, title: str, description: str = "", structure: Optional[OntologyStructure] = None
     ) -> Ontology:
-        structure_dict = structure.to_dict() if structure else dict()
+        structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()
         ontology = {
             "title": title,
             "description": description,
