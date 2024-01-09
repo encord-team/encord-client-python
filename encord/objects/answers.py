@@ -124,10 +124,7 @@ class TextAnswer(Answer[str, TextAttribute]):
         self._answered = True
 
     def get_value(self) -> Optional[str]:
-        if not self.is_answered():
-            return None
-        else:
-            return self._value
+        return self._value if self.is_answered() else None
 
     def copy_from(self, text_answer: TextAnswer):
         if text_answer.ontology_attribute.feature_node_hash != self.ontology_attribute.feature_node_hash:
@@ -193,10 +190,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
         self._value = value
 
     def get_value(self) -> Optional[NestableOption]:
-        if not self.is_answered():
-            return None
-        else:
-            return self._value
+        return self._value if self.is_answered() else None
 
     def copy_from(self, radio_answer: RadioAnswer):
         if radio_answer.ontology_attribute.feature_node_hash != self.ontology_attribute.feature_node_hash:
