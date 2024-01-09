@@ -13,29 +13,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from collections import OrderedDict
-
-from encord.orm import base_orm
+from encord.orm.base_dto import BaseDTO
 
 
-class ApiKeyMeta(base_orm.BaseORM):
+class ApiKeyMeta(BaseDTO):
     """
     ApiKeyMeta contains key information.
-
-    ORM:
-
-    title,
-    resource_type
-
     """
 
-    DB_FIELDS = OrderedDict(
-        [
-            ("title", str),
-            ("resource_type", str),
-        ]
-    )
-
-    NON_UPDATABLE_FIELDS = {
-        "resource_type",
-    }
+    title: str
+    resource_type: str

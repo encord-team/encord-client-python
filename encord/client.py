@@ -223,14 +223,13 @@ class EncordClient:
         """
         querier = Querier(config)
         key_type = querier.basic_getter(ApiKeyMeta)
-        resource_type = key_type.get("resource_type", None)
 
-        if resource_type == TYPE_PROJECT:
-            logger.info("Initialising Encord client for project using key: %s", key_type.get("title", ""))
+        if key_type.resource_type == TYPE_PROJECT:
+            logger.info("Initialising Encord client for project using key: %s", key_type.title)
             return EncordClientProject(querier, config)
 
-        elif resource_type == TYPE_DATASET:
-            logger.info("Initialising Encord client for dataset using key: %s", key_type.get("title", ""))
+        elif key_type.resource_type == TYPE_DATASET:
+            logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
             return EncordClientDataset(querier, config)
 
         else:
@@ -308,13 +307,12 @@ class EncordClientDataset(EncordClient):
         """
         querier = Querier(config)
         key_type = querier.basic_getter(ApiKeyMeta)
-        resource_type = key_type.get("resource_type", None)
 
-        if resource_type == TYPE_PROJECT:
+        if key_type.resource_type == TYPE_PROJECT:
             raise RuntimeError("Trying to initialise an EncordClientDataset using a project key.")
 
-        elif resource_type == TYPE_DATASET:
-            logger.info("Initialising Encord client for dataset using key: %s", key_type.get("title", ""))
+        elif key_type.resource_type == TYPE_DATASET:
+            logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
             return EncordClientDataset(querier, config, dataset_access_settings=dataset_access_settings)
 
         else:
