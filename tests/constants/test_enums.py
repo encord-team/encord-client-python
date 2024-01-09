@@ -14,4 +14,6 @@ def test_data_type_consistency() -> None:
 
 def test_data_type_missing() -> None:
     assert DataType.from_upper_case_string("new_cord_type").value == "_MISSING_DATA_TYPE_"
+    assert DataType.from_upper_case_string("new_cord_type") == "_MISSING_DATA_TYPE_"
     assert DataType("new_cord_type").value == "_MISSING_DATA_TYPE_"
+    assert DataType("new_cord_type") == "_MISSING_DATA_TYPE_"
