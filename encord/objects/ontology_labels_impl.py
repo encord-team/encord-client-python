@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Uni
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.constants.enums import DataType
-from encord.exceptions import LabelRowError, WrongProjectTypeError
+from encord.exceptions import LabelRowError, WrongProjectTypeError, OntologyError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.limits import (
     LABEL_ROW_BUNDLE_CREATE_LIMIT,
@@ -1325,18 +1325,23 @@ class LabelRowV2:
         for frame_object_label in objects_list:
             object_hash = frame_object_label["objectHash"]
             if object_hash not in self._objects_map:
-                object_instance = self._create_new_object_instance(frame_object_label, frame)
-                self.add_object_instance(object_instance)
+                try:
+                    object_instance = self._create_new_object_instance(frame_object_label, frame)
+                    self.add_object_instance(object_instance)
+                except OntologyError:
+                    logging.warning(f'Skipping object {object_hash} since it is not in the ontology.')
             else:
                 self._add_coordinates_to_object_instance(frame_object_label, frame)
 
     def _add_objects_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_answers"].values():
             object_hash = answer["objectHash"]
-            object_instance = self._objects_map[object_hash]
-
-            answer_list = answer["classifications"]
-            object_instance.set_answer_from_list(answer_list)
+            object_instance = self._objects_map.get(object_hash)
+            if object_instance:
+                answer_list = answer["classifications"]
+                object_instance.set_answer_from_list(answer_list)
+            else:
+                logging.warning(f'Skipping answers for object {object_hash} as it has no corresponding object.')
 
     def _add_action_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_actions"].values():
