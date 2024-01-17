@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import Any, Dict, Type, TypeVar
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError, validator
 from pydantic.generics import GenericModel
 
+from encord.common.time_parser import parse_datetime
 from encord.common.utils import snake_to_camel
 from encord.exceptions import EncordException
 from encord.orm.base_dto.base_dto_interface import BaseDTOInterface, T
@@ -13,6 +15,12 @@ class BaseDTO(BaseDTOInterface, BaseModel):
         ignore_extra = True
         alias_generator = snake_to_camel
         allow_population_by_field_name = True
+
+    @validator("*", pre=True)
+    def parse_datetime(cls, value, field):
+        if isinstance(value, str) and issubclass(field.type_, datetime):
+            return parse_datetime(value)
+        return value
 
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
@@ -33,6 +41,12 @@ class GenericBaseDTO(BaseDTOInterface, GenericModel):
         ignore_extra = True
         alias_generator = snake_to_camel
         allow_population_by_field_name = True
+
+    @validator("*", pre=True)
+    def parse_datetime(cls, value, field):
+        if isinstance(value, str) and issubclass(field.type_, datetime):
+            return parse_datetime(value)
+        return value
 
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
