@@ -8,7 +8,6 @@ from pydantic import (  # type: ignore[attr-defined]
     Field,
     ValidationError,
     field_validator,
-    model_validator,
 )
 
 from encord.common.time_parser import parse_datetime
@@ -42,6 +41,12 @@ DataT = TypeVar("DataT")
 
 class GenericBaseDTO(BaseDTOInterface, BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)
+
+    @field_validator("*", mode="before")
+    def parse_datetime(cls, value, info):
+        if issubclass(cls.model_fields[info.field_name].annotation, datetime) and isinstance(value, str):
+            return parse_datetime(value)
+        return value
 
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:

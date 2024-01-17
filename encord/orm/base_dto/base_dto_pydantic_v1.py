@@ -42,6 +42,12 @@ class GenericBaseDTO(BaseDTOInterface, GenericModel):
         alias_generator = snake_to_camel
         allow_population_by_field_name = True
 
+    @validator("*", pre=True)
+    def parse_datetime(cls, value, field):
+        if isinstance(value, str) and issubclass(field.type_, datetime):
+            return parse_datetime(value)
+        return value
+
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
         try:
