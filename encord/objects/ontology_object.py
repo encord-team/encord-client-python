@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
 
 from encord.objects.attributes import (
     Attribute,
+    AttributeType,
     _add_attribute,
     attribute_from_dict,
     attributes_to_list_dict,
@@ -65,17 +66,15 @@ class Object(OntologyElement):
 
         return ret
 
-    T = TypeVar("T", bound=Attribute)
-
     def add_attribute(
         self,
-        cls: Type[T],
+        cls: Type[AttributeType],
         name: str,
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
         required: bool = False,
         dynamic: bool = False,
-    ) -> T:
+    ) -> AttributeType:
         """
         Adds an attribute to the object.
 
