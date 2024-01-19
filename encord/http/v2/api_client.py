@@ -62,7 +62,7 @@ class ApiClient:
 
     @staticmethod
     def _tracing_id() -> str:
-        return f"{uuid.uuid4().hex}/{random.randint(1, 2**63 - 1)};o=1"
+        return f"{uuid.uuid4().hex}/1;o=1"
 
     def _build_url(self, path: Path) -> str:
         return urljoin(self._domain, str(self._base_path / path))
