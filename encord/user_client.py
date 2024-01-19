@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime
-from encord.configs import SshConfig, UserConfig, get_env_ssh_key
+from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
@@ -287,6 +287,15 @@ class EncordUserClient:
         querier = Querier(user_config)
 
         return EncordUserClient(user_config, querier)
+
+    @staticmethod
+    def create_with_bearer_token(
+        token: str, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS, **kwargs
+    ) -> EncordUserClient:
+        config = BearerConfig.from_bearer_token(token=token, requests_settings=requests_settings, **kwargs)
+        querier = Querier(config)
+
+        return EncordUserClient(config, querier)
 
     def get_projects(
         self,

@@ -12,10 +12,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from __future__ import annotations
+
 import hashlib
 import logging
 import os
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Dict, Optional
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -112,7 +115,7 @@ class UserConfig(BaseConfig):
         password: Optional[str] = "",
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
-    ):
+    ) -> UserConfig:
         """
         Instantiate a UserConfig object by the content of a private ssh key.
 
@@ -136,6 +139,36 @@ class UserConfig(BaseConfig):
             return UserConfig(private_key, requests_settings=requests_settings, **kwargs)
         else:
             raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
+
+
+class BearerConfig(BaseConfig):
+    def __init__(
+        self,
+        token: str,
+        domain: str = ENCORD_DOMAIN,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+    ):
+        self.token = token
+        self.domain = domain
+
+        endpoint = domain + ENCORD_PUBLIC_USER_PATH
+        super().__init__(endpoint, requests_settings=requests_settings)
+
+    def define_headers(self, data: str) -> Dict:
+        return {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {str}",
+        }
+
+    @staticmethod
+    def from_bearer_token(
+        token: str,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        **kwargs,
+    ) -> BearerConfig:
+        return BearerConfig(token=token, requests_settings=requests_settings, **kwargs)
 
 
 class Config(BaseConfig):
