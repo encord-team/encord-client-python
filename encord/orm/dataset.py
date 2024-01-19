@@ -642,20 +642,10 @@ class Dataset(dict, Formatter):
         )
 
 
-@dataclasses.dataclass(frozen=True)
-class DatasetDataInfo(Formatter):
+class DatasetDataInfo(BaseDTO):
     data_hash: str
     title: str
-    backing_item_uuid: Optional[UUID]
-
-    @classmethod
-    def from_dict(cls, json_dict: Dict) -> DatasetDataInfo:
-        backing_item_uuid_value = json_dict.get("backing_item_uuid")
-        return DatasetDataInfo(
-            json_dict["data_hash"],
-            json_dict["title"],
-            UUID(backing_item_uuid_value) if backing_item_uuid_value else None,
-        )
+    backing_item_uuid: UUID
 
 
 @dataclasses.dataclass(frozen=True)
@@ -941,32 +931,18 @@ class ImageGroupOCR:
     processed_texts: Dict
 
 
-@dataclasses.dataclass(frozen=True)
-class ReEncodeVideoTaskResult:
+class ReEncodeVideoTaskResult(BaseDTO):
     data_hash: str
     # The signed url is only present when using StorageLocation.CORD_STORAGE
     signed_url: Optional[str]
     bucket_path: str
 
 
-@dataclasses.dataclass(frozen=True)
-class ReEncodeVideoTask(Formatter):
+class ReEncodeVideoTask(BaseDTO):
     """A re encode video object with supporting information."""
 
     status: str
     result: Optional[List[ReEncodeVideoTaskResult]] = None
-
-    @classmethod
-    def from_dict(cls, json_dict: Dict):
-        if "result" in json_dict:
-            dict_results = json_dict["result"]
-            results = [
-                ReEncodeVideoTaskResult(result["data_hash"], result.get("signed_url"), result["bucket_path"])
-                for result in dict_results
-            ]
-            return ReEncodeVideoTask(json_dict["status"], results)
-        else:
-            return ReEncodeVideoTask(json_dict["status"])
 
 
 @dataclasses.dataclass
@@ -1014,8 +990,7 @@ class LongPollingStatus(str, Enum):
     """
 
 
-@dataclasses.dataclass(frozen=True)
-class DatasetDataLongPolling(Formatter):
+class DatasetDataLongPolling(BaseDTO):
     """
     Response of the upload job's long polling request.
 
@@ -1040,17 +1015,6 @@ class DatasetDataLongPolling(Formatter):
 
     units_error_count: int
     """Number of upload job units that have error status."""
-
-    @classmethod
-    def from_dict(cls, json_dict: Dict) -> DatasetDataLongPolling:
-        return DatasetDataLongPolling(
-            status=LongPollingStatus(json_dict["status"]),
-            data_hashes_with_titles=[DatasetDataInfo.from_dict(x) for x in json_dict["data_hashes_with_titles"]],
-            errors=json_dict["errors"],
-            units_pending_count=json_dict["units_pending_count"],
-            units_done_count=json_dict["units_done_count"],
-            units_error_count=json_dict["units_error_count"],
-        )
 
 
 @dataclasses.dataclass(frozen=True)
