@@ -45,19 +45,23 @@ Encord Objects
 .. automodule:: encord.objects.common
     :members:
     :undoc-members:
-    :inherited-members:
-
-.. automodule:: encord.objects.utils
-    :members:
-    :undoc-members:
 
 .. automodule:: encord.objects.project
     :members:
     :undoc-members:
 
+.. automodule:: encord.objects.attributes
+    :members:
+    :undoc-members:
+
+
 Label Row V2
 --------------------
 .. autoclass:: encord.objects.LabelRowV2
+    :members:
+    :undoc-members:
+
+.. automodule:: encord.objects.metadata
     :members:
     :undoc-members:
 
