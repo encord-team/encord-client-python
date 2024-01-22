@@ -19,6 +19,7 @@ import json
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
+from types import MappingProxyType
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -288,7 +289,7 @@ class DataRow(dict, Formatter):
         return self["duration"]
 
     @property
-    def client_metadata(self) -> Optional[dict]:
+    def client_metadata(self) -> Optional[MappingProxyType]:
         """
         The currently cached client metadata. To cache the client metadata, use the
         :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
@@ -296,7 +297,7 @@ class DataRow(dict, Formatter):
         The setter updates the custom client metadata. This queues a request for the backend which will
         be executed on a call of :meth:`.DataRow.upload`.
         """
-        return self["client_metadata"]
+        return MappingProxyType(self["client_metadata"]) if self["client_metadata"] is not None else None
 
     @client_metadata.setter
     def client_metadata(self, new_client_metadata: Dict) -> None:
