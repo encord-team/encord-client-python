@@ -27,7 +27,7 @@ DATASET_JSON = {
             "file_size": 3560366.0,
             "file_type": "image/png",
             "data_type": "IMG_GROUP",
-            "client_metadata": {"key", "value"},
+            "client_metadata": {"key": "value"},
             "storage_location": StorageLocation.CORD_STORAGE.value,
             "is_optimised_image_group": None,
             "frames_per_second": None,
