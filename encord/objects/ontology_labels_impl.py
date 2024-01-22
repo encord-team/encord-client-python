@@ -1428,7 +1428,10 @@ class LabelRowV2:
                     frame_classification_label, frame, classification_answers
                 )
                 if classification_instance:
-                    self.add_classification_instance(classification_instance)
+                    try:
+                        self.add_classification_instance(classification_instance)
+                    except LabelRowError:
+                        logging.warning(f'Skipping {frame}')
             else:
                 self._add_frames_to_classification_instance(frame_classification_label, frame)
 

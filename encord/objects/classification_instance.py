@@ -135,7 +135,7 @@ class ClassificationInstance:
         frames_list = frames_class_to_frames_list(frames)
 
         if self._check_classification_already_present(frames_list):
-            logging.warning(f'Skipping {frames_list}')
+            logging.warning(f'Skipping {frames_list} as already present for {self.ontology_item}')
             return
 
         for frame in frames_list:
