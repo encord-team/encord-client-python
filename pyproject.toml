@@ -6,7 +6,7 @@ authors = ["Cord Technologies Limited <hello@encord.com>"]
 license = "Apache Software License"
 keywords = ["encord"]
 packages = [
-    { include = "encord"},
+    { include = "encord" },
 ]
 readme = "README.md"
 repository="https://github.com/encord-team/encord-client-python"
@@ -16,6 +16,8 @@ classifiers=[
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
+include = ["encord/py.typed"]
+
 
 [tool.poetry.dependencies]
 python = "^3.8"

@@ -128,6 +128,14 @@ class LabelRowV2:
         return self._label_row_read_only_data.data_type
 
     @property
+    def file_type(self) -> str | None:
+        return self._label_row_read_only_data.file_type
+
+    @property
+    def client_metadata(self) -> dict | None:
+        return self._label_row_read_only_data.client_metadata
+
+    @property
     def label_status(self) -> LabelStatus:
         """
         Returns the current labeling status for the label row.
@@ -428,6 +436,60 @@ class LabelRowV2:
             frame_num = frame
 
         return self.FrameView(self, self._label_row_read_only_data, frame_num)
+
+    def _get_image_group_metadata_list(self) -> List[LabelRowReadOnlyDataImagesDataEntry]:
+        if self._label_row_read_only_data.data_type in [DataType.IMAGE, DataType.VIDEO]:
+            return [
+                self.LabelRowReadOnlyDataImagesDataEntry(
+                    index=0,
+                    title=self._label_row_read_only_data.data_title,
+                    file_type=self._label_row_read_only_data.file_type or "",
+                    height=self._label_row_read_only_data.height or 0,
+                    width=self._label_row_read_only_data.width or 0,
+                    image_hash=self._label_row_read_only_data.data_hash,
+                )
+            ]
+
+        images_data = self._label_row_read_only_data.images_data
+        if images_data is None:
+            raise LabelRowError("Image data is not present in the label row")
+        return images_data
+
+    def get_image_group_metadata(self, frame: Union[int, str] = 0) -> FrameViewMetadata:
+        """
+        Get image group metadata for frame or image hash.
+        """
+        images_data = self._get_image_group_metadata_list()
+        if isinstance(frame, str):
+            data_meta = None
+            for data in images_data:
+                if data.image_hash == frame:
+                    data_meta = data
+                    break
+            if data_meta is None:
+                raise LabelRowError(f"Image hash {frame} not found in the label row")
+        else:
+            data_meta = None
+            for data in images_data:
+                if data.index == frame:
+                    data_meta = data
+                    break
+            if data_meta is None:
+                raise LabelRowError(f"Frame {frame} not found in the label row")
+
+        return self.FrameViewMetadata(data_meta)
+
+    def get_image_group_metadata_list(self) -> List[FrameViewMetadata]:
+        """
+        Get image metadata for image group if requested.
+        """
+        views = []
+
+        images_data = self._get_image_group_metadata_list()
+
+        for data in images_data:
+            views.append(self.FrameViewMetadata(data))
+        return views
 
     def get_frame_views(self) -> List[FrameView]:
         """
@@ -732,6 +794,38 @@ class LabelRowV2:
             payload=BundledSetPriorityPayload(priorities=[(self.data_hash, priority)]),
         )
 
+    class FrameViewMetadata:
+        """
+        This class can be used to inspect what metadata for a frame view
+        """
+
+        def __init__(self, images_data: LabelRowV2.LabelRowReadOnlyDataImagesDataEntry):
+            self._image_data = images_data
+
+        @property
+        def title(self) -> str:
+            return self._image_data.title
+
+        @property
+        def file_type(self) -> str:
+            return self._image_data.file_type
+
+        @property
+        def width(self) -> int:
+            return self._image_data.width
+
+        @property
+        def height(self) -> int:
+            return self._image_data.height
+
+        @property
+        def image_hash(self) -> str:
+            return self._image_data.image_hash
+
+        @property
+        def frame_number(self) -> int:
+            return self._image_data.index
+
     class FrameView:
         """
         This class can be used to inspect what object/classification instances are on a given frame or
@@ -921,6 +1015,15 @@ class LabelRowV2:
         data_link: Optional[str] = None
 
     @dataclass(frozen=True)
+    class LabelRowReadOnlyDataImagesDataEntry:
+        index: int
+        title: str
+        file_type: str
+        height: int
+        width: int
+        image_hash: str
+
+    @dataclass(frozen=True)
     class LabelRowReadOnlyData:
         """This is an internal helper class. A user should not directly interact with it."""
 
@@ -946,6 +1049,9 @@ class LabelRowV2:
         height: Optional[int]
         data_link: Optional[str]
         priority: Optional[float]
+        file_type: Optional[str]
+        client_metadata: Optional[dict]
+        images_data: Optional[List[LabelRowV2.LabelRowReadOnlyDataImagesDataEntry]]
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
@@ -1208,6 +1314,11 @@ class LabelRowV2:
             width=label_row_metadata.width,
             height=label_row_metadata.height,
             priority=label_row_metadata.priority,
+            images_data=None
+            if label_row_metadata.images_data is None
+            else [LabelRowV2.LabelRowReadOnlyDataImagesDataEntry(**data) for data in label_row_metadata.images_data],
+            client_metadata=label_row_metadata.client_metadata,
+            file_type=label_row_metadata.file_type,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -1273,6 +1384,9 @@ class LabelRowV2:
             height=height,
             width=width,
             priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
+            client_metadata=label_row_dict.get("client_metadata", None),
+            images_data=label_row_dict.get("images_data", None),
+            file_type=label_row_dict.get("file_type"),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):

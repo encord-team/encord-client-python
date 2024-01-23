@@ -283,6 +283,10 @@ class LabelRowMetadata(Formatter):
     width: Optional[int]
     priority: Optional[float] = None
     """Only available for not complete tasks"""
+    client_metadata: Optional[dict] = None
+    images_data: Optional[list] = None
+    file_type: Optional[str] = None
+    """Only available for certain read requests"""
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -319,6 +323,9 @@ class LabelRowMetadata(Formatter):
             height=json_dict.get("height"),
             width=json_dict.get("width"),
             priority=json_dict.get("priority"),
+            client_metadata=json_dict.get("client_metadata", None),
+            images_data=json_dict.get("images_data", None),
+            file_type=json_dict.get("file_type"),
         )
 
     @classmethod
