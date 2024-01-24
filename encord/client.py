@@ -918,13 +918,13 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
-    def create_label_row(self, uid):
+    def create_label_row(self, uid, *, get_signed_url=False):
         """
         This function is documented in :meth:`encord.project.Project.create_label_row`.
         """
-        return self._querier.basic_put(LabelRow, uid=uid, payload=None)
+        return self._querier.basic_put(LabelRow, uid=uid, payload={"get_signed_url": get_signed_url})
 
-    def create_label_rows(self, uids: List[str]) -> List[LabelRow]:
+    def create_label_rows(self, uids: List[str], *, get_signed_url=False) -> List[LabelRow]:
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -936,7 +936,9 @@ class EncordClientProject(EncordClient):
         Returns:
             List[LabelRow]: A list of created label rows
         """
-        return self._querier.put_multiple(LabelRow, uid=uids, payload={"multi_request": True})
+        return self._querier.put_multiple(
+            LabelRow, uid=uids, payload={"multi_request": True, "get_signed_url": get_signed_url}
+        )
 
     def submit_label_row_for_review(self, uid):
         """
