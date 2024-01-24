@@ -166,4 +166,4 @@ def _upload_single_file(
                 )
 
                 logger.error(error_string)
-                raise RuntimeError(error_string)
+                raise CloudUploadError(error_string)
