@@ -1325,10 +1325,10 @@ class LabelRowV2:
         for frame_object_label in objects_list:
             object_hash = frame_object_label["objectHash"]
             if object_hash not in self._objects_map:
-                try:
-                    object_instance = self._create_new_object_instance(frame_object_label, frame)
+                object_instance = self._create_new_object_instance(frame_object_label, frame)
+                if object_instance:
                     self.add_object_instance(object_instance)
-                except OntologyError:
+                else:
                     logging.warning(f'Skipping object {object_hash} since it is not in the ontology.')
             else:
                 self._add_coordinates_to_object_instance(frame_object_label, frame)
@@ -1351,12 +1351,14 @@ class LabelRowV2:
             answer_list = answer["actions"]
             object_instance.set_answer_from_list(answer_list)
 
-    def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
+    def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance | None:
         ontology = self._ontology.structure
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
 
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
+        if not label_class:
+            return None
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
         coordinates = self._get_coordinates(frame_object_label)
