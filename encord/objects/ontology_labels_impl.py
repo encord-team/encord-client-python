@@ -311,6 +311,7 @@ class LabelRowV2:
                 operation=self._project_client.create_label_rows,
                 payload=BundledCreateRowsPayload(
                     uids=[self.data_hash],
+                    get_signed_url=include_signed_url,
                 ),
                 result_mapper=BundleResultMapper[OrmLabelRow](
                     result_mapping_predicate=lambda r: r["data_hash"],
