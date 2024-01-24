@@ -1458,6 +1458,9 @@ class LabelRowV2:
         classification_hash = frame_classification_label["classificationHash"]
 
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
+        if not label_class:
+            logging.warning(f'Skipping classification hash:{classification_hash} as no ontology object was found.')
+            return None
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
@@ -1474,7 +1477,7 @@ class LabelRowV2:
 
         answers_dict = classification_answers.get(classification_hash, {}).get("classifications")
         if not answers_dict:
-            logging.warning(f'Skipping {classification_hash}')
+            logging.warning(f'Skipping classification hash:{classification_hash} as no corresponding answer was found.')
             return None
         self._add_static_answers_from_dict(classification_instance, answers_dict)
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Type, cast
 from uuid import uuid4
@@ -28,7 +29,7 @@ class OntologyStructure:
         self,
         feature_node_hash: str,
         type_: Optional[Type[OntologyElementT]] = None,
-    ) -> OntologyElementT:
+    ) -> OntologyElementT | None:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
@@ -52,8 +53,7 @@ class OntologyStructure:
             found_item = _get_element_by_hash(feature_node_hash, classification.attributes)
             if found_item is not None:
                 return checked_cast(found_item, type_)
-
-        raise OntologyError(f"Item not found: can't find an item with a hash {feature_node_hash} in the ontology.")
+        logging.warning(f"Item not found: can't find an item with a hash {feature_node_hash} in the ontology.")
 
     def get_child_by_title(
         self,
