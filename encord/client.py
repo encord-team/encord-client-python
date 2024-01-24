@@ -856,6 +856,7 @@ class EncordClientProject(EncordClient):
         include_object_feature_hashes: Optional[typing.Set[str]] = None,
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
         include_reviews: bool = False,
+        include_export_history: bool = False,
     ) -> LabelRow:
         """
         This function is documented in :meth:`encord.project.Project.get_label_row`.
@@ -866,6 +867,7 @@ class EncordClientProject(EncordClient):
             "include_object_feature_hashes": optional_set_to_list(include_object_feature_hashes),
             "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
             "include_reviews": include_reviews,
+            "include_export_history": include_export_history,
         }
 
         return self._querier.basic_getter(LabelRow, uid, payload=payload, retryable=True)
@@ -878,6 +880,7 @@ class EncordClientProject(EncordClient):
         include_object_feature_hashes: Optional[typing.Set[str]] = None,
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
         include_reviews: bool = False,
+        include_export_history: bool = False,
     ) -> List[LabelRow]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_rows`.
@@ -888,6 +891,7 @@ class EncordClientProject(EncordClient):
             "include_object_feature_hashes": optional_set_to_list(include_object_feature_hashes),
             "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
             "include_reviews": include_reviews,
+            "include_export_history": include_export_history,
         }
 
         return self._querier.get_multiple(LabelRow, uids, payload=payload, retryable=True)
@@ -918,13 +922,13 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
-    def create_label_row(self, uid):
+    def create_label_row(self, uid, *, get_signed_url=False):
         """
         This function is documented in :meth:`encord.project.Project.create_label_row`.
         """
-        return self._querier.basic_put(LabelRow, uid=uid, payload=None)
+        return self._querier.basic_put(LabelRow, uid=uid, payload={"get_signed_url": get_signed_url})
 
-    def create_label_rows(self, uids: List[str]) -> List[LabelRow]:
+    def create_label_rows(self, uids: List[str], *, get_signed_url=False) -> List[LabelRow]:
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -936,7 +940,9 @@ class EncordClientProject(EncordClient):
         Returns:
             List[LabelRow]: A list of created label rows
         """
-        return self._querier.put_multiple(LabelRow, uid=uids, payload={"multi_request": True})
+        return self._querier.put_multiple(
+            LabelRow, uid=uids, payload={"multi_request": True, "get_signed_url": get_signed_url}
+        )
 
     def submit_label_row_for_review(self, uid):
         """
