@@ -25,6 +25,7 @@ class BundledGetRowsPayload:
 @dataclass
 class BundledCreateRowsPayload:
     uids: List[str]
+    get_signed_url: bool
 
     def add(self, other: BundledCreateRowsPayload) -> BundledCreateRowsPayload:
         self.uids.extend(other.uids)
