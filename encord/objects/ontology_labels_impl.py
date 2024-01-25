@@ -1359,6 +1359,15 @@ class LabelRowV2:
         else:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
+        # Preserve extra list metadata on initialise_labels
+        existing_priority = None
+        existing_client_metadata = None
+        existing_images_data = None
+        if hasattr(self, "_label_row_read_only_data"):
+            existing_priority = self._label_row_read_only_data.priority
+            existing_client_metadata = self._label_row_read_only_data.client_metadata
+            existing_images_data = self._label_row_read_only_data.images_data
+
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
             dataset_hash=label_row_dict["dataset_hash"],
@@ -1383,10 +1392,10 @@ class LabelRowV2:
             data_link=data_link,
             height=height,
             width=width,
-            priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
-            client_metadata=label_row_dict.get("client_metadata", None),
-            images_data=label_row_dict.get("images_data", None),
-            file_type=label_row_dict.get("file_type"),
+            priority=label_row_dict.get("priority", existing_priority),
+            client_metadata=label_row_dict.get("client_metadata", existing_client_metadata),
+            images_data=label_row_dict.get("images_data", existing_images_data),
+            file_type=label_row_dict["file_type"],
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
