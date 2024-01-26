@@ -67,6 +67,8 @@ class BaseConfig(ABC):
     def define_headers(self, data: str) -> Dict:
         pass
 
+    def __str__(self) -> str:
+        return self.requests_settings.__str__()
 
 def _get_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
     hash_builder = hashlib.sha256()
@@ -137,7 +139,8 @@ class UserConfig(BaseConfig):
         else:
             raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
 
-
+    def __str__(self) -> str:
+        return super().__str__()
 class Config(BaseConfig):
     """
     Config defining endpoint, project id, API key, and timeouts.

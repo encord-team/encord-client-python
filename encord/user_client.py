@@ -725,8 +725,8 @@ class EncordUserClient:
                 "upload_dir": upload_dir,
             },
         )
-
-
+    def __repr__(self) -> str:
+        return "EncordUserClient: " + self.user_config.__str__()
 class ListingFilter(Enum):
     """
     Available properties_filter keys for get_projects() and get_datasets().
