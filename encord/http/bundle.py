@@ -176,7 +176,7 @@ def bundled_operation(
     if not bundle:
         result = operation(**asdict(payload))
         if result_mapper:
-            assert len(result) == 1, "Expected a singular request for singular request!"
+            assert len(result) == 1, "Expected a singular response for a singular request!"
             assert result_mapper.result_mapping_predicate(result[0]) == result_mapper.result_handler.predicate
             result_mapper.result_handler.handler(result[0])
     else:
