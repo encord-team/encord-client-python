@@ -13,6 +13,7 @@ from typing import (
     NoReturn,
     Optional,
     Sequence,
+    Set,
     Union,
 )
 
@@ -29,7 +30,7 @@ from encord.objects.attributes import (
 )
 from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames, frames_class_to_frames_list
+from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
@@ -133,7 +134,18 @@ class ClassificationInstance:
 
         frames_list = frames_class_to_frames_list(frames)
 
-        self._check_classification_already_present(frames_list)
+        conflicting_frames_list = self._is_classification_already_present(frames_list)
+        if conflicting_frames_list and not overwrite:
+            raise LabelRowError(
+                f"The classification '{self.classification_hash}' already exists "
+                f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
+                f"Set 'overwrite' parameter to True to override."
+            )
+
+        frames_to_add = set(frames_list) - conflicting_frames_list if conflicting_frames_list else frames_list
+        if not frames_to_add:
+            # Nothing to do
+            return
 
         for frame in frames_list:
             self._check_within_range(frame)
@@ -534,16 +546,10 @@ class ClassificationInstance:
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
-    def _check_classification_already_present(self, frames: Iterable[int]) -> None:
+    def _is_classification_already_present(self, frames: Iterable[int]) -> Set[int]:
         if self._parent is None:
-            return
-        already_present_frame = self._parent._is_classification_already_present(self.ontology_item, frames)
-        if already_present_frame is not None:
-            raise LabelRowError(
-                f"The LabelRowV2, that this classification is part of, already has a classification of the same type "
-                f"on frame `{already_present_frame}`. The same type of classification can only be present once per "
-                f"frame per LabelRowV2."
-            )
+            return set()
+        return self._parent._is_classification_already_present(self.ontology_item, frames)
 
     def __repr__(self):
         return (

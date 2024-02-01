@@ -9,6 +9,9 @@ class Range:
     start: int
     end: int
 
+    def __repr__(self):
+        return f"({self.start}:{self.end})"
+
 
 Ranges = List[Range]
 FramesList = List[int]
