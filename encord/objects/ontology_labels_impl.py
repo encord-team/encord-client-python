@@ -4,7 +4,6 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
 
 from encord.client import EncordClientProject
@@ -43,7 +42,7 @@ from encord.objects.coordinates import (
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
 )
-from encord.objects.frames import Frames, frames_class_to_frames_list
+from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -542,7 +541,7 @@ class LabelRowV2:
         frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
 
         classification_hash = classification_instance.classification_hash
-        already_present_frame = self._is_classification_already_present(
+        already_present_frames = self._is_classification_already_present(
             classification_instance.ontology_item,
             frames,
         )
@@ -551,11 +550,12 @@ class LabelRowV2:
                 "The supplied ClassificationInstance was already previously added. (the classification_hash is the same)."
             )
 
-        if already_present_frame is not None and not force:
+        if already_present_frames and not force:
             raise LabelRowError(
-                f"A ClassificationInstance of the same type was already added and has overlapping frames. One "
-                f"overlapping frame that was found is `{already_present_frame}`. Make sure that you only add "
-                f"classifications which are on frames where the same type of classification does not yet exist."
+                f"A ClassificationInstance {classification_hash} was already added and has overlapping frames. "
+                f"Overlapping frames that were found are `{frames_to_ranges(already_present_frames)}`. "
+                f"Make sure that you only add classifications which are on frames where the same type of "
+                f"classification does not yet exist."
             )
 
         if classification_hash in self._classifications_map and force:
@@ -1163,11 +1163,9 @@ class LabelRowV2:
 
         return ret
 
-    def _is_classification_already_present(
-        self, classification: Classification, frames: Iterable[int]
-    ) -> Optional[int]:
+    def _is_classification_already_present(self, classification: Classification, frames: Iterable[int]) -> Set[int]:
         present_frames = self._classifications_to_frames.get(classification, set())
-        return next((frame for frame in frames if frame in present_frames), None)
+        return present_frames.intersection(frames)
 
     def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         self._classifications_to_frames[classification].update(set(frames))
