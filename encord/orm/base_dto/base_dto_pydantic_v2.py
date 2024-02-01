@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, Dict, Type, TypeVar, get_origin
 
 # TODO: invent some dependency version dependent type checking to get rid of this ignore
 from pydantic import (  # type: ignore[attr-defined]
@@ -21,7 +21,11 @@ class BaseDTO(BaseDTOInterface, BaseModel):
 
     @field_validator("*", mode="before")
     def parse_datetime(cls, value, info):
-        if issubclass(cls.model_fields[info.field_name].annotation, datetime) and isinstance(value, str):
+        annotation = cls.model_fields[info.field_name].annotation
+        origin = get_origin(annotation)
+        # Not supporting complex cases for now.
+        # So for lists of datetimes this won't run custom parser
+        if origin is None and issubclass(annotation, datetime) and isinstance(value, str):
             return parse_datetime(value)
         return value
 
@@ -44,7 +48,11 @@ class GenericBaseDTO(BaseDTOInterface, BaseModel):
 
     @field_validator("*", mode="before")
     def parse_datetime(cls, value, info):
-        if issubclass(cls.model_fields[info.field_name].annotation, datetime) and isinstance(value, str):
+        annotation = cls.model_fields[info.field_name].annotation
+        origin = get_origin(annotation)
+        # Not supporting complex cases for now.
+        # So for lists of datetimes this won't run custom parser
+        if origin is None and issubclass(annotation, datetime) and isinstance(value, str):
             return parse_datetime(value)
         return value
 
