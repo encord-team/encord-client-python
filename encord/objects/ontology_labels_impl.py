@@ -533,26 +533,26 @@ class LabelRowV2:
 
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
-                "The supplied ClassificationInstance is already part of a LabelRowV2. You can only add a ClassificationInstance"
-                " to one LabelRowV2. You can do a ClassificationInstance.copy() to create an identical ObjectInstance which is "
-                "not part of any LabelRowV2."
+                "Provided ClassificationInstance object is already attached to a different LabelRowV2 object. "
+                "You can only add a ClassificationInstance to one label row. "
+                "You can do a ClassificationInstance.copy() to create an identical ClassificationInstance which is not part of any label row."
             )
 
-        frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
-
         classification_hash = classification_instance.classification_hash
+        frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
         already_present_frames = self._is_classification_already_present(
             classification_instance.ontology_item,
             frames,
         )
         if classification_hash in self._classifications_map and not force:
             raise LabelRowError(
-                "The supplied ClassificationInstance was already previously added. (the classification_hash is the same)."
+                f"A ClassificationInstance for classification hash '{classification_hash}' already exists on the label row object. "
+                f"Pass 'force=True' to override it."
             )
 
         if already_present_frames and not force:
             raise LabelRowError(
-                f"A ClassificationInstance {classification_hash} was already added and has overlapping frames. "
+                f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
                 f"Overlapping frames that were found are `{frames_to_ranges(already_present_frames)}`. "
                 f"Make sure that you only add classifications which are on frames where the same type of "
                 f"classification does not yet exist."
@@ -1469,6 +1469,7 @@ class LabelRowV2:
             last_edited_at=frame_view.last_edited_at,
             last_edited_by=frame_view.last_edited_by,
             reviews=frame_view.reviews,
+            overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
         )
 
         answers_dict = classification_answers[classification_hash]["classifications"]
@@ -1494,6 +1495,7 @@ class LabelRowV2:
             last_edited_at=frame_view.last_edited_at,
             last_edited_by=frame_view.last_edited_by,
             reviews=frame_view.reviews,
+            overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
         )
 
     def _check_labelling_is_initalised(self):

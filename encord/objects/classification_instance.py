@@ -30,7 +30,7 @@ from encord.objects.attributes import (
 )
 from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames, frames_class_to_frames_list
+from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
@@ -135,10 +135,16 @@ class ClassificationInstance:
         frames_list = frames_class_to_frames_list(frames)
 
         conflicting_frames_list = self._is_classification_already_present(frames_list)
+        if conflicting_frames_list and not overwrite:
+            raise LabelRowError(
+                f"The classification '{self.classification_hash}' already exists "
+                f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
+                f"Set 'overwrite' parameter to True to override."
+            )
 
         frames_to_add = set(frames_list) - conflicting_frames_list if conflicting_frames_list else frames_list
         if not frames_to_add:
-            # Classification already exists on the given frames, nothing to do
+            # Nothing to do
             return
 
         for frame in frames_list:

@@ -626,14 +626,16 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
     label_row.add_classification_instance(overlapping_classification_instance)
     with pytest.raises(LabelRowError):
         overlapping_classification_instance.set_for_frames(1)
-    with pytest.raises(LabelRowError):
-        overlapping_classification_instance.set_for_frames(1, overwrite=True)
+
+    # Do not raise if overwrite flag is passed
+    overlapping_classification_instance.set_for_frames(1, overwrite=True)
 
     label_row.remove_classification(classification_instance_1)
     overlapping_classification_instance.set_for_frames(1)
 
     with pytest.raises(LabelRowError):
         overlapping_classification_instance.set_for_frames(3)
+
     classification_instance_2.remove_from_frames(3)
     overlapping_classification_instance.set_for_frames(3)
 
