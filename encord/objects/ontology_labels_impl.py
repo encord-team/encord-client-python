@@ -1340,10 +1340,12 @@ class LabelRowV2:
     def _add_objects_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_answers"].values():
             object_hash = answer["objectHash"]
-            object_instance = self._objects_map[object_hash]
-
-            answer_list = answer["classifications"]
-            object_instance.set_answer_from_list(answer_list)
+            # In cases when we had an object, added some attributes for this object, and then removed the object,
+            # in some label rows we still have such "orphaned" answers.
+            # To avoid parser errors, we're omitting attributes for the object that is not in label rows.
+            if object_instance := self._objects_map.get(object_hash):
+                answer_list = answer["classifications"]
+                object_instance.set_answer_from_list(answer_list)
 
     def _add_action_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_actions"].values():
