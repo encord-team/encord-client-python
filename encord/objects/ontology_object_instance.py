@@ -154,7 +154,7 @@ class ObjectInstance:
         attribute: Optional[Attribute] = None,
         frames: Optional[Frames] = None,
         overwrite: bool = False,
-        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
+        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
     ) -> None:
         """
         Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
