@@ -1221,8 +1221,11 @@ class LabelRowV2:
         if data_type == DataType.VIDEO:
             video_dict = list(label_row_dict["data_units"].values())[0]
             data_link = video_dict["data_link"]
-            height = video_dict["height"]
-            width = video_dict["width"]
+            # Dimensions should be always there
+            # But we have some older entries that don't have them
+            # So setting them to None for now until the format is not guaranteed to be enforced
+            height = video_dict.get("height")
+            width = video_dict.get("width")
 
         elif data_type == DataType.DICOM:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
@@ -1233,8 +1236,11 @@ class LabelRowV2:
         elif data_type == DataType.IMAGE:
             image_dict = list(label_row_dict["data_units"].values())[0]
             data_link = image_dict["data_link"]
-            height = image_dict["height"]
-            width = image_dict["width"]
+            # Dimensions should be always there
+            # But we have some older entries that don't have them
+            # So setting them to None for now until the format is not guaranteed to be enforced
+            height = image_dict.get("height")
+            width = image_dict.get("width")
 
         elif data_type == DataType.IMG_GROUP:
             data_link = None
@@ -1437,8 +1443,11 @@ class LabelRowV2:
                 data_link=payload.get("data_link"),
                 file_type=payload["data_type"],
                 frame_number=frame_number,
-                width=payload["width"],
-                height=payload["height"],
+                # Dimensions should be always there
+                # But we have some older entries that don't have them
+                # So setting them to 0 for now until the format is not guaranteed to be enforced
+                width=payload.get("width", 0),
+                height=payload.get("height", 0),
             )
             frame_level_data[frame_number] = frame_level_image_group_data
         return frame_level_data
