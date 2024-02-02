@@ -201,8 +201,7 @@ class ObjectInstance:
                 "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
                 "overwrite an existing answer to an attribute."
             )
-        static_answer.is_manual_annotation = manual_annotation
-        static_answer.set(answer)
+        static_answer.set(answer, manual_annotation=manual_annotation)
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
