@@ -1359,7 +1359,6 @@ class LabelRowV2:
         else:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
-
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
             dataset_hash=label_row_dict["dataset_hash"],
