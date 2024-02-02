@@ -18,8 +18,7 @@ import hashlib
 import logging
 import os
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
@@ -67,7 +66,7 @@ class BaseConfig(ABC):
         self.requests_settings = requests_settings
 
     @abstractmethod
-    def define_headers(self, data: str) -> Dict:
+    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
         pass
 
 
@@ -86,89 +85,16 @@ def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
 class UserConfig(BaseConfig):
     def __init__(
         self,
-        private_key: Ed25519PrivateKey,
         domain: str = ENCORD_DOMAIN,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
-        self.private_key: Ed25519PrivateKey = private_key
-        self.public_key: Ed25519PublicKey = private_key.public_key()
-        self.public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
-
         self.domain = domain
-
         endpoint = domain + ENCORD_PUBLIC_USER_PATH
         super().__init__(endpoint, requests_settings=requests_settings)
 
-    def define_headers(self, data: str) -> Dict:
-        signature = _get_signature(data, self.private_key)
-
-        return {
-            "Accept": "application/json",
-            "Accept-Encoding": "gzip",
-            "Content-Type": "application/json",
-            "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
-        }
-
-    @staticmethod
-    def from_ssh_private_key(
-        ssh_private_key: str,
-        password: Optional[str] = "",
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-        **kwargs,
-    ) -> UserConfig:
-        """
-        Instantiate a UserConfig object by the content of a private ssh key.
-
-        Args:
-            ssh_private_key: The content of a private key file.
-            password: The password for the private key file.
-            requests_settings: The requests settings for all outgoing network requests.
-
-        Returns:
-            UserConfig.
-
-        Raises:
-            ValueError: If the provided key content is not of the correct format.
-
-        """
-        key_bytes = ssh_private_key.encode()
-        password_bytes = password.encode() if password else None
-        private_key = load_ssh_private_key(key_bytes, password_bytes)
-
-        if isinstance(private_key, Ed25519PrivateKey):
-            return UserConfig(private_key, requests_settings=requests_settings, **kwargs)
-        else:
-            raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
-
-
-class BearerConfig(BaseConfig):
-    def __init__(
-        self,
-        token: str,
-        domain: str = ENCORD_DOMAIN,
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-    ):
-        self.token = token
-        self.domain = domain
-
-        endpoint = domain + ENCORD_PUBLIC_USER_PATH
-        super().__init__(endpoint, requests_settings=requests_settings)
-
-    def define_headers(self, data: str) -> Dict:
-        return {
-            "Accept": "application/json",
-            "Accept-Encoding": "gzip",
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {str}",
-        }
-
-    @staticmethod
-    def from_bearer_token(
-        token: str,
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-        **kwargs,
-    ) -> BearerConfig:
-        return BearerConfig(token=token, requests_settings=requests_settings, **kwargs)
+    @abstractmethod
+    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
+        pass
 
 
 class Config(BaseConfig):
@@ -178,16 +104,11 @@ class Config(BaseConfig):
 
     def __init__(
         self,
-        resource_id: Optional[str] = None,
         web_file_path: str = ENCORD_PUBLIC_PATH,
         domain: Optional[str] = None,
         websocket_endpoint: str = WEBSOCKET_ENDPOINT,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
-        if resource_id is None:
-            resource_id = get_env_resource_id()
-
-        self.resource_id = resource_id
         self.websocket_endpoint = websocket_endpoint
         if domain is None:
             raise RuntimeError("`domain` must be specified")
@@ -195,11 +116,6 @@ class Config(BaseConfig):
         self.domain = domain
         endpoint = domain + web_file_path
         super().__init__(endpoint, requests_settings=requests_settings)
-        logger.info("Initialising Encord client with endpoint: %s and resource_id: %s", endpoint, resource_id)
-
-    @abstractmethod
-    def get_websocket_url(self):
-        raise NotImplementedError("The specialised config needs to implement this method.")
 
 
 def get_env_resource_id() -> str:
@@ -279,6 +195,7 @@ class ApiKeyConfig(Config):
         if api_key is None:
             api_key = get_env_api_key()
 
+        self.resource_id = resource_id
         self.api_key = api_key
         self._headers = {
             "Accept": "application/json",
@@ -287,57 +204,95 @@ class ApiKeyConfig(Config):
             "ResourceID": resource_id,
             "Authorization": self.api_key,
         }
-        super().__init__(resource_id, web_file_path=web_file_path, domain=domain, requests_settings=requests_settings)
+        super().__init__(web_file_path=web_file_path, domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, data) -> Dict:
+    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
         return self._headers
-
-    def get_websocket_url(self):
-        return (
-            f"{self.websocket_endpoint}?"
-            f"client_type={2}&"
-            f"project_hash={self.resource_id}&"
-            f"api_key={self.api_key}"
-        )
 
 
 EncordConfig = ApiKeyConfig
 CordConfig = EncordConfig
 
 
-class SshConfig(Config):
+class SshConfig(UserConfig):
     def __init__(
         self,
-        user_config: UserConfig,
-        resource_type: str,
-        resource_id: Optional[str] = None,
+        private_key: Ed25519PrivateKey,
+        domain: str = ENCORD_DOMAIN,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
-        self._user_config = user_config
-        if resource_type not in ALL_RESOURCE_TYPES:
-            raise TypeError(f"The passed resource type `{resource_type}` is invalid.")
-        self._resource_type = resource_type
-        super().__init__(
-            resource_id=resource_id,
-            domain=self._user_config.domain,
-            requests_settings=self._user_config.requests_settings,
-        )
+        self.private_key: Ed25519PrivateKey = private_key
+        self.public_key: Ed25519PublicKey = private_key.public_key()
+        self.public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
+        super().__init__(domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, data: str) -> Dict:
-        signature = _get_signature(data, self._user_config.private_key)
+    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
+        signature = _get_signature(data, self.private_key)
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Accept-Encoding": "gzip",
-            "ResourceID": self.resource_id,
-            "ResourceType": self._resource_type,
-            "Authorization": _get_ssh_authorization_header(self._user_config.public_key_hex, signature),
+            "ResourceID": resource_id,
+            "ResourceType": resource_type,
+            "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
         }
 
-    def get_websocket_url(self):
-        signature = _get_signature(self.resource_id, self._user_config.private_key)
-        return (
-            f"{self.websocket_endpoint}?"
-            f"client_type={2}&"
-            f"project_hash={self.resource_id}&"
-            f"ssh_authorization={_get_ssh_authorization_header(self._user_config.public_key_hex, signature)}"
-        )
+    @staticmethod
+    def from_ssh_private_key(
+        ssh_private_key: str,
+        password: Optional[str] = "",
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        **kwargs,
+    ) -> SshConfig:
+        """
+        Instantiate a UserConfig object by the content of a private ssh key.
+
+        Args:
+            ssh_private_key: The content of a private key file.
+            password: The password for the private key file.
+            requests_settings: The requests settings for all outgoing network requests.
+
+        Returns:
+            UserConfig.
+
+        Raises:
+            ValueError: If the provided key content is not of the correct format.
+
+        """
+        key_bytes = ssh_private_key.encode()
+        password_bytes = password.encode() if password else None
+        private_key = load_ssh_private_key(key_bytes, password_bytes)
+
+        if not isinstance(private_key, Ed25519PrivateKey):
+            raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
+
+        return SshConfig(private_key, requests_settings=requests_settings, **kwargs)
+
+
+class BearerConfig(UserConfig):
+    def __init__(
+        self,
+        token: str,
+        domain: str = ENCORD_DOMAIN,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+    ):
+        self.token = token
+        super().__init__(domain=domain, requests_settings=requests_settings)
+
+    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
+        return {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "application/json",
+            "ResourceID": resource_id,
+            "ResourceType": resource_type,
+            "Authorization": f"Bearer {self.token}",
+        }
+
+    @staticmethod
+    def from_bearer_token(
+        token: str,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        **kwargs,
+    ) -> BearerConfig:
+        return BearerConfig(token=token, requests_settings=requests_settings, **kwargs)

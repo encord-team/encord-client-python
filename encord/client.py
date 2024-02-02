@@ -507,11 +507,10 @@ class EncordClientDataset(EncordClient):
         ]
 
         res = self._querier.basic_setter(DicomSeries, uid=dicom_files, payload={"title": title})
-
-        if res:
-            return res
-        else:
+        if not res:
             raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
+
+        return res
 
     def upload_image(
         self,
@@ -713,10 +712,7 @@ class EncordClientDataset(EncordClient):
         """
 
         payload = {"image_group_data_hash": image_group_id}
-
-        response = self._querier.get_multiple(ImageGroupOCR, payload=payload)
-
-        return response
+        return self._querier.get_multiple(ImageGroupOCR, payload=payload)
 
 
 class EncordClientProject(EncordClient):
@@ -1279,9 +1275,6 @@ class EncordClientProject(EncordClient):
                 images.append(Image(image))
 
         return video, images
-
-    def get_websocket_url(self) -> str:
-        return self._config.get_websocket_url()
 
     def get_label_logs(
         self,

@@ -1,15 +1,14 @@
 import platform
-import random
 import uuid
 from pathlib import Path
-from typing import Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
 from requests import PreparedRequest, Response
 
 from encord._version import __version__ as encord_version
-from encord.configs import UserConfig
+from encord.configs import BearerConfig, UserConfig
 from encord.exceptions import RequestException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
@@ -25,7 +24,7 @@ T = TypeVar("T", bound=BaseDTOInterface)
 
 
 class ApiClient:
-    def __init__(self, config: UserConfig):
+    def __init__(self, config: Union[UserConfig, BearerConfig]):
         self._config = config
         self._domain = self._config.domain
         self._base_path = Path("v2/public/")
