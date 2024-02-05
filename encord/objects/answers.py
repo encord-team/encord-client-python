@@ -67,7 +67,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         raise RuntimeError("Cannot reset the ontology attribute of an instantiated answer.")
 
     @abstractmethod
-    def set(self, value: ValueType) -> None:
+    def set(self, value: ValueType, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
         pass
 
     def get(self) -> ValueType:
@@ -116,12 +116,13 @@ class TextAnswer(Answer[str, TextAttribute]):
         super().__init__(ontology_attribute)
         self._value: Optional[str] = None
 
-    def set(self, value: str) -> None:
+    def set(self, value: str, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
         """Returns the object itself"""
         if not isinstance(value, str):
             raise ValueError("TextAnswer can only be set to a string.")
         self._value = value
         self._answered = True
+        self.is_manual_annotation = manual_annotation
 
     def get_value(self) -> Optional[str]:
         return self._value if self.is_answered() else None
@@ -176,7 +177,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
         super().__init__(ontology_attribute)
         self._value: Optional[NestableOption] = None
 
-    def set(self, value: NestableOption):
+    def set(self, value: NestableOption, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
         if not isinstance(value, NestableOption):
             raise ValueError("RadioAnswer can only be set to a NestableOption.")
 
@@ -188,6 +189,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
             )
         self._answered = True
         self._value = value
+        self.is_manual_annotation = manual_annotation
 
     def get_value(self) -> Optional[NestableOption]:
         return self._value if self.is_answered() else None
@@ -291,7 +293,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             if self._feature_hash_to_answer_map[option.feature_node_hash]
         ]
 
-    def set(self, value: Iterable[FlatOption]):
+    def set(self, value: Iterable[FlatOption], manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION):
         if not isinstance(value, Iterable):
             raise ValueError(
                 "Checklist attribute answer should be an iterable of FlatOption values. "
@@ -308,6 +310,8 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
         for value_ in value:
             self._verify_flat_option(value_)
             self._feature_hash_to_answer_map[value_.feature_node_hash] = True
+
+        self.is_manual_annotation = manual_annotation
 
     @deprecated("0.1.91", alternative=".set(options)")
     def set_options(self, values: Iterable[FlatOption]):

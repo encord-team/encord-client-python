@@ -154,6 +154,7 @@ class ObjectInstance:
         attribute: Optional[Attribute] = None,
         frames: Optional[Frames] = None,
         overwrite: bool = False,
+        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
     ) -> None:
         """
         Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
@@ -176,6 +177,8 @@ class ObjectInstance:
                 throw a ValueError.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
                 a LabelRowError if the answer already exists. This argument is ignored for dynamic attributes.
+            manual_annotation: If `True`, the answer will be marked as manually annotated. This arg defaults to
+                DEFAULT_MANUAL_ANNOTATION.
         """
         if attribute is None:
             attribute = _infer_attribute_from_answer(self._ontology_object.attributes, answer)
@@ -198,8 +201,7 @@ class ObjectInstance:
                 "The answer to this attribute was already set. Set `overwrite` to `True` if you want to"
                 "overwrite an existing answer to an attribute."
             )
-
-        static_answer.set(answer)
+        static_answer.set(answer, manual_annotation=manual_annotation)
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
         """
