@@ -16,6 +16,7 @@ from tests.objects.data import (
     empty_video,
     image_group_with_reviews,
     native_image_data,
+    native_image_data_classification_with_no_answer,
     video_with_dynamic_classifications,
     video_with_dynamic_classifications_ui_constructed,
 )
@@ -259,3 +260,19 @@ def test_label_row_with_reviews():
         # Ideally this will be fixed "properly"
         exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
+
+
+def test_classifications_with_no_answers_equivalent_to_no_classification():
+    # Testing backward compatibility with label rows that might have classifications with no answers
+    # This is not a part of the current behaviour, but we still have label rows like that in the wild
+
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = None
+    label_row_metadata_dict["frames_per_second"] = None
+    label_row_metadata_dict["number_of_frames"] = 1
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(native_image_data_classification_with_no_answer.labels)
+
+    assert len(label_row.get_classification_instances()) == 0
