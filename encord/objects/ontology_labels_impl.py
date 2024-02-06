@@ -1425,13 +1425,12 @@ class LabelRowV2:
     ):
         for frame_classification_label in classifications_list:
             classification_hash = frame_classification_label["classificationHash"]
-            if classification_hash not in self._classifications_map:
-                classification_instance = self._create_new_classification_instance(
-                    frame_classification_label, frame, classification_answers
-                )
-                self.add_classification_instance(classification_instance)
-            else:
+            if classification_hash in self._classifications_map:
                 self._add_frames_to_classification_instance(frame_classification_label, frame)
+            elif classification_instance := self._create_new_classification_instance(
+                frame_classification_label, frame, classification_answers
+            ):
+                self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
@@ -1454,7 +1453,7 @@ class LabelRowV2:
 
     def _create_new_classification_instance(
         self, frame_classification_label: dict, frame: int, classification_answers: dict
-    ) -> ClassificationInstance:
+    ) -> Optional[ClassificationInstance]:
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
 
@@ -1474,10 +1473,14 @@ class LabelRowV2:
             overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
         )
 
-        answers_dict = classification_answers[classification_hash]["classifications"]
-        self._add_static_answers_from_dict(classification_instance, answers_dict)
+        # For some older label rows we might have a classification entry, but without an assigned answer.
+        # These cases are equivalent to not having classifications at all, so just ignoring them
+        if classification_answer := classification_answers.get(classification_hash):
+            answers_dict = classification_answer["classifications"]
+            self._add_static_answers_from_dict(classification_instance, answers_dict)
+            return classification_instance
 
-        return classification_instance
+        return None
 
     def _add_static_answers_from_dict(
         self, classification_instance: ClassificationInstance, answers_list: List[dict]
