@@ -1,3 +1,4 @@
+import contextlib
 from datetime import datetime
 
 from dateutil import parser
@@ -15,14 +16,13 @@ def parse_datetime(time_string: str) -> datetime:
     So instead we're applying parsers with known formats, starting from the formats most likely to occur,
     and falling back to the most complicated logic only in case of all other attempt have failed.
     """
-    try:
+    with contextlib.suppress(Exception):
         return datetime.strptime(time_string, DATETIME_LONG_STRING_FORMAT)
-    except Exception:
-        pass
-
-    try:
+    with contextlib.suppress(Exception):
         return parser.isoparse(time_string)
-    except Exception:
-        pass
+    with contextlib.suppress(Exception):
+        return parser.parse(time_string)
 
-    return parser.parse(time_string)
+    # As a last resort, employ fuzzy parsing, which is most expensive,
+    # but parses the most obscure timestamp formats
+    return parser.parse(time_string, fuzzy=True)
