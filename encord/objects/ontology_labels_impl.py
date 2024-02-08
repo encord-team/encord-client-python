@@ -1430,7 +1430,7 @@ class LabelRowV2:
             elif classification_instance := self._create_new_classification_instance(
                 frame_classification_label, frame, classification_answers
             ):
-                self.add_classification_instance(classification_instance)
+                self.add_classification_instance(classification_instance, force=True)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
