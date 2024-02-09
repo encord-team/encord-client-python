@@ -303,3 +303,12 @@ class ProjectImporterCvatInfo(BaseDTO):
 
 class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
+
+
+class GetLabelRowsCocoParams(BaseDTO):
+    label_hashes: Optional[List[str]]
+    get_signed_url: bool
+
+
+class GetLabelRowsCocoResponse(BaseDTO):
+    result: dict
