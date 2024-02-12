@@ -171,6 +171,9 @@ class Project:
         data_title_like: Optional[str] = None,
         workflow_graph_node_title_eq: Optional[str] = None,
         workflow_graph_node_title_like: Optional[str] = None,
+        include_workflow_graph_node: bool = True,
+        include_client_metadata: bool = False,
+        include_images_data: bool = False,
     ) -> List[LabelRowV2]:
         """
         Args:
@@ -184,7 +187,9 @@ class Project:
             data_title_like: Optionally filter by fuzzy title match; SQL syntax
             workflow_graph_node_title_eq: Optionally filter by exact match with workflow node title
             workflow_graph_node_title_like: Optionally filter by fuzzy match with workflow node title; SQL syntax
-
+            include_workflow_graph_node: Include workflow graph node metadata in all the results. True by default.
+            include_client_metadata: Optionally include client_metadata into the result of this query.
+            include_images_data: Optionally include image group metadata into the result of this query.
         Returns:
             A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows
         """
@@ -200,6 +205,9 @@ class Project:
             data_title_like=data_title_like,
             workflow_graph_node_title_eq=workflow_graph_node_title_eq,
             workflow_graph_node_title_like=workflow_graph_node_title_like,
+            include_workflow_graph_node=include_workflow_graph_node,
+            include_client_metadata=include_client_metadata,
+            include_images_data=include_images_data,
         )
 
         label_rows = [

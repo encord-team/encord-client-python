@@ -754,7 +754,10 @@ class EncordClientProject(EncordClient):
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
         *,
-        include_uninitialised_labels=False,
+        include_uninitialised_labels: bool = False,
+        include_workflow_graph_node: bool = True,
+        include_client_metadata: bool = False,
+        include_images_data: bool = False,
         label_hashes: Optional[List[str]] = None,
         data_hashes: Optional[List[str]] = None,
         data_title_eq: Optional[str] = None,
@@ -784,6 +787,9 @@ class EncordClientProject(EncordClient):
             "data_title_like": data_title_like,
             "workflow_graph_node_title_eq": workflow_graph_node_title_eq,
             "workflow_graph_node_title_like": workflow_graph_node_title_like,
+            "include_client_metadata": include_client_metadata,
+            "include_images_data": include_images_data,
+            "include_workflow_graph_node": include_workflow_graph_node,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
 
