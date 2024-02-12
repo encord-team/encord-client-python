@@ -437,7 +437,7 @@ class LabelRowV2:
 
         return self.FrameView(self, self._label_row_read_only_data, frame_num)
 
-    def _get_image_group_metadata_list(self) -> List[LabelRowReadOnlyDataImagesDataEntry]:
+    def _get_frame_metadata_list(self) -> List[LabelRowReadOnlyDataImagesDataEntry]:
         if self._label_row_read_only_data.data_type in [DataType.IMAGE, DataType.VIDEO]:
             return [
                 self.LabelRowReadOnlyDataImagesDataEntry(
@@ -455,11 +455,11 @@ class LabelRowV2:
             raise LabelRowError("Image data is not present in the label row")
         return images_data
 
-    def get_image_group_metadata(self, frame: Union[int, str] = 0) -> FrameViewMetadata:
+    def get_frame_metadata(self, frame: Union[int, str] = 0) -> FrameViewMetadata:
         """
         Get image group metadata for frame or image hash.
         """
-        images_data = self._get_image_group_metadata_list()
+        images_data = self._get_frame_metadata_list()
         if isinstance(frame, str):
             data_meta = None
             for data in images_data:
@@ -479,13 +479,13 @@ class LabelRowV2:
 
         return self.FrameViewMetadata(data_meta)
 
-    def get_image_group_metadata_list(self) -> List[FrameViewMetadata]:
+    def get_frames_metadata(self) -> List[FrameViewMetadata]:
         """
         Get image metadata for image group if requested.
         """
         views = []
 
-        images_data = self._get_image_group_metadata_list()
+        images_data = self._get_frame_metadata_list()
 
         for data in images_data:
             views.append(self.FrameViewMetadata(data))
