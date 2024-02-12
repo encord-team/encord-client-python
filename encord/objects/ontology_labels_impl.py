@@ -550,7 +550,9 @@ class LabelRowV2:
                 f"Pass 'force=True' to override it."
             )
 
-        if already_present_frames and not force:
+        if already_present_frames:
+            if force:
+                return
             raise LabelRowError(
                 f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
                 f"Overlapping frames that were found are `{frames_to_ranges(already_present_frames)}`. "
