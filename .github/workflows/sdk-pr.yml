@@ -8,7 +8,8 @@ on:
 env:
   PYTHON: 3.8
   POETRY: 1.7.0
-  UNIT_TEST_REPORT: unit-test-report.xml
+  UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python-3_8_p1.xml
+  UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python-3_8_p2.xml
 
 concurrency:
   group: cord-client-${{ github.ref }}-pr
@@ -38,18 +39,18 @@ jobs:
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.8.16
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
 
   unit-tests-python-3-8-pydantic-2:
     name: Run unit tests (Python 3.8, Pydantic 2.x)
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.8.16
           pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
