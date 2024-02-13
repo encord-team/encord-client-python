@@ -6,7 +6,7 @@ on:
 
 env:
   PYTHON: 3.8
-  POETRY: 1.5.0
+  POETRY: 1.7.0
   PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
 concurrency:
