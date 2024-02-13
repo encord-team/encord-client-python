@@ -7,7 +7,7 @@ on:
 
 env:
   PYTHON: 3.8
-  POETRY: 1.5.0
+  POETRY: 1.7.0
   UNIT_TEST_REPORT: unit-test-report.xml
 
 concurrency:
