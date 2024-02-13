@@ -6,6 +6,10 @@ inputs:
     description: 'Python version to use'
     default: 3.8.16
     required: false
+  pydantic-version:
+    description: 'Pydantic version to use'
+    default: ''
+    required: false
   poetry-version:
     description: 'Poetry version to use'
     default: 1.5.0
@@ -33,11 +37,16 @@ runs:
         uses: actions/cache@v3
         with:
           path: .venv
-          key: unit-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}-1
+          key: unit-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}-${{ inputs.pydantic-version }}-1
 
       - name: Install dependencies
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
+        shell: bash
+
+      - name: Override pydantic version
+        if: ${{ inputs.pydantic-version }}
+        run: poetry add pydantic=${{ inputs.pydantic-version }} --no-interaction
         shell: bash
 
       - name: Run tests
