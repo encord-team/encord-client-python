@@ -550,7 +550,7 @@ class LabelRowV2:
 
     def add_object_instance(self, object_instance: ObjectInstance, force: bool = True) -> None:
         """
-        Add an object instance to the label row. If the object instance already exists, it
+        Add an object instance to the label row. If the object instance already exists, it overwrites the current instance
 
         Args:
             object_instance: The object instance to add.
