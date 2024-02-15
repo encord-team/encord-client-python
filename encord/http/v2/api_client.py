@@ -98,7 +98,7 @@ class ApiClient:
         return self._request(req, result_type=result_type)  # type: ignore
 
     def _request(self, req: PreparedRequest, result_type: Optional[Type[T]]):
-        req = sign_request(req, self._config.public_key_hex, self._config.private_key)
+        req = self._config.define_headers_v2(req)
 
         timeouts = (self._config.connect_timeout, self._config.read_timeout)
         req_settings = self._config.requests_settings

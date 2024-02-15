@@ -55,6 +55,10 @@ _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 logger = logging.getLogger(__name__)
 
+from requests import PreparedRequest
+
+from encord.http.v2.request_signer import sign_request
+
 
 class BaseConfig(ABC):
     def __init__(self, endpoint: str, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS):
@@ -67,6 +71,10 @@ class BaseConfig(ABC):
 
     @abstractmethod
     def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
+        pass
+
+    @abstractmethod
+    def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
         pass
 
 
@@ -209,6 +217,9 @@ class ApiKeyConfig(Config):
     def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
         return self._headers
 
+    def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        raise NotImplementedError("API key authorization is not supported for the Encord API v2")
+
 
 EncordConfig = ApiKeyConfig
 CordConfig = EncordConfig
@@ -236,6 +247,9 @@ class SshConfig(UserConfig):
             "ResourceType": resource_type,
             "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
         }
+
+    def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        return sign_request(request, self.public_key_hex, self.private_key)
 
     @staticmethod
     def from_ssh_private_key(
@@ -288,6 +302,10 @@ class BearerConfig(UserConfig):
             "ResourceType": resource_type,
             "Authorization": f"Bearer {self.token}",
         }
+
+    def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        request.headers["Authorization"] = f"Bearer {self.token}"
+        return request
 
     @staticmethod
     def from_bearer_token(

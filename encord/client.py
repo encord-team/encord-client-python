@@ -50,7 +50,7 @@ import requests
 
 import encord.exceptions
 from encord.common.deprecated import deprecated
-from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig, SshConfig
+from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, BearerConfig, Config, EncordConfig, SshConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import (
@@ -166,7 +166,7 @@ class EncordClient:
         self._api_client = api_client
 
     def _get_api_client(self) -> ApiClient:
-        if not isinstance(self._config, SshConfig):
+        if not (isinstance(self._config, (SshConfig, BearerConfig))):
             raise EncordException(
                 "This functionality requires private SSH key authentication. API keys are not supported."
             )
