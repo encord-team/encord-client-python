@@ -70,7 +70,7 @@ class BaseConfig(ABC):
         self.requests_settings = requests_settings
 
     @abstractmethod
-    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         pass
 
     @abstractmethod
@@ -102,7 +102,7 @@ class UserConfig(BaseConfig):
         self.config = config
         super().__init__(endpoint=config.domain + ENCORD_PUBLIC_USER_PATH, requests_settings=config.requests_settings)
 
-    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         return self.config.define_headers(resource_id, resource_type, data)
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -218,7 +218,7 @@ class ApiKeyConfig(Config):
         }
         super().__init__(web_file_path=web_file_path, domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         return self._headers
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -242,7 +242,7 @@ class SshConfig(Config):
 
         super().__init__(domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         signature = _get_signature(data, self.private_key)
         return {
             "Accept": "application/json",
@@ -298,7 +298,7 @@ class BearerConfig(Config):
         self.token = token
         super().__init__(domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         return {
             "Accept": "application/json",
             "Accept-Encoding": "gzip",
