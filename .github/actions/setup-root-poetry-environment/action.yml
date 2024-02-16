@@ -16,8 +16,7 @@ inputs:
     default: '.'
   cache-key:
     description: "Cache key"
-    required: false
-    default: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+    required: true
 
 runs:
   using: "composite"
