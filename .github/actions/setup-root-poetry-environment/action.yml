@@ -12,7 +12,7 @@ inputs:
     required: false
   environment-location:
     description: "Environment location"
-    required: true
+    required: false
     default: '.'
   cache-key:
     description: "Cache key"

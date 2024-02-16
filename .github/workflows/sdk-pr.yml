@@ -26,7 +26,6 @@ jobs:
       - name: Setup root poetry environment
         uses: ./.github/actions/setup-root-poetry-environment
         with:
-          project: ./encord-backend/projects/sdk-integration-tests
           cache-key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Run linting, type checking and testing
         uses: pre-commit/action@v3.0.0
