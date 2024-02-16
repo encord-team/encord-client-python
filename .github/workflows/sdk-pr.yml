@@ -54,3 +54,21 @@ jobs:
           python-version: 3.8.16
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
+
+  integration-tests-python-3-11:
+    name: Run integration tests for Python 3.11
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout backend repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+
+      - name: Run integration tests for Python 3.11
+        uses: ./.github/actions/run-sdk-integration-tests
+        with:
+          python-version: 3.11.2
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}

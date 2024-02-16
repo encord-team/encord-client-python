@@ -1,0 +1,66 @@
+name: 'Run integration tests'
+description: 'Run the integration tests for a given Python version. These tests come from the cord-backend.'
+
+inputs:
+  python-version:
+    description: 'Python version to use'
+    default: 3.11
+    required: false
+  test-report-file:
+    description: 'File name to save the test report in'
+    required: true
+  private-key:
+    description: 'Private key for integration tests'
+    required: true
+  poetry-version:
+    description: 'Poetry version to use'
+    default: 1.5.0
+    required: false
+  project:
+    description: 'project of the backend repo.'
+    default: sdk-integration-tests
+    required: false
+  test-dir:
+    description: 'Test directory of the integration tests project.'
+    default: ./src/sdk_integration_tests/tests
+    required: false
+  environment:
+    description: 'Encord deployment to run tests'
+    default: DEV
+    required: false
+  sdk-repository-url:
+    description: 'Git URL to the Encord SDK repository'
+    default: https://github.com/encord-team/encord-client-python
+    required: false
+
+
+runs:
+  using: "composite"
+
+  steps:
+      - name: Setup Poetry environment
+        uses: ./.github/actions/setup-poetry-environment
+        with:
+          project: ${{ inputs.project }}
+          cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}-1
+          python: ${{ inputs.python-version }}
+
+      - name: Setup FFMPEG
+        uses: FedericoCarboni/setup-ffmpeg@v2
+
+      - name: Run tests
+        run: |
+          cd projects/${{ inputs.project }}
+          export PRIVATE_KEY="${{ inputs.private-key }}"
+          export CORD_ENV="${{ inputs.environment }}"
+          source $(poetry env info --path)/bin/activate
+          poetry add git+${{ inputs.sdk-repository-url }}
+          python -m pytest -n 16 ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ env.SDK_TEST_REPORT }}
+        shell: bash
+
+      - name: Upload report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ inputs.test-report-file }}
+          path: projects/${{ inputs.project }}/${{ inputs.test-report-file }}
