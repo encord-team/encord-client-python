@@ -553,7 +553,7 @@ class EncordUserClient:
         dataset = self.get_dataset(
             dataset_hash,
         )
-        querier = dataset._client._querier
+        querier = dataset._client.querier
 
         successful_uploads = upload_to_signed_url_list(
             file_path_strings, self._config, querier, Images, CloudUploadSettings()
