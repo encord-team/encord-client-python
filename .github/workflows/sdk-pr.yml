@@ -61,11 +61,15 @@ jobs:
     name: Run integration tests for Python 3.11
     runs-on: ubuntu-20.04
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Checkout backend repo
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          path: encord-backend
 
       - name: Run integration tests for Python 3.11
         uses: ./.github/actions/run-integration-tests
