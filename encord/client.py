@@ -408,7 +408,7 @@ class EncordClientDataset(EncordClient):
         """
 
         payload = {"user_emails": user_emails, "user_role": user_role}
-        users = self._querier.basic_setter(DatasetUsers, self._config.resource_id, payload=payload)
+        users = self._querier.basic_setter(DatasetUsers, self._querier.resource_id, payload=payload)
 
         return [DatasetUser.from_dict(user) for user in users]
 
@@ -546,7 +546,7 @@ class EncordClientDataset(EncordClient):
     def link_items(self, item_uuids: List[uuid.UUID]) -> List[DataRow]:
         return self._querier.basic_setter(
             DatasetLinkItems,
-            uid=self._config.resource_id,
+            uid=self._querier.resource_id,
             payload={"item_uuids": [str(item_uuid) for item_uuid in item_uuids]},
         )
 
@@ -615,7 +615,7 @@ class EncordClientDataset(EncordClient):
 
         process_hash = self._querier.basic_setter(
             DatasetDataLongPolling,
-            self._config.resource_id,
+            self._querier.resource_id,
             payload={
                 "files": files,
                 "integration_id": integration_id,
@@ -647,7 +647,7 @@ class EncordClientDataset(EncordClient):
 
                 res = self._querier.basic_getter(
                     DatasetDataLongPolling,
-                    self._config.resource_id,
+                    self._querier.resource_id,
                     payload={
                         "process_hash": upload_job_id,
                         "timeout_seconds": min(
@@ -722,7 +722,8 @@ class EncordClientProject(EncordClient):
 
     @property
     def project_hash(self) -> str:
-        return self._config.resource_id  # type: ignore[attr-defined]
+        assert self._querier.resource_id, "Resource id can't be empty for created project client"
+        return self._querier.resource_id  # type: ignore[attr-defined]
 
     def get_project(self, include_labels_metadata=True) -> OrmProject:
         """
@@ -804,7 +805,7 @@ class EncordClientProject(EncordClient):
         """
 
         payload = {"user_emails": user_emails, "user_role": user_role}
-        users = self._querier.basic_setter(ProjectUsers, self._config.resource_id, payload=payload)
+        users = self._querier.basic_setter(ProjectUsers, self._querier.resource_id, payload=payload)
 
         return [ProjectUser.from_dict(user) for user in users]
 
@@ -848,7 +849,7 @@ class EncordClientProject(EncordClient):
         if copy_collaborators:
             payload.copy_project_options.append(ProjectCopyOptions.COLLABORATORS)
 
-        return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=dataclasses.asdict(payload))
+        return self._querier.basic_setter(ProjectCopy, self._querier.resource_id, payload=dataclasses.asdict(payload))
 
     def get_label_row(
         self,

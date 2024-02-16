@@ -12,6 +12,7 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from requests import PreparedRequest, Request, Response, Session
 
+from encord.client import EncordClient
 from encord.configs import _get_signature, _get_ssh_authorization_header
 from encord.http.v2.payloads import Page
 from encord.orm.analytics import CollaboratorTimer
@@ -41,6 +42,8 @@ ontology_dic = {
     "editor": OntologyStructure().to_dict(),
     "description": "",
 }
+
+api_key_meta_dic = {"title": "dummy key", "resource_type": "project"}
 
 project_orm = OrmProject({"project_hash": PROJECT_HASH, "ontology_hash": ONTOLOGY_HASH})
 
@@ -79,6 +82,11 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {"status": 200, "response": ontology_dic}
+                return mock_response
+            elif request_type == "apikeymeta":
+                mock_response = MagicMock()
+                mock_response.status_code = 200
+                mock_response.json.return_value = {"status": 200, "response": api_key_meta_dic}
                 return mock_response
             else:
                 print(f"Unknown type {request_type}")
@@ -208,3 +216,17 @@ def test_v2_api_when_initialised_with_bearer_auth(mock_send, bearer_token):
         # Expect call to have correct resource type and id, and correct bearer auth
         assert mock_call.args[0].path_url.startswith("/v2/public/analytics/collaborators/timers")
         assert mock_call.args[0].headers["Authorization"] == f"Bearer {bearer_token}"
+
+
+@patch.object(Session, "send")
+def test_v1_public_when_initialised_with_api_key(mock_send, bearer_token):
+    mock_send.side_effect = make_side_effects()
+
+    client = EncordClient.initialise(resource_id="project-hash", api_key="dummy api key")
+    client.get_project()
+
+    assert mock_send.call_count == 2
+    for mock_call in mock_send.call_args_list:
+        # Expect call to have correct resource type and id, and correct bearer auth
+        assert mock_call.args[0].path_url.startswith("/public")
+        assert mock_call.args[0].headers["Authorization"] == "dummy api key"

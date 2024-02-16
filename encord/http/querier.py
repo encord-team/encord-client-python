@@ -50,8 +50,8 @@ class Querier:
 
     def __init__(self, config: BaseConfig, resource_type: Optional[str] = None, resource_id: Optional[str] = None):
         self._config = config
-        self._resource_type = resource_type
-        self._resource_id = resource_id
+        self.resource_type = resource_type
+        self.resource_id = resource_id
 
     def basic_getter(
         self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
@@ -187,7 +187,7 @@ class Querier:
         )
 
         request.headers = self._config.define_headers(
-            resource_id=self._resource_id, resource_type=self._resource_type, data=request.data
+            resource_id=self.resource_id, resource_type=self.resource_type, data=request.data
         )
         request.headers[HEADER_USER_AGENT] = self._user_agent()
         request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
