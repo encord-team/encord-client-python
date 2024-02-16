@@ -14,7 +14,10 @@ inputs:
     description: "Environment location"
     required: false
     default: '.'
-
+  cache-key:
+    description: "Cache key"
+    required: false
+    default: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
 runs:
   using: "composite"
@@ -33,10 +36,10 @@ runs:
 
     - name: Load cached venv
       id: cached-poetry-dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ inputs.project }}/.venv
-        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        key: ${{inputs.cache-key}}
 
     - if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
