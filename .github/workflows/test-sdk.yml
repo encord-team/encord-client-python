@@ -141,19 +141,25 @@ jobs:
     name: Run integration tests for Python 3.11
     runs-on: ubuntu-20.04
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Checkout backend repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          path: encord-backend
 
       - name: Run integration tests for Python 3.11
-        uses: ./.github/actions/run-sdk-integration-tests
+        uses: ./.github/actions/run-integration-tests
         with:
           python-version: 3.11.2
+          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
+
 
 
   publish-test-reports:
