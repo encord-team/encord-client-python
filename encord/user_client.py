@@ -77,6 +77,14 @@ class EncordUserClient:
         self._querier = querier
         self._api_client = ApiClient(config.config)
 
+    @property
+    def querier(self) -> Querier:
+        return self._querier
+
+    @property
+    def user_config(self) -> UserConfig:
+        return self._config
+
     def get_dataset(
         self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
     ) -> Dataset:
