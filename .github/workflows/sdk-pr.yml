@@ -75,6 +75,7 @@ jobs:
         uses: ./.github/actions/run-integration-tests
         with:
           python-version: 3.11.2
+          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}

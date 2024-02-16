@@ -16,9 +16,9 @@ inputs:
     description: 'Poetry version to use'
     default: 1.5.0
     required: false
-  project:
+  integration-tests-location:
     description: 'project of the backend repo.'
-    default: sdk-integration-tests
+    default: projects/sdk-integration-tests
     required: false
   test-dir:
     description: 'Test directory of the integration tests project.'
@@ -50,7 +50,7 @@ runs:
 
       - name: Run tests
         run: |
-          cd projects/${{ inputs.project }}
+          cd ${{ inputs.integration-tests-location }}
           export PRIVATE_KEY="${{ inputs.private-key }}"
           export CORD_ENV="${{ inputs.environment }}"
           source $(poetry env info --path)/bin/activate
