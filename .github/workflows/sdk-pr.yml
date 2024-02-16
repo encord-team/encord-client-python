@@ -11,6 +11,7 @@ env:
   UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python-3_8_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python-3_8_p2.xml
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+  BACKEND_REPO: cord-team/cord-backend
 
 concurrency:
   group: cord-client-${{ github.ref }}-pr
@@ -61,7 +62,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}

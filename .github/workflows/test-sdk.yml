@@ -142,7 +142,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout backend repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ env.BACKEND_REPO }}
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
