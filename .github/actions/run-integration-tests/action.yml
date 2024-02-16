@@ -39,7 +39,7 @@ runs:
 
   steps:
       - name: Setup Poetry environment
-        uses: ./.github/actions/setup-poetry-environment
+        uses: ./.github/actions/setup-root-poetry-environment
         with:
           project: ${{ inputs.project }}
           cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}-1
