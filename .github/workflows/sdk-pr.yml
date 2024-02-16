@@ -67,7 +67,7 @@ jobs:
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
 
       - name: Run integration tests for Python 3.11
-        uses: ./.github/actions/run-sdk-integration-tests
+        uses: ./.github/actions/run-integration-tests
         with:
           python-version: 3.11.2
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
