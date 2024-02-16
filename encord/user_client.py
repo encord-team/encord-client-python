@@ -75,7 +75,7 @@ class EncordUserClient:
     def __init__(self, config: UserConfig, querier: Querier):
         self._config = config
         self._querier = querier
-        self._api_client = ApiClient(config)
+        self._api_client = ApiClient(config.config)
 
     def get_dataset(
         self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
@@ -95,7 +95,7 @@ class EncordUserClient:
         """
         querier = Querier(self._config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         client = EncordClientDataset(
-            querier=querier, config=self._config, dataset_access_settings=dataset_access_settings
+            querier=querier, config=self._config.config, dataset_access_settings=dataset_access_settings
         )
         orm_dataset = client.get_dataset()
         return Dataset(client, orm_dataset)
@@ -116,7 +116,7 @@ class EncordUserClient:
             project_hash: The Project ID
         """
         querier = Querier(self._config, resource_type=TYPE_PROJECT, resource_id=project_hash)
-        client = EncordClientProject(querier=querier, config=self._config, api_client=self._api_client)
+        client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
 
         orm_project = client.get_project(include_labels_metadata=False)
 
@@ -278,9 +278,10 @@ class EncordUserClient:
         if not ssh_private_key:
             ssh_private_key = get_env_ssh_key()
 
-        user_config = SshConfig.from_ssh_private_key(
+        config = SshConfig.from_ssh_private_key(
             ssh_private_key, password, requests_settings=requests_settings, **kwargs
         )
+        user_config = UserConfig(config)
         querier = Querier(user_config)
         return EncordUserClient(user_config, querier)
 
@@ -290,7 +291,7 @@ class EncordUserClient:
     ) -> EncordUserClient:
         config = BearerConfig.from_bearer_token(token=token, requests_settings=requests_settings, **kwargs)
         querier = Querier(config, resource_type="")
-        return EncordUserClient(config, querier)
+        return EncordUserClient(UserConfig(config), querier)
 
     def get_projects(
         self,

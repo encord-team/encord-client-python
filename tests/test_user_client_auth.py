@@ -51,8 +51,18 @@ def bearer_token() -> str:
 
 
 def make_side_effects(project_response: Optional[MagicMock] = None, ontology_response: Optional[MagicMock] = None):
+    # Mocking a few service endpoints to make it possible to test authentication
+
     def side_effects(*args, **kwargs):
-        if args[0].path_url.startswith("/public"):
+        if args[0].path_url.startswith("/public/user"):
+            request_type = json.loads(args[0].body)["query_type"]
+            if request_type == "datasetwithuserrole":
+                mock_response = MagicMock()
+                mock_response.status_code = 200
+                mock_response.json.return_value = {"status": 200, "response": {}}
+                return mock_response
+
+        elif args[0].path_url.startswith("/public"):
             request_type = json.loads(args[0].body)["query_type"]
 
             if request_type == "project":
@@ -77,6 +87,8 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
             mock_response.status_code = 200
             mock_response.json.return_value = Page[CollaboratorTimer](results=[]).to_dict()
             return mock_response
+        else:
+            raise RuntimeError(f"Not mocked URL: {args[0].path_url}")
 
     return side_effects
 
@@ -89,13 +101,47 @@ def get_encord_auth_header(request: PreparedRequest) -> str:
 
 
 @patch.object(Session, "send")
-def test_v1_user_resource_when_initialised_with_ssh_key(mock_send, bearer_token):
+def test_v1_public_resource_when_initialised_with_ssh_key(mock_send, bearer_token):
     mock_send.side_effect = make_side_effects()
 
     user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=DUMMY_PRIVATE_KEY)
     user_client.get_project(project_hash=PROJECT_HASH)
 
     assert mock_send.call_count == 2
+    for mock_call in mock_send.call_args_list:
+        # Expect call to have correct resource type and id, and correct bearer auth
+        request = mock_call.args[0]
+
+        assert request.path_url == "/public"
+        assert request.headers["ResourceType"] == "project"
+        assert request.headers["ResourceID"] == PROJECT_HASH
+        assert request.headers["Authorization"] == get_encord_auth_header(request)
+
+
+@patch.object(Session, "send")
+def test_v1_public_resource_when_initialised_with_bearer_auth(mock_send, bearer_token):
+    mock_send.side_effect = make_side_effects()
+
+    user_client = EncordUserClient.create_with_bearer_token(bearer_token)
+    user_client.get_project(project_hash=PROJECT_HASH)
+
+    assert mock_send.call_count == 2
+    for mock_call in mock_send.call_args_list:
+        # Expect call to have correct resource type and id, and correct bearer auth
+        assert mock_call.args[0].path_url == "/public"
+        assert mock_call.args[0].headers["ResourceType"] == "project"
+        assert mock_call.args[0].headers["ResourceID"] == PROJECT_HASH
+        assert mock_call.args[0].headers["Authorization"] == f"Bearer {bearer_token}"
+
+
+@patch.object(Session, "send")
+def test_v1_public_user_resource_when_initialised_with_ssh_key(mock_send, bearer_token):
+    mock_send.side_effect = make_side_effects()
+
+    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=DUMMY_PRIVATE_KEY)
+    user_client.get_datasets()
+
+    assert mock_send.call_count == 1
     for mock_call in mock_send.call_args_list:
         # Expect call to have correct resource type and id, and correct bearer auth
         request = mock_call.args[0]
@@ -107,13 +153,32 @@ def test_v1_user_resource_when_initialised_with_ssh_key(mock_send, bearer_token)
 
 
 @patch.object(Session, "send")
-def test_v1_user_resource_when_initialised_with_bearer_auth(mock_send, bearer_token):
+def test_v1_public_user_resource_when_initialised_with_bearer_auth(mock_send, bearer_token):
     mock_send.side_effect = make_side_effects()
 
     user_client = EncordUserClient.create_with_bearer_token(bearer_token)
-    user_client.get_project(project_hash=PROJECT_HASH)
+    user_client.get_datasets()
 
-    assert mock_send.call_count == 2
+    assert mock_send.call_count == 1
+    for mock_call in mock_send.call_args_list:
+        # Expect call to have correct resource type and id, and correct bearer auth
+        request = mock_call.args[0]
+        assert request.path_url == "/public/user"
+        assert request.headers["ResourceType"] == "datasetwithuserrole"
+        assert request.headers["ResourceID"] == PROJECT_HASH
+        assert request.headers["Authorization"] == f"Bearer {bearer_token}"
+
+
+@patch.object(Session, "send")
+def test_xxx_v1_user_resource_when_initialised_with_bearer_auth(mock_send, bearer_token):
+    mock_send.side_effect = make_side_effects()
+
+    user_client = EncordUserClient.create_with_bearer_token(bearer_token)
+    project = user_client.get_project(project_hash=PROJECT_HASH)
+
+    project.list_label_rows_v2()
+
+    assert mock_send.call_count == 3
     for mock_call in mock_send.call_args_list:
         # Expect call to have correct resource type and id, and correct bearer auth
         assert mock_call.args[0].path_url == "/public/user"

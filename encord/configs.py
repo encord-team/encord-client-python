@@ -70,7 +70,7 @@ class BaseConfig(ABC):
         self.requests_settings = requests_settings
 
     @abstractmethod
-    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
         pass
 
     @abstractmethod
@@ -91,18 +91,22 @@ def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
 
 
 class UserConfig(BaseConfig):
+    """
+    Just a wrapper redirecting some of the requests towards the "/public/user" endpoint rather than just "/public"
+    """
+
     def __init__(
         self,
-        domain: str = ENCORD_DOMAIN,
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        config: Config,
     ):
-        self.domain = domain
-        endpoint = domain + ENCORD_PUBLIC_USER_PATH
-        super().__init__(endpoint, requests_settings=requests_settings)
+        self.config = config
+        super().__init__(endpoint=config.domain + ENCORD_PUBLIC_USER_PATH, requests_settings=config.requests_settings)
 
-    @abstractmethod
-    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
-        pass
+    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
+        return self.config.define_headers(resource_id, resource_type, data)
+
+    def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        return self.config.define_headers_v2(request)
 
 
 class Config(BaseConfig):
@@ -214,7 +218,7 @@ class ApiKeyConfig(Config):
         }
         super().__init__(web_file_path=web_file_path, domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
         return self._headers
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -225,7 +229,7 @@ EncordConfig = ApiKeyConfig
 CordConfig = EncordConfig
 
 
-class SshConfig(UserConfig):
+class SshConfig(Config):
     def __init__(
         self,
         private_key: Ed25519PrivateKey,
@@ -235,18 +239,24 @@ class SshConfig(UserConfig):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
         self.public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
+
         super().__init__(domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
         signature = _get_signature(data, self.private_key)
-        return {
+
+        headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Accept-Encoding": "gzip",
-            "ResourceID": resource_id,
             "ResourceType": resource_type,
             "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
         }
+
+        if resource_id:
+            headers["ResourceID"] = resource_id
+
+        return headers
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
         return sign_request(request, self.public_key_hex, self.private_key)
@@ -283,7 +293,7 @@ class SshConfig(UserConfig):
         return SshConfig(private_key, requests_settings=requests_settings, **kwargs)
 
 
-class BearerConfig(UserConfig):
+class BearerConfig(Config):
     def __init__(
         self,
         token: str,
@@ -293,15 +303,19 @@ class BearerConfig(UserConfig):
         self.token = token
         super().__init__(domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, resource_id: str, resource_type: str, data: str) -> Dict[str, Any]:
-        return {
+    def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
+        headers = {
             "Accept": "application/json",
             "Accept-Encoding": "gzip",
             "Content-Type": "application/json",
-            "ResourceID": resource_id,
             "ResourceType": resource_type,
             "Authorization": f"Bearer {self.token}",
         }
+
+        if resource_id:
+            headers["ResourceID"] = resource_id
+
+        return headers
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
         request.headers["Authorization"] = f"Bearer {self.token}"
