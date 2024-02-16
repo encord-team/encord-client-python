@@ -40,7 +40,7 @@ runs:
 
     - if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        cd ${{ input.project }}
+        cd ${{ inputs.project }}
         poetry lock --no-update
         poetry install --no-interaction
         source .venv/bin/activate
