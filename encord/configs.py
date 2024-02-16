@@ -102,6 +102,10 @@ class UserConfig(BaseConfig):
         self.config = config
         super().__init__(endpoint=config.domain + ENCORD_PUBLIC_USER_PATH, requests_settings=config.requests_settings)
 
+    @property
+    def domain(self) -> str:
+        return self.config.domain
+
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         return self.config.define_headers(resource_id, resource_type, data)
 
