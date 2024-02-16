@@ -12,8 +12,7 @@ inputs:
     required: false
   project:
     description: "Environment location"
-    required: false
-    default: '.'
+    required: true
   cache-key:
     description: "Cache key"
     required: true
