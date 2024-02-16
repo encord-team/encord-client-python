@@ -10,9 +10,10 @@ inputs:
     description: "Poetry version to use"
     default: 1.7.0
     required: false
-  project:
+  environment-location:
     description: "Environment location"
     required: true
+    default: '.'
   cache-key:
     description: "Cache key"
     required: true
@@ -41,7 +42,7 @@ runs:
 
     - if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        cd ${{ inputs.project }}
+        cd ${{ inputs.environment-location }}
         poetry lock --no-update
         poetry install --no-interaction
         source .venv/bin/activate
