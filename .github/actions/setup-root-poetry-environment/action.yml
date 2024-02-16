@@ -10,6 +10,11 @@ inputs:
     description: "Poetry version to use"
     default: 1.7.0
     required: false
+  project:
+    description: "Environment location"
+    required: false
+    default: '.'
+
 
 runs:
   using: "composite"
@@ -30,11 +35,12 @@ runs:
       id: cached-poetry-dependencies
       uses: actions/cache@v3
       with:
-        path: .venv
+        path: ${{ inputs.project }}/.venv
         key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
     - if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
+        cd ${{ input.project }}
         poetry lock --no-update
         poetry install --no-interaction
         source .venv/bin/activate
