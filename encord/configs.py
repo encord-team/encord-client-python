@@ -244,19 +244,14 @@ class SshConfig(Config):
 
     def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
         signature = _get_signature(data, self.private_key)
-
-        headers = {
+        return {
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Accept-Encoding": "gzip",
-            "ResourceType": resource_type,
+            "ResourceType": resource_type or "",
+            "ResourceID": resource_id or "",
             "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
         }
-
-        if resource_id:
-            headers["ResourceID"] = resource_id
-
-        return headers
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
         return sign_request(request, self.public_key_hex, self.private_key)
@@ -304,18 +299,14 @@ class BearerConfig(Config):
         super().__init__(domain=domain, requests_settings=requests_settings)
 
     def define_headers(self, resource_id: Optional[str], resource_type: str, data: str) -> Dict[str, Any]:
-        headers = {
+        return {
             "Accept": "application/json",
             "Accept-Encoding": "gzip",
             "Content-Type": "application/json",
-            "ResourceType": resource_type,
+            "ResourceID": resource_id or "",
+            "ResourceType": resource_type or "",
             "Authorization": f"Bearer {self.token}",
         }
-
-        if resource_id:
-            headers["ResourceID"] = resource_id
-
-        return headers
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
         request.headers["Authorization"] = f"Bearer {self.token}"

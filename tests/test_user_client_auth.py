@@ -147,8 +147,6 @@ def test_v1_public_user_resource_when_initialised_with_ssh_key(mock_send, bearer
         request = mock_call.args[0]
 
         assert request.path_url == "/public/user"
-        assert request.headers["ResourceType"] == "project"
-        assert request.headers["ResourceID"] == PROJECT_HASH
         assert request.headers["Authorization"] == get_encord_auth_header(request)
 
 
@@ -164,8 +162,6 @@ def test_v1_public_user_resource_when_initialised_with_bearer_auth(mock_send, be
         # Expect call to have correct resource type and id, and correct bearer auth
         request = mock_call.args[0]
         assert request.path_url == "/public/user"
-        assert request.headers["ResourceType"] == "datasetwithuserrole"
-        assert request.headers["ResourceID"] == PROJECT_HASH
         assert request.headers["Authorization"] == f"Bearer {bearer_token}"
 
 

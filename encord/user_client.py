@@ -290,8 +290,9 @@ class EncordUserClient:
         token: str, *, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS, **kwargs
     ) -> EncordUserClient:
         config = BearerConfig.from_bearer_token(token=token, requests_settings=requests_settings, **kwargs)
-        querier = Querier(config, resource_type="")
-        return EncordUserClient(UserConfig(config), querier)
+        user_config = UserConfig(config)
+        querier = Querier(user_config)
+        return EncordUserClient(user_config, querier)
 
     def get_projects(
         self,
