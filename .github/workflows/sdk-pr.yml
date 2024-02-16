@@ -13,6 +13,9 @@ env:
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
   BACKEND_REPO: cord-team/cord-backend
 
+  INTEGRATION_TEST_REPORT_PYTHON_3_11: integration-test-report-python3_11.xml
+  INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+
 concurrency:
   group: cord-client-${{ github.ref }}-pr
   cancel-in-progress: true
