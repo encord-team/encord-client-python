@@ -61,7 +61,8 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
                 mock_response.status_code = 200
                 mock_response.json.return_value = {"status": 200, "response": {}}
                 return mock_response
-
+            else:
+                assert False
         elif args[0].path_url.startswith("/public"):
             request_type = json.loads(args[0].body)["query_type"]
 
@@ -82,6 +83,7 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
             else:
                 print(f"Unknown type {request_type}")
                 assert False
+
         elif args[0].path_url.startswith("/v2/public/analytics/collaborators/timers"):
             mock_response = MagicMock()
             mock_response.status_code = 200
@@ -163,24 +165,6 @@ def test_v1_public_user_resource_when_initialised_with_bearer_auth(mock_send, be
         request = mock_call.args[0]
         assert request.path_url == "/public/user"
         assert request.headers["Authorization"] == f"Bearer {bearer_token}"
-
-
-@patch.object(Session, "send")
-def test_xxx_v1_user_resource_when_initialised_with_bearer_auth(mock_send, bearer_token):
-    mock_send.side_effect = make_side_effects()
-
-    user_client = EncordUserClient.create_with_bearer_token(bearer_token)
-    project = user_client.get_project(project_hash=PROJECT_HASH)
-
-    project.list_label_rows_v2()
-
-    assert mock_send.call_count == 3
-    for mock_call in mock_send.call_args_list:
-        # Expect call to have correct resource type and id, and correct bearer auth
-        assert mock_call.args[0].path_url == "/public/user"
-        assert mock_call.args[0].headers["ResourceType"] == "project"
-        assert mock_call.args[0].headers["ResourceID"] == PROJECT_HASH
-        assert mock_call.args[0].headers["Authorization"] == f"Bearer {bearer_token}"
 
 
 @patch.object(Session, "send")
