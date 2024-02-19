@@ -233,6 +233,18 @@ class Project:
         """
         return self._client.add_users(user_emails, user_role)
 
+    def get_users(self) -> List[ProjectUser]:
+        """
+        Get the users in a project
+        Returns:
+            List[ProjectUser]: List of the users associated to this project
+        Raises:
+            AuthorisationError: If the project API key is invalid.
+            ResourceNotFoundError: If no project exists by the specified project EntityId.
+            UnknownError: If an error occurs while adding the users to the project
+        """
+        return self._client.get_users()
+
     def copy_project(
         self,
         copy_datasets: Union[bool, CopyDatasetOptions] = False,
