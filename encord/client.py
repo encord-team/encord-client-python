@@ -813,12 +813,11 @@ class EncordClientProject(EncordClient):
 
         return [ProjectUser.from_dict(user) for user in users]
 
-    def get_users(self) -> List[DatasetUser]:
+    def get_users(self) -> List[ProjectUser]:
         """
         This function is documented in :meth:`encord.project.Project.get_users`.
         """
-        users = self._querier.basic_getter(ProjectUsers, self._config.resource_id)
-        return [ProjectUser.from_dict(user) for user in users]
+        return self._querier.basic_getter(ProjectUsers, self._config.resource_id)
 
     def copy_project(
         self,
