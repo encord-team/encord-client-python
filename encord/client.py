@@ -133,6 +133,7 @@ from encord.orm.project import (
     ProjectCopy,
     ProjectCopyOptions,
     ProjectDataset,
+    ProjectUserParams,
     ProjectUsers,
     TaskPriorityParams,
 )
@@ -813,12 +814,6 @@ class EncordClientProject(EncordClient):
 
         return [ProjectUser.from_dict(user) for user in users]
 
-    def get_users(self) -> List[ProjectUser]:
-        """
-        This function is documented in :meth:`encord.project.Project.get_users`.
-        """
-        return self._querier.basic_getter(ProjectUsers, self._config.resource_id)
-
     def copy_project(
         self,
         copy_datasets: Union[bool, CopyDatasetOptions] = False,
@@ -1365,6 +1360,11 @@ class EncordClientProject(EncordClient):
     def get_collaborator_timers_page(self, params: CollaboratorTimerParams) -> Page[CollaboratorTimer]:
         return self._get_api_client().get(
             "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
+        )
+
+    def get_users(self, params: ProjectUserParams) -> Page[ProjectUser]:
+        return self._get_api_client().get(
+            Path(f"projects/{self.project_hash}/users"), params=params, result_type=Page[ProjectUser]
         )
 
 

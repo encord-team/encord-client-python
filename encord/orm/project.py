@@ -303,3 +303,9 @@ class ProjectImporterCvatInfo(BaseDTO):
 
 class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
+
+
+class ProjectUserParams(BaseDTO):
+    project_hash: str
+    page_size: int = 100
+    page_token: Optional[str] = None
