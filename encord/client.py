@@ -495,7 +495,7 @@ class EncordClientDataset(EncordClient):
             cloud_upload_settings=cloud_upload_settings,
         )
         if not successful_uploads:
-            raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
+            raise encord.exceptions.EncordException("DICOM files upload failed. The DICOM series was not created.")
 
         dicom_files = [
             {
@@ -511,7 +511,7 @@ class EncordClientDataset(EncordClient):
         if res:
             return res
         else:
-            raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
+            raise encord.exceptions.EncordException(message="An error has occurred during the DICOM series creation.")
 
     def upload_image(
         self,
