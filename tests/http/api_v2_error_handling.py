@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -32,7 +31,7 @@ def test_response_mapping_status_codes_to_exception_type_500(send: MagicMock, ap
     send.return_value = res
 
     with pytest.raises(UnknownException):
-        api_client.get(Path("/"), params=None, result_type=CollaboratorTimer)
+        api_client.get("/", params=None, result_type=CollaboratorTimer)
 
 
 @patch.object(Session, "send")
@@ -42,7 +41,7 @@ def test_response_mapping_status_codes_to_exception_type_401(send: MagicMock, ap
     send.return_value = res
 
     with pytest.raises(AuthenticationError):
-        api_client.get(Path("/"), params=None, result_type=CollaboratorTimer)
+        api_client.get("/", params=None, result_type=CollaboratorTimer)
 
 
 @patch.object(Session, "send")
@@ -52,7 +51,7 @@ def test_response_mapping_status_codes_to_exception_type_403(send: MagicMock, ap
     send.return_value = res
 
     with pytest.raises(AuthorisationError):
-        api_client.get(Path("/"), params=None, result_type=CollaboratorTimer)
+        api_client.get("/", params=None, result_type=CollaboratorTimer)
 
 
 @patch.object(Session, "send")
@@ -62,7 +61,7 @@ def test_response_mapping_status_codes_to_exception_type_404(send: MagicMock, ap
     send.return_value = res
 
     with pytest.raises(ResourceNotFoundError):
-        api_client.get(Path("/"), params=None, result_type=CollaboratorTimer)
+        api_client.get("/", params=None, result_type=CollaboratorTimer)
 
 
 @patch.object(Session, "send")
@@ -72,4 +71,4 @@ def test_response_mapping_status_codes_to_exception_type_unknown(send: MagicMock
     send.return_value = res
 
     with pytest.raises(UnknownException):
-        api_client.get(Path("/"), params=None, result_type=CollaboratorTimer)
+        api_client.get("/", params=None, result_type=CollaboratorTimer)

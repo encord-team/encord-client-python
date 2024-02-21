@@ -16,7 +16,7 @@ from tests.fixtures import ontology, project, user_client
 
 assert user_client and project and ontology
 
-COLLABORATOR_TIMERS_PATH = Path("analytics/collaborators/timers")
+COLLABORATOR_TIMERS_PATH = "analytics/collaborators/timers"
 
 
 def construct_timer(
