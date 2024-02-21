@@ -46,7 +46,7 @@ def test_constructed_url_is_correct(send: MagicMock, api_client: ApiClient):
 
 
 @patch.object(Session, "send")
-def test_payload_serialisation(send: MagicMock, api_client: ApiClient):
+def test_payload_url_serialisation(send: MagicMock, api_client: ApiClient):
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"payload": "hello world"}
@@ -61,3 +61,19 @@ def test_payload_serialisation(send: MagicMock, api_client: ApiClient):
         send.call_args_list[0].args[0].url
         == "https://api.encord.com/v2/public?text=test&number=0.01&time=2024-02-01+01%3A02%3A03%2B00%3A00"
     )
+
+
+@patch.object(Session, "send")
+def test_payload_body_serialisation(send: MagicMock, api_client: ApiClient):
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"payload": "hello world"}
+    send.return_value = mock_response
+
+    expected_time = datetime.fromisoformat("2024-02-01T01:02:03Z")
+    payload = TestComplexPayload(text="test", number=0.01, time=expected_time)
+
+    api_client.post("/", params=None, payload=payload, result_type=TestPayload)
+
+    assert send.call_args_list[0].args[0].url == "https://api.encord.com/v2/public"
+    assert send.call_args_list[0].args[0].body == b'{"text": "test", "number": 0.01, "time": "2024-02-01T01:02:03Z"}'
