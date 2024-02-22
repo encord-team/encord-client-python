@@ -76,6 +76,7 @@ from encord.orm.analytics import (
     CollaboratorTimersGroupBy,
 )
 from encord.orm.api_key import ApiKeyMeta
+from encord.orm.bearer_request import BearerTokenResponse
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
@@ -239,6 +240,12 @@ class EncordClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)
+
+    def get_bearer_token(self) -> BearerTokenResponse:
+        return self._get_api_client().get(
+            Path("user/bearer_token"), None, result_type=BearerTokenResponse
+        )
+
 
 
 class EncordClientDataset(EncordClient):
@@ -1356,6 +1363,7 @@ class EncordClientProject(EncordClient):
         return self._get_api_client().get(
             Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
         )
+
 
 
 def _device_to_string(device: Device) -> str:
