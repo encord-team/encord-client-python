@@ -560,7 +560,7 @@ class LabelRowV2:
 
         object_instance.is_valid()
 
-        if object_instance.is_assigned_to_label_row():
+        if object_instance.is_assigned_to_label_row() and not force:
             raise LabelRowError(
                 "The supplied ObjectInstance is already part of a LabelRowV2. You can only add a ObjectInstance to one "
                 "LabelRowV2. You can do a ObjectInstance.copy() to create an identical ObjectInstance which is not part of "
