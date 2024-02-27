@@ -242,7 +242,7 @@ class EncordClient:
         return self._querier.get_multiple(CloudIntegration)
 
     def get_bearer_token(self) -> BearerTokenResponse:
-        return self._get_api_client().get(Path("user/bearer_token"), None, result_type=BearerTokenResponse)
+        return self._get_api_client().get("user/bearer_token", None, result_type=BearerTokenResponse)
 
 
 class EncordClientDataset(EncordClient):
@@ -1350,7 +1350,7 @@ class EncordClientProject(EncordClient):
 
     def workflow_set_priority(self, priorities: List[Tuple[str, float]]) -> None:
         self._get_api_client().post(
-            Path(f"projects/{self.project_hash}/priorities"),
+            f"projects/{self.project_hash}/priorities",
             params=None,
             payload=TaskPriorityParams(priorities=priorities),
             result_type=None,
@@ -1358,7 +1358,7 @@ class EncordClientProject(EncordClient):
 
     def get_collaborator_timers_page(self, params: CollaboratorTimerParams) -> Page[CollaboratorTimer]:
         return self._get_api_client().get(
-            Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
+            "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
         )
 
 

@@ -2,7 +2,7 @@ import platform
 import uuid
 from pathlib import Path
 from typing import Optional, Type, TypeVar, Union
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlunparse
 
 import requests
 from requests import PreparedRequest, Response
@@ -26,8 +26,8 @@ T = TypeVar("T", bound=BaseDTOInterface)
 class ApiClient:
     def __init__(self, config: Config):
         self._config = config
-        self._domain = config.domain
-        self._base_path = Path("v2/public/")
+        self._domain = self._config.domain
+        self._base_path = "v2/public/"
 
     @staticmethod
     def _exception_context_from_response(response: Response) -> RequestContext:
@@ -63,8 +63,13 @@ class ApiClient:
     def _tracing_id() -> str:
         return f"{uuid.uuid4().hex}/1;o=1"
 
-    def _build_url(self, path: Path) -> str:
-        return urljoin(self._domain, str(self._base_path / path))
+    def _build_url(self, path: str) -> str:
+        if path.startswith("/"):
+            path = path[1:]
+        url = urljoin(self._domain, urljoin(self._base_path, path))
+        if url.endswith("/"):
+            url = url[:-1]
+        return url
 
     def _headers(self):
         return {
@@ -75,7 +80,7 @@ class ApiClient:
             HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
-    def get(self, path: Path, params: Optional[BaseDTO], result_type: Type[T]) -> T:
+    def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T]) -> T:
         params_dict = params.to_dict() if params is not None else None
         req = requests.Request(
             method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
@@ -84,7 +89,7 @@ class ApiClient:
         return self._request(req, result_type=result_type)  # type: ignore
 
     def post(
-        self, path: Path, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
+        self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
         req = requests.Request(

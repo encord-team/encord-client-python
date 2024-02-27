@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -26,7 +25,7 @@ def test_deserialise_payload_raises_on_wrong_payload(send: MagicMock, api_client
     send.return_value = res
 
     with pytest.raises(EncordException):
-        api_client.get(Path("/"), params=None, result_type=CollaboratorTimer)
+        api_client.get("/", params=None, result_type=CollaboratorTimer)
 
 
 @patch.object(Session, "send")
@@ -43,7 +42,7 @@ def test_deserialise_payload_ok_on_correct_payload(send: MagicMock, api_client: 
     """
     send.return_value = res
 
-    res = api_client.get(Path("/"), params=None, result_type=CollaboratorTimer)
+    res = api_client.get("/", params=None, result_type=CollaboratorTimer)
 
     assert isinstance(res, CollaboratorTimer)
     assert res == CollaboratorTimer(
@@ -66,7 +65,7 @@ def test_deserialise_payload_ok_on_extra_keys(send: MagicMock, api_client: ApiCl
     """
     send.return_value = res
 
-    res = api_client.get(Path("/"), params=None, result_type=CollaboratorTimer)
+    res = api_client.get("/", params=None, result_type=CollaboratorTimer)
 
     assert isinstance(res, CollaboratorTimer)
     assert res == CollaboratorTimer(
