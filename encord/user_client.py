@@ -89,7 +89,6 @@ class EncordUserClient:
         client = EncordClient(querier=self.querier, config=self._config.config, api_client=self._api_client)
         return client.get_bearer_token().token
 
-
     def get_dataset(
         self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
     ) -> Dataset:
@@ -585,7 +584,6 @@ class EncordUserClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)
-
 
     def get_ontologies(
         self,
