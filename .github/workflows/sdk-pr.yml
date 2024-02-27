@@ -25,7 +25,7 @@ jobs:
     name: Linting and type checking
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup root poetry environment
         uses: ./.github/actions/setup-root-poetry-environment
         with:
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
