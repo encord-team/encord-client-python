@@ -105,7 +105,7 @@ class EncordUserClient:
             dataset_hash: The Dataset ID
             dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
         """
-        querier = Querier(self._config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
+        querier = Querier(self._config.config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         client = EncordClientDataset(
             querier=querier, config=self._config.config, dataset_access_settings=dataset_access_settings
         )
