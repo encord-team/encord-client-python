@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.11
         uses: ./.github/actions/run-unit-tests
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
@@ -127,7 +127,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.11
         uses: ./.github/actions/run-unit-tests
@@ -176,31 +176,31 @@ jobs:
 
       steps:
         - name: Download unit test report Python 3.8
-          uses: actions/download-artifact@v2
+          uses: actions/download-artifact@v4
           with:
             name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
             path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
 
         - name: Download unit test report Python 3.9
-          uses: actions/download-artifact@v2
+          uses: actions/download-artifact@v4
           with:
             name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
             path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
 
         - name: Download unit test report Python 3.10
-          uses: actions/download-artifact@v2
+          uses: actions/download-artifact@v4
           with:
             name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
             path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
 
         - name: Download unit test report Python 3.11
-          uses: actions/download-artifact@v2
+          uses: actions/download-artifact@v4
           with:
             name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
             path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
 
         - name: Download integration test report Python 3.11
-          uses: actions/download-artifact@v2
+          uses: actions/download-artifact@v4
           with:
             name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
             path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
@@ -244,7 +244,7 @@ jobs:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Get workflow status
         uses: technote-space/workflow-conclusion-action@v2

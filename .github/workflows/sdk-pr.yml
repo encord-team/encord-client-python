@@ -25,13 +25,13 @@ jobs:
     name: Linting and type checking
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup root poetry environment
         uses: ./.github/actions/setup-root-poetry-environment
         with:
           cache-key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Run linting, type checking and testing
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
         with:
           extra_args: "--all-files --hook-stage=push"
 
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
