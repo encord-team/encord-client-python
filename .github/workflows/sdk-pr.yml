@@ -31,7 +31,7 @@ jobs:
         with:
           cache-key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Run linting, type checking and testing
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
         with:
           extra_args: "--all-files --hook-stage=push"
 
