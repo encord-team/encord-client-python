@@ -287,6 +287,7 @@ class LabelRowMetadata(Formatter):
     images_data: Optional[list] = None
     file_type: Optional[str] = None
     """Only available for certain read requests"""
+    label_is_valid: bool = True
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -326,6 +327,7 @@ class LabelRowMetadata(Formatter):
             client_metadata=json_dict.get("client_metadata", None),
             images_data=json_dict.get("images_data", None),
             file_type=json_dict.get("file_type"),
+            label_is_valid=bool(json_dict.get("label_is_valid", True)),
         )
 
     @classmethod
