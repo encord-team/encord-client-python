@@ -142,7 +142,7 @@ class EncordUserClient:
         return Project(client, orm_project, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
-        querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
+        querier = Querier(self._config.config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
         return Ontology(querier, orm_ontology)
 
