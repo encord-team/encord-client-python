@@ -50,7 +50,7 @@ import requests
 
 import encord.exceptions
 from encord.common.deprecated import deprecated
-from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig, SshConfig
+from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, BearerConfig, Config, EncordConfig, SshConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import (
@@ -76,6 +76,7 @@ from encord.orm.analytics import (
     CollaboratorTimersGroupBy,
 )
 from encord.orm.api_key import ApiKeyMeta
+from encord.orm.bearer_request import BearerTokenResponse
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
@@ -162,11 +163,11 @@ class EncordClient:
 
     def __init__(self, querier: Querier, config: Config, api_client: Optional[ApiClient] = None):
         self._querier = querier
-        self._config: Config = config
+        self._config = config
         self._api_client = api_client
 
     def _get_api_client(self) -> ApiClient:
-        if not isinstance(self._config, SshConfig):
+        if not (isinstance(self._config, (SshConfig, BearerConfig))):
             raise EncordException(
                 "This functionality requires private SSH key authentication. API keys are not supported."
             )
@@ -239,6 +240,9 @@ class EncordClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)
+
+    def get_bearer_token(self) -> BearerTokenResponse:
+        return self._get_api_client().get("user/bearer_token", None, result_type=BearerTokenResponse)
 
 
 class EncordClientDataset(EncordClient):
@@ -408,7 +412,7 @@ class EncordClientDataset(EncordClient):
         """
 
         payload = {"user_emails": user_emails, "user_role": user_role}
-        users = self._querier.basic_setter(DatasetUsers, self._config.resource_id, payload=payload)
+        users = self._querier.basic_setter(DatasetUsers, self._querier.resource_id, payload=payload)
 
         return [DatasetUser.from_dict(user) for user in users]
 
@@ -507,11 +511,10 @@ class EncordClientDataset(EncordClient):
         ]
 
         res = self._querier.basic_setter(DicomSeries, uid=dicom_files, payload={"title": title})
-
-        if res:
-            return res
-        else:
+        if not res:
             raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
+
+        return res
 
     def upload_image(
         self,
@@ -547,7 +550,7 @@ class EncordClientDataset(EncordClient):
     def link_items(self, item_uuids: List[uuid.UUID]) -> List[DataRow]:
         return self._querier.basic_setter(
             DatasetLinkItems,
-            uid=self._config.resource_id,
+            uid=self._querier.resource_id,
             payload={"item_uuids": [str(item_uuid) for item_uuid in item_uuids]},
         )
 
@@ -616,7 +619,7 @@ class EncordClientDataset(EncordClient):
 
         process_hash = self._querier.basic_setter(
             DatasetDataLongPolling,
-            self._config.resource_id,
+            self._querier.resource_id,
             payload={
                 "files": files,
                 "integration_id": integration_id,
@@ -648,7 +651,7 @@ class EncordClientDataset(EncordClient):
 
                 res = self._querier.basic_getter(
                     DatasetDataLongPolling,
-                    self._config.resource_id,
+                    self._querier.resource_id,
                     payload={
                         "process_hash": upload_job_id,
                         "timeout_seconds": min(
@@ -713,10 +716,7 @@ class EncordClientDataset(EncordClient):
         """
 
         payload = {"image_group_data_hash": image_group_id}
-
-        response = self._querier.get_multiple(ImageGroupOCR, payload=payload)
-
-        return response
+        return self._querier.get_multiple(ImageGroupOCR, payload=payload)
 
 
 class EncordClientProject(EncordClient):
@@ -726,7 +726,8 @@ class EncordClientProject(EncordClient):
 
     @property
     def project_hash(self) -> str:
-        return self._config.resource_id  # type: ignore[attr-defined]
+        assert self._querier.resource_id, "Resource id can't be empty for created project client"
+        return self._querier.resource_id  # type: ignore[attr-defined]
 
     def get_project(self, include_labels_metadata=True) -> OrmProject:
         """
@@ -808,7 +809,7 @@ class EncordClientProject(EncordClient):
         """
 
         payload = {"user_emails": user_emails, "user_role": user_role}
-        users = self._querier.basic_setter(ProjectUsers, self._config.resource_id, payload=payload)
+        users = self._querier.basic_setter(ProjectUsers, self._querier.resource_id, payload=payload)
 
         return [ProjectUser.from_dict(user) for user in users]
 
@@ -852,7 +853,7 @@ class EncordClientProject(EncordClient):
         if copy_collaborators:
             payload.copy_project_options.append(ProjectCopyOptions.COLLABORATORS)
 
-        return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=dataclasses.asdict(payload))
+        return self._querier.basic_setter(ProjectCopy, self._querier.resource_id, payload=dataclasses.asdict(payload))
 
     def get_label_row(
         self,
@@ -1279,9 +1280,6 @@ class EncordClientProject(EncordClient):
                 images.append(Image(image))
 
         return video, images
-
-    def get_websocket_url(self) -> str:
-        return self._config.get_websocket_url()
 
     def get_label_logs(
         self,

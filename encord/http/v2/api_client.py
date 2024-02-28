@@ -1,13 +1,14 @@
 import platform
 import uuid
-from typing import Optional, Type, TypeVar
+from pathlib import Path
+from typing import Optional, Type, TypeVar, Union
 from urllib.parse import urljoin, urlunparse
 
 import requests
 from requests import PreparedRequest, Response
 
 from encord._version import __version__ as encord_version
-from encord.configs import UserConfig
+from encord.configs import Config
 from encord.exceptions import RequestException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
@@ -23,7 +24,7 @@ T = TypeVar("T", bound=BaseDTOInterface)
 
 
 class ApiClient:
-    def __init__(self, config: UserConfig):
+    def __init__(self, config: Config):
         self._config = config
         self._domain = self._config.domain
         self._base_path = "v2/public/"
@@ -55,7 +56,7 @@ class ApiClient:
             return RequestContext()
 
     @staticmethod
-    def _user_agent():
+    def _user_agent() -> str:
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
     @staticmethod
@@ -102,7 +103,7 @@ class ApiClient:
         return self._request(req, result_type=result_type)  # type: ignore
 
     def _request(self, req: PreparedRequest, result_type: Optional[Type[T]]):
-        req = sign_request(req, self._config.public_key_hex, self._config.private_key)
+        req = self._config.define_headers_v2(req)
 
         timeouts = (self._config.connect_timeout, self._config.read_timeout)
         req_settings = self._config.requests_settings

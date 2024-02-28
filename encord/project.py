@@ -696,9 +696,6 @@ class Project:
         """
         return self._client.get_data(data_hash, get_signed_url)
 
-    def get_websocket_url(self) -> str:
-        return self._client.get_websocket_url()
-
     def get_label_logs(
         self,
         user_hash: Optional[str] = None,

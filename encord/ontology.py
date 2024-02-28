@@ -12,9 +12,8 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, config: SshConfig, instance: OrmOntology):
+    def __init__(self, querier: Querier, instance: OrmOntology):
         self._querier = querier
-        self._config = config
         self._ontology_instance = instance
 
     @property
@@ -82,7 +81,7 @@ class Ontology:
             payload = dict(**self._ontology_instance)
             payload["editor"] = self._ontology_instance.structure.to_dict()  # we're using internal/legacy name here
             payload.pop("structure", None)
-            self._querier.basic_put(OrmOntology, self._config.resource_id, payload)
+            self._querier.basic_put(OrmOntology, self._ontology_instance.ontology_hash, payload)
 
     def _get_ontology(self):
-        return self._querier.basic_getter(OrmOntology, self._config.resource_id)
+        return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)

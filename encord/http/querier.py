@@ -48,8 +48,10 @@ class Querier:
     T = TypeVar("T")
     PayloadType = Union[None, Dict[str, Any], BaseDTO, Sequence[Dict[str, Any]], Sequence[BaseDTO]]
 
-    def __init__(self, config: BaseConfig):
+    def __init__(self, config: BaseConfig, resource_type: Optional[str] = None, resource_id: Optional[str] = None):
         self._config = config
+        self.resource_type = resource_type
+        self.resource_id = resource_id
 
     def basic_getter(
         self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
@@ -184,10 +186,11 @@ class Querier:
             method, db_object_type, uid, timeout, self._config.connect_timeout, self._serialise_payload(payload)
         )
 
-        request.headers = self._config.define_headers(request.data)
+        request.headers = self._config.define_headers(
+            resource_id=self.resource_id, resource_type=self.resource_type, data=request.data
+        )
         request.headers[HEADER_USER_AGENT] = self._user_agent()
         request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
-
         return request
 
     def _execute(self, request: Request, retryable=False, enable_logging: bool = True) -> Tuple[Any, RequestContext]:
