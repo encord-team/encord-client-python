@@ -104,6 +104,7 @@ class ApiClient:
 
     def _request(self, req: PreparedRequest, result_type: Optional[Type[T]]):
         req = self._config.define_headers_v2(req)
+
         timeouts = (self._config.connect_timeout, self._config.read_timeout)
         req_settings = self._config.requests_settings
         with create_new_session(
