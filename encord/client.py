@@ -1364,7 +1364,7 @@ class EncordClientProject(EncordClient):
 
     def get_users(self, params: ProjectUserParams) -> Page[ProjectUser]:
         return self._get_api_client().get(
-            Path(f"projects/{self.project_hash}/users"), params=params, result_type=Page[ProjectUser]
+            f"projects/{self.project_hash}/users", params=params, result_type=Page[ProjectUser]
         )
 
 
