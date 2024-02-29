@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional
 
 from encord.common.time_parser import parse_datetime
 from encord.orm import base_orm
+from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 
 
@@ -186,6 +187,7 @@ class LabelRow(base_orm.BaseORM):
             ("object_actions", dict),
             ("label_status", str),
             ("annotation_task_status", str),
+            ("label_is_valid", bool),
         ]
     )
 
@@ -351,3 +353,11 @@ class LabelRowMetadata(Formatter):
             return value
 
         return {k: transform(v) for k, v in asdict(self).items()}
+
+
+class LabelValidationState(BaseDTO):
+    label_hash: str
+    branch_name: str
+    version: int
+    label_is_valid: bool
+    errors: list[str]

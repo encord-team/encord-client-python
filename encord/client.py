@@ -106,6 +106,7 @@ from encord.orm.label_row import (
     LabelRow,
     LabelRowMetadata,
     LabelStatus,
+    LabelValidationState,
     Review,
     ShadowDataState,
 )
@@ -1362,6 +1363,18 @@ class EncordClientProject(EncordClient):
         return self._get_api_client().get(
             "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
         )
+
+    def get_label_validation_errors(self, label_hash: str) -> List[str]:
+        errors = self._get_api_client().get(
+            f"project/{self.project_hash}/label/{label_hash}/validation-errors",
+            params=None,
+            result_type=LabelValidationState,
+        )
+
+        if errors.label_is_valid:
+            return []
+
+        return errors.errors or []
 
 
 def _device_to_string(device: Device) -> str:
