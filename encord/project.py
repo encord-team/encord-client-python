@@ -25,7 +25,7 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions
+from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectUserParams
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -232,6 +232,30 @@ class Project:
             UnknownError: If an error occurs while adding the users to the project
         """
         return self._client.add_users(user_emails, user_role)
+
+    def get_users(self) -> List[ProjectUser]:
+        """
+        Get the users in a project
+        Returns:
+            List[ProjectUser]: List of the users associated to this project
+        Raises:
+            AuthorisationError: If the project API key is invalid.
+            ResourceNotFoundError: If no project exists by the specified project EntityId.
+            UnknownError: If an error occurs while adding the users to the project
+        """
+        users: List[ProjectUser] = []
+        params = ProjectUserParams(
+            project_hash=self.project_hash,
+            page_size=100,
+        )
+        while True:
+            page = self._client.get_users(params)
+            users += page.results
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
+        return users
 
     def copy_project(
         self,

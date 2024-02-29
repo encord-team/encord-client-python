@@ -126,7 +126,6 @@ class ApiClient:
 
             if result_type is None:
                 return None
-
             return result_type.from_dict(res_json)
 
     @staticmethod

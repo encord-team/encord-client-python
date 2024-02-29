@@ -133,6 +133,7 @@ from encord.orm.project import (
     ProjectCopy,
     ProjectCopyOptions,
     ProjectDataset,
+    ProjectUserParams,
     ProjectUsers,
     TaskPriorityParams,
 )
@@ -1359,6 +1360,11 @@ class EncordClientProject(EncordClient):
     def get_collaborator_timers_page(self, params: CollaboratorTimerParams) -> Page[CollaboratorTimer]:
         return self._get_api_client().get(
             "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
+        )
+
+    def get_users(self, params: ProjectUserParams) -> Page[ProjectUser]:
+        return self._get_api_client().get(
+            f"projects/{self.project_hash}/users", params=params, result_type=Page[ProjectUser]
         )
 
 
