@@ -360,4 +360,4 @@ class LabelValidationState(BaseDTO):
     branch_name: str
     version: int
     label_is_valid: bool
-    errors: list[str]
+    errors: List[str]

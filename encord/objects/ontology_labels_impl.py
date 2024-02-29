@@ -807,7 +807,7 @@ class LabelRowV2:
             payload=BundledSetPriorityPayload(priorities=[(self.data_hash, priority)]),
         )
 
-    def get_label_validation_errors(self) -> list[str] | None:
+    def get_label_validation_errors(self) -> List[str] | None:
         """
         Get validation errors for the label row (list of error messages).
 
