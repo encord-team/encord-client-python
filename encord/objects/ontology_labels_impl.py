@@ -247,6 +247,15 @@ class LabelRowV2:
 
     @property
     def label_is_valid(self) -> bool:
+        """
+        For labels uploaded via the SDK, a check is run to ensure that the labels are valid.
+        This property returns `True` if the labels have correct structure and match the project ontology.
+
+        If it is `False`, then loading the labels via `LabelRowV2` will raise an error, and the label editor
+        will not be able to load the labels.
+
+        You can call :meth`.get_label_validation_errors` to get the validation error messages.
+        """
         return self._label_row_read_only_data.label_is_valid
 
     @property
@@ -799,6 +808,11 @@ class LabelRowV2:
         )
 
     def get_label_validation_errors(self) -> list[str] | None:
+        """
+        Get validation errors for the label row (list of error messages).
+
+        If the label row is valid, this will return `None`.
+        """
         if not self.label_hash or self.label_is_valid:
             return None
 
