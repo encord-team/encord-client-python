@@ -1366,7 +1366,7 @@ class EncordClientProject(EncordClient):
 
     def get_label_validation_errors(self, label_hash: str) -> List[str]:
         errors = self._get_api_client().get(
-            f"project/{self.project_hash}/label/{label_hash}/validation-errors",
+            f"projects/{self.project_hash}/labels/{label_hash}/validation-state",
             params=None,
             result_type=LabelValidationState,
         )
