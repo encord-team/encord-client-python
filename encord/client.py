@@ -1371,7 +1371,7 @@ class EncordClientProject(EncordClient):
             result_type=LabelValidationState,
         )
 
-        if errors.label_is_valid:
+        if errors.is_valid:
             return []
 
         return errors.errors or []
