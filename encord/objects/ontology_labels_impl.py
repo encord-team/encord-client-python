@@ -246,6 +246,19 @@ class LabelRowV2:
         return self._label_row_read_only_data.priority
 
     @property
+    def is_valid(self) -> bool:
+        """
+        For labels uploaded via the SDK, a check is run to ensure that the labels are valid.
+        This property returns `True` if the labels have correct structure and match the project ontology.
+
+        If it is `False`, then loading the labels via `LabelRowV2` will raise an error, and the label editor
+        will not be able to load the labels.
+
+        You can call :meth`.get_label_validation_errors` to get the validation error messages.
+        """
+        return self._label_row_read_only_data.is_valid
+
+    @property
     def ontology_structure(self) -> OntologyStructure:
         """Get the corresponding ontology structure"""
         return self._ontology.structure
@@ -794,6 +807,17 @@ class LabelRowV2:
             payload=BundledSetPriorityPayload(priorities=[(self.data_hash, priority)]),
         )
 
+    def get_validation_errors(self) -> List[str] | None:
+        """
+        Get validation errors for the label row (list of error messages).
+
+        If the label row is valid, this will return `None`.
+        """
+        if not self.label_hash or self.is_valid:
+            return None
+
+        return self._project_client.get_label_validation_errors(self.label_hash)
+
     class FrameViewMetadata:
         """
         This class can be used to inspect what metadata for a frame view
@@ -1055,6 +1079,7 @@ class LabelRowV2:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
+        is_valid: bool = field(default=True)
 
     def _to_object_answers(self) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}
@@ -1319,6 +1344,7 @@ class LabelRowV2:
             else [LabelRowV2.LabelRowReadOnlyDataImagesDataEntry(**data) for data in label_row_metadata.images_data],
             client_metadata=label_row_metadata.client_metadata,
             file_type=label_row_metadata.file_type,
+            is_valid=label_row_metadata.is_valid,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -1387,6 +1413,7 @@ class LabelRowV2:
             client_metadata=label_row_dict.get("client_metadata", self._label_row_read_only_data.client_metadata),
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
             file_type=label_row_dict.get("file_type", None),
+            is_valid=bool(label_row_dict.get("is_valid", True)),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
