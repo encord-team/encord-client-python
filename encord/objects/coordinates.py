@@ -168,10 +168,41 @@ class SkeletonCoordinate:
 
     visibility: Optional[Visibility] = None
 
+    def to_dict(self) -> dict:
+        return {
+            "x": self.x,
+            "y": self.y,
+            "name": self.name,
+            "color": self.color,
+            "value": self.value,
+            "featureHash": self.feature_hash,
+        }
+
 
 @dataclass(frozen=True)
 class SkeletonCoordinates:
     values: List[SkeletonCoordinate]
+
+    @staticmethod
+    def from_dict(d: dict) -> SkeletonCoordinates:
+        skeleton_dict = d["skeleton"]
+        list_coordinates: List[SkeletonCoordinate] = []
+        sorted_dict_value_tuples = sorted((int(key), value) for key, value in skeleton_dict.items())
+        sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
+        for coordinate in sorted_dict_values:
+            skeleton_coordinate = SkeletonCoordinate(
+                x=coordinate["x"],
+                y=coordinate["y"],
+                name=coordinate["name"],
+                value=coordinate["value"],
+                color=coordinate["color"],
+                feature_hash=coordinate["featureHash"],
+            )
+            list_coordinates.append(skeleton_coordinate)
+        return SkeletonCoordinates(values=list_coordinates)
+
+    def to_dict(self) -> dict:
+        return {i: x.to_dict() for i, x in enumerate(self.values)}
 
 
 Coordinates = Union[
