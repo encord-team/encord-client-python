@@ -1,9 +1,14 @@
 import datetime
+from typing import List, Optional
 
-from encord.configs import SshConfig
+from encord.configs import BearerConfig, SshConfig
+from encord.exceptions import EncordException
 from encord.http.querier import Querier
+from encord.http.v2.api_client import ApiClient
 from encord.objects.ontology_structure import OntologyStructure
+from encord.objects.skeleton_template import SkeletonTemplate
 from encord.orm.ontology import Ontology as OrmOntology
+from encord.orm.skeleton_template import SkeletonTemplateORM, SkeletonTemplatesORM
 
 
 class Ontology:
@@ -12,9 +17,18 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, instance: OrmOntology):
+    def __init__(self, querier: Querier, instance: OrmOntology, api_client: Optional[ApiClient] = None):
         self._querier = querier
         self._ontology_instance = instance
+        self._api_client = api_client
+
+    def _get_api_client(self) -> ApiClient:
+        if not self._api_client:
+            raise EncordException(
+                "This functionality requires private SSH key authentication. API keys are not supported."
+            )
+
+        return self._api_client
 
     @property
     def ontology_hash(self) -> str:
@@ -85,3 +99,9 @@ class Ontology:
 
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
+
+    def _get_skeleton_templates(self) -> List[SkeletonTemplate]:
+        orm_templates = self._get_api_client().get(
+            f"ontologies/{self.ontology_hash}/skeleton-templates", params=None, result_type=List[SkeletonTemplateORM]
+        )
+        return [SkeletonTemplate.from_dict(orm_template.template) for orm_template in orm_templates]

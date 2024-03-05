@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Flag, auto
-from typing import Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
+
+# from encord.objects.skeleton_template import SkeletonTemplate
 
 
 @dataclass(frozen=True)
@@ -168,6 +170,10 @@ class SkeletonCoordinate:
 
     visibility: Optional[Visibility] = None
 
+    @staticmethod
+    def from_dict(d: dict[str, Any]) -> SkeletonCoordinate:
+        return SkeletonCoordinate(**d)
+
     def to_dict(self) -> dict:
         return {
             "x": self.x,
@@ -203,6 +209,15 @@ class SkeletonCoordinates:
 
     def to_dict(self) -> dict:
         return {i: x.to_dict() for i, x in enumerate(self.values)}
+
+
+# @dataclass
+# class SkeletonInstance:
+#     values: List[SkeletonCoordinate]
+#     template: SkeletonTemplate
+
+#     def to_dict(self) -> dict:
+#         return {i: x.to_dict() for i, x in enumerate(self.values)}
 
 
 Coordinates = Union[

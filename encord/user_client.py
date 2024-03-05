@@ -144,7 +144,7 @@ class EncordUserClient:
     def get_ontology(self, ontology_hash: str) -> Ontology:
         querier = Querier(self._config.config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        return Ontology(querier, orm_ontology)
+        return Ontology(querier, orm_ontology, self._api_client)
 
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
