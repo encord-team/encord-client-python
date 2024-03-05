@@ -165,7 +165,7 @@ class SkeletonCoordinate:
     # `featureHash` and `value` seem to appear when visibility is
     # present. They might not have any meaning. Remove if confirmed that
     # Frontend does not need it.
-    feature_hash: Optional[str] = None
+    featureHash: Optional[str] = None
     value: Optional[str] = None
 
     visibility: Optional[Visibility] = None
@@ -181,7 +181,7 @@ class SkeletonCoordinate:
             "name": self.name,
             "color": self.color,
             "value": self.value,
-            "featureHash": self.feature_hash,
+            "featureHash": self.featureHash,
         }
 
 
