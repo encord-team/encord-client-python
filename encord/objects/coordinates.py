@@ -160,7 +160,7 @@ class SkeletonCoordinate:
     # `name` and `color` can be removed as they are part of the ontology.
     # The frontend must first be aware of how to merge with ontology.
     name: str
-    color: str
+    color: Optional[str] = None
 
     # `featureHash` and `value` seem to appear when visibility is
     # present. They might not have any meaning. Remove if confirmed that
@@ -216,6 +216,11 @@ class SkeletonCoordinates:
 #     values: List[SkeletonCoordinate]
 #     template: SkeletonTemplate
 
+#     @staticmethod
+#     def from_dict(d: dict, skeleton_template: SkeletonTemplate) -> SkeletonInstance:
+#         skeleton_coords = [SkeletonCoordinate(coord) for coord in d["skeleton"].values()]
+#         return SkeletonInstance(skeleton_coords, skeleton_template)
+
 #     def to_dict(self) -> dict:
 #         return {i: x.to_dict() for i, x in enumerate(self.values)}
 
@@ -227,6 +232,7 @@ Coordinates = Union[
     PolygonCoordinates,
     PolylineCoordinates,
     SkeletonCoordinates,
+    # SkeletonInstance,
     BitmaskCoordinates,
 ]
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
@@ -236,5 +242,6 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.POLYGON: PolygonCoordinates,
     Shape.POLYLINE: PolylineCoordinates,
     Shape.SKELETON: SkeletonCoordinates,
+    # Shape.SKELETON: SkeletonInstance,
     Shape.BITMASK: BitmaskCoordinates,
 }

@@ -48,6 +48,8 @@ from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
+
+# from encord.objects.skeleton_template import SkeletonInstance
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
 from encord.orm.label_row import (
@@ -1558,6 +1560,8 @@ class LabelRowV2:
         elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
+            # skeleton_type = self._ontology._skeleton_templates["name"]
+            # return SkeletonInstance.from_dict(frame_object_label, skeleton_type)
             return SkeletonCoordinates.from_dict(frame_object_label)
         elif "bitmask" in frame_object_label:
             return BitmaskCoordinates.from_dict(frame_object_label)

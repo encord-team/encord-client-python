@@ -137,7 +137,7 @@ class EncordUserClient:
         # not full access, that is implied by get_ontology method
         ontology_hash = orm_project["ontology_hash"]
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        project_ontology = Ontology(querier, orm_ontology)
+        project_ontology = Ontology(querier, orm_ontology, self._api_client)
 
         return Project(client, orm_project, project_ontology)
 
