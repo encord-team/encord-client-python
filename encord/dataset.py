@@ -259,7 +259,7 @@ class Dataset:
         """
         return self._client.delete_image_group(data_hash)
 
-    def delete_data(self, data_hashes: List[str]):
+    def delete_data(self, data_hashes: Union[List[str], str]):
         """
         Delete a video/image group from a dataset.
 

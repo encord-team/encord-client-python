@@ -561,10 +561,12 @@ class EncordClientDataset(EncordClient):
         """
         self._querier.basic_delete(ImageGroup, uid=data_hash)
 
-    def delete_data(self, data_hashes: List[str]):
+    def delete_data(self, data_hashes: Union[List[str], str]):
         """
         This function is documented in :meth:`encord.dataset.Dataset.delete_data`.
         """
+        if isinstance(data_hashes, str):
+            data_hashes = [data_hashes]
         self._querier.basic_delete(Video, uid=data_hashes)
 
     def add_private_data_to_dataset(
