@@ -406,13 +406,15 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def save(self, bundle: Optional[Bundle] = None) -> None:
+    def save(self, bundle: Optional[Bundle] = None, validate_before_saving: bool = False) -> None:
         """
         Upload the created labels with the Encord server. This will overwrite any labels that someone has created
         in the platform in the meantime.
 
         Args:
             bundle: if not passed, save is executed immediately. If passed, it is executed as a part of the bundle
+            validate_before_saving: enable stricter server-side integrity checks. Boolean, `False` by default.
+
         """
         self._check_labelling_is_initalised()
         assert self.label_hash is not None  # Checked earlier, assert is just to silence mypy
@@ -420,7 +422,9 @@ class LabelRowV2:
         bundled_operation(
             bundle,
             self._project_client.save_label_rows,
-            payload=BundledSaveRowsPayload(uids=[self.label_hash], payload=[self.to_encord_dict()]),
+            payload=BundledSaveRowsPayload(
+                uids=[self.label_hash], payload=[self.to_encord_dict()], validate_before_saving=validate_before_saving
+            ),
         )
 
     @property

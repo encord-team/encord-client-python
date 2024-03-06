@@ -96,9 +96,16 @@ def check_error_response(response, context=None, payload=None):
         )
 
     if response == CORRUPTED_LABEL_ERROR:
+        message = "The label blurb is corrupted."
+
+        if payload and isinstance(payload, str):
+            message += "\n" + payload
+        else:
+            message += (
+                " This could be due to the number of frame labels exceeding the number of frames in the labelled video."
+            )
         raise CorruptedLabelError(
-            "The label blurb is corrupted. This could be due to the number of "
-            "frame labels exceeding the number of frames in the labelled video.",
+            message=message,
             context=context,
         )
 
