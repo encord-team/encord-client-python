@@ -36,10 +36,12 @@ class BundledCreateRowsPayload:
 class BundledSaveRowsPayload:
     uids: List[str]
     payload: List[Dict]
+    validate_before_saving: Optional[bool]
 
     def add(self, other: BundledSaveRowsPayload) -> BundledSaveRowsPayload:
         self.uids.extend(other.uids)
         self.payload.extend(other.payload)
+        self.validate_before_saving = self.validate_before_saving or other.validate_before_saving
         return self
 
 

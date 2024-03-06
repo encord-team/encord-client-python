@@ -904,14 +904,16 @@ class EncordClientProject(EncordClient):
 
         return self._querier.get_multiple(LabelRow, uids, payload=payload, retryable=True)
 
-    def save_label_row(self, uid, label):
+    def save_label_row(self, uid, label, validate_before_saving: bool = False):
         """
         This function is documented in :meth:`encord.project.Project.save_label_row`.
         """
         label = LabelRow(label)
+        if validate_before_saving:
+            label["validate_before_saving"] = True
         return self._querier.basic_setter(LabelRow, uid, payload=label, retryable=True)
 
-    def save_label_rows(self, uids: List[str], payload: List[LabelRow]):
+    def save_label_rows(self, uids: List[str], payload: List[LabelRow], validate_before_saving: bool = False):
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -927,6 +929,7 @@ class EncordClientProject(EncordClient):
         multirequest_payload = {
             "multi_request": True,
             "labels": payload,
+            "validate_before_saving": validate_before_saving,
         }
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 

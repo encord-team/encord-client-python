@@ -916,7 +916,7 @@ class Project:
             include_reviews=include_reviews,
         )
 
-    def save_label_row(self, uid, label):
+    def save_label_row(self, uid, label, validate_before_saving: bool = False):
         """
         DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
@@ -929,6 +929,7 @@ class Project:
         Args:
             uid: A label_hash (uid) string.
             label: A label row instance.
+            validate_before_saving: enable stricter server-side integrity checks. Boolean, `False` by default.
 
         Returns:
             Bool.
@@ -942,7 +943,7 @@ class Project:
             AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
         """
-        return self._client.save_label_row(uid, label)
+        return self._client.save_label_row(uid, label, validate_before_saving)
 
     def create_label_row(self, uid: str):
         """
