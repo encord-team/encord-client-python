@@ -168,7 +168,15 @@ class SkeletonCoordinate:
     featureHash: Optional[str] = None
     value: Optional[str] = None
 
-    def __init__(self, x: float, y: float, name: str, color: str = "#00000", featureHash: str = None, value: str = None) -> None:
+    def __init__(
+        self,
+        x: float,
+        y: float,
+        name: str,
+        color: str = "#00000",
+        featureHash: Optional[str] = None,
+        value: Optional[str] = None,
+    ) -> None:
         self.x = x
         self.y = y
         self.name = name
@@ -194,6 +202,7 @@ class SkeletonCoordinate:
 @dataclass(frozen=True)
 class SkeletonCoordinates:
     values: List[SkeletonCoordinate]
+
     @staticmethod
     def from_dict(d: dict) -> SkeletonCoordinates:
         skeleton_dict = d["skeleton"]
@@ -207,7 +216,7 @@ class SkeletonCoordinates:
                 name=coordinate["name"],
                 value=coordinate["value"],
                 color=coordinate["color"],
-                feature_hash=coordinate["featureHash"],
+                featureHash=coordinate["featureHash"],
             )
             list_coordinates.append(skeleton_coordinate)
         return SkeletonCoordinates(values=list_coordinates)

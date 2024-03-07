@@ -17,10 +17,14 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, instance: OrmOntology, skeleton_templates: list[SkeletonTemplate]):
+    def __init__(
+        self, querier: Querier, instance: OrmOntology, skeleton_templates: Optional[list[SkeletonTemplate]] = None
+    ):
         self._querier = querier
         self._ontology_instance = instance
-        self._skeleton_templates = {template.name: template for template in skeleton_templates}
+        self._skeleton_templates = (
+            {template.name: template for template in skeleton_templates} if skeleton_templates else {}
+        )
 
     @property
     def ontology_hash(self) -> str:
