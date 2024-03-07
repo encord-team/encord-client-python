@@ -7,6 +7,19 @@ from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates  
 from encord.orm.base_dto import BaseDTO
 
 
+@dataclass
+class SkeletonInstance:
+    values: List[SkeletonCoordinate]
+    template: SkeletonTemplate
+
+    @staticmethod
+    def from_dict(d: dict, skeleton_template: SkeletonTemplate) -> SkeletonInstance:
+        skeleton_coords = [SkeletonCoordinate(coord) for coord in d["skeleton"].values()]
+        return SkeletonInstance(skeleton_coords, skeleton_template)
+
+    def to_dict(self) -> dict:
+        return {i: x.to_dict() for i, x in enumerate(self.values)}
+
 class SkeletonTemplate(BaseDTO):
     name: str
     width: float
@@ -31,7 +44,6 @@ class SkeletonTemplate(BaseDTO):
                 x=coord.x, y=coord.y, name=coord.name, featureHash=partner.featureHash
             )
             aligned_coordinates.append(aligned_coordinate)
-        # return SkeletonInstance(values=aligned_coordinates, template=self)
         return SkeletonCoordinates(values=aligned_coordinates)
 
     def to_dict(self) -> dict:

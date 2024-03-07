@@ -649,7 +649,7 @@ class EncordUserClient:
         ontology = OrmOntology.from_dict(retval)
         querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
 
-        return Ontology(querier, ontology)
+        return Ontology(querier, ontology, skeleton_templates)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):

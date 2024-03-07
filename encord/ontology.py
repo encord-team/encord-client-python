@@ -17,19 +17,10 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, instance: OrmOntology, api_client: Optional[ApiClient] = None):
+    def __init__(self, querier: Querier, instance: OrmOntology, skeleton_templates: list[SkeletonTemplate]):
         self._querier = querier
         self._ontology_instance = instance
-        self._api_client = api_client
-        self._skeleton_templates = self._get_skeleton_templates()
-
-    def _get_api_client(self) -> ApiClient:
-        if not self._api_client:
-            raise EncordException(
-                "This functionality requires private SSH key authentication. API keys are not supported."
-            )
-
-        return self._api_client
+        self._skeleton_templates = {template.name: template for template in skeleton_templates}
 
     @property
     def ontology_hash(self) -> str:
@@ -101,15 +92,15 @@ class Ontology:
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
 
-    def _get_skeleton_templates(self) -> Dict[str, SkeletonTemplate]:
-        try:
-            api_client = self._get_api_client()
-        except EncordException:
-            return {}
-        orm_templates = (
-            api_client
-            .get(f"/ontologies/{self.ontology_hash}/skeleton-templates", params=None, result_type=SkeletonTemplatesORM)
-            .templates
-        )
-        skeleton_templates = [SkeletonTemplate.from_dict(orm_template.template) for orm_template in orm_templates]
-        return {template.name: template for template in skeleton_templates}
+    # def _get_skeleton_templates(self) -> Dict[str, SkeletonTemplate]:
+    #     try:
+    #         api_client = self._get_api_client()
+    #     except EncordException:
+    #         return {}
+    #     orm_templates = (
+    #         api_client
+    #         .get(f"/ontologies/{self.ontology_hash}/skeleton-templates", params=None, result_type=SkeletonTemplatesORM)
+    #         .templates
+    #     )
+    #     skeleton_templates = [SkeletonTemplate.from_dict(orm_template.template) for orm_template in orm_templates]
+    #     return {template.name: template for template in skeleton_templates}
