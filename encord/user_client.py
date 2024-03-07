@@ -138,14 +138,14 @@ class EncordUserClient:
         # not full access, that is implied by get_ontology method
         ontology_hash = orm_project["ontology_hash"]
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        project_ontology = Ontology(querier, orm_ontology, self._api_client)
+        project_ontology = Ontology(querier, orm_ontology)
 
         return Project(client, orm_project, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         querier = Querier(self._config.config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        return Ontology(querier, orm_ontology, self._api_client)
+        return Ontology(querier, orm_ontology)
 
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
