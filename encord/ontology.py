@@ -102,8 +102,12 @@ class Ontology:
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
 
     def _get_skeleton_templates(self) -> Dict[str, SkeletonTemplate]:
+        try:
+            api_client = self._get_api_client()
+        except EncordException:
+            return {}
         orm_templates = (
-            self._get_api_client()
+            api_client
             .get(f"/ontologies/{self.ontology_hash}/skeleton-templates", params=None, result_type=SkeletonTemplatesORM)
             .templates
         )

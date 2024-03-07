@@ -26,6 +26,7 @@ from encord.objects.common import (
     DeidentifyRedactTextMode,
     SaveDeidentifiedDicomCondition,
 )
+from encord.objects.skeleton_template import SkeletonTemplate
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
@@ -628,13 +629,20 @@ class EncordUserClient:
         return retval
 
     def create_ontology(
-        self, title: str, description: str = "", structure: Optional[OntologyStructure] = None
+        self, title: str, description: str = "", structure: Optional[OntologyStructure] = None, skeleton_templates: Optional[List[SkeletonTemplate]] = None,
     ) -> Ontology:
+        object_name_to_feature_node_hashes = {obj.name: obj.feature_node_hash for obj in structure.objects}
+        for skeleton_template in skeleton_templates:
+            if skeleton_template.name not in object_name_to_feature_node_hashes:
+                raise ValueError("Unused template")
+            skeleton_template.feature_node_hash = object_name_to_feature_node_hashes[skeleton_template.name]
         structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()
+        skeleton_templates_dict = [skeleton_template.to_dict() for skeleton_template in skeleton_templates] if skeleton_templates else [{}]
         ontology = {
             "title": title,
             "description": description,
             "editor": structure_dict,
+            "skeleton": skeleton_templates_dict
         }
 
         retval = self._querier.basic_setter(OrmOntology, uid=None, payload=ontology)

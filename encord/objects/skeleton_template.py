@@ -12,8 +12,8 @@ class SkeletonTemplate(BaseDTO):
     width: float
     height: float
     skeleton: dict[str, SkeletonCoordinate]
-    skeletonEdges: dict[str, dict[str, str]]
-    feature_node_hash: str
+    skeletonEdges: dict[str, dict[str, dict[str,str]]] # start-end-color-hex
+    feature_node_hash: str | None = None
 
     @property
     def required_vertices(self) -> Set[str]:
@@ -33,3 +33,7 @@ class SkeletonTemplate(BaseDTO):
             aligned_coordinates.append(aligned_coordinate)
         # return SkeletonInstance(values=aligned_coordinates, template=self)
         return SkeletonCoordinates(values=aligned_coordinates)
+
+    def to_dict(self) -> dict:
+        serialise_skeleton = {idx: coord.to_dict() for (idx, coord) in self.skeleton.items()}
+        return {"name": self.name, "width": self.width, "height": self.height, "skeleton": serialise_skeleton, "skeletonEdges" : self.skeletonEdges, "feature_node_hash": self.feature_node_hash}

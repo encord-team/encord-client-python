@@ -152,7 +152,7 @@ class Visibility(Flag):
     OCCLUDED = auto()
 
 
-@dataclass(frozen=True)
+@dataclass(init=False)
 class SkeletonCoordinate:
     x: float
     y: float
@@ -160,7 +160,7 @@ class SkeletonCoordinate:
     # `name` and `color` can be removed as they are part of the ontology.
     # The frontend must first be aware of how to merge with ontology.
     name: str
-    color: Optional[str] = None
+    color: Optional[str] = "#00000"
 
     # `featureHash` and `value` seem to appear when visibility is
     # present. They might not have any meaning. Remove if confirmed that
@@ -168,7 +168,13 @@ class SkeletonCoordinate:
     featureHash: Optional[str] = None
     value: Optional[str] = None
 
-    visibility: Optional[Visibility] = None
+    def __init__(self, x: float, y: float, name: str, color: str = "#00000", featureHash: str = None, value: str = None) -> None:
+        self.x = x
+        self.y = y
+        self.name = name
+        self.color = color
+        self.featureHash = featureHash if featureHash else ""
+        self.value = value if value else name
 
     @staticmethod
     def from_dict(d: dict[str, Any]) -> SkeletonCoordinate:
@@ -188,7 +194,6 @@ class SkeletonCoordinate:
 @dataclass(frozen=True)
 class SkeletonCoordinates:
     values: List[SkeletonCoordinate]
-
     @staticmethod
     def from_dict(d: dict) -> SkeletonCoordinates:
         skeleton_dict = d["skeleton"]
