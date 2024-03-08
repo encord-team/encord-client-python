@@ -122,7 +122,7 @@ class OntologyStructure:
         classifications_ret = [
             Classification.from_dict(classification_dict) for classification_dict in d["classifications"]
         ]
-        skeleton_templates = [SkeletonTemplate.from_dict(skeleton_template_dict) for skeleton_template_dict in d.get("skeleton_templates", [])]
+        skeleton_templates = [SkeletonTemplate.from_dict(skeleton_template_dict["template"]) for skeleton_template_dict in d.get("skeleton_templates", [])]
         dict_skeleton_templates = {template.name: template for template in skeleton_templates}
         return OntologyStructure(objects=objects_ret, classifications=classifications_ret, skeleton_templates=dict_skeleton_templates)
 
@@ -145,7 +145,7 @@ class OntologyStructure:
         for ontology_classification in self.classifications:
             ontology_classifications.append(ontology_classification.to_dict())
         skeleton_templates: List[Dict[str, Any]] = list()
-        skeleton_templates = [template.to_dict() for template in self.skeleton_templates.values()]
+        skeleton_templates = [{"template": template.to_dict()} for template in self.skeleton_templates.values()]
         ret["skeleton_templates"] = skeleton_templates
         return ret
 

@@ -142,6 +142,8 @@ EXPECTED_ONTOLOGY: encord.objects.OntologyStructure = encord.objects.OntologyStr
     skeleton_templates={"Line": SKELETON_TEMPLATE_LINE},
 )
 
+def test_ontology_structure_round_trip():
+    assert encord.objects.OntologyStructure.from_dict(EXPECTED_ONTOLOGY.to_dict())
 
 def test_json_to_ontology():
     # GIVEN
