@@ -130,7 +130,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-test*.py
 test.py
 test_blurb.py
 test_blurb2.py
