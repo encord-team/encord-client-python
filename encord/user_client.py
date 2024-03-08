@@ -633,30 +633,19 @@ class EncordUserClient:
         title: str,
         description: str = "",
         structure: Optional[OntologyStructure] = None,
-        skeleton_templates: Optional[List[SkeletonTemplate]] = None,
     ) -> Ontology:
-        if structure and skeleton_templates:
-            object_name_to_feature_node_hashes = {obj.name: obj.feature_node_hash for obj in structure.objects}
-            for skeleton_template in skeleton_templates:
-                if skeleton_template.name not in object_name_to_feature_node_hashes:
-                    raise ValueError("Unused template")
-                skeleton_template.feature_node_hash = object_name_to_feature_node_hashes[skeleton_template.name]
         structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()
-        skeleton_templates_dict = (
-            [skeleton_template.to_dict() for skeleton_template in skeleton_templates] if skeleton_templates else [{}]
-        )
         ontology = {
             "title": title,
             "description": description,
             "editor": structure_dict,
-            "skeleton": skeleton_templates_dict,
         }
 
         retval = self._querier.basic_setter(OrmOntology, uid=None, payload=ontology)
         ontology = OrmOntology.from_dict(retval)
         querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
 
-        return Ontology(querier, ontology, skeleton_templates)
+        return Ontology(querier, ontology)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):

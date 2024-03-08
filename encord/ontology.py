@@ -18,13 +18,10 @@ class Ontology:
     """
 
     def __init__(
-        self, querier: Querier, instance: OrmOntology, skeleton_templates: Optional[list[SkeletonTemplate]] = None
+        self, querier: Querier, instance: OrmOntology
     ):
         self._querier = querier
         self._ontology_instance = instance
-        self._skeleton_templates = (
-            {template.name: template for template in skeleton_templates} if skeleton_templates else {}
-        )
 
     @property
     def ontology_hash(self) -> str:

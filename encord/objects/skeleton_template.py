@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, List, Optional, Set, Type
 
-from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates  # SkeletonInstance
+from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
 
 # @dataclass
 # class SkeletonInstance:
@@ -47,6 +47,11 @@ class SkeletonTemplate:
             )
             aligned_coordinates.append(aligned_coordinate)
         return SkeletonCoordinates(values=aligned_coordinates)
+
+    @staticmethod
+    def from_dict(d: dict) -> SkeletonTemplate:
+        return SkeletonTemplate(**d)
+
 
     def to_dict(self) -> dict:
         serialise_skeleton = {idx: coord.to_dict() for (idx, coord) in self.skeleton.items()}
