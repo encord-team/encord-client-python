@@ -7,8 +7,6 @@ from typing import Any, Dict, List, Optional, Type, Union
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
 
-# from encord.objects.skeleton_template import SkeletonTemplate
-
 
 @dataclass(frozen=True)
 class BoundingBoxCoordinates:
@@ -224,20 +222,18 @@ class SkeletonCoordinates:
     def to_dict(self) -> dict:
         return {i: x.to_dict() for i, x in enumerate(self.values)}
 
+@dataclass
+class SkeletonInstance:
+    values: List[SkeletonCoordinate]
+    template: str
 
-# @dataclass
-# class SkeletonInstance:
-#     values: List[SkeletonCoordinate]
-#     template: SkeletonTemplate
+    @staticmethod
+    def from_dict(d: dict, skeleton_template: str) -> SkeletonInstance:
+        skeleton_coords = [SkeletonCoordinate(coord) for coord in d["skeleton"].values()]
+        return SkeletonInstance(skeleton_coords, skeleton_template)
 
-#     @staticmethod
-#     def from_dict(d: dict, skeleton_template: SkeletonTemplate) -> SkeletonInstance:
-#         skeleton_coords = [SkeletonCoordinate(coord) for coord in d["skeleton"].values()]
-#         return SkeletonInstance(skeleton_coords, skeleton_template)
-
-#     def to_dict(self) -> dict:
-#         return {i: x.to_dict() for i, x in enumerate(self.values)}
-
+    def to_dict(self) -> dict:
+        return {i: x.to_dict() for i, x in enumerate(self.values)}
 
 Coordinates = Union[
     BoundingBoxCoordinates,
@@ -245,8 +241,8 @@ Coordinates = Union[
     PointCoordinate,
     PolygonCoordinates,
     PolylineCoordinates,
-    SkeletonCoordinates,
-    # SkeletonInstance,
+    # SkeletonCoordinates,
+    SkeletonInstance,
     BitmaskCoordinates,
 ]
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
@@ -255,7 +251,7 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.POINT: PointCoordinate,
     Shape.POLYGON: PolygonCoordinates,
     Shape.POLYLINE: PolylineCoordinates,
-    Shape.SKELETON: SkeletonCoordinates,
-    # Shape.SKELETON: SkeletonInstance,
+    # Shape.SKELETON: SkeletonCoordinates,
+    Shape.SKELETON: SkeletonInstance,
     Shape.BITMASK: BitmaskCoordinates,
 }

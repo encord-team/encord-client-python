@@ -41,15 +41,13 @@ from encord.objects.coordinates import (
     PolygonCoordinates,
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
-    SkeletonCoordinates,
+    SkeletonInstance,
 )
 from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
-
-# from encord.objects.skeleton_template import SkeletonInstance
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
 from encord.orm.label_row import (
@@ -1257,7 +1255,7 @@ class LabelRowV2:
             ):
                 raise ValueError("Bitmask dimensions don't match the media dimensions")
             encord_object["bitmask"] = coordinates.to_dict()
-        elif isinstance(coordinates, SkeletonCoordinates):
+        elif isinstance(coordinates, SkeletonInstance):
             encord_object["skeleton"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
@@ -1560,9 +1558,8 @@ class LabelRowV2:
         elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
-            # skeleton_type = self._ontology._skeleton_templates["name"]
-            # return SkeletonInstance.from_dict(frame_object_label, skeleton_type)
-            return SkeletonCoordinates.from_dict(frame_object_label)
+            skeleton_type = self._ontology.structure.skeleton_templates[frame_object_label["name"]]
+            return SkeletonInstance.from_dict(frame_object_label, skeleton_type)
         elif "bitmask" in frame_object_label:
             return BitmaskCoordinates.from_dict(frame_object_label)
         else:

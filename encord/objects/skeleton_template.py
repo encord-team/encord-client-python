@@ -3,28 +3,35 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, List, Optional, Set, Type
 
-from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
+from encord.objects.coordinates import SkeletonCoordinate, SkeletonInstance
 
-# @dataclass
-# class SkeletonInstance:
-#     values: List[SkeletonCoordinate]
-#     template: SkeletonTemplate
 
-#     @staticmethod
-#     def from_dict(d: dict, skeleton_template: SkeletonTemplate) -> SkeletonInstance:
-#         skeleton_coords = [SkeletonCoordinate(coord) for coord in d["skeleton"].values()]
-#         return SkeletonInstance(skeleton_coords, skeleton_template)
+@dataclass(frozen=True)
+class SkeletonTemplateCoordinate:
+    x: float
+    y: float
+    name: str
+    color: Optional[str] = "#00000"
+    value: Optional[str] = ""
+    featureHash: Optional[str] = None
 
-#     def to_dict(self) -> dict:
-#         return {i: x.to_dict() for i, x in enumerate(self.values)}
+    @staticmethod
+    def from_dict(d: dict[str, Any]) -> SkeletonTemplateCoordinate:
+        return SkeletonTemplateCoordinate(**d)
 
+    def to_dict(self) -> dict:
+        return {
+            "x": self.x,
+            "y": self.y,
+            "name": self.name,
+        }
 
 @dataclass
 class SkeletonTemplate:
     name: str
     width: float
     height: float
-    skeleton: dict[str, SkeletonCoordinate]
+    skeleton: dict[str, SkeletonTemplateCoordinate]
     skeletonEdges: dict[str, dict[str, dict[str, str]]]  # start-end-color-hex
     feature_node_hash: str | None = None
 
@@ -34,7 +41,7 @@ class SkeletonTemplate:
 
     def create_instance(
         self, provided_coordinates: List[SkeletonCoordinate]
-    ) -> SkeletonCoordinates:  # SkeletonInstance:
+    ) -> SkeletonInstance:
         provided_vertices = {provided_coordinate.name for provided_coordinate in provided_coordinates}
         if provided_vertices != self.required_vertices:
             difference = provided_vertices.symmetric_difference(self.required_vertices)
@@ -46,11 +53,17 @@ class SkeletonTemplate:
                 x=coord.x, y=coord.y, name=coord.name, featureHash=partner.featureHash
             )
             aligned_coordinates.append(aligned_coordinate)
-        return SkeletonCoordinates(values=aligned_coordinates)
+        return SkeletonInstance(values=aligned_coordinates, template=self)
 
     @staticmethod
     def from_dict(d: dict) -> SkeletonTemplate:
-        return SkeletonTemplate(**d)
+        skeleton_coordinates = {str(i): SkeletonTemplateCoordinate.from_dict(coord) for (i,coord) in d["skeleton"].items()}
+        return SkeletonTemplate(name=d["name"],
+                                width=d["width"],
+                                height=d["height"],
+                                skeleton=skeleton_coordinates,
+                                skeletonEdges=d["skeletonEdges"],
+                                feature_node_hash=d.get("feature_node_hash"))
 
 
     def to_dict(self) -> dict:
