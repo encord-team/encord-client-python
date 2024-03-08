@@ -150,7 +150,7 @@ class Visibility(Flag):
     OCCLUDED = auto()
 
 
-@dataclass(init=False)
+@dataclass(frozen=True)
 class SkeletonCoordinate:
     x: float
     y: float
@@ -158,7 +158,7 @@ class SkeletonCoordinate:
     # `name` and `color` can be removed as they are part of the ontology.
     # The frontend must first be aware of how to merge with ontology.
     name: str
-    color: Optional[str] = "#00000"
+    color: Optional[str] = None
 
     # `featureHash` and `value` seem to appear when visibility is
     # present. They might not have any meaning. Remove if confirmed that
@@ -166,21 +166,7 @@ class SkeletonCoordinate:
     featureHash: Optional[str] = None
     value: Optional[str] = None
 
-    def __init__(
-        self,
-        x: float,
-        y: float,
-        name: str,
-        color: str = "#00000",
-        featureHash: Optional[str] = None,
-        value: Optional[str] = None,
-    ) -> None:
-        self.x = x
-        self.y = y
-        self.name = name
-        self.color = color
-        self.featureHash = featureHash if featureHash else ""
-        self.value = value if value else name
+    visibility: Optional[Visibility] = None
 
     @staticmethod
     def from_dict(d: dict[str, Any]) -> SkeletonCoordinate:
@@ -222,6 +208,7 @@ class SkeletonCoordinates:
     def to_dict(self) -> dict:
         return {i: x.to_dict() for i, x in enumerate(self.values)}
 
+
 @dataclass
 class SkeletonInstance:
     values: List[SkeletonCoordinate]
@@ -229,11 +216,12 @@ class SkeletonInstance:
 
     @staticmethod
     def from_dict(d: dict, skeleton_template: str) -> SkeletonInstance:
-        skeleton_coords = [SkeletonCoordinate(coord) for coord in d["skeleton"].values()]
+        skeleton_coords = [SkeletonCoordinate(**coord) for coord in d["skeleton"].values()]
         return SkeletonInstance(skeleton_coords, skeleton_template)
 
     def to_dict(self) -> dict:
         return {i: x.to_dict() for i, x in enumerate(self.values)}
+
 
 Coordinates = Union[
     BoundingBoxCoordinates,

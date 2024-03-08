@@ -26,6 +26,7 @@ class SkeletonTemplateCoordinate:
             "name": self.name,
         }
 
+
 @dataclass
 class SkeletonTemplate:
     name: str
@@ -39,9 +40,7 @@ class SkeletonTemplate:
     def required_vertices(self) -> Set[str]:
         return {coordinate.name for coordinate in self.skeleton.values()}
 
-    def create_instance(
-        self, provided_coordinates: List[SkeletonCoordinate]
-    ) -> SkeletonInstance:
+    def create_instance(self, provided_coordinates: List[SkeletonCoordinate]) -> SkeletonInstance:
         provided_vertices = {provided_coordinate.name for provided_coordinate in provided_coordinates}
         if provided_vertices != self.required_vertices:
             difference = provided_vertices.symmetric_difference(self.required_vertices)
@@ -53,18 +52,21 @@ class SkeletonTemplate:
                 x=coord.x, y=coord.y, name=coord.name, featureHash=partner.featureHash
             )
             aligned_coordinates.append(aligned_coordinate)
-        return SkeletonInstance(values=aligned_coordinates, template=self)
+        return SkeletonInstance(values=aligned_coordinates, template=self.name)
 
     @staticmethod
     def from_dict(d: dict) -> SkeletonTemplate:
-        skeleton_coordinates = {str(i): SkeletonTemplateCoordinate.from_dict(coord) for (i,coord) in d["skeleton"].items()}
-        return SkeletonTemplate(name=d["name"],
-                                width=d["width"],
-                                height=d["height"],
-                                skeleton=skeleton_coordinates,
-                                skeletonEdges=d["skeletonEdges"],
-                                feature_node_hash=d.get("feature_node_hash"))
-
+        skeleton_coordinates = {
+            str(i): SkeletonTemplateCoordinate.from_dict(coord) for (i, coord) in d["skeleton"].items()
+        }
+        return SkeletonTemplate(
+            name=d["name"],
+            width=d["width"],
+            height=d["height"],
+            skeleton=skeleton_coordinates,
+            skeletonEdges=d["skeletonEdges"],
+            feature_node_hash=d.get("feature_node_hash"),
+        )
 
     def to_dict(self) -> dict:
         serialise_skeleton = {idx: coord.to_dict() for (idx, coord) in self.skeleton.items()}

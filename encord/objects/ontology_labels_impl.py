@@ -1559,7 +1559,7 @@ class LabelRowV2:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
             skeleton_type = self._ontology.structure.skeleton_templates[frame_object_label["name"]]
-            return SkeletonInstance.from_dict(frame_object_label, skeleton_type)
+            return SkeletonInstance.from_dict(frame_object_label, skeleton_type.name)
         elif "bitmask" in frame_object_label:
             return BitmaskCoordinates.from_dict(frame_object_label)
         else:

@@ -122,13 +122,16 @@ CLASSIFICATION_1 = encord.objects.Classification(
     feature_node_hash="a39d81c0",
     attributes=[RADIO_ATTRIBUTE_3],
 )
-SKELETON_TEMPLATE_COORDINATES = [SkeletonTemplateCoordinate(x=0,y=0,name="point_0"),SkeletonTemplateCoordinate(x=1,y=1,name="point_1")]
+SKELETON_TEMPLATE_COORDINATES = [
+    SkeletonTemplateCoordinate(x=0, y=0, name="point_0"),
+    SkeletonTemplateCoordinate(x=1, y=1, name="point_1"),
+]
 SKELETON_TEMPLATE_LINE = SkeletonTemplate(
     name="Line",
     width=100,
     height=100,
-    skeleton={str(i):x for (i,x) in enumerate(SKELETON_TEMPLATE_COORDINATES)},
-    skeletonEdges={'0': {'1': {'color': '#00000'}}},
+    skeleton={str(i): x for (i, x) in enumerate(SKELETON_TEMPLATE_COORDINATES)},
+    skeletonEdges={"0": {"1": {"color": "#00000"}}},
     feature_node_hash="c67522ee",
 )
 # intentionally using a different import for backwards compatibility check
@@ -142,8 +145,10 @@ EXPECTED_ONTOLOGY: encord.objects.OntologyStructure = encord.objects.OntologyStr
     skeleton_templates={"Line": SKELETON_TEMPLATE_LINE},
 )
 
+
 def test_ontology_structure_round_trip():
     assert encord.objects.OntologyStructure.from_dict(EXPECTED_ONTOLOGY.to_dict())
+
 
 def test_json_to_ontology():
     # GIVEN

@@ -17,9 +17,7 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(
-        self, querier: Querier, instance: OrmOntology
-    ):
+    def __init__(self, querier: Querier, instance: OrmOntology):
         self._querier = querier
         self._ontology_instance = instance
 
