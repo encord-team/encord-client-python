@@ -229,7 +229,6 @@ Coordinates = Union[
     PointCoordinate,
     PolygonCoordinates,
     PolylineCoordinates,
-    # SkeletonCoordinates,
     SkeletonInstance,
     BitmaskCoordinates,
 ]
@@ -239,7 +238,6 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.POINT: PointCoordinate,
     Shape.POLYGON: PolygonCoordinates,
     Shape.POLYLINE: PolylineCoordinates,
-    # Shape.SKELETON: SkeletonCoordinates,
     Shape.SKELETON: SkeletonInstance,
     Shape.BITMASK: BitmaskCoordinates,
 }

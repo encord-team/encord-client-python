@@ -1,14 +1,8 @@
 import datetime
-from typing import Dict, Optional
 
-from encord.configs import BearerConfig, SshConfig
-from encord.exceptions import EncordException
 from encord.http.querier import Querier
-from encord.http.v2.api_client import ApiClient
 from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.skeleton_template import SkeletonTemplate
 from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.skeleton_template import SkeletonTemplateORM, SkeletonTemplatesORM
 
 
 class Ontology:
@@ -90,16 +84,3 @@ class Ontology:
 
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
-
-    # def _get_skeleton_templates(self) -> Dict[str, SkeletonTemplate]:
-    #     try:
-    #         api_client = self._get_api_client()
-    #     except EncordException:
-    #         return {}
-    #     orm_templates = (
-    #         api_client
-    #         .get(f"/ontologies/{self.ontology_hash}/skeleton-templates", params=None, result_type=SkeletonTemplatesORM)
-    #         .templates
-    #     )
-    #     skeleton_templates = [SkeletonTemplate.from_dict(orm_template.template) for orm_template in orm_templates]
-    #     return {template.name: template for template in skeleton_templates}
