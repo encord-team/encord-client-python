@@ -16,6 +16,7 @@ from tests.objects.data import (
     empty_video,
     image_group_with_reviews,
     native_image_data,
+    native_image_data_classification_overlapping,
     native_image_data_classification_with_no_answer,
     video_with_dynamic_classifications,
     video_with_dynamic_classifications_ui_constructed,
@@ -276,3 +277,22 @@ def test_classifications_with_no_answers_equivalent_to_no_classification():
     label_row.from_labels_dict(native_image_data_classification_with_no_answer.labels)
 
     assert len(label_row.get_classification_instances()) == 0
+
+
+def test_join_overlapping_classifications():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = 0.08
+    label_row_metadata_dict["frames_per_second"] = 25.0
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+
+    label_row.from_labels_dict(native_image_data_classification_overlapping.labels)
+
+    classification_ontology_hashes = [
+        c.ontology_item.feature_node_hash for c in label_row.get_classification_instances()
+    ]
+    expected_hashes = ["NzIxNTU1", "jPOcEsbw", "3DuQbFxo"]
+
+    assert len(classification_ontology_hashes) == 3
+    assert not DeepDiff(classification_ontology_hashes, expected_hashes, ignore_order=True)
