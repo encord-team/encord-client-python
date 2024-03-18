@@ -12,7 +12,7 @@ class StorageUserRole(CamelStrEnum):
     ADMIN = auto()
 
 
-class Folder(BaseDTO):
+class StorageFolder(BaseDTO):
     uuid: UUID
     parent: Optional[UUID]
     name: str

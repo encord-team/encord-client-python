@@ -59,9 +59,9 @@ from encord.orm.project import Project as OrmProject
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import CreateStorageFolderPayload
-from encord.orm.storage import Folder as OrmFolder
+from encord.orm.storage import StorageFolder as OrmStorageFolder
 from encord.project import Project
-from encord.storage import Folder
+from encord.storage import StorageFolder
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -747,14 +747,14 @@ class EncordUserClient:
             },
         )
 
-    def create_folder(
+    def create_storage_folder(
         self,
         name: str,
         description: Optional[str],
         client_metadata: Optional[Dict[str, Any]] = None,
-        parent_folder: Optional[Union[Folder, UUID]] = None,
-    ) -> Folder:
-        if isinstance(parent_folder, Folder):
+        parent_folder: Optional[Union[StorageFolder, UUID]] = None,
+    ) -> StorageFolder:
+        if isinstance(parent_folder, StorageFolder):
             parent_folder = parent_folder.uuid
 
         payload = CreateStorageFolderPayload(
@@ -763,11 +763,13 @@ class EncordUserClient:
             parent=parent_folder,
             client_metadata=json.dumps(client_metadata) if client_metadata is not None else None,
         )
-        folder_orm = self._api_client.post("storage/folders", params=None, payload=payload, result_type=OrmFolder)
-        return Folder(self._api_client, folder_orm)
+        folder_orm = self._api_client.post(
+            "storage/folders", params=None, payload=payload, result_type=OrmStorageFolder
+        )
+        return StorageFolder(self._api_client, folder_orm)
 
-    def get_folder(self, folder_uuid: UUID) -> Folder:
-        return Folder._get_folder(self._api_client, folder_uuid)
+    def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
+        return StorageFolder._get_folder(self._api_client, folder_uuid)
 
 
 class ListingFilter(Enum):
