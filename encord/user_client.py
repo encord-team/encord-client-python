@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import base64
+import json
 import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.common.deprecated import deprecated
@@ -56,7 +58,10 @@ from encord.orm.project import (
 from encord.orm.project import Project as OrmProject
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
+from encord.orm.storage import CreateStorageFolderPayload
+from encord.orm.storage import Folder as OrmFolder
 from encord.project import Project
+from encord.storage import Folder
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -741,6 +746,28 @@ class EncordUserClient:
                 "upload_dir": upload_dir,
             },
         )
+
+    def create_folder(
+        self,
+        name: str,
+        description: Optional[str],
+        client_metadata: Optional[Dict[str, Any]] = None,
+        parent_folder: Optional[Union[Folder, UUID]] = None,
+    ) -> Folder:
+        if isinstance(parent_folder, Folder):
+            parent_folder = parent_folder.uuid
+
+        payload = CreateStorageFolderPayload(
+            name=name,
+            description=description,
+            parent=parent_folder,
+            client_metadata=json.dumps(client_metadata) if client_metadata is not None else None,
+        )
+        folder_orm = self._api_client.post("storage/folders", params=None, payload=payload, result_type=OrmFolder)
+        return Folder(self._api_client, folder_orm)
+
+    def get_folder(self, folder_uuid: UUID) -> Folder:
+        return Folder._get_folder(self._api_client, folder_uuid)
 
 
 class ListingFilter(Enum):
