@@ -102,6 +102,14 @@ class ApiClient:
 
         return self._request(req, result_type=result_type)  # type: ignore
 
+    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None) -> T:
+        params_dict = params.to_dict() if params is not None else None
+        req = requests.Request(
+            method="DELETE", url=self._build_url(path), headers=self._headers(), params=params_dict
+        ).prepare()
+
+        return self._request(req, result_type=result_type)  # type: ignore
+
     def _request(self, req: PreparedRequest, result_type: Optional[Type[T]]):
         req = self._config.define_headers_v2(req)
 

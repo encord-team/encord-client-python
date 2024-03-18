@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Any, Dict, Type, TypeVar
 
@@ -30,7 +31,8 @@ class BaseDTO(BaseDTOInterface, BaseModel):
             raise EncordException(message=str(e)) from e
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
-        return self.dict(by_alias=by_alias, exclude_none=exclude_none)  # type: ignore[attr-defined]
+        # Pydantic v1 is missing the 'model_dump()' method, the below is suboptimal but works
+        return json.loads(self.json(by_alias=by_alias, exclude_none=exclude_none))  # type: ignore[attr-defined]
 
 
 DataT = TypeVar("DataT")
@@ -56,4 +58,5 @@ class GenericBaseDTO(BaseDTOInterface, GenericModel):
             raise EncordException(message=str(e)) from e
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
-        return self.dict(by_alias=by_alias, exclude_none=exclude_none)  # type: ignore[attr-defined]
+        # Pydantic v1 is missing the 'model_dump()' method, the below is suboptimal but works
+        return json.loads(self.json(by_alias=by_alias, exclude_none=exclude_none))  # type: ignore[attr-defined]
