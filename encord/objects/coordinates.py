@@ -186,38 +186,12 @@ class SkeletonCoordinate:
 @dataclass(frozen=True)
 class SkeletonCoordinates:
     values: List[SkeletonCoordinate]
-
-    @staticmethod
-    def from_dict(d: dict) -> SkeletonCoordinates:
-        skeleton_dict = d["skeleton"]
-        list_coordinates: List[SkeletonCoordinate] = []
-        sorted_dict_value_tuples = sorted((int(key), value) for key, value in skeleton_dict.items())
-        sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
-        for coordinate in sorted_dict_values:
-            skeleton_coordinate = SkeletonCoordinate(
-                x=coordinate["x"],
-                y=coordinate["y"],
-                name=coordinate["name"],
-                value=coordinate["value"],
-                color=coordinate["color"],
-                featureHash=coordinate["featureHash"],
-            )
-            list_coordinates.append(skeleton_coordinate)
-        return SkeletonCoordinates(values=list_coordinates)
-
-    def to_dict(self) -> dict:
-        return {i: x.to_dict() for i, x in enumerate(self.values)}
-
-
-@dataclass
-class SkeletonInstance:
-    values: List[SkeletonCoordinate]
     template: str
 
     @staticmethod
-    def from_dict(d: dict, skeleton_template: str) -> SkeletonInstance:
+    def from_dict(d: dict, skeleton_template: str) -> SkeletonCoordinates:
         skeleton_coords = [SkeletonCoordinate(**coord) for coord in d["skeleton"].values()]
-        return SkeletonInstance(skeleton_coords, skeleton_template)
+        return SkeletonCoordinates(skeleton_coords, skeleton_template)
 
     def to_dict(self) -> dict:
         return {i: x.to_dict() for i, x in enumerate(self.values)}
@@ -229,7 +203,7 @@ Coordinates = Union[
     PointCoordinate,
     PolygonCoordinates,
     PolylineCoordinates,
-    SkeletonInstance,
+    SkeletonCoordinates,
     BitmaskCoordinates,
 ]
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
@@ -238,6 +212,6 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.POINT: PointCoordinate,
     Shape.POLYGON: PolygonCoordinates,
     Shape.POLYLINE: PolylineCoordinates,
-    Shape.SKELETON: SkeletonInstance,
+    Shape.SKELETON: SkeletonCoordinates,
     Shape.BITMASK: BitmaskCoordinates,
 }

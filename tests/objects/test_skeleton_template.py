@@ -20,4 +20,4 @@ SKELETON_TEMPLATE_LINE = SkeletonTemplate(
 
 def test_skeleton_template_round_trip():
     dict_template = SKELETON_TEMPLATE_LINE.to_dict()
-    assert SkeletonTemplate.from_dict(dict_template)
+    assert SkeletonTemplate.from_dict(dict_template) == dict_template

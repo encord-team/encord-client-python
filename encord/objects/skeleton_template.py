@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, List, Optional, Set, Type
 
-from encord.objects.coordinates import SkeletonCoordinate, SkeletonInstance
+from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ class SkeletonTemplate:
     def required_vertices(self) -> Set[str]:
         return {coordinate.name for coordinate in self.skeleton.values()}
 
-    def create_instance(self, provided_coordinates: List[SkeletonCoordinate]) -> SkeletonInstance:
+    def create_instance(self, provided_coordinates: List[SkeletonCoordinate]) -> SkeletonCoordinates:
         provided_vertices = {provided_coordinate.name for provided_coordinate in provided_coordinates}
         if provided_vertices != self.required_vertices:
             difference = provided_vertices.symmetric_difference(self.required_vertices)
@@ -52,7 +52,7 @@ class SkeletonTemplate:
                 x=coord.x, y=coord.y, name=coord.name, featureHash=partner.featureHash
             )
             aligned_coordinates.append(aligned_coordinate)
-        return SkeletonInstance(values=aligned_coordinates, template=self.name)
+        return SkeletonCoordinates(values=aligned_coordinates, template=self.name)
 
     @staticmethod
     def from_dict(d: dict) -> SkeletonTemplate:

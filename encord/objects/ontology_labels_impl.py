@@ -41,7 +41,7 @@ from encord.objects.coordinates import (
     PolygonCoordinates,
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
-    SkeletonInstance,
+    SkeletonCoordinates,
 )
 from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
@@ -1255,7 +1255,7 @@ class LabelRowV2:
             ):
                 raise ValueError("Bitmask dimensions don't match the media dimensions")
             encord_object["bitmask"] = coordinates.to_dict()
-        elif isinstance(coordinates, SkeletonInstance):
+        elif isinstance(coordinates, SkeletonCoordinates):
             encord_object["skeleton"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
@@ -1559,7 +1559,7 @@ class LabelRowV2:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
             skeleton_type = self._ontology.structure.skeleton_templates[frame_object_label["name"]]
-            return SkeletonInstance.from_dict(frame_object_label, skeleton_type.name)
+            return SkeletonCoordinates.from_dict(frame_object_label, skeleton_type.name)
         elif "bitmask" in frame_object_label:
             return BitmaskCoordinates.from_dict(frame_object_label)
         else:

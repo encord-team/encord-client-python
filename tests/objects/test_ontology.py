@@ -158,6 +158,7 @@ def test_json_to_ontology():
 
     # WHEN
     actual = encord.objects.OntologyStructure.from_dict(editor_dict)
+
     # THEN
     assert EXPECTED_ONTOLOGY == actual
 
