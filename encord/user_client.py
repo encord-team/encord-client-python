@@ -635,7 +635,11 @@ class EncordUserClient:
     def create_ontology(
         self, title: str, description: str = "", structure: Optional[OntologyStructure] = None
     ) -> Ontology:
-        structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()
+        try:
+            structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()
+        except ValueError as e:
+            raise ValueError("Can't create an Ontology containing a Classification without any attributes. " + str(e))
+
         ontology = {
             "title": title,
             "description": description,
