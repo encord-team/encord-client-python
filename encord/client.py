@@ -41,10 +41,11 @@ import os.path
 import time
 import typing
 import uuid
+from collections.abc import Iterable
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, Union, cast
+from typing import Optional, Union, cast
 
 import requests
 
@@ -73,7 +74,6 @@ from encord.http.v2.payloads import Page
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
-    CollaboratorTimersGroupBy,
 )
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.bearer_request import BearerTokenResponse
@@ -239,7 +239,7 @@ class EncordClient:
                 message=f"API key [{config.api_key}] is not associated with a project or dataset"
             )
 
-    def get_cloud_integrations(self) -> List[CloudIntegration]:
+    def get_cloud_integrations(self) -> list[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)
 
     def get_bearer_token(self) -> BearerTokenResponse:
@@ -355,9 +355,9 @@ class EncordClientDataset(EncordClient):
         title_like: Optional[str] = None,
         created_before: Optional[Union[str, datetime]] = None,
         created_after: Optional[Union[str, datetime]] = None,
-        data_types: Optional[List[DataType]] = None,
-        data_hashes: Optional[List[str]] = None,
-    ) -> List[DataRow]:
+        data_types: Optional[list[DataType]] = None,
+        data_hashes: Optional[list[str]] = None,
+    ) -> list[DataRow]:
         """
         Retrieve dataset rows (pointers to data, labels).
 
@@ -382,7 +382,7 @@ class EncordClientDataset(EncordClient):
         created_after = optional_datetime_to_iso_str("created_after", created_after)
 
         data_rows = cast(
-            List[DataRow],
+            list[DataRow],
             self._querier.get_multiple(
                 DataRows,
                 payload={
@@ -407,7 +407,7 @@ class EncordClientDataset(EncordClient):
     def set_access_settings(self, dataset_access_settings: DatasetAccessSettings) -> None:
         self._dataset_access_settings = dataset_access_settings
 
-    def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
+    def add_users(self, user_emails: list[str], user_role: DatasetUserRole) -> list[DatasetUser]:
         """
         This function is documented in :meth:`encord.project.Dataset.add_users`.
         """
@@ -481,7 +481,7 @@ class EncordClientDataset(EncordClient):
 
     def create_dicom_series(
         self,
-        file_paths: List[str],
+        file_paths: list[str],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ):
@@ -548,7 +548,7 @@ class EncordClientDataset(EncordClient):
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
 
-    def link_items(self, item_uuids: List[uuid.UUID]) -> List[DataRow]:
+    def link_items(self, item_uuids: list[uuid.UUID]) -> list[DataRow]:
         return self._querier.basic_setter(
             DatasetLinkItems,
             uid=self._querier.resource_id,
@@ -561,7 +561,7 @@ class EncordClientDataset(EncordClient):
         """
         self._querier.basic_delete(ImageGroup, uid=data_hash)
 
-    def delete_data(self, data_hashes: Union[List[str], str]):
+    def delete_data(self, data_hashes: Union[list[str], str]):
         """
         This function is documented in :meth:`encord.dataset.Dataset.delete_data`.
         """
@@ -572,7 +572,7 @@ class EncordClientDataset(EncordClient):
     def add_private_data_to_dataset(
         self,
         integration_id: str,
-        private_files: Union[str, typing.Dict, Path, typing.TextIO],
+        private_files: Union[str, dict, Path, typing.TextIO],
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
         """
@@ -596,7 +596,7 @@ class EncordClientDataset(EncordClient):
     def add_private_data_to_dataset_start(
         self,
         integration_id: str,
-        private_files: Union[str, typing.Dict, Path, typing.TextIO],
+        private_files: Union[str, dict, Path, typing.TextIO],
         ignore_errors: bool = False,
     ) -> str:
         """
@@ -700,7 +700,7 @@ class EncordClientDataset(EncordClient):
         except AttributeError:
             return False
 
-    def re_encode_data(self, data_hashes: List[str]):
+    def re_encode_data(self, data_hashes: list[str]):
         """
         This function is documented in :meth:`encord.dataset.Dataset.re_encode_data`.
         """
@@ -713,7 +713,7 @@ class EncordClientDataset(EncordClient):
         """
         return self._querier.basic_getter(ReEncodeVideoTask, uid=job_id)
 
-    def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
+    def run_ocr(self, image_group_id: str) -> list[ImageGroupOCR]:
         """
         This function is documented in :meth:`encord.dataset.Dataset.run_ocr`.
         """
@@ -755,20 +755,20 @@ class EncordClientProject(EncordClient):
         self,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
-        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        label_statuses: Optional[list[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
         *,
         include_uninitialised_labels: bool = False,
         include_workflow_graph_node: bool = True,
         include_client_metadata: bool = False,
         include_images_data: bool = False,
-        label_hashes: Optional[List[str]] = None,
-        data_hashes: Optional[List[str]] = None,
+        label_hashes: Optional[list[str]] = None,
+        data_hashes: Optional[list[str]] = None,
         data_title_eq: Optional[str] = None,
         data_title_like: Optional[str] = None,
         workflow_graph_node_title_eq: Optional[str] = None,
         workflow_graph_node_title_like: Optional[str] = None,
-    ) -> List[LabelRowMetadata]:
+    ) -> list[LabelRowMetadata]:
         """
         This function is documented in :meth:`encord.project.Project.list_label_rows`.
         """
@@ -806,7 +806,7 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.basic_setter(LabelStatus, label_hash, payload)
 
-    def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
+    def add_users(self, user_emails: list[str], user_role: ProjectUserRole) -> list[ProjectUser]:
         """
         This function is documented in :meth:`encord.project.Project.add_users`.
         """
@@ -863,8 +863,8 @@ class EncordClientProject(EncordClient):
         uid: str,
         get_signed_url: bool = True,
         *,
-        include_object_feature_hashes: Optional[typing.Set[str]] = None,
-        include_classification_feature_hashes: Optional[typing.Set[str]] = None,
+        include_object_feature_hashes: Optional[set[str]] = None,
+        include_classification_feature_hashes: Optional[set[str]] = None,
         include_reviews: bool = False,
         include_export_history: bool = False,
     ) -> LabelRow:
@@ -884,14 +884,14 @@ class EncordClientProject(EncordClient):
 
     def get_label_rows(
         self,
-        uids: List[str],
+        uids: list[str],
         get_signed_url: bool = True,
         *,
-        include_object_feature_hashes: Optional[typing.Set[str]] = None,
-        include_classification_feature_hashes: Optional[typing.Set[str]] = None,
+        include_object_feature_hashes: Optional[set[str]] = None,
+        include_classification_feature_hashes: Optional[set[str]] = None,
         include_reviews: bool = False,
         include_export_history: bool = False,
-    ) -> List[LabelRow]:
+    ) -> list[LabelRow]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_rows`.
         """
@@ -915,7 +915,7 @@ class EncordClientProject(EncordClient):
             label["validate_before_saving"] = True
         return self._querier.basic_setter(LabelRow, uid, payload=label, retryable=True)
 
-    def save_label_rows(self, uids: List[str], payload: List[LabelRow], validate_before_saving: bool = False):
+    def save_label_rows(self, uids: list[str], payload: list[LabelRow], validate_before_saving: bool = False):
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -941,7 +941,7 @@ class EncordClientProject(EncordClient):
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload={"get_signed_url": get_signed_url})
 
-    def create_label_rows(self, uids: List[str], *, get_signed_url=False) -> List[LabelRow]:
+    def create_label_rows(self, uids: list[str], *, get_signed_url=False) -> list[LabelRow]:
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -963,14 +963,14 @@ class EncordClientProject(EncordClient):
         """
         return self._querier.basic_put(Review, uid=uid, payload=None)
 
-    def add_datasets(self, dataset_hashes: List[str]) -> bool:
+    def add_datasets(self, dataset_hashes: list[str]) -> bool:
         """
         This function is documented in :meth:`encord.project.Project.add_datasets`.
         """
         payload = {"dataset_hashes": dataset_hashes}
         return self._querier.basic_setter(ProjectDataset, uid=None, payload=payload)
 
-    def remove_datasets(self, dataset_hashes: List[str]) -> bool:
+    def remove_datasets(self, dataset_hashes: list[str]) -> bool:
         """
         This function is documented in :meth:`encord.project.Project.remove_datasets`.
         """
@@ -1011,7 +1011,7 @@ class EncordClientProject(EncordClient):
         ontology.add_classification(name, classification_type, required, options)
         return self.__set_project_ontology(ontology)
 
-    def list_models(self) -> List[ModelConfiguration]:
+    def list_models(self) -> list[ModelConfiguration]:
         """
         This function is documented in :meth:`encord.project.Project.list_models`.
         """
@@ -1023,7 +1023,7 @@ class EncordClientProject(EncordClient):
         get_created_at: bool = False,
         get_training_final_loss: bool = False,
         get_model_training_labels: bool = False,
-    ) -> List[TrainingMetadata]:
+    ) -> list[TrainingMetadata]:
         """
         This function is documented in :meth:`encord.project.Project.get_training_metadata`.
         """
@@ -1039,7 +1039,7 @@ class EncordClientProject(EncordClient):
         self,
         title: str,
         description: str,
-        features: List[str],
+        features: list[str],
         model: Union[AutomationModels, str],
     ) -> str:
         """
@@ -1090,14 +1090,14 @@ class EncordClientProject(EncordClient):
     def model_inference(
         self,
         uid: str,
-        file_paths: Optional[List[str]] = None,
-        base64_strings: Optional[List[bytes]] = None,
+        file_paths: Optional[list[str]] = None,
+        base64_strings: Optional[list[bytes]] = None,
         conf_thresh: float = 0.6,
         iou_thresh: float = 0.3,
         device: Device = Device.CUDA,
-        detection_frame_range: Optional[List[int]] = None,
+        detection_frame_range: Optional[list[int]] = None,
         allocation_enabled: bool = False,
-        data_hashes: Optional[List[str]] = None,
+        data_hashes: Optional[list[str]] = None,
         rdp_thresh: float = 0.005,
     ):
         """
@@ -1164,7 +1164,7 @@ class EncordClientProject(EncordClient):
     def model_train(
         self,
         uid: str,
-        label_rows: Optional[List[str]] = None,
+        label_rows: Optional[list[str]] = None,
         epochs: Optional[int] = None,
         batch_size: int = 24,
         weights: Optional[ModelTrainingWeights] = None,
@@ -1266,7 +1266,7 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
 
-    def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
+    def get_data(self, data_hash: str, get_signed_url: bool = False) -> tuple[Optional[Video], Optional[list[Image]]]:
         """
         This function is documented in :meth:`encord.project.Project.get_data`.
         """
@@ -1278,7 +1278,7 @@ class EncordClientProject(EncordClient):
         if dataset_data["video"] is not None:
             video = Video(dataset_data["video"])
 
-        images: Union[List[Image], None] = None
+        images: Union[list[Image], None] = None
         if dataset_data["images"] is not None:
             images = []
 
@@ -1296,7 +1296,7 @@ class EncordClientProject(EncordClient):
         after: Optional[datetime] = None,
         before: Optional[datetime] = None,
         user_email: Optional[str] = None,
-    ) -> List[LabelLog]:
+    ) -> list[LabelLog]:
         """
         This function is documented in :meth:`encord.project.Project.get_label_logs`.
         """
@@ -1334,7 +1334,7 @@ class EncordClientProject(EncordClient):
         payload = {"editor": ontology.to_dict()}
         return self._querier.basic_setter(OrmProject, uid=None, payload=payload)
 
-    def workflow_reopen(self, label_hashes: List[str]) -> None:
+    def workflow_reopen(self, label_hashes: list[str]) -> None:
         """
         This function is documented in :meth:`encord.objects.LabelRowV2.workflow_reopen`.
         """
@@ -1344,7 +1344,7 @@ class EncordClientProject(EncordClient):
             payload=LabelWorkflowGraphNodePayload(action=WorkflowAction.REOPEN),
         )
 
-    def workflow_complete(self, label_hashes: List[str]) -> None:
+    def workflow_complete(self, label_hashes: list[str]) -> None:
         """
         This function is documented in :meth:`encord.objects.LabelRowV2.workflow_complete`.
         """
@@ -1354,7 +1354,7 @@ class EncordClientProject(EncordClient):
             payload=LabelWorkflowGraphNodePayload(action=WorkflowAction.COMPLETE),
         )
 
-    def workflow_set_priority(self, priorities: List[Tuple[str, float]]) -> None:
+    def workflow_set_priority(self, priorities: list[tuple[str, float]]) -> None:
         self._get_api_client().post(
             f"projects/{self.project_hash}/priorities",
             params=None,
@@ -1367,7 +1367,7 @@ class EncordClientProject(EncordClient):
             "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
         )
 
-    def get_label_validation_errors(self, label_hash: str) -> List[str]:
+    def get_label_validation_errors(self, label_hash: str) -> list[str]:
         errors = self._get_api_client().get(
             f"projects/{self.project_hash}/labels/{label_hash}/validation-state",
             params=None,
