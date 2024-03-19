@@ -26,7 +26,7 @@ from requests import Session
 from requests.adapters import HTTPAdapter, Retry
 
 from encord._version import __version__ as encord_version
-from encord.configs import BaseConfig
+from encord.configs import ApiKeyConfig, BaseConfig
 from encord.exceptions import RequestException, ResourceNotFoundError
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
@@ -52,6 +52,8 @@ class Querier:
         self._config = config
         self.resource_type = resource_type
         self.resource_id = resource_id
+        if resource_id is None and isinstance(config, ApiKeyConfig):
+            self.resource_id = config.resource_id
 
     def basic_getter(
         self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
