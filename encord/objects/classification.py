@@ -52,6 +52,8 @@ class Classification(OntologyElement):
         }
         if attributes_list := attributes_to_list_dict(self.attributes):
             ret["attributes"] = attributes_list
+        else:
+            raise ValueError(f"Classification {str(self.uid)} requires attribute before use")
 
         return ret
 
