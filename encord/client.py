@@ -310,7 +310,7 @@ class EncordClientDataset(EncordClient):
         Returns:
             EncordClientDataset: An Encord client dataset instance.
         """
-        querier = Querier(config)
+        querier = Querier(config, resource_id=config.resource_id)
         key_type = querier.basic_getter(ApiKeyMeta)
 
         if key_type.resource_type == TYPE_PROJECT:
