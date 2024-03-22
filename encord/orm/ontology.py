@@ -55,8 +55,8 @@ class Ontology(dict, Formatter):
                 "title": title,
                 "description": description,
                 "structure": structure,
-                "created_at": created_at,
-                "last_edited_at": last_edited_at,
+                "created_at": datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S"),
+                "last_edited_at": datetime.strptime(last_edited_at, "%Y-%m-%d %H:%M:%S"),
             }
         )
 
