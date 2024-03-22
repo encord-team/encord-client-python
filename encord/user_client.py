@@ -62,6 +62,7 @@ from encord.orm.storage import CreateStorageFolderPayload
 from encord.orm.storage import StorageFolder as OrmStorageFolder
 from encord.project import Project
 from encord.storage import StorageFolder
+from encord.group import Group
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -684,6 +685,10 @@ class EncordUserClient:
             ret[clause.value] = val
 
         return ret
+
+    def get_groups(self) -> Group:
+        print("GETTING GROUPS")
+        return Group._get_groups(self._api_client)
 
     def deidentify_dicom_files(
         self,
