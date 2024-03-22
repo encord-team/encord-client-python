@@ -103,6 +103,6 @@ class Ontology(dict, Formatter):
             description=json_dict["description"],
             ontology_hash=json_dict["ontology_hash"],
             structure=OntologyStructure.from_dict(json_dict["editor"]),
-            created_at=json_dict["created_at"],
-            last_edited_at=json_dict["last_edited_at"],
+            created_at=datetime.strptime(json_dict["created_at"], "%Y-%m-%d %H:%M:%S"),
+            last_edited_at=datetime.strptime(json_dict["last_edited_at"], "%Y-%m-%d %H:%M:%S"),
         )
