@@ -687,7 +687,6 @@ class EncordUserClient:
         return ret
 
     def get_groups(self) -> Group:
-        print("GETTING GROUPS")
         return Group._get_groups(self._api_client)
 
     def deidentify_dicom_files(
