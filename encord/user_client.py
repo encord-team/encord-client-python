@@ -776,8 +776,8 @@ class EncordUserClient:
     def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
         return StorageFolder._get_folder(self._api_client, folder_uuid)
 
-    def get_client_metadata_schema(self) -> ClientMetadataSchema:
-        return ClientMetadataSchema._get_client_metadata_schema(self._api_client)
+    def get_client_metadata_schema(self, organisation_id: int) -> ClientMetadataSchema:
+        return ClientMetadataSchema._get_client_metadata_schema(self._api_client, organisation_id)
 
 
 class ListingFilter(Enum):

@@ -19,6 +19,7 @@ class ClientMetadataSchemaTypes(Enum):
 class ClientMetadataSchema(BaseDTO):
     uuid: UUID
     metadata_schema: Dict[str, ClientMetadataSchemaTypes]
+    organisation_id: int
     created_at: datetime
     updated_at: datetime
 

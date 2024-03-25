@@ -35,11 +35,16 @@ class ClientMetadataSchema:
 
     def save(self) -> None:
         payload = orm.ClientMetadataSchemaPayload(metadata_schema=self._client_metadata_schema.metadata_schema)
-        return self._api_client.post(f"metadata/client-metadata-schema", params=None, payload=payload, result_type=None)
+        return self._api_client.post(
+            f"organisation/{self._client_metadata_schema.organisation_id}/client-metadata-schema",
+            params=None,
+            payload=payload,
+            result_type=None
+        )
 
     @staticmethod
-    def _get_client_metadata_schema(api_client: ApiClient) -> "ClientMetadataSchema":
+    def _get_client_metadata_schema(api_client: ApiClient, organisation_id: int) -> "ClientMetadataSchema":
         client_metadata_schema = api_client.get(
-            f"metadata/client-metadata-schema", params=None, result_type=orm.ClientMetadataSchema
+            f"organisation/{organisation_id}/client-metadata-schema", params=None, result_type=orm.ClientMetadataSchema
         )
         return ClientMetadataSchema(api_client, client_metadata_schema)
