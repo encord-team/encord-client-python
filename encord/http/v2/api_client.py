@@ -99,6 +99,7 @@ class ApiClient:
             params=params_dict,
             json=payload.to_dict() if payload is not None else None,
         ).prepare()
+        print(req.url)
 
         return self._request(req, result_type=result_type)  # type: ignore
 

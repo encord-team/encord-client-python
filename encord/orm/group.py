@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 from encord.orm.base_dto import BaseDTO
+from encord.utilities.project_user import ProjectUserRole
 
 
 class Group(BaseDTO):
@@ -10,6 +11,6 @@ class Group(BaseDTO):
     created_at: datetime
 
 
-class CreateGroupPayload(BaseDTO):
-    name: str
-    description: str
+class ProjectGroupParam(BaseDTO):
+    group_hash: UUID
+    user_role: ProjectUserRole

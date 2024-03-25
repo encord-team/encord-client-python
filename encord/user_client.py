@@ -45,7 +45,7 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
-from encord.orm.group import CreateGroupPayload
+from encord.orm.group import ProjectGroupParam
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
@@ -691,9 +691,23 @@ class EncordUserClient:
 
     def get_groups(self) -> Page[Group]:
         return self._api_client.get(
-            f"user/current_organisation/groups", params=None, result_type=Page[OrmGroup]
+            "user/current_organisation/groups", params=None, result_type=Page[OrmGroup]
         )
 
+    def get_project_groups(self, project_hash: str) -> Page[Group]:
+        return self._api_client.get(
+            f"project/{project_hash}/group", params=None, result_type=Page[OrmGroup]
+        )
+
+    def add_group_to_project(self, project_hash: str, group_param: ProjectGroupParam):
+        return self._api_client.post(
+            f"project/{project_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
+        )
+
+    def remove_group_from_project(self, project_hash: str, group_hash: str):
+        return self._api_client.delete(
+            f"project/{project_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
+        )
 
     def deidentify_dicom_files(
         self,
