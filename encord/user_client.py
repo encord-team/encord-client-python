@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
+from encord.client_metadata_schema import ClientMetadataSchema
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
@@ -774,6 +775,9 @@ class EncordUserClient:
 
     def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
         return StorageFolder._get_folder(self._api_client, folder_uuid)
+
+    def get_client_metadata_schema(self) -> ClientMetadataSchema:
+        return ClientMetadataSchema._get_client_metadata_schema(self._api_client)
 
 
 class ListingFilter(Enum):
