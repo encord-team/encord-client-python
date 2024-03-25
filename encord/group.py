@@ -1,9 +1,8 @@
-from typing import Any, Dict, Optional, List, Type
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 import encord.orm.group as orm_group
 from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
 
 
 class Group:
@@ -24,11 +23,6 @@ class Group:
     def description(self) -> str:
         return self._orm_group.description
 
-    @staticmethod
-    def _get_groups(api_client: ApiClient) -> "List[Group]":
-
-        groups = api_client.get(
-            f"user/current_organisation/groups", params=None, result_type=Page[orm_group.Group]
-        )
-
-        return [Group(api_client, group) for group in groups]
+    @property
+    def group_hash(self) -> UUID:
+        return self._orm_group.group_hash

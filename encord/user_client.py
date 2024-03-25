@@ -23,6 +23,7 @@ from encord.http.utils import (
     upload_to_signed_url_list,
 )
 from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
 from encord.objects import OntologyStructure
 from encord.objects.common import (
     DeidentifyRedactTextMode,
@@ -44,6 +45,7 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.group import CreateGroupPayload
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
@@ -73,6 +75,7 @@ from encord.utilities.client_utilities import (
 )
 from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
+from encord.orm.group import Group as OrmGroup
 
 log = logging.getLogger(__name__)
 
@@ -686,8 +689,11 @@ class EncordUserClient:
 
         return ret
 
-    def get_groups(self) -> Group:
-        return Group._get_groups(self._api_client)
+    def get_groups(self) -> Page[Group]:
+        return self._api_client.get(
+            f"user/current_organisation/groups", params=None, result_type=Page[OrmGroup]
+        )
+
 
     def deidentify_dicom_files(
         self,

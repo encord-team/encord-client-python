@@ -8,3 +8,8 @@ class Group(BaseDTO):
     name: str
     description: str
     created_at: datetime
+
+
+class CreateGroupPayload(BaseDTO):
+    name: str
+    description: str
