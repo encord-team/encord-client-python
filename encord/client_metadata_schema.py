@@ -1,4 +1,5 @@
 import json
+import uuid
 from typing import Any, Dict, Optional
 from uuid import UUID
 from datetime import datetime
@@ -28,10 +29,14 @@ class ClientMetadataSchema:
     def updated_at(self) -> datetime:
         return self._client_metadata_schema.updated_at
 
-    def set_metadata_schema_from_dict(self, json_dict: Dict[str, str]) -> None:
-        # get updated dict from json_dict by changing value of every key to key_val
-        validated_json_dict = {key: orm.ClientMetadataSchemaTypes(val) for key, val in json_dict.items()}
-        self._client_metadata_schema.metadata_schema = validated_json_dict
+    def set_metadata_schema_from_dict(self, json_dict: Dict[str, orm.ClientMetadataSchemaTypes]) -> None:
+        try:
+            validated_dict = {key: orm.ClientMetadataSchemaTypes(val) for key, val in json_dict.items()}
+        except ValueError:
+            raise NotImplementedError(
+                f"Got an unexpected data type in schema. Valid data types are: "
+                f"{', '.join([v for v in orm.ClientMetadataSchemaTypes])}.")
+        self._client_metadata_schema.metadata_schema = validated_dict
 
     def save(self) -> None:
         payload = orm.ClientMetadataSchemaPayload(metadata_schema=self._client_metadata_schema.metadata_schema)

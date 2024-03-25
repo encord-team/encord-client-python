@@ -1,14 +1,12 @@
 from datetime import datetime
-from enum import auto
-from typing import Any, Dict, Optional
+from typing import Dict
 from uuid import UUID
 
-from encord.orm.analytics import CamelStrEnum
+from encord.common.enum import StringEnum
 from encord.orm.base_dto import BaseDTO
-from enum import Enum
 
 
-class ClientMetadataSchemaTypes(Enum):
+class ClientMetadataSchemaTypes(StringEnum):
     NUMBER = "number"
     STRING = "string"
     BOOLEAN = "boolean"
