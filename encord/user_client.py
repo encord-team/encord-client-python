@@ -45,7 +45,7 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
-from encord.orm.group import ProjectGroupParam, DatasetGroupParam
+from encord.orm.group import ProjectGroupParam, DatasetGroupParam, OntologyGroupParam
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
@@ -700,7 +700,6 @@ class EncordUserClient:
         )
 
     def add_group_to_project(self, project_hash: str, group_param: ProjectGroupParam):
-        print("PROJECT PARAMS", group_param)
         return self._api_client.post(
             f"project/{project_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
         )
@@ -725,10 +724,24 @@ class EncordUserClient:
             f"dataset/{dataset_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
         )
 
+    def get_ontology_groups(self, ontology_hash: str) -> Page[Group]:
+        return self._api_client.get(
+            f"ontologies/{ontology_hash}/group", params=None, result_type=Page[OrmGroup]
+        )
+
+    def add_group_to_ontology(self, ontology_hash: str, group_param: OntologyGroupParam):
+        return self._api_client.post(
+            f"ontologies/{ontology_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
+        )
+
+    def remove_group_from_ontology(self, ontology_hash: str, group_hash: str):
+        return self._api_client.delete(
+            f"ontologies/{ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
+        )
+
     def deidentify_dicom_files(
         self,
         dicom_urls: List[str],
-        integration_hash: str,
         redact_dicom_tags: bool = True,
         redact_pixels_mode: DeidentifyRedactTextMode = DeidentifyRedactTextMode.REDACT_NO_TEXT,
         save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,

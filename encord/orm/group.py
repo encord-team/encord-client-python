@@ -20,3 +20,7 @@ class ProjectGroupParam(BaseDTO):
 class DatasetGroupParam(BaseDTO):
     group_hash: UUID
     user_role: DatasetUserRole
+
+class OntologyGroupParam(BaseDTO):
+    group_hash: UUID
+    user_role: DatasetUserRole
