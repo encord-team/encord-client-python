@@ -777,7 +777,7 @@ class EncordUserClient:
     def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
         return StorageFolder._get_folder(self._api_client, folder_uuid)
 
-    def get_client_metadata_schema(self, organisation_id: int) -> dict[str, ClientMetadataSchemaTypes] | None:
+    def get_client_metadata_schema(self, organisation_id: int) -> dict[str, ClientMetadataSchemaTypes] or None:
         return get_client_metadata_schema(self._api_client, organisation_id)
 
     def set_client_metadata_schema_from_dict(
