@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
 from uuid import UUID
 
 from encord.common.enum import StringEnum
@@ -25,5 +25,5 @@ class ClientMetadataSchema(BaseDTO):
 class ClientMetadataSchemaPayload(BaseDTO):
     metadata_schema: Dict[str, ClientMetadataSchemaTypes]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
         return self.metadata_schema
