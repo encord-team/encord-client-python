@@ -690,51 +690,123 @@ class EncordUserClient:
         return ret
 
     def get_groups(self) -> Page[Group]:
+        """
+        List all groups belonging to the user's current organization.
+        """
         return self._api_client.get(
             "user/current_organisation/groups", params=None, result_type=Page[OrmGroup]
         )
 
     def get_project_groups(self, project_hash: str) -> Page[Group]:
+        """
+        List all groups that have access to a particular project
+        """
         return self._api_client.get(
             f"project/{project_hash}/group", params=None, result_type=Page[OrmGroup]
         )
 
-    def add_group_to_project(self, project_hash: str, group_param: ProjectGroupParam):
+    def add_group_to_project(self, project_hash: str, group_param: ProjectGroupParam) -> Page[Group]:
+        """
+        Add group to a project
+
+        Args:
+            project_hash: hash of the target project
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+            Paginated response of updated list of groups associated with the project
+        """
         return self._api_client.post(
             f"project/{project_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
         )
 
     def remove_group_from_project(self, project_hash: str, group_hash: str):
+        """
+        Remove group from project
+
+        Args:
+            project_hash: hash of the target project
+            group_hash: hash of the group to be removed
+
+        Returns:
+            Paginated response of updated list of groups associated with the project
+        """
         return self._api_client.delete(
             f"project/{project_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
         )
 
     def get_dataset_groups(self, dataset_hash: str) -> Page[Group]:
+        """
+        List all groups that have access to a particular dataset
+        """
         return self._api_client.get(
             f"dataset/{dataset_hash}/group", params=None, result_type=Page[OrmGroup]
         )
 
     def add_group_to_dataset(self, dataset_hash: str, group_param: DatasetGroupParam):
+        """
+        Add group to a dataset
+
+        Args:
+            dataset_hash: hash of the target dataset
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+            Paginated response of updated list of groups associated with the dataset
+        """
         return self._api_client.post(
             f"dataset/{dataset_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
         )
 
     def remove_group_from_dataset(self, dataset_hash: str, group_hash: str):
+        """
+        Remove group from dataset
+
+        Args:
+            dataset_hash: hash of the target dataset
+            group_hash: hash of the group to be removed
+
+        Returns:
+            Paginated response of updated list of groups associated with the dataset
+        """
         return self._api_client.delete(
             f"dataset/{dataset_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
         )
 
     def get_ontology_groups(self, ontology_hash: str) -> Page[Group]:
+        """
+        List all groups that have access to a particular ontology
+        """
         return self._api_client.get(
             f"ontologies/{ontology_hash}/group", params=None, result_type=Page[OrmGroup]
         )
 
     def add_group_to_ontology(self, ontology_hash: str, group_param: OntologyGroupParam):
+        """
+        Add group to a ontology
+
+        Args:
+            ontology_hash: hash of the target ontology
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+            Paginated response of updated list of groups associated with the ontology
+        """
         return self._api_client.post(
             f"ontologies/{ontology_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
         )
 
     def remove_group_from_ontology(self, ontology_hash: str, group_hash: str):
+        """
+        Remove group from ontology
+
+        Args:
+            ontology_hash: hash of the target ontology
+            group_hash: hash of the group to be removed
+
+        Returns:
+            Paginated response of updated list of groups associated with the ontology
+        """
         return self._api_client.delete(
             f"ontologies/{ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
         )
