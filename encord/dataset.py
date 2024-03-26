@@ -136,8 +136,8 @@ class Dataset:
     def get_groups(self):
         return self._client.get_groups(self.dataset_hash)
 
-    def add_group(self, group_params: DatasetGroupParam):
-        return self._client.add_group(self.dataset_hash, group_params)
+    def add_group(self, group_param: DatasetGroupParam):
+        return self._client.add_group(self.dataset_hash, group_param)
 
     def remove_group(self, group_hash: UUID):
         return self._client.remove_group(self.dataset_hash, group_hash)

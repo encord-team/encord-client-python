@@ -99,32 +99,30 @@ class Ontology:
             f"ontologies/{self.ontology_hash}/group", params=None, result_type=Page[OrmGroup]
         )
 
-    def add_group(self, ontology_hash: str, group_param: OntologyGroupParam):
+    def add_group(self, group_param: OntologyGroupParam):
         """
         Add group to a ontology
 
         Args:
-            ontology_hash: hash of the target ontology
             group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
 
         Returns:
             Paginated response of updated list of groups associated with the ontology
         """
         return self.api_client.post(
-            f"ontologies/{ontology_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
+            f"ontologies/{self.ontology_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
         )
 
-    def remove_group(self, ontology_hash: str, group_hash: UUID):
+    def remove_group(self, group_hash: UUID):
         """
         Remove group from ontology
 
         Args:
-            ontology_hash: hash of the target ontology
             group_hash: hash of the group to be removed
 
         Returns:
             Paginated response of updated list of groups associated with the ontology
         """
         return self.api_client.delete(
-            f"ontologies/{ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
+            f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
         )
