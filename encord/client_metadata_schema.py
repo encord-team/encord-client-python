@@ -9,7 +9,7 @@ from encord.http.v2.api_client import ApiClient
 
 class ClientMetadataSchema:
 
-    def __init__(self, api_client: ApiClient, client_metadata_schema: orm.ClientMetadataSchema):
+    def __init__(self, api_client: ApiClient, client_metadata_schema: orm.ClientMetadataSchema | None):
         self._api_client = api_client
         self._client_metadata_schema = client_metadata_schema
 
@@ -22,12 +22,8 @@ class ClientMetadataSchema:
         return self._client_metadata_schema.metadata_schema
 
     @property
-    def created_at(self) -> datetime:
-        return self._client_metadata_schema.created_at
-
-    @property
-    def updated_at(self) -> datetime:
-        return self._client_metadata_schema.updated_at
+    def organisation_id(self) -> int:
+        return self._client_metadata_schema.organisation_id
 
     def set_metadata_schema_from_dict(self, json_dict: Dict[str, orm.ClientMetadataSchemaTypes]) -> None:
         try:
@@ -52,4 +48,6 @@ class ClientMetadataSchema:
         client_metadata_schema = api_client.get(
             f"organisation/{organisation_id}/client-metadata-schema", params=None, result_type=orm.ClientMetadataSchema
         )
+        if client_metadata_schema.organisation_id == -1:
+            client_metadata_schema.organisation_id = organisation_id
         return ClientMetadataSchema(api_client, client_metadata_schema)
