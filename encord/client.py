@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-""" ``encord.client`` provides a simple Python client that allows you
+"""``encord.client`` provides a simple Python client that allows you
 to query project resources through the Encord API.
 
 Here is a simple example for instantiating the client for a project

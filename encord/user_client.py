@@ -28,6 +28,7 @@ from encord.objects.common import (
     DeidentifyRedactTextMode,
     SaveDeidentifiedDicomCondition,
 )
+from encord.objects.skeleton_template import SkeletonTemplate
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
@@ -633,7 +634,10 @@ class EncordUserClient:
         return retval
 
     def create_ontology(
-        self, title: str, description: str = "", structure: Optional[OntologyStructure] = None
+        self,
+        title: str,
+        description: str = "",
+        structure: Optional[OntologyStructure] = None,
     ) -> Ontology:
         try:
             structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()

@@ -1,5 +1,12 @@
 {
   "python.testing.pytestArgs": ["tests"],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "search.exclude": {
+    "*.md": true,
+    "**/*.rst": true,
+    "docs/*": true,
+    "poetry.lock": true,
+    "test.py": true
+  }
 }

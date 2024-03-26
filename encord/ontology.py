@@ -1,6 +1,5 @@
 import datetime
 
-from encord.configs import SshConfig
 from encord.http.querier import Querier
 from encord.objects.ontology_structure import OntologyStructure
 from encord.orm.ontology import Ontology as OrmOntology
