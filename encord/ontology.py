@@ -130,10 +130,7 @@ class Ontology:
         Returns:
             Iterable of updated groups associated with the ontology
         """
-        while True:
-            page = self.api_client.delete(
-                f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
-            )
-            yield from page.results
 
-            break
+        self.api_client.delete(
+            f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
+        )

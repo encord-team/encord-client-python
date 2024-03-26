@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Iterable
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -689,13 +689,14 @@ class EncordUserClient:
 
         return ret
 
-    def get_groups(self) -> Page[Group]:
+    def list_groups(self) -> Iterable[OrmGroup]:
         """
         List all groups belonging to the user's current organization.
         """
-        return self._api_client.get(
+        page = self._api_client.get(
             "user/current_organisation/groups", params=None, result_type=Page[OrmGroup]
         )
+        yield from page.results
 
 
     def deidentify_dicom_files(

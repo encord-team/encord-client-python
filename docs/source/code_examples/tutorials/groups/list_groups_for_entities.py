@@ -7,15 +7,13 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 
 # List Project Groups
 project = user_client.get_project("<project_hash>")
-project_groups = project.list_groups()
-
-print(project_groups)
+for project_group in project.list_groups():
+    print(project_group)
 
 # List Dataset Groups
 dataset = user_client.get_dataset("<dataset_hash>")
-dataset_groups = dataset.list_groups()
-
-print(dataset_groups)
+for dataset_group in dataset.list_groups():
+    print(dataset_group)
 
 
 # List Ontology Groups
