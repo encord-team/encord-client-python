@@ -23,7 +23,7 @@ def set_client_metadata_schema_from_dict(
 
 def get_client_metadata_schema(
     api_client: ApiClient, organisation_id: int
-) -> Optional[dict[str, orm.ClientMetadataSchemaTypes]]:
+) -> Optional[Dict[str, orm.ClientMetadataSchemaTypes]]:
     client_metadata_schema = api_client.get(
         f"organisation/{organisation_id}/client-metadata-schema", params=None, result_type=orm.ClientMetadataSchema
     )
