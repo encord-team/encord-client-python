@@ -47,6 +47,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Tuple, Union, cast
 
 import requests
+
 import encord.exceptions
 from encord.common.deprecated import deprecated
 from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, BearerConfig, Config, EncordConfig, SshConfig
@@ -58,7 +59,6 @@ from encord.constants.string_constants import (
     TYPE_DATASET,
     TYPE_PROJECT,
 )
-
 from encord.exceptions import EncordException
 from encord.group import Group
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
@@ -102,7 +102,7 @@ from encord.orm.dataset import (
     Video,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.group import ProjectGroupParam, DatasetGroupParam
+from encord.orm.group import DatasetGroupParam, ProjectGroupParam
 from encord.orm.group import Group as OrmGroup
 from encord.orm.label_log import LabelLog, LabelLogParams
 from encord.orm.label_row import (
