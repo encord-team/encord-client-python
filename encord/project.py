@@ -237,14 +237,36 @@ class Project:
         """
         return self._client.add_users(user_emails, user_role)
 
-    def get_groups(self):
-        return self._client.get_groups(self.project_hash)
+    def list_groups(self) -> Iterable[Group]:
+        """
+        List all groups that have access to a particular project
+        """
+        page = self._client.list_groups(self.project_hash)
+        yield from page.results
 
     def add_group(self, group_param: ProjectGroupParam):
-        return self._client.add_group(self.project_hash, group_param)
+        """
+        Add group to a project
+
+        Args:
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+           Iterable of updated groups associated with the project
+        """
+        self._client.add_group(self.project_hash, group_param)
 
     def remove_group(self, group_hash: UUID):
-        return self._client.remove_group(self.project_hash, group_hash)
+        """
+        Remove group from target project
+
+        Args:
+            group_hash: hash of the group to be removed
+
+        Returns:
+            Paginated response of updated list of groups associated with the project
+        """
+        self._client.remove_group(self.project_hash, group_hash)
 
     def copy_project(
         self,

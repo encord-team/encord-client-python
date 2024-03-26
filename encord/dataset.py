@@ -5,6 +5,7 @@ from uuid import UUID
 
 from encord.client import EncordClientDataset
 from encord.constants.enums import DataType
+from encord.group import Group
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
@@ -133,14 +134,38 @@ class Dataset:
         """
         return self._client.add_users(user_emails, user_role)
 
-    def get_groups(self):
-        return self._client.get_groups(self.dataset_hash)
+    def list_groups(self) -> Iterable[Group]:
+        """
+        List all groups that have access to a particular dataset
+        """
+        while True:
+            page = self._client.list_groups(self.dataset_hash)
+            yield from page.results
+            break
 
     def add_group(self, group_param: DatasetGroupParam):
-        return self._client.add_group(self.dataset_hash, group_param)
+        """
+        Add group to a dataset
+
+        Args:
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+            Iterable of updated groups associated with the dataset
+        """
+        self._client.add_group(self.dataset_hash, group_param)
 
     def remove_group(self, group_hash: UUID):
-        return self._client.remove_group(self.dataset_hash, group_hash)
+        """
+        Remove group from dataset
+
+        Args:
+            group_hash: hash of the group to be removed
+
+        Returns:
+            Iterable of updated groups associated with the dataset
+        """
+        self._client.remove_group(self.dataset_hash, group_hash)
 
     def upload_video(
         self,

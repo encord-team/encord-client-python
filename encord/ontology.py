@@ -1,6 +1,8 @@
 import datetime
+from typing import Iterable
 from uuid import UUID
 
+from encord.group import Group
 from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
@@ -91,25 +93,30 @@ class Ontology:
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
 
-    def get_groups(self):
+    def list_groups(self) -> Iterable[OrmGroup]:
         """
         List all groups that have access to a particular ontology
         """
-        return self.api_client.get(
-            f"ontologies/{self.ontology_hash}/group", params=None, result_type=Page[OrmGroup]
-        )
+        while True:
+            page = self.api_client.get(
+                f"ontologies/{self.ontology_hash}/group", params=None, result_type=Page[OrmGroup]
+            )
+
+            yield from page.results
+
+            break
 
     def add_group(self, group_param: OntologyGroupParam):
         """
-        Add group to a ontology
+        Add group to an ontology
 
         Args:
             group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
 
         Returns:
-            Paginated response of updated list of groups associated with the ontology
+            Iterable of updated groups associated with the ontology
         """
-        return self.api_client.post(
+        self.api_client.post(
             f"ontologies/{self.ontology_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
         )
 
@@ -121,8 +128,12 @@ class Ontology:
             group_hash: hash of the group to be removed
 
         Returns:
-            Paginated response of updated list of groups associated with the ontology
+            Iterable of updated groups associated with the ontology
         """
-        return self.api_client.delete(
-            f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
-        )
+        while True:
+            page = self.api_client.delete(
+                f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
+            )
+            yield from page.results
+
+            break
