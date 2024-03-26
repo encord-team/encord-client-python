@@ -1,14 +1,13 @@
 import datetime
 from uuid import UUID
 
-from encord.configs import SshConfig
-from encord.group import Group
 from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
+from encord.orm.group import Group as OrmGroup
+from encord.orm.group import OntologyGroupParam
 from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.group import Group as OrmGroup, OntologyGroupParam
 
 
 class Ontology:

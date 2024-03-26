@@ -15,6 +15,7 @@ from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
+from encord.group import Group
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
@@ -45,7 +46,8 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
-from encord.orm.group import ProjectGroupParam, DatasetGroupParam, OntologyGroupParam
+from encord.orm.group import DatasetGroupParam, OntologyGroupParam, ProjectGroupParam
+from encord.orm.group import Group as OrmGroup
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
@@ -64,7 +66,6 @@ from encord.orm.storage import CreateStorageFolderPayload
 from encord.orm.storage import StorageFolder as OrmStorageFolder
 from encord.project import Project
 from encord.storage import StorageFolder
-from encord.group import Group
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -75,7 +76,6 @@ from encord.utilities.client_utilities import (
 )
 from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
-from encord.orm.group import Group as OrmGroup
 
 log = logging.getLogger(__name__)
 
@@ -654,7 +654,7 @@ class EncordUserClient:
         ontology = OrmOntology.from_dict(retval)
         querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
 
-        return Ontology(querier, ontology)
+        return Ontology(querier, ontology, self._api_client)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):
