@@ -1,9 +1,14 @@
 import datetime
+from uuid import UUID
 
 from encord.configs import SshConfig
+from encord.group import Group
 from encord.http.querier import Querier
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
 from encord.orm.ontology import Ontology as OrmOntology
+from encord.orm.group import Group as OrmGroup, OntologyGroupParam
 
 
 class Ontology:
@@ -12,9 +17,10 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, instance: OrmOntology):
+    def __init__(self, querier: Querier, instance: OrmOntology, api_client: ApiClient):
         self._querier = querier
         self._ontology_instance = instance
+        self.api_client = api_client
 
     @property
     def ontology_hash(self) -> str:
@@ -85,3 +91,41 @@ class Ontology:
 
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
+
+    def get_groups(self):
+        """
+        List all groups that have access to a particular ontology
+        """
+        return self.api_client.get(
+            f"ontologies/{self.ontology_hash}/group", params=None, result_type=Page[OrmGroup]
+        )
+
+    def add_group(self, ontology_hash: str, group_param: OntologyGroupParam):
+        """
+        Add group to a ontology
+
+        Args:
+            ontology_hash: hash of the target ontology
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+            Paginated response of updated list of groups associated with the ontology
+        """
+        return self.api_client.post(
+            f"ontologies/{ontology_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
+        )
+
+    def remove_group(self, ontology_hash: str, group_hash: UUID):
+        """
+        Remove group from ontology
+
+        Args:
+            ontology_hash: hash of the target ontology
+            group_hash: hash of the group to be removed
+
+        Returns:
+            Paginated response of updated list of groups associated with the ontology
+        """
+        return self.api_client.delete(
+            f"ontologies/{ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
+        )

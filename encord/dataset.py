@@ -19,6 +19,7 @@ from encord.orm.dataset import (
     StorageLocation,
 )
 from encord.orm.dataset import Dataset as OrmDataset
+from encord.orm.group import DatasetGroupParam
 
 
 class Dataset:
@@ -131,6 +132,15 @@ class Dataset:
             user_role: the user role to assign to all users
         """
         return self._client.add_users(user_emails, user_role)
+
+    def get_groups(self):
+        return self._client.get_groups(self.dataset_hash)
+
+    def add_group(self, group_params: DatasetGroupParam):
+        return self._client.add_group(self.dataset_hash, group_params)
+
+    def remove_group(self, group_hash: UUID):
+        return self._client.remove_group(self.dataset_hash, group_hash)
 
     def upload_video(
         self,

@@ -1,12 +1,16 @@
 import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
+from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
+from encord.group import Group
+from encord.orm.group import Group as OrmGroup, ProjectGroupParam
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.analytics import (
@@ -232,6 +236,15 @@ class Project:
             UnknownError: If an error occurs while adding the users to the project
         """
         return self._client.add_users(user_emails, user_role)
+
+    def get_groups(self):
+        return self._client.get_groups(self.project_hash)
+
+    def add_group(self, group_param: ProjectGroupParam):
+        return self._client.add_group(self.project_hash, group_param)
+
+    def remove_group(self, group_hash: UUID):
+        return self._client.remove_group(self.project_hash, group_hash)
 
     def copy_project(
         self,
