@@ -1,6 +1,5 @@
 import datetime
 from typing import Iterable
-from uuid import UUID
 
 from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
@@ -97,7 +96,7 @@ class Ontology:
         """
         while True:
             page = self.api_client.get(
-                f"ontologies/{self.ontology_hash}/group", params=None, result_type=Page[OntologyGroup]
+                f"ontologies/{self.ontology_hash}/groups", params=None, result_type=Page[OntologyGroup]
             )
 
             yield from page.results
@@ -112,13 +111,13 @@ class Ontology:
             group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
 
         Returns:
-            Iterable of updated groups associated with the ontology
+            None
         """
         self.api_client.post(
-            f"ontologies/{self.ontology_hash}/group", params=None, payload=group_param, result_type=Page[OntologyGroup]
+            f"ontologies/{self.ontology_hash}/group", params=None, payload=group_param, result_type=None
         )
 
-    def remove_group(self, group_hash: UUID):
+    def remove_group(self, group_hash: str):
         """
         Remove group from ontology
 
@@ -126,9 +125,9 @@ class Ontology:
             group_hash: hash of the group to be removed
 
         Returns:
-            Iterable of updated groups associated with the ontology
+            None
         """
 
         self.api_client.delete(
-            f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=Page[OntologyGroup]
+            f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=None
         )

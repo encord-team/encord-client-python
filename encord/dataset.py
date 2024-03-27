@@ -150,11 +150,11 @@ class Dataset:
             group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
 
         Returns:
-            Iterable of updated groups associated with the dataset
+            None
         """
         self._client.add_group(self.dataset_hash, group_param)
 
-    def remove_group(self, group_hash: UUID):
+    def remove_group(self, group_hash: str):
         """
         Remove group from dataset
 
@@ -162,7 +162,7 @@ class Dataset:
             group_hash: hash of the group to be removed
 
         Returns:
-            Iterable of updated groups associated with the dataset
+            None
         """
         self._client.remove_group(self.dataset_hash, group_hash)
 
