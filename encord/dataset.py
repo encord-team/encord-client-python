@@ -19,6 +19,7 @@ from encord.orm.dataset import (
     StorageLocation,
 )
 from encord.orm.dataset import Dataset as OrmDataset
+from encord.orm.group import DatasetGroup, DatasetGroupParam
 
 
 class Dataset:
@@ -131,6 +132,39 @@ class Dataset:
             user_role: the user role to assign to all users
         """
         return self._client.add_users(user_emails, user_role)
+
+    def list_groups(self) -> Iterable[DatasetGroup]:
+        """
+        List all groups that have access to a particular dataset
+        """
+        while True:
+            page = self._client.list_groups(self.dataset_hash)
+            yield from page.results
+            break
+
+    def add_group(self, group_param: DatasetGroupParam):
+        """
+        Add group to a dataset
+
+        Args:
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+            None
+        """
+        self._client.add_group(self.dataset_hash, group_param)
+
+    def remove_group(self, group_hash: str):
+        """
+        Remove group from dataset
+
+        Args:
+            group_hash: hash of the group to be removed
+
+        Returns:
+            None
+        """
+        self._client.remove_group(self.dataset_hash, group_hash)
 
     def upload_video(
         self,

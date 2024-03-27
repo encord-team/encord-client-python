@@ -25,7 +25,7 @@ DUMMY_PRIVATE_KEY = (
 
 @pytest.fixture
 def ontology() -> Ontology:
-    return Ontology(None, OrmOntology.from_dict(ONTOLOGY_BLURB))
+    return Ontology(None, OrmOntology.from_dict(ONTOLOGY_BLURB), None)
 
 
 @pytest.fixture

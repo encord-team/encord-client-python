@@ -1,12 +1,11 @@
 import datetime
-from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
+from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
-from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.analytics import (
@@ -16,6 +15,7 @@ from encord.orm.analytics import (
 )
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
+from encord.orm.group import ProjectGroup, ProjectGroupParam
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -232,6 +232,37 @@ class Project:
             UnknownError: If an error occurs while adding the users to the project
         """
         return self._client.add_users(user_emails, user_role)
+
+    def list_groups(self) -> Iterable[ProjectGroup]:
+        """
+        List all groups that have access to a particular project
+        """
+        page = self._client.list_groups(self.project_hash)
+        yield from page.results
+
+    def add_group(self, group_param: ProjectGroupParam):
+        """
+        Add group to a project
+
+        Args:
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+           None
+        """
+        self._client.add_group(self.project_hash, group_param)
+
+    def remove_group(self, group_hash: str):
+        """
+        Remove group from target project
+
+        Args:
+            group_hash: hash of the group to be removed
+
+        Returns:
+           None
+        """
+        self._client.remove_group(group_hash)
 
     def copy_project(
         self,

@@ -1,8 +1,11 @@
 import datetime
+from typing import Iterable
 
-from encord.configs import SshConfig
 from encord.http.querier import Querier
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
+from encord.orm.group import OntologyGroup, OntologyGroupParam
 from encord.orm.ontology import Ontology as OrmOntology
 
 
@@ -12,9 +15,10 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, instance: OrmOntology):
+    def __init__(self, querier: Querier, instance: OrmOntology, api_client: ApiClient):
         self._querier = querier
         self._ontology_instance = instance
+        self.api_client = api_client
 
     @property
     def ontology_hash(self) -> str:
@@ -85,3 +89,43 @@ class Ontology:
 
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
+
+    def list_groups(self) -> Iterable[OntologyGroup]:
+        """
+        List all groups that have access to a particular ontology
+        """
+        while True:
+            page = self.api_client.get(
+                f"ontologies/{self.ontology_hash}/groups", params=None, result_type=Page[OntologyGroup]
+            )
+
+            yield from page.results
+
+            break
+
+    def add_group(self, group_param: OntologyGroupParam):
+        """
+        Add group to an ontology
+
+        Args:
+            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+
+        Returns:
+            None
+        """
+        self.api_client.post(
+            f"ontologies/{self.ontology_hash}/group", params=None, payload=group_param, result_type=None
+        )
+
+    def remove_group(self, group_hash: str):
+        """
+        Remove group from ontology
+
+        Args:
+            group_hash: hash of the group to be removed
+
+        Returns:
+            None
+        """
+
+        self.api_client.delete(f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=None)
