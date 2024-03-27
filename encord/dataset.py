@@ -5,7 +5,6 @@ from uuid import UUID
 
 from encord.client import EncordClientDataset
 from encord.constants.enums import DataType
-from encord.group import Group
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
@@ -21,6 +20,7 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.group import DatasetGroupParam
+from encord.orm.group import DatasetGroup
 
 
 class Dataset:
@@ -134,7 +134,7 @@ class Dataset:
         """
         return self._client.add_users(user_emails, user_role)
 
-    def list_groups(self) -> Iterable[Group]:
+    def list_groups(self) -> Iterable[DatasetGroup]:
         """
         List all groups that have access to a particular dataset
         """

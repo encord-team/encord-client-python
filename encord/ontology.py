@@ -2,13 +2,11 @@ import datetime
 from typing import Iterable
 from uuid import UUID
 
-from encord.group import Group
 from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
-from encord.orm.group import Group as OrmGroup
-from encord.orm.group import OntologyGroupParam
+from encord.orm.group import OntologyGroup, OntologyGroupParam
 from encord.orm.ontology import Ontology as OrmOntology
 
 
@@ -93,13 +91,13 @@ class Ontology:
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
 
-    def list_groups(self) -> Iterable[OrmGroup]:
+    def list_groups(self) -> Iterable[OntologyGroup]:
         """
         List all groups that have access to a particular ontology
         """
         while True:
             page = self.api_client.get(
-                f"ontologies/{self.ontology_hash}/group", params=None, result_type=Page[OrmGroup]
+                f"ontologies/{self.ontology_hash}/group", params=None, result_type=Page[OntologyGroup]
             )
 
             yield from page.results
@@ -117,7 +115,7 @@ class Ontology:
             Iterable of updated groups associated with the ontology
         """
         self.api_client.post(
-            f"ontologies/{self.ontology_hash}/group", params=None, payload=group_param, result_type=Page[OrmGroup]
+            f"ontologies/{self.ontology_hash}/group", params=None, payload=group_param, result_type=Page[OntologyGroup]
         )
 
     def remove_group(self, group_hash: UUID):
@@ -132,5 +130,5 @@ class Ontology:
         """
 
         self.api_client.delete(
-            f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=Page[OrmGroup]
+            f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=Page[OntologyGroup]
         )

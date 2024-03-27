@@ -1,16 +1,11 @@
 import datetime
-from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
-from encord.group import Group
-from encord.orm.group import Group as OrmGroup, ProjectGroupParam
 from encord.http.bundle import Bundle
-from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.analytics import (
@@ -20,6 +15,7 @@ from encord.orm.analytics import (
 )
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
+from encord.orm.group import ProjectGroup, ProjectGroupParam
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -237,7 +233,7 @@ class Project:
         """
         return self._client.add_users(user_emails, user_role)
 
-    def list_groups(self) -> Iterable[Group]:
+    def list_groups(self) -> Iterable[ProjectGroup]:
         """
         List all groups that have access to a particular project
         """
@@ -266,7 +262,7 @@ class Project:
         Returns:
             Paginated response of updated list of groups associated with the project
         """
-        self._client.remove_group(self.project_hash, group_hash)
+        self._client.remove_group(group_hash)
 
     def copy_project(
         self,

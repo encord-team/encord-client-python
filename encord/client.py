@@ -60,7 +60,6 @@ from encord.constants.string_constants import (
     TYPE_PROJECT,
 )
 from encord.exceptions import EncordException
-from encord.orm.group import Group
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
@@ -102,7 +101,7 @@ from encord.orm.dataset import (
     Video,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.group import DatasetGroupParam, ProjectGroupParam
+from encord.orm.group import DatasetGroupParam, DatasetGroup, ProjectGroupParam, ProjectGroup
 from encord.orm.label_log import LabelLog, LabelLogParams
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -167,6 +166,10 @@ class EncordClient:
     def __init__(self, querier: Querier, config: Config, api_client: Optional[ApiClient] = None):
         self._querier = querier
         self._config = config
+
+        if api_client is None:
+            api_client = ApiClient(config)
+
         self._api_client = api_client
 
     def _get_api_client(self) -> ApiClient:
@@ -227,6 +230,7 @@ class EncordClient:
         """
         querier = Querier(config, resource_id=config.resource_id)
         key_type = querier.basic_getter(ApiKeyMeta)
+        api_client = ApiClient(config)
 
         if key_type.resource_type == TYPE_PROJECT:
             logger.info("Initialising Encord client for project using key: %s", key_type.title)
@@ -234,7 +238,7 @@ class EncordClient:
 
         elif key_type.resource_type == TYPE_DATASET:
             logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
-            return EncordClientDataset(querier, config)
+            return EncordClientDataset(querier, config, api_client)
 
         else:
             raise encord.exceptions.InitialisationError(
@@ -316,13 +320,14 @@ class EncordClientDataset(EncordClient):
         """
         querier = Querier(config, resource_id=config.resource_id)
         key_type = querier.basic_getter(ApiKeyMeta)
+        api_client = ApiClient(config)
 
         if key_type.resource_type == TYPE_PROJECT:
             raise RuntimeError("Trying to initialise an EncordClientDataset using a project key.")
 
         elif key_type.resource_type == TYPE_DATASET:
             logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
-            return EncordClientDataset(querier, config, dataset_access_settings=dataset_access_settings)
+            return EncordClientDataset(querier, config, api_client=api_client, dataset_access_settings=dataset_access_settings)
 
         else:
             raise encord.exceptions.InitialisationError(
@@ -421,19 +426,19 @@ class EncordClientDataset(EncordClient):
 
         return [DatasetUser.from_dict(user) for user in users]
 
-    def list_groups(self, dataset_hash: str) -> Page[Group]:
+    def list_groups(self, dataset_hash: str) -> Page[DatasetGroup]:
         return self._api_client.get(
-            f"dataset/{dataset_hash}/group", params=None, result_type=Page[Group]
+            f"dataset/{dataset_hash}/group", params=None, result_type=Page[DatasetGroup]
         )
 
     def add_group(self, dataset_hash: str, group_param: DatasetGroupParam):
         return self._api_client.post(
-            f"dataset/{dataset_hash}/group", params=None, payload=group_param, result_type=Page[Group]
+            f"dataset/{dataset_hash}/group", params=None, payload=group_param, result_type=Page[DatasetGroup]
         )
 
     def remove_group(self, dataset_hash: str, group_hash: uuid.UUID):
         return self._api_client.delete(
-            f"dataset/{dataset_hash}/group/{group_hash}", params=None, result_type=Page[Group]
+            f"dataset/{dataset_hash}/group/{group_hash}", params=None, result_type=Page[DatasetGroup]
         )
 
     def upload_video(
@@ -835,29 +840,19 @@ class EncordClientProject(EncordClient):
 
         return [ProjectUser.from_dict(user) for user in users]
 
-    def list_groups(self, project_hash: str) -> Page[Group]:
+    def list_groups(self, project_hash: str) -> Page[ProjectGroup]:
         return self._api_client.get(
-            f"project/{project_hash}/group", params=None, result_type=Page[Group]
+            f"project/{project_hash}/group", params=None, result_type=Page[ProjectGroup]
         )
 
-    def add_group(self, project_hash: str, group_param: ProjectGroupParam) -> Page[Group]:
+    def add_group(self, project_hash: str, group_param: ProjectGroupParam) -> Page[ProjectGroup]:
         return self._api_client.post(
-            f"project/{project_hash}/group", params=None, payload=group_param, result_type=Page[Group]
+            f"project/{project_hash}/group", params=None, payload=group_param, result_type=Page[ProjectGroup]
         )
 
-    def remove_group(self, project_hash: str, group_hash: uuid.UUID) -> Page[Group]:
-        """
-        Remove group from target project
-
-        Args:
-            project_hash: hash of the target project
-            group_hash: hash of the group to be removed
-
-        Returns:
-            Paginated response of updated list of groups associated with the project
-        """
+    def remove_group(self, group_hash: uuid.UUID) -> Page[ProjectGroup]:
         return self._api_client.delete(
-            f"project/{self.project_hash}/group/{group_hash}", params=None, result_type=Page[Group]
+            f"project/{self.project_hash}/group/{group_hash}", params=None, result_type=Page[ProjectGroup]
         )
 
 
