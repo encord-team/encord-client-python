@@ -12,7 +12,7 @@ class Group:
         self._parsed_metadata: Optional[Dict[str, Any]] = None
 
     @property
-    def uuid(self) -> UUID:
+    def uuid(self) -> str:
         return self._orm_group.group_hash
 
     @property
@@ -24,5 +24,5 @@ class Group:
         return self._orm_group.description
 
     @property
-    def group_hash(self) -> UUID:
+    def group_hash(self) -> str:
         return self._orm_group.group_hash

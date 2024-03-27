@@ -128,6 +128,4 @@ class Ontology:
             None
         """
 
-        self.api_client.delete(
-            f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=None
-        )
+        self.api_client.delete(f"ontologies/{self.ontology_hash}/group/{group_hash}", params=None, result_type=None)
