@@ -19,8 +19,7 @@ from encord.orm.dataset import (
     StorageLocation,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.group import DatasetGroupParam
-from encord.orm.group import DatasetGroup
+from encord.orm.group import DatasetGroup, DatasetGroupParam
 
 
 class Dataset:

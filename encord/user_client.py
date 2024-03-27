@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, Iterable
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -116,7 +116,10 @@ class EncordUserClient:
         """
         querier = Querier(self._config.config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         client = EncordClientDataset(
-            querier=querier, config=self._config.config, dataset_access_settings=dataset_access_settings, api_client=self._api_client,
+            querier=querier,
+            config=self._config.config,
+            dataset_access_settings=dataset_access_settings,
+            api_client=self._api_client,
         )
         orm_dataset = client.get_dataset()
         return Dataset(client, orm_dataset)
@@ -693,15 +696,13 @@ class EncordUserClient:
         """
         List all groups belonging to the user's current organization.
         """
-        page = self._api_client.get(
-            "user/current_organisation/groups", params=None, result_type=Page[OrmGroup]
-        )
+        page = self._api_client.get("user/current_organisation/groups", params=None, result_type=Page[OrmGroup])
         yield from page.results
-
 
     def deidentify_dicom_files(
         self,
         dicom_urls: List[str],
+        integration_hash: str,
         redact_dicom_tags: bool = True,
         redact_pixels_mode: DeidentifyRedactTextMode = DeidentifyRedactTextMode.REDACT_NO_TEXT,
         save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,

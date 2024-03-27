@@ -101,7 +101,7 @@ from encord.orm.dataset import (
     Video,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.group import DatasetGroupParam, DatasetGroup, ProjectGroupParam, ProjectGroup
+from encord.orm.group import DatasetGroup, DatasetGroupParam, ProjectGroup, ProjectGroupParam
 from encord.orm.label_log import LabelLog, LabelLogParams
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -327,7 +327,9 @@ class EncordClientDataset(EncordClient):
 
         elif key_type.resource_type == TYPE_DATASET:
             logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
-            return EncordClientDataset(querier, config, api_client=api_client, dataset_access_settings=dataset_access_settings)
+            return EncordClientDataset(
+                querier, config, api_client=api_client, dataset_access_settings=dataset_access_settings
+            )
 
         else:
             raise encord.exceptions.InitialisationError(
@@ -427,9 +429,7 @@ class EncordClientDataset(EncordClient):
         return [DatasetUser.from_dict(user) for user in users]
 
     def list_groups(self, dataset_hash: str) -> Page[DatasetGroup]:
-        return self._api_client.get(
-            f"dataset/{dataset_hash}/group", params=None, result_type=Page[DatasetGroup]
-        )
+        return self._api_client.get(f"dataset/{dataset_hash}/group", params=None, result_type=Page[DatasetGroup])
 
     def add_group(self, dataset_hash: str, group_param: DatasetGroupParam):
         return self._api_client.post(
@@ -841,9 +841,7 @@ class EncordClientProject(EncordClient):
         return [ProjectUser.from_dict(user) for user in users]
 
     def list_groups(self, project_hash: str) -> Page[ProjectGroup]:
-        return self._api_client.get(
-            f"project/{project_hash}/group", params=None, result_type=Page[ProjectGroup]
-        )
+        return self._api_client.get(f"project/{project_hash}/group", params=None, result_type=Page[ProjectGroup])
 
     def add_group(self, project_hash: str, group_param: ProjectGroupParam) -> Page[ProjectGroup]:
         return self._api_client.post(
@@ -854,7 +852,6 @@ class EncordClientProject(EncordClient):
         return self._api_client.delete(
             f"project/{self.project_hash}/group/{group_hash}", params=None, result_type=Page[ProjectGroup]
         )
-
 
     def copy_project(
         self,

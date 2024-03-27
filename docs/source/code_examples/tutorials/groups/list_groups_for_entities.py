@@ -20,5 +20,3 @@ for dataset_group in dataset.list_groups():
 ontology = user_client.get_ontology("<ontology_hash>")
 for ontology_group in ontology.list_groups():
     print(ontology_group)
-
-
