@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Type, Union
+from typing import Dict, Optional
 
 import encord.orm.client_metadata_schema as orm
 from encord.http.v2.api_client import ApiClient

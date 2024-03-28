@@ -1,9 +1,7 @@
 import platform
 import uuid
-from pathlib import Path
-from types import NoneType
-from typing import Optional, Type, TypeVar, Union, get_args, get_origin
-from urllib.parse import urljoin, urlunparse
+from typing import Optional, Type, TypeVar
+from urllib.parse import urljoin
 
 import requests
 from requests import PreparedRequest, Response
