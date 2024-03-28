@@ -6,7 +6,7 @@ from encord.http.v2.api_client import ApiClient
 
 def set_client_metadata_schema_from_dict(
     api_client: ApiClient, organisation_id: int, json_dict: Dict[str, orm.ClientMetadataSchemaTypes]
-) -> None:
+):
     try:
         validated_dict = {key: orm.ClientMetadataSchemaTypes(val) for key, val in json_dict.items()}
     except ValueError:
@@ -18,7 +18,6 @@ def set_client_metadata_schema_from_dict(
     api_client.post(
         f"organisation/{organisation_id}/client-metadata-schema", params=None, payload=payload, result_type=None
     )
-    return
 
 
 def get_client_metadata_schema(
