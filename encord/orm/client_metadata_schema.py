@@ -1,9 +1,11 @@
+import uuid
 from datetime import datetime
-from typing import Any, Dict
-from uuid import UUID
+from typing import Any, Dict, Optional, Type
+from uuid import UUID, uuid4
 
 from encord.common.enum import StringEnum
 from encord.orm.base_dto import BaseDTO
+from encord.orm.base_dto.base_dto_interface import T
 
 
 class ClientMetadataSchemaTypes(StringEnum):

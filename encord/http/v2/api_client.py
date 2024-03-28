@@ -80,13 +80,13 @@ class ApiClient:
             HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
-    def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T]) -> T:
+    def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
         params_dict = params.to_dict() if params is not None else None
         req = requests.Request(
             method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
 
-        return self._request(req, result_type=result_type)  # type: ignore
+        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
     def post(
         self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
@@ -110,7 +110,7 @@ class ApiClient:
 
         return self._request(req, result_type=result_type)  # type: ignore
 
-    def _request(self, req: PreparedRequest, result_type: Optional[Type[T]]):
+    def _request(self, req: PreparedRequest, result_type: Optional[Type[T]], allow_none: bool = False):
         req = self._config.define_headers_v2(req)
 
         timeouts = (self._config.connect_timeout, self._config.read_timeout)
@@ -132,7 +132,7 @@ class ApiClient:
             except Exception as e:
                 raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
 
-            if result_type is None:
+            if result_type is None or (res_json is None and allow_none):
                 return None
 
             return result_type.from_dict(res_json)

@@ -25,6 +25,9 @@ def get_client_metadata_schema(
     api_client: ApiClient, organisation_id: int
 ) -> Optional[Dict[str, orm.ClientMetadataSchemaTypes]]:
     client_metadata_schema = api_client.get(
-        f"organisation/{organisation_id}/client-metadata-schema", params=None, result_type=orm.ClientMetadataSchema
+        f"organisation/{organisation_id}/client-metadata-schema",
+        params=None,
+        result_type=orm.ClientMetadataSchema,
+        allow_none=True,
     )
     return client_metadata_schema.metadata_schema if client_metadata_schema else None
