@@ -782,8 +782,8 @@ class EncordUserClient:
 
     def set_client_metadata_schema_from_dict(
         self, organisation_id: int, json_dict: Dict[str, ClientMetadataSchemaTypes]
-    ) -> None:
-        return set_client_metadata_schema_from_dict(self._api_client, organisation_id, json_dict)
+    ):
+        set_client_metadata_schema_from_dict(self._api_client, organisation_id, json_dict)
 
 
 class ListingFilter(Enum):
