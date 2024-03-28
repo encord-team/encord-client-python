@@ -15,6 +15,7 @@ groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
         project.add_group(group_param=ProjectGroupParam(group_hash=group.group_hash, user_role=ProjectUserRole.ADMIN))
+        break
 
 
 # Add Group to Dataset
@@ -23,6 +24,7 @@ groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
         dataset.add_group(group_param=DatasetGroupParam(group_hash=group.group_hash, user_role=DatasetUserRole.ADMIN))
+        break
 
 
 # Add Group to Ontologies
@@ -31,3 +33,4 @@ groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
         ontology.add_group(group_param=OntologyGroupParam(group_hash=group.group_hash, user_role=OntologyUserRole.ADMIN))
+        break

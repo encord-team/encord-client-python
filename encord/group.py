@@ -12,10 +12,6 @@ class Group:
         self._parsed_metadata: Optional[Dict[str, Any]] = None
 
     @property
-    def uuid(self) -> str:
-        return self._orm_group.group_hash
-
-    @property
     def name(self) -> str:
         return self._orm_group.name
 

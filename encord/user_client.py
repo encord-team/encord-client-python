@@ -696,7 +696,7 @@ class EncordUserClient:
         """
         List all groups belonging to the user's current organization.
         """
-        page = self._api_client.get("user/current_organisation/groups", params=None, result_type=Page[OrmGroup])
+        page = self._api_client.get("user/current-organisation/groups", params=None, result_type=Page[OrmGroup])
         yield from page.results
 
     def deidentify_dicom_files(
