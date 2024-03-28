@@ -30,6 +30,7 @@ from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
+from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 
@@ -237,22 +238,25 @@ class Project:
         """
         List all groups that have access to a particular project
         """
-        page = self._client.list_groups(self.project_hash)
+        project_hash = convert_to_uuid(self.project_hash)
+        page = self._client.list_groups(project_hash)
         yield from page.results
 
-    def add_group(self, group_param: ProjectGroupParam):
+    def add_group(self, group_hash: UUID, user_role: ProjectUserRole):
         """
         Add group to a project
 
         Args:
-            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+            group_hash: hash of the group to be added and
+            user_role: user role that the group will be given
 
         Returns:
            None
         """
-        self._client.add_group(self.project_hash, group_param)
+        project_hash = convert_to_uuid(self.project_hash)
+        self._client.add_group(project_hash, ProjectGroupParam(group_hash=group_hash, user_role=user_role))
 
-    def remove_group(self, group_hash: str):
+    def remove_group(self, group_hash: UUID):
         """
         Remove group from target project
 

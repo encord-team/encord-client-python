@@ -20,6 +20,7 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.group import DatasetGroup, DatasetGroupParam
+from encord.utilities.hash_utilities import convert_to_uuid
 
 
 class Dataset:
@@ -137,24 +138,24 @@ class Dataset:
         """
         List all groups that have access to a particular dataset
         """
-        while True:
-            page = self._client.list_groups(self.dataset_hash)
-            yield from page.results
-            break
+        dataset_hash = convert_to_uuid(self.dataset_hash)
+        page = self._client.list_groups(dataset_hash)
+        yield from page.results
 
-    def add_group(self, group_param: DatasetGroupParam):
+    def add_group(self, group_hash: UUID, user_role: DatasetUserRole) -> None:
         """
         Add group to a dataset
 
         Args:
-            group_param: Object containing (1) hash of the group to be added and (2) user role that the group will be given
+            group_hash: hash of the group to be added
+            user_role: user role that the group will be given
 
         Returns:
             None
         """
-        self._client.add_group(self.dataset_hash, group_param)
+        self._client.add_group(self.dataset_hash, DatasetGroupParam(group_hash=group_hash, user_role=user_role))
 
-    def remove_group(self, group_hash: str):
+    def remove_group(self, group_hash: UUID):
         """
         Remove group from dataset
 
@@ -164,7 +165,8 @@ class Dataset:
         Returns:
             None
         """
-        self._client.remove_group(self.dataset_hash, group_hash)
+        dataset_hash = convert_to_uuid(self.dataset_hash)
+        self._client.remove_group(dataset_hash, group_hash)
 
     def upload_video(
         self,

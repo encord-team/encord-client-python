@@ -8,7 +8,7 @@ from encord.utilities.project_user import ProjectUserRole
 
 
 class Group(BaseDTO):
-    group_hash: str
+    group_hash: UUID
     name: str
     description: str
     created_at: datetime
@@ -30,15 +30,15 @@ class DatasetGroup(Group):
 
 
 class ProjectGroupParam(BaseDTO):
-    group_hash: str
+    group_hash: UUID
     user_role: ProjectUserRole
 
 
 class DatasetGroupParam(BaseDTO):
-    group_hash: str
+    group_hash: UUID
     user_role: DatasetUserRole
 
 
 class OntologyGroupParam(BaseDTO):
-    group_hash: str
+    group_hash: UUID
     user_role: OntologyUserRole
