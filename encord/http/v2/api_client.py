@@ -1,7 +1,8 @@
 import platform
 import uuid
 from pathlib import Path
-from typing import Optional, Type, TypeVar, Union
+from types import NoneType
+from typing import Optional, Type, TypeVar, Union, get_args, get_origin
 from urllib.parse import urljoin, urlunparse
 
 import requests
@@ -85,7 +86,6 @@ class ApiClient:
         req = requests.Request(
             method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
-
         return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
     def post(

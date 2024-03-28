@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Type, Union
 
 import encord.orm.client_metadata_schema as orm
 from encord.http.v2.api_client import ApiClient
@@ -24,7 +24,7 @@ def set_client_metadata_schema_from_dict(
 def get_client_metadata_schema(
     api_client: ApiClient, organisation_id: int
 ) -> Optional[Dict[str, orm.ClientMetadataSchemaTypes]]:
-    client_metadata_schema = api_client.get(
+    client_metadata_schema: Optional[orm.ClientMetadataSchema] = api_client.get(
         f"organisation/{organisation_id}/client-metadata-schema",
         params=None,
         result_type=orm.ClientMetadataSchema,
