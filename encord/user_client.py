@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
+from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
@@ -29,6 +30,7 @@ from encord.objects.common import (
     SaveDeidentifiedDicomCondition,
 )
 from encord.ontology import Ontology
+from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
@@ -774,6 +776,14 @@ class EncordUserClient:
 
     def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
         return StorageFolder._get_folder(self._api_client, folder_uuid)
+
+    def get_client_metadata_schema(self, organisation_id: int) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
+        return get_client_metadata_schema(self._api_client, organisation_id)
+
+    def set_client_metadata_schema_from_dict(
+        self, organisation_id: int, json_dict: Dict[str, ClientMetadataSchemaTypes]
+    ):
+        set_client_metadata_schema_from_dict(self._api_client, organisation_id, json_dict)
 
 
 class ListingFilter(Enum):
