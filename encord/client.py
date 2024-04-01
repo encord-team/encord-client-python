@@ -257,8 +257,9 @@ class EncordClientDataset(EncordClient):
         querier: Querier,
         config: Config,
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
+        api_client: Optional[ApiClient] = None,
     ):
-        super().__init__(querier, config)
+        super().__init__(querier, config, api_client)
         self._dataset_access_settings = dataset_access_settings
 
     @staticmethod
