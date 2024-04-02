@@ -6,7 +6,7 @@ from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
-from encord.orm.group import OntologyGroup, AddOntologyGroupsPayload
+from encord.orm.group import OntologyGroup, AddOntologyGroupsPayload, RemoveGroupsParams
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.ontology import OntologyUserRole
 from encord.utilities.hash_utilities import convert_to_uuid
@@ -102,7 +102,7 @@ class Ontology:
 
         yield from page.results
 
-    def add_group(self, group_hash: UUID, user_role: OntologyUserRole):
+    def add_groups(self, group_hash_list: list[UUID], user_role: OntologyUserRole):
         """
         Add group to an ontology
 
@@ -114,22 +114,24 @@ class Ontology:
             None
         """
         ontology_hash = convert_to_uuid(self.ontology_hash)
+        payload = AddOntologyGroupsPayload(group_hash_list=group_hash_list, user_role=user_role)
         self.api_client.post(
             f"ontologies/{ontology_hash}/groups",
             params=None,
-            payload=AddOntologyGroupsPayload(group_hash=group_hash, user_role=user_role),
+            payload=payload,
             result_type=None,
         )
 
-    def remove_group(self, group_hash: UUID):
+    def remove_groups(self, group_hash_list: list[UUID]):
         """
         Remove group from ontology
 
         Args:
-            group_hash: hash of the group to be removed
+            group_hash_list: hash of the group to be removed
 
         Returns:
             None
         """
         ontology_hash = convert_to_uuid(self.ontology_hash)
-        self.api_client.delete(f"ontologies/{ontology_hash}/groups/{group_hash}", params=None, result_type=None)
+        params = RemoveGroupsParams(group_hash_list=group_hash_list)
+        self.api_client.delete(f"ontologies/{ontology_hash}/groups", params=params, result_type=None)

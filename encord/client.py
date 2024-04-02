@@ -101,7 +101,13 @@ from encord.orm.dataset import (
     Video,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.group import AddProjectGroupsPayload, DatasetGroup, ProjectGroup, RemoveGroupsParams
+from encord.orm.group import (
+    AddDatasetGroupsPayload,
+    AddProjectGroupsPayload,
+    DatasetGroup,
+    ProjectGroup,
+    RemoveGroupsParams,
+)
 from encord.orm.label_log import LabelLog, LabelLogParams
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -422,11 +428,13 @@ class EncordClientDataset(EncordClient):
     def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
         return self._get_api_client().get(f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup])
 
-    def add_group(self, dataset_hash: str, group_param: DatasetGroupParam) -> None:
-        self._get_api_client().post(f"datasets/{dataset_hash}/groups", params=None, payload=group_param, result_type=None)
+    def add_groups(self, dataset_hash: str, group_hash_list: list[uuid.UUID], user_role: DatasetUserRole) -> None:
+        payload = AddDatasetGroupsPayload(group_hash_list=group_hash_list, user_role=user_role)
+        self._get_api_client().post(f"datasets/{dataset_hash}/groups", params=None, payload=payload, result_type=None)
 
-    def remove_group(self, dataset_hash: uuid.UUID, group_hash: uuid.UUID) -> None:
-        self._get_api_client().delete(f"datasets/{dataset_hash}/groups/{group_hash}", params=None, result_type=None)
+    def remove_groups(self, dataset_hash: uuid.UUID, group_hash_list: list[uuid.UUID]) -> None:
+        params = RemoveGroupsParams(group_hash_list=group_hash_list)
+        self._get_api_client().delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
 
     def upload_video(
         self,

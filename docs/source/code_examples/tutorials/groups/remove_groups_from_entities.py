@@ -18,7 +18,7 @@ dataset = user_client.get_dataset("<dataset_hash>")
 groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
-        dataset.remove_group(group.group_hash)
+        dataset.remove_groups(group.group_hash)
 
 
 # Remove Group from Ontology
@@ -26,4 +26,4 @@ ontology = user_client.get_ontology("<ontology_hash>")
 groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
-        ontology.remove_group(group.group_hash)
+        ontology.remove_groups(group.group_hash)

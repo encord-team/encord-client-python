@@ -142,31 +142,31 @@ class Dataset:
         page = self._client.list_groups(dataset_hash)
         yield from page.results
 
-    def add_group(self, group_hash: UUID, user_role: DatasetUserRole) -> None:
+    def add_groups(self, group_hash_list: list[UUID], user_role: DatasetUserRole) -> None:
         """
         Add group to a dataset
 
         Args:
-            group_hash: hash of the group to be added
+            group_hash_list: List of group hashes to be added
             user_role: user role that the group will be given
 
         Returns:
             None
         """
-        self._client.add_group(self.dataset_hash, AddDatasetGroupsPayload(group_hash=group_hash, user_role=user_role))
+        self._client.add_groups(self.dataset_hash, group_hash_list, user_role)
 
-    def remove_group(self, group_hash: UUID):
+    def remove_groups(self, group_hash_list: list[UUID]):
         """
         Remove group from dataset
 
         Args:
-            group_hash: hash of the group to be removed
+            group_hash_list: List of group hashes to be removed
 
         Returns:
             None
         """
         dataset_hash = convert_to_uuid(self.dataset_hash)
-        self._client.remove_group(dataset_hash, group_hash)
+        self._client.remove_groups(dataset_hash, group_hash_list)
 
     def upload_video(
         self,
