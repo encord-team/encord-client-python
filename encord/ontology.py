@@ -115,7 +115,7 @@ class Ontology:
         """
         ontology_hash = convert_to_uuid(self.ontology_hash)
         self.api_client.post(
-            f"ontologies/{ontology_hash}/group",
+            f"ontologies/{ontology_hash}/groups",
             params=None,
             payload=OntologyGroupParam(group_hash=group_hash, user_role=user_role),
             result_type=None,
@@ -132,4 +132,4 @@ class Ontology:
             None
         """
         ontology_hash = convert_to_uuid(self.ontology_hash)
-        self.api_client.delete(f"ontologies/{ontology_hash}/group/{group_hash}", params=None, result_type=None)
+        self.api_client.delete(f"ontologies/{ontology_hash}/groups/{group_hash}", params=None, result_type=None)

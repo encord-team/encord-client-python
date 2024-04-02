@@ -420,13 +420,13 @@ class EncordClientDataset(EncordClient):
         return [DatasetUser.from_dict(user) for user in users]
 
     def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
-        return self._get_api_client().get(f"dataset/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup])
+        return self._get_api_client().get(f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup])
 
     def add_group(self, dataset_hash: str, group_param: DatasetGroupParam) -> None:
-        self._get_api_client().post(f"dataset/{dataset_hash}/group", params=None, payload=group_param, result_type=None)
+        self._get_api_client().post(f"datasets/{dataset_hash}/groups", params=None, payload=group_param, result_type=None)
 
     def remove_group(self, dataset_hash: uuid.UUID, group_hash: uuid.UUID) -> None:
-        self._get_api_client().delete(f"dataset/{dataset_hash}/group/{group_hash}", params=None, result_type=None)
+        self._get_api_client().delete(f"datasets/{dataset_hash}/groups/{group_hash}", params=None, result_type=None)
 
     def upload_video(
         self,
@@ -828,13 +828,13 @@ class EncordClientProject(EncordClient):
         return [ProjectUser.from_dict(user) for user in users]
 
     def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
-        return self._get_api_client().get(f"project/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])
+        return self._get_api_client().get(f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])
 
     def add_group(self, project_hash: uuid.UUID, group_param: ProjectGroupParam) -> None:
-        self._get_api_client().post(f"project/{project_hash}/group", params=None, payload=group_param, result_type=None)
+        self._get_api_client().post(f"projects/{project_hash}/groups", params=None, payload=group_param, result_type=None)
 
     def remove_group(self, group_hash: uuid.UUID) -> None:
-        self._get_api_client().delete(f"project/{self.project_hash}/group/{group_hash}", params=None, result_type=None)
+        self._get_api_client().delete(f"projects/{self.project_hash}/groups/{group_hash}", params=None, result_type=None)
 
     def copy_project(
         self,
