@@ -1,6 +1,5 @@
 from encord import EncordUserClient
 from encord.orm.dataset import DatasetUserRole
-from encord.orm.group import ProjectGroupParam, DatasetGroupParam, OntologyGroupParam
 from encord.orm.ontology import OntologyUserRole
 from encord.utilities.project_user import ProjectUserRole
 
@@ -14,7 +13,7 @@ project = user_client.get_project("<project_hash>")
 groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
-        project.add_group(group_param=ProjectGroupParam(group_hash=group.group_hash, user_role=ProjectUserRole.ADMIN))
+        project.add_group(group.group_hash, ProjectUserRole.ADMIN)
         break
 
 
@@ -23,7 +22,7 @@ dataset = user_client.get_dataset("<dataset_hash>")
 groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
-        dataset.add_group(group_param=DatasetGroupParam(group_hash=group.group_hash, user_role=DatasetUserRole.ADMIN))
+        dataset.add_group(group.group_hash, DatasetUserRole.ADMIN)
         break
 
 
@@ -32,5 +31,5 @@ ontology = user_client.get_ontology("<ontology_hash>")
 groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
-        ontology.add_group(group_param=OntologyGroupParam(group_hash=group.group_hash, user_role=OntologyUserRole.ADMIN))
+        ontology.add_group(group.group_hash, OntologyUserRole.ADMIN)
         break
