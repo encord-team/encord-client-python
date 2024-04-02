@@ -426,7 +426,9 @@ class EncordClientDataset(EncordClient):
         return [DatasetUser.from_dict(user) for user in users]
 
     def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
-        return self._get_api_client().get(f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup])
+        return self._get_api_client().get(
+            f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup]
+        )
 
     def add_groups(self, dataset_hash: str, group_hash_list: list[uuid.UUID], user_role: DatasetUserRole) -> None:
         payload = AddDatasetGroupsPayload(group_hash_list=group_hash_list, user_role=user_role)
@@ -836,7 +838,9 @@ class EncordClientProject(EncordClient):
         return [ProjectUser.from_dict(user) for user in users]
 
     def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
-        return self._get_api_client().get(f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])
+        return self._get_api_client().get(
+            f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup]
+        )
 
     def add_groups(self, project_hash: uuid.UUID, group_hash_list: list[uuid.UUID], user_role: ProjectUserRole) -> None:
         payload = AddProjectGroupsPayload(group_hash_list=group_hash_list, user_role=user_role)

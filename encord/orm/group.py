@@ -28,6 +28,7 @@ class DatasetGroup(Group):
     user_role: DatasetUserRole
     is_same_organisation: bool
 
+
 class AddGroupsPayload(BaseDTO):
     group_hash_list: list[UUID]
 

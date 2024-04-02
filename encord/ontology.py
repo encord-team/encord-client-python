@@ -6,7 +6,7 @@ from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
-from encord.orm.group import OntologyGroup, AddOntologyGroupsPayload, RemoveGroupsParams
+from encord.orm.group import AddOntologyGroupsPayload, OntologyGroup, RemoveGroupsParams
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.ontology import OntologyUserRole
 from encord.utilities.hash_utilities import convert_to_uuid
