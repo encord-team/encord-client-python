@@ -28,17 +28,21 @@ class DatasetGroup(Group):
     user_role: DatasetUserRole
     is_same_organisation: bool
 
+class AddGroupsPayload(BaseDTO):
+    group_hash_list: list[UUID]
 
-class ProjectGroupParam(BaseDTO):
-    group_hash: UUID
+
+class AddProjectGroupsPayload(AddGroupsPayload):
     user_role: ProjectUserRole
 
 
-class DatasetGroupParam(BaseDTO):
-    group_hash: UUID
+class AddDatasetGroupsPayload(AddGroupsPayload):
     user_role: DatasetUserRole
 
 
-class OntologyGroupParam(BaseDTO):
-    group_hash: UUID
+class AddOntologyGroupsPayload(AddGroupsPayload):
     user_role: OntologyUserRole
+
+
+class RemoveGroupsParams(BaseDTO):
+    group_hash_list: list[UUID]

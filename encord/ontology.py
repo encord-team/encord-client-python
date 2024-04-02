@@ -6,7 +6,7 @@ from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
-from encord.orm.group import OntologyGroup, OntologyGroupParam
+from encord.orm.group import OntologyGroup, AddOntologyGroupsPayload
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.ontology import OntologyUserRole
 from encord.utilities.hash_utilities import convert_to_uuid
@@ -117,7 +117,7 @@ class Ontology:
         self.api_client.post(
             f"ontologies/{ontology_hash}/groups",
             params=None,
-            payload=OntologyGroupParam(group_hash=group_hash, user_role=user_role),
+            payload=AddOntologyGroupsPayload(group_hash=group_hash, user_role=user_role),
             result_type=None,
         )
 

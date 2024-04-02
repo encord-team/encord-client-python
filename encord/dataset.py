@@ -19,7 +19,7 @@ from encord.orm.dataset import (
     StorageLocation,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.group import DatasetGroup, DatasetGroupParam
+from encord.orm.group import AddDatasetGroupsPayload, DatasetGroup
 from encord.utilities.hash_utilities import convert_to_uuid
 
 
@@ -153,7 +153,7 @@ class Dataset:
         Returns:
             None
         """
-        self._client.add_group(self.dataset_hash, DatasetGroupParam(group_hash=group_hash, user_role=user_role))
+        self._client.add_group(self.dataset_hash, AddDatasetGroupsPayload(group_hash=group_hash, user_role=user_role))
 
     def remove_group(self, group_hash: UUID):
         """

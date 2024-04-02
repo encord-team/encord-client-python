@@ -13,7 +13,7 @@ project = user_client.get_project("<project_hash>")
 groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
-        project.add_group(group.group_hash, ProjectUserRole.ADMIN)
+        project.add_groups([group.group_hash], ProjectUserRole.ADMIN)
         break
 
 

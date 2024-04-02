@@ -45,7 +45,6 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
-from encord.orm.group import DatasetGroupParam, OntologyGroupParam, ProjectGroupParam
 from encord.orm.group import Group as OrmGroup
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
