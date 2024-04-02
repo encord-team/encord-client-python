@@ -1,11 +1,11 @@
 from datetime import datetime
+from typing import List
 from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO
 from encord.orm.dataset import DatasetUserRole
 from encord.utilities.ontology_user import OntologyUserRole
 from encord.utilities.project_user import ProjectUserRole
-from typing import List
 
 
 class Group(BaseDTO):
