@@ -8,8 +8,8 @@ from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
 from encord.orm.group import AddOntologyGroupsPayload, OntologyGroup, RemoveGroupsParams
 from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.ontology import OntologyUserRole
 from encord.utilities.hash_utilities import convert_to_uuid
+from encord.utilities.ontology_user import OntologyUserRole
 
 
 class Ontology:

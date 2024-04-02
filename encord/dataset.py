@@ -19,7 +19,7 @@ from encord.orm.dataset import (
     StorageLocation,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.group import AddDatasetGroupsPayload, DatasetGroup
+from encord.orm.group import DatasetGroup
 from encord.utilities.hash_utilities import convert_to_uuid
 
 
