@@ -320,9 +320,7 @@ class EncordClientDataset(EncordClient):
 
         elif key_type.resource_type == TYPE_DATASET:
             logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
-            return EncordClientDataset(
-                querier, config, dataset_access_settings=dataset_access_settings
-            )
+            return EncordClientDataset(querier, config, dataset_access_settings=dataset_access_settings)
 
         else:
             raise encord.exceptions.InitialisationError(

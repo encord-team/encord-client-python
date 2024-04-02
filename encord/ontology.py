@@ -97,10 +97,8 @@ class Ontology:
         """
         List all groups that have access to a particular ontology
         """
-        ontology_hash= convert_to_uuid(self.ontology_hash)
-        page = self.api_client.get(
-            f"ontologies/{ontology_hash}/groups", params=None, result_type=Page[OntologyGroup]
-        )
+        ontology_hash = convert_to_uuid(self.ontology_hash)
+        page = self.api_client.get(f"ontologies/{ontology_hash}/groups", params=None, result_type=Page[OntologyGroup])
 
         yield from page.results
 
@@ -115,9 +113,12 @@ class Ontology:
         Returns:
             None
         """
-        ontology_hash= convert_to_uuid(self.ontology_hash)
+        ontology_hash = convert_to_uuid(self.ontology_hash)
         self.api_client.post(
-            f"ontologies/{ontology_hash}/group", params=None, payload=OntologyGroupParam(group_hash=group_hash, user_role=user_role), result_type=None
+            f"ontologies/{ontology_hash}/group",
+            params=None,
+            payload=OntologyGroupParam(group_hash=group_hash, user_role=user_role),
+            result_type=None,
         )
 
     def remove_group(self, group_hash: UUID):
@@ -130,5 +131,5 @@ class Ontology:
         Returns:
             None
         """
-        ontology_hash= convert_to_uuid(self.ontology_hash)
+        ontology_hash = convert_to_uuid(self.ontology_hash)
         self.api_client.delete(f"ontologies/{ontology_hash}/group/{group_hash}", params=None, result_type=None)
