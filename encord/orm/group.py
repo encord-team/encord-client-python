@@ -5,6 +5,7 @@ from encord.orm.base_dto import BaseDTO
 from encord.orm.dataset import DatasetUserRole
 from encord.utilities.ontology_user import OntologyUserRole
 from encord.utilities.project_user import ProjectUserRole
+from typing import List
 
 
 class Group(BaseDTO):
@@ -30,7 +31,7 @@ class DatasetGroup(Group):
 
 
 class AddGroupsPayload(BaseDTO):
-    group_hash_list: list[UUID]
+    group_hash_list: List[UUID]
 
 
 class AddProjectGroupsPayload(AddGroupsPayload):
@@ -46,4 +47,4 @@ class AddOntologyGroupsPayload(AddGroupsPayload):
 
 
 class RemoveGroupsParams(BaseDTO):
-    group_hash_list: list[UUID]
+    group_hash_list: List[UUID]

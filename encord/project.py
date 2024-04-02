@@ -242,7 +242,7 @@ class Project:
         page = self._client.list_groups(project_hash)
         yield from page.results
 
-    def add_groups(self, group_hash_list: list[UUID], user_role: ProjectUserRole):
+    def add_groups(self, group_hash_list: List[UUID], user_role: ProjectUserRole):
         """
         Add group to a project
 
@@ -256,7 +256,7 @@ class Project:
         project_hash = convert_to_uuid(self.project_hash)
         self._client.add_groups(project_hash, group_hash_list, user_role)
 
-    def remove_groups(self, group_hash_list: list[UUID]):
+    def remove_groups(self, group_hash_list: List[UUID]):
         """
         Remove group from target project
 

@@ -1,5 +1,5 @@
 import datetime
-from typing import Iterable
+from typing import Iterable, List
 from uuid import UUID
 
 from encord.http.querier import Querier
@@ -102,7 +102,7 @@ class Ontology:
 
         yield from page.results
 
-    def add_groups(self, group_hash_list: list[UUID], user_role: OntologyUserRole):
+    def add_groups(self, group_hash_list: List[UUID], user_role: OntologyUserRole):
         """
         Add group to an ontology
 
@@ -122,7 +122,7 @@ class Ontology:
             result_type=None,
         )
 
-    def remove_groups(self, group_hash_list: list[UUID]):
+    def remove_groups(self, group_hash_list: List[UUID]):
         """
         Remove group from ontology
 
