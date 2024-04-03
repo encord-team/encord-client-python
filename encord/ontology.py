@@ -1,5 +1,5 @@
 import datetime
-from typing import Iterable, List
+from typing import Iterable, List, Union
 from uuid import UUID
 
 from encord.http.querier import Querier
@@ -102,19 +102,21 @@ class Ontology:
 
         yield from page.results
 
-    def add_groups(self, group_hash_list: List[UUID], user_role: OntologyUserRole):
+    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: OntologyUserRole):
         """
         Add group to an ontology
 
         Args:
-            group_hash: hash of the group to be added
+            group_hash: List of group hashes to be added
             user_role: user role that the group will be given
 
         Returns:
             None
         """
         ontology_hash = convert_to_uuid(self.ontology_hash)
-        payload = AddOntologyGroupsPayload(group_hash_list=group_hash_list, user_role=user_role)
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        payload = AddOntologyGroupsPayload(group_hash=group_hash, user_role=user_role)
         self.api_client.post(
             f"ontologies/{ontology_hash}/groups",
             params=None,
@@ -122,16 +124,18 @@ class Ontology:
             result_type=None,
         )
 
-    def remove_groups(self, group_hash_list: List[UUID]):
+    def remove_group(self, group_hash: Union[List[UUID], UUID]):
         """
         Remove group from ontology
 
         Args:
-            group_hash_list: hash of the group to be removed
+            group_hash: List of group_hashes to be removed
 
         Returns:
             None
         """
         ontology_hash = convert_to_uuid(self.ontology_hash)
-        params = RemoveGroupsParams(group_hash_list=group_hash_list)
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        params = RemoveGroupsParams(group_hash=group_hash)
         self.api_client.delete(f"ontologies/{ontology_hash}/groups", params=params, result_type=None)

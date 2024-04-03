@@ -242,31 +242,35 @@ class Project:
         page = self._client.list_groups(project_hash)
         yield from page.results
 
-    def add_groups(self, group_hash_list: List[UUID], user_role: ProjectUserRole):
+    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: ProjectUserRole):
         """
         Add group to a project
 
         Args:
-            group_hash_list: List of group hashes to be added
+            group_hash: List of group hashes to be added
             user_role: user role that the group will be given
 
         Returns:
            None
         """
         project_hash = convert_to_uuid(self.project_hash)
-        self._client.add_groups(project_hash, group_hash_list, user_role)
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        self._client.add_groups(project_hash, group_hash, user_role)
 
-    def remove_groups(self, group_hash_list: List[UUID]):
+    def remove_group(self, group_hash: Union[List[UUID], UUID]):
         """
         Remove group from target project
 
         Args:
-            group_hash_list: List of group_hashes to be removed
+            group_hash: List of group_hashes to be removed
 
         Returns:
            None
         """
-        self._client.remove_groups(group_hash_list)
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        self._client.remove_groups(group_hash)
 
     def copy_project(
         self,

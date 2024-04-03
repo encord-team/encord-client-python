@@ -31,7 +31,7 @@ class DatasetGroup(Group):
 
 
 class AddGroupsPayload(BaseDTO):
-    group_hash_list: List[UUID]
+    group_hash: List[UUID]
 
 
 class AddProjectGroupsPayload(AddGroupsPayload):
@@ -47,4 +47,4 @@ class AddOntologyGroupsPayload(AddGroupsPayload):
 
 
 class RemoveGroupsParams(BaseDTO):
-    group_hash_list: List[UUID]
+    group_hash: List[UUID]

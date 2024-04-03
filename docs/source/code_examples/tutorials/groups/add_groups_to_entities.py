@@ -13,7 +13,7 @@ project = user_client.get_project("<project_hash>")
 groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
-        project.add_groups([group.group_hash], ProjectUserRole.ADMIN)
+        project.add_group([group.group_hash], ProjectUserRole.ADMIN)
         break
 
 
@@ -31,5 +31,5 @@ ontology = user_client.get_ontology("<ontology_hash>")
 groups = user_client.list_groups()
 for group in groups:
     if group.name == "TestGroup":
-        ontology.add_groups([group.group_hash], OntologyUserRole.ADMIN)
+        ontology.add_group([group.group_hash], OntologyUserRole.ADMIN)
         break
