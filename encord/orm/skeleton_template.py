@@ -11,6 +11,7 @@ class SkeletonTemplateCoordinate(BaseDTO):
     value: Optional[str] = ""
     featureHash: Optional[str] = None
 
+
 class SkeletonTemplate(BaseDTO):
     name: str
     width: float

@@ -11,6 +11,7 @@ from encord.orm.skeleton_template import SkeletonTemplateCoordinate as SkeletonT
 class SkeletonTemplateCoordinate(SkeletonTemplateCoordinateORM):
     pass
 
+
 class SkeletonTemplate(SkeletonTemplateORM):
     @property
     def required_vertices(self) -> Set[str]:
@@ -29,4 +30,3 @@ class SkeletonTemplate(SkeletonTemplateORM):
             )
             aligned_coordinates.append(aligned_coordinate)
         return SkeletonCoordinates(values=aligned_coordinates, template=self.name)
-
