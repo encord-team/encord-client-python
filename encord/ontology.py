@@ -116,7 +116,7 @@ class Ontology:
         ontology_hash = convert_to_uuid(self.ontology_hash)
         if isinstance(group_hash, UUID):
             group_hash = [group_hash]
-        payload = AddOntologyGroupsPayload(group_hash=group_hash, user_role=user_role)
+        payload = AddOntologyGroupsPayload(group_hash_list=group_hash, user_role=user_role)
         self.api_client.post(
             f"ontologies/{ontology_hash}/groups",
             params=None,
@@ -137,5 +137,5 @@ class Ontology:
         ontology_hash = convert_to_uuid(self.ontology_hash)
         if isinstance(group_hash, UUID):
             group_hash = [group_hash]
-        params = RemoveGroupsParams(group_hash=group_hash)
+        params = RemoveGroupsParams(group_hash_list=group_hash)
         self.api_client.delete(f"ontologies/{ontology_hash}/groups", params=params, result_type=None)

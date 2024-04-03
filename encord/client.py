@@ -431,11 +431,11 @@ class EncordClientDataset(EncordClient):
         )
 
     def add_groups(self, dataset_hash: str, group_hash: list[uuid.UUID], user_role: DatasetUserRole) -> None:
-        payload = AddDatasetGroupsPayload(group_hash=group_hash, user_role=user_role)
+        payload = AddDatasetGroupsPayload(group_hash_list=group_hash, user_role=user_role)
         self._get_api_client().post(f"datasets/{dataset_hash}/groups", params=None, payload=payload, result_type=None)
 
     def remove_groups(self, dataset_hash: uuid.UUID, group_hash: list[uuid.UUID]) -> None:
-        params = RemoveGroupsParams(group_hash=group_hash)
+        params = RemoveGroupsParams(group_hash_list=group_hash)
         self._get_api_client().delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
 
     def upload_video(
@@ -843,11 +843,11 @@ class EncordClientProject(EncordClient):
         )
 
     def add_groups(self, project_hash: uuid.UUID, group_hash: list[uuid.UUID], user_role: ProjectUserRole) -> None:
-        payload = AddProjectGroupsPayload(group_hash=group_hash, user_role=user_role)
+        payload = AddProjectGroupsPayload(group_hash_list=group_hash, user_role=user_role)
         self._get_api_client().post(f"projects/{project_hash}/groups", params=None, payload=payload, result_type=None)
 
     def remove_groups(self, group_hash: list[uuid.UUID]) -> None:
-        params = RemoveGroupsParams(group_hash=group_hash)
+        params = RemoveGroupsParams(group_hash_list=group_hash)
         self._get_api_client().delete(f"projects/{self.project_hash}/groups", params=params, result_type=None)
 
     def copy_project(
