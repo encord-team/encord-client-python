@@ -254,7 +254,7 @@ class LabelRowV2:
         If it is `False`, then loading the labels via `LabelRowV2` will raise an error, and the label editor
         will not be able to load the labels.
 
-        You can call :meth`.get_label_validation_errors` to get the validation error messages.
+        You can call :meth`.get_validation_errors` to get the validation error messages.
         """
         return self._label_row_read_only_data.is_valid
 
