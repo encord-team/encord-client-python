@@ -142,7 +142,7 @@ class Dataset:
         page = self._client.list_groups(dataset_hash)
         yield from page.results
 
-    def add_groups(self, group_hash: Union[List[UUID], UUID], user_role: DatasetUserRole) -> None:
+    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: DatasetUserRole) -> None:
         """
         Add group to a dataset
 
@@ -157,7 +157,7 @@ class Dataset:
             group_hash = [group_hash]
         self._client.add_groups(self.dataset_hash, group_hash, user_role)
 
-    def remove_groups(self, group_hash: Union[List[UUID], UUID]):
+    def remove_group(self, group_hash: Union[List[UUID], UUID]):
         """
         Remove group from dataset
 
