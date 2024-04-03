@@ -4,38 +4,14 @@ from dataclasses import dataclass
 from typing import Any, List, Optional, Set, Type
 
 from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
+from encord.orm.skeleton_template import SkeletonTemplate as SkeletonTemplateORM
+from encord.orm.skeleton_template import SkeletonTemplateCoordinate as SkeletonTemplateCoordinateORM
 
 
-@dataclass(frozen=True)
-class SkeletonTemplateCoordinate:
-    x: float
-    y: float
-    name: str
-    color: Optional[str] = "#00000"
-    value: Optional[str] = ""
-    featureHash: Optional[str] = None
+class SkeletonTemplateCoordinate(SkeletonTemplateCoordinateORM):
+    pass
 
-    @staticmethod
-    def from_dict(d: dict[str, Any]) -> SkeletonTemplateCoordinate:
-        return SkeletonTemplateCoordinate(**d)
-
-    def to_dict(self) -> dict:
-        return {
-            "x": self.x,
-            "y": self.y,
-            "name": self.name,
-        }
-
-
-@dataclass
-class SkeletonTemplate:
-    name: str
-    width: float
-    height: float
-    skeleton: dict[str, SkeletonTemplateCoordinate]
-    skeletonEdges: dict[str, dict[str, dict[str, str]]]  # start-end-color-hex
-    feature_node_hash: str | None = None
-
+class SkeletonTemplate(SkeletonTemplateORM):
     @property
     def required_vertices(self) -> Set[str]:
         return {coordinate.name for coordinate in self.skeleton.values()}
@@ -54,27 +30,3 @@ class SkeletonTemplate:
             aligned_coordinates.append(aligned_coordinate)
         return SkeletonCoordinates(values=aligned_coordinates, template=self.name)
 
-    @staticmethod
-    def from_dict(d: dict) -> SkeletonTemplate:
-        skeleton_coordinates = {
-            str(i): SkeletonTemplateCoordinate.from_dict(coord) for (i, coord) in d["skeleton"].items()
-        }
-        return SkeletonTemplate(
-            name=d["name"],
-            width=d["width"],
-            height=d["height"],
-            skeleton=skeleton_coordinates,
-            skeletonEdges=d["skeletonEdges"],
-            feature_node_hash=d.get("feature_node_hash"),
-        )
-
-    def to_dict(self) -> dict:
-        serialise_skeleton = {idx: coord.to_dict() for (idx, coord) in self.skeleton.items()}
-        return {
-            "name": self.name,
-            "width": self.width,
-            "height": self.height,
-            "skeleton": serialise_skeleton,
-            "skeletonEdges": self.skeletonEdges,
-            "feature_node_hash": self.feature_node_hash,
-        }

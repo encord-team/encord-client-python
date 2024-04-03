@@ -26,7 +26,6 @@ from encord.objects.common import (
     DeidentifyRedactTextMode,
     SaveDeidentifiedDicomCondition,
 )
-from encord.objects.skeleton_template import SkeletonTemplate
 from encord.ontology import Ontology
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
