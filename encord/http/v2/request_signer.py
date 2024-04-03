@@ -35,7 +35,7 @@ def _request_body_bytes(request: PreparedRequest) -> bytes:
         return b""
 
 
-def sign_request(request: PreparedRequest, key_id: str, private_key: Ed25519PrivateKey):
+def sign_request(request: PreparedRequest, key_id: str, private_key: Ed25519PrivateKey) -> PreparedRequest:
     assert request.method is not None
 
     content_digest = _sfv_str("sha-256", hashlib.sha256(_request_body_bytes(request)).digest())
@@ -54,7 +54,7 @@ def sign_request(request: PreparedRequest, key_id: str, private_key: Ed25519Priv
         "content-digest": content_digest,
     }
 
-    covered_elements = [f'"{element_id}"' for element_id in signature_elements.keys()]
+    covered_elements = [f'"{element_id}"' for element_id in signature_elements]
     signature_elements_pairs = [f"{k}={_sfv_value(v)}" for k, v in signature_params.items()]
     sig_params_serialised = ";".join([f"({' '.join(covered_elements)})"] + signature_elements_pairs)
 

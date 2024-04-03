@@ -1,7 +1,5 @@
 import platform
-import random
 import uuid
-from pathlib import Path
 from typing import Optional, Type, TypeVar
 from urllib.parse import urljoin
 
@@ -9,7 +7,7 @@ import requests
 from requests import PreparedRequest, Response
 
 from encord._version import __version__ as encord_version
-from encord.configs import UserConfig
+from encord.configs import Config
 from encord.exceptions import RequestException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
@@ -25,10 +23,10 @@ T = TypeVar("T", bound=BaseDTOInterface)
 
 
 class ApiClient:
-    def __init__(self, config: UserConfig):
+    def __init__(self, config: Config):
         self._config = config
         self._domain = self._config.domain
-        self._base_path = Path("v2/public/")
+        self._base_path = "v2/public/"
 
     @staticmethod
     def _exception_context_from_response(response: Response) -> RequestContext:
@@ -57,15 +55,20 @@ class ApiClient:
             return RequestContext()
 
     @staticmethod
-    def _user_agent():
+    def _user_agent() -> str:
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
     @staticmethod
     def _tracing_id() -> str:
         return f"{uuid.uuid4().hex}/1;o=1"
 
-    def _build_url(self, path: Path) -> str:
-        return urljoin(self._domain, str(self._base_path / path))
+    def _build_url(self, path: str) -> str:
+        if path.startswith("/"):
+            path = path[1:]
+        url = urljoin(self._domain, urljoin(self._base_path, path))
+        if url.endswith("/"):
+            url = url[:-1]
+        return url
 
     def _headers(self):
         return {
@@ -76,16 +79,15 @@ class ApiClient:
             HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
-    def get(self, path: Path, params: Optional[BaseDTO], result_type: Type[T]) -> T:
+    def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
         params_dict = params.to_dict() if params is not None else None
         req = requests.Request(
             method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
-
-        return self._request(req, result_type=result_type)  # type: ignore
+        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
     def post(
-        self, path: Path, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
+        self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
         req = requests.Request(
@@ -98,8 +100,16 @@ class ApiClient:
 
         return self._request(req, result_type=result_type)  # type: ignore
 
-    def _request(self, req: PreparedRequest, result_type: Optional[Type[T]]):
-        req = sign_request(req, self._config.public_key_hex, self._config.private_key)
+    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None) -> T:
+        params_dict = params.to_dict() if params is not None else None
+        req = requests.Request(
+            method="DELETE", url=self._build_url(path), headers=self._headers(), params=params_dict
+        ).prepare()
+
+        return self._request(req, result_type=result_type)  # type: ignore
+
+    def _request(self, req: PreparedRequest, result_type: Optional[Type[T]], allow_none: bool = False):
+        req = self._config.define_headers_v2(req)
 
         timeouts = (self._config.connect_timeout, self._config.read_timeout)
         req_settings = self._config.requests_settings
@@ -120,7 +130,7 @@ class ApiClient:
             except Exception as e:
                 raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
 
-            if result_type is None:
+            if result_type is None or (res_json is None and allow_none):
                 return None
 
             return result_type.from_dict(res_json)

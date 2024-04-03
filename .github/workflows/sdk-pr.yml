@@ -7,8 +7,14 @@ on:
 
 env:
   PYTHON: 3.8
-  POETRY: 1.5.0
-  UNIT_TEST_REPORT: unit-test-report.xml
+  POETRY: 1.7.0
+  UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python-3_8_p1.xml
+  UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python-3_8_p2.xml
+  BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+  BACKEND_REPO: cord-team/cord-backend
+
+  INTEGRATION_TEST_REPORT_PYTHON_3_11: integration-test-report-python3_11.xml
+  INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
 
 concurrency:
   group: cord-client-${{ github.ref }}-pr
@@ -19,55 +25,62 @@ jobs:
     name: Linting and type checking
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup root poetry environment
         uses: ./.github/actions/setup-root-poetry-environment
+        with:
+          cache-key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Run linting, type checking and testing
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
         with:
           extra_args: "--all-files --hook-stage=push"
 
-  unit-tests:
-    name: Run unit tests
+  unit-tests-python-3-8:
+    name: Run unit tests (Python 3.8, Pydantic 1.x)
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up python
-        uses: actions/setup-python@v4
+      - name: Run unit tests for Python 3.8
+        uses: ./.github/actions/run-unit-tests
         with:
-          python-version: ${{ env.PYTHON }}
+          python-version: 3.8.16
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
 
-      - uses: snok/install-poetry@v1
+  unit-tests-python-3-8-pydantic-2:
+    name: Run unit tests (Python 3.8, Pydantic 2.x)
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run unit tests for Python 3.8
+        uses: ./.github/actions/run-unit-tests
         with:
-          version: ${{ env.POETRY }}
-          virtualenvs-in-project: true
+          python-version: 3.8.16
+          pydantic-version: 2.6.1
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
 
-      - name: Check cache
-        id: cached-poetry
-        uses: actions/cache@v3
+  integration-tests-python-3-11:
+    name: Run integration tests for Python 3.11
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Checkout backend repo
+        uses: actions/checkout@v4
         with:
-          path: .venv
-          key: unit-${{ hashFiles('poetry.lock') }}-${{ env.PYTHON }}-1
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          path: encord-backend
 
-      - name: Install dependencies
-        if: $${{ steps.cached-poetry.outputs.cache-hit != 'true' }}
-        run: poetry install --no-interaction
-
-      - name: Run tests
-        run: |
-          poetry run python -m pytest tests --verbose --junitxml=${{ env.UNIT_TEST_REPORT }}
-
-      - name: Upload report
-        uses: actions/upload-artifact@v3
-        if: always()
+      - name: Run integration tests for Python 3.11
+        uses: ./.github/actions/run-integration-tests
         with:
-          name: ${{ env.UNIT_TEST_REPORT }}
-          path: ${{ env.UNIT_TEST_REPORT }}
-
-      - name: Publish unit test report
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        with:
-          files: ${{ env.UNIT_TEST_REPORT }}
-          check_name: Unit test report
+          python-version: 3.11.2
+          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}

@@ -128,6 +128,14 @@ class LabelRowV2:
         return self._label_row_read_only_data.data_type
 
     @property
+    def file_type(self) -> str | None:
+        return self._label_row_read_only_data.file_type
+
+    @property
+    def client_metadata(self) -> dict | None:
+        return self._label_row_read_only_data.client_metadata
+
+    @property
     def label_status(self) -> LabelStatus:
         """
         Returns the current labeling status for the label row.
@@ -236,6 +244,19 @@ class LabelRowV2:
             raise WrongProjectTypeError('"priority" property only works with workflow-based projects.')
 
         return self._label_row_read_only_data.priority
+
+    @property
+    def is_valid(self) -> bool:
+        """
+        For labels uploaded via the SDK, a check is run to ensure that the labels are valid.
+        This property returns `True` if the labels have correct structure and match the project ontology.
+
+        If it is `False`, then loading the labels via `LabelRowV2` will raise an error, and the label editor
+        will not be able to load the labels.
+
+        You can call :meth`.get_validation_errors` to get the validation error messages.
+        """
+        return self._label_row_read_only_data.is_valid
 
     @property
     def ontology_structure(self) -> OntologyStructure:
@@ -385,13 +406,15 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def save(self, bundle: Optional[Bundle] = None) -> None:
+    def save(self, bundle: Optional[Bundle] = None, validate_before_saving: bool = False) -> None:
         """
         Upload the created labels with the Encord server. This will overwrite any labels that someone has created
         in the platform in the meantime.
 
         Args:
             bundle: if not passed, save is executed immediately. If passed, it is executed as a part of the bundle
+            validate_before_saving: enable stricter server-side integrity checks. Boolean, `False` by default.
+
         """
         self._check_labelling_is_initalised()
         assert self.label_hash is not None  # Checked earlier, assert is just to silence mypy
@@ -399,7 +422,9 @@ class LabelRowV2:
         bundled_operation(
             bundle,
             self._project_client.save_label_rows,
-            payload=BundledSaveRowsPayload(uids=[self.label_hash], payload=[self.to_encord_dict()]),
+            payload=BundledSaveRowsPayload(
+                uids=[self.label_hash], payload=[self.to_encord_dict()], validate_before_saving=validate_before_saving
+            ),
         )
 
     @property
@@ -428,6 +453,60 @@ class LabelRowV2:
             frame_num = frame
 
         return self.FrameView(self, self._label_row_read_only_data, frame_num)
+
+    def _get_frame_metadata_list(self) -> List[LabelRowReadOnlyDataImagesDataEntry]:
+        if self._label_row_read_only_data.data_type in [DataType.IMAGE, DataType.VIDEO]:
+            return [
+                self.LabelRowReadOnlyDataImagesDataEntry(
+                    index=0,
+                    title=self._label_row_read_only_data.data_title,
+                    file_type=self._label_row_read_only_data.file_type or "",
+                    height=self._label_row_read_only_data.height or 0,
+                    width=self._label_row_read_only_data.width or 0,
+                    image_hash=self._label_row_read_only_data.data_hash,
+                )
+            ]
+
+        images_data = self._label_row_read_only_data.images_data
+        if images_data is None:
+            raise LabelRowError("Image data is not present in the label row")
+        return images_data
+
+    def get_frame_metadata(self, frame: Union[int, str] = 0) -> FrameViewMetadata:
+        """
+        Get image group metadata for frame or image hash.
+        """
+        images_data = self._get_frame_metadata_list()
+        if isinstance(frame, str):
+            data_meta = None
+            for data in images_data:
+                if data.image_hash == frame:
+                    data_meta = data
+                    break
+            if data_meta is None:
+                raise LabelRowError(f"Image hash {frame} not found in the label row")
+        else:
+            data_meta = None
+            for data in images_data:
+                if data.index == frame:
+                    data_meta = data
+                    break
+            if data_meta is None:
+                raise LabelRowError(f"Frame {frame} not found in the label row")
+
+        return self.FrameViewMetadata(data_meta)
+
+    def get_frames_metadata(self) -> List[FrameViewMetadata]:
+        """
+        Get image metadata for image group if requested.
+        """
+        views = []
+
+        images_data = self._get_frame_metadata_list()
+
+        for data in images_data:
+            views.append(self.FrameViewMetadata(data))
+        return views
 
     def get_frame_views(self) -> List[FrameView]:
         """
@@ -488,7 +567,7 @@ class LabelRowV2:
 
     def add_object_instance(self, object_instance: ObjectInstance, force: bool = True) -> None:
         """
-        Add an object instance to the label row. If the object instance already exists, it
+        Add an object instance to the label row. If the object instance already exists, it overwrites the current instance
 
         Args:
             object_instance: The object instance to add.
@@ -732,6 +811,49 @@ class LabelRowV2:
             payload=BundledSetPriorityPayload(priorities=[(self.data_hash, priority)]),
         )
 
+    def get_validation_errors(self) -> List[str] | None:
+        """
+        Get validation errors for the label row (list of error messages).
+
+        If the label row is valid, this will return `None`.
+        """
+        if not self.label_hash or self.is_valid:
+            return None
+
+        return self._project_client.get_label_validation_errors(self.label_hash)
+
+    class FrameViewMetadata:
+        """
+        This class can be used to inspect what metadata for a frame view
+        """
+
+        def __init__(self, images_data: LabelRowV2.LabelRowReadOnlyDataImagesDataEntry):
+            self._image_data = images_data
+
+        @property
+        def title(self) -> str:
+            return self._image_data.title
+
+        @property
+        def file_type(self) -> str:
+            return self._image_data.file_type
+
+        @property
+        def width(self) -> int:
+            return self._image_data.width
+
+        @property
+        def height(self) -> int:
+            return self._image_data.height
+
+        @property
+        def image_hash(self) -> str:
+            return self._image_data.image_hash
+
+        @property
+        def frame_number(self) -> int:
+            return self._image_data.index
+
     class FrameView:
         """
         This class can be used to inspect what object/classification instances are on a given frame or
@@ -921,6 +1043,15 @@ class LabelRowV2:
         data_link: Optional[str] = None
 
     @dataclass(frozen=True)
+    class LabelRowReadOnlyDataImagesDataEntry:
+        index: int
+        title: str
+        file_type: str
+        height: int
+        width: int
+        image_hash: str
+
+    @dataclass(frozen=True)
     class LabelRowReadOnlyData:
         """This is an internal helper class. A user should not directly interact with it."""
 
@@ -946,9 +1077,13 @@ class LabelRowV2:
         height: Optional[int]
         data_link: Optional[str]
         priority: Optional[float]
+        file_type: Optional[str]
+        client_metadata: Optional[dict]
+        images_data: Optional[List[LabelRowV2.LabelRowReadOnlyDataImagesDataEntry]]
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
+        is_valid: bool = field(default=True)
 
     def _to_object_answers(self) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}
@@ -1208,6 +1343,12 @@ class LabelRowV2:
             width=label_row_metadata.width,
             height=label_row_metadata.height,
             priority=label_row_metadata.priority,
+            images_data=None
+            if label_row_metadata.images_data is None
+            else [LabelRowV2.LabelRowReadOnlyDataImagesDataEntry(**data) for data in label_row_metadata.images_data],
+            client_metadata=label_row_metadata.client_metadata,
+            file_type=label_row_metadata.file_type,
+            is_valid=label_row_metadata.is_valid,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -1273,6 +1414,10 @@ class LabelRowV2:
             height=height,
             width=width,
             priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
+            client_metadata=label_row_dict.get("client_metadata", self._label_row_read_only_data.client_metadata),
+            images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
+            file_type=label_row_dict.get("file_type", None),
+            is_valid=bool(label_row_dict.get("is_valid", True)),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):

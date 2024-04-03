@@ -87,6 +87,11 @@
         "source": "/api.html",
         "destination": "https://docs.encord.com/reference/sdk-ref-annotate",
         "type": 301
+      },
+      {
+        "source": "**",
+        "destination": "https://docs.encord.com/reference/general-concepts-sdk",
+        "type": 301
       }
     ]
   }

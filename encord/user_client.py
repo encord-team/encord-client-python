@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import base64
+import json
 import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
+from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime
-from encord.configs import SshConfig, UserConfig, get_env_ssh_key
+from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
@@ -27,6 +30,7 @@ from encord.objects.common import (
     SaveDeidentifiedDicomCondition,
 )
 from encord.ontology import Ontology
+from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
@@ -56,7 +60,10 @@ from encord.orm.project import (
 from encord.orm.project import Project as OrmProject
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
+from encord.orm.storage import CreateStorageFolderPayload
+from encord.orm.storage import StorageFolder as OrmStorageFolder
 from encord.project import Project
+from encord.storage import StorageFolder
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -72,10 +79,22 @@ log = logging.getLogger(__name__)
 
 
 class EncordUserClient:
-    def __init__(self, user_config: UserConfig, querier: Querier):
-        self.user_config = user_config
-        self.querier = querier
-        self._api_client = ApiClient(user_config)
+    def __init__(self, config: UserConfig, querier: Querier):
+        self._config = config
+        self._querier = querier
+        self._api_client = ApiClient(config.config)
+
+    @property
+    def querier(self) -> Querier:
+        return self._querier
+
+    @property
+    def user_config(self) -> UserConfig:
+        return self._config
+
+    def get_bearer_token(self) -> str:
+        client = EncordClient(querier=self.querier, config=self._config.config, api_client=self._api_client)
+        return client.get_bearer_token().token
 
     def get_dataset(
         self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
@@ -93,9 +112,10 @@ class EncordUserClient:
             dataset_hash: The Dataset ID
             dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
         """
-        config = SshConfig(self.user_config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
-        querier = Querier(config)
-        client = EncordClientDataset(querier=querier, config=config, dataset_access_settings=dataset_access_settings)
+        querier = Querier(self._config.config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
+        client = EncordClientDataset(
+            querier=querier, config=self._config.config, dataset_access_settings=dataset_access_settings
+        )
         orm_dataset = client.get_dataset()
         return Dataset(client, orm_dataset)
 
@@ -114,9 +134,8 @@ class EncordUserClient:
         Args:
             project_hash: The Project ID
         """
-        config = SshConfig(self.user_config, resource_type=TYPE_PROJECT, resource_id=project_hash)
-        querier = Querier(config)
-        client = EncordClientProject(querier=querier, config=config, api_client=self._api_client)
+        querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=project_hash)
+        client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
 
         orm_project = client.get_project(include_labels_metadata=False)
 
@@ -124,18 +143,15 @@ class EncordUserClient:
         # as there might be only read-only ontology structure access in scope of the project,
         # not full access, that is implied by get_ontology method
         ontology_hash = orm_project["ontology_hash"]
-        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
-
-        orm_ontology = querier.basic_getter(OrmOntology, config.resource_id)
-        project_ontology = Ontology(querier, config, orm_ontology)
+        orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
+        project_ontology = Ontology(querier, orm_ontology)
 
         return Project(client, orm_project, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
-        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
-        querier = Querier(config)
+        querier = Querier(self._config.config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        return Ontology(querier, config, orm_ontology)
+        return Ontology(querier, orm_ontology)
 
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
@@ -176,7 +192,7 @@ class EncordUserClient:
         if dataset_description:
             dataset["description"] = dataset_description
 
-        result = self.querier.basic_setter(OrmDataset, uid=None, payload=dataset)
+        result = self._querier.basic_setter(OrmDataset, uid=None, payload=dataset)
         return CreateDatasetResponse.from_dict(result)
 
     def create_dataset_api_key(
@@ -187,21 +203,21 @@ class EncordUserClient:
             "title": api_key_title,
             "scopes": list(map(lambda scope: scope.value, dataset_scopes)),
         }
-        response = self.querier.basic_setter(DatasetAPIKey, uid=None, payload=api_key_payload)
+        response = self._querier.basic_setter(DatasetAPIKey, uid=None, payload=api_key_payload)
         return DatasetAPIKey.from_dict(response)
 
     def get_dataset_api_keys(self, dataset_hash: str) -> List[DatasetAPIKey]:
         api_key_payload = {
             "dataset_hash": dataset_hash,
         }
-        api_keys: List[DatasetAPIKey] = self.querier.get_multiple(DatasetAPIKey, uid=None, payload=api_key_payload)
+        api_keys: List[DatasetAPIKey] = self._querier.get_multiple(DatasetAPIKey, uid=None, payload=api_key_payload)
         return api_keys
 
     def get_or_create_dataset_api_key(self, dataset_hash: str) -> DatasetAPIKey:
         api_key_payload = {
             "dataset_hash": dataset_hash,
         }
-        response = self.querier.basic_put(DatasetAPIKey, uid=None, payload=api_key_payload)
+        response = self._querier.basic_put(DatasetAPIKey, uid=None, payload=api_key_payload)
         return DatasetAPIKey.from_dict(response)
 
     def get_datasets(
@@ -233,7 +249,7 @@ class EncordUserClient:
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
-        data = self.querier.get_multiple(
+        data = self._querier.get_multiple(
             DatasetWithUserRole,
             payload={
                 "filter": properties_filter,
@@ -281,11 +297,20 @@ class EncordUserClient:
         if not ssh_private_key:
             ssh_private_key = get_env_ssh_key()
 
-        user_config = UserConfig.from_ssh_private_key(
+        config = SshConfig.from_ssh_private_key(
             ssh_private_key, password, requests_settings=requests_settings, **kwargs
         )
+        user_config = UserConfig(config)
         querier = Querier(user_config)
+        return EncordUserClient(user_config, querier)
 
+    @staticmethod
+    def create_with_bearer_token(
+        token: str, *, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS, **kwargs
+    ) -> EncordUserClient:
+        config = BearerConfig.from_bearer_token(token=token, requests_settings=requests_settings, **kwargs)
+        user_config = UserConfig(config)
+        querier = Querier(user_config)
         return EncordUserClient(user_config, querier)
 
     def get_projects(
@@ -317,7 +342,7 @@ class EncordUserClient:
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
-        data = self.querier.get_multiple(ProjectWithUserRole, payload={"filter": properties_filter})
+        data = self._querier.get_multiple(ProjectWithUserRole, payload={"filter": properties_filter})
         return [{"project": OrmProject(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
 
     def create_project(
@@ -357,7 +382,7 @@ class EncordUserClient:
         if workflow_template_hash is not None:
             project["workflow_template_id"] = workflow_template_hash
 
-        return self.querier.basic_setter(OrmProject, uid=None, payload=project)
+        return self._querier.basic_setter(OrmProject, uid=None, payload=project)
 
     def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
         """
@@ -366,13 +391,13 @@ class EncordUserClient:
         """
         payload = {"title": api_key_title, "scopes": list(map(lambda scope: scope.value, scopes))}
 
-        return self.querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
+        return self._querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
 
     def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
-        return self.querier.get_multiple(ProjectAPIKey, uid=project_hash)
+        return self._querier.get_multiple(ProjectAPIKey, uid=project_hash)
 
     def get_or_create_project_api_key(self, project_hash: str) -> str:
-        return self.querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
+        return self._querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
 
     @deprecated("0.1.98", ".get_dataset()")
     def get_dataset_client(
@@ -388,7 +413,7 @@ class EncordUserClient:
         return EncordClientDataset.initialise(
             dataset_hash,
             dataset_api_key.api_key,
-            requests_settings=self.user_config.requests_settings,
+            requests_settings=self._config.requests_settings,
             dataset_access_settings=dataset_access_settings,
         )
 
@@ -399,7 +424,7 @@ class EncordUserClient:
         """
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
         return EncordClient.initialise(
-            project_hash, project_api_key, requests_settings=self.user_config.requests_settings, **kwargs
+            project_hash, project_api_key, requests_settings=self._config.requests_settings, **kwargs
         )
 
     def create_project_from_cvat(
@@ -480,7 +505,7 @@ class EncordUserClient:
         }
 
         log.info("Starting project import. This may take a few minutes.")
-        server_ret = self.querier.basic_setter(ProjectImporter, uid=None, payload=payload)
+        server_ret = self._querier.basic_setter(ProjectImporter, uid=None, payload=payload)
 
         if "success" in server_ret:
             success = server_ret["success"]
@@ -497,7 +522,7 @@ class EncordUserClient:
 
     def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> Tuple[List[Path], Path]:
         payload = {"annotations_base64": annotations_base64}
-        project_info = self.querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
+        project_info = self._querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
         if "error" in project_info:
             message = project_info["error"]["message"]
             raise ValueError(message)
@@ -550,7 +575,7 @@ class EncordUserClient:
         querier = dataset._client._querier
 
         successful_uploads = upload_to_signed_url_list(
-            file_path_strings, self.user_config, querier, Images, CloudUploadSettings()
+            file_path_strings, self._config, querier, Images, CloudUploadSettings()
         )
         if len(images_paths) != len(successful_uploads):
             raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
@@ -565,7 +590,7 @@ class EncordUserClient:
         return dataset_hash, image_title_to_image_hash_map
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        return self.querier.get_multiple(CloudIntegration)
+        return self._querier.get_multiple(CloudIntegration)
 
     def get_ontologies(
         self,
@@ -596,15 +621,14 @@ class EncordUserClient:
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
-        data = self.querier.get_multiple(OntologyWithUserRole, payload={"filter": properties_filter})
+        data = self._querier.get_multiple(OntologyWithUserRole, payload={"filter": properties_filter})
         retval: List[Dict] = []
         for row in data:
             ontology = OrmOntology.from_dict(row.ontology)
-            config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
-            querier = Querier(config)
+            querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
             retval.append(
                 {
-                    "ontology": Ontology(querier, config, ontology),
+                    "ontology": Ontology(querier, ontology),
                     "user_role": OntologyUserRole(row.user_role),
                 }
             )
@@ -613,19 +637,22 @@ class EncordUserClient:
     def create_ontology(
         self, title: str, description: str = "", structure: Optional[OntologyStructure] = None
     ) -> Ontology:
-        structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()
+        try:
+            structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()
+        except ValueError as e:
+            raise ValueError("Can't create an Ontology containing a Classification without any attributes. " + str(e))
+
         ontology = {
             "title": title,
             "description": description,
             "editor": structure_dict,
         }
 
-        retval = self.querier.basic_setter(OrmOntology, uid=None, payload=ontology)
+        retval = self._querier.basic_setter(OrmOntology, uid=None, payload=ontology)
         ontology = OrmOntology.from_dict(retval)
-        config = SshConfig(self.user_config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
-        querier = Querier(config)
+        querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
 
-        return Ontology(querier, config, ontology)
+        return Ontology(querier, ontology)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):
@@ -714,7 +741,7 @@ class EncordUserClient:
 
         """
 
-        return self.querier.basic_setter(
+        return self._querier.basic_setter(
             DicomDeidentifyTask,
             uid=integration_hash,
             payload={
@@ -725,6 +752,38 @@ class EncordUserClient:
                 "upload_dir": upload_dir,
             },
         )
+
+    def create_storage_folder(
+        self,
+        name: str,
+        description: Optional[str],
+        client_metadata: Optional[Dict[str, Any]] = None,
+        parent_folder: Optional[Union[StorageFolder, UUID]] = None,
+    ) -> StorageFolder:
+        if isinstance(parent_folder, StorageFolder):
+            parent_folder = parent_folder.uuid
+
+        payload = CreateStorageFolderPayload(
+            name=name,
+            description=description,
+            parent=parent_folder,
+            client_metadata=json.dumps(client_metadata) if client_metadata is not None else None,
+        )
+        folder_orm = self._api_client.post(
+            "storage/folders", params=None, payload=payload, result_type=OrmStorageFolder
+        )
+        return StorageFolder(self._api_client, folder_orm)
+
+    def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
+        return StorageFolder._get_folder(self._api_client, folder_uuid)
+
+    def get_client_metadata_schema(self, organisation_id: int) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
+        return get_client_metadata_schema(self._api_client, organisation_id)
+
+    def set_client_metadata_schema_from_dict(
+        self, organisation_id: int, json_dict: Dict[str, ClientMetadataSchemaTypes]
+    ):
+        set_client_metadata_schema_from_dict(self._api_client, organisation_id, json_dict)
 
 
 class ListingFilter(Enum):

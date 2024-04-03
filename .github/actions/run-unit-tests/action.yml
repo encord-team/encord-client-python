@@ -6,9 +6,13 @@ inputs:
     description: 'Python version to use'
     default: 3.8.16
     required: false
+  pydantic-version:
+    description: 'Pydantic version to use'
+    default: ''
+    required: false
   poetry-version:
     description: 'Poetry version to use'
-    default: 1.5.0
+    default: 1.7.0
     required: false
   test-report-file:
     description: 'File name to save the test report in'
@@ -19,7 +23,7 @@ runs:
 
   steps:
       - name: Set up python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -30,14 +34,19 @@ runs:
 
       - name: Check cache
         id: cached-poetry
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
-          key: unit-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}-1
+          key: unit-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}-${{ inputs.pydantic-version }}-1
 
       - name: Install dependencies
         if: steps.cached-poetry.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
+        shell: bash
+
+      - name: Override pydantic version
+        if: ${{ inputs.pydantic-version }}
+        run: poetry add pydantic=${{ inputs.pydantic-version }} --no-interaction
         shell: bash
 
       - name: Run tests
@@ -46,7 +55,7 @@ runs:
         shell: bash
 
       - name: Upload report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ inputs.test-report-file }}

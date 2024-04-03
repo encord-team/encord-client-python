@@ -171,6 +171,9 @@ class Project:
         data_title_like: Optional[str] = None,
         workflow_graph_node_title_eq: Optional[str] = None,
         workflow_graph_node_title_like: Optional[str] = None,
+        include_workflow_graph_node: bool = True,
+        include_client_metadata: bool = False,
+        include_images_data: bool = False,
     ) -> List[LabelRowV2]:
         """
         Args:
@@ -184,7 +187,9 @@ class Project:
             data_title_like: Optionally filter by fuzzy title match; SQL syntax
             workflow_graph_node_title_eq: Optionally filter by exact match with workflow node title
             workflow_graph_node_title_like: Optionally filter by fuzzy match with workflow node title; SQL syntax
-
+            include_workflow_graph_node: Include workflow graph node metadata in all the results. True by default.
+            include_client_metadata: Optionally include client_metadata into the result of this query.
+            include_images_data: Optionally include image group metadata into the result of this query.
         Returns:
             A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows
         """
@@ -200,6 +205,9 @@ class Project:
             data_title_like=data_title_like,
             workflow_graph_node_title_eq=workflow_graph_node_title_eq,
             workflow_graph_node_title_like=workflow_graph_node_title_like,
+            include_workflow_graph_node=include_workflow_graph_node,
+            include_client_metadata=include_client_metadata,
+            include_images_data=include_images_data,
         )
 
         label_rows = [
@@ -688,9 +696,6 @@ class Project:
         """
         return self._client.get_data(data_hash, get_signed_url)
 
-    def get_websocket_url(self) -> str:
-        return self._client.get_websocket_url()
-
     def get_label_logs(
         self,
         user_hash: Optional[str] = None,
@@ -911,7 +916,7 @@ class Project:
             include_reviews=include_reviews,
         )
 
-    def save_label_row(self, uid, label):
+    def save_label_row(self, uid, label, validate_before_saving: bool = False):
         """
         DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
@@ -924,6 +929,7 @@ class Project:
         Args:
             uid: A label_hash (uid) string.
             label: A label row instance.
+            validate_before_saving: enable stricter server-side integrity checks. Boolean, `False` by default.
 
         Returns:
             Bool.
@@ -937,7 +943,7 @@ class Project:
             AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
             CorruptedLabelError: If a blurb is corrupted (e.g. if the frame labels have more frames than the video).
         """
-        return self._client.save_label_row(uid, label)
+        return self._client.save_label_row(uid, label, validate_before_saving)
 
     def create_label_row(self, uid: str):
         """

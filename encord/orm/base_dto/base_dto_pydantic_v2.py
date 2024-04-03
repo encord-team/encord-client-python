@@ -37,7 +37,7 @@ class BaseDTO(BaseDTOInterface, BaseModel):
             raise EncordException(message=str(e)) from e
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
-        return self.model_dump(by_alias=by_alias, exclude_none=exclude_none)  # type: ignore[attr-defined]
+        return self.model_dump(by_alias=by_alias, exclude_none=exclude_none, mode="json")  # type: ignore[attr-defined]
 
 
 DataT = TypeVar("DataT")
@@ -64,4 +64,4 @@ class GenericBaseDTO(BaseDTOInterface, BaseModel):
             raise EncordException(message=str(e)) from e
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
-        return self.model_dump(by_alias=by_alias, exclude_none=exclude_none)  # type: ignore[attr-defined]
+        return self.model_dump(by_alias=by_alias, exclude_none=exclude_none, mode="json")  # type: ignore[attr-defined]

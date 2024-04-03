@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional
 
 from encord.common.time_parser import parse_datetime
 from encord.orm import base_orm
+from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 
 
@@ -186,6 +187,7 @@ class LabelRow(base_orm.BaseORM):
             ("object_actions", dict),
             ("label_status", str),
             ("annotation_task_status", str),
+            ("is_valid", bool),
         ]
     )
 
@@ -283,6 +285,11 @@ class LabelRowMetadata(Formatter):
     width: Optional[int]
     priority: Optional[float] = None
     """Only available for not complete tasks"""
+    client_metadata: Optional[dict] = None
+    images_data: Optional[list] = None
+    file_type: Optional[str] = None
+    """Only available for certain read requests"""
+    is_valid: bool = True
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -319,6 +326,10 @@ class LabelRowMetadata(Formatter):
             height=json_dict.get("height"),
             width=json_dict.get("width"),
             priority=json_dict.get("priority"),
+            client_metadata=json_dict.get("client_metadata", None),
+            images_data=json_dict.get("images_data", None),
+            file_type=json_dict.get("file_type"),
+            is_valid=bool(json_dict.get("is_valid", True)),
         )
 
     @classmethod
@@ -342,3 +353,11 @@ class LabelRowMetadata(Formatter):
             return value
 
         return {k: transform(v) for k, v in asdict(self).items()}
+
+
+class LabelValidationState(BaseDTO):
+    label_hash: str
+    branch_name: str
+    version: int
+    is_valid: bool
+    errors: List[str]

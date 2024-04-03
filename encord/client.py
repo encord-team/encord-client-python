@@ -50,7 +50,7 @@ import requests
 
 import encord.exceptions
 from encord.common.deprecated import deprecated
-from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, Config, EncordConfig, SshConfig
+from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, BearerConfig, Config, EncordConfig, SshConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import (
@@ -76,6 +76,7 @@ from encord.orm.analytics import (
     CollaboratorTimersGroupBy,
 )
 from encord.orm.api_key import ApiKeyMeta
+from encord.orm.bearer_request import BearerTokenResponse
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
@@ -106,6 +107,7 @@ from encord.orm.label_row import (
     LabelRow,
     LabelRowMetadata,
     LabelStatus,
+    LabelValidationState,
     Review,
     ShadowDataState,
 )
@@ -162,11 +164,11 @@ class EncordClient:
 
     def __init__(self, querier: Querier, config: Config, api_client: Optional[ApiClient] = None):
         self._querier = querier
-        self._config: Config = config
+        self._config = config
         self._api_client = api_client
 
     def _get_api_client(self) -> ApiClient:
-        if not isinstance(self._config, SshConfig):
+        if not (isinstance(self._config, (SshConfig, BearerConfig))):
             raise EncordException(
                 "This functionality requires private SSH key authentication. API keys are not supported."
             )
@@ -221,7 +223,7 @@ class EncordClient:
         Returns:
             EncordClient: A Encord client instance.
         """
-        querier = Querier(config)
+        querier = Querier(config, resource_id=config.resource_id)
         key_type = querier.basic_getter(ApiKeyMeta)
 
         if key_type.resource_type == TYPE_PROJECT:
@@ -239,6 +241,9 @@ class EncordClient:
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)
+
+    def get_bearer_token(self) -> BearerTokenResponse:
+        return self._get_api_client().get("user/bearer_token", None, result_type=BearerTokenResponse)
 
 
 class EncordClientDataset(EncordClient):
@@ -305,7 +310,7 @@ class EncordClientDataset(EncordClient):
         Returns:
             EncordClientDataset: An Encord client dataset instance.
         """
-        querier = Querier(config)
+        querier = Querier(config, resource_id=config.resource_id)
         key_type = querier.basic_getter(ApiKeyMeta)
 
         if key_type.resource_type == TYPE_PROJECT:
@@ -408,7 +413,7 @@ class EncordClientDataset(EncordClient):
         """
 
         payload = {"user_emails": user_emails, "user_role": user_role}
-        users = self._querier.basic_setter(DatasetUsers, self._config.resource_id, payload=payload)
+        users = self._querier.basic_setter(DatasetUsers, self._querier.resource_id, payload=payload)
 
         return [DatasetUser.from_dict(user) for user in users]
 
@@ -507,11 +512,10 @@ class EncordClientDataset(EncordClient):
         ]
 
         res = self._querier.basic_setter(DicomSeries, uid=dicom_files, payload={"title": title})
-
-        if res:
-            return res
-        else:
+        if not res:
             raise encord.exceptions.EncordException(message="An error has occurred during the DICOM series creation.")
+
+        return res
 
     def upload_image(
         self,
@@ -547,7 +551,7 @@ class EncordClientDataset(EncordClient):
     def link_items(self, item_uuids: List[uuid.UUID]) -> List[DataRow]:
         return self._querier.basic_setter(
             DatasetLinkItems,
-            uid=self._config.resource_id,
+            uid=self._querier.resource_id,
             payload={"item_uuids": [str(item_uuid) for item_uuid in item_uuids]},
         )
 
@@ -557,10 +561,12 @@ class EncordClientDataset(EncordClient):
         """
         self._querier.basic_delete(ImageGroup, uid=data_hash)
 
-    def delete_data(self, data_hashes: List[str]):
+    def delete_data(self, data_hashes: Union[List[str], str]):
         """
         This function is documented in :meth:`encord.dataset.Dataset.delete_data`.
         """
+        if isinstance(data_hashes, str):
+            data_hashes = [data_hashes]
         self._querier.basic_delete(Video, uid=data_hashes)
 
     def add_private_data_to_dataset(
@@ -616,7 +622,7 @@ class EncordClientDataset(EncordClient):
 
         process_hash = self._querier.basic_setter(
             DatasetDataLongPolling,
-            self._config.resource_id,
+            self._querier.resource_id,
             payload={
                 "files": files,
                 "integration_id": integration_id,
@@ -648,7 +654,7 @@ class EncordClientDataset(EncordClient):
 
                 res = self._querier.basic_getter(
                     DatasetDataLongPolling,
-                    self._config.resource_id,
+                    self._querier.resource_id,
                     payload={
                         "process_hash": upload_job_id,
                         "timeout_seconds": min(
@@ -713,10 +719,7 @@ class EncordClientDataset(EncordClient):
         """
 
         payload = {"image_group_data_hash": image_group_id}
-
-        response = self._querier.get_multiple(ImageGroupOCR, payload=payload)
-
-        return response
+        return self._querier.get_multiple(ImageGroupOCR, payload=payload)
 
 
 class EncordClientProject(EncordClient):
@@ -726,7 +729,8 @@ class EncordClientProject(EncordClient):
 
     @property
     def project_hash(self) -> str:
-        return self._config.resource_id  # type: ignore[attr-defined]
+        assert self._querier.resource_id, "Resource id can't be empty for created project client"
+        return self._querier.resource_id  # type: ignore[attr-defined]
 
     def get_project(self, include_labels_metadata=True) -> OrmProject:
         """
@@ -754,7 +758,10 @@ class EncordClientProject(EncordClient):
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
         *,
-        include_uninitialised_labels=False,
+        include_uninitialised_labels: bool = False,
+        include_workflow_graph_node: bool = True,
+        include_client_metadata: bool = False,
+        include_images_data: bool = False,
         label_hashes: Optional[List[str]] = None,
         data_hashes: Optional[List[str]] = None,
         data_title_eq: Optional[str] = None,
@@ -784,6 +791,9 @@ class EncordClientProject(EncordClient):
             "data_title_like": data_title_like,
             "workflow_graph_node_title_eq": workflow_graph_node_title_eq,
             "workflow_graph_node_title_like": workflow_graph_node_title_like,
+            "include_client_metadata": include_client_metadata,
+            "include_images_data": include_images_data,
+            "include_workflow_graph_node": include_workflow_graph_node,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
 
@@ -802,7 +812,7 @@ class EncordClientProject(EncordClient):
         """
 
         payload = {"user_emails": user_emails, "user_role": user_role}
-        users = self._querier.basic_setter(ProjectUsers, self._config.resource_id, payload=payload)
+        users = self._querier.basic_setter(ProjectUsers, self._querier.resource_id, payload=payload)
 
         return [ProjectUser.from_dict(user) for user in users]
 
@@ -846,7 +856,7 @@ class EncordClientProject(EncordClient):
         if copy_collaborators:
             payload.copy_project_options.append(ProjectCopyOptions.COLLABORATORS)
 
-        return self._querier.basic_setter(ProjectCopy, self._config.resource_id, payload=dataclasses.asdict(payload))
+        return self._querier.basic_setter(ProjectCopy, self._querier.resource_id, payload=dataclasses.asdict(payload))
 
     def get_label_row(
         self,
@@ -896,14 +906,16 @@ class EncordClientProject(EncordClient):
 
         return self._querier.get_multiple(LabelRow, uids, payload=payload, retryable=True)
 
-    def save_label_row(self, uid, label):
+    def save_label_row(self, uid, label, validate_before_saving: bool = False):
         """
         This function is documented in :meth:`encord.project.Project.save_label_row`.
         """
         label = LabelRow(label)
+        if validate_before_saving:
+            label["validate_before_saving"] = True
         return self._querier.basic_setter(LabelRow, uid, payload=label, retryable=True)
 
-    def save_label_rows(self, uids: List[str], payload: List[LabelRow]):
+    def save_label_rows(self, uids: List[str], payload: List[LabelRow], validate_before_saving: bool = False):
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -919,6 +931,7 @@ class EncordClientProject(EncordClient):
         multirequest_payload = {
             "multi_request": True,
             "labels": payload,
+            "validate_before_saving": validate_before_saving,
         }
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
@@ -1274,9 +1287,6 @@ class EncordClientProject(EncordClient):
 
         return video, images
 
-    def get_websocket_url(self) -> str:
-        return self._config.get_websocket_url()
-
     def get_label_logs(
         self,
         user_hash: Optional[str] = None,
@@ -1346,7 +1356,7 @@ class EncordClientProject(EncordClient):
 
     def workflow_set_priority(self, priorities: List[Tuple[str, float]]) -> None:
         self._get_api_client().post(
-            Path(f"projects/{self.project_hash}/priorities"),
+            f"projects/{self.project_hash}/priorities",
             params=None,
             payload=TaskPriorityParams(priorities=priorities),
             result_type=None,
@@ -1354,8 +1364,20 @@ class EncordClientProject(EncordClient):
 
     def get_collaborator_timers_page(self, params: CollaboratorTimerParams) -> Page[CollaboratorTimer]:
         return self._get_api_client().get(
-            Path("analytics/collaborators/timers"), params=params, result_type=Page[CollaboratorTimer]
+            "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
         )
+
+    def get_label_validation_errors(self, label_hash: str) -> List[str]:
+        errors = self._get_api_client().get(
+            f"projects/{self.project_hash}/labels/{label_hash}/validation-state",
+            params=None,
+            result_type=LabelValidationState,
+        )
+
+        if errors.is_valid:
+            return []
+
+        return errors.errors or []
 
 
 def _device_to_string(device: Device) -> str:

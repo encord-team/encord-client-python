@@ -1,7 +1,7 @@
 <h1 align="center">
   <p align="center">Encord Python API Client</p>
   <a href="https://encord.com">
-    <img src="./docs/_static/logo.svg" width="100" alt="Cord logo"/>
+    <img src="https://storage.googleapis.com/docs-media.encord.com/encord.png" width="280" alt="Encord logo"/>
   </a>
 </h1>
 
@@ -22,12 +22,12 @@
 
 ## 💡 Getting Started
 
-For full documentation, please visit [Encord Python SDK](https://python.docs.encord.com/).
+For full documentation, please visit [Encord Python SDK](https://docs.encord.com/reference/installation-sdk).
 
 First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/stable/installing) package manager:
 
 ```bash
-pip install encord
+python3 -m pip install encord
 ```
 
 Then, generate an public-private key pair, and upload the public key to [Encord website](https://www.encord.com/).
@@ -36,20 +36,13 @@ Detailed guide can be found in the [dedicated manual](https://docs.encord.com/do
 Passing the private key to the factory, you can initialise the Encord client directly.
 
 ```python
+# Import dependencies
 from encord import EncordUserClient
 
+# Authenticate with Encord using the path to your private key.  Replace <private_key_path> with the path to your private key.
 user_client = EncordUserClient.create_with_ssh_private_key(
-    "<your_private_key_content>",
-    password="<your_private_key_password_if_set_on_key_generation>",
-)
-```
-
-Once you have instantiated an Encord client, it is easy to fetch a project information and start
-working with the platform.
-
-```py
-project = user_client.get_project("<project_hash>")
-label_rows = project.list_label_rows_v2()
+  ssh_private_key_path="<private_key_path>"
+  )
 ```
 
 For detailed examples and API reference please refer to [Encord SDK documentation](https://python.docs.encord.com/)
