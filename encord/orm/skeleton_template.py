@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from encord.orm.base_dto import BaseDTO
 
@@ -16,9 +16,9 @@ class SkeletonTemplate(BaseDTO):
     name: str
     width: float
     height: float
-    skeleton: dict[str, SkeletonTemplateCoordinate]
-    skeleton_edges: dict[str, dict[str, dict[str, str]]]  # start-end-color-hex
-    feature_node_hash: str | None = None
+    skeleton: Dict[str, SkeletonTemplateCoordinate]
+    skeleton_edges: Dict[str, Dict[str, Dict[str, str]]]  # start-end-color-hex
+    feature_node_hash: Union[str, None] = None
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
         assert by_alias and exclude_none
