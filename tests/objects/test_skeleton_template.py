@@ -13,7 +13,7 @@ SKELETON_TEMPLATE_LINE = SkeletonTemplate(
     width=100,
     height=100,
     skeleton={str(i): x for (i, x) in enumerate(SKELETON_TEMPLATE_COORDINATES)},
-    skeletonEdges={"0": {"1": {"color": "#00000"}}},
+    skeleton_edges={"0": {"1": {"color": "#00000"}}},
     feature_node_hash="c67522ee",
 )
 
