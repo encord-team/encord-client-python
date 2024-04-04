@@ -101,6 +101,13 @@ from encord.orm.dataset import (
     Video,
 )
 from encord.orm.dataset import Dataset as OrmDataset
+from encord.orm.group import (
+    AddDatasetGroupsPayload,
+    AddProjectGroupsPayload,
+    DatasetGroup,
+    ProjectGroup,
+    RemoveGroupsParams,
+)
 from encord.orm.label_log import LabelLog, LabelLogParams
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -256,8 +263,9 @@ class EncordClientDataset(EncordClient):
         querier: Querier,
         config: Config,
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
+        api_client: Optional[ApiClient] = None,
     ):
-        super().__init__(querier, config)
+        super().__init__(querier, config, api_client)
         self._dataset_access_settings = dataset_access_settings
 
     @staticmethod
@@ -416,6 +424,19 @@ class EncordClientDataset(EncordClient):
         users = self._querier.basic_setter(DatasetUsers, self._querier.resource_id, payload=payload)
 
         return [DatasetUser.from_dict(user) for user in users]
+
+    def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
+        return self._get_api_client().get(
+            f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup]
+        )
+
+    def add_groups(self, dataset_hash: str, group_hash: list[uuid.UUID], user_role: DatasetUserRole) -> None:
+        payload = AddDatasetGroupsPayload(group_hash_list=group_hash, user_role=user_role)
+        self._get_api_client().post(f"datasets/{dataset_hash}/groups", params=None, payload=payload, result_type=None)
+
+    def remove_groups(self, dataset_hash: uuid.UUID, group_hash: list[uuid.UUID]) -> None:
+        params = RemoveGroupsParams(group_hash_list=group_hash)
+        self._get_api_client().delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
 
     def upload_video(
         self,
@@ -815,6 +836,19 @@ class EncordClientProject(EncordClient):
         users = self._querier.basic_setter(ProjectUsers, self._querier.resource_id, payload=payload)
 
         return [ProjectUser.from_dict(user) for user in users]
+
+    def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
+        return self._get_api_client().get(
+            f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup]
+        )
+
+    def add_groups(self, project_hash: uuid.UUID, group_hash: list[uuid.UUID], user_role: ProjectUserRole) -> None:
+        payload = AddProjectGroupsPayload(group_hash_list=group_hash, user_role=user_role)
+        self._get_api_client().post(f"projects/{project_hash}/groups", params=None, payload=payload, result_type=None)
+
+    def remove_groups(self, group_hash: list[uuid.UUID]) -> None:
+        params = RemoveGroupsParams(group_hash_list=group_hash)
+        self._get_api_client().delete(f"projects/{self.project_hash}/groups", params=params, result_type=None)
 
     def copy_project(
         self,

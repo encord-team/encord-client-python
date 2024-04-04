@@ -1,9 +1,15 @@
 import datetime
+from typing import Iterable, List, Union
+from uuid import UUID
 
-from encord.configs import SshConfig
 from encord.http.querier import Querier
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
+from encord.orm.group import AddOntologyGroupsPayload, OntologyGroup, RemoveGroupsParams
 from encord.orm.ontology import Ontology as OrmOntology
+from encord.utilities.hash_utilities import convert_to_uuid
+from encord.utilities.ontology_user import OntologyUserRole
 
 
 class Ontology:
@@ -12,9 +18,10 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, instance: OrmOntology):
+    def __init__(self, querier: Querier, instance: OrmOntology, api_client: ApiClient):
         self._querier = querier
         self._ontology_instance = instance
+        self.api_client = api_client
 
     @property
     def ontology_hash(self) -> str:
@@ -85,3 +92,50 @@ class Ontology:
 
     def _get_ontology(self):
         return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
+
+    def list_groups(self) -> Iterable[OntologyGroup]:
+        """
+        List all groups that have access to a particular ontology
+        """
+        ontology_hash = convert_to_uuid(self.ontology_hash)
+        page = self.api_client.get(f"ontologies/{ontology_hash}/groups", params=None, result_type=Page[OntologyGroup])
+
+        yield from page.results
+
+    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: OntologyUserRole):
+        """
+        Add group to an ontology
+
+        Args:
+            group_hash: List of group hashes to be added
+            user_role: user role that the group will be given
+
+        Returns:
+            None
+        """
+        ontology_hash = convert_to_uuid(self.ontology_hash)
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        payload = AddOntologyGroupsPayload(group_hash_list=group_hash, user_role=user_role)
+        self.api_client.post(
+            f"ontologies/{ontology_hash}/groups",
+            params=None,
+            payload=payload,
+            result_type=None,
+        )
+
+    def remove_group(self, group_hash: Union[List[UUID], UUID]):
+        """
+        Remove group from ontology
+
+        Args:
+            group_hash: List of group_hashes to be removed
+
+        Returns:
+            None
+        """
+        ontology_hash = convert_to_uuid(self.ontology_hash)
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        params = RemoveGroupsParams(group_hash_list=group_hash)
+        self.api_client.delete(f"ontologies/{ontology_hash}/groups", params=params, result_type=None)

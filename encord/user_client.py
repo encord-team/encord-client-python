@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -24,6 +24,7 @@ from encord.http.utils import (
     upload_to_signed_url_list,
 )
 from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
 from encord.objects import OntologyStructure
 from encord.objects.common import (
     DeidentifyRedactTextMode,
@@ -46,6 +47,7 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.group import Group as OrmGroup
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
@@ -114,7 +116,10 @@ class EncordUserClient:
         """
         querier = Querier(self._config.config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         client = EncordClientDataset(
-            querier=querier, config=self._config.config, dataset_access_settings=dataset_access_settings
+            querier=querier,
+            config=self._config.config,
+            dataset_access_settings=dataset_access_settings,
+            api_client=self._api_client,
         )
         orm_dataset = client.get_dataset()
         return Dataset(client, orm_dataset)
@@ -144,14 +149,14 @@ class EncordUserClient:
         # not full access, that is implied by get_ontology method
         ontology_hash = orm_project["ontology_hash"]
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        project_ontology = Ontology(querier, orm_ontology)
+        project_ontology = Ontology(querier, orm_ontology, self._api_client)
 
         return Project(client, orm_project, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         querier = Querier(self._config.config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        return Ontology(querier, orm_ontology)
+        return Ontology(querier, orm_ontology, self._api_client)
 
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
@@ -628,7 +633,7 @@ class EncordUserClient:
             querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
             retval.append(
                 {
-                    "ontology": Ontology(querier, ontology),
+                    "ontology": Ontology(querier, ontology, api_client=self._api_client),
                     "user_role": OntologyUserRole(row.user_role),
                 }
             )
@@ -652,7 +657,7 @@ class EncordUserClient:
         ontology = OrmOntology.from_dict(retval)
         querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
 
-        return Ontology(querier, ontology)
+        return Ontology(querier, ontology, self._api_client)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):
@@ -686,6 +691,13 @@ class EncordUserClient:
             ret[clause.value] = val
 
         return ret
+
+    def list_groups(self) -> Iterable[OrmGroup]:
+        """
+        List all groups belonging to the user's current organization.
+        """
+        page = self._api_client.get("user/current-organisation/groups", params=None, result_type=Page[OrmGroup])
+        yield from page.results
 
     def deidentify_dicom_files(
         self,

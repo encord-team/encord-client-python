@@ -1,12 +1,11 @@
 import datetime
-from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
+from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
-from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.analytics import (
@@ -16,6 +15,7 @@ from encord.orm.analytics import (
 )
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import Image, Video
+from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
     AnnotationTaskStatus,
@@ -30,6 +30,7 @@ from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
+from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 
 
@@ -232,6 +233,44 @@ class Project:
             UnknownError: If an error occurs while adding the users to the project
         """
         return self._client.add_users(user_emails, user_role)
+
+    def list_groups(self) -> Iterable[ProjectGroup]:
+        """
+        List all groups that have access to a particular project
+        """
+        project_hash = convert_to_uuid(self.project_hash)
+        page = self._client.list_groups(project_hash)
+        yield from page.results
+
+    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: ProjectUserRole):
+        """
+        Add group to a project
+
+        Args:
+            group_hash: List of group hashes to be added
+            user_role: user role that the group will be given
+
+        Returns:
+           None
+        """
+        project_hash = convert_to_uuid(self.project_hash)
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        self._client.add_groups(project_hash, group_hash, user_role)
+
+    def remove_group(self, group_hash: Union[List[UUID], UUID]):
+        """
+        Remove group from target project
+
+        Args:
+            group_hash: List of group_hashes to be removed
+
+        Returns:
+           None
+        """
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        self._client.remove_groups(group_hash)
 
     def copy_project(
         self,
