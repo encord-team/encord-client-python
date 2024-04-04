@@ -20,5 +20,6 @@ class SkeletonTemplate(BaseDTO):
     skeleton_edges: dict[str, dict[str, dict[str, str]]]  # start-end-color-hex
     feature_node_hash: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        assert by_alias and exclude_none
         return super().to_dict(by_alias=False)
