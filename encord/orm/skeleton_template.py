@@ -9,7 +9,7 @@ class SkeletonTemplateCoordinate(BaseDTO):
     name: str
     color: Optional[str] = "#00000"
     value: Optional[str] = ""
-    featureHash: Optional[str] = None
+    feature_hash: Optional[str] = None
 
 
 class SkeletonTemplate(BaseDTO):

@@ -22,7 +22,7 @@ class SkeletonTemplate(SkeletonTemplateORM):
         for coord in provided_coordinates:
             partner = [x for x in self.skeleton.values() if x.name == coord.name][0]
             aligned_coordinate = SkeletonCoordinate(
-                x=coord.x, y=coord.y, name=coord.name, featureHash=partner.featureHash
+                x=coord.x, y=coord.y, name=coord.name, feature_hash=partner.feature_hash
             )
             aligned_coordinates.append(aligned_coordinate)
         return SkeletonCoordinates(values=aligned_coordinates, template=self.name)
