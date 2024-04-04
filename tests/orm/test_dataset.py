@@ -1,6 +1,5 @@
 """Unit tests for the dataset class"""
 
-
 from datetime import datetime
 from typing import Set
 

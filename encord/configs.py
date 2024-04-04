@@ -24,11 +24,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    PublicFormat,
-    load_ssh_private_key,
-)
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, ssh
 
 import encord.exceptions
 from encord.constants.string_constants import ALL_RESOURCE_TYPES
@@ -284,7 +280,7 @@ class SshConfig(Config):
         """
         key_bytes = ssh_private_key.encode()
         password_bytes = password.encode() if password else None
-        private_key = load_ssh_private_key(key_bytes, password_bytes)
+        private_key = ssh.load_ssh_private_key(key_bytes, password_bytes)
 
         if not isinstance(private_key, Ed25519PrivateKey):
             raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
