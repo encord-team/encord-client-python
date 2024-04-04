@@ -163,13 +163,13 @@ class SkeletonCoordinate:
     # `featureHash` and `value` seem to appear when visibility is
     # present. They might not have any meaning. Remove if confirmed that
     # Frontend does not need it.
-    featureHash: Optional[str] = None
+    feature_hash: Optional[str] = None
     value: Optional[str] = None
 
     visibility: Optional[Visibility] = None
 
     @staticmethod
-    def from_dict(d: dict[str, Any]) -> SkeletonCoordinate:
+    def from_dict(d: Dict[str, Any]) -> SkeletonCoordinate:
         return SkeletonCoordinate(**d)
 
     def to_dict(self) -> dict:
@@ -179,7 +179,7 @@ class SkeletonCoordinate:
             "name": self.name,
             "color": self.color,
             "value": self.value,
-            "featureHash": self.featureHash,
+            "feature_hash": self.feature_hash,
         }
 
 

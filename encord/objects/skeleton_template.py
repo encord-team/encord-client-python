@@ -5,11 +5,7 @@ from typing import Any, List, Optional, Set, Type
 
 from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
 from encord.orm.skeleton_template import SkeletonTemplate as SkeletonTemplateORM
-from encord.orm.skeleton_template import SkeletonTemplateCoordinate as SkeletonTemplateCoordinateORM
-
-
-class SkeletonTemplateCoordinate(SkeletonTemplateCoordinateORM):
-    pass
+from encord.orm.skeleton_template import SkeletonTemplateCoordinate
 
 
 class SkeletonTemplate(SkeletonTemplateORM):
