@@ -7,7 +7,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from requests import Session
 
-from encord.configs import UserConfig
+from encord.configs import SshConfig
 from encord.http.constants import RequestsSettings
 from encord.http.v2.api_client import ApiClient
 from encord.user_client import EncordUserClient
@@ -21,7 +21,7 @@ DATASET_HASH = uuid4().hex
 
 @pytest.fixture
 def api_client():
-    return ApiClient(config=UserConfig(PRIVATE_KEY))
+    return ApiClient(config=SshConfig(PRIVATE_KEY))
 
 
 def stub_responses(*args, **kwargs) -> MagicMock:
