@@ -222,7 +222,7 @@ class Querier:
             try:
                 res_json = res.json()
             except Exception as e:
-                raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
+                raise RequestException(f"Error parsing JSON response: {res.text.strip()}", context=context) from e
 
         # pylint: disable-next=no-member
         if res_json.get("status") != requests.codes.ok:
