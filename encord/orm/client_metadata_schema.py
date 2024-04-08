@@ -12,6 +12,7 @@ class ClientMetadataSchemaTypes(StringEnum):
     BOOLEAN = "boolean"
     DATETIME = "datetime"
     GEOSPATIAL = "geospatial"
+    ENUM = "enum"
 
 
 class ClientMetadataSchema(BaseDTO):
