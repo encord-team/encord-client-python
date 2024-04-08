@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
+from encord.orm.base_dto import BaseDTO
 
 
 @dataclass(frozen=True)
@@ -150,51 +151,20 @@ class Visibility(Flag):
     OCCLUDED = auto()
 
 
-@dataclass(frozen=True)
-class SkeletonCoordinate:
+class SkeletonCoordinate(BaseDTO):
     x: float
     y: float
-
-    # `name` and `color` can be removed as they are part of the ontology.
-    # The frontend must first be aware of how to merge with ontology.
     name: str
     color: Optional[str] = None
-
-    # `featureHash` and `value` seem to appear when visibility is
-    # present. They might not have any meaning. Remove if confirmed that
-    # Frontend does not need it.
     feature_hash: Optional[str] = None
     value: Optional[str] = None
 
     visibility: Optional[Visibility] = None
 
-    @staticmethod
-    def from_dict(d: Dict[str, Any]) -> SkeletonCoordinate:
-        return SkeletonCoordinate(**d)
 
-    def to_dict(self) -> dict:
-        return {
-            "x": self.x,
-            "y": self.y,
-            "name": self.name,
-            "color": self.color,
-            "value": self.value,
-            "feature_hash": self.feature_hash,
-        }
-
-
-@dataclass(frozen=True)
-class SkeletonCoordinates:
+class SkeletonCoordinates(BaseDTO):
     values: List[SkeletonCoordinate]
-    template: str
-
-    @staticmethod
-    def from_dict(d: dict, skeleton_template: str) -> SkeletonCoordinates:
-        skeleton_coords = [SkeletonCoordinate(**coord) for coord in d["skeleton"].values()]
-        return SkeletonCoordinates(skeleton_coords, skeleton_template)
-
-    def to_dict(self) -> dict:
-        return {i: x.to_dict() for i, x in enumerate(self.values)}
+    name: str
 
 
 Coordinates = Union[

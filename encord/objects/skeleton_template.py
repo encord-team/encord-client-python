@@ -25,4 +25,4 @@ class SkeletonTemplate(SkeletonTemplateORM):
                 x=coord.x, y=coord.y, name=coord.name, feature_hash=partner.feature_hash
             )
             aligned_coordinates.append(aligned_coordinate)
-        return SkeletonCoordinates(values=aligned_coordinates, template=self.name)
+        return SkeletonCoordinates(values=aligned_coordinates, name=self.name)
