@@ -1,11 +1,14 @@
 import contextlib
 from datetime import datetime
+from functools import lru_cache
 
 from dateutil import parser
 
 from encord.common.constants import DATETIME_LONG_STRING_FORMAT
 
 
+# Cache: major performance win for large classification ranges
+@lru_cache(maxsize=8192)
 def parse_datetime(time_string: str) -> datetime:
     """
     Parsing datetime strings in the most compatible yet performant way.
