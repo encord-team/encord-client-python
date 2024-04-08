@@ -132,56 +132,6 @@ labels = {
     "classification_answers": {},
     "object_actions": {},
     "label_status": "LABELLED",
-    "is_valid": True,
-    "export_hash": "8e64c5ec-b1ec-4108-aeed-39b5ccf7d92f",
-    "exported_at": "Mon, 08 Apr 2024 12:58:21 UTC",
-    "export_history": [
-        {
-            "export_hash": "8e64c5ec-b1ec-4108-aeed-39b5ccf7d92f",
-            "exported_at": "Mon, 08 Apr 2024 12:58:21 UTC",
-            "user_email": "jim@encord.com",
-        },
-        {
-            "export_hash": "d650931e-6886-46e3-8e96-eba4134b9d7c",
-            "exported_at": "Mon, 08 Apr 2024 12:55:02 UTC",
-            "user_email": "jim@encord.com",
-        },
-        {
-            "export_hash": "bf1e3e0a-7fec-4532-894b-7d54c5bcb130",
-            "exported_at": "Mon, 08 Apr 2024 12:45:06 UTC",
-            "user_email": "jim@encord.com",
-        },
-        {
-            "export_hash": "44824e9a-8810-4c63-a71e-4177f7828561",
-            "exported_at": "Mon, 08 Apr 2024 12:44:38 UTC",
-            "user_email": "jim@encord.com",
-        },
-        {
-            "export_hash": "abb24677-9ecb-475d-9ea9-c95908298bb1",
-            "exported_at": "Mon, 08 Apr 2024 12:42:28 UTC",
-            "user_email": "jim@encord.com",
-        },
-        {
-            "export_hash": "d6918565-3781-4f35-9794-f761eaee238a",
-            "exported_at": "Mon, 08 Apr 2024 12:40:27 UTC",
-            "user_email": "jim@encord.com",
-        },
-        {
-            "export_hash": "d9baf44e-18dd-4902-8b96-e7acab648a16",
-            "exported_at": "Mon, 08 Apr 2024 12:34:47 UTC",
-            "user_email": "jim@encord.com",
-        },
-        {
-            "export_hash": "cb914996-c053-4a26-ab70-881d5600b198",
-            "exported_at": "Wed, 03 Apr 2024 16:38:50 UTC",
-            "user_email": "jim@encord.com",
-        },
-        {
-            "export_hash": "3b1692e2-9477-4c0c-9b94-6495bc43a8b8",
-            "exported_at": "Wed, 03 Apr 2024 15:34:47 UTC",
-            "user_email": "jim@encord.com",
-        },
-    ],
 }
 expected_coordinates = SkeletonCoordinates(
     values=[
