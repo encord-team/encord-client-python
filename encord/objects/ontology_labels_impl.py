@@ -14,7 +14,6 @@ from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, 
 from encord.http.limits import (
     LABEL_ROW_BUNDLE_CREATE_LIMIT,
     LABEL_ROW_BUNDLE_GET_LIMIT,
-    LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
 from encord.objects.attributes import Attribute
 from encord.objects.bundled_operations import (
@@ -28,7 +27,6 @@ from encord.objects.bundled_operations import (
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
-    AVAILABLE_COLORS,
     DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
@@ -55,10 +53,6 @@ from encord.orm.label_row import (
     LabelStatus,
     WorkflowGraphNode,
 )
-from encord.orm.ontology import (  # pylint: disable=unused-import # for backward compatibility
-    OntologyUserRole,
-)
-from encord.orm.project import TaskPriorityParams
 
 log = logging.getLogger(__name__)
 
@@ -1303,7 +1297,7 @@ class LabelRowV2:
         return present_frames.intersection(frames)
 
     def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
-        self._classifications_to_frames[classification].update(set(frames))
+        self._classifications_to_frames[classification].update(frames)
 
     def _remove_frames_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         present_frames = self._classifications_to_frames.get(classification, set())

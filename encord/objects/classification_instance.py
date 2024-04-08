@@ -447,7 +447,7 @@ class ClassificationInstance:
         def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
             return self._classification_instance._frames_to_data[self._frame]
 
-    @dataclass
+    @dataclass(slots=True)
     class FrameData:
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
@@ -485,9 +485,10 @@ class ClassificationInstance:
             reviews: Optional[List[dict]] = None,
         ) -> None:
             self.created_at = created_at or self.created_at
+            self.last_edited_at = last_edited_at or self.last_edited_at
+
             if created_by is not None:
                 self.created_by = created_by
-            self.last_edited_at = last_edited_at or self.last_edited_at
             if last_edited_by is not None:
                 self.last_edited_by = last_edited_by
             if confidence is not None:
