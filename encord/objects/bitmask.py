@@ -14,11 +14,9 @@ class ArrayProtocol(Protocol):
     """
 
     @property
-    def __array_interface__(self) -> Dict[str, Any]:
-        ...
+    def __array_interface__(self) -> Dict[str, Any]: ...
 
-    def tobytes(self) -> bytes:
-        ...
+    def tobytes(self) -> bytes: ...
 
 
 def _string_to_rle(s: str) -> List[int]:

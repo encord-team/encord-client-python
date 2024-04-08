@@ -21,8 +21,7 @@ class BundlablePayload(Protocol[BundlablePayloadT]):
     # This line ensures we're only allowing dataclasses for now
     __dataclass_fields__: ClassVar[Dict]
 
-    def add(self, other: BundlablePayloadT) -> BundlablePayloadT:
-        ...
+    def add(self, other: BundlablePayloadT) -> BundlablePayloadT: ...
 
 
 T = TypeVar("T")
