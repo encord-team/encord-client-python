@@ -29,6 +29,7 @@ def ontology() -> Ontology:
 def label_row_metadata() -> LabelRowMetadata:
     return LabelRowMetadata(
         label_hash="",
+        branch_name="main",
         created_at=datetime.now(),
         last_edited_at=datetime.now(),
         data_hash="",

@@ -740,6 +740,7 @@ class LabelRowV2:
         read_only_data = self._label_row_read_only_data
 
         ret["label_hash"] = read_only_data.label_hash
+        ret["branch_name"] = read_only_data.branch_name
         ret["created_at"] = read_only_data.created_at
         ret["last_edited_at"] = read_only_data.last_edited_at
         ret["data_hash"] = read_only_data.data_hash

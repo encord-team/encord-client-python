@@ -1,5 +1,6 @@
 IMG_GROUP_TEST_BLURB = {
     "label_hash": "5fbba385-4918-4eee-85a8-8b7a2e71dd16",
+    "branch_name": "main",
     "data_title": "image-group-f5ef4",
     "data_type": "img_group",
     "data_units": {

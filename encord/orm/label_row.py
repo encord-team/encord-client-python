@@ -174,6 +174,7 @@ class LabelRow(base_orm.BaseORM):
     DB_FIELDS = OrderedDict(
         [
             ("label_hash", str),
+            ("branch_name", str),
             ("created_at", str),
             ("last_edited_at", str),
             ("dataset_hash", str),

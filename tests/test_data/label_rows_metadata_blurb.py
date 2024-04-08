@@ -1,6 +1,7 @@
 LABEL_ROW_METADATA_BLURB = [
     {
         "label_hash": "44e1bdfb-3c45-4edb-8a71-a969f22fd632",
+        "branch_name": "main",
         "label_status": "LABEL_IN_PROGRESS",
         "created_at": "2023-03-21T09:58:08.472959",
         "last_edited_at": "2023-03-21T11:03:52.573279",
@@ -24,6 +25,7 @@ LABEL_ROW_METADATA_BLURB = [
     },
     {
         "label_hash": "2321fd7d-99cd-4d85-b371-9a9f59cf79a7",
+        "branch_name": "main",
         "label_status": "LABEL_IN_PROGRESS",
         "created_at": "2023-03-21T10:25:48.821571",
         "last_edited_at": "2023-03-21T11:51:19.785354",
@@ -47,6 +49,7 @@ LABEL_ROW_METADATA_BLURB = [
     },
     {
         "label_hash": "f6dcda1a-8e0a-45b2-a3c5-d7ebfe93ad8a",
+        "branch_name": "main",
         "label_status": "LABEL_IN_PROGRESS",
         "created_at": "2023-03-21T12:02:42.287150",
         "last_edited_at": "2023-03-21T12:02:42.287150",
@@ -73,6 +76,7 @@ LABEL_ROW_METADATA_BLURB = [
 LABEL_ROW_BLURB = [
     {
         "label_hash": "2321fd7d-99cd-4d85-b371-9a9f59cf79a7",
+        "branch_name": "main",
         "created_at": "2023-03-21 10:25:48",
         "last_edited_at": "2023-03-21 11:51:19",
         "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",
@@ -169,6 +173,7 @@ LABEL_ROW_BLURB = [
     },
     {
         "label_hash": "f6dcda1a-8e0a-45b2-a3c5-d7ebfe93ad8a",
+        "branch_name": "main",
         "created_at": "2023-03-21 12:02:42",
         "last_edited_at": "2023-03-21 12:02:42",
         "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",
@@ -231,6 +236,7 @@ LABEL_ROW_BLURB = [
     },
     {
         "label_hash": "44e1bdfb-3c45-4edb-8a71-a969f22fd632",
+        "branch_name": "main",
         "created_at": "2023-03-21 09:58:08",
         "last_edited_at": "2023-03-22 19:02:27",
         "dataset_hash": "6a8a9b04-b173-44a7-b746-558eaa468132",

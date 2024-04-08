@@ -4,6 +4,7 @@ from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelSt
 
 FAKE_LABEL_ROW_METADATA = LabelRowMetadata(
     label_hash="",
+    branch_name="main",
     created_at=datetime.datetime.now(),
     last_edited_at=datetime.datetime.now(),
     data_hash="",
