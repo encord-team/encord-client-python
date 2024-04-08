@@ -166,6 +166,9 @@ class SkeletonCoordinates(BaseDTO):
     values: List[SkeletonCoordinate]
     name: str
 
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        return {str(i): x.to_dict() for i, x in enumerate(self.values)}
+
 
 Coordinates = Union[
     BoundingBoxCoordinates,

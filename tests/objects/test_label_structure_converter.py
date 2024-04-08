@@ -296,7 +296,6 @@ def test_skeleton_template_coordinates():
     ann = obj_instance.get_annotations()[0]
     assert ann.coordinates == skeleton_coordinates.expected_coordinates
     label_dict = label_row.to_encord_dict()
-    label_dict_obj = list(skeleton_coordinates.labels['data_units'].values())[0]['labels']['objects'][0]
-    origin_obj = list(label_dict['data_units'].values())[0]['labels']['objects'][0]
-    old_format = {str(i): coord for i, coord in enumerate(origin_obj['skeleton']['values'])}
-    assert old_format == label_dict_obj['skeleton']
+    label_dict_obj = list(skeleton_coordinates.labels["data_units"].values())[0]["labels"]["objects"][0]
+    origin_obj = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]
+    assert origin_obj["skeleton"] == label_dict_obj["skeleton"]
