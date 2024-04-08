@@ -33,8 +33,8 @@ def stub_responses(*args, **kwargs) -> MagicMock:
             "project_hash": PROJECT_HASH,
             "title": "Test project",
             "description": "",
-            "created_at": datetime.utcnow(),
-            "last_edited_at": datetime.utcnow(),
+            "created_at": "2024-01-01 11:11:11",
+            "last_edited_at": "2024-01-01 11:11:11",
             "editor_ontology": {},
             "datasets": [uuid4().hex],
             "label_rows": [],
@@ -45,8 +45,8 @@ def stub_responses(*args, **kwargs) -> MagicMock:
             "title": "Test ontology",
             "description": "",
             "ontology_hash": ONTOLOGY_HASH,
-            "created_at": datetime.utcnow(),
-            "last_edited_at": datetime.utcnow(),
+            "created_at": "2024-01-01 11:11:11",
+            "last_edited_at": "2024-01-01 11:11:11",
             "editor": {
                 "objects": [],
                 "classifications": [],
@@ -68,6 +68,7 @@ def stub_responses(*args, **kwargs) -> MagicMock:
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"status": 200, "response": response}
+    mock_response.content = json.dumps({"status": 200, "response": response})
 
     return mock_response
 
@@ -117,6 +118,7 @@ def test_request_timeout_settings_correctly_propagated(send: MagicMock, api_clie
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"results": []}
+    mock_response.content = json.dumps({"results": []})
     send.side_effect = None
     send.return_value = mock_response
 

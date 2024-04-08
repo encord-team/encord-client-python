@@ -166,6 +166,17 @@ class ClassificationInstance:
             self._parent._add_frames_to_classification(self.ontology_item, frames_list)
             self._parent._add_to_frame_to_hashes_map(self, frames_list)
 
+    def set_frame_data(self, frame_data: FrameData, frames: Frames) -> None:
+        frames_list = frames_class_to_frames_list(frames)
+
+        for frame in frames_list:
+            self._frames_to_data[frame] = frame_data
+
+        if self.is_assigned_to_label_row():
+            assert self._parent is not None
+            self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+            self._parent._add_to_frame_to_hashes_map(self, frames_list)
+
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
         Args:
@@ -447,7 +458,7 @@ class ClassificationInstance:
         def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
             return self._classification_instance._frames_to_data[self._frame]
 
-    @dataclass(slots=True)
+    @dataclass
     class FrameData:
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None

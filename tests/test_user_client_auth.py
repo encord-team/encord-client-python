@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.serialization import (
     PublicFormat,
     load_ssh_private_key,
 )
-from requests import PreparedRequest, Request, Response, Session
+from requests import PreparedRequest, Session
 
 from encord.client import EncordClient
 from encord.configs import _get_signature, _get_ssh_authorization_header
@@ -63,6 +63,7 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {"status": 200, "response": {}}
+                mock_response.content = json.dumps({"status": 200, "response": {}})
                 return mock_response
             else:
                 assert False
@@ -75,6 +76,7 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {"status": 200, "response": project_orm}
+                mock_response.content = json.dumps({"status": 200, "response": project_orm}, default=str)
                 return mock_response
             elif request_type == "ontology":
                 if ontology_response:
@@ -82,11 +84,13 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {"status": 200, "response": ontology_dic}
+                mock_response.content = json.dumps({"status": 200, "response": ontology_dic}, default=str)
                 return mock_response
             elif request_type == "apikeymeta":
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {"status": 200, "response": api_key_meta_dic}
+                mock_response.content = json.dumps({"status": 200, "response": api_key_meta_dic})
                 return mock_response
             else:
                 print(f"Unknown type {request_type}")
@@ -96,6 +100,7 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.json.return_value = Page[CollaboratorTimer](results=[]).to_dict()
+            mock_response.json.content = json.dumps(Page[CollaboratorTimer](results=[]).to_dict())
             return mock_response
         else:
             raise RuntimeError(f"Not mocked URL: {args[0].path_url}")

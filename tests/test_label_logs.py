@@ -18,6 +18,7 @@ def get_mocked_answer(payload: Any) -> MagicMock:
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"status": 200, "response": payload}
+    mock_response.content = json.dumps({"status": 200, "response": payload})
     return mock_response
 
 

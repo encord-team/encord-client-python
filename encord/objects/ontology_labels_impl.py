@@ -1630,17 +1630,7 @@ class LabelRowV2:
         object_hash = frame_classification_label["classificationHash"]
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
-        classification_instance.set_for_frames(
-            frame,
-            created_at=frame_view.created_at,
-            created_by=frame_view.created_by,
-            confidence=frame_view.confidence,
-            manual_annotation=frame_view.manual_annotation,
-            last_edited_at=frame_view.last_edited_at,
-            last_edited_by=frame_view.last_edited_by,
-            reviews=frame_view.reviews,
-            overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
-        )
+        classification_instance.set_frame_data(frame_view, frame)
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:

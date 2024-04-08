@@ -617,7 +617,7 @@ class ObjectInstance:
                     "Trying to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frame"
                 )
 
-    @dataclass(slots=True)
+    @dataclass
     class FrameInfo:
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
@@ -675,7 +675,7 @@ class ObjectInstance:
             if is_deleted is not None:
                 self.is_deleted = is_deleted
 
-    @dataclass(slots=True)
+    @dataclass
     class FrameData:
         coordinates: Coordinates
         object_frame_instance_info: ObjectInstance.FrameInfo
