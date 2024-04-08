@@ -262,6 +262,8 @@ class LabelRowMetadata(Formatter):
     """Only present if the label row is initiated"""
     last_edited_at: Optional[datetime.datetime]
     """Only present if the label row is initiated"""
+    branch_name: str
+    """Only present if the label row is initiated"""
 
     data_hash: str
     dataset_hash: str
@@ -283,6 +285,7 @@ class LabelRowMetadata(Formatter):
     """Only available for the VIDEO data_type"""
     height: Optional[int]
     width: Optional[int]
+
     priority: Optional[float] = None
     """Only available for not complete tasks"""
     client_metadata: Optional[dict] = None
@@ -330,6 +333,7 @@ class LabelRowMetadata(Formatter):
             images_data=json_dict.get("images_data", None),
             file_type=json_dict.get("file_type"),
             is_valid=bool(json_dict.get("is_valid", True)),
+            branch_name=json_dict["branch_name"],
         )
 
     @classmethod
