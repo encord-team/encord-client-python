@@ -126,7 +126,7 @@ class Project:
         """
         Get the project type.
         """
-        return ProjectType.MANUAL_QA.value if self._project_instance.workflow_manager_uuid is None else ProjectType.WORKFLOW.value
+        return ProjectType.MANUAL_QA if self._project_instance.workflow_manager_uuid is None else ProjectType.WORKFLOW
 
     @property
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
@@ -137,7 +137,7 @@ class Project:
 
         .. code::
 
-            from encord.orm.label_row import LabelRowMetadata
+            from encord.orm.label_row import LabexlRowMetadata
 
             project = user_client.get_project("<project_hash>")
 
