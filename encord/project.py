@@ -126,11 +126,7 @@ class Project:
         """
         Get the project type.
         """
-        return (
-            ProjectType.MANUAL_QA.value
-            if self._project_instance.workflow_manager_uuid is None
-            else ProjectType.WORKFLOW.value
-        )
+        return ProjectType.MANUAL_QA.value if self._project_instance.workflow_manager_uuid is None else ProjectType.WORKFLOW.value
 
     @property
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
