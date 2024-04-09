@@ -122,7 +122,7 @@ class Project:
         return self._project_instance.datasets
 
     @property
-    def project_type(self) -> str:
+    def project_type(self) -> ProjectType:
         """
         Get the project type.
         """
