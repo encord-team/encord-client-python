@@ -124,7 +124,8 @@ class Project:
     @property
     def project_type(self) -> ProjectType:
         """
-        Get the project type.
+        Get the project type
+        If workflow_manager_uuid is None, the project is a manual QA project else its a workflow project.
         """
         return ProjectType.MANUAL_QA if self._project_instance.workflow_manager_uuid is None else ProjectType.WORKFLOW
 
