@@ -18,6 +18,7 @@ from tests.objects.data import (
     image_group_with_reviews,
     native_image_data,
     native_image_data_classification_with_no_answer,
+    skeleton_coordinates,
     video_with_dynamic_classifications,
     video_with_dynamic_classifications_ui_constructed,
 )
@@ -277,3 +278,25 @@ def test_classifications_with_no_answers_equivalent_to_no_classification():
     label_row.from_labels_dict(native_image_data_classification_with_no_answer.labels)
 
     assert len(label_row.get_classification_instances()) == 0
+
+
+def test_skeleton_template_coordinates():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = None
+    label_row_metadata_dict["frames_per_second"] = None
+    label_row_metadata_dict["number_of_frames"] = 1
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(skeleton_coordinates.ontology))
+    label_row.from_labels_dict(skeleton_coordinates.labels)
+
+    obj_instances = label_row.get_object_instances()
+    assert len(obj_instances) == 1
+
+    obj_instance = obj_instances[0]
+    ann = obj_instance.get_annotations()[0]
+    assert ann.coordinates == skeleton_coordinates.expected_coordinates
+    label_dict = label_row.to_encord_dict()
+    label_dict_obj = list(skeleton_coordinates.labels["data_units"].values())[0]["labels"]["objects"][0]
+    origin_obj = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]
+    assert origin_obj["skeleton"] == label_dict_obj["skeleton"]

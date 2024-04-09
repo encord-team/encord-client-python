@@ -16,6 +16,7 @@ from encord.objects.ontology_element import (
     _get_element_by_hash,
 )
 from encord.objects.ontology_object import Object
+from encord.objects.skeleton_template import SkeletonTemplate
 from encord.objects.utils import checked_cast, does_type_match
 
 
@@ -23,6 +24,7 @@ from encord.objects.utils import checked_cast, does_type_match
 class OntologyStructure:
     objects: List[Object] = field(default_factory=list)
     classifications: List[Classification] = field(default_factory=list)
+    skeleton_templates: Dict[str, SkeletonTemplate] = field(default_factory=dict)
 
     def get_child_by_hash(
         self,
@@ -120,7 +122,14 @@ class OntologyStructure:
         classifications_ret = [
             Classification.from_dict(classification_dict) for classification_dict in d["classifications"]
         ]
-        return OntologyStructure(objects=objects_ret, classifications=classifications_ret)
+        skeleton_templates = [
+            SkeletonTemplate.from_dict(skeleton_template_dict["template"])
+            for skeleton_template_dict in d.get("skeleton_templates", [])
+        ]
+        dict_skeleton_templates = {template.name: template for template in skeleton_templates}
+        return OntologyStructure(
+            objects=objects_ret, classifications=classifications_ret, skeleton_templates=dict_skeleton_templates
+        )
 
     def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
         """
@@ -140,7 +149,9 @@ class OntologyStructure:
         ret["classifications"] = ontology_classifications
         for ontology_classification in self.classifications:
             ontology_classifications.append(ontology_classification.to_dict())
-
+        skeleton_templates: List[Dict[str, Any]] = list()
+        skeleton_templates = [{"template": template.to_dict()} for template in self.skeleton_templates.values()]
+        ret["skeleton_templates"] = skeleton_templates
         return ret
 
     def add_object(
@@ -261,3 +272,15 @@ class OntologyStructure:
         cls = Classification(uid=uid, feature_node_hash=feature_node_hash, attributes=list())
         self.classifications.append(cls)
         return cls
+
+    def add_skeleton_template(
+        self,
+        skeleton_template: SkeletonTemplate,
+        feature_node_hash: Optional[str] = None,
+    ) -> None:
+        if feature_node_hash is None:
+            feature_node_hash = str(uuid4())[:8]
+        skeleton_template.feature_node_hash = feature_node_hash
+        if skeleton_template.name in self.skeleton_templates:
+            raise ValueError("Already a template with this name associated to this ontology")
+        self.skeleton_templates[skeleton_template.name] = skeleton_template
