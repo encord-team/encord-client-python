@@ -163,6 +163,9 @@ class ProjectUsers:
 class ProjectDataset:
     pass
 
+class ProjectType(str, Enum):
+    WORKFLOW = "workflow"
+    MANUAL_QA = "manual_qa"
 
 class ProjectCopyOptions(str, Enum):
     COLLABORATORS = "collaborators"
