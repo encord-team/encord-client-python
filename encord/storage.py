@@ -82,6 +82,26 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
+        """
+        Upload image to a folder in Encord storage.
+
+        Args:
+            file_path: path to image e.g. '/home/user/data/image.png'
+            title:
+                The image title. If unspecified, this will be the file name.
+            client_metadata:
+                Optional arbitrary metadata to be associated with the image. Should be a dictionary
+                that is JSON-serializable.
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        Returns:
+            UUID of the newly created image item.
+
+        Raises:
+            AuthorizationError: If the user is not authorized to access the folder.
+            EncordException: If the image could not be uploaded, e.g. due to being in an unsupported format.
+        """
         upload_url_info = self.get_upload_signed_urls(
             item_type=orm_storage.StorageItemType.IMAGE, count=1, frames_subfolder_name=None
         )
@@ -124,6 +144,30 @@ class StorageFolder:
         video_metadata: Optional[orm_storage.CustomerProvidedVideoMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
+        """
+        Upload video to a folder in Encord storage.
+
+        Args:
+            file_path: path to video e.g. '/home/user/data/video.mp4'
+            title:
+                The video title. If unspecified, this will be the file name. This title should include an extension.
+                For example "encord_video.mp4".
+            client_metadata:
+                Optional arbitrary metadata to be associated with the video. Should be a dictionary
+                that is JSON-serializable.
+            video_metadata:
+                Optional media metadata for a video file; if provided, Encord service will skip frame
+                synchronisation checks and will use the values specified here to render the video in the label editor.
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        Returns:
+            UUID of the newly created video item.
+
+        Raises:
+            AuthorizationError: If the user is not authorized to access the folder.
+            EncordException: If the video could not be uploaded, e.g. due to being in an unsupported format.
+        """
         upload_url_info = self.get_upload_signed_urls(
             item_type=orm_storage.StorageItemType.VIDEO, count=1, frames_subfolder_name=None
         )
@@ -170,6 +214,28 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
+        """
+        Upload a DICOM series to a folder in Encord storage.
+
+        Args:
+            file_paths: a list of paths to DICOM files, e.g.
+                ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
+            title:
+                The title of the DICOM series. If unspecified this will be randomly generated for you. This title should
+                NOT include an extension. For example "encord_image_group".
+            client_metadata:
+                Optional arbitrary metadata to be associated with the video. Should be a dictionary
+                that is JSON-serializable.
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        Returns:
+            UUID of the newly created DICOM series item.
+
+        Raises:
+            AuthorizationError: If the user is not authorized to access the folder.
+            EncordException: If the series could not be uploaded, e.g. due to being in an unsupported format.
+        """
         upload_url_info = self.get_upload_signed_urls(
             item_type=orm_storage.StorageItemType.DICOM_FILE, count=len(file_paths), frames_subfolder_name=None
         )
@@ -222,6 +288,30 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
+        """
+        Create an image group in Encord storage. Choose this type of image upload for non-sequential images that are
+        logically connected (e.g. multiple views of the same object). See also :meth:`.Folder.create_image_sequence`
+        and :meth:`.Folder.upload_image`.
+
+        Args:
+            file_paths: a list of paths to images, e.g.
+                ['/home/user/data/img1.png', '/home/user/data/img2.png']
+            title:
+                The title of the image group. If unspecified this will be randomly generated for you. This title should
+                NOT include an extension. For example "encord_image_group".
+            client_metadata:
+                Optional arbitrary metadata to be associated with the image group. Should be a dictionary
+                that is JSON-serializable.
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        Returns:
+            UUID of the newly created image group item.
+
+        Raises:
+            AuthorizationError: If the user is not authorized to access the folder.
+            EncordException: If the images could not be uploaded, e.g. due to being in an unsupported format.
+        """
         return self._create_image_group_or_sequence(
             file_paths,
             title,
@@ -237,6 +327,31 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
+        """
+        Create an image group in Encord storage. Choose this type of image upload for sequential images (a timelapse
+        or similar). A compressed video will be created from the images.
+
+        See also :meth:`.Folder.create_image_group` and :meth:`.Folder.upload_image`.
+
+        Args:
+            file_paths: a list of paths to images, e.g.
+                ['/home/user/data/img1.png', '/home/user/data/img2.png']
+            title:
+                The title of the image sequence. If unspecified this will be randomly generated for you. This title s
+                should NOT include an extension. For example "front camera 2024-04-01".
+            client_metadata:
+                Optional arbitrary metadata to be associated with the image sequence. Should be a dictionary
+                that is JSON-serializable.
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        Returns:
+            UUID of the newly created image sequence item.
+
+        Raises:
+            AuthorizationError: If the user is not authorized to access the folder.
+            EncordException: If the images could not be uploaded, e.g. due to being in an unsupported format.
+        """
         return self._create_image_group_or_sequence(
             file_paths,
             title,

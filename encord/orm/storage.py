@@ -94,7 +94,7 @@ class UploadLongPollingState(BaseDTO):
 class CustomerProvidedVideoMetadata(BaseDTO):
     """
     Media metadata for a video file; if provided, Encord service will skip frame synchronisation checks
-    and would assume the values are correct.
+    and will use the values specified here to render the video in the label editor.
     """
 
     fps: float
