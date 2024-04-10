@@ -138,7 +138,7 @@ class Project:
 
         .. code::
 
-            from encord.orm.label_row import LabexlRowMetadata
+            from encord.orm.label_row import LabelRowMetadata
 
             project = user_client.get_project("<project_hash>")
 
