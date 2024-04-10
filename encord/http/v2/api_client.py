@@ -90,18 +90,21 @@ class ApiClient:
         self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
+        payload_dict = payload.to_dict() if payload is not None else None
+
         req = requests.Request(
             method="POST",
             url=self._build_url(path),
             headers=self._headers(),
             params=params_dict,
-            json=payload.to_dict() if payload is not None else None,
+            json=payload_dict,
         ).prepare()
 
         return self._request(req, result_type=result_type)  # type: ignore
 
     def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None) -> T:
         params_dict = params.to_dict() if params is not None else None
+
         req = requests.Request(
             method="DELETE", url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
