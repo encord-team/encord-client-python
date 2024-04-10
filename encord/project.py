@@ -25,7 +25,7 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions
+from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectType
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -120,6 +120,14 @@ class Project:
 
         """
         return self._project_instance.datasets
+
+    @property
+    def project_type(self) -> ProjectType:
+        """
+        Get the project type
+        If workflow_manager_uuid is None, the project is a manual QA project else its a workflow project.
+        """
+        return ProjectType.MANUAL_QA if self._project_instance.workflow_manager_uuid is None else ProjectType.WORKFLOW
 
     @property
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
