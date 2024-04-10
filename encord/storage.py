@@ -18,7 +18,6 @@ from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
 from encord.http.utils import CloudUploadSettings, _upload_single_file
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
-from encord.orm.common import WrappedUUID
 from encord.orm.dataset import LongPollingStatus
 from encord.orm.storage import DataUploadItems, StorageItemType, UploadSignedUrlsPayload
 
@@ -62,7 +61,7 @@ class StorageFolder:
 
     def get_upload_signed_urls(
         self, item_type: orm_storage.StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
-    ) -> list[orm_storage.UploadSignedUrl]:
+    ) -> List[orm_storage.UploadSignedUrl]:
         urls = self._api_client.post(
             f"storage/folders/{self.uuid}/upload-signed-urls",
             params=None,
@@ -422,8 +421,8 @@ class StorageFolder:
             path=f"storage/folders/{self.uuid}/data-upload-jobs",
             params=None,
             payload=payload,
-            result_type=WrappedUUID,
-        ).__root__
+            result_type=UUID,
+        )
 
         print(f"add_data_to_folder job started with upload_job_id={upload_job_id}.")
         print("SDK process can be terminated, this will not affect successful job execution.")

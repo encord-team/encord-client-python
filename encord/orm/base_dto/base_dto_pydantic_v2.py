@@ -5,6 +5,7 @@ from typing import Any, Dict, Type, TypeVar, get_origin
 from pydantic import (  # type: ignore[attr-defined]
     BaseModel,
     ConfigDict,  # type: ignore[attr-defined]
+    Extra,
     Field,
     ValidationError,
     field_validator,
@@ -17,7 +18,7 @@ from encord.orm.base_dto.base_dto_interface import BaseDTOInterface, T
 
 
 class BaseDTO(BaseDTOInterface, BaseModel):
-    model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)
+    model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)  # type: ignore[typeddict-unknown-key,typeddict-item]
 
     @field_validator("*", mode="before")
     def parse_datetime(cls, value, info):
@@ -44,7 +45,7 @@ DataT = TypeVar("DataT")
 
 
 class GenericBaseDTO(BaseDTOInterface, BaseModel):
-    model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)
+    model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)  # type: ignore[typeddict-unknown-key,typeddict-item]
 
     @field_validator("*", mode="before")
     def parse_datetime(cls, value, info):

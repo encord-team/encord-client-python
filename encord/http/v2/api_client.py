@@ -1,6 +1,6 @@
 import platform
 import uuid
-from typing import Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
@@ -16,10 +16,9 @@ from encord.http.common import (
 )
 from encord.http.utils import create_new_session
 from encord.http.v2.error_utils import handle_error_response
-from encord.http.v2.request_signer import sign_request
 from encord.orm.base_dto import BaseDTO, BaseDTOInterface
 
-T = TypeVar("T", bound=BaseDTOInterface)
+T = TypeVar("T", bound=Union[BaseDTOInterface, uuid.UUID, int, str])
 
 
 class ApiClient:
@@ -135,8 +134,16 @@ class ApiClient:
 
             if result_type is None or (res_json is None and allow_none):
                 return None
-
-            return result_type.from_dict(res_json)
+            if result_type == int:
+                return int(res_json)
+            elif result_type == str:
+                return str(res_json)
+            elif result_type == uuid.UUID:
+                return uuid.UUID(res_json)
+            elif issubclass(result_type, BaseDTOInterface):
+                return result_type.from_dict(res_json)
+            else:
+                raise ValueError(f"Unsupported result type {result_type}")
 
     @staticmethod
     def _handle_error(response: Response, context: RequestContext):
