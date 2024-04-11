@@ -18,7 +18,13 @@ from encord.http.utils import CloudUploadSettings, _upload_single_file
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.dataset import LongPollingStatus
-from encord.orm.storage import DataUploadItems, StorageItemType, UploadSignedUrlsPayload
+from encord.orm.storage import (
+    CustomerProvidedVideoMetadata,
+    DataUploadItems,
+    FoldersSortBy,
+    StorageItemType,
+    UploadSignedUrlsPayload,
+)
 
 
 class StorageFolder:
@@ -58,22 +64,6 @@ class StorageFolder:
     def delete(self):
         self._api_client.delete(f"storage/folders/{self.uuid}", params=None, result_type=None)
 
-    def get_upload_signed_urls(
-        self, item_type: orm_storage.StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
-    ) -> List[orm_storage.UploadSignedUrl]:
-        urls = self._api_client.post(
-            f"storage/folders/{self.uuid}/upload-signed-urls",
-            params=None,
-            payload=UploadSignedUrlsPayload(
-                item_type=item_type,
-                count=count,
-                frames_subfolder_name=frames_subfolder_name,
-            ),
-            result_type=Page[orm_storage.UploadSignedUrl],
-        )
-
-        return urls.results
-
     def upload_image(
         self,
         file_path: Union[Path, str],
@@ -101,8 +91,8 @@ class StorageFolder:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the image could not be uploaded, e.g. due to being in an unsupported format.
         """
-        upload_url_info = self.get_upload_signed_urls(
-            item_type=orm_storage.StorageItemType.IMAGE, count=1, frames_subfolder_name=None
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.IMAGE, count=1, frames_subfolder_name=None
         )
         if len(upload_url_info) != 1:
             raise EncordException("Can't access upload location")
@@ -110,7 +100,7 @@ class StorageFolder:
         title = self._guess_title(title, file_path)
 
         self._upload_local_file(
-            file_path, title, orm_storage.StorageItemType.IMAGE, upload_url_info[0].signed_url, cloud_upload_settings
+            file_path, title, StorageItemType.IMAGE, upload_url_info[0].signed_url, cloud_upload_settings
         )
 
         upload_result = self._add_data(
@@ -140,7 +130,7 @@ class StorageFolder:
         file_path: Union[Path, str],
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
-        video_metadata: Optional[orm_storage.CustomerProvidedVideoMetadata] = None,
+        video_metadata: Optional[CustomerProvidedVideoMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """
@@ -167,8 +157,8 @@ class StorageFolder:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the video could not be uploaded, e.g. due to being in an unsupported format.
         """
-        upload_url_info = self.get_upload_signed_urls(
-            item_type=orm_storage.StorageItemType.VIDEO, count=1, frames_subfolder_name=None
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.VIDEO, count=1, frames_subfolder_name=None
         )
         if len(upload_url_info) != 1:
             raise EncordException("Can't access upload location")
@@ -178,7 +168,7 @@ class StorageFolder:
         self._upload_local_file(
             file_path,
             title,
-            orm_storage.StorageItemType.VIDEO,
+            StorageItemType.VIDEO,
             upload_url_info[0].signed_url,
             cloud_upload_settings,
         )
@@ -235,8 +225,8 @@ class StorageFolder:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the series could not be uploaded, e.g. due to being in an unsupported format.
         """
-        upload_url_info = self.get_upload_signed_urls(
-            item_type=orm_storage.StorageItemType.DICOM_FILE, count=len(file_paths), frames_subfolder_name=None
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.DICOM_FILE, count=len(file_paths), frames_subfolder_name=None
         )
         if len(upload_url_info) != len(file_paths):
             raise EncordException("Can't access upload location")
@@ -249,7 +239,7 @@ class StorageFolder:
             self._upload_local_file(
                 local_file_path,
                 file_title,
-                orm_storage.StorageItemType.DICOM_FILE,
+                StorageItemType.DICOM_FILE,
                 url_info.signed_url,
                 cloud_upload_settings,
             )
@@ -367,8 +357,8 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]],
         cloud_upload_settings: CloudUploadSettings,
     ):
-        upload_url_info = self.get_upload_signed_urls(
-            item_type=orm_storage.StorageItemType.IMAGE, count=len(file_paths), frames_subfolder_name=None
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.IMAGE, count=len(file_paths), frames_subfolder_name=None
         )
         if len(upload_url_info) != len(file_paths):
             raise EncordException("Can't access upload location")
@@ -381,7 +371,7 @@ class StorageFolder:
             self._upload_local_file(
                 local_file_path,
                 file_title,
-                orm_storage.StorageItemType.DICOM_FILE,
+                StorageItemType.DICOM_FILE,
                 url_info.signed_url,
                 cloud_upload_settings,
             )
@@ -432,7 +422,7 @@ class StorageFolder:
         self,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
-        order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageFolder"]:
@@ -443,7 +433,7 @@ class StorageFolder:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
-            order: Sort order for the folders. See :class:`encord.orm_storage.FoldersSortBy` for available options.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page.
 
@@ -461,6 +451,22 @@ class StorageFolder:
             desc=desc,
             page_size=page_size,
         )
+
+    def _get_upload_signed_urls(
+        self, item_type: StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
+    ) -> List[orm_storage.UploadSignedUrl]:
+        urls = self._api_client.post(
+            f"storage/folders/{self.uuid}/upload-signed-urls",
+            params=None,
+            payload=UploadSignedUrlsPayload(
+                item_type=item_type,
+                count=count,
+                frames_subfolder_name=frames_subfolder_name,
+            ),
+            result_type=Page[orm_storage.UploadSignedUrl],
+        )
+
+        return urls.results
 
     def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str:
         if title:
@@ -634,7 +640,7 @@ class StorageFolder:
         global_search: bool,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
-        order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageFolder"]:
@@ -676,7 +682,7 @@ class StorageFolder:
         api_client: ApiClient,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
-        order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageFolder"]:

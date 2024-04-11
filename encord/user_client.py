@@ -62,10 +62,10 @@ from encord.orm.project import (
 from encord.orm.project import Project as OrmProject
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
-from encord.orm.storage import CreateStorageFolderPayload, FoldersSortBy, ListFoldersParams
+from encord.orm.storage import CreateStorageFolderPayload
 from encord.orm.storage import StorageFolder as OrmStorageFolder
 from encord.project import Project
-from encord.storage import StorageFolder
+from encord.storage import FoldersSortBy, StorageFolder
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -833,7 +833,7 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
-            order: Sort order for the folders. See :class:`encord.orm_storage.FoldersSortBy` for available options.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page.
 
@@ -867,7 +867,7 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
-            order: Sort order for the folders. See :class:`encord.orm_storage.FoldersSortBy` for available options.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page.
 
