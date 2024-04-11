@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Flag, auto
-from typing import Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
+from encord.orm.base_dto import BaseDTO
 
 
 @dataclass(frozen=True)
@@ -150,28 +151,23 @@ class Visibility(Flag):
     OCCLUDED = auto()
 
 
-@dataclass(frozen=True)
-class SkeletonCoordinate:
+class SkeletonCoordinate(BaseDTO):
     x: float
     y: float
-
-    # `name` and `color` can be removed as they are part of the ontology.
-    # The frontend must first be aware of how to merge with ontology.
     name: str
-    color: str
-
-    # `featureHash` and `value` seem to appear when visibility is
-    # present. They might not have any meaning. Remove if confirmed that
-    # Frontend does not need it.
+    color: Optional[str] = None
     feature_hash: Optional[str] = None
     value: Optional[str] = None
 
     visibility: Optional[Visibility] = None
 
 
-@dataclass(frozen=True)
-class SkeletonCoordinates:
+class SkeletonCoordinates(BaseDTO):
     values: List[SkeletonCoordinate]
+    name: str
+
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        return {str(i): x.to_dict() for i, x in enumerate(self.values)}
 
 
 Coordinates = Union[
