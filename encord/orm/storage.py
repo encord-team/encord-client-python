@@ -186,3 +186,17 @@ class PostUploadJobParams(BaseDTO):
 
 class GetUploadJobParams(BaseDTO):
     timeout_seconds: int = 60
+
+
+class FoldersSortBy(CamelStrEnum):
+    NAME = auto()
+    CREATED_AT = auto()
+
+
+class ListFoldersParams(BaseDTO):
+    search: Optional[str] = None
+    dataset_synced: Optional[bool] = None
+    order: FoldersSortBy = FoldersSortBy.NAME
+    desc: bool = False
+    page_token: Optional[str] = None
+    page_size: int = 100

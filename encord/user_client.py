@@ -65,7 +65,7 @@ from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import CreateStorageFolderPayload
 from encord.orm.storage import StorageFolder as OrmStorageFolder
 from encord.project import Project
-from encord.storage import StorageFolder
+from encord.storage import FoldersSortBy, StorageFolder
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -775,6 +775,19 @@ class EncordUserClient:
         client_metadata: Optional[Dict[str, Any]] = None,
         parent_folder: Optional[Union[StorageFolder, UUID]] = None,
     ) -> StorageFolder:
+        """
+        Create a new storage folder.
+
+        Args:
+            name: The name of the folder.
+            description: The description of the folder.
+            client_metadata: Optional arbitrary metadata to be associated with the folder. Should be a dictionary
+                that is JSON-serializable.
+            parent_folder: The parent folder of the folder; or `None` if the folder is to be created at the root level.
+
+        Returns:
+            The created storage folder. See :class:`encord.storage.StorageFolder` for details.
+        """
         if isinstance(parent_folder, StorageFolder):
             parent_folder = parent_folder.uuid
 
@@ -790,7 +803,88 @@ class EncordUserClient:
         return StorageFolder(self._api_client, folder_orm)
 
     def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
+        """
+        Get a storage folder by its UUID.
+
+        Args:
+            folder_uuid: The UUID of the folder to retrieve.
+
+        Returns:
+            The storage folder. See :class:`encord.storage.StorageFolder` for details.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the folder with the given UUID does not exist or
+                the user does not have access to it.
+        """
         return StorageFolder._get_folder(self._api_client, folder_uuid)
+
+    def list_storage_folders(
+        self,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: FoldersSortBy = FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable[StorageFolder]:
+        """
+        List top-level storage folders.
+
+        Args:
+            search: Search string to filter folders by name (optional)
+            dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
+                no filtering is applied.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            desc: If True, sort in descending order.
+            page_size: Number of folders to return per page.
+
+        Returns:
+            Iterable of :class:`encord.StorageFolder` objects.
+        """
+
+        return StorageFolder._list_folders(
+            self._api_client,
+            None,
+            global_search=False,
+            search=search,
+            dataset_synced=dataset_synced,
+            order=order,
+            desc=desc,
+            page_size=page_size,
+        )
+
+    def find_storage_folders(
+        self,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: FoldersSortBy = FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable[StorageFolder]:
+        """
+        Recursively search for storage folders, starting from the top level.
+
+        Args:
+            search: Search string to filter folders by name (optional)
+            dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
+                no filtering is applied.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            desc: If True, sort in descending order.
+            page_size: Number of folders to return per page.
+
+        Returns:
+            Iterable of :class:`encord.StorageFolder` objects.
+        """
+
+        return StorageFolder._list_folders(
+            self._api_client,
+            None,
+            global_search=True,
+            search=search,
+            dataset_synced=dataset_synced,
+            order=order,
+            desc=desc,
+            page_size=page_size,
+        )
 
     def get_client_metadata_schema(self, organisation_id: int) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
         return get_client_metadata_schema(self._api_client, organisation_id)

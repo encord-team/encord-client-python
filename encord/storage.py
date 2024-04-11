@@ -2,10 +2,9 @@ import json
 import mimetypes
 import os
 import time
-import typing
 from math import ceil
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, TextIO, Union
 from uuid import UUID
 
 import requests
@@ -19,7 +18,13 @@ from encord.http.utils import CloudUploadSettings, _upload_single_file
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.dataset import LongPollingStatus
-from encord.orm.storage import DataUploadItems, StorageItemType, UploadSignedUrlsPayload
+from encord.orm.storage import (
+    CustomerProvidedVideoMetadata,
+    DataUploadItems,
+    FoldersSortBy,
+    StorageItemType,
+    UploadSignedUrlsPayload,
+)
 
 
 class StorageFolder:
@@ -59,22 +64,6 @@ class StorageFolder:
     def delete(self):
         self._api_client.delete(f"storage/folders/{self.uuid}", params=None, result_type=None)
 
-    def get_upload_signed_urls(
-        self, item_type: orm_storage.StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
-    ) -> List[orm_storage.UploadSignedUrl]:
-        urls = self._api_client.post(
-            f"storage/folders/{self.uuid}/upload-signed-urls",
-            params=None,
-            payload=UploadSignedUrlsPayload(
-                item_type=item_type,
-                count=count,
-                frames_subfolder_name=frames_subfolder_name,
-            ),
-            result_type=Page[orm_storage.UploadSignedUrl],
-        )
-
-        return urls.results
-
     def upload_image(
         self,
         file_path: Union[Path, str],
@@ -102,8 +91,8 @@ class StorageFolder:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the image could not be uploaded, e.g. due to being in an unsupported format.
         """
-        upload_url_info = self.get_upload_signed_urls(
-            item_type=orm_storage.StorageItemType.IMAGE, count=1, frames_subfolder_name=None
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.IMAGE, count=1, frames_subfolder_name=None
         )
         if len(upload_url_info) != 1:
             raise EncordException("Can't access upload location")
@@ -111,7 +100,7 @@ class StorageFolder:
         title = self._guess_title(title, file_path)
 
         self._upload_local_file(
-            file_path, title, orm_storage.StorageItemType.IMAGE, upload_url_info[0].signed_url, cloud_upload_settings
+            file_path, title, StorageItemType.IMAGE, upload_url_info[0].signed_url, cloud_upload_settings
         )
 
         upload_result = self._add_data(
@@ -141,7 +130,7 @@ class StorageFolder:
         file_path: Union[Path, str],
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
-        video_metadata: Optional[orm_storage.CustomerProvidedVideoMetadata] = None,
+        video_metadata: Optional[CustomerProvidedVideoMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """
@@ -168,8 +157,8 @@ class StorageFolder:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the video could not be uploaded, e.g. due to being in an unsupported format.
         """
-        upload_url_info = self.get_upload_signed_urls(
-            item_type=orm_storage.StorageItemType.VIDEO, count=1, frames_subfolder_name=None
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.VIDEO, count=1, frames_subfolder_name=None
         )
         if len(upload_url_info) != 1:
             raise EncordException("Can't access upload location")
@@ -179,7 +168,7 @@ class StorageFolder:
         self._upload_local_file(
             file_path,
             title,
-            orm_storage.StorageItemType.VIDEO,
+            StorageItemType.VIDEO,
             upload_url_info[0].signed_url,
             cloud_upload_settings,
         )
@@ -236,8 +225,8 @@ class StorageFolder:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the series could not be uploaded, e.g. due to being in an unsupported format.
         """
-        upload_url_info = self.get_upload_signed_urls(
-            item_type=orm_storage.StorageItemType.DICOM_FILE, count=len(file_paths), frames_subfolder_name=None
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.DICOM_FILE, count=len(file_paths), frames_subfolder_name=None
         )
         if len(upload_url_info) != len(file_paths):
             raise EncordException("Can't access upload location")
@@ -250,7 +239,7 @@ class StorageFolder:
             self._upload_local_file(
                 local_file_path,
                 file_title,
-                orm_storage.StorageItemType.DICOM_FILE,
+                StorageItemType.DICOM_FILE,
                 url_info.signed_url,
                 cloud_upload_settings,
             )
@@ -368,8 +357,8 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]],
         cloud_upload_settings: CloudUploadSettings,
     ):
-        upload_url_info = self.get_upload_signed_urls(
-            item_type=orm_storage.StorageItemType.IMAGE, count=len(file_paths), frames_subfolder_name=None
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.IMAGE, count=len(file_paths), frames_subfolder_name=None
         )
         if len(upload_url_info) != len(file_paths):
             raise EncordException("Can't access upload location")
@@ -382,7 +371,7 @@ class StorageFolder:
             self._upload_local_file(
                 local_file_path,
                 file_title,
-                orm_storage.StorageItemType.DICOM_FILE,
+                StorageItemType.DICOM_FILE,
                 url_info.signed_url,
                 cloud_upload_settings,
             )
@@ -417,7 +406,7 @@ class StorageFolder:
     def add_private_data_to_folder_start(
         self,
         integration_id: str,
-        private_files: Union[str, typing.Dict, Path, typing.TextIO],
+        private_files: Union[str, Dict, Path, TextIO],
         ignore_errors: bool = False,
     ) -> UUID:
         return self._add_data_to_folder_start(integration_id, private_files, ignore_errors)
@@ -428,6 +417,56 @@ class StorageFolder:
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> orm_storage.UploadLongPollingState:
         return self._add_data_to_folder_get_result(upload_job_id, timeout_seconds)
+
+    def list_subfolders(
+        self,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: FoldersSortBy = FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable["StorageFolder"]:
+        """
+        List subfolders of the current folder.
+
+        Args:
+            search: Search string to filter folders by name (optional)
+            dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
+                no filtering is applied.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            desc: If True, sort in descending order.
+            page_size: Number of folders to return per page.
+
+        Returns:
+            Iterable of :class:`encord.StorageFolder` objects.
+        """
+
+        return StorageFolder._list_folders(
+            self._api_client,
+            self.uuid,
+            global_search=False,
+            search=search,
+            dataset_synced=dataset_synced,
+            order=order,
+            desc=desc,
+            page_size=page_size,
+        )
+
+    def _get_upload_signed_urls(
+        self, item_type: StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
+    ) -> List[orm_storage.UploadSignedUrl]:
+        urls = self._api_client.post(
+            f"storage/folders/{self.uuid}/upload-signed-urls",
+            params=None,
+            payload=UploadSignedUrlsPayload(
+                item_type=item_type,
+                count=count,
+                frames_subfolder_name=frames_subfolder_name,
+            ),
+            result_type=Page[orm_storage.UploadSignedUrl],
+        )
+
+        return urls.results
 
     def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str:
         if title:
@@ -481,7 +520,7 @@ class StorageFolder:
     def _add_data(
         self,
         integration_id: Optional[str],
-        private_files: Union[str, typing.Dict, Path, typing.TextIO, DataUploadItems],
+        private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> orm_storage.UploadLongPollingState:
         upload_job_id = self._add_data_to_folder_start(
@@ -502,7 +541,7 @@ class StorageFolder:
     def _add_data_to_folder_start(
         self,
         integration_id: Optional[str],
-        private_files: Union[str, typing.Dict, Path, typing.TextIO, DataUploadItems],
+        private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> UUID:
         if isinstance(private_files, dict):
@@ -517,7 +556,7 @@ class StorageFolder:
         elif isinstance(private_files, Path):
             text_contents = private_files.read_text(encoding="utf-8")
             files = json.loads(text_contents)
-        elif isinstance(private_files, typing.TextIO):
+        elif isinstance(private_files, TextIO):
             text_contents = private_files.read()
             files = json.loads(text_contents)
         elif isinstance(private_files, DataUploadItems):
@@ -593,3 +632,81 @@ class StorageFolder:
             f"storage/folders/{folder_uuid}", params=None, result_type=orm_storage.StorageFolder
         )
         return StorageFolder(api_client, orm_folder)
+
+    @staticmethod
+    def _list_folders(
+        api_client: ApiClient,
+        parent_uuid: Optional[UUID],
+        global_search: bool,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: FoldersSortBy = FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable["StorageFolder"]:
+        """ """
+
+        if page_size < 1 or page_size > 1000:
+            raise ValueError("page_size should be between 1 and 1000")
+
+        params = orm_storage.ListFoldersParams(
+            search=search,
+            dataset_synced=dataset_synced,
+            order=order,
+            desc=desc,
+            page_token=None,
+            page_size=page_size,
+        )
+
+        path: str
+        if parent_uuid is not None:
+            path = f"storage/folders/{parent_uuid}/folders"
+        elif global_search:
+            path = "storage/search/folders"
+        else:
+            path = "storage/folders"
+
+        while True:
+            page = api_client.get(path, params=params, result_type=Page[orm_storage.StorageFolder])
+
+            for orm_folder in page.results:
+                yield StorageFolder(api_client, orm_folder)
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
+
+    @staticmethod
+    def _search_folders(
+        api_client: ApiClient,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: FoldersSortBy = FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable["StorageFolder"]:
+        """ """
+
+        if page_size < 1 or page_size > 1000:
+            raise ValueError("page_size should be between 1 and 1000")
+
+        params = orm_storage.ListFoldersParams(
+            search=search,
+            dataset_synced=dataset_synced,
+            order=order,
+            desc=desc,
+            page_token=None,
+            page_size=page_size,
+        )
+
+        while True:
+            page = api_client.get("storage/folders", params=params, result_type=Page[orm_storage.StorageFolder])
+
+            for orm_folder in page.results:
+                yield StorageFolder(api_client, orm_folder)
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
