@@ -166,6 +166,17 @@ class ClassificationInstance:
             self._parent._add_frames_to_classification(self.ontology_item, frames_list)
             self._parent._add_to_frame_to_hashes_map(self, frames_list)
 
+    def set_frame_data(self, frame_data: FrameData, frames: Frames) -> None:
+        frames_list = frames_class_to_frames_list(frames)
+
+        for frame in frames_list:
+            self._frames_to_data[frame] = frame_data
+
+        if self.is_assigned_to_label_row():
+            assert self._parent is not None
+            self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+            self._parent._add_to_frame_to_hashes_map(self, frames_list)
+
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
         Args:
@@ -485,9 +496,10 @@ class ClassificationInstance:
             reviews: Optional[List[dict]] = None,
         ) -> None:
             self.created_at = created_at or self.created_at
+            self.last_edited_at = last_edited_at or self.last_edited_at
+
             if created_by is not None:
                 self.created_by = created_by
-            self.last_edited_at = last_edited_at or self.last_edited_at
             if last_edited_by is not None:
                 self.last_edited_by = last_edited_by
             if confidence is not None:

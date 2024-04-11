@@ -26,6 +26,7 @@ requests = "^2.25.0"
 cryptography = ">=3.4.8"
 tqdm = "^4.32.1"
 pydantic = ">=1.10.14"
+orjson = ">=2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.1"

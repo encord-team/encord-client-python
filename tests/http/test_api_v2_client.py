@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Optional
 from unittest.mock import MagicMock, patch
@@ -33,6 +34,7 @@ def test_constructed_url_is_correct(send: MagicMock, api_client: ApiClient):
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"payload": "hello world"}
+    mock_response.content = json.dumps({"payload": "hello world"})
     send.return_value = mock_response
 
     api_client.get("/", params=None, result_type=TestPayload)
@@ -51,6 +53,7 @@ def test_payload_url_serialisation(send: MagicMock, api_client: ApiClient):
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"payload": "hello world"}
+    mock_response.content = json.dumps({"payload": "hello world"})
     send.return_value = mock_response
 
     expected_time = datetime.fromisoformat("2024-02-01T01:02:03+01:00")
@@ -69,6 +72,7 @@ def test_payload_body_serialisation(send: MagicMock, api_client: ApiClient):
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"payload": "hello world"}
+    mock_response.content = json.dumps({"payload": "hello world"})
     send.return_value = mock_response
 
     expected_time = datetime.fromisoformat("2024-02-01T01:02:03+01:00")

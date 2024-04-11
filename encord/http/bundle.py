@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 import logging
 from dataclasses import asdict, dataclass, is_dataclass
 from functools import reduce

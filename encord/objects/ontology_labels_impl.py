@@ -14,7 +14,6 @@ from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, 
 from encord.http.limits import (
     LABEL_ROW_BUNDLE_CREATE_LIMIT,
     LABEL_ROW_BUNDLE_GET_LIMIT,
-    LABEL_ROW_BUNDLE_SAVE_LIMIT,
 )
 from encord.objects.attributes import Attribute
 from encord.objects.bundled_operations import (
@@ -28,7 +27,6 @@ from encord.objects.bundled_operations import (
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
-    AVAILABLE_COLORS,
     DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
@@ -56,10 +54,6 @@ from encord.orm.label_row import (
     LabelStatus,
     WorkflowGraphNode,
 )
-from encord.orm.ontology import (  # pylint: disable=unused-import # for backward compatibility
-    OntologyUserRole,
-)
-from encord.orm.project import TaskPriorityParams
 
 log = logging.getLogger(__name__)
 
@@ -1306,7 +1300,7 @@ class LabelRowV2:
         return present_frames.intersection(frames)
 
     def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
-        self._classifications_to_frames[classification].update(set(frames))
+        self._classifications_to_frames[classification].update(frames)
 
     def _remove_frames_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         present_frames = self._classifications_to_frames.get(classification, set())
@@ -1643,17 +1637,7 @@ class LabelRowV2:
         object_hash = frame_classification_label["classificationHash"]
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
-        classification_instance.set_for_frames(
-            frame,
-            created_at=frame_view.created_at,
-            created_by=frame_view.created_by,
-            confidence=frame_view.confidence,
-            manual_annotation=frame_view.manual_annotation,
-            last_edited_at=frame_view.last_edited_at,
-            last_edited_by=frame_view.last_edited_by,
-            reviews=frame_view.reviews,
-            overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
-        )
+        classification_instance.set_frame_data(frame_view, frame)
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:

@@ -15,11 +15,11 @@
 import dataclasses
 import logging
 import platform
-import random
 import uuid
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Type, TypeVar, Union
 
+import orjson
 import requests
 import requests.exceptions
 from requests import Session
@@ -220,7 +220,7 @@ class Querier:
             res = session.send(req, timeout=timeouts)
 
             try:
-                res_json = res.json()
+                res_json = orjson.loads(res.content)
             except Exception as e:
                 raise RequestException(f"Error parsing JSON response: {res.text.strip()}", context=context) from e
 

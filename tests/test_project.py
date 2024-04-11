@@ -1,3 +1,4 @@
+import json
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -74,6 +75,7 @@ def test_valid_device(mock_send, project: Project, device):
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"status": 200, "response": response}
+    mock_response.content = json.dumps({"status": 200, "response": response})
 
     mock_send.return_value = mock_response
 
