@@ -2,10 +2,9 @@ import json
 import mimetypes
 import os
 import time
-import typing
 from math import ceil
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, TextIO, Union
 from uuid import UUID
 
 import requests
@@ -417,7 +416,7 @@ class StorageFolder:
     def add_private_data_to_folder_start(
         self,
         integration_id: str,
-        private_files: Union[str, typing.Dict, Path, typing.TextIO],
+        private_files: Union[str, Dict, Path, TextIO],
         ignore_errors: bool = False,
     ) -> UUID:
         return self._add_data_to_folder_start(integration_id, private_files, ignore_errors)
@@ -428,6 +427,40 @@ class StorageFolder:
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> orm_storage.UploadLongPollingState:
         return self._add_data_to_folder_get_result(upload_job_id, timeout_seconds)
+
+    def list_subfolders(
+        self,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable["StorageFolder"]:
+        """
+        List subfolders of the current folder.
+
+        Args:
+            search: Search string to filter folders by name (optional)
+            dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
+                no filtering is applied.
+            order: Sort order for the folders. See :class:`encord.orm_storage.FoldersSortBy` for available options.
+            desc: If True, sort in descending order.
+            page_size: Number of folders to return per page.
+
+        Returns:
+            Iterable of :class:`encord.StorageFolder` objects.
+        """
+
+        return StorageFolder._list_folders(
+            self._api_client,
+            self.uuid,
+            global_search=False,
+            search=search,
+            dataset_synced=dataset_synced,
+            order=order,
+            desc=desc,
+            page_size=page_size,
+        )
 
     def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str:
         if title:
@@ -481,7 +514,7 @@ class StorageFolder:
     def _add_data(
         self,
         integration_id: Optional[str],
-        private_files: Union[str, typing.Dict, Path, typing.TextIO, DataUploadItems],
+        private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> orm_storage.UploadLongPollingState:
         upload_job_id = self._add_data_to_folder_start(
@@ -502,7 +535,7 @@ class StorageFolder:
     def _add_data_to_folder_start(
         self,
         integration_id: Optional[str],
-        private_files: Union[str, typing.Dict, Path, typing.TextIO, DataUploadItems],
+        private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> UUID:
         if isinstance(private_files, dict):
@@ -517,7 +550,7 @@ class StorageFolder:
         elif isinstance(private_files, Path):
             text_contents = private_files.read_text(encoding="utf-8")
             files = json.loads(text_contents)
-        elif isinstance(private_files, typing.TextIO):
+        elif isinstance(private_files, TextIO):
             text_contents = private_files.read()
             files = json.loads(text_contents)
         elif isinstance(private_files, DataUploadItems):
@@ -593,3 +626,81 @@ class StorageFolder:
             f"storage/folders/{folder_uuid}", params=None, result_type=orm_storage.StorageFolder
         )
         return StorageFolder(api_client, orm_folder)
+
+    @staticmethod
+    def _list_folders(
+        api_client: ApiClient,
+        parent_uuid: Optional[UUID],
+        global_search: bool,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable["StorageFolder"]:
+        """ """
+
+        if page_size < 1 or page_size > 1000:
+            raise ValueError("page_size should be between 1 and 1000")
+
+        params = orm_storage.ListFoldersParams(
+            search=search,
+            dataset_synced=dataset_synced,
+            order=order,
+            desc=desc,
+            page_token=None,
+            page_size=page_size,
+        )
+
+        path: str
+        if parent_uuid is not None:
+            path = f"storage/folders/{parent_uuid}/folders"
+        elif global_search:
+            path = "storage/search/folders"
+        else:
+            path = "storage/folders"
+
+        while True:
+            page = api_client.get(path, params=params, result_type=Page[orm_storage.StorageFolder])
+
+            for orm_folder in page.results:
+                yield StorageFolder(api_client, orm_folder)
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
+
+    @staticmethod
+    def _search_folders(
+        api_client: ApiClient,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable["StorageFolder"]:
+        """ """
+
+        if page_size < 1 or page_size > 1000:
+            raise ValueError("page_size should be between 1 and 1000")
+
+        params = orm_storage.ListFoldersParams(
+            search=search,
+            dataset_synced=dataset_synced,
+            order=order,
+            desc=desc,
+            page_token=None,
+            page_size=page_size,
+        )
+
+        while True:
+            page = api_client.get("storage/folders", params=params, result_type=Page[orm_storage.StorageFolder])
+
+            for orm_folder in page.results:
+                yield StorageFolder(api_client, orm_folder)
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
