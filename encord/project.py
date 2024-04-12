@@ -183,6 +183,7 @@ class Project:
         include_workflow_graph_node: bool = True,
         include_client_metadata: bool = False,
         include_images_data: bool = False,
+        include_all_label_branches: bool = False,
     ) -> List[LabelRowV2]:
         """
         Args:
@@ -199,6 +200,7 @@ class Project:
             include_workflow_graph_node: Include workflow graph node metadata in all the results. True by default.
             include_client_metadata: Optionally include client_metadata into the result of this query.
             include_images_data: Optionally include image group metadata into the result of this query.
+            include_all_label_branches: Optionally include all label branches. They will be included as separate label row objects.
         Returns:
             A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows
         """
@@ -217,6 +219,7 @@ class Project:
             include_workflow_graph_node=include_workflow_graph_node,
             include_client_metadata=include_client_metadata,
             include_images_data=include_images_data,
+            include_all_label_branches=include_all_label_branches,
         )
 
         label_rows = [

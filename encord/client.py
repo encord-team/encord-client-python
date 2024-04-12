@@ -789,6 +789,7 @@ class EncordClientProject(EncordClient):
         data_title_like: Optional[str] = None,
         workflow_graph_node_title_eq: Optional[str] = None,
         workflow_graph_node_title_like: Optional[str] = None,
+        include_all_label_branches: bool = False,
     ) -> List[LabelRowMetadata]:
         """
         This function is documented in :meth:`encord.project.Project.list_label_rows`.
@@ -815,6 +816,7 @@ class EncordClientProject(EncordClient):
             "include_client_metadata": include_client_metadata,
             "include_images_data": include_images_data,
             "include_workflow_graph_node": include_workflow_graph_node,
+            "include_all_label_branches": include_all_label_branches,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
 

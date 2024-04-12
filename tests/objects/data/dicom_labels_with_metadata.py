@@ -1,5 +1,6 @@
 DICOM_LABELS_WITH_METADATA_TEST_BLURB = {
     "label_hash": "7ed1217b-e975-4d18-8601-94536e06888f",
+    "branch_name": "main",
     "created_at": "2023-09-05 13:31:24",
     "last_edited_at": "2023-09-05 14:12:12",
     "dataset_hash": "0f323c0c-93dc-4282-8338-45daceecce3f",

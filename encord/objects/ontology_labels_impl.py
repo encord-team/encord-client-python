@@ -103,6 +103,10 @@ class LabelRowV2:
         return self._label_row_read_only_data.label_hash
 
     @property
+    def branch_name(self) -> str:
+        return self._label_row_read_only_data.branch_name
+
+    @property
     def data_hash(self) -> str:
         return self._label_row_read_only_data.data_hash
 
@@ -731,6 +735,7 @@ class LabelRowV2:
         read_only_data = self._label_row_read_only_data
 
         ret["label_hash"] = read_only_data.label_hash
+        ret["branch_name"] = read_only_data.branch_name
         ret["created_at"] = read_only_data.created_at
         ret["last_edited_at"] = read_only_data.last_edited_at
         ret["data_hash"] = read_only_data.data_hash
@@ -1075,6 +1080,7 @@ class LabelRowV2:
         file_type: Optional[str]
         client_metadata: Optional[dict]
         images_data: Optional[List[LabelRowV2.LabelRowReadOnlyDataImagesDataEntry]]
+        branch_name: str
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
@@ -1322,6 +1328,7 @@ class LabelRowV2:
 
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_metadata.label_hash,
+            branch_name=label_row_metadata.branch_name,
             data_hash=label_row_metadata.data_hash,
             data_title=label_row_metadata.data_title,
             dataset_hash=label_row_metadata.dataset_hash,
@@ -1388,6 +1395,7 @@ class LabelRowV2:
 
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
+            branch_name=label_row_dict["branch_name"],
             dataset_hash=label_row_dict["dataset_hash"],
             dataset_title=label_row_dict["dataset_title"],
             data_title=label_row_dict["data_title"],

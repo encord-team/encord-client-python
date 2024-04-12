@@ -58,6 +58,7 @@ image_group_ontology = {
 
 image_group_labels = {
     "label_hash": "f1e6bc82-9f89-4545-8abb-f271bf28cf99",
+    "branch_name": "main",
     "created_at": "2023-02-09 14:12:03",
     "last_edited_at": "2023-02-09 14:12:03",
     "dataset_hash": "d9f19c3c-5cd0-4f8c-b98c-6c0e24676224",
