@@ -80,11 +80,7 @@ class ApiClient:
         }
 
     def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
-        params_dict = params.to_dict() if params is not None else None
-        req = requests.Request(
-            method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
-        ).prepare()
-        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
+        return self._request_without_payload("GET", path, params, result_type)
 
     def get_paged_iterator(
         self,
@@ -114,8 +110,26 @@ class ApiClient:
             else:
                 break
 
+    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None) -> T:
+        return self._request_without_payload("DELETE", path, params, result_type)
+
     def post(
         self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
+    ) -> T:
+        return self._request_with_payload("POST", path, params, payload, result_type)
+
+    def patch(
+        self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
+    ) -> T:
+        return self._request_with_payload("PATCH", path, params, payload, result_type)
+
+    def _request_with_payload(
+        self,
+        method: str,
+        path: str,
+        params: Optional[BaseDTO],
+        payload: Optional[BaseDTO],
+        result_type: Optional[Type[T]],
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
         payload_dict = payload.to_dict() if payload is not None else None
@@ -130,11 +144,13 @@ class ApiClient:
 
         return self._request(req, result_type=result_type)  # type: ignore
 
-    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None) -> T:
+    def _request_without_payload(
+        self, method: str, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]]
+    ):
         params_dict = params.to_dict() if params is not None else None
 
         req = requests.Request(
-            method="DELETE", url=self._build_url(path), headers=self._headers(), params=params_dict
+            method=method, url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
 
         return self._request(req, result_type=result_type)  # type: ignore
