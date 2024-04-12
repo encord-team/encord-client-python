@@ -66,6 +66,7 @@ def test_project_collaborator_timers_single_page(api_client_get: MagicMock, proj
             page_size=100,
         ),
         result_type=Page[CollaboratorTimer],
+        allow_none=False,
     )
 
     assert return_value.results == timers

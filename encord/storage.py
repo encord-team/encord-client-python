@@ -2,6 +2,8 @@ import json
 import mimetypes
 import os
 import time
+import typing
+from datetime import datetime
 from math import ceil
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, TextIO, Union
@@ -22,6 +24,7 @@ from encord.orm.storage import (
     CustomerProvidedVideoMetadata,
     DataUploadItems,
     FoldersSortBy,
+    ListItemsParams,
     StorageItemType,
     UploadSignedUrlsPayload,
 )
@@ -60,6 +63,50 @@ class StorageFolder:
             if self._orm_folder.client_metadata is not None:
                 self._parsed_metadata = json.loads(self._orm_folder.client_metadata)
         return self._parsed_metadata
+
+    def list_items(
+        self,
+        search: Optional[str] = None,
+        is_in_dataset: Optional[bool] = None,
+        item_types: Optional[List[StorageItemType]] = None,
+        order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable["StorageItem"]:
+        """
+        List items in the folder.
+
+        Args:
+            search: Search string to filter items by name.
+            is_in_dataset: Filter items by whether they are linked to any dataset. `True` and `False` select
+                only linked and only unlinked items, respectively. `None` includes all items regardless of their
+                dataset links.
+            item_types: Filter items by type.
+            order: Sort order.
+            desc: Sort in descending order.
+            page_size: Number of items to return per page.
+
+        Returns:
+            Iterable of items in the folder.
+        """
+        params = ListItemsParams(
+            search=search,
+            is_in_dataset=is_in_dataset,
+            item_types=item_types or [],
+            order=order,
+            desc=desc,
+            page_token=None,
+            page_size=page_size,
+        )
+
+        paged_items = self._api_client.get_paged_iterator(
+            f"storage/folders/{self.uuid}/items",
+            params=params,
+            result_type=orm_storage.StorageItem,
+        )
+
+        for item in paged_items:
+            yield StorageItem(self._api_client, item)
 
     def delete(self):
         self._api_client.delete(f"storage/folders/{self.uuid}", params=None, result_type=None)
@@ -192,7 +239,7 @@ class StorageFolder:
         )
 
         if upload_result.status == LongPollingStatus.ERROR:
-            raise EncordException(f"Could not register image, errors occured {upload_result.errors}")
+            raise EncordException(f"Could not register video, errors occured {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
 
@@ -666,16 +713,10 @@ class StorageFolder:
         else:
             path = "storage/folders"
 
-        while True:
-            page = api_client.get(path, params=params, result_type=Page[orm_storage.StorageFolder])
+        paged_folders = api_client.get_paged_iterator(path, params, orm_storage.StorageFolder)
 
-            for orm_folder in page.results:
-                yield StorageFolder(api_client, orm_folder)
-
-            if page.next_page_token is not None:
-                params.page_token = page.next_page_token
-            else:
-                break
+        for orm_folder in paged_folders:
+            yield StorageFolder(api_client, orm_folder)
 
     @staticmethod
     def _search_folders(
@@ -700,13 +741,113 @@ class StorageFolder:
             page_size=page_size,
         )
 
-        while True:
-            page = api_client.get("storage/folders", params=params, result_type=Page[orm_storage.StorageFolder])
+        paged_folders = api_client.get_paged_iterator(
+            "storage/folders", params=params, result_type=orm_storage.StorageFolder
+        )
 
-            for orm_folder in page.results:
-                yield StorageFolder(api_client, orm_folder)
+        for orm_folder in paged_folders:
+            yield StorageFolder(api_client, orm_folder)
 
-            if page.next_page_token is not None:
-                params.page_token = page.next_page_token
-            else:
-                break
+
+class StorageItem:
+    def __init__(self, api_client: ApiClient, orm_item: orm_storage.StorageItem):
+        self._api_client = api_client
+        self._orm_item = orm_item
+        self._parsed_metadata: Optional[Dict[str, Any]] = None
+
+    @property
+    def uuid(self) -> UUID:
+        return self._orm_item.uuid
+
+    @property
+    def parent_folder_uuid(self) -> UUID:
+        return self._orm_item.parent
+
+    def parent_folder(self) -> StorageFolder:
+        return StorageFolder._get_folder(self._api_client, self.parent_folder_uuid)
+
+    @property
+    def item_type(self) -> StorageItemType:
+        return self._orm_item.item_type
+
+    @property
+    def name(self) -> str:
+        return self._orm_item.name
+
+    @property
+    def description(self) -> str:
+        return self._orm_item.description
+
+    @property
+    def client_metadata(self) -> Optional[Dict[str, Any]]:
+        if self._parsed_metadata is None:
+            if self._orm_item.client_metadata is not None:
+                self._parsed_metadata = json.loads(self._orm_item.client_metadata)
+        return self._parsed_metadata
+
+    @property
+    def created_at(self) -> datetime:
+        return self._orm_item.created_at
+
+    @property
+    def last_edited_at(self) -> datetime:
+        return self._orm_item.last_edited_at
+
+    @property
+    def backed_data_units_count(self) -> int:
+        return self._orm_item.backed_data_units_count
+
+    @property
+    def storage_location(self) -> orm_storage.StorageLocationName:
+        return self._orm_item.storage_location
+
+    @property
+    def integration_hash(self) -> Optional[UUID]:
+        return self._orm_item.integration_hash
+
+    @property
+    def url(self) -> Optional[str]:
+        return self._orm_item.url
+
+    @property
+    def file_size(self) -> Optional[int]:
+        return self._orm_item.file_size
+
+    @property
+    def mime_type(self) -> Optional[str]:
+        return self._orm_item.mime_type
+
+    @property
+    def duration(self) -> Optional[float]:
+        return self._orm_item.duration
+
+    @property
+    def fps(self) -> Optional[float]:
+        return self._orm_item.fps
+
+    @property
+    def height(self) -> Optional[int]:
+        return self._orm_item.height
+
+    @property
+    def width(self) -> Optional[int]:
+        return self._orm_item.width
+
+    @property
+    def dicom_instance_uid(self) -> Optional[str]:
+        return self._orm_item.dicom_instance_uid
+
+    @property
+    def dicom_study_uid(self) -> Optional[str]:
+        return self._orm_item.dicom_study_uid
+
+    @property
+    def dicom_series_uid(self) -> Optional[str]:
+        return self._orm_item.dicom_series_uid
+
+    @property
+    def frame_count(self) -> Optional[int]:
+        return self._orm_item.frame_count
+
+    def get_signed_url(self) -> str:
+        raise NotImplementedError()
