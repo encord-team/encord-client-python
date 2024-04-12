@@ -62,10 +62,11 @@ from encord.orm.project import (
 from encord.orm.project import Project as OrmProject
 from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
-from encord.orm.storage import CreateStorageFolderPayload
+from encord.orm.storage import CreateStorageFolderPayload, ListItemsParams, StorageItemType
 from encord.orm.storage import StorageFolder as OrmStorageFolder
+from encord.orm.storage import StorageItem as OrmStorageItem
 from encord.project import Project
-from encord.storage import FoldersSortBy, StorageFolder
+from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
     APIKeyScopes,
     CvatImporterError,
@@ -885,6 +886,55 @@ class EncordUserClient:
             desc=desc,
             page_size=page_size,
         )
+
+    def find_storage_items(
+        self,
+        search: Optional[str] = None,
+        is_in_dataset: Optional[bool] = None,
+        item_types: Optional[List[StorageItemType]] = None,
+        order: FoldersSortBy = FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable[StorageItem]:
+        """
+        Recursively search for storage items, starting from the root level.
+
+        Args:
+            search: Search string to filter items by name.
+            is_in_dataset: Filter items by whether they are linked to any dataset. `True` and `False` select
+                only linked and only unlinked items, respectively. `None` includes all items regardless of their
+                dataset links.
+            item_types: Filter items by type.
+            order: Sort order.
+            desc: Sort in descending order.
+            page_size: Number of items to return per page.
+
+        At least one of `search` or `item_types` must be provided.
+
+        Returns:
+            Iterable of items in the folder.
+        """
+        if not search and not item_types:
+            raise ValueError("At least one of 'search' or 'item_types' must be provided.")
+
+        params = ListItemsParams(
+            search=search,
+            is_in_dataset=is_in_dataset,
+            item_types=item_types or [],
+            order=order,
+            desc=desc,
+            page_token=None,
+            page_size=page_size,
+        )
+
+        paged_items = self._api_client.get_paged_iterator(
+            "storage/search/items",
+            params=params,
+            result_type=OrmStorageItem,
+        )
+
+        for item in paged_items:
+            yield StorageItem(self._api_client, item)
 
     def get_client_metadata_schema(self, organisation_id: int) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
         return get_client_metadata_schema(self._api_client, organisation_id)

@@ -1396,9 +1396,9 @@ class EncordClientProject(EncordClient):
             result_type=None,
         )
 
-    def get_collaborator_timers_page(self, params: CollaboratorTimerParams) -> Page[CollaboratorTimer]:
-        return self._get_api_client().get(
-            "analytics/collaborators/timers", params=params, result_type=Page[CollaboratorTimer]
+    def get_collaborator_timers(self, params: CollaboratorTimerParams) -> Iterable[CollaboratorTimer]:
+        yield from self._get_api_client().get_paged_iterator(
+            "analytics/collaborators/timers", params=params, result_type=CollaboratorTimer
         )
 
     def get_label_validation_errors(self, label_hash: str) -> List[str]:

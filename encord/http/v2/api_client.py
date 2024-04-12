@@ -1,6 +1,6 @@
 import platform
 import uuid
-from typing import Optional, Type, TypeVar, Union
+from typing import Iterator, Optional, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
@@ -16,6 +16,7 @@ from encord.http.common import (
 )
 from encord.http.utils import create_new_session
 from encord.http.v2.error_utils import handle_error_response
+from encord.http.v2.payloads import Page
 from encord.orm.base_dto import BaseDTO, BaseDTOInterface
 
 T = TypeVar("T", bound=Union[BaseDTOInterface, uuid.UUID, int, str])
@@ -84,6 +85,34 @@ class ApiClient:
             method="GET", url=self._build_url(path), headers=self._headers(), params=params_dict
         ).prepare()
         return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
+
+    def get_paged_iterator(
+        self,
+        path: str,
+        params: BaseDTO,
+        result_type: Type[T],
+        allow_none: bool = False,
+    ) -> Iterator[T]:
+        if not hasattr(params, "page_token"):
+            raise ValueError("params must have a page_token attribute for paging to work")
+
+        while True:
+            #  Pydantic is magic and relies on under-specified parts of the type system
+            #  MyPy doesn't like this (insists on 'type erasure'), but it works because
+            #  in reality the type is not erased and the generic parameters are available
+            page = self.get(
+                path,
+                params=params,
+                result_type=Page[result_type],  # type: ignore[valid-type]
+                allow_none=allow_none,
+            )
+
+            yield from page.results
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
 
     def post(
         self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]

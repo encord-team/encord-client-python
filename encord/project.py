@@ -1050,12 +1050,4 @@ class Project:
             page_size=100,
         )
 
-        while True:
-            page = self._client.get_collaborator_timers_page(params)
-
-            yield from page.results
-
-            if page.next_page_token is not None:
-                params.page_token = page.next_page_token
-            else:
-                break
+        yield from self._client.get_collaborator_timers(params)

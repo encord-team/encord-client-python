@@ -27,6 +27,15 @@ class StorageUserRole(CamelStrEnum):
     ADMIN = auto()
 
 
+class StorageLocationName(CamelStrEnum):
+    ENCORD = auto()
+    GCP = auto()
+    S3 = auto()
+    AZURE = auto()
+    OPEN_TELEKOM = auto()
+    DIRECT_ACCESS = auto()
+
+
 class StorageFolder(BaseDTO):
     uuid: UUID
     parent: Optional[UUID]
@@ -38,6 +47,38 @@ class StorageFolder(BaseDTO):
     last_edited_at: datetime
     user_role: StorageUserRole
     synced_dataset_hash: Optional[UUID]
+
+
+class StorageItem(BaseDTO):
+    uuid: UUID
+    parent: UUID
+    item_type: StorageItemType
+    name: str
+    description: str
+    client_metadata: str
+    owner: str
+    created_at: datetime
+    last_edited_at: datetime
+    is_tombstone: bool = False
+    """This item has been deleted but the link is retained for consistency reasons.
+    Mostly for items in the 'cloud linked folders' that are referenced but aren't present after a re-sync"""
+    is_placeholder: bool = False
+    """This item has been added to the folder but isn't fully processed yet"""
+    backed_data_units_count: int
+    storage_location: StorageLocationName
+    integration_hash: Optional[UUID]
+    url: Optional[str]
+    signed_url: Optional[str]
+    file_size: Optional[int]
+    mime_type: Optional[str]
+    duration: Optional[float]
+    fps: Optional[float]
+    height: Optional[int]
+    width: Optional[int]
+    dicom_instance_uid: Optional[str]
+    dicom_study_uid: Optional[str]
+    dicom_series_uid: Optional[str]
+    frame_count: Optional[int]
 
 
 class CreateStorageFolderPayload(BaseDTO):
@@ -191,6 +232,16 @@ class GetUploadJobParams(BaseDTO):
 class FoldersSortBy(CamelStrEnum):
     NAME = auto()
     CREATED_AT = auto()
+
+
+class ListItemsParams(BaseDTO):
+    search: Optional[str]
+    is_in_dataset: Optional[bool]
+    item_types: List[StorageItemType]
+    order: FoldersSortBy
+    desc: bool
+    page_token: Optional[str]
+    page_size: int
 
 
 class ListFoldersParams(BaseDTO):
