@@ -25,7 +25,7 @@ class SkeletonTemplate(BaseDTO):
     @classmethod
     def from_dict(cls, d: Dict[str, Any]):
         coords = {key: SkeletonTemplateCoordinate.from_dict(val) for key, val in d["skeleton"].items()}
-        return SkeletonTemplate(
+        return cls(
             name=d["name"],
             width=d["width"],
             height=d["height"],
