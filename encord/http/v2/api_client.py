@@ -135,7 +135,7 @@ class ApiClient:
         payload_dict = payload.to_dict() if payload is not None else None
 
         req = requests.Request(
-            method="POST",
+            method=method,
             url=self._build_url(path),
             headers=self._headers(),
             params=params_dict,

@@ -806,7 +806,7 @@ class StorageItem:
     @name.setter
     def name(self, name: str):
         self._orm_item = self._api_client.patch(
-            f"storage/items/{self.uuid}",
+            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
             params=None,
             payload=PatchItemPayload(name=name),
             result_type=orm_storage.StorageItem,
@@ -819,7 +819,7 @@ class StorageItem:
     @description.setter
     def description(self, description: str):
         self._orm_item = self._api_client.patch(
-            f"storage/items/{self.uuid}",
+            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
             params=None,
             payload=PatchItemPayload(description=description),
             result_type=orm_storage.StorageItem,
@@ -835,7 +835,7 @@ class StorageItem:
     @client_metadata.setter
     def client_metadata(self, client_metadata: dict):
         self._orm_item = self._api_client.patch(
-            f"storage/items/{self.uuid}",
+            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
             params=None,
             payload=PatchItemPayload(client_metadata=client_metadata),
             result_type=orm_storage.StorageItem,
