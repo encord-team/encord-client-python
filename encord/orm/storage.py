@@ -139,11 +139,17 @@ class CustomerProvidedVideoMetadata(BaseDTO):
     """
 
     fps: float
+    """Frame rate of the video in frames per second."""
     duration: float
+    """Video duration in (float) seconds."""
     width: int
+    """Width of the video in pixels."""
     height: int
+    """Height of the video in pixels."""
     file_size: int
+    """Size of the video file in bytes."""
     mime_type: str
+    """MIME type of the video file (e.g. `video/mp4` or `video/webm`)."""
 
 
 class DataUploadImage(BaseDTO):
@@ -263,3 +269,50 @@ class PatchFolderPayload(BaseDTO):
     name: Optional[str] = None
     description: Optional[str] = None
     client_metadata: Optional[dict] = None
+
+
+class StorageFolderSummary(BaseDTO):
+    files: int
+    folders: int
+    videos: int
+    images: int
+    image_groups: int
+    image_sequences: int
+    dicom_files: int
+    dicom_series: int
+    tombstones: int
+    upload_jobs: int
+    total_size: float
+
+
+class ItemShortInfo(BaseDTO):
+    uuid: UUID
+    name: str
+    parent_uuid: UUID
+    parent_name: str
+    item_type: StorageItemType
+
+
+class DatasetShortInfo(BaseDTO):
+    dataset_hash: str
+    backing_folder_uuid: Optional[UUID]
+    title: str
+    data_hashes: List[UUID]
+    data_units_created_at: datetime
+
+
+class StorageItemSummary(BaseDTO):
+    """
+    A summary of item usage in the system
+    """
+
+    frame_in_groups: int
+    """A number of group items (DICOM_SERIES, IMAGE_GROUP, IMAGE_SEQUENCE) that contain this item"""
+    accessible_group_items: List[ItemShortInfo]
+    """List of group items that contain this item (only those that the user has access to,
+    so the length of this list can be less than `frame_in_groups`)"""
+    used_in_datasets: int
+    """A number of datasets that contain this item as a `DataRow`"""
+    accessible_datasets: List[DatasetShortInfo]
+    """List of datasets that contain this item as a `DataRow` (only those that the user has access to, so
+    the length of this list can be less than `used_in_datasets`)"""

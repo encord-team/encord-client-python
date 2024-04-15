@@ -2,7 +2,6 @@ import json
 import mimetypes
 import os
 import time
-import typing
 from datetime import datetime
 from math import ceil
 from pathlib import Path
@@ -27,6 +26,8 @@ from encord.orm.storage import (
     ListItemsParams,
     PatchFolderPayload,
     PatchItemPayload,
+    StorageFolderSummary,
+    StorageItemSummary,
     StorageItemType,
     UploadSignedUrlsPayload,
 )
@@ -501,6 +502,17 @@ class StorageFolder:
             page_size=page_size,
         )
 
+    def get_summary(self) -> StorageFolderSummary:
+        """
+        Get a summary of the folder (total size, number of items, etc). See :class:`encord.StorageFolderSummary` for
+        exact set of information provided.
+        """
+        return self._api_client.get(
+            f"storage/folders/{self.uuid}/summary",
+            params=None,
+            result_type=StorageFolderSummary,
+        )
+
     def update(
         self,
         name: Optional[str] = None,
@@ -885,6 +897,17 @@ class StorageItem:
     def get_signed_url(self) -> str:
         raise NotImplementedError()
 
+    def get_summary(self) -> StorageItemSummary:
+        """
+        Get a summary of the item (linked datasets, etc.). See :class:`encord.StorageItemSummary` for
+        exact set of information provided.
+        """
+        return self._api_client.get(
+            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}/summary",
+            params=None,
+            result_type=StorageItemSummary,
+        )
+
     def update(
         self,
         name: Optional[str] = None,
@@ -892,7 +915,7 @@ class StorageItem:
         client_metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
-        Update the items's modifiable properties. Any parameters that are not provided will not be updated.
+        Update the item's modifiable properties. Any parameters that are not provided will not be updated.
 
         Args:
             name: New item name.
