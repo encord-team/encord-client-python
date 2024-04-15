@@ -108,6 +108,7 @@
         {
             "template": {
                 "name": "Line",
+                "shape": "skeleton",
                 "width": 100.0,
                 "height": 100.0,
                 "skeleton": {
@@ -126,7 +127,7 @@
                         "value": ""
                     }
                 },
-                "skeleton_edges": {
+                "skeletonEdges": {
                     "0": {
                         "1": {
                             "color": "#00000"

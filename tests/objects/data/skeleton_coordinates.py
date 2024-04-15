@@ -28,35 +28,40 @@ ontology = {
         {
             "template": {
                 "name": "Triangle",
-                "width": 0.486,
-                "height": 0.32199999999999995,
+                "shape": "skeleton",
+                "width": 0.23513107100307273,
+                "height": 0.25,
                 "skeleton": {
                     "0": {
-                        "x": 0.382,
-                        "y": 0.262,
+                        "x": 0.5148689289969273,
+                        "y": 0.5,
                         "name": "point_0",
                         "color": "#000000",
                         "value": "point_0",
-                        "feature_hash": "1wthOoHe",
+                        "featureHash": "A9sGmBcx",
                     },
                     "1": {
-                        "x": 0.21,
-                        "y": 0.514,
+                        "x": 0.75,
+                        "y": 0.5,
                         "name": "point_1",
                         "color": "#000000",
                         "value": "point_1",
-                        "feature_hash": "KGp1oToz",
+                        "featureHash": "UWKgC/Dy",
                     },
                     "2": {
-                        "x": 0.696,
-                        "y": 0.584,
+                        "x": 0.675,
+                        "y": 0.25,
                         "name": "point_2",
                         "color": "#000000",
                         "value": "point_2",
-                        "feature_hash": "OqR+F4dN",
+                        "featureHash": "mBt9AAhC",
                     },
                 },
-                "skeleton_edges": {},
+                "skeletonEdges": {
+                    "0": {"1": {"color": "#000000"}},
+                    "1": {"2": {"color": "#000000"}},
+                    "2": {"0": {"color": "#000000"}},
+                },
                 "feature_node_hash": "lwsBaDE4",
             }
         }
