@@ -22,8 +22,5 @@ SKELETON_TEMPLATE_LINE = SkeletonTemplate.from_dict(
 
 
 def test_skeleton_template_round_trip():
-    print(SKELETON_TEMPLATE_LINE)
     dict_template = SKELETON_TEMPLATE_LINE.to_dict()
-    print(type(dict_template))
-    print(dict_template)
     assert SkeletonTemplate.from_dict(dict_template) == SKELETON_TEMPLATE_LINE
