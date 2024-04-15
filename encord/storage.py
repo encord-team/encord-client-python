@@ -55,27 +55,9 @@ class StorageFolder:
     def name(self) -> str:
         return self._orm_folder.name
 
-    @name.setter
-    def name(self, name: str):
-        self._orm_folder = self._api_client.patch(
-            f"storage/folders/{self.uuid}",
-            params=None,
-            payload=PatchFolderPayload(name=name),
-            result_type=orm_storage.StorageFolder,
-        )
-
     @property
     def description(self) -> str:
         return self._orm_folder.description
-
-    @description.setter
-    def description(self, description: str):
-        self._orm_folder = self._api_client.patch(
-            f"storage/folders/{self.uuid}",
-            params=None,
-            payload=PatchFolderPayload(description=description),
-            result_type=orm_storage.StorageFolder,
-        )
 
     @property
     def client_metadata(self) -> Optional[Dict[str, Any]]:
@@ -83,15 +65,6 @@ class StorageFolder:
             if self._orm_folder.client_metadata is not None:
                 self._parsed_metadata = json.loads(self._orm_folder.client_metadata)
         return self._parsed_metadata
-
-    @client_metadata.setter
-    def client_metadata(self, client_metadata: dict):
-        self._orm_folder = self._api_client.patch(
-            f"storage/folders/{self.uuid}",
-            params=None,
-            payload=PatchFolderPayload(client_metadata=client_metadata),
-            result_type=orm_storage.StorageFolder,
-        )
 
     def list_items(
         self,
@@ -528,6 +501,37 @@ class StorageFolder:
             page_size=page_size,
         )
 
+    def update(
+        self,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """
+        Update the folder's modifiable properties. Any parameters that are not provided will not be updated.
+
+        Args:
+            name: New folder name.
+            description: New folder description.
+            client_metadata: New client metadata.
+
+        Returns:
+            None
+        """
+        if name is None and description is None and client_metadata is None:
+            return
+
+        self._orm_folder = self._api_client.patch(
+            f"storage/folders/{self.uuid}",
+            params=None,
+            payload=PatchFolderPayload(
+                name=name,
+                description=description,
+                client_metadata=client_metadata,
+            ),
+            result_type=orm_storage.StorageFolder,
+        )
+
     def _get_upload_signed_urls(
         self, item_type: StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
     ) -> List[orm_storage.UploadSignedUrl]:
@@ -803,27 +807,9 @@ class StorageItem:
     def name(self) -> str:
         return self._orm_item.name
 
-    @name.setter
-    def name(self, name: str):
-        self._orm_item = self._api_client.patch(
-            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
-            params=None,
-            payload=PatchItemPayload(name=name),
-            result_type=orm_storage.StorageItem,
-        )
-
     @property
     def description(self) -> str:
         return self._orm_item.description
-
-    @description.setter
-    def description(self, description: str):
-        self._orm_item = self._api_client.patch(
-            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
-            params=None,
-            payload=PatchItemPayload(description=description),
-            result_type=orm_storage.StorageItem,
-        )
 
     @property
     def client_metadata(self) -> Optional[Dict[str, Any]]:
@@ -831,15 +817,6 @@ class StorageItem:
             if self._orm_item.client_metadata is not None:
                 self._parsed_metadata = json.loads(self._orm_item.client_metadata)
         return self._parsed_metadata
-
-    @client_metadata.setter
-    def client_metadata(self, client_metadata: dict):
-        self._orm_item = self._api_client.patch(
-            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
-            params=None,
-            payload=PatchItemPayload(client_metadata=client_metadata),
-            result_type=orm_storage.StorageItem,
-        )
 
     @property
     def created_at(self) -> datetime:
@@ -907,6 +884,37 @@ class StorageItem:
 
     def get_signed_url(self) -> str:
         raise NotImplementedError()
+
+    def update(
+        self,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """
+        Update the items's modifiable properties. Any parameters that are not provided will not be updated.
+
+        Args:
+            name: New item name.
+            description: New item description.
+            client_metadata: New client metadata.
+
+        Returns:
+            None
+        """
+        if name is None and description is None and client_metadata is None:
+            return
+
+        self._orm_item = self._api_client.patch(
+            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
+            params=None,
+            payload=PatchItemPayload(
+                name=name,
+                description=description,
+                client_metadata=client_metadata,
+            ),
+            result_type=orm_storage.StorageItem,
+        )
 
     @staticmethod
     def _get_item(api_client: ApiClient, item_uuid: UUID) -> "StorageItem":
