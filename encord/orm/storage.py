@@ -251,3 +251,15 @@ class ListFoldersParams(BaseDTO):
     desc: bool = False
     page_token: Optional[str] = None
     page_size: int = 100
+
+
+class PatchItemPayload(BaseDTO):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    client_metadata: Optional[dict] = None
+
+
+class PatchFolderPayload(BaseDTO):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    client_metadata: Optional[dict] = None
