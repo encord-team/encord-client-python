@@ -316,3 +316,27 @@ class StorageItemSummary(BaseDTO):
     accessible_datasets: List[DatasetShortInfo]
     """List of datasets that contain this item as a `DataRow` (only those that the user has access to, so
     the length of this list can be less than `used_in_datasets`)"""
+
+
+class DeleteItemsParams(BaseDTO):
+    remove_unused_frames: bool
+
+
+class DeleteItemsPayload(BaseDTO):
+    child_uuids: List[UUID]
+    remove_unused_frames: bool
+
+
+class DeleteItemsResponse(BaseDTO):
+    removed_items_count: int
+    removed_folders_count: int
+
+
+class MoveItemsPayload(BaseDTO):
+    item_uuids: List[UUID]
+    new_parent_uuid: UUID
+
+
+class MoveFoldersPayload(BaseDTO):
+    folder_uuids: List[UUID]
+    new_parent_uuid: Optional[UUID]
