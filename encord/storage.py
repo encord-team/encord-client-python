@@ -544,6 +544,76 @@ class StorageFolder:
             result_type=orm_storage.StorageFolder,
         )
 
+    def move_to_folder(self, target_folder: Optional[Union["StorageFolder", UUID]]) -> None:
+        """
+        Move the folder to another folder (specify folder object or UUID),
+        or to the root level if `target_folder` is None.
+        """
+        target_folder_uuid = target_folder.uuid if isinstance(target_folder, StorageFolder) else target_folder
+        self._api_client.post(
+            "storage/folders/move",
+            params=None,
+            payload=orm_storage.MoveFoldersPayload(
+                folder_uuids=[self.uuid],
+                new_parent_uuid=target_folder_uuid,
+            ),
+            result_type=None,
+        )
+
+        self.refetch_data()
+
+    def move_items_to_folder(
+        self, target_folder: Union["StorageFolder", UUID], items_to_move: List[Union[UUID, "StorageItem"]]
+    ) -> None:
+        """
+        Move items (list of `StorageItem` objects or UUIDs) to another folder (specify folder object or UUID).
+
+        Args:
+            target_folder: Target folder to move items to.
+            items_to_move: List of items to move. All the items should be immediate children
+                of the current folder.
+
+        Returns:
+            `None`
+        """
+        target_folder_uuid = target_folder if isinstance(target_folder, UUID) else target_folder.uuid
+
+        item_uuids = [item.uuid if isinstance(item, StorageItem) else item for item in items_to_move]
+        self._api_client.post(
+            f"storage/folders/{self.uuid}/items/move",
+            params=None,
+            payload=orm_storage.MoveItemsPayload(item_uuids=item_uuids, new_parent_uuid=target_folder_uuid),
+            result_type=None,
+        )
+
+    def delete_storage_items(self, item_uuids: List[UUID], remove_unused_frames=True) -> None:
+        """
+        Delete storage items by their UUIDs.
+
+        Args:
+            item_uuids: List of UUIDs of items to delete. All the items should be immediate children
+                of the current folder.
+            remove_unused_frames: If `True` (which is default), then for every image group or DICOM series item,
+            find and remove the individual images or DICOM files that are not used in any other item.
+
+        Returns:
+            `None`
+        """
+        self._api_client.post(
+            f"/storage/folders/{self.uuid}/items/delete",
+            params=None,
+            payload=orm_storage.DeleteItemsPayload(child_uuids=item_uuids, remove_unused_frames=remove_unused_frames),
+            result_type=None,  # we don't need a result here, even though the server provides it
+        )
+
+    def refetch_data(self) -> None:
+        """
+        Refetch data for the folder.
+        """
+        self._orm_folder = self._api_client.get(
+            f"storage/folders/{self.uuid}", params=None, result_type=orm_storage.StorageFolder
+        )
+
     def _get_upload_signed_urls(
         self, item_type: StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
     ) -> List[orm_storage.UploadSignedUrl]:
@@ -937,6 +1007,48 @@ class StorageItem:
                 client_metadata=client_metadata,
             ),
             result_type=orm_storage.StorageItem,
+        )
+
+    def delete(self, remove_unused_frames=True):
+        """
+        Delete the item from the storage.
+
+        Args:
+            remove_unused_frames: If `True` (which is default) and the item is an image group or a DICOM series,
+            find and remove the individual images or DICOM files that are not used in any other item.
+
+        Returns:
+            None
+        """
+        self._api_client.post(
+            f"/storage/folders/{self.parent_folder_uuid}/items/delete",
+            params=None,
+            payload=orm_storage.DeleteItemsPayload(child_uuids=[self.uuid], remove_unused_frames=remove_unused_frames),
+            result_type=None,  # we don't need a result here, even though the server provides it
+        )
+
+    def move_to_folder(self, target_folder: Union[StorageFolder, UUID]):
+        """
+        Move the item to another folder (specify folder object or UUID).
+
+        Args:
+            target_folder: Target folder to move the item to. Should be a `StorageFolder` object or a UUID.
+        """
+        target_folder_uuid = target_folder if isinstance(target_folder, UUID) else target_folder.uuid
+        self._api_client.post(
+            f"storage/folders/{self.parent_folder_uuid}/items/move",
+            params=None,
+            payload=orm_storage.MoveItemsPayload(item_uuids=[self.uuid], new_parent_uuid=target_folder_uuid),
+            result_type=None,
+        )
+        self.refetch_data()
+
+    def refetch_data(self) -> None:
+        """
+        Refetch data for the item.
+        """
+        self._orm_item = self._api_client.get(
+            f"storage/items/{self.uuid}", params=None, result_type=orm_storage.StorageItem
         )
 
     @staticmethod
