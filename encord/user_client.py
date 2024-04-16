@@ -837,6 +837,7 @@ class EncordUserClient:
 
     def list_storage_folders(
         self,
+        *,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
@@ -871,6 +872,7 @@ class EncordUserClient:
 
     def find_storage_folders(
         self,
+        *,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
@@ -905,11 +907,13 @@ class EncordUserClient:
 
     def find_storage_items(
         self,
+        *,
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
         item_types: Optional[List[StorageItemType]] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
+        get_signed_urls: bool = False,
         page_size: int = 100,
     ) -> Iterable[StorageItem]:
         """
@@ -923,6 +927,7 @@ class EncordUserClient:
             item_types: Filter items by type.
             order: Sort order.
             desc: Sort in descending order.
+            get_signed_urls: If True, return signed URLs for the items.
             page_size: Number of items to return per page.
 
         At least one of `search` or `item_types` must be provided.
@@ -941,6 +946,7 @@ class EncordUserClient:
             desc=desc,
             page_token=None,
             page_size=page_size,
+            sign_urls=get_signed_urls,
         )
 
         paged_items = self._api_client.get_paged_iterator(
