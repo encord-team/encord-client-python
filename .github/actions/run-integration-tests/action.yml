@@ -63,4 +63,4 @@ runs:
         if: always()
         with:
           name: ${{ inputs.test-report-file }}
-          path: projects/${{ inputs.project }}/${{ inputs.test-report-file }}
+          path: projects/${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
