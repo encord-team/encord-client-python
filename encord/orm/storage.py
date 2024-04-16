@@ -248,6 +248,7 @@ class ListItemsParams(BaseDTO):
     desc: bool
     page_token: Optional[str]
     page_size: int
+    sign_urls: bool
 
 
 class ListFoldersParams(BaseDTO):
@@ -340,3 +341,7 @@ class MoveItemsPayload(BaseDTO):
 class MoveFoldersPayload(BaseDTO):
     folder_uuids: List[UUID]
     new_parent_uuid: Optional[UUID]
+
+
+class GetItemParams(BaseDTO):
+    sign_url: bool

@@ -23,6 +23,7 @@ from encord.orm.storage import (
     CustomerProvidedVideoMetadata,
     DataUploadItems,
     FoldersSortBy,
+    GetItemParams,
     ListItemsParams,
     PatchFolderPayload,
     PatchItemPayload,
@@ -69,10 +70,12 @@ class StorageFolder:
 
     def list_items(
         self,
+        *,
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
         item_types: Optional[List[StorageItemType]] = None,
         order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        get_signed_urls: bool = False,
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageItem"]:
@@ -100,6 +103,7 @@ class StorageFolder:
             desc=desc,
             page_token=None,
             page_size=page_size,
+            sign_urls=get_signed_urls,
         )
 
         paged_items = self._api_client.get_paged_iterator(
@@ -470,6 +474,7 @@ class StorageFolder:
 
     def list_subfolders(
         self,
+        *,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
@@ -964,8 +969,20 @@ class StorageItem:
     def frame_count(self) -> Optional[int]:
         return self._orm_item.frame_count
 
-    def get_signed_url(self) -> str:
-        raise NotImplementedError()
+    def get_signed_url(self, refetch: bool = False) -> Optional[str]:
+        """
+        Get a signed URL for the item. This URL can be used to download the item.
+
+        Will return `None` if the item is "synthetic" entity: an image group or a DICOM series. Note
+        that image sequences are backed by a video file and will have a signed URL.
+        """
+        if self.item_type == StorageItemType.DICOM_SERIES or self.item_type == StorageItemType.IMAGE_GROUP:
+            return None  # not supported for these types. Maybe raise ValueError instead?
+
+        if refetch or self._orm_item.signed_url is None:
+            self.refetch_data(get_signed_url=True)
+
+        return self._orm_item.signed_url
 
     def get_summary(self) -> StorageItemSummary:
         """
@@ -1043,12 +1060,14 @@ class StorageItem:
         )
         self.refetch_data()
 
-    def refetch_data(self) -> None:
+    def refetch_data(self, get_signed_url: bool = False) -> None:
         """
         Refetch data for the item.
         """
         self._orm_item = self._api_client.get(
-            f"storage/items/{self.uuid}", params=None, result_type=orm_storage.StorageItem
+            f"storage/items/{self.uuid}",
+            params=GetItemParams(sign_url=get_signed_url),
+            result_type=orm_storage.StorageItem,
         )
 
     @staticmethod
