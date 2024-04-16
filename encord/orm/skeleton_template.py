@@ -23,4 +23,3 @@ class SkeletonTemplate(BaseDTO):
     skeleton_edges: Dict[str, Dict[str, Dict[str, str]]]  # start-end-color-hex
     feature_node_hash: Optional[str] = Field(default=None, alias="feature_node_hash")
     shape: Optional[str] = "skeleton"
-

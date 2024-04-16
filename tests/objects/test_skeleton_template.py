@@ -26,55 +26,46 @@ def test_skeleton_template_round_trip_internal():
     dict_template = SKELETON_TEMPLATE_LINE.to_dict()
     assert SkeletonTemplate.from_dict(dict_template) == SKELETON_TEMPLATE_LINE
 
-SKELETON_TEMPLATE_TRIANGLE_JSON = {"name": "Triangle",
-        "shape": "skeleton",
-        "width": 0.235,
-        "height": 0.25,
-        "skeleton": {
-            "0": {
-                "x": 0.5148689289969273,
-                "y": 0.5,
-                "name": "point_0",
-                "color": "#000000",
-                "value": "point_0",
-                "featureHash": "A9sGmBcx"
-            },
-            "1": {
-                "x": 0.75,
-                "y": 0.5,
-                "name": "point_1",
-                "color": "#000000",
-                "value": "point_1",
-                "featureHash": "UWKgC/Dy"
-            },
-            "2": {
-                "x": 0.675,
-                "y": 0.25,
-                "name": "point_2",
-                "color": "#000000",
-                "value": "point_2",
-                "featureHash": "mBt9AAhC"
-            }
+
+SKELETON_TEMPLATE_TRIANGLE_JSON = {
+    "name": "Triangle",
+    "shape": "skeleton",
+    "width": 0.235,
+    "height": 0.25,
+    "skeleton": {
+        "0": {
+            "x": 0.5148689289969273,
+            "y": 0.5,
+            "name": "point_0",
+            "color": "#000000",
+            "value": "point_0",
+            "featureHash": "A9sGmBcx",
         },
-        "skeletonEdges": {
-            "0": {
-                "1": {
-                    "color": "#000000"
-                }
-            },
-            "1": {
-                "2": {
-                    "color": "#000000"
-                }
-            },
-            "2": {
-                "0": {
-                    "color": "#000000"
-                }
-            }
+        "1": {
+            "x": 0.75,
+            "y": 0.5,
+            "name": "point_1",
+            "color": "#000000",
+            "value": "point_1",
+            "featureHash": "UWKgC/Dy",
         },
-        "feature_node_hash": "GSc3nz5D"
-    }
+        "2": {
+            "x": 0.675,
+            "y": 0.25,
+            "name": "point_2",
+            "color": "#000000",
+            "value": "point_2",
+            "featureHash": "mBt9AAhC",
+        },
+    },
+    "skeletonEdges": {
+        "0": {"1": {"color": "#000000"}},
+        "1": {"2": {"color": "#000000"}},
+        "2": {"0": {"color": "#000000"}},
+    },
+    "feature_node_hash": "GSc3nz5D",
+}
+
 
 def test_skeleton_template_round_trip_external():
     st = SkeletonTemplate.from_dict(SKELETON_TEMPLATE_TRIANGLE_JSON)
