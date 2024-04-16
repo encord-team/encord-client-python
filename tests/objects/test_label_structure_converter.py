@@ -11,6 +11,7 @@ from deepdiff import DeepDiff
 from encord.objects import OntologyStructure
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.orm.label_row import LabelRowMetadata
+from encord.orm.skeleton_template import SkeletonTemplate
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data import (
     data_1,
@@ -287,7 +288,15 @@ def test_skeleton_template_coordinates():
     label_row_metadata_dict["number_of_frames"] = 1
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(skeleton_coordinates.ontology))
+    ontology = ontology_from_dict(skeleton_coordinates.ontology)
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology=ontology)
+    assert ontology.structure.skeleton_templates
+    skeleton_template = ontology.structure.skeleton_templates["Triangle"]
+    assert isinstance(skeleton_template, SkeletonTemplate)
+    assert skeleton_template.skeleton_edges
+    assert len(skeleton_template.skeleton_edges) == 3
+
+    assert skeleton_template.to_dict() == skeleton_coordinates.ontology["skeleton_templates"][0]["template"]
     label_row.from_labels_dict(skeleton_coordinates.labels)
 
     obj_instances = label_row.get_object_instances()

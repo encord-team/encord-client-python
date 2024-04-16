@@ -1,5 +1,8 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
+from pydantic import Field
+
+from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
 from encord.orm.base_dto import BaseDTO
 
 
@@ -18,8 +21,5 @@ class SkeletonTemplate(BaseDTO):
     height: float
     skeleton: Dict[str, SkeletonTemplateCoordinate]
     skeleton_edges: Dict[str, Dict[str, Dict[str, str]]]  # start-end-color-hex
-    feature_node_hash: Union[str, None] = None
-
-    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
-        assert by_alias and exclude_none
-        return super().to_dict(by_alias=False)
+    feature_node_hash: Optional[str] = Field(default=None, alias="feature_node_hash")
+    shape: Optional[str] = "skeleton"
