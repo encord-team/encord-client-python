@@ -958,13 +958,11 @@ class EncordUserClient:
         for item in paged_items:
             yield StorageItem(self._api_client, item)
 
-    def get_client_metadata_schema(self, organisation_id: int) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
-        return get_client_metadata_schema(self._api_client, organisation_id)
+    def get_client_metadata_schema(self) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
+        return get_client_metadata_schema(self._api_client)
 
-    def set_client_metadata_schema_from_dict(
-        self, organisation_id: int, json_dict: Dict[str, ClientMetadataSchemaTypes]
-    ):
-        set_client_metadata_schema_from_dict(self._api_client, organisation_id, json_dict)
+    def set_client_metadata_schema_from_dict(self, json_dict: Dict[str, ClientMetadataSchemaTypes]):
+        set_client_metadata_schema_from_dict(self._api_client, json_dict)
 
 
 class ListingFilter(Enum):
