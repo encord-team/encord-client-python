@@ -242,7 +242,7 @@ class Dataset:
 
     def create_dicom_series(
         self,
-        file_paths: List[str],
+        file_paths: Union[List[str], List[Path]],
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
     ):
