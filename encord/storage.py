@@ -24,6 +24,7 @@ from encord.orm.storage import (
     DataUploadItems,
     FoldersSortBy,
     GetItemParams,
+    GetItemsBulkPayload,
     ListItemsParams,
     PatchFolderPayload,
     PatchItemPayload,
@@ -995,6 +996,28 @@ class StorageItem:
             result_type=StorageItemSummary,
         )
 
+    def get_child_items(self, get_signed_urls: bool = False) -> List["StorageItem"]:
+        """
+        Get child items of the item (e.g. frames of an image group or files of DICOM series).
+        Only returns those items that are accessible to the user. See also :meth:`.get_summary`.
+
+        Args:
+            get_signed_urls: If True, get signed URLs for the child items.
+
+        Returns:
+            List of child items. The list will be emtpy if the item has no children (e.g. it's a Video)
+        """
+        if self.item_type != StorageItemType.IMAGE_GROUP and self.item_type != StorageItemType.DICOM_SERIES:
+            return []
+
+        child_items = self._api_client.get(
+            f"/storage/folders/{self.parent_folder_uuid}/items/{self.uuid}/child-items",
+            params=orm_storage.GetChildItemsParams(sign_urls=get_signed_urls),
+            result_type=Page[orm_storage.StorageItem],
+        ).results
+
+        return [StorageItem(self._api_client, item) for item in child_items]
+
     def update(
         self,
         name: Optional[str] = None,
@@ -1071,6 +1094,20 @@ class StorageItem:
         )
 
     @staticmethod
-    def _get_item(api_client: ApiClient, item_uuid: UUID) -> "StorageItem":
-        orm_item = api_client.get(f"storage/items/{item_uuid}", params=None, result_type=orm_storage.StorageItem)
+    def _get_item(api_client: ApiClient, item_uuid: UUID, get_signed_url: bool) -> "StorageItem":
+        orm_item = api_client.get(
+            f"storage/items/{item_uuid}",
+            params=GetItemParams(sign_url=get_signed_url),
+            result_type=orm_storage.StorageItem,
+        )
         return StorageItem(api_client, orm_item)
+
+    @staticmethod
+    def _get_items(api_client: ApiClient, item_uuids: List[UUID], get_signed_url: bool) -> List["StorageItem"]:
+        orm_items = api_client.post(
+            "storage/items/get-bulk",
+            params=None,
+            payload=GetItemsBulkPayload(item_uuids=item_uuids, sign_urls=get_signed_url),
+            result_type=Page[orm_storage.StorageItem],  #  it's always just one page here
+        )
+        return [StorageItem(api_client, orm_item) for orm_item in orm_items.results]
