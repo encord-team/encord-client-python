@@ -819,7 +819,7 @@ class EncordUserClient:
         """
         return StorageFolder._get_folder(self._api_client, folder_uuid)
 
-    def get_storage_item(self, item_uuid: UUID) -> StorageItem:
+    def get_storage_item(self, item_uuid: UUID, sign_url: bool = False) -> StorageItem:
         """
         Get a storage item by its UUID.
 
@@ -833,7 +833,7 @@ class EncordUserClient:
             :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
-        return StorageItem._get_item(self._api_client, item_uuid)
+        return StorageItem._get_item(self._api_client, item_uuid, sign_url)
 
     def list_storage_folders(
         self,

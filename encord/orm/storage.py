@@ -345,3 +345,12 @@ class MoveFoldersPayload(BaseDTO):
 
 class GetItemParams(BaseDTO):
     sign_url: bool
+
+
+class GetChildItemsParams(BaseDTO):
+    sign_urls: bool = False
+
+
+class GetItemsBulkPayload(BaseDTO):
+    item_uuids: List[UUID]
+    sign_urls: bool = False
