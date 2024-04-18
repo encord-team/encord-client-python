@@ -996,7 +996,7 @@ class StorageItem:
             result_type=StorageItemSummary,
         )
 
-    def get_child_items(self, get_signed_urls: bool = False) -> List["StorageItem"]:
+    def get_child_items(self, get_signed_urls: bool = False) -> Iterable["StorageItem"]:
         """
         Get child items of the item (e.g. frames of an image group or files of DICOM series).
         Only returns those items that are accessible to the user. See also :meth:`.get_summary`.
