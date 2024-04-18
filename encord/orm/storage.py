@@ -352,5 +352,5 @@ class GetChildItemsParams(BaseDTO):
 
 
 class GetItemsBulkPayload(BaseDTO):
-    item_uuids: list[UUID]
+    item_uuids: List[UUID]
     sign_urls: bool = False
