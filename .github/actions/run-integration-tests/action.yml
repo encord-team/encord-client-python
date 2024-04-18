@@ -60,8 +60,7 @@ runs:
 
       - name: Upload report
         uses: actions/upload-artifact@v3
-        working-directory: ${{ inputs.integration-tests-location }}
         if: always()
         with:
           name: ${{ inputs.test-report-file }}
-          path: ${{ inputs.test-report-file }}
+          path: ${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
