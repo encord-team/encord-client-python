@@ -1026,7 +1026,7 @@ class DatasetDataLongPolling(BaseDTO):
     errors: List[str]
     """Stringified list of exceptions."""
 
-    data_units_errors: Optional[List[DataUnitError]] = None
+    data_units_errors: List[DataUnitError]
     """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
     units_pending_count: int

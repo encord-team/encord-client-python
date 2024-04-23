@@ -74,6 +74,7 @@ def test_complex_model_deserialization():
         "data_hashes_with_titles": [
             {"data_hash": "abc", "title": "dummy title", "backing_item_uuid": str(backing_item_uuid)}
         ],
+        "data_units_errors": [],
     }
 
     model = DatasetDataLongPolling.from_dict(data_dict)
