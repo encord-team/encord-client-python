@@ -991,6 +991,24 @@ class LongPollingStatus(str, Enum):
     """
 
 
+class DataUnitError(BaseDTO):
+    """
+    A description of an error for an individual upload item
+    """
+
+    object_urls: List[str]
+    """URLs involved. A single item for videos and images; a list of frames for image groups and DICOM"""
+
+    error: str
+    """The error message"""
+
+    subtask_uuid: UUID
+    """Opaque ID of the process. Please quote this when contacting Encord support."""
+
+    action_description: str
+    """Human-readable description of the action that failed (e.g. 'Uploading DICOM series'."""
+
+
 class DatasetDataLongPolling(BaseDTO):
     """
     Response of the upload job's long polling request.
@@ -1007,6 +1025,9 @@ class DatasetDataLongPolling(BaseDTO):
 
     errors: List[str]
     """Stringified list of exceptions."""
+
+    data_units_errors: Optional[List[DataUnitError]]
+    """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
     units_pending_count: int
     """Number of upload job units that have pending status."""
