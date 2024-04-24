@@ -976,11 +976,11 @@ class LongPollingStatus(str, Enum):
     """
     Job has finished successfully (possibly with errors if `ignore_errors=True`).
 
-    If `ignore_errors=False` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`
-    , job will only have the status `DONE` if there were no errors.
+    If `ignore_errors=False` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start,
+    the job will only have the status `DONE` if there were no errors.
 
-    If `ignore_errors=True` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`
-    , job will always show the status `DONE` once complete and will never show `ERROR`
+    If `ignore_errors=True` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`,
+    the job will always show the status `DONE` once complete and will never show `ERROR`
     status if this flag was set to `True`. There could be errors that were ignored.
 
     Information about number of errors and stringified exceptions is available in the
