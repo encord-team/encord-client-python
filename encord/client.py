@@ -45,6 +45,7 @@ from datetime import datetime
 from math import ceil
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple, Union, cast
+from uuid import UUID
 
 import requests
 
@@ -1011,6 +1012,13 @@ class EncordClientProject(EncordClient):
         This function is documented in :meth:`encord.project.Project.remove_datasets`.
         """
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
+
+    def list_project_datasets(self, project_hash: UUID) -> Iterable[ProjectDataset]:
+        return (
+            self._get_api_client()
+            .get(f"projects/{project_hash}/datasets", params=None, result_type=Page[ProjectDataset])
+            .results
+        )
 
     def get_project_ontology(self) -> LegacyOntology:
         project = self.get_project()

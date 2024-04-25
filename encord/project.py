@@ -25,7 +25,7 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectOrm, ProjectType
+from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectDataset, ProjectOrm, ProjectType
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -108,22 +108,14 @@ class Project:
         return self._ontology.structure
 
     @property
-    def datasets(self) -> list:
+    @deprecated(version="0.1.117", alternative=".list_datasets")
+    def datasets(self) -> List[Dict[str, Any]]:
         """
-        Get the associated datasets.
+        DEPRECATED: Prefer using the :meth:`encord.project.list_datasets` class to work with the data.
 
-        Prefer using the :meth:`encord.objects.project.ProjectDataset` class to work with the data.
-
-        .. code::
-
-            from encord.objects.project import ProjectDataset
-
-            project = user_client.get_project("<project_hash>")
-
-            project_datasets = ProjectDataset.from_list(project.datasets)
-
+        Get the info about datasets associated with this project.
         """
-        return self._project_instance.datasets
+        return [project_dataset.to_dict() for project_dataset in self.list_datasets()]
 
     @property
     def project_type(self) -> ProjectType:
@@ -1062,3 +1054,6 @@ class Project:
         )
 
         yield from self._client.get_collaborator_timers(params)
+
+    def list_datasets(self) -> Iterable[ProjectDataset]:
+        return self._client.list_project_datasets(self._project_instance.project_hash)
