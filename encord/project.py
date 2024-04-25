@@ -1,5 +1,5 @@
 import datetime
-from typing import Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClientProject
@@ -83,13 +83,15 @@ class Project:
 
     @property
     @deprecated(version="0.1.95", alternative=".ontology_structure")
-    def ontology(self) -> dict:
+    def ontology(self) -> Dict[str, Any]:
         """
         Get the ontology of the project.
 
         DEPRECATED: Prefer using the :meth:`encord.Project.ontology_structure` method.
+        This method returns the same structure as :meth:`encord.Project.ontology_structure`, just in
+        raw python dictionary format.
         """
-        return self._project_instance.editor_ontology
+        return self._ontology.structure.to_dict()
 
     @property
     def ontology_hash(self) -> str:
