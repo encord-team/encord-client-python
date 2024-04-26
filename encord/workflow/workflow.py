@@ -18,13 +18,7 @@ class WorkflowStage:
     title: str
 
     def __repr__(self):
-        return f"WorkflowStage {self.stage_type}: uuid={self.uuid} title={self.title}"
-
-    def get_tasks(self) -> Iterable[Task]:
-        return []
-
-    def submit(self, task: Task) -> None:
-        return
+        return f"WorkflowStage(stage_type={self.stage_type} uuid='{self.uuid}' title='{self.title}')"
 
 
 class Workflow:
@@ -34,4 +28,8 @@ class Workflow:
         self.stages = [WorkflowStage(uuid=x.uuid, title=x.title, stage_type=x.node_type) for x in workflow_orm.stages]
 
     def get_stage(self, *, name: str | None = None, uuid: UUID | None = None) -> WorkflowStage:
-        raise NotImplementedError()
+        for stage in self.stages:
+            if (uuid is not None and stage.uuid == uuid) or (name is not None and stage.title == name):
+                return stage
+
+        raise ValueError(f"No matching stage found: '{uuid or name}'")

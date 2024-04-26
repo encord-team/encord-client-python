@@ -150,7 +150,7 @@ class Project:
         The Project class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be dirty.
         """
-        self._project_instance = self._client.get_project()
+        self._project_instance = self._client.get_project_v2()
 
     def refetch_ontology(self) -> None:
         """

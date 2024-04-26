@@ -141,16 +141,17 @@ class EncordUserClient:
         Args:
             project_hash: The Project ID
         """
-        project_orm = self._api_client.get(f"/projects/{project_hash}", params=None, result_type=ProjectOrm)
 
         # Querying ontology using project querier to avoid permission error,
         # as there might be only read-only ontology structure access in scope of the project,
         # not full access, that is implied by get_ontology method
         querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=project_hash)
+        client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
+        project_orm = client.get_project_v2()
+
         orm_ontology = querier.basic_getter(OrmOntology, project_orm.ontology_hash)
         project_ontology = Ontology(querier, orm_ontology, self._api_client)
 
-        client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
         return Project(client, project_orm, project_ontology)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
