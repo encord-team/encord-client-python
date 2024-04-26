@@ -162,7 +162,7 @@ class ProjectUsers:
 
 
 class ProjectDataset(BaseDTO):
-    dataaset_hash: UUID
+    dataset_hash: UUID
     title: str
     description: str
 

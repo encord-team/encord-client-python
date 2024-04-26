@@ -25,7 +25,7 @@ class WorkflowStage:
 
 
 class Workflow:
-    nodes: list[WorkflowNode]
+    stages: list[WorkflowNode]
 
     def get_stage(self, *, name: str | None = None, uuid: UUID | None = None) -> WorkflowStage:
         return WorkflowStage()
