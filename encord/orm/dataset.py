@@ -974,12 +974,15 @@ class LongPollingStatus(str, Enum):
 
     DONE = "DONE"
     """
-    Job has finished successfully (possibly with errors if `ignore_errors=True`)
-    If `ignore_errors=False` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`
-    , job will only have the status `DONE` if there were no errors.
-    If `ignore_errors=True` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`
-    , job will always show the status `DONE` once complete and will never show `ERROR`
+    Job has finished successfully (possibly with errors if `ignore_errors=True`).
+
+    If `ignore_errors=False` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start,
+    the job will only have the status `DONE` if there were no errors.
+
+    If `ignore_errors=True` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`,
+    the job will always show the status `DONE` once complete and will never show `ERROR`
     status if this flag was set to `True`. There could be errors that were ignored.
+
     Information about number of errors and stringified exceptions is available in the
     `units_error_count: int` and `errors: List[str]` attributes.
     """
@@ -989,6 +992,24 @@ class LongPollingStatus(str, Enum):
     Job has completed with errors. This can only happen if `ignore_errors` was set to `False`.
     Information about errors is available in the `units_error_count: int` and `errors: List[str]` attributes.
     """
+
+
+class DataUnitError(BaseDTO):
+    """
+    A description of an error for an individual upload item
+    """
+
+    object_urls: List[str]
+    """URLs involved. A single item for videos and images; a list of frames for image groups and DICOM"""
+
+    error: str
+    """The error message"""
+
+    subtask_uuid: UUID
+    """Opaque ID of the process. Please quote this when contacting Encord support."""
+
+    action_description: str
+    """Human-readable description of the action that failed (e.g. 'Uploading DICOM series'."""
 
 
 class DatasetDataLongPolling(BaseDTO):
@@ -1007,6 +1028,9 @@ class DatasetDataLongPolling(BaseDTO):
 
     errors: List[str]
     """Stringified list of exceptions."""
+
+    data_unit_errors: List[DataUnitError]
+    """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
     units_pending_count: int
     """Number of upload job units that have pending status."""
