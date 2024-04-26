@@ -1,22 +1,25 @@
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Iterable
 from uuid import UUID
+
+from encord.orm.workflow import Workflow as WorkflowORM
+from encord.orm.workflow import WorkflowNodeType
 
 
 class Task:
     task_uuid: UUID
 
 
-class WorkflowNodeType(str, Enum):
-    ANNOTATION = auto()
-
-
-class WorkflowNode:
-    node_type: WorkflowNodeType
+@dataclass(frozen=True)
+class WorkflowStage:
+    stage_type: WorkflowNodeType
+    uuid: UUID
     title: str
 
+    def __repr__(self):
+        return f"WorkflowStage {self.stage_type}: uuid={self.uuid} title={self.title}"
 
-class WorkflowStage:
     def get_tasks(self) -> Iterable[Task]:
         return []
 
@@ -25,7 +28,10 @@ class WorkflowStage:
 
 
 class Workflow:
-    stages: list[WorkflowNode]
+    stages: list[WorkflowStage] = []
+
+    def __init__(self, workflow_orm: WorkflowORM):
+        self.stages = [WorkflowStage(uuid=x.uuid, title=x.title, stage_type=x.node_type) for x in workflow_orm.stages]
 
     def get_stage(self, *, name: str | None = None, uuid: UUID | None = None) -> WorkflowStage:
-        return WorkflowStage()
+        raise NotImplementedError()

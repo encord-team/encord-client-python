@@ -10,6 +10,16 @@ class WorkflowAction(str, Enum):
     COMPLETE = "complete"
 
 
+class WorkflowNodeType(str, Enum):
+    ANNOTATION = "ANNOTATION"
+    REVIEW = "REVIEW"
+    USER_ROUTER = "USER_ROUTER"
+    PERCENTAGE_ROUTER = "PERCENTAGE_ROUTER"
+    CONSENSUS_ANNOTATION = "CONSENSUS_ANNOTATION"
+    CONSENSUS_REVIEW = "CONSENSUS_REVIEW"
+    DONE = "DONE"
+
+
 class LabelWorkflowGraphNode:
     pass
 
@@ -20,7 +30,7 @@ class LabelWorkflowGraphNodePayload(BaseDTO):
 
 class WorkflowNode(BaseDTO):
     uuid: UUID
-    node_type: str
+    node_type: WorkflowNodeType
     title: str
 
 

@@ -45,6 +45,9 @@ class Project:
         self._project_instance = project_instance
         self._ontology = ontology
 
+        if project_instance.workflow:
+            self._workflow = Workflow(project_instance.workflow)
+
     @property
     def project_hash(self) -> str:
         """
@@ -161,12 +164,12 @@ class Project:
         """
         return self._client.get_project()
 
-    def get_workflow(self) -> Workflow:
-        return Workflow()
-
     @property
     def workflow(self) -> Workflow:
-        return Workflow()
+        assert (
+            self.project_type == ProjectType.WORKFLOW
+        ), "project..workflow property only available for workflow porjects"
+        return self._workflow
 
     def list_label_rows_v2(
         self,
