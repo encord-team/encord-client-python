@@ -4,7 +4,7 @@ from typing import Iterable
 from uuid import UUID
 
 from encord.orm.workflow import Workflow as WorkflowORM
-from encord.orm.workflow import WorkflowNodeType
+from encord.orm.workflow import WorkflowStageType
 
 
 class Task:
@@ -13,7 +13,7 @@ class Task:
 
 @dataclass(frozen=True)
 class WorkflowStage:
-    stage_type: WorkflowNodeType
+    stage_type: WorkflowStageType
     uuid: UUID
     title: str
 

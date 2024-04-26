@@ -10,7 +10,7 @@ class WorkflowAction(str, Enum):
     COMPLETE = "complete"
 
 
-class WorkflowNodeType(str, Enum):
+class WorkflowStageType(str, Enum):
     ANNOTATION = "ANNOTATION"
     REVIEW = "REVIEW"
     USER_ROUTER = "USER_ROUTER"
@@ -30,7 +30,7 @@ class LabelWorkflowGraphNodePayload(BaseDTO):
 
 class WorkflowNode(BaseDTO):
     uuid: UUID
-    node_type: WorkflowNodeType
+    node_type: WorkflowStageType
     title: str
 
 
