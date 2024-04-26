@@ -18,7 +18,7 @@ class WorkflowStage:
     title: str
 
     def __repr__(self):
-        return f"WorkflowStage {self.stage_type}: uuid={self.uuid} title={self.title}"
+        return f"WorkflowStage(stage_type={self.stage_type} uuid='{self.uuid}' title='{self.title}')"
 
     def get_tasks(self) -> Iterable[Task]:
         return []
