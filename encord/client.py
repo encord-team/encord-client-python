@@ -146,6 +146,7 @@ from encord.orm.project import (
     TaskPriorityParams,
 )
 from encord.orm.project import Project as OrmProject
+from encord.orm.project import ProjectOrm as ProjectOrmV2
 from encord.orm.workflow import (
     LabelWorkflowGraphNode,
     LabelWorkflowGraphNodePayload,
@@ -772,6 +773,13 @@ class EncordClientProject(EncordClient):
         return self._querier.basic_getter(
             OrmProject, payload={"include_labels_metadata": include_labels_metadata}, retryable=True
         )
+
+    def get_project_v2(self) -> ProjectOrmV2:
+        """
+        This is an internal method, do not use it directly.
+        Use :meth:`UserClient.get_project` instead.
+        """
+        return self._get_api_client().get(f"/projects/{self.project_hash}", params=None, result_type=ProjectOrmV2)
 
     def list_label_rows(
         self,
