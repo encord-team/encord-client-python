@@ -1,21 +1,52 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Iterable, Literal
+from typing import Iterable, Literal, Optional
 from uuid import UUID
 
+from pydantic import BaseModel
 from typing_extensions import Annotated
 
-from encord.orm.base_dto import Field
+from encord.http.v2.api_client import ApiClient
+from encord.orm.base_dto import BaseDTO, Field
 from encord.orm.workflow import Workflow as WorkflowORM
 from encord.orm.workflow import WorkflowNode, WorkflowStageType
 
 
+class TaskInfo(BaseDTO):
+    uuid: UUID
+
+
+@dataclass
 class Task:
-    task_uuid: UUID
+    uuid: UUID
+
+
+@dataclass
+class AnnotationTask(Task):
+    pass
+
+
+class TasksQueryParams(BaseDTO):
+    page_token: Optional[str] = None
+
+
+@dataclass
+class WorkflowClient:
+    api_client: ApiClient
+    project_hash: UUID
+
+    def get_tasks(self, stage_uuid: UUID) -> Iterable[TaskInfo]:
+        return self.api_client.get_paged_iterator(
+            path=f"/projects/{self.project_hash}/workflow-stages/{stage_uuid}/tasks",
+            params=TasksQueryParams(),
+            result_type=TaskInfo,
+        )
 
 
 @dataclass(frozen=True)
 class WorkflowStageBase:
+    workflow_client: WorkflowClient
+
     # stage_type: WorkflowStageType
     uuid: UUID
     title: str
@@ -26,6 +57,10 @@ class WorkflowStageBase:
 
 class AnnotationStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.ANNOTATION] = WorkflowStageType.ANNOTATION
+
+    def get_tasks(self) -> Iterable[AnnotationTask]:
+        for task_info in self.workflow_client.get_tasks(self.uuid):
+            yield AnnotationTask(uuid=task_info.uuid)
 
 
 class ReviewStage(WorkflowStageBase):
@@ -50,27 +85,29 @@ WorkflowStage = Annotated[
 ]
 
 
-def _construct_stage(node: WorkflowNode) -> WorkflowStage:
-    match node.node_type:
+def _construct_stage(workflow_client: WorkflowClient, node: WorkflowNode) -> WorkflowStage:
+    match node.stage_type:
         case WorkflowStageType.ANNOTATION:
-            return AnnotationStage(uuid=node.uuid, title=node.title)
+            return AnnotationStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
         case WorkflowStageType.REVIEW:
-            return ReviewStage(uuid=node.uuid, title=node.title)
+            return ReviewStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
         case WorkflowStageType.CONSENSUS_ANNOTATION:
-            return ConsensusAnnotationStage(uuid=node.uuid, title=node.title)
+            return ConsensusAnnotationStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
         case WorkflowStageType.CONSENSUS_REVIEW:
-            return ConsensusReviewStage(uuid=node.uuid, title=node.title)
+            return ConsensusReviewStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
         case WorkflowStageType.DONE:
-            return CompleteStage(uuid=node.uuid, title=node.title)
+            return CompleteStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
         case _:
-            raise AssertionError(f"Unknown stage type: {node.node_type}")
+            raise AssertionError(f"Unknown stage type: {node.stage_type}")
 
 
 class Workflow:
     stages: list[WorkflowStage] = []
 
-    def __init__(self, workflow_orm: WorkflowORM):
-        self.stages = [_construct_stage(x) for x in workflow_orm.stages]
+    def __init__(self, api_client: ApiClient, project_hash: UUID, workflow_orm: WorkflowORM):
+        workflow_client = WorkflowClient(api_client, project_hash)
+
+        self.stages = [_construct_stage(workflow_client, x) for x in workflow_orm.stages]
 
     def get_stage(self, *, name: str | None = None, uuid: UUID | None = None) -> WorkflowStage:
         for stage in self.stages:

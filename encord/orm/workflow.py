@@ -30,7 +30,7 @@ class LabelWorkflowGraphNodePayload(BaseDTO):
 
 class WorkflowNode(BaseDTO):
     uuid: UUID
-    node_type: WorkflowStageType
+    stage_type: WorkflowStageType
     title: str
 
 

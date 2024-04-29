@@ -6,6 +6,7 @@ from encord.client import EncordClientProject
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
+from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.analytics import (
@@ -40,13 +41,15 @@ class Project:
     Access project related data and manipulate the project.
     """
 
-    def __init__(self, client: EncordClientProject, project_instance: ProjectOrm, ontology: Ontology):
+    def __init__(
+        self, client: EncordClientProject, project_instance: ProjectOrm, ontology: Ontology, api_client: ApiClient
+    ):
         self._client = client
         self._project_instance = project_instance
         self._ontology = ontology
 
         if project_instance.workflow:
-            self._workflow = Workflow(project_instance.workflow)
+            self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
 
     @property
     def project_hash(self) -> str:
