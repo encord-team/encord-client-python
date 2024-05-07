@@ -1,22 +1,29 @@
 from __future__ import annotations
 
+from typing import Optional, Type, TypeVar, Union, cast
 from uuid import UUID
 
 from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
-from encord.orm.base_dto import BaseDTO, BaseDTOInterface, Field
+from encord.objects.utils import (
+    check_type,
+    checked_cast,
+    does_type_match,
+    short_uuid_str,
+)
+from encord.orm.base_dto import Field
 from encord.orm.workflow import Workflow as WorkflowORM
 from encord.orm.workflow import WorkflowNode, WorkflowStageType
-from encord.workflow.common import WorkflowClient, WorkflowStageBase, WorkflowTask
-from encord.workflow.stages.annotation import AnnotationStage, AnnotationTask
+from encord.workflow.common import WorkflowClient
+from encord.workflow.stages.annotation import AnnotationStage
 from encord.workflow.stages.consensus_annotation import ConsensusAnnotationStage
 from encord.workflow.stages.consensus_review import ConsensusReviewStage
 from encord.workflow.stages.final import FinalStage
 from encord.workflow.stages.review import ReviewStage
 
 WorkflowStage = Annotated[
-    AnnotationStage | ReviewStage | ConsensusAnnotationStage | ConsensusReviewStage | FinalStage,
+    Union[AnnotationStage, ReviewStage, ConsensusAnnotationStage, ConsensusReviewStage, FinalStage],
     Field(discriminator="stage_type"),
 ]
 
@@ -37,6 +44,11 @@ def _construct_stage(workflow_client: WorkflowClient, node: WorkflowNode) -> Wor
             raise AssertionError(f"Unknown stage type: {node.stage_type}")
 
 
+WorkflowStageT = TypeVar(
+    "WorkflowStageT", AnnotationStage, ReviewStage, ConsensusAnnotationStage, ConsensusReviewStage, FinalStage
+)
+
+
 class Workflow:
     stages: list[WorkflowStage] = []
 
@@ -45,9 +57,15 @@ class Workflow:
 
         self.stages = [_construct_stage(workflow_client, stage) for stage in workflow_orm.stages]
 
-    def get_stage(self, *, name: str | None = None, uuid: UUID | None = None) -> WorkflowStage:
+    def get_stage(
+        self, *, name: Optional[str] = None, uuid: Optional[UUID] = None, type_: Optional[Type[WorkflowStageT]] = None
+    ) -> WorkflowStageT:
         for stage in self.stages:
             if (uuid is not None and stage.uuid == uuid) or (name is not None and stage.title == name):
-                return stage
+                if type_ is not None and not isinstance(stage, type_):
+                    raise AssertionError(
+                        f"Expected '{type_.__name__}' but got '{type(stage).__name__}' for the requested workflow stage '{uuid or name}'"
+                    )
+                return checked_cast(stage, type_)
 
         raise ValueError(f"No matching stage found: '{uuid or name}'")
