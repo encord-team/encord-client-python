@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
+from typing import Iterable, Literal, Optional
 from uuid import UUID
 
 from encord.orm.workflow import WorkflowStageType
@@ -35,7 +35,7 @@ class _ActionRelease(WorkflowAction):
 
 
 class ReviewTask(WorkflowTask):
-    assignee: str | None
+    assignee: Optional[str]
     data_hash: UUID
     data_title: str
 

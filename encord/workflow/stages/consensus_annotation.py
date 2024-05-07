@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
+from typing import Iterable, List, Literal
 from uuid import UUID
 
 from encord.orm.base_dto import Field
@@ -23,4 +23,4 @@ class ConsensusAnnotationStage(WorkflowStageBase):
 class ConsensusAnnotationTask(WorkflowTask):
     data_hash: UUID
     data_title: str
-    subtasks: list[AnnotationTask] = Field(default_factory=list)
+    subtasks: List[AnnotationTask] = Field(default_factory=list)

@@ -26,7 +26,7 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectDataset, ProjectOrm, ProjectType
+from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectDataset, ProjectDTO, ProjectType
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -42,7 +42,7 @@ class Project:
     """
 
     def __init__(
-        self, client: EncordClientProject, project_instance: ProjectOrm, ontology: Ontology, api_client: ApiClient
+        self, client: EncordClientProject, project_instance: ProjectDTO, ontology: Ontology, api_client: ApiClient
     ):
         self._client = client
         self._project_instance = project_instance

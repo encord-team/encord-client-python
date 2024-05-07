@@ -25,12 +25,12 @@ def api_client():
 
 
 def stub_responses(*args, **kwargs) -> MagicMock:
-    body_json = json.loads(args[0].body)
-    request_type = body_json["query_type"]
+    mock_response = MagicMock()
 
-    if request_type == "project":
+    if args[0].path_url.startswith("/v2/public/projects"):
         response = {
             "project_hash": PROJECT_HASH,
+            "project_type": "manual_qa",
             "title": "Test project",
             "description": "",
             "created_at": "2024-01-01 11:11:11",
@@ -40,35 +40,41 @@ def stub_responses(*args, **kwargs) -> MagicMock:
             "label_rows": [],
             "ontology_hash": ONTOLOGY_HASH,
         }
-    elif request_type == "ontology":
-        response = {
-            "title": "Test ontology",
-            "description": "",
-            "ontology_hash": ONTOLOGY_HASH,
-            "created_at": "2024-01-01 11:11:11",
-            "last_edited_at": "2024-01-01 11:11:11",
-            "editor": {
-                "objects": [],
-                "classifications": [],
-            },
-        }
-    elif request_type == "dataset":
-        response = {
-            "dataset_hash": DATASET_HASH,
-            "title": "Test dataset",
-            "description": "",
-            "dataset_type": "cord",
-            "data_rows": [],
-        }
-    elif request_type in ["datarows", "labelrowmetadata"]:
-        response = {}  # These objects are not used in tests, so it's ok to return empty descriptor for now
-    else:
-        assert False, f"Unsupported request: {request_type}"
+        mock_response.status_code = 200
+        mock_response.json.return_value = response
 
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"status": 200, "response": response}
-    mock_response.content = json.dumps({"status": 200, "response": response})
+    else:
+        # Legacy api
+        body_json = json.loads(args[0].body)
+        request_type = body_json["query_type"]
+        if request_type == "ontology":
+            response = {
+                "title": "Test ontology",
+                "description": "",
+                "ontology_hash": ONTOLOGY_HASH,
+                "created_at": "2024-01-01 11:11:11",
+                "last_edited_at": "2024-01-01 11:11:11",
+                "editor": {
+                    "objects": [],
+                    "classifications": [],
+                },
+            }
+        elif request_type == "dataset":
+            response = {
+                "dataset_hash": DATASET_HASH,
+                "title": "Test dataset",
+                "description": "",
+                "dataset_type": "cord",
+                "data_rows": [],
+            }
+        elif request_type in ["datarows", "labelrowmetadata"]:
+            response = {}  # These objects are not used in tests, so it's ok to return empty descriptor for now
+        else:
+            assert False, f"Unsupported request: {request_type}"
+
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"status": 200, "response": response}
+        mock_response.content = json.dumps({"status": 200, "response": response})
 
     return mock_response
 

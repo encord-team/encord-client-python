@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
+from typing import Iterable, List, Literal, Optional
 from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO
@@ -41,10 +41,10 @@ class ConsensusReviewOption(BaseDTO):
 
 
 class ConsensusReviewTask(WorkflowTask):
-    assignee: str | None
+    assignee: Optional[str]
     data_hash: UUID
     data_title: str
-    options: list[ConsensusReviewOption]
+    options: List[ConsensusReviewOption]
 
     def approve(self) -> None:
         workflow_client, stage_uuid = self._get_client_data()

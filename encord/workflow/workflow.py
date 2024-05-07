@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional, Type, TypeVar, Union, cast
+from typing import List, Optional, Type, TypeVar, Union
 from uuid import UUID
 
 from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
-from encord.objects.utils import (
-    check_type,
-    checked_cast,
-    does_type_match,
-    short_uuid_str,
-)
+from encord.objects.utils import checked_cast
 from encord.orm.base_dto import Field
 from encord.orm.workflow import Workflow as WorkflowORM
 from encord.orm.workflow import WorkflowNode, WorkflowStageType
@@ -50,7 +45,7 @@ WorkflowStageT = TypeVar(
 
 
 class Workflow:
-    stages: list[WorkflowStage] = []
+    stages: List[WorkflowStage] = []
 
     def __init__(self, api_client: ApiClient, project_hash: UUID, workflow_orm: WorkflowORM):
         workflow_client = WorkflowClient(api_client, project_hash)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
+from typing import Iterable, Literal, Optional
 
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import WorkflowAction, WorkflowStageBase, WorkflowTask
@@ -30,7 +30,7 @@ class _ActionRelease(WorkflowAction):
 
 
 class AnnotationTask(WorkflowTask):
-    assignee: str | None
+    assignee: Optional[str]
     label_branch_name: str
 
     def submit(self) -> None:

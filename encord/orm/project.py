@@ -317,7 +317,7 @@ class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
 
 
-class ProjectOrm(BaseDTO):
+class ProjectDTO(BaseDTO):
     project_hash: UUID
     project_type: ProjectType
     title: str
@@ -325,4 +325,4 @@ class ProjectOrm(BaseDTO):
     created_at: datetime.datetime
     last_edited_at: datetime.datetime
     ontology_hash: str
-    workflow: Optional[Workflow]
+    workflow: Optional[Workflow] = None

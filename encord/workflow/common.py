@@ -24,8 +24,8 @@ class WorkflowStageBase:
 
 
 class WorkflowTask(BaseDTO):
-    _stage_uuid: UUID | None = None
-    _workflow_client: WorkflowClient | None = None
+    _stage_uuid: Optional[UUID] = None
+    _workflow_client: Optional[WorkflowClient] = None
 
     uuid: UUID
     created_at: datetime

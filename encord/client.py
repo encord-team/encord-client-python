@@ -146,7 +146,7 @@ from encord.orm.project import (
     TaskPriorityParams,
 )
 from encord.orm.project import Project as OrmProject
-from encord.orm.project import ProjectOrm as ProjectOrmV2
+from encord.orm.project import ProjectDTO as ProjectOrmV2
 from encord.orm.workflow import (
     LabelWorkflowGraphNode,
     LabelWorkflowGraphNodePayload,
