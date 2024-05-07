@@ -3,6 +3,7 @@ from encord.workflow.workflow import (
     AnnotationTask,
     ConsensusAnnotationStage,
     ConsensusReviewStage,
+    FinalStage,
     ReviewStage,
     Workflow,
 )
