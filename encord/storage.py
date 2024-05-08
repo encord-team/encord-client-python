@@ -1007,7 +1007,11 @@ class StorageItem:
         Returns:
             List of child items. The list will be emtpy if the item has no children (e.g. it's a Video)
         """
-        if self.item_type != StorageItemType.IMAGE_GROUP and self.item_type != StorageItemType.DICOM_SERIES:
+        if self.item_type not in {
+            StorageItemType.IMAGE_GROUP,
+            StorageItemType.IMAGE_SEQUENCE,
+            StorageItemType.DICOM_SERIES,
+        }:
             return []
 
         child_items = self._api_client.get(
