@@ -38,6 +38,7 @@ class _ActionRelease(WorkflowAction):
 class ConsensusReviewOption(BaseDTO):
     annotator: str
     label_branch_name: str
+    label_hash: Optional[UUID]
 
 
 class ConsensusReviewTask(WorkflowTask):
