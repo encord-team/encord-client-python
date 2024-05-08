@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Iterable, Literal, Optional
+from uuid import UUID
 
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import WorkflowAction, WorkflowStageBase, WorkflowTask
@@ -30,8 +31,10 @@ class _ActionRelease(WorkflowAction):
 
 
 class AnnotationTask(WorkflowTask):
-    assignee: Optional[str]
+    data_hash: UUID
+    data_title: str
     label_branch_name: str
+    assignee: Optional[str]
 
     def submit(self) -> None:
         workflow_client, stage_uuid = self._get_client_data()
