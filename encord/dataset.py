@@ -264,7 +264,7 @@ class Dataset:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
         folder: Optional[Union[UUID, StorageFolder]] = None,
-    ):
+    ) -> Dict:
         """
         Upload a DICOM series to Encord storage
 
@@ -280,7 +280,7 @@ class Dataset:
                 When uploading to a non-mirror dataset, you have to specify the folder to store the file in.
                 This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
         Returns:
-            Bool.
+            A dictionary describing the created series.
 
         Raises:
             UploadOperationNotSupportedError: If trying to upload to external

@@ -44,7 +44,7 @@ import uuid
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, Union, cast
+from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import requests
 
@@ -73,7 +73,6 @@ from encord.http.v2.payloads import Page
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
-    CollaboratorTimersGroupBy,
 )
 from encord.orm.api_key import ApiKeyMeta
 from encord.orm.bearer_request import BearerTokenResponse
@@ -512,7 +511,7 @@ class EncordClientDataset(EncordClient):
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder_uuid: Optional[uuid.UUID] = None,
-    ):
+    ) -> Dict:
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_dicom_series`.
         """
@@ -550,7 +549,7 @@ class EncordClientDataset(EncordClient):
         if not res:
             raise encord.exceptions.EncordException(message="An error has occurred during the DICOM series creation.")
 
-        return DicomSeries(**res)
+        return res
 
     def upload_image(
         self,
