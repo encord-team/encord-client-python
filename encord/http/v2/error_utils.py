@@ -19,10 +19,12 @@ def handle_error_response(status_code: int, message=None, context=None):
     Called if HTTP response status code is an error response.
     """
     if status_code == HTTP_UNAUTHORIZED:
-        raise AuthenticationError("You are not authenticated to access the Encord platform.", context=context)
+        raise AuthenticationError(
+            message or "You are not authenticated to access the Encord platform.", context=context
+        )
 
     if status_code == HTTP_FORBIDDEN:
-        raise AuthorisationError("You are not authorised to access this asset.", context=context)
+        raise AuthorisationError(message or "You are not authorised to access this asset.", context=context)
 
     if status_code == HTTP_NOT_FOUND:
         raise ResourceNotFoundError("The requested resource was not found.", context=context)
@@ -30,4 +32,4 @@ def handle_error_response(status_code: int, message=None, context=None):
     if status_code == HTTP_METHOD_NOT_ALLOWED:
         raise MethodNotAllowedError("HTTP method is not allowed.", context=context)
 
-    raise UnknownException("An unknown error occurred.", context=context)
+    raise UnknownException(message or "An unknown error occurred.", context=context)

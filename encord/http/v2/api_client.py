@@ -8,7 +8,7 @@ from requests import PreparedRequest, Response
 
 from encord._version import __version__ as encord_version
 from encord.configs import Config
-from encord.exceptions import RequestException
+from encord.exceptions import EncordException, RequestException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     HEADER_USER_AGENT,
@@ -209,5 +209,7 @@ class ApiClient:
         try:
             description = response.json()
             handle_error_response(response.status_code, context=context, message=description.get("message"))
+        except EncordException as e:
+            raise e
         except Exception:
             handle_error_response(response.status_code, context=context)
