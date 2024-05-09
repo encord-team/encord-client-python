@@ -15,11 +15,14 @@ from encord.orm.dataset import (
     DatasetUser,
     DatasetUserRole,
     Image,
+    ImageGroup,
     ImageGroupOCR,
     StorageLocation,
+    Video,
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.group import DatasetGroup
+from encord.storage import StorageFolder
 from encord.utilities.hash_utilities import convert_to_uuid
 
 
@@ -177,7 +180,8 @@ class Dataset:
         file_path: str,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
-    ):
+        folder: Optional[Union[UUID, StorageFolder]] = None,
+    ) -> Video:
         """
         Upload video to Encord storage.
 
@@ -188,15 +192,22 @@ class Dataset:
             title:
                 The video title. If unspecified, this will be the file name. This title should include an extension.
                 For example "encord_video.mp4".
+            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in.
+                This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
 
         Returns:
-            Bool.
+            An object describing the created video, see :class:`encord.orm.dataset.Video`
 
         Raises:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
         """
-        return self._client.upload_video(file_path, cloud_upload_settings=cloud_upload_settings, title=title)
+
+        folder_uuid = folder.uuid if isinstance(folder, StorageFolder) else folder
+
+        return self._client.upload_video(
+            file_path, cloud_upload_settings=cloud_upload_settings, title=title, folder_uuid=folder_uuid
+        )
 
     def create_image_group(
         self,
@@ -206,7 +217,8 @@ class Dataset:
         title: Optional[str] = None,
         *,
         create_video: bool = True,
-    ):
+        folder: Optional[Union[UUID, StorageFolder]] = None,
+    ) -> List[ImageGroup]:
         """
         Create an image group in Encord storage. Choose this type of image upload for sequential images. Else, you can
         choose the :meth:`.Dataset.upload_image` function.
@@ -225,19 +237,25 @@ class Dataset:
                 A flag specifying how image groups are stored. If `True`, a compressed video will be created from
                 the image groups. `True` was the previous default support. If `False`, the images
                 are saved as a sequence of images.
+            folder:
+                When uploading to a non-mirror dataset, you have to specify the folder to store the file in.
+                This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
 
         Returns:
-            Bool.
+            A list containing the object(s) describing the created data unit(s).
+            See :class:`encord.orm.dataset.ImageGroup`. The list normally contains a single object.
 
         Raises:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
+            InvalidArgumentError: If the folder is specified, but the dataset is a mirror dataset.
         """
         return self._client.create_image_group(
             file_paths,
             cloud_upload_settings=cloud_upload_settings,
             title=title,
             create_video=create_video,
+            folder_uuid=folder.uuid if isinstance(folder, StorageFolder) else folder,
         )
 
     def create_dicom_series(
@@ -245,6 +263,7 @@ class Dataset:
         file_paths: List[str],
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
+        folder: Optional[Union[UUID, StorageFolder]] = None,
     ):
         """
         Upload a DICOM series to Encord storage
@@ -257,20 +276,30 @@ class Dataset:
             title:
                 The title of the DICOM series. If unspecified this will be randomly generated for you. This title should
                 NOT include an extension. For example "encord_image_group".
+            folder:
+                When uploading to a non-mirror dataset, you have to specify the folder to store the file in.
+                This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
         Returns:
             Bool.
 
         Raises:
             UploadOperationNotSupportedError: If trying to upload to external
                                               datasets (e.g. S3/GPC/Azure)
+            InvalidArgumentError: If the folder is specified, but the dataset is a mirror dataset.
         """
-        return self._client.create_dicom_series(file_paths, cloud_upload_settings=cloud_upload_settings, title=title)
+        return self._client.create_dicom_series(
+            file_paths,
+            cloud_upload_settings=cloud_upload_settings,
+            title=title,
+            folder_uuid=folder.uuid if isinstance(folder, StorageFolder) else folder,
+        )
 
     def upload_image(
         self,
         file_path: Union[Path, str],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        folder: Optional[Union[UUID, StorageFolder]] = None,
     ) -> Image:
         """
         Upload a single image to Encord storage. If your images are sequential we recommend creating an image group via
@@ -283,9 +312,13 @@ class Dataset:
                 For example "encord_image.png".
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in.
+                This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
 
         """
-        return self._client.upload_image(file_path, title, cloud_upload_settings)
+
+        folder_uuid = folder.uuid if isinstance(folder, StorageFolder) else folder
+        return self._client.upload_image(file_path, title, cloud_upload_settings, folder_uuid)
 
     def link_items(self, item_uuids: List[UUID]) -> List[DataRow]:
         return self._client.link_items(item_uuids)
@@ -340,6 +373,8 @@ class Dataset:
         integration_id: str,
         private_files: Union[str, Dict, Path, TextIO],
         ignore_errors: bool = False,
+        *,
+        folder: Optional[Union[StorageFolder, UUID]] = None,
     ) -> str:
         """
         Append data hosted on a private cloud to an existing dataset.
@@ -360,12 +395,15 @@ class Dataset:
                 A `str` path or `Path` object to a json file, json str or python dictionary of the files you wish to add
             ignore_errors:
                 When set to `True`, this will prevent individual errors from stopping the upload process.
+            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in.
+                This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
         Returns:
             str
                 `upload_job_id` - UUID Identifier of upload job.
                 This id enables the user to track the job progress via SDK, or web app.
         """
-        return self._client.add_private_data_to_dataset_start(integration_id, private_files, ignore_errors)
+        folder_uuid = folder.uuid if isinstance(folder, StorageFolder) else folder
+        return self._client.add_private_data_to_dataset_start(integration_id, private_files, ignore_errors, folder_uuid)
 
     def add_private_data_to_dataset_get_result(
         self,

@@ -443,7 +443,8 @@ class EncordClientDataset(EncordClient):
         file_path: str,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
-    ):
+        folder_uuid: Optional[uuid.UUID] = None,
+    ) -> Video:
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
@@ -451,10 +452,10 @@ class EncordClientDataset(EncordClient):
             signed_urls = upload_to_signed_url_list(
                 [file_path], self._config, self._querier, Video, cloud_upload_settings=cloud_upload_settings
             )
-            res = upload_video_to_encord(signed_urls[0], title, self._querier)
+            res = upload_video_to_encord(signed_urls[0], title, folder_uuid, self._querier)
             if res:
                 logger.info("Upload complete.")
-                return res
+                return Video(res)
             else:
                 raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
         else:
@@ -468,7 +469,8 @@ class EncordClientDataset(EncordClient):
         title: Optional[str] = None,
         *,
         create_video: bool = True,
-    ):
+        folder_uuid: Optional[uuid.UUID] = None,
+    ) -> List[ImageGroup]:
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
         """
@@ -484,19 +486,23 @@ class EncordClientDataset(EncordClient):
         upload_images_to_encord(successful_uploads, self._querier)
 
         image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
+        payload = {
+            "image_group_title": title,
+            "create_video": create_video,
+        }
+        if folder_uuid is not None:
+            payload["folder_uuid"] = str(folder_uuid)
+
         res = self._querier.basic_setter(
             ImageGroup,
             uid=image_hash_list,  # type: ignore
-            payload={
-                "image_group_title": title,
-                "create_video": create_video,
-            },
+            payload=payload,
         )
 
         if res:
             titles = [video_data.get("title") for video_data in res]
             logger.info(f"Upload successful! {titles} created.")
-            return res
+            return [ImageGroup(obj) for obj in res]
         else:
             raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
 
@@ -505,6 +511,7 @@ class EncordClientDataset(EncordClient):
         file_paths: List[str],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        folder_uuid: Optional[uuid.UUID] = None,
     ):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_dicom_series`.
@@ -532,17 +539,25 @@ class EncordClientDataset(EncordClient):
             for file in successful_uploads
         ]
 
-        res = self._querier.basic_setter(DicomSeries, uid=dicom_files, payload={"title": title})
+        payload = {
+            "title": title,
+        }
+
+        if folder_uuid is not None:
+            payload["folder_uuid"] = str(folder_uuid)
+
+        res = self._querier.basic_setter(DicomSeries, uid=dicom_files, payload=payload)
         if not res:
             raise encord.exceptions.EncordException(message="An error has occurred during the DICOM series creation.")
 
-        return res
+        return DicomSeries(**res)
 
     def upload_image(
         self,
         file_path: Union[Path, str],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        folder_uuid: Optional[uuid.UUID] = None,
     ) -> Image:
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_image`.
@@ -559,6 +574,8 @@ class EncordClientDataset(EncordClient):
             raise encord.exceptions.EncordException("Image upload failed.")
 
         upload = successful_uploads[0]
+        if folder_uuid is not None:
+            upload["folder_uuid"] = str(folder_uuid)
         if title is not None:
             upload["title"] = title
 
@@ -619,6 +636,7 @@ class EncordClientDataset(EncordClient):
         integration_id: str,
         private_files: Union[str, typing.Dict, Path, typing.TextIO],
         ignore_errors: bool = False,
+        folder_uuid: Optional[uuid.UUID] = None,
     ) -> str:
         """
         This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`.
@@ -641,14 +659,18 @@ class EncordClientDataset(EncordClient):
         else:
             raise ValueError(f"Type [{type(private_files)}] of argument private_files is not supported")
 
+        payload = {
+            "files": files,
+            "integration_id": integration_id,
+            "ignore_errors": ignore_errors,
+        }
+        if folder_uuid is not None:
+            payload["folder_uuid"] = str(folder_uuid)
+
         process_hash = self._querier.basic_setter(
             DatasetDataLongPolling,
             self._querier.resource_id,
-            payload={
-                "files": files,
-                "integration_id": integration_id,
-                "ignore_errors": ignore_errors,
-            },
+            payload=payload,
         )["process_hash"]
 
         print(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
