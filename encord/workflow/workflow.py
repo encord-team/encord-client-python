@@ -8,7 +8,7 @@ from typing_extensions import Annotated
 from encord.http.v2.api_client import ApiClient
 from encord.objects.utils import checked_cast
 from encord.orm.base_dto import Field
-from encord.orm.workflow import Workflow as WorkflowORM
+from encord.orm.workflow import Workflow as WorkflowDTO
 from encord.orm.workflow import WorkflowNode, WorkflowStageType
 from encord.workflow.common import WorkflowClient
 from encord.workflow.stages.annotation import AnnotationStage
@@ -43,19 +43,30 @@ WorkflowStageT = TypeVar(
 )
 
 
+def _ensure_uuid(v: str | UUID) -> UUID:
+    if isinstance(v, UUID):
+        return v
+    else:
+        return UUID(v)
+
+
 class Workflow:
     stages: List[WorkflowStage] = []
 
-    def __init__(self, api_client: ApiClient, project_hash: UUID, workflow_orm: WorkflowORM):
+    def __init__(self, api_client: ApiClient, project_hash: UUID, workflow_orm: WorkflowDTO):
         workflow_client = WorkflowClient(api_client, project_hash)
 
         self.stages = [_construct_stage(workflow_client, stage) for stage in workflow_orm.stages]
 
     def get_stage(
-        self, *, name: Optional[str] = None, uuid: Optional[UUID] = None, type_: Optional[Type[WorkflowStageT]] = None
+        self,
+        *,
+        name: Optional[str] = None,
+        uuid: Optional[UUID | str] = None,
+        type_: Optional[Type[WorkflowStageT]] = None,
     ) -> WorkflowStageT:
         for stage in self.stages:
-            if (uuid is not None and stage.uuid == uuid) or (name is not None and stage.title == name):
+            if (uuid is not None and stage.uuid == _ensure_uuid(uuid)) or (name is not None and stage.title == name):
                 if type_ is not None and not isinstance(stage, type_):
                     raise AssertionError(
                         f"Expected '{type_.__name__}' but got '{type(stage).__name__}' for the requested workflow stage '{uuid or name}'"
