@@ -11,14 +11,15 @@ class ReviewStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.REVIEW] = WorkflowStageType.REVIEW
 
     def get_tasks(self) -> Iterable[ReviewTask]:
-        for task in self.workflow_client.get_tasks(self.uuid, type_=ReviewTask):
+        for task in self._workflow_client.get_tasks(self.uuid, type_=ReviewTask):
             task._stage_uuid = self.uuid
-            task._workflow_client = self.workflow_client
+            task._workflow_client = self._workflow_client
             yield task
 
 
 class _ActionApprove(WorkflowAction):
     action: Literal["APPROVE"] = "APPROVE"
+    approve_label_reviews: bool = True
 
 
 class _ActionReject(WorkflowAction):

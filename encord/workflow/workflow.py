@@ -25,15 +25,15 @@ WorkflowStage = Annotated[
 
 def _construct_stage(workflow_client: WorkflowClient, node: WorkflowNode) -> WorkflowStage:
     if node.stage_type == WorkflowStageType.ANNOTATION:
-        return AnnotationStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
+        return AnnotationStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
     elif node.stage_type == WorkflowStageType.REVIEW:
-        return ReviewStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
+        return ReviewStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
     elif node.stage_type == WorkflowStageType.CONSENSUS_ANNOTATION:
-        return ConsensusAnnotationStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
+        return ConsensusAnnotationStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
     elif node.stage_type == WorkflowStageType.CONSENSUS_REVIEW:
-        return ConsensusReviewStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
+        return ConsensusReviewStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
     elif node.stage_type == WorkflowStageType.DONE:
-        return FinalStage(uuid=node.uuid, title=node.title, workflow_client=workflow_client)
+        return FinalStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
     else:
         raise AssertionError(f"Unknown stage type: {node.stage_type}")
 

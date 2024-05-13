@@ -11,9 +11,9 @@ class AnnotationStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.ANNOTATION] = WorkflowStageType.ANNOTATION
 
     def get_tasks(self) -> Iterable[AnnotationTask]:
-        for task in self.workflow_client.get_tasks(self.uuid, type_=AnnotationTask):
+        for task in self._workflow_client.get_tasks(self.uuid, type_=AnnotationTask):
             task._stage_uuid = self.uuid
-            task._workflow_client = self.workflow_client
+            task._workflow_client = self._workflow_client
             yield task
 
 

@@ -15,7 +15,7 @@ class TasksQueryParams(BaseDTO):
 
 @dataclass(frozen=True)
 class WorkflowStageBase:
-    workflow_client: WorkflowClient
+    _workflow_client: WorkflowClient
     uuid: UUID
     title: str
 

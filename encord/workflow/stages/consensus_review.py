@@ -12,9 +12,9 @@ class ConsensusReviewStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.CONSENSUS_REVIEW] = WorkflowStageType.CONSENSUS_REVIEW
 
     def get_tasks(self) -> Iterable[ConsensusReviewTask]:
-        for task in self.workflow_client.get_tasks(self.uuid, type_=ConsensusReviewTask):
+        for task in self._workflow_client.get_tasks(self.uuid, type_=ConsensusReviewTask):
             task._stage_uuid = self.uuid
-            task._workflow_client = self.workflow_client
+            task._workflow_client = self._workflow_client
             yield task
 
 

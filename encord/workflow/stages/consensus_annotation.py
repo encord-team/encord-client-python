@@ -13,10 +13,10 @@ class ConsensusAnnotationStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.CONSENSUS_ANNOTATION] = WorkflowStageType.CONSENSUS_ANNOTATION
 
     def get_tasks(self) -> Iterable[ConsensusAnnotationTask]:
-        for task in self.workflow_client.get_tasks(self.uuid, type_=ConsensusAnnotationTask):
+        for task in self._workflow_client.get_tasks(self.uuid, type_=ConsensusAnnotationTask):
             for subtask in task.subtasks:
                 subtask._stage_uuid = self.uuid
-                subtask._workflow_client = self.workflow_client
+                subtask._workflow_client = self._workflow_client
             yield task
 
 

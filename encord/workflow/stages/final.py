@@ -11,7 +11,7 @@ class FinalStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.DONE] = WorkflowStageType.DONE
 
     def get_tasks(self) -> Iterable[FinalStageTask]:
-        yield from self.workflow_client.get_tasks(self.uuid, type_=FinalStageTask)
+        yield from self._workflow_client.get_tasks(self.uuid, type_=FinalStageTask)
 
 
 class FinalStageTask(WorkflowTask):
