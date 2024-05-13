@@ -3,6 +3,7 @@ import mimetypes
 import os.path
 from dataclasses import dataclass
 from typing import Iterable, List, Optional, Type, Union
+from uuid import UUID
 
 from tqdm import tqdm
 
@@ -101,7 +102,10 @@ def upload_to_signed_url_list(
 
 
 def upload_video_to_encord(
-    signed_url: Union[SignedVideoURL, SignedImageURL, SignedDicomURL], video_title: Optional[str], querier: Querier
+    signed_url: Union[SignedVideoURL, SignedImageURL, SignedDicomURL],
+    video_title: Optional[str],
+    folder_uuid: Optional[UUID],
+    querier: Querier,
 ) -> Video:
     payload = {
         "signed_url": signed_url["signed_url"],
@@ -110,6 +114,9 @@ def upload_video_to_encord(
         "file_link": signed_url["file_link"],
         "video_title": video_title,
     }
+    if folder_uuid is not None:
+        payload["folder_uuid"] = str(folder_uuid)
+
     return querier.basic_put(
         Video,
         uid=signed_url.get("data_hash"),
