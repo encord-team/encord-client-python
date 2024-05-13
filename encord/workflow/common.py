@@ -49,10 +49,10 @@ class WorkflowClient:
     api_client: ApiClient
     project_hash: UUID
 
-    def get_tasks(self, stage_uuid: UUID, type_: Type[T]) -> Iterable[T]:
+    def get_tasks(self, stage_uuid: UUID, params: TasksQueryParams, type_: Type[T]) -> Iterable[T]:
         return self.api_client.get_paged_iterator(
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks",
-            params=TasksQueryParams(),
+            params=params,
             result_type=type_,
         )
 

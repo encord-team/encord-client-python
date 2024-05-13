@@ -1,17 +1,35 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
+from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
+from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.orm.workflow import WorkflowStageType
-from encord.workflow.common import WorkflowStageBase, WorkflowTask
+from encord.workflow.common import TasksQueryParams, WorkflowStageBase, WorkflowTask
+
+
+class _FinalTasksQueryParams(TasksQueryParams):
+    filter_data_hashes: Optional[List[UUID]] = None
+    filter_dataset_hashes: Optional[List[UUID]] = None
+    data_title_like: Optional[str] = None
 
 
 class FinalStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.DONE] = WorkflowStageType.DONE
 
-    def get_tasks(self) -> Iterable[FinalStageTask]:
-        yield from self._workflow_client.get_tasks(self.uuid, type_=FinalStageTask)
+    def get_tasks(
+        self,
+        data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
+        dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
+        data_title: Optional[str] = None,
+    ) -> Iterable[FinalStageTask]:
+        params = _FinalTasksQueryParams(
+            filter_data_hashes=ensure_uuid_list(data_hash),
+            filter_dataset_hashes=ensure_uuid_list(dataset_hash),
+            data_title_like=data_title,
+        )
+
+        yield from self._workflow_client.get_tasks(self.uuid, params, type_=FinalStageTask)
 
 
 class FinalStageTask(WorkflowTask):

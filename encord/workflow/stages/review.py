@@ -1,17 +1,38 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal, Optional
+from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
+from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.orm.workflow import WorkflowStageType
-from encord.workflow.common import WorkflowAction, WorkflowStageBase, WorkflowTask
+from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
+
+
+class _ReviewTasksQueryParams(TasksQueryParams):
+    filter_user_emails: Optional[List[str]] = None
+    filter_data_hashes: Optional[List[UUID]] = None
+    filter_dataset_hashes: Optional[List[UUID]] = None
+    data_title_like: Optional[str] = None
 
 
 class ReviewStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.REVIEW] = WorkflowStageType.REVIEW
 
-    def get_tasks(self) -> Iterable[ReviewTask]:
-        for task in self._workflow_client.get_tasks(self.uuid, type_=ReviewTask):
+    def get_tasks(
+        self,
+        *,
+        assignee: Union[List[str], str, None] = None,
+        data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
+        dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
+        data_title: Optional[str] = None,
+    ) -> Iterable[ReviewTask]:
+        params = _ReviewTasksQueryParams(
+            filter_user_emails=ensure_list(assignee),
+            filter_data_hashes=ensure_uuid_list(data_hash),
+            filter_dataset_hashes=ensure_uuid_list(dataset_hash),
+            data_title_like=data_title,
+        )
+        for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
             yield task
