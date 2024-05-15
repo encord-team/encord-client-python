@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import auto
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 from encord.orm.analytics import CamelStrEnum
@@ -370,4 +370,4 @@ class JobStatus(CamelStrEnum):
 
 class ReencodeVideoItemsResponse(BaseDTO):
     status: JobStatus
-    result: list | dict | None
+    result: Optional[Union[list, dict]]
