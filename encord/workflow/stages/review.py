@@ -9,10 +9,10 @@ from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowSta
 
 
 class _ReviewTasksQueryParams(TasksQueryParams):
-    filter_user_emails: Optional[List[str]] = None
-    filter_data_hashes: Optional[List[UUID]] = None
-    filter_dataset_hashes: Optional[List[UUID]] = None
-    data_title_like: Optional[str] = None
+    user_emails: Optional[List[str]] = None
+    data_hashes: Optional[List[UUID]] = None
+    dataset_hashes: Optional[List[UUID]] = None
+    data_title_contains: Optional[str] = None
 
 
 class ReviewStage(WorkflowStageBase):
@@ -27,10 +27,10 @@ class ReviewStage(WorkflowStageBase):
         data_title: Optional[str] = None,
     ) -> Iterable[ReviewTask]:
         params = _ReviewTasksQueryParams(
-            filter_user_emails=ensure_list(assignee),
-            filter_data_hashes=ensure_uuid_list(data_hash),
-            filter_dataset_hashes=ensure_uuid_list(dataset_hash),
-            data_title_like=data_title,
+            user_emails=ensure_list(assignee),
+            data_hashes=ensure_uuid_list(data_hash),
+            dataset_hashes=ensure_uuid_list(dataset_hash),
+            data_title_contains=data_title,
         )
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid

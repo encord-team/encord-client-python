@@ -9,9 +9,9 @@ from encord.workflow.common import TasksQueryParams, WorkflowStageBase, Workflow
 
 
 class _FinalTasksQueryParams(TasksQueryParams):
-    filter_data_hashes: Optional[List[UUID]] = None
-    filter_dataset_hashes: Optional[List[UUID]] = None
-    data_title_like: Optional[str] = None
+    data_hashes: Optional[List[UUID]] = None
+    dataset_hashes: Optional[List[UUID]] = None
+    data_title_contains: Optional[str] = None
 
 
 class FinalStage(WorkflowStageBase):
@@ -24,9 +24,9 @@ class FinalStage(WorkflowStageBase):
         data_title: Optional[str] = None,
     ) -> Iterable[FinalStageTask]:
         params = _FinalTasksQueryParams(
-            filter_data_hashes=ensure_uuid_list(data_hash),
-            filter_dataset_hashes=ensure_uuid_list(dataset_hash),
-            data_title_like=data_title,
+            data_hashes=ensure_uuid_list(data_hash),
+            dataset_hashes=ensure_uuid_list(dataset_hash),
+            data_title_contains=data_title,
         )
 
         yield from self._workflow_client.get_tasks(self.uuid, params, type_=FinalStageTask)
