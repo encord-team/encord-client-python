@@ -251,7 +251,7 @@ class StorageFolder:
         else:
             return upload_result.items_with_names[0].item_uuid
 
-    def re_encode_videos(self, storage_items: list[UUID], process_title: str, force_full_reencoding: bool) -> UUID:
+    def re_encode_videos(self, storage_items: List[UUID], process_title: str, force_full_reencoding: bool) -> UUID:
         return self._api_client.post(
             "/storage/items/reencode",
             params=None,
