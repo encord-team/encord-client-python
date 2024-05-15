@@ -357,6 +357,6 @@ class GetItemsBulkPayload(BaseDTO):
 
 
 class ReencodeVideoItemPayload(BaseDTO):
-    storage_items: list[UUID]
+    storage_items: List[UUID]
     process_title: str
     force_full_reencoding: bool
