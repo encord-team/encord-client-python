@@ -45,6 +45,7 @@ class _ActionApprove(WorkflowAction):
 
 class _ActionReject(WorkflowAction):
     action: Literal["REJECT"] = "REJECT"
+    reject_label_reviews: bool = True
 
 
 class _ActionAssign(WorkflowAction):
