@@ -356,7 +356,18 @@ class GetItemsBulkPayload(BaseDTO):
     sign_urls: bool = False
 
 
-class ReencodeVideoItemPayload(BaseDTO):
+class ReencodeVideoItemsRequestPayload(BaseDTO):
     storage_items: List[UUID]
     process_title: str
     force_full_reencoding: bool
+
+
+class JobStatus(CamelStrEnum):
+    SUBMITTED = auto()
+    DONE = auto()
+    ERROR = auto()
+
+
+class ReencodeVideoItemsResultPayload(BaseDTO):
+    status: JobStatus
+    result: list | dict | None
