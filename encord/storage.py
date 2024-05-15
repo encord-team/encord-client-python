@@ -165,7 +165,7 @@ class StorageFolder:
                     orm_storage.DataUploadImage(
                         object_url=upload_url_info[
                             0
-                        ].object_key,  #  this is actually ignored when placeholder_item_uuid is set
+                        ].object_key,  # this is actually ignored when placeholder_item_uuid is set
                         placeholder_item_uuid=upload_url_info[0].item_uuid,
                         title=title,
                         client_metadata=client_metadata or {},
@@ -235,7 +235,7 @@ class StorageFolder:
                     orm_storage.DataUploadVideo(
                         object_url=upload_url_info[
                             0
-                        ].object_key,  #  this is actually ignored when placeholder_item_uuid is set
+                        ].object_key,  # this is actually ignored when placeholder_item_uuid is set
                         placeholder_item_uuid=upload_url_info[0].item_uuid,
                         title=title,
                         client_metadata=client_metadata or {},
@@ -250,6 +250,18 @@ class StorageFolder:
             raise EncordException(f"Could not register video, errors occured {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
+
+    def re_encode_videos(self, storage_items: List[UUID], process_title: str, force_full_reencoding: bool) -> UUID:
+        return self._api_client.post(
+            "/storage/items/reencode",
+            params=None,
+            payload=orm_storage.ReencodeVideoItemPayload(
+                storage_items=storage_items,
+                process_title=process_title,
+                force_full_reencoding=force_full_reencoding,
+            ),
+            result_type=UUID,
+        )
 
     def create_dicom_series(
         self,
@@ -1112,6 +1124,6 @@ class StorageItem:
             "storage/items/get-bulk",
             params=None,
             payload=GetItemsBulkPayload(item_uuids=item_uuids, sign_urls=get_signed_url),
-            result_type=Page[orm_storage.StorageItem],  #  it's always just one page here
+            result_type=Page[orm_storage.StorageItem],  # it's always just one page here
         )
         return [StorageItem(api_client, orm_item) for orm_item in orm_items.results]

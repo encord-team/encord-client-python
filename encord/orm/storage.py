@@ -354,3 +354,9 @@ class GetChildItemsParams(BaseDTO):
 class GetItemsBulkPayload(BaseDTO):
     item_uuids: List[UUID]
     sign_urls: bool = False
+
+
+class ReencodeVideoItemPayload(BaseDTO):
+    storage_items: list[UUID]
+    process_title: str
+    force_full_reencoding: bool
