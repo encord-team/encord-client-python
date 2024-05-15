@@ -28,8 +28,8 @@ from encord.orm.storage import (
     ListItemsParams,
     PatchFolderPayload,
     PatchItemPayload,
-    ReencodeVideoItemsRequestPayload,
-    ReencodeVideoItemsResultPayload,
+    ReencodeVideoItemsRequest,
+    ReencodeVideoItemsResponse,
     StorageFolderSummary,
     StorageItemSummary,
     StorageItemType,
@@ -257,7 +257,7 @@ class StorageFolder:
         return self._api_client.post(
             "/storage/items/reencode",
             params=None,
-            payload=ReencodeVideoItemsRequestPayload(
+            payload=ReencodeVideoItemsRequest(
                 storage_items=storage_items,
                 process_title=process_title,
                 force_full_reencoding=force_full_reencoding,
@@ -265,9 +265,9 @@ class StorageFolder:
             result_type=UUID,
         )
 
-    def get_re_encoding_status(self, process_hash: UUID) -> ReencodeVideoItemsResultPayload:
+    def get_re_encoding_status(self, process_hash: UUID) -> ReencodeVideoItemsResponse:
         return self._api_client.get(
-            "/storage/items/reencode/{process_hash}", params=None, result_type=ReencodeVideoItemsResultPayload
+            "/storage/items/reencode/{process_hash}", params=None, result_type=ReencodeVideoItemsResponse
         )
 
     def create_dicom_series(
