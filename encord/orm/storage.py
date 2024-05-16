@@ -3,7 +3,8 @@ from enum import auto
 from typing import Dict, List, Optional, Union
 from uuid import UUID
 
-from encord.orm.analytics import BeEnum, CamelStrEnum
+from encord.common.enum import StringEnum
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, Field
 from encord.orm.dataset import LongPollingStatus
 
@@ -362,10 +363,10 @@ class ReencodeVideoItemsRequest(BaseDTO):
     force_full_reencoding: bool
 
 
-class JobStatus(BeEnum):
-    SUBMITTED = auto()
-    DONE = auto()
-    ERROR = auto()
+class JobStatus(StringEnum):
+    SUBMITTED = "SUBMITTED"
+    DONE = "DONE"
+    ERROR = "ERROR"
 
 
 class ReencodeVideoItemsResponse(BaseDTO):

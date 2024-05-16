@@ -7,12 +7,6 @@ from encord.orm.base_dto import BaseDTO
 from encord.utilities.project_user import ProjectUserRole
 
 
-class BeEnum(str, Enum):
-    # noinspection PyMethodParameters
-    def _generate_next_value_(name, start, count, last_values) -> str:  # type: ignore
-        return name.upper()
-
-
 class CamelStrEnum(str, Enum):
     # noinspection PyMethodParameters
     def _generate_next_value_(name, start, count, last_values) -> str:  # type: ignore
