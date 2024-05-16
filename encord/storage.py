@@ -267,7 +267,7 @@ class StorageFolder:
 
     def get_re_encoding_status(self, process_hash: UUID) -> ReencodeVideoItemsResponse:
         return self._api_client.get(
-            "/storage/items/reencode/{process_hash}", params=None, result_type=ReencodeVideoItemsResponse
+            f"/storage/items/reencode/{process_hash}", params=None, result_type=ReencodeVideoItemsResponse
         )
 
     def create_dicom_series(
