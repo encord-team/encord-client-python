@@ -1,6 +1,6 @@
 from enum import Enum
 
-from common.utils import snake_to_camel
+from encord.common.utils import snake_to_camel
 
 
 class CamelStrEnum(str, Enum):
