@@ -2,9 +2,10 @@ from datetime import datetime
 from enum import auto
 from typing import Optional
 
+from orm.base_types import CamelStrEnum
+
 from encord.orm.base_dto import BaseDTO
 from encord.utilities.project_user import ProjectUserRole
-from orm.base_types import CamelStrEnum
 
 
 class CollaboratorTimersGroupBy(CamelStrEnum):

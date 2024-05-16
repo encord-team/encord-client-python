@@ -3,7 +3,8 @@ from enum import auto
 from typing import Dict, List, Optional, Union
 from uuid import UUID
 
-from orm.base_types import CamelStrEnum, BeEnum
+from orm.base_types import BeEnum, CamelStrEnum
+
 from encord.orm.base_dto import BaseDTO, Field
 from encord.orm.dataset import LongPollingStatus
 
