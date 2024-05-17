@@ -795,7 +795,7 @@ class EncordClientProject(EncordClient):
             OrmProject, payload={"include_labels_metadata": include_labels_metadata}, retryable=True
         )
 
-    def _get_project_v2(self) -> ProjectOrmV2:
+    def get_project_v2(self) -> ProjectOrmV2:
         """
         This is an internal method, do not use it directly.
         Use :meth:`UserClient.get_project` instead.
