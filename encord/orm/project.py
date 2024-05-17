@@ -18,12 +18,13 @@ import datetime
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.common.enum import StringEnum
 from encord.orm import base_orm
 from encord.orm.base_dto import BaseDTO
+from encord.orm.workflow import Workflow
 
 
 class Project(base_orm.BaseORM):
@@ -160,8 +161,14 @@ class ProjectUsers:
     pass
 
 
-class ProjectDataset:
-    pass
+class ProjectDataset(BaseDTO):
+    dataset_hash: UUID
+    title: str
+    description: str
+
+    @classmethod
+    def from_list(cls, dataset_list: List[Dict[str, Any]]) -> List[ProjectDataset]:
+        return [cls.from_dict(i) for i in dataset_list]
 
 
 class ProjectType(str, Enum):
@@ -308,3 +315,14 @@ class ProjectImporterCvatInfo(BaseDTO):
 
 class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
+
+
+class ProjectDTO(BaseDTO):
+    project_hash: UUID
+    project_type: ProjectType
+    title: str
+    description: str
+    created_at: datetime.datetime
+    last_edited_at: datetime.datetime
+    ontology_hash: str
+    workflow: Optional[Workflow] = None

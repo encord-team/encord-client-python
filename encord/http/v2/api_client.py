@@ -1,6 +1,6 @@
 import platform
 import uuid
-from typing import Iterator, Optional, Type, TypeVar, Union
+from typing import Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
@@ -8,7 +8,7 @@ from requests import PreparedRequest, Response
 
 from encord._version import __version__ as encord_version
 from encord.configs import Config
-from encord.exceptions import RequestException
+from encord.exceptions import EncordException, RequestException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     HEADER_USER_AGENT,
@@ -114,7 +114,11 @@ class ApiClient:
         return self._request_without_payload("DELETE", path, params, result_type)
 
     def post(
-        self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
+        self,
+        path: str,
+        params: Optional[BaseDTO],
+        payload: Union[BaseDTO, Sequence[BaseDTO], None],
+        result_type: Optional[Type[T]],
     ) -> T:
         return self._request_with_payload("POST", path, params, payload, result_type)
 
@@ -123,30 +127,40 @@ class ApiClient:
     ) -> T:
         return self._request_with_payload("PATCH", path, params, payload, result_type)
 
+    def _serialise_payload(self, payload: Union[BaseDTO, Sequence[BaseDTO], None]) -> Union[List[Dict], Dict, None]:
+        if isinstance(payload, list):
+            return [p.to_dict() for p in payload]
+        elif isinstance(payload, BaseDTO):
+            return payload.to_dict()
+        elif payload is None:
+            return None
+        else:
+            raise ValueError(f"Unsupported payload type: {type(payload)}")
+
     def _request_with_payload(
         self,
         method: str,
         path: str,
         params: Optional[BaseDTO],
-        payload: Optional[BaseDTO],
+        payload: Union[BaseDTO, Sequence[BaseDTO], None],
         result_type: Optional[Type[T]],
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
-        payload_dict = payload.to_dict() if payload is not None else None
+        payload_serialised = self._serialise_payload(payload)
 
         req = requests.Request(
             method=method,
             url=self._build_url(path),
             headers=self._headers(),
             params=params_dict,
-            json=payload_dict,
+            json=payload_serialised,
         ).prepare()
 
         return self._request(req, result_type=result_type)  # type: ignore
 
     def _request_without_payload(
         self, method: str, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]]
-    ):
+    ) -> T:
         params_dict = params.to_dict() if params is not None else None
 
         req = requests.Request(
@@ -195,5 +209,7 @@ class ApiClient:
         try:
             description = response.json()
             handle_error_response(response.status_code, context=context, message=description.get("message"))
+        except EncordException as e:
+            raise e
         except Exception:
             handle_error_response(response.status_code, context=context)

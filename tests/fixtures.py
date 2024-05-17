@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +11,7 @@ from encord.client import EncordClientProject
 from encord.http.querier import Querier
 from encord.ontology import Ontology
 from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.project import Project as OrmProject
+from encord.orm.project import ProjectDTO, ProjectType
 from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
 DUMMY_PRIVATE_KEY = (
@@ -34,13 +36,20 @@ def user_client() -> EncordUserClient:
 
 
 @pytest.fixture
-@patch.object(EncordClientProject, "get_project")
+@patch.object(EncordClientProject, "get_project_v2")
 @patch.object(Querier, "basic_getter")
 def project(querier_mock: Querier, client_project_mock, user_client: EncordUserClient, ontology: Ontology) -> Project:
     querier_mock.return_value = OrmOntology.from_dict(ONTOLOGY_BLURB)
 
-    client_project_mock.return_value = OrmProject(
-        {"ontology_hash": "dummy-ontology-hash", "project_hash": "dummy-project-hash"}
+    client_project_mock.return_value = ProjectDTO(
+        project_hash=uuid.uuid4(),
+        project_type=ProjectType.MANUAL_QA,
+        title="Dummy project",
+        description="",
+        created_at=datetime.now(),
+        last_edited_at=datetime.now(),
+        ontology_hash="dummy-ontology-hash",
+        workflow=None,
     )
 
     return user_client.get_project("dummy-project-hash")

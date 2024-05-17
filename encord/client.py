@@ -45,6 +45,7 @@ from datetime import datetime
 from math import ceil
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
+from uuid import UUID
 
 import requests
 
@@ -144,6 +145,7 @@ from encord.orm.project import (
     TaskPriorityParams,
 )
 from encord.orm.project import Project as OrmProject
+from encord.orm.project import ProjectDTO as ProjectOrmV2
 from encord.orm.workflow import (
     LabelWorkflowGraphNode,
     LabelWorkflowGraphNodePayload,
@@ -793,6 +795,13 @@ class EncordClientProject(EncordClient):
             OrmProject, payload={"include_labels_metadata": include_labels_metadata}, retryable=True
         )
 
+    def get_project_v2(self) -> ProjectOrmV2:
+        """
+        This is an internal method, do not use it directly.
+        Use :meth:`UserClient.get_project` instead.
+        """
+        return self._get_api_client().get(f"/projects/{self.project_hash}", params=None, result_type=ProjectOrmV2)
+
     def list_label_rows(
         self,
         edited_before: Optional[Union[str, datetime]] = None,
@@ -1032,6 +1041,13 @@ class EncordClientProject(EncordClient):
         This function is documented in :meth:`encord.project.Project.remove_datasets`.
         """
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
+
+    def list_project_datasets(self, project_hash: UUID) -> Iterable[ProjectDataset]:
+        return (
+            self._get_api_client()
+            .get(f"projects/{project_hash}/datasets", params=None, result_type=Page[ProjectDataset])
+            .results
+        )
 
     def get_project_ontology(self) -> LegacyOntology:
         project = self.get_project()

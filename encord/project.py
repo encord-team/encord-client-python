@@ -1,11 +1,12 @@
 import datetime
-from typing import Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
+from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.analytics import (
@@ -25,13 +26,14 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectType
+from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectDataset, ProjectDTO, ProjectType
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
+from encord.workflow import Workflow
 
 
 class Project:
@@ -39,17 +41,23 @@ class Project:
     Access project related data and manipulate the project.
     """
 
-    def __init__(self, client: EncordClientProject, project_instance: OrmProject, ontology: Ontology):
+    def __init__(
+        self, client: EncordClientProject, project_instance: ProjectDTO, ontology: Ontology, api_client: ApiClient
+    ):
         self._client = client
         self._project_instance = project_instance
         self._ontology = ontology
+
+        if project_instance.workflow:
+            self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
 
     @property
     def project_hash(self) -> str:
         """
         Get the project hash (i.e. the Project ID).
         """
-        return self._project_instance.project_hash
+        # Keeping the interface backward compatible, so converting UUID to str for now
+        return str(self._project_instance.project_hash)
 
     @property
     def title(self) -> str:
@@ -81,13 +89,15 @@ class Project:
 
     @property
     @deprecated(version="0.1.95", alternative=".ontology_structure")
-    def ontology(self) -> dict:
+    def ontology(self) -> Dict[str, Any]:
         """
         Get the ontology of the project.
 
         DEPRECATED: Prefer using the :meth:`encord.Project.ontology_structure` method.
+        This method returns the same structure as :meth:`encord.Project.ontology_structure`, just in
+        raw python dictionary format.
         """
-        return self._project_instance.editor_ontology
+        return self._ontology.structure.to_dict()
 
     @property
     def ontology_hash(self) -> str:
@@ -104,30 +114,21 @@ class Project:
         return self._ontology.structure
 
     @property
-    def datasets(self) -> list:
+    @deprecated(version="0.1.117", alternative=".list_datasets")
+    def datasets(self) -> List[Dict[str, Any]]:
         """
-        Get the associated datasets.
+        DEPRECATED: Prefer using the :meth:`encord.project.list_datasets` class to work with the data.
 
-        Prefer using the :meth:`encord.objects.project.ProjectDataset` class to work with the data.
-
-        .. code::
-
-            from encord.objects.project import ProjectDataset
-
-            project = user_client.get_project("<project_hash>")
-
-            project_datasets = ProjectDataset.from_list(project.datasets)
-
+        Get the info about datasets associated with this project.
         """
-        return self._project_instance.datasets
+        return [project_dataset.to_dict() for project_dataset in self.list_datasets()]
 
     @property
     def project_type(self) -> ProjectType:
         """
         Get the project type
-        If workflow_manager_uuid is None, the project is a manual QA project else its a workflow project.
         """
-        return ProjectType.MANUAL_QA if self._project_instance.workflow_manager_uuid is None else ProjectType.WORKFLOW
+        return self._project_instance.project_type
 
     @property
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
@@ -145,16 +146,14 @@ class Project:
             label_rows = LabelRowMetadata.from_list(project.label_rows)
 
         """
-        if self._project_instance.label_rows is None:
-            self._project_instance = self._client.get_project(include_labels_metadata=True)
-        return self._project_instance.label_rows
+        return self._client.get_project(include_labels_metadata=True).label_rows
 
     def refetch_data(self) -> None:
         """
         The Project class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be dirty.
         """
-        self._project_instance = self._client.get_project()
+        self._project_instance = self._client.get_project_v2()
 
     def refetch_ontology(self) -> None:
         """
@@ -167,6 +166,13 @@ class Project:
         This function is exposed for convenience. You are encouraged to use the property accessors instead.
         """
         return self._client.get_project()
+
+    @property
+    def workflow(self) -> Workflow:
+        assert (
+            self.project_type == ProjectType.WORKFLOW
+        ), "project..workflow property only available for workflow porjects"
+        return self._workflow
 
     def list_label_rows_v2(
         self,
@@ -1054,3 +1060,6 @@ class Project:
         )
 
         yield from self._client.get_collaborator_timers(params)
+
+    def list_datasets(self) -> Iterable[ProjectDataset]:
+        return self._client.list_project_datasets(self._project_instance.project_hash)

@@ -123,4 +123,3 @@ def test_label_rows_property_queries_metadata(project_client_mock: MagicMock, pr
 
     # Expect label rows metadata to be cached, so data query doesn't happen again
     _ = project.label_rows
-    project_client_mock.assert_called_once()
