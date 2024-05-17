@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import auto
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 from encord.orm.analytics import CamelStrEnum
@@ -354,3 +354,20 @@ class GetChildItemsParams(BaseDTO):
 class GetItemsBulkPayload(BaseDTO):
     item_uuids: List[UUID]
     sign_urls: bool = False
+
+
+class ReencodeVideoItemsRequest(BaseDTO):
+    storage_items: List[UUID]
+    process_title: str
+    force_full_reencoding: bool
+
+
+class JobStatus(CamelStrEnum):
+    SUBMITTED = auto()
+    DONE = auto()
+    ERROR = auto()
+
+
+class ReencodeVideoItemsResponse(BaseDTO):
+    status: JobStatus
+    result: Optional[Union[list, dict]]
