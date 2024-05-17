@@ -35,8 +35,6 @@ from encord.orm.storage import (
     StorageItemType,
     UploadSignedUrlsPayload,
 )
-from encord.orm.storage import StorageFolder as OrmStorageFolder
-from encord.orm.storage import StorageItem as OrmStorageItem
 
 
 class StorageFolder:
@@ -521,11 +519,13 @@ class StorageFolder:
         return StorageFolder._list_folders(
             self._api_client,
             f"storage/folders/{self.uuid}/folders",
-            search=search,
-            dataset_synced=dataset_synced,
-            order=order,
-            desc=desc,
-            page_size=page_size,
+            orm_storage.ListFoldersParams(
+                search=search,
+                dataset_synced=dataset_synced,
+                order=order,
+                desc=desc,
+                page_size=page_size,
+            ),
         )
 
     def search_folders_recursively(
@@ -554,12 +554,14 @@ class StorageFolder:
         return StorageFolder._list_folders(
             self._api_client,
             "storage/search/folders",
-            folder_uuid=self.uuid,
-            search=search,
-            dataset_synced=dataset_synced,
-            order=order,
-            desc=desc,
-            page_size=page_size,
+            orm_storage.ListFoldersParams(
+                folder_uuif=self.uuid,
+                search=search,
+                dataset_synced=dataset_synced,
+                order=order,
+                desc=desc,
+                page_size=page_size,
+            ),
         )
 
     def search_items_recursively(
@@ -609,7 +611,7 @@ class StorageFolder:
         paged_items = self._api_client.get_paged_iterator(
             "storage/search/items",
             params=params,
-            result_type=OrmStorageItem,
+            result_type=orm_storage.StorageItem,
         )
 
         for item in paged_items:
@@ -912,29 +914,13 @@ class StorageFolder:
     def _list_folders(
         api_client: ApiClient,
         path: str,
-        folder_uuid: Optional[UUID],
-        search: Optional[str] = None,
-        dataset_synced: Optional[bool] = None,
-        order: FoldersSortBy = FoldersSortBy.NAME,
-        desc: bool = False,
-        page_size: int = 100,
+        params: orm_storage.ListFoldersParams,
     ) -> Iterable["StorageFolder"]:
         """ """
-
-        if page_size < 1 or page_size > 1000:
+        if params.page_size < 1 or params.page_size > 1000:
             raise ValueError("page_size should be between 1 and 1000")
 
-        params = orm_storage.ListFoldersParams(
-            folder_uuid=folder_uuid,
-            search=search,
-            dataset_synced=dataset_synced,
-            order=order,
-            desc=desc,
-            page_token=None,
-            page_size=page_size,
-        )
-
-        paged_folders = api_client.get_paged_iterator(path, params, OrmStorageFolder)
+        paged_folders = api_client.get_paged_iterator(path, params, orm_storage.StorageFolder)
 
         for orm_folder in paged_folders:
             yield StorageFolder(api_client, orm_folder)
