@@ -528,7 +528,7 @@ class StorageFolder:
             ),
         )
 
-    def search_folders_recursively(
+    def find_folders_recursively(
         self,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
@@ -555,7 +555,7 @@ class StorageFolder:
             self._api_client,
             "storage/search/folders",
             orm_storage.ListFoldersParams(
-                folder_uuif=self.uuid,
+                folder_uuid=self.uuid,
                 search=search,
                 dataset_synced=dataset_synced,
                 order=order,
@@ -564,7 +564,7 @@ class StorageFolder:
             ),
         )
 
-    def search_items_recursively(
+    def find_items_recursively(
         self,
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
