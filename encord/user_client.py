@@ -861,8 +861,7 @@ class EncordUserClient:
 
         return StorageFolder._list_folders(
             self._api_client,
-            None,
-            global_search=False,
+            "storage/folders",
             search=search,
             dataset_synced=dataset_synced,
             order=order,
@@ -896,8 +895,7 @@ class EncordUserClient:
 
         return StorageFolder._list_folders(
             self._api_client,
-            None,
-            global_search=True,
+            "storage/search/folders",
             search=search,
             dataset_synced=dataset_synced,
             order=order,
