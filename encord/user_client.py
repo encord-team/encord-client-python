@@ -53,7 +53,6 @@ from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
     CvatExportType,
     ManualReviewWorkflowSettings,
-    ProjectDTO,
     ProjectImporter,
     ProjectImporterCvatInfo,
     ProjectWorkflowSettings,
@@ -65,7 +64,6 @@ from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import CreateStorageFolderPayload, ListFoldersParams, ListItemsParams, StorageItemType
 from encord.orm.storage import StorageFolder as OrmStorageFolder
-from encord.orm.storage import StorageItem as OrmStorageItem
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
@@ -937,8 +935,6 @@ class EncordUserClient:
         Returns:
             Iterable of items in the folder.
         """
-        if not search and not item_types:
-            raise ValueError("At least one of 'search' or 'item_types' must be provided.")
 
         params = ListItemsParams(
             search=search,
@@ -951,14 +947,7 @@ class EncordUserClient:
             sign_urls=get_signed_urls,
         )
 
-        paged_items = self._api_client.get_paged_iterator(
-            "storage/search/items",
-            params=params,
-            result_type=OrmStorageItem,
-        )
-
-        for item in paged_items:
-            yield StorageItem(self._api_client, item)
+        return StorageFolder._list_items(self._api_client, "storage/search/items", params)
 
     def get_client_metadata_schema(self) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
         return get_client_metadata_schema(self._api_client)

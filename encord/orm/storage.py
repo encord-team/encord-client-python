@@ -241,7 +241,6 @@ class FoldersSortBy(CamelStrEnum):
 
 
 class ListItemsParams(BaseDTO):
-    folder_uuid: Optional[UUID] = None
     search: Optional[str]
     is_in_dataset: Optional[bool]
     item_types: List[StorageItemType]
@@ -253,7 +252,6 @@ class ListItemsParams(BaseDTO):
 
 
 class ListFoldersParams(BaseDTO):
-    folder_uuid: Optional[UUID] = None
     search: Optional[str] = None
     dataset_synced: Optional[bool] = None
     order: FoldersSortBy = FoldersSortBy.NAME
