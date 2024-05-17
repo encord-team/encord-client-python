@@ -1,6 +1,6 @@
 import platform
 import uuid
-from typing import Iterator, Optional, Sequence, Type, TypeVar, Union
+from typing import Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
@@ -127,9 +127,9 @@ class ApiClient:
     ) -> T:
         return self._request_with_payload("PATCH", path, params, payload, result_type)
 
-    def _serialise_payload(self, payload: Union[BaseDTO, Sequence[BaseDTO], None]) -> Optional[dict]:
+    def _serialise_payload(self, payload: Union[BaseDTO, Sequence[BaseDTO], None]) -> Union[List[Dict], Dict, None]:
         if isinstance(payload, list):
-            return [p.to_dict() for p in payload]  # type: ignore
+            return [p.to_dict() for p in payload]
         elif isinstance(payload, BaseDTO):
             return payload.to_dict()
         elif payload is None:
