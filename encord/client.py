@@ -509,7 +509,7 @@ class EncordClientDataset(EncordClient):
 
     def create_dicom_series(
         self,
-        file_paths: List[str],
+        file_paths: Union[List[str], List[Path]],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder_uuid: Optional[uuid.UUID] = None,
@@ -522,7 +522,7 @@ class EncordClientDataset(EncordClient):
                 raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
         successful_uploads = upload_to_signed_url_list(
-            file_paths=file_paths,
+            file_paths=[str(file_path) for file_path in file_paths],
             config=self._config,
             querier=self._querier,
             orm_class=DicomSeries,
