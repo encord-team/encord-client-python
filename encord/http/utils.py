@@ -2,6 +2,7 @@ import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable, List, Optional, Type, Union
 from uuid import UUID
 
@@ -47,9 +48,11 @@ class CloudUploadSettings:
     """
 
 
-def _get_content_type(orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]], file_path: str) -> Optional[str]:
+def _get_content_type(
+    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]], file_path: Union[str, Path]
+) -> Optional[str]:
     if orm_class == Images:
-        return mimetypes.guess_type(file_path)[0]
+        return mimetypes.guess_type(str(file_path))[0]
     elif orm_class == Video:
         return "application/octet-stream"
     elif orm_class == DicomSeries:
@@ -59,7 +62,7 @@ def _get_content_type(orm_class: Union[Type[Images], Type[Video], Type[DicomSeri
 
 
 def upload_to_signed_url_list(
-    file_paths: Iterable[str],
+    file_paths: Union[Iterable[str], Iterable[Path], Iterable[Union[Path, str]]],
     config: BaseConfig,
     querier: Querier,
     orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]],
@@ -144,7 +147,7 @@ def _get_signed_url(
 
 
 def _upload_single_file(
-    file_path: str,
+    file_path: Union[str, Path],
     signed_url: dict,
     content_type: Optional[str],
     *,

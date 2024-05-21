@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, TextIO, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, TextIO, Union
 from uuid import UUID
 
 import requests
@@ -118,7 +118,7 @@ class StorageFolder:
         for item in paged_items:
             yield StorageItem(self._api_client, item)
 
-    def delete(self):
+    def delete(self) -> None:
         self._api_client.delete(f"storage/folders/{self.uuid}", params=None, result_type=None)
 
     def upload_image(
@@ -272,7 +272,7 @@ class StorageFolder:
 
     def create_dicom_series(
         self,
-        file_paths: List[str],
+        file_paths: Union[List[str], List[Path], List[Union[str, Path]]],
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
@@ -588,7 +588,7 @@ class StorageFolder:
         self.refetch_data()
 
     def move_items_to_folder(
-        self, target_folder: Union["StorageFolder", UUID], items_to_move: List[Union[UUID, "StorageItem"]]
+        self, target_folder: Union["StorageFolder", UUID], items_to_move: Sequence[Union[UUID, "StorageItem"]]
     ) -> None:
         """
         Move items (list of `StorageItem` objects or UUIDs) to another folder (specify folder object or UUID).
@@ -1072,7 +1072,7 @@ class StorageItem:
             result_type=orm_storage.StorageItem,
         )
 
-    def delete(self, remove_unused_frames=True):
+    def delete(self, remove_unused_frames=True) -> None:
         """
         Delete the item from the storage.
 
@@ -1090,7 +1090,7 @@ class StorageItem:
             result_type=None,  # we don't need a result here, even though the server provides it
         )
 
-    def move_to_folder(self, target_folder: Union[StorageFolder, UUID]):
+    def move_to_folder(self, target_folder: Union[StorageFolder, UUID]) -> None:
         """
         Move the item to another folder (specify folder object or UUID).
 
