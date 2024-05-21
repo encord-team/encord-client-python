@@ -556,6 +556,7 @@ class StorageFolder:
             f"storage/folders/{self.uuid}/folders",
             orm_storage.ListFoldersParams(
                 search=search,
+                is_recursive=True,
                 dataset_synced=dataset_synced,
                 order=order,
                 desc=desc,
@@ -595,6 +596,7 @@ class StorageFolder:
 
         params = ListItemsParams(
             search=search,
+            is_recursive=True,
             is_in_dataset=is_in_dataset,
             item_types=item_types or [],
             order=order,
@@ -604,7 +606,7 @@ class StorageFolder:
             sign_urls=get_signed_urls,
         )
 
-        return StorageFolder._list_items(self._api_client, f"storage/folders/{self.uuid}/folders", params)
+        return StorageFolder._list_items(self._api_client, f"storage/folders/{self.uuid}/items", params)
 
     def get_summary(self) -> StorageFolderSummary:
         """

@@ -242,6 +242,7 @@ class FoldersSortBy(CamelStrEnum):
 
 class ListItemsParams(BaseDTO):
     search: Optional[str]
+    is_recursive: Optional[bool] = False
     is_in_dataset: Optional[bool]
     item_types: List[StorageItemType]
     order: FoldersSortBy
@@ -253,6 +254,7 @@ class ListItemsParams(BaseDTO):
 
 class ListFoldersParams(BaseDTO):
     search: Optional[str] = None
+    is_recursive: Optional[bool] = False
     dataset_synced: Optional[bool] = None
     order: FoldersSortBy = FoldersSortBy.NAME
     desc: bool = False
