@@ -528,7 +528,7 @@ class StorageFolder:
             ),
         )
 
-    def find_folders_recursively(
+    def find_subfolders(
         self,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
@@ -564,7 +564,7 @@ class StorageFolder:
             ),
         )
 
-    def find_items_recursively(
+    def find_items(
         self,
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
