@@ -1,4 +1,5 @@
 import json
+import uuid
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -10,8 +11,11 @@ from encord.client import EncordClientProject
 from encord.constants.model import Device
 from encord.constants.model_weights import faster_rcnn_R_101_C4_3x
 from encord.exceptions import EncordException
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
 from encord.orm.label_row import LabelRow
 from encord.orm.project import Project as OrmProject
+from encord.orm.project import ProjectDataset
 from encord.project import Project
 from tests.fixtures import ontology, project, user_client
 
@@ -123,3 +127,21 @@ def test_label_rows_property_queries_metadata(project_client_mock: MagicMock, pr
 
     # Expect label rows metadata to be cached, so data query doesn't happen again
     _ = project.label_rows
+
+
+@patch.object(ApiClient, "get")
+def test_project_datasets(api_get: MagicMock, project: Project) -> None:
+    dataset_hash = uuid.uuid4()
+    expected_dataset = ProjectDataset(dataset_hash=dataset_hash, title="test dataset", description="my test dataset")
+    api_get.return_value = Page(results=[expected_dataset])
+
+    assert len(list(project.list_datasets())) == 1
+    assert list(project.list_datasets()) == [expected_dataset]
+
+    # Correctly serialised for legacy endpoint
+    assert len(project.datasets) == 1
+    assert project.datasets[0] == {
+        "dataset_hash": str(dataset_hash),
+        "title": "test dataset",
+        "description": "my test dataset",
+    }
