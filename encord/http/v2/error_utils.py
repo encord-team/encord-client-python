@@ -12,6 +12,7 @@ HTTP_UNAUTHORIZED = 401
 HTTP_FORBIDDEN = 403
 HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
+HTTP_UNPROCESSABLE_ENTITY = 422
 HTTP_GENERAL_ERROR = 500
 
 
@@ -35,6 +36,9 @@ def handle_error_response(status_code: int, message=None, context=None):
         raise MethodNotAllowedError("HTTP method is not allowed.", context=context)
 
     if status_code == HTTP_BAD_REQUEST:
+        raise InvalidArgumentsError(message or "Provided payload is invalid and can't be processed.", context=context)
+
+    if status_code == HTTP_UNPROCESSABLE_ENTITY:
         raise InvalidArgumentsError(message or "Provided payload is invalid and can't be processed.", context=context)
 
     raise UnknownException(message or "An unknown error occurred.", context=context)
