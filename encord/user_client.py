@@ -99,7 +99,9 @@ class EncordUserClient:
         return client.get_bearer_token().token
 
     def get_dataset(
-        self, dataset_hash: str, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
+        self,
+        dataset_hash: Union[str, UUID],
+        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
     ) -> Dataset:
         """
         Get the Dataset class to access dataset fields and manipulate a dataset.
@@ -114,6 +116,9 @@ class EncordUserClient:
             dataset_hash: The Dataset ID
             dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
         """
+        if isinstance(dataset_hash, UUID):
+            dataset_hash = str(dataset_hash)
+
         querier = Querier(self._config.config, resource_type=TYPE_DATASET, resource_id=dataset_hash)
         client = EncordClientDataset(
             querier=querier,
