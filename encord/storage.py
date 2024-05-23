@@ -518,14 +518,95 @@ class StorageFolder:
 
         return StorageFolder._list_folders(
             self._api_client,
-            self.uuid,
-            global_search=False,
+            f"storage/folders/{self.uuid}/folders",
+            orm_storage.ListFoldersParams(
+                search=search,
+                dataset_synced=dataset_synced,
+                order=order,
+                desc=desc,
+                page_size=page_size,
+            ),
+        )
+
+    def find_subfolders(
+        self,
+        search: Optional[str] = None,
+        dataset_synced: Optional[bool] = None,
+        order: FoldersSortBy = FoldersSortBy.NAME,
+        desc: bool = False,
+        page_size: int = 100,
+    ) -> Iterable["StorageFolder"]:
+        """
+        Recursively search for storage folders, starting from this folder.
+
+        Args:
+            search: Search string to filter folders by name (optional)
+            dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
+                no filtering is applied.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            desc: If True, sort in descending order.
+            page_size: Number of folders to return per page.
+
+        Returns:
+            Iterable of :class:`encord.StorageFolder` objects.
+        """
+
+        return StorageFolder._list_folders(
+            self._api_client,
+            f"storage/folders/{self.uuid}/folders",
+            orm_storage.ListFoldersParams(
+                search=search,
+                is_recursive=True,
+                dataset_synced=dataset_synced,
+                order=order,
+                desc=desc,
+                page_size=page_size,
+            ),
+        )
+
+    def find_items(
+        self,
+        search: Optional[str] = None,
+        is_in_dataset: Optional[bool] = None,
+        item_types: Optional[List[StorageItemType]] = None,
+        order: FoldersSortBy = FoldersSortBy.NAME,
+        desc: bool = False,
+        get_signed_urls: bool = False,
+        page_size: int = 100,
+    ):
+        """
+        Recursively search for storage items, starting from this folder.
+
+        Args:
+            search: Search string to filter items by name.
+            is_in_dataset: Filter items by whether they are linked to any dataset. `True` and `False` select
+                only linked and only unlinked items, respectively. `None` includes all items regardless of their
+                dataset links.
+            item_types: Filter items by type.
+            order: Sort order.
+            desc: Sort in descending order.
+            get_signed_urls: If True, return signed URLs for the items.
+            page_size: Number of items to return per page.
+
+        At least one of `search` or `item_types` must be provided.
+
+        Returns:
+            Iterable of items in the folder and its subfolders.
+        """
+
+        params = ListItemsParams(
             search=search,
-            dataset_synced=dataset_synced,
+            is_recursive=True,
+            is_in_dataset=is_in_dataset,
+            item_types=item_types or [],
             order=order,
             desc=desc,
+            page_token=None,
             page_size=page_size,
+            sign_urls=get_signed_urls,
         )
+
+        return StorageFolder._list_items(self._api_client, f"storage/folders/{self.uuid}/items", params)
 
     def get_summary(self) -> StorageFolderSummary:
         """
@@ -823,35 +904,12 @@ class StorageFolder:
     @staticmethod
     def _list_folders(
         api_client: ApiClient,
-        parent_uuid: Optional[UUID],
-        global_search: bool,
-        search: Optional[str] = None,
-        dataset_synced: Optional[bool] = None,
-        order: FoldersSortBy = FoldersSortBy.NAME,
-        desc: bool = False,
-        page_size: int = 100,
+        path: str,
+        params: orm_storage.ListFoldersParams,
     ) -> Iterable["StorageFolder"]:
         """ """
-
-        if page_size < 1 or page_size > 1000:
+        if params.page_size < 1 or params.page_size > 1000:
             raise ValueError("page_size should be between 1 and 1000")
-
-        params = orm_storage.ListFoldersParams(
-            search=search,
-            dataset_synced=dataset_synced,
-            order=order,
-            desc=desc,
-            page_token=None,
-            page_size=page_size,
-        )
-
-        path: str
-        if parent_uuid is not None:
-            path = f"storage/folders/{parent_uuid}/folders"
-        elif global_search:
-            path = "storage/search/folders"
-        else:
-            path = "storage/folders"
 
         paged_folders = api_client.get_paged_iterator(path, params, orm_storage.StorageFolder)
 
@@ -859,34 +917,22 @@ class StorageFolder:
             yield StorageFolder(api_client, orm_folder)
 
     @staticmethod
-    def _search_folders(
+    def _list_items(
         api_client: ApiClient,
-        search: Optional[str] = None,
-        dataset_synced: Optional[bool] = None,
-        order: FoldersSortBy = FoldersSortBy.NAME,
-        desc: bool = False,
-        page_size: int = 100,
-    ) -> Iterable["StorageFolder"]:
+        path: str,
+        params: orm_storage.ListItemsParams,
+    ) -> Iterable["StorageItem"]:
         """ """
-
-        if page_size < 1 or page_size > 1000:
+        if params.page_size < 1 or params.page_size > 1000:
             raise ValueError("page_size should be between 1 and 1000")
 
-        params = orm_storage.ListFoldersParams(
-            search=search,
-            dataset_synced=dataset_synced,
-            order=order,
-            desc=desc,
-            page_token=None,
-            page_size=page_size,
-        )
+        if not params.search and not params.item_types:
+            raise ValueError("At least one of 'search' or 'item_types' must be provided.")
 
-        paged_folders = api_client.get_paged_iterator(
-            "storage/folders", params=params, result_type=orm_storage.StorageFolder
-        )
+        paged_items = api_client.get_paged_iterator(path, params, orm_storage.StorageItem)
 
-        for orm_folder in paged_folders:
-            yield StorageFolder(api_client, orm_folder)
+        for item in paged_items:
+            yield StorageItem(api_client, item)
 
 
 class StorageItem:
