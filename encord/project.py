@@ -121,7 +121,7 @@ class Project:
 
         Get the info about datasets associated with this project.
         """
-        return [project_dataset.to_dict() for project_dataset in self.list_datasets()]
+        return [project_dataset.to_dict(by_alias=False) for project_dataset in self.list_datasets()]
 
     @property
     def project_type(self) -> ProjectType:
