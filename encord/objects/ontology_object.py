@@ -21,7 +21,7 @@ class Object(OntologyElement):
     color: str
     shape: Shape
     feature_node_hash: str
-    required: bool
+    required: bool = False
     attributes: List[Attribute] = field(default_factory=list)
 
     @property
