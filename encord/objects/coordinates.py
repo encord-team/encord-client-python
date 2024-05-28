@@ -98,7 +98,10 @@ class PolygonCoordinates:
         polygon_dict = d["polygon"]
         values: List[PointCoordinate] = []
 
-        sorted_dict_value_tuples = sorted((int(key), value) for key, value in polygon_dict.items())
+        if isinstance(polygon_dict, list):
+            sorted_dict_value_tuples = sorted((int(key), value) for key, value in enumerate(polygon_dict))
+        else:
+            sorted_dict_value_tuples = sorted((int(key), value) for key, value in polygon_dict.items())
         sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
 
         for value in sorted_dict_values:
