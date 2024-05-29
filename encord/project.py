@@ -176,8 +176,8 @@ class Project:
 
     def list_label_rows_v2(
         self,
-        data_hashes: Optional[List[str]] = None,
-        label_hashes: Optional[List[str]] = None,
+        data_hashes: Optional[Union[List[str], List[UUID]]] = None,
+        label_hashes: Optional[Union[List[str], List[UUID]]] = None,
         edited_before: Optional[Union[str, datetime.datetime]] = None,
         edited_after: Optional[Union[str, datetime.datetime]] = None,
         label_statuses: Optional[List[AnnotationTaskStatus]] = None,

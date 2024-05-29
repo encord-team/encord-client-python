@@ -813,8 +813,8 @@ class EncordClientProject(EncordClient):
         include_workflow_graph_node: bool = True,
         include_client_metadata: bool = False,
         include_images_data: bool = False,
-        label_hashes: Optional[List[str]] = None,
-        data_hashes: Optional[List[str]] = None,
+        label_hashes: Optional[Union[List[str], List[UUID]]] = None,
+        data_hashes: Optional[Union[List[str], List[UUID]]] = None,
         data_title_eq: Optional[str] = None,
         data_title_like: Optional[str] = None,
         workflow_graph_node_title_eq: Optional[str] = None,
@@ -824,6 +824,9 @@ class EncordClientProject(EncordClient):
         """
         This function is documented in :meth:`encord.project.Project.list_label_rows`.
         """
+
+        data_hashes = [str(data_hash) for data_hash in data_hashes] if data_hashes is not None else None
+        label_hashes = [str(label_hash) for label_hash in label_hashes] if label_hashes is not None else None
 
         label_statuses_values = (
             [label_status.value for label_status in label_statuses] if label_statuses is not None else None
