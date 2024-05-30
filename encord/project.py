@@ -1067,9 +1067,9 @@ class Project:
 
     def export_label_rows_to_COCO(
         self,
-        label_hashes: List[str] | None = None,
-        include_object_feature_hashes: Set[str] | None = None,
-        include_classification_feature_hashes: Set[str] | None = None,
+        label_hashes: Optional[List[str]] = None,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
     ) -> dict[str, Any]:
         label_rows = self.list_label_rows_v2(label_hashes=label_hashes)
         with self.create_bundle() as bundle:

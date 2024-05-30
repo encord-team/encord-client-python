@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 from pycocotools import mask as cocomask
@@ -34,8 +34,8 @@ class CocoAnnotation(BaseModel):
     id_: int
     image_id: int
     is_crowd: int
-    segmentation: List | Dict
-    keypoints: List[float] | None = None
+    segmentation: Union[List, Dict]
+    keypoints: Optional[List[float]] = None
     num_keypoints: Optional[int] = None
     track_id: Optional[int] = None
     encord_track_uuid: Optional[str] = None
@@ -114,8 +114,8 @@ class CocoEncoder:
         self._data_hash_to_image_id_map: Dict[tuple[str, int], int] = {}
         """Map of (data_hash, frame_offset) to the image id"""
 
-        self._feature_hash_to_attribute_map: Dict[str, Attribute] | None = None
-        self._id_and_object_hash_to_answers_map: Dict[tuple[int, str], Dict] | None = None
+        self._feature_hash_to_attribute_map: Optional[Dict[str, Attribute]] = None
+        self._id_and_object_hash_to_answers_map: Optional[Dict[tuple[int, str], Dict]] = None
         self._include_videos = include_videos
 
     def encode(self) -> Dict:
