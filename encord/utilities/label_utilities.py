@@ -27,7 +27,7 @@ from encord.constants.string_constants import (
 from encord.orm.label_row import LabelRow
 
 
-def construct_answer_dictionaries(label_row):
+def construct_answer_dictionaries(label_row) -> LabelRow:
     """
     Adds answer object and classification answer dictionaries from a label row if they do not exist.
     Integrity checks are conducted upon saving of labels.

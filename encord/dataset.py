@@ -177,7 +177,7 @@ class Dataset:
 
     def upload_video(
         self,
-        file_path: str,
+        file_path: Union[str, Path],
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
         folder: Optional[Union[UUID, StorageFolder]] = None,
@@ -211,7 +211,7 @@ class Dataset:
 
     def create_image_group(
         self,
-        file_paths: Iterable[str],
+        file_paths: Union[Iterable[str], Iterable[Path], Iterable[Union[Path, str]]],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
@@ -260,7 +260,7 @@ class Dataset:
 
     def create_dicom_series(
         self,
-        file_paths: List[str],
+        file_paths: Union[List[str], List[Path], List[Union[Path, str]]],
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
         folder: Optional[Union[UUID, StorageFolder]] = None,
