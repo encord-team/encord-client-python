@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from pycocotools import mask as cocomask
@@ -29,7 +29,7 @@ class DicomAnnotationData:
 
 class CocoAnnotation(BaseModel):
     area: float
-    bbox: tuple[float, float, float, float]
+    bbox: Tuple[float, float, float, float]
     category_id: int
     id_: int
     image_id: int
@@ -78,7 +78,7 @@ def get_polygon_from_dict(
     polygon_dict: Dict,
     w: int,
     h: int,
-) -> List[tuple[float, float]]:
+) -> List[Tuple[float, float]]:
     return [
         (
             polygon_dict[str(i)]["x"] * w,
@@ -111,11 +111,11 @@ class CocoEncoder:
         self._object_hash_to_track_id_map: Dict[str, int] = {}
         self._coco_categories_id_to_ontology_object_map: Dict = {}  # TODO: do we need this?
         self._feature_hash_to_coco_category_id_map: Dict[str, int] = {}
-        self._data_hash_to_image_id_map: Dict[tuple[str, int], int] = {}
+        self._data_hash_to_image_id_map: Dict[Tuple[str, int], int] = {}
         """Map of (data_hash, frame_offset) to the image id"""
 
         self._feature_hash_to_attribute_map: Optional[Dict[str, Attribute]] = None
-        self._id_and_object_hash_to_answers_map: Optional[Dict[tuple[int, str], Dict]] = None
+        self._id_and_object_hash_to_answers_map: Optional[Dict[Tuple[int, str], Dict]] = None
         self._include_videos = include_videos
 
     def encode(self) -> Dict:
@@ -624,7 +624,7 @@ class CocoEncoder:
     def get_bbox_for_polyline(
         self,
         polygon: List,
-    ) -> tuple[float, float, float, float]:
+    ) -> Tuple[float, float, float, float]:
         if len(polygon) == 2:
             # We have the edge case of a single edge polygon.
             first_point = polygon[0]
@@ -874,11 +874,11 @@ class CocoEncoder:
     def get_id_and_object_hash_to_answers_map(
         self,
         object_actions: Dict,
-    ) -> Dict[tuple[int, str], Dict]:
+    ) -> Dict[Tuple[int, str], Dict]:
         if self._id_and_object_hash_to_answers_map is not None:
             return self._id_and_object_hash_to_answers_map
 
-        ret: Dict[tuple[int, str], Dict] = defaultdict(Dict)
+        ret: Dict[Tuple[int, str], Dict] = defaultdict(Dict)
         feature_hash_to_attribute_map = self.get_feature_hash_to_flat_object_attribute_map()
         for object_hash, payload in object_actions.items():
             for action in payload["actions"]:
@@ -911,7 +911,7 @@ class CocoEncoder:
         object_hash: str,
         feature_hash: str,
         image_id: int,
-        id_and_object_hash_to_answers_map: Dict[tuple[int, str], Dict],
+        id_and_object_hash_to_answers_map: Dict[Tuple[int, str], Dict],
     ) -> Dict:
         ret = {}
         id_and_object_hash = (image_id, object_hash)
@@ -988,7 +988,7 @@ class CocoEncoder:
 
     def get_coco_annotation_default_fields(
         self, object_: Dict
-    ) -> tuple[
+    ) -> Tuple[
         int,
         int,
         Optional[int],

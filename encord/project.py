@@ -1070,7 +1070,7 @@ class Project:
         label_hashes: Optional[List[str]] = None,
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         label_rows = self.list_label_rows_v2(label_hashes=label_hashes)
         with self.create_bundle() as bundle:
             for row in label_rows:
