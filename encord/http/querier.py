@@ -243,7 +243,7 @@ def create_new_session(
         status=max_retries,  # type: ignore
         other=max_retries,  # type: ignore
         allowed_methods=["POST", "PUT", "GET"],  # type: ignore  # post is there since we use it for idempotent ops too.
-        status_forcelist=[413, 429, 500, 503],
+        status_forcelist=[413, 429, 500, 502, 503],
         backoff_factor=backoff_factor,
     )
 
