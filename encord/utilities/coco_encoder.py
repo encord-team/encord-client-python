@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 from pycocotools import mask as cocomask
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class DicomAnnotationData:
     dicom_instance_uid: str
-    multiframe_frame_number: int | None  # only present for multi-frame DICOMs
+    multiframe_frame_number: Optional[int]  # only present for multi-frame DICOMs
     file_uri: str
     width: int
     height: int
@@ -36,17 +36,17 @@ class CocoAnnotation(BaseModel):
     is_crowd: int
     segmentation: List | Dict
     keypoints: List[float] | None = None
-    num_keypoints: int | None = None
-    track_id: int | None = None
-    encord_track_uuid: str | None = None
-    rotation: float | None = None
-    classifications: Dict | None = None
-    manual_annotation: bool | None = None
+    num_keypoints: Optional[int] = None
+    track_id: Optional[int] = None
+    encord_track_uuid: Optional[str] = None
+    rotation: Optional[float] = None
+    classifications: Optional[Dict] = None
+    manual_annotation: Optional[bool] = None
 
     def to_dict(self) -> Dict:
         return {
             "area": self.area,
-            "bbox": List(self.bbox),
+            "bbox": list(self.bbox),
             "category_id": self.category_id,
             "image_id": self.image_id,
             "iscrowd": self.is_crowd,
@@ -137,9 +137,9 @@ class CocoEncoder:
             "year": None,
         }
 
-    def get_description(self) -> str | None:
+    def get_description(self) -> Optional[str]:
         if len(self._labels_list) == 0:
-            res: str | None = None
+            res: Optional[str] = None
         else:
             res = str(self._labels_list[0]["data_title"])
 
@@ -473,7 +473,9 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Optional[Dict] = self.get_flat_classifications(
+            object_, image_id, object_answers, object_actions
+        )
 
         return CocoAnnotation(
             area=area,
@@ -517,7 +519,9 @@ class CocoEncoder:
 
         rotation = object_["rotatableBoundingBox"]["theta"]
 
-        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Optional[Dict] = self.get_flat_classifications(
+            object_, image_id, object_answers, object_actions
+        )
 
         return CocoAnnotation(
             area=area,
@@ -545,7 +549,7 @@ class CocoEncoder:
         object_actions: Dict,
     ) -> CocoAnnotation:
         polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
-        segmentation = [List(chain(*polygon))]
+        segmentation = [list(chain(*polygon))]
         _polygon = Polygon(polygon)
         area: float = _polygon.area
         x, y, x_max, y_max = _polygon.bounds
@@ -555,7 +559,7 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: Dict | None = self.get_flat_classifications(
+        classifications: Optional[Dict] = self.get_flat_classifications(
             object_,
             image_id,
             object_answers,
@@ -589,14 +593,16 @@ class CocoEncoder:
     ) -> CocoAnnotation:
         """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
         polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
-        polyline_coordinate = self.join_polyline_from_polygon(List(chain(*polygon)))
+        polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
         segmentation = [polyline_coordinate]
         area = 0
         bbox = self.get_bbox_for_polyline(polygon)
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Optional[Dict] = self.get_flat_classifications(
+            object_, image_id, object_answers, object_actions
+        )
 
         return CocoAnnotation(
             area=area,
@@ -672,7 +678,7 @@ class CocoEncoder:
         # implementation) data.
 
         # Obtain the COCO compatible RLE string (convert from row-major to column-major order)
-        transposed_segmentation = Dict(counts=bitmask["rleString"], size=[bitmask["width"], bitmask["height"]])
+        transposed_segmentation = dict(counts=bitmask["rleString"], size=[bitmask["width"], bitmask["height"]])
         mask = np.asfortranarray(cocomask.decode(transposed_segmentation).T)
         segmentation = cocomask.encode(mask)
         bbox = tuple(cocomask.toBbox(segmentation))
@@ -684,7 +690,9 @@ class CocoEncoder:
         id_, _, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
         is_crowd = 1
 
-        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Optional[Dict] = self.get_flat_classifications(
+            object_, image_id, object_answers, object_actions
+        )
 
         return CocoAnnotation(
             area=area,
@@ -725,7 +733,9 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Optional[Dict] = self.get_flat_classifications(
+            object_, image_id, object_answers, object_actions
+        )
 
         return CocoAnnotation(
             area=area,
@@ -775,7 +785,9 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Optional[Dict] = self.get_flat_classifications(
+            object_, image_id, object_answers, object_actions
+        )
 
         return CocoAnnotation(
             area=area,
@@ -979,9 +991,9 @@ class CocoEncoder:
     ) -> tuple[
         int,
         int,
-        int | None,
-        str | None,
-        bool | None,
+        Optional[int],
+        Optional[str],
+        Optional[bool],
     ]:
         id_ = self.next_annotation_id()
         is_crowd = 0
