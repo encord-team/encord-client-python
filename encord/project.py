@@ -424,7 +424,7 @@ class Project:
             ValueError: If invalid arguments are supplied in the function call
         """
         res = self._client.add_object(name, shape)
-        self.refetch_data()
+        self.refetch_ontology()
         return res
 
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
@@ -456,7 +456,7 @@ class Project:
             ValueError: If invalid arguments are supplied in the function call
         """
         res = self._client.add_classification(name, classification_type, required, options)
-        self.refetch_data()
+        self.refetch_ontology()
         return res
 
     def list_models(self) -> List[ModelConfiguration]:
