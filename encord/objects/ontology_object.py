@@ -21,6 +21,7 @@ class Object(OntologyElement):
     color: str
     shape: Shape
     feature_node_hash: str
+    required: bool = False
     attributes: List[Attribute] = field(default_factory=list)
 
     @property
@@ -51,6 +52,7 @@ class Object(OntologyElement):
             shape=shape_opt,
             feature_node_hash=d["featureNodeHash"],
             attributes=attributes_ret,
+            required=bool(d.get("required", False)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -60,6 +62,7 @@ class Object(OntologyElement):
             "color": self.color,
             "shape": self.shape.value,
             "featureNodeHash": self.feature_node_hash,
+            "required": self.required,
         }
         if attributes_list := attributes_to_list_dict(self.attributes):
             ret["attributes"] = attributes_list

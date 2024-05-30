@@ -92,7 +92,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
         ret: Dict[str, Any] = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
-        ret["type"] = self.get_property_type()
+        ret["type"] = self.get_property_type().value
         ret["featureNodeHash"] = self.feature_node_hash
         ret["required"] = self.required
         ret["dynamic"] = self.dynamic
