@@ -237,15 +237,28 @@ class Querier:
 def create_new_session(
     max_retries: Optional[int], backoff_factor: float, connect_retries
 ) -> Generator[Session, None, None]:
-    retry_policy = Retry(
-        connect=connect_retries,
-        read=max_retries,
-        status=max_retries,  # type: ignore
-        other=max_retries,  # type: ignore
-        allowed_methods=["POST", "PUT", "GET"],  # type: ignore  # post is there since we use it for idempotent ops too.
-        status_forcelist=[413, 429, 500, 503],
-        backoff_factor=backoff_factor,
-    )
+    if max_retries:
+        retry_policy = Retry(
+            connect=connect_retries,
+            read=max_retries,
+            status=max_retries,
+            other=max_retries,
+            allowed_methods=["POST", "PUT", "GET"],  # type: ignore
+            # post is there since we use it for idempotent ops too.
+            status_forcelist=[413, 429, 500, 502, 503],
+            backoff_factor=backoff_factor,
+        )
+    else:
+        retry_policy = Retry(
+            connect=connect_retries,
+            read=0,
+            status=1,
+            other=0,
+            allowed_methods=["POST", "PUT", "GET"],  # type: ignore
+            # post is there since we use it for idempotent ops too.
+            status_forcelist=[429, 502, 503],
+            backoff_factor=backoff_factor,
+        )
 
     with Session() as session:
         session.mount("http://", HTTPAdapter(max_retries=retry_policy))
