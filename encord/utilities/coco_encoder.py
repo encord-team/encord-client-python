@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import chain
+from typing import Dict, List
 
 import numpy as np
 from pycocotools import mask as cocomask
@@ -33,19 +34,19 @@ class CocoAnnotation(BaseModel):
     id_: int
     image_id: int
     is_crowd: int
-    segmentation: list | dict
-    keypoints: list[float] | None = None
+    segmentation: List | Dict
+    keypoints: List[float] | None = None
     num_keypoints: int | None = None
     track_id: int | None = None
     encord_track_uuid: str | None = None
     rotation: float | None = None
-    classifications: dict | None = None
+    classifications: Dict | None = None
     manual_annotation: bool | None = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         return {
             "area": self.area,
-            "bbox": list(self.bbox),
+            "bbox": List(self.bbox),
             "category_id": self.category_id,
             "image_id": self.image_id,
             "iscrowd": self.is_crowd,
@@ -74,10 +75,10 @@ class Size:
 
 
 def get_polygon_from_dict(
-    polygon_dict: dict,
+    polygon_dict: Dict,
     w: int,
     h: int,
-) -> list[tuple[float, float]]:
+) -> List[tuple[float, float]]:
     return [
         (
             polygon_dict[str(i)]["x"] * w,
@@ -99,25 +100,25 @@ class CocoEncoder:
 
     def __init__(
         self,
-        labels_list: list[dict],
+        labels_list: List[Dict],
         ontology: OntologyStructure,
         include_videos: bool = True,
     ) -> None:
         self._labels_list = labels_list
         self._ontology = ontology
-        self._coco_json: dict = {}
+        self._coco_json: Dict = {}
         self._current_annotation_id = 0
-        self._object_hash_to_track_id_map: dict[str, int] = {}
-        self._coco_categories_id_to_ontology_object_map: dict = {}  # TODO: do we need this?
-        self._feature_hash_to_coco_category_id_map: dict[str, int] = {}
-        self._data_hash_to_image_id_map: dict[tuple[str, int], int] = {}
+        self._object_hash_to_track_id_map: Dict[str, int] = {}
+        self._coco_categories_id_to_ontology_object_map: Dict = {}  # TODO: do we need this?
+        self._feature_hash_to_coco_category_id_map: Dict[str, int] = {}
+        self._data_hash_to_image_id_map: Dict[tuple[str, int], int] = {}
         """Map of (data_hash, frame_offset) to the image id"""
 
-        self._feature_hash_to_attribute_map: dict[str, Attribute] | None = None
-        self._id_and_object_hash_to_answers_map: dict[tuple[int, str], dict] | None = None
+        self._feature_hash_to_attribute_map: Dict[str, Attribute] | None = None
+        self._id_and_object_hash_to_answers_map: Dict[tuple[int, str], Dict] | None = None
         self._include_videos = include_videos
 
-    def encode(self) -> dict:
+    def encode(self) -> Dict:
         self._coco_json["info"] = self.get_info()
         self._coco_json["categories"] = self.get_categories()
         self._coco_json["images"] = self.get_images()
@@ -125,7 +126,7 @@ class CocoEncoder:
 
         return self._coco_json
 
-    def get_info(self) -> dict:
+    def get_info(self) -> Dict:
         return {
             "description": self.get_description(),
             "contributor": None,  # TODO: these fields also need a response
@@ -144,7 +145,7 @@ class CocoEncoder:
 
         return res
 
-    def get_categories(self) -> list[dict]:
+    def get_categories(self) -> List[Dict]:
         """This does not translate classifications as they are not part of the Coco spec."""
         categories = []
         for object_ in self._ontology.objects:
@@ -152,7 +153,7 @@ class CocoEncoder:
 
         return categories
 
-    def get_category(self, object_: Object) -> dict:
+    def get_category(self, object_: Object) -> Dict:
         super_category = self.get_super_category(object_)
         ret = {
             "supercategory": super_category,
@@ -183,7 +184,7 @@ class CocoEncoder:
     def get_category_name(self, object_: Object) -> str:
         return object_.name
 
-    def get_images(self) -> list:
+    def get_images(self) -> List:
         """All the data is in the specific label_row"""
         images = []
 
@@ -199,7 +200,7 @@ class CocoEncoder:
 
         return images
 
-    def get_dicom(self, data_unit: dict) -> list:
+    def get_dicom(self, data_unit: Dict) -> List:
         return [
             self._dicom_label_to_coco_image(
                 int(key), data_unit["data_hash"], data_unit["width"], data_unit["height"], label
@@ -207,7 +208,7 @@ class CocoEncoder:
             for key, label in data_unit["labels"].items()
         ]
 
-    def get_image(self, data_unit: dict) -> dict:
+    def get_image(self, data_unit: Dict) -> Dict:
         # TODO: we probably want a map of this image id to image hash in our DB, including the image_group hash.
 
         """
@@ -232,7 +233,7 @@ class CocoEncoder:
             "width": data_unit["width"],
         }
 
-    def get_video_images(self, data_unit: dict) -> list[dict]:
+    def get_video_images(self, data_unit: Dict) -> List[Dict]:
         if not self._include_videos:
             return []
 
@@ -259,8 +260,8 @@ class CocoEncoder:
         return images
 
     def _dicom_label_to_coco_image(
-        self, frame: int, data_hash: str, series_width: int, series_height: int, dicom_label: dict
-    ) -> dict:
+        self, frame: int, data_hash: str, series_width: int, series_height: int, dicom_label: Dict
+    ) -> Dict:
         image_id = len(self._data_hash_to_image_id_map)
         # ideally this should be verify_arg, but currently we can't be sure that the metadata is on every frame
         metadata = dicom_label.get("metadata")
@@ -294,7 +295,7 @@ class CocoEncoder:
         height: int,
         width: int,
         frame_num: int,
-    ) -> dict:
+    ) -> Dict:
         image_id = len(self._data_hash_to_image_id_map)
         self._data_hash_to_image_id_map[(data_hash, frame_num)] = image_id
 
@@ -307,7 +308,7 @@ class CocoEncoder:
             "width": width,
         }
 
-    def get_all_annotations(self) -> list[CocoAnnotation]:
+    def get_all_annotations(self) -> List[CocoAnnotation]:
         annotations = []
 
         # TODO: need to make sure at least one image
@@ -363,11 +364,11 @@ class CocoEncoder:
 
     def get_annotations(
         self,
-        objects: list[dict],
+        objects: List[Dict],
         image_id: int,
-        object_answers: dict,
-        object_actions: dict,
-    ) -> list[CocoAnnotation]:
+        object_answers: Dict,
+        object_actions: Dict,
+    ) -> List[CocoAnnotation]:
         annotations = []
 
         for object_ in objects:
@@ -452,11 +453,11 @@ class CocoEncoder:
 
     def get_bounding_box(
         self,
-        object_: dict,
+        object_: Dict,
         image_id: int,
         size: Size,
-        object_answers: dict,
-        object_actions: dict,
+        object_answers: Dict,
+        object_actions: Dict,
     ) -> CocoAnnotation:
         x, y = (
             object_["boundingBox"]["x"] * size.width,
@@ -472,7 +473,7 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -493,11 +494,11 @@ class CocoEncoder:
 
     def get_rotatable_bounding_box(
         self,
-        object_: dict,
+        object_: Dict,
         image_id: int,
         size: Size,
-        object_answers: dict,
-        object_actions: dict,
+        object_answers: Dict,
+        object_actions: Dict,
     ) -> CocoAnnotation:
         x, y = (
             object_["rotatableBoundingBox"]["x"] * size.width,
@@ -516,7 +517,7 @@ class CocoEncoder:
 
         rotation = object_["rotatableBoundingBox"]["theta"]
 
-        classifications: dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -537,14 +538,14 @@ class CocoEncoder:
 
     def get_polygon(
         self,
-        object_: dict,
+        object_: Dict,
         image_id: int,
         size: Size,
-        object_answers: dict,
-        object_actions: dict,
+        object_answers: Dict,
+        object_actions: Dict,
     ) -> CocoAnnotation:
         polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
-        segmentation = [list(chain(*polygon))]
+        segmentation = [List(chain(*polygon))]
         _polygon = Polygon(polygon)
         area: float = _polygon.area
         x, y, x_max, y_max = _polygon.bounds
@@ -554,7 +555,7 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: dict | None = self.get_flat_classifications(
+        classifications: Dict | None = self.get_flat_classifications(
             object_,
             image_id,
             object_answers,
@@ -580,22 +581,22 @@ class CocoEncoder:
 
     def get_polyline(
         self,
-        object_: dict,
+        object_: Dict,
         image_id: int,
         size: Size,
-        object_answers: dict,
-        object_actions: dict,
+        object_answers: Dict,
+        object_actions: Dict,
     ) -> CocoAnnotation:
         """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
         polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
-        polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
+        polyline_coordinate = self.join_polyline_from_polygon(List(chain(*polygon)))
         segmentation = [polyline_coordinate]
         area = 0
         bbox = self.get_bbox_for_polyline(polygon)
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -616,7 +617,7 @@ class CocoEncoder:
 
     def get_bbox_for_polyline(
         self,
-        polygon: list,
+        polygon: List,
     ) -> tuple[float, float, float, float]:
         if len(polygon) == 2:
             # We have the edge case of a single edge polygon.
@@ -636,8 +637,8 @@ class CocoEncoder:
 
     @staticmethod
     def join_polyline_from_polygon(
-        polygon: list[float],
-    ) -> list[float]:
+        polygon: List[float],
+    ) -> List[float]:
         """
         Essentially a trick to represent a polyline in coco. We pretend for this to be a polygon and join every
         coordinate from the end back to the beginning, so it will essentially be an area-less polygon.
@@ -658,11 +659,11 @@ class CocoEncoder:
 
     def get_bitmask(
         self,
-        object_: dict,
+        object_: Dict,
         image_id: int,
         size: Size,
-        object_answers: dict,
-        object_actions: dict,
+        object_answers: Dict,
+        object_actions: Dict,
     ) -> CocoAnnotation:
         bitmask = object_["bitmask"]
         # Note: It's essential to transpose the input and output coordinates when using pycocotools' functions,
@@ -671,7 +672,7 @@ class CocoEncoder:
         # implementation) data.
 
         # Obtain the COCO compatible RLE string (convert from row-major to column-major order)
-        transposed_segmentation = dict(counts=bitmask["rleString"], size=[bitmask["width"], bitmask["height"]])
+        transposed_segmentation = Dict(counts=bitmask["rleString"], size=[bitmask["width"], bitmask["height"]])
         mask = np.asfortranarray(cocomask.decode(transposed_segmentation).T)
         segmentation = cocomask.encode(mask)
         bbox = tuple(cocomask.toBbox(segmentation))
@@ -683,7 +684,7 @@ class CocoEncoder:
         id_, _, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
         is_crowd = 1
 
-        classifications: dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -704,11 +705,11 @@ class CocoEncoder:
 
     def get_point(
         self,
-        object_: dict,
+        object_: Dict,
         image_id: int,
         size: Size,
-        object_answers: dict,
-        object_actions: dict,
+        object_answers: Dict,
+        object_actions: Dict,
     ) -> CocoAnnotation:
         x, y = (
             object_["point"]["0"]["x"] * size.width,
@@ -724,7 +725,7 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -745,14 +746,14 @@ class CocoEncoder:
 
     def get_skeleton(
         self,
-        object_: dict,
+        object_: Dict,
         image_id: int,
         size: Size,
-        object_answers: dict,
-        object_actions: dict,
+        object_answers: Dict,
+        object_actions: Dict,
     ) -> CocoAnnotation:
         area = 0
-        segmentation: list = []
+        segmentation: List = []
         keypoints = []
 
         for point in object_["skeleton"].values():
@@ -774,7 +775,7 @@ class CocoEncoder:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications: dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
+        classifications: Dict | None = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -794,12 +795,12 @@ class CocoEncoder:
         )
 
     def get_flat_classifications(
-        self, object_: dict, image_id: int, object_answers: dict, object_actions: dict
-    ) -> dict:
+        self, object_: Dict, image_id: int, object_answers: Dict, object_actions: Dict
+    ) -> Dict:
         object_hash = object_["objectHash"]
         feature_hash = object_["featureHash"]
 
-        feature_hash_to_attribute_map: dict[str, Attribute] = self.get_feature_hash_to_flat_object_attribute_map()
+        feature_hash_to_attribute_map: Dict[str, Attribute] = self.get_feature_hash_to_flat_object_attribute_map()
         id_and_object_hash_to_answers_map = self.get_id_and_object_hash_to_answers_map(object_actions)
 
         classifications = self.get_flat_static_classifications(
@@ -815,11 +816,11 @@ class CocoEncoder:
 
         return classifications
 
-    def get_feature_hash_to_flat_object_attribute_map(self) -> dict[str, Attribute]:
+    def get_feature_hash_to_flat_object_attribute_map(self) -> Dict[str, Attribute]:
         if self._feature_hash_to_attribute_map is not None:
             return self._feature_hash_to_attribute_map
 
-        ret: dict[str, Attribute] = {}
+        ret: Dict[str, Attribute] = {}
 
         for object_ in self._ontology.objects:
             for attribute in object_.attributes:
@@ -833,9 +834,9 @@ class CocoEncoder:
         self,
         object_hash: str,
         object_feature_hash: str,
-        object_answers: dict,
-        feature_hash_to_attribute_map: dict[str, Attribute],
-    ) -> dict:
+        object_answers: Dict,
+        feature_hash_to_attribute_map: Dict[str, Attribute],
+    ) -> Dict:
         ret = {}
         classifications = object_answers[object_hash]["classifications"]
         for classification in classifications:
@@ -847,13 +848,12 @@ class CocoEncoder:
             attribute = feature_hash_to_attribute_map[feature_hash]
             answers = classification["answers"]
 
-            match attribute.get_property_type():
-                case PropertyType.TEXT:
-                    ret.update(self.get_text_answer(attribute, answers))
-                case PropertyType.RADIO:
-                    ret.update(self.get_radio_answer(attribute, answers))
-                case PropertyType.CHECKLIST:
-                    ret.update(self.get_checklist_answer(attribute, answers))
+            if attribute.get_property_type() == PropertyType.TEXT:
+                ret.update(self.get_text_answer(attribute, answers))
+            elif attribute.get_property_type() == PropertyType.RADIO:
+                ret.update(self.get_radio_answer(attribute, answers))
+            elif attribute.get_property_type() == PropertyType.CHECKLIST:
+                ret.update(self.get_checklist_answer(attribute, answers))
 
         self.add_unselected_attributes(object_feature_hash, ret, match_dynamic_attributes=False)
 
@@ -861,12 +861,12 @@ class CocoEncoder:
 
     def get_id_and_object_hash_to_answers_map(
         self,
-        object_actions: dict,
-    ) -> dict[tuple[int, str], dict]:
+        object_actions: Dict,
+    ) -> Dict[tuple[int, str], Dict]:
         if self._id_and_object_hash_to_answers_map is not None:
             return self._id_and_object_hash_to_answers_map
 
-        ret: dict[tuple[int, str], dict] = defaultdict(dict)
+        ret: Dict[tuple[int, str], Dict] = defaultdict(Dict)
         feature_hash_to_attribute_map = self.get_feature_hash_to_flat_object_attribute_map()
         for object_hash, payload in object_actions.items():
             for action in payload["actions"]:
@@ -879,13 +879,12 @@ class CocoEncoder:
                 answers = action["answers"]
                 answers_dict = {}
 
-                match attribute.get_property_type():
-                    case PropertyType.TEXT:
-                        answers_dict.update(self.get_text_answer(attribute, answers))
-                    case PropertyType.RADIO:
-                        answers_dict.update(self.get_radio_answer(attribute, answers))
-                    case PropertyType.CHECKLIST:
-                        answers_dict.update(self.get_checklist_answer(attribute, answers))
+                if attribute.get_property_type() == PropertyType.TEXT:
+                    answers_dict.update(self.get_text_answer(attribute, answers))
+                elif attribute.get_property_type() == PropertyType.RADIO:
+                    answers_dict.update(self.get_radio_answer(attribute, answers))
+                elif attribute.get_property_type() == PropertyType.CHECKLIST:
+                    answers_dict.update(self.get_checklist_answer(attribute, answers))
 
                 for sub_range in action["range"]:
                     for i in range(sub_range[0], sub_range[1] + 1):
@@ -900,8 +899,8 @@ class CocoEncoder:
         object_hash: str,
         feature_hash: str,
         image_id: int,
-        id_and_object_hash_to_answers_map: dict[tuple[int, str], dict],
-    ) -> dict:
+        id_and_object_hash_to_answers_map: Dict[tuple[int, str], Dict],
+    ) -> Dict:
         ret = {}
         id_and_object_hash = (image_id, object_hash)
 
@@ -913,7 +912,7 @@ class CocoEncoder:
         return ret
 
     def add_unselected_attributes(
-        self, feature_hash: str, attributes_dict: dict, match_dynamic_attributes: bool
+        self, feature_hash: str, attributes_dict: Dict, match_dynamic_attributes: bool
     ) -> None:
         """
         Attributes which have never been selected will not show up in the actions map. They will need to be
@@ -934,7 +933,7 @@ class CocoEncoder:
                     if attribute.name not in attributes_dict:
                         attributes_dict[attribute.name] = None
 
-    def get_attributes_for_feature_hash(self, feature_hash: str) -> list[Attribute]:
+    def get_attributes_for_feature_hash(self, feature_hash: str) -> List[Attribute]:
         ret = []
 
         for object_ in self._ontology.objects:
@@ -945,11 +944,11 @@ class CocoEncoder:
 
         return ret
 
-    def get_radio_answer(self, attribute: Attribute, answers: dict) -> dict:
+    def get_radio_answer(self, attribute: Attribute, answers: Dict) -> Dict:
         answer = answers[0]  # radios only have one answer by definition
         return {attribute.name: answer["name"]}
 
-    def get_checklist_answer(self, attribute: Attribute, answers: dict) -> dict:
+    def get_checklist_answer(self, attribute: Attribute, answers: Dict) -> Dict:
         ret = {}
         found_checklist_answers = set()
 
@@ -962,10 +961,10 @@ class CocoEncoder:
 
         return ret
 
-    def get_text_answer(self, attribute: Attribute, answers: str) -> dict:
+    def get_text_answer(self, attribute: Attribute, answers: str) -> Dict:
         return {attribute.name: answers}
 
-    def get_category_id(self, object_: dict) -> int:
+    def get_category_id(self, object_: Dict) -> int:
         feature_hash = object_["featureHash"]
         try:
             return self._feature_hash_to_coco_category_id_map[feature_hash]
@@ -976,7 +975,7 @@ class CocoEncoder:
             ) from None
 
     def get_coco_annotation_default_fields(
-        self, object_: dict
+        self, object_: Dict
     ) -> tuple[
         int,
         int,
