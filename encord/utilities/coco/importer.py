@@ -2,26 +2,34 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
-
-from datastructure import CategoryID, CocoAnnotation, CocoCategoryInfo, CocoImage, FrameIndex, ImageID
-from parsers import (
-    parse_annotations,
-)
-from utils import crop_box_to_image_size
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 from encord.objects.common import Shape
 from encord.objects.coordinates import BoundingBoxCoordinates, PointCoordinate, PolygonCoordinates
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
-from encord.project import Project
 from encord.utilities import label_utilities
+from encord.utilities.coco.datastructure import (
+    CategoryID,
+    CocoAnnotation,
+    CocoCategoryInfo,
+    CocoImage,
+    FrameIndex,
+    ImageID,
+)
+from encord.utilities.coco.parsers import (
+    parse_annotations,
+)
+from encord.utilities.coco.utils import crop_box_to_image_size
+
+if TYPE_CHECKING:
+    from encord import Project
 
 logger = logging.getLogger()
 
 class CocoImporter:
-    def __init__(self, project: Project, annotation_dict: Dict[str, Any], category_id_to_feature_hash: Dict[CategoryID,str], image_id_to_frame_index: Dict[ImageID,FrameIndex]) -> None:
+    def __init__(self, project: "Project", annotation_dict: Dict[str, Any], category_id_to_feature_hash: Dict[CategoryID,str], image_id_to_frame_index: Dict[ImageID,FrameIndex]) -> None:
         self._project = project
         self._annotation_dict = annotation_dict
         self._category_id_to_feature_hash = category_id_to_feature_hash
@@ -41,19 +49,25 @@ class CocoImporter:
         # map_image_id_to_label_row: dict[ImageID, LabelRowV2] = {}
         label_hashes = list({frame_index.label_hash for frame_index in self._image_id_to_frame_index.values()})
         label_rows = self._project.list_label_rows_v2(label_hashes=label_hashes)
+        with self._project.create_bundle() as bundle:
+            for row in label_rows:
+                row.initialise_labels(bundle=bundle)
         self._label_rows = label_rows
 
     def encode(self) -> None:
         for image_id, annotations in self._annotations.items():
             frame_index = self._image_id_to_frame_index[image_id]
-            label_row = [row for row in self._label_rows if row.label_hash == frame_index.label_hash][0]
+            rows = [row for row in self._label_rows if row.label_hash == frame_index.label_hash]
+            if not len(rows) == 1:
+                raise ValueError(f"Label hash {frame_index.label_hash} not found in project")
+            label_row = rows[0]
             frame_view = label_row.get_frame_view(self._image_id_to_frame_index[image_id].frame)
             img_h, img_w = frame_view.height, frame_view.width
             for annotation in annotations:
                 encord_object = self.category_to_encord[annotation.category_id]
-                if annotation.segmentation:
+                if annotation.segmentation and len(annotation.bbox or []) != 4:
                     polygon = annotation.segmentation
-                    points = [PointCoordinate(x=polygon[i]/ img_w, y=polygon[i + 1] / img_h) for i in range(len(0,polygon, 2))]
+                    points = [PointCoordinate(x=polygon[i]/ img_w, y=polygon[i + 1] / img_h) for i in range(0,len(polygon), 2)]
                     polygon_coordinates = PolygonCoordinates(values=points)
                     object_instance = encord_object.create_instance()
                     object_instance.set_for_frames(polygon_coordinates, frames=frame_index.frame)
@@ -67,6 +81,7 @@ class CocoImporter:
                     bounding_box = BoundingBoxCoordinates(height = h /img_h, width=w /img_w, top_left_x=x /img_w, top_left_y=y/img_h)
                     object_instance = encord_object.create_instance()
                     object_instance.set_for_frames(bounding_box, frames=frame_index.frame)
+                    label_row.add_object_instance(object_instance)
             label_row.save()
 
 

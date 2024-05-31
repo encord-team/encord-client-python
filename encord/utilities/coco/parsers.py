@@ -1,8 +1,9 @@
 from typing import Dict, List
 
 import numpy as np
-from datastructure import CocoAnnotation, CocoCategory, CocoImage, CocoInfo, CocoResult, ImageID
-from utils import annToMask, mask_to_polygon
+
+from encord.utilities.coco.datastructure import CocoAnnotation, CocoCategory, CocoImage, CocoInfo, CocoResult, ImageID
+from encord.utilities.coco.utils import annToMask, mask_to_polygon
 
 
 def parse_info(info: Dict) -> CocoInfo:

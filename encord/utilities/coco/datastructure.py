@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
-from typing import List, Optional, Set, Tuple, TypeAlias
+from typing import List, Optional, Set, Tuple
 
 from encord.objects.common import Shape
 
@@ -107,7 +107,7 @@ class EncordCocoMetadata:
 
 @dataclass
 class CocoCategoryInfo:
-    shapes: Set[Shape] = {}
+    shapes: Set[Shape] = field(default_factory=set)
     has_rotation: bool = False
 
 
