@@ -1,9 +1,11 @@
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
+import cv2
+import numpy as np
 from pycocotools.mask import decode, frPyObjects, merge
 
 from encord.objects.common import Shape
-from encord.utilities.coco.datastructure import CocoAnnotation, CocoCategoryInfo
+from encord.utilities.coco.datastructure import CocoAnnotation, CocoBbox, CocoCategoryInfo
 
 
 def find_ontology_object(ontology: dict, encord_name: str):
@@ -78,3 +80,14 @@ def _infer_category_shapes(annotations: Dict[int, List[CocoAnnotation]]) -> Dict
             category_info.shapes.add(Shape.BOUNDING_BOX)
 
     return category_shapes
+
+def mask_to_polygon(mask: np.ndarray) -> Tuple[Optional[List[Any]], CocoBbox]:
+    [x, y, w, h] = cv2.boundingRect(mask)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for contour in contours:
+        # Valid polygons have >= 6 coordinates (3 points)
+        if contour.size >= 6:
+            return contour.squeeze(1).tolist(), (x, y, w, h)
+
+    return None, (x, y, w, h) 
