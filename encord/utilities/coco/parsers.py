@@ -1,7 +1,5 @@
 from typing import Dict, List
 
-import numpy as np
-
 from encord.utilities.coco.datastructure import CocoAnnotation, ImageID
 from encord.utilities.coco.utils import annToMask, mask_to_polygon
 
@@ -12,7 +10,7 @@ def parse_annotations(annotations: List[Dict]) -> Dict[ImageID, List[CocoAnnotat
         if annotation["iscrowd"] == 1:
             continue
 
-        segmentations = annotation.get("segmentation", {})
+        segmentations = annotation.get("segmentation", [])
 
         if not segmentations:
             segmentations = [[]]
