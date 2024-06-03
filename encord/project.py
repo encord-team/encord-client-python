@@ -1066,6 +1066,11 @@ class Project:
     def list_datasets(self) -> Iterable[ProjectDataset]:
         return self._client.list_project_datasets(self._project_instance.project_hash)
 
-    def import_coco_labels(self, labels_dict: Dict[str, Any], category_id_to_feature_hash: Dict[CategoryID,str], image_id_to_frame_index: Dict[ImageID,FrameIndex]) -> None:
+    def import_coco_labels(
+        self,
+        labels_dict: Dict[str, Any],
+        category_id_to_feature_hash: Dict[CategoryID, str],
+        image_id_to_frame_index: Dict[ImageID, FrameIndex],
+    ) -> None:
         coco_importer = CocoImporter(self, labels_dict, category_id_to_feature_hash, image_id_to_frame_index)
         coco_importer.encode()
