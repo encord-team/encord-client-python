@@ -338,6 +338,7 @@ class DeleteItemsResponse(BaseDTO):
 class MoveItemsPayload(BaseDTO):
     item_uuids: List[UUID]
     new_parent_uuid: UUID
+    allow_synced_dataset_move: bool = False
 
 
 class MoveFoldersPayload(BaseDTO):

@@ -669,7 +669,10 @@ class StorageFolder:
         self.refetch_data()
 
     def move_items_to_folder(
-        self, target_folder: Union["StorageFolder", UUID], items_to_move: List[Union[UUID, "StorageItem"]]
+        self,
+        target_folder: Union["StorageFolder", UUID],
+        items_to_move: List[Union[UUID, "StorageItem"]],
+        allow_mirror_dataset_changes: bool = False,
     ) -> None:
         """
         Move items (list of `StorageItem` objects or UUIDs) to another folder (specify folder object or UUID).
@@ -678,6 +681,9 @@ class StorageFolder:
             target_folder: Target folder to move items to.
             items_to_move: List of items to move. All the items should be immediate children
                 of the current folder.
+            allow_mirror_dataset_changes: If `True`, allow moving items that are linked to a mirror dataset. By default,
+                moving such items is prohibited, as it would result in data units being removed from a dataset,
+                potentially deleting related annotations and other data.
 
         Returns:
             `None`
@@ -688,7 +694,11 @@ class StorageFolder:
         self._api_client.post(
             f"storage/folders/{self.uuid}/items/move",
             params=None,
-            payload=orm_storage.MoveItemsPayload(item_uuids=item_uuids, new_parent_uuid=target_folder_uuid),
+            payload=orm_storage.MoveItemsPayload(
+                item_uuids=item_uuids,
+                new_parent_uuid=target_folder_uuid,
+                allow_synced_dataset_move=allow_mirror_dataset_changes,
+            ),
             result_type=None,
         )
 
@@ -1136,18 +1146,31 @@ class StorageItem:
             result_type=None,  # we don't need a result here, even though the server provides it
         )
 
-    def move_to_folder(self, target_folder: Union[StorageFolder, UUID]):
+    def move_to_folder(
+        self,
+        target_folder: Union[StorageFolder, UUID],
+        allow_mirror_dataset_changes: bool = False,
+    ):
         """
         Move the item to another folder (specify folder object or UUID).
 
         Args:
             target_folder: Target folder to move the item to. Should be a `StorageFolder` object or a UUID.
+
+            allow_mirror_dataset_changes: If `True`, allow moving items that are linked to a mirror dataset. By default,
+                moving such items is prohibited, as it would result in data units being removed from a dataset,
+                potentially deleting related annotations and other data.
+
         """
         target_folder_uuid = target_folder if isinstance(target_folder, UUID) else target_folder.uuid
         self._api_client.post(
             f"storage/folders/{self.parent_folder_uuid}/items/move",
             params=None,
-            payload=orm_storage.MoveItemsPayload(item_uuids=[self.uuid], new_parent_uuid=target_folder_uuid),
+            payload=orm_storage.MoveItemsPayload(
+                item_uuids=[self.uuid],
+                new_parent_uuid=target_folder_uuid,
+                allow_synced_dataset_move=allow_mirror_dataset_changes,
+            ),
             result_type=None,
         )
         self.refetch_data()
