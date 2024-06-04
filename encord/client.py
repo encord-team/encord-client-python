@@ -441,7 +441,7 @@ class EncordClientDataset(EncordClient):
 
     def upload_video(
         self,
-        file_path: str,
+        file_path: Union[str, Path],
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
         folder_uuid: Optional[uuid.UUID] = None,
@@ -464,7 +464,7 @@ class EncordClientDataset(EncordClient):
 
     def create_image_group(
         self,
-        file_paths: Iterable[str],
+        file_paths: Iterable[Union[str, Path]],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
@@ -509,7 +509,7 @@ class EncordClientDataset(EncordClient):
 
     def create_dicom_series(
         self,
-        file_paths: List[str],
+        file_paths: typing.Collection[Union[Path, str]],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder_uuid: Optional[uuid.UUID] = None,
@@ -1004,7 +1004,7 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
-    def create_label_row(self, uid, *, get_signed_url=False):
+    def create_label_row(self, uid, *, get_signed_url=False) -> typing.Any:
         """
         This function is documented in :meth:`encord.project.Project.create_label_row`.
         """

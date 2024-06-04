@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, TextIO, Union
+from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, TextIO, Union
 from uuid import UUID
 
 import requests
@@ -118,7 +118,7 @@ class StorageFolder:
         for item in paged_items:
             yield StorageItem(self._api_client, item)
 
-    def delete(self):
+    def delete(self) -> None:
         self._api_client.delete(f"storage/folders/{self.uuid}", params=None, result_type=None)
 
     def upload_image(
@@ -272,7 +272,7 @@ class StorageFolder:
 
     def create_dicom_series(
         self,
-        file_paths: List[str],
+        file_paths: Sequence[Union[str, Path]],
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
@@ -346,7 +346,7 @@ class StorageFolder:
 
     def create_image_group(
         self,
-        file_paths: List[str],
+        file_paths: Collection[Union[Path, str]],
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
@@ -385,7 +385,7 @@ class StorageFolder:
 
     def create_image_sequence(
         self,
-        file_paths: List[str],
+        file_paths: Collection[Union[Path, str]],
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
@@ -425,7 +425,7 @@ class StorageFolder:
 
     def _create_image_group_or_sequence(
         self,
-        file_paths: List[str],
+        file_paths: Collection[Union[Path, str]],
         title: Optional[str],
         create_video: bool,
         client_metadata: Optional[Dict[str, Any]],
@@ -671,7 +671,7 @@ class StorageFolder:
     def move_items_to_folder(
         self,
         target_folder: Union["StorageFolder", UUID],
-        items_to_move: List[Union[UUID, "StorageItem"]],
+        items_to_move: Sequence[Union[UUID, "StorageItem"]],
         allow_mirror_dataset_changes: bool = False,
     ) -> None:
         """
@@ -1128,7 +1128,7 @@ class StorageItem:
             result_type=orm_storage.StorageItem,
         )
 
-    def delete(self, remove_unused_frames=True):
+    def delete(self, remove_unused_frames=True) -> None:
         """
         Delete the item from the storage.
 
