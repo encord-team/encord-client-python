@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Flag, auto
 from typing import Any, Dict, List, Optional, Type, Union
 
+from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
 from encord.orm.base_dto import BaseDTO
@@ -98,8 +99,13 @@ class PolygonCoordinates:
         polygon_dict = d["polygon"]
         values: List[PointCoordinate] = []
 
-        sorted_dict_value_tuples = sorted((int(key), value) for key, value in polygon_dict.items())
-        sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
+        if isinstance(polygon_dict, dict):
+            sorted_dict_value_tuples = sorted((int(key), value) for key, value in polygon_dict.items())
+            sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
+        elif isinstance(polygon_dict, list):
+            sorted_dict_values = list(polygon_dict)
+        else:
+            raise LabelRowError(f"Invalid format for polygon coordinates: {polygon_dict}")
 
         for value in sorted_dict_values:
             point_coordinate = PointCoordinate(
@@ -123,8 +129,13 @@ class PolylineCoordinates:
         polyline = d["polyline"]
         values: List[PointCoordinate] = []
 
-        sorted_dict_value_tuples = sorted((int(key), value) for key, value in polyline.items())
-        sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
+        if isinstance(polyline, dict):
+            sorted_dict_value_tuples = sorted((int(key), value) for key, value in polyline.items())
+            sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
+        elif isinstance(polyline, list):
+            sorted_dict_values = list(polyline)
+        else:
+            raise LabelRowError(f"Invalid format for polyline coordinates: {polyline}")
 
         for value in sorted_dict_values:
             point_coordinate = PointCoordinate(
