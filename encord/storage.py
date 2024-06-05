@@ -1126,7 +1126,7 @@ class StorageItem:
         if bundle is not None:
             bundled_operation(
                 bundle,
-                operation=self._api_client.get_bound_partial(StorageItem._patch_multiple_items),
+                operation=self._api_client.get_bound_operation(StorageItem._patch_multiple_items),
                 payload=orm_storage.BundledPatchItemPayload(
                     item_patches={
                         str(self.uuid): PatchItemPayload(

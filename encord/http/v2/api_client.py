@@ -81,24 +81,24 @@ class ApiClient:
             HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
-    def get_bound_partial(self, callback: Callable) -> Callable:
+    def get_bound_operation(self, operation: Callable) -> Callable:
         """
         Wrap a function to bind it to the current API client instance (via a named parameter). This is useful for
         bundling, as the 'Bundle' groups operations based on the 'operation' function, which means that if
         you use an entity object method as the operation, then it will not be grouped with other similar operations.
         """
-        if "api_client" in inspect.signature(callback).parameters:
-            if wrapped := self._bound_callbacks.get(callback):
+        if "api_client" in inspect.signature(operation).parameters:
+            if wrapped := self._bound_callbacks.get(operation):
                 return wrapped
 
             def wrapped_callback(*args, **kwargs):
-                return callback(*args, api_client=self, **kwargs)
+                return operation(*args, api_client=self, **kwargs)
 
-            self._bound_callbacks[callback] = wrapped_callback
+            self._bound_callbacks[operation] = wrapped_callback
 
             return wrapped_callback
         else:
-            return callback
+            raise RuntimeError(f"Operation {operation} does not have an 'api_client' parameter")
 
     def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
         return self._request_without_payload("GET", path, params, result_type)
