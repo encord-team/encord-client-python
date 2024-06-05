@@ -1,6 +1,7 @@
+import inspect
 import platform
 import uuid
-from typing import Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
+from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
@@ -27,6 +28,7 @@ class ApiClient:
         self._config = config
         self._domain = self._config.domain
         self._base_path = "v2/public/"
+        self._bound_callbacks: Dict[Callable, Callable] = {}
 
     @staticmethod
     def _exception_context_from_response(response: Response) -> RequestContext:
@@ -78,6 +80,25 @@ class ApiClient:
             HEADER_USER_AGENT: self._user_agent(),
             HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
+
+    def get_bound_partial(self, callback: Callable) -> Callable:
+        """
+        Wrap a function to bind it to the current API client instance (via a named parameter). This is useful for
+        bundling, as the 'Bundle' groups operations based on the 'operation' function, which means that if
+        you use an entity object method as the operation, then it will not be grouped with other similar operations.
+        """
+        if "api_client" in inspect.signature(callback).parameters:
+            if wrapped := self._bound_callbacks.get(callback):
+                return wrapped
+
+            def wrapped_callback(*args, **kwargs):
+                return callback(*args, api_client=self, **kwargs)
+
+            self._bound_callbacks[callback] = wrapped_callback
+
+            return wrapped_callback
+        else:
+            return callback
 
     def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
         return self._request_without_payload("GET", path, params, result_type)

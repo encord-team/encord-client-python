@@ -14,6 +14,7 @@ import encord
 import encord.orm.storage as orm_storage
 from encord.client import LONG_POLLING_RESPONSE_RETRY_N, LONG_POLLING_SLEEP_ON_FAILURE_SECONDS
 from encord.exceptions import EncordException
+from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
 from encord.http.utils import CloudUploadSettings, _upload_single_file
 from encord.http.v2.api_client import ApiClient
@@ -35,6 +36,8 @@ from encord.orm.storage import (
     StorageItemType,
     UploadSignedUrlsPayload,
 )
+
+STORAGE_BUNDLE_CREATE_LIMIT = 1000
 
 
 class StorageFolder:
@@ -1102,6 +1105,7 @@ class StorageItem:
         name: Optional[str] = None,
         description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
+        bundle: Optional[Bundle] = None,
     ) -> None:
         """
         Update the item's modifiable properties. Any parameters that are not provided will not be updated.
@@ -1110,6 +1114,8 @@ class StorageItem:
             name: New item name.
             description: New item description.
             client_metadata: New client metadata.
+            bundle: Optional :class:`encord.http.Bundle` to use for the operation. If provided, the operation
+                will be bundled into a single server call with other item updates using the same bundle.
 
         Returns:
             None
@@ -1117,16 +1123,36 @@ class StorageItem:
         if name is None and description is None and client_metadata is None:
             return
 
-        self._orm_item = self._api_client.patch(
-            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
-            params=None,
-            payload=PatchItemPayload(
-                name=name,
-                description=description,
-                client_metadata=client_metadata,
-            ),
-            result_type=orm_storage.StorageItem,
-        )
+        if bundle is not None:
+            bundled_operation(
+                bundle,
+                operation=self._api_client.get_bound_partial(StorageItem._patch_multiple_items),
+                payload=orm_storage.BundledPatchItemPayload(
+                    item_patches={
+                        str(self.uuid): PatchItemPayload(
+                            name=name,
+                            description=description,
+                            client_metadata=client_metadata,
+                        ),
+                    },
+                ),
+                result_mapper=BundleResultMapper[orm_storage.StorageItem](
+                    result_mapping_predicate=lambda r: str(r.uuid),
+                    result_handler=BundleResultHandler(predicate=str(self.uuid), handler=self._set_orm_item),
+                ),
+                limit=STORAGE_BUNDLE_CREATE_LIMIT,
+            )
+        else:
+            self._orm_item = self._api_client.patch(
+                f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
+                params=None,
+                payload=PatchItemPayload(
+                    name=name,
+                    description=description,
+                    client_metadata=client_metadata,
+                ),
+                result_type=orm_storage.StorageItem,
+            )
 
     def delete(self, remove_unused_frames=True) -> None:
         """
@@ -1179,10 +1205,12 @@ class StorageItem:
         """
         Refetch data for the item.
         """
-        self._orm_item = self._api_client.get(
-            f"storage/items/{self.uuid}",
-            params=GetItemParams(sign_url=get_signed_url),
-            result_type=orm_storage.StorageItem,
+        self._set_orm_item(
+            self._api_client.get(
+                f"storage/items/{self.uuid}",
+                params=GetItemParams(sign_url=get_signed_url),
+                result_type=orm_storage.StorageItem,
+            )
         )
 
     @staticmethod
@@ -1203,3 +1231,18 @@ class StorageItem:
             result_type=Page[orm_storage.StorageItem],  # it's always just one page here
         )
         return [StorageItem(api_client, orm_item) for orm_item in orm_items.results]
+
+    @staticmethod
+    def _patch_multiple_items(
+        api_client: ApiClient,
+        item_patches: Dict[str, PatchItemPayload],
+    ) -> List[orm_storage.StorageItem]:
+        return api_client.patch(
+            "storage/items/patch-bulk",
+            params=None,
+            payload=orm_storage.PatchItemsBulkPayload(item_patches=item_patches),
+            result_type=Page[orm_storage.StorageItem],
+        ).results
+
+    def _set_orm_item(self, orm_item: orm_storage.StorageItem) -> None:
+        self._orm_item = orm_item
