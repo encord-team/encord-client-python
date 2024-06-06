@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, ValuesView
 
 from nptyping import NDArray
 
@@ -78,8 +78,11 @@ class CocoImporter:
                     elif encord_object.shape == Shape.BITMASK:
                         mask = annotation.segmentation
                         if not isinstance(mask, NDArray):
-                            raise ValueError("Unhappy")
+                            raise ValueError("Require Bitmask for mask")
                         coordinates = BitmaskCoordinates(mask.astype(bool))
+                    else:
+                        # Impossible
+                        pass
                     object_instance = encord_object.create_instance()
                     object_instance.set_for_frames(coordinates, frames=frame_index.frame)
                     label_row.add_object_instance(object_instance)
@@ -94,7 +97,7 @@ class CocoImporter:
                             img_h=img_h,
                         )
                     except ValueError as e:
-                        logger.warning(f"kipping annotation with id {annotation.id_} {str(e)}")
+                        logger.warning(f"Skipping annotation with id {annotation.id_} {str(e)}")
                         continue
                     bounding_box = BoundingBoxCoordinates(
                         height=h / img_h, width=w / img_w, top_left_x=x / img_w, top_left_y=y / img_h
@@ -102,4 +105,9 @@ class CocoImporter:
                     object_instance = encord_object.create_instance()
                     object_instance.set_for_frames(bounding_box, frames=frame_index.frame)
                     label_row.add_object_instance(object_instance)
+                else:
+                    logger.warning(
+                        "Should have either Bitmask/Polygon with segmentation data or be matching to Bounding box type."
+                    )
+                    continue
             label_row.save()
