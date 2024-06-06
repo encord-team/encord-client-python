@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from encord.utilities.coco.datastructure import CocoAnnotation, ImageID
-from encord.utilities.coco.utils import annToMask, mask_to_polygon, parse_annotation
+from encord.utilities.coco.utils import parse_annotation
 
 
 def parse_annotations(annotations: List[Dict]) -> Dict[ImageID, List[CocoAnnotation]]:
@@ -18,7 +18,7 @@ def parse_annotations(annotations: List[Dict]) -> Dict[ImageID, List[CocoAnnotat
             segmentations = [segmentations]
         elif isinstance(segmentations, dict):
             h, w = segmentations["size"]
-            segment = parse_annotation(annotation, h,w)
+            segment = parse_annotation(annotation, h, w)
             segmentations = [segment]
 
         img_id = annotation["image_id"]
