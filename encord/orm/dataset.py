@@ -402,6 +402,10 @@ class DataRow(dict, Formatter):
 
     @property
     def backing_item_uuid(self) -> UUID:
+        """
+        The id of the :class:`encord.storage.StorageItem` that underlies this data row.
+        See also :meth:`encord.user_client.EncordUserClient.get_storage_item`.
+        """
         backing_item_uuid: Optional[UUID] = self.get("backing_item_uuid")
         if not backing_item_uuid:
             raise NotImplementedError("Storage API is not yet implemented by the service")
