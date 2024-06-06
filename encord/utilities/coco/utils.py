@@ -1,10 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import numpy as np
 from nptyping import NDArray
 from pycocotools.mask import decode, frPyObjects
-
-from encord.utilities.coco.datastructure import CocoBbox
 
 
 def parse_annotation(annotation, h: int, w: int) -> Union[list, NDArray]:
