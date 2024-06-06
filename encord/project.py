@@ -1072,5 +1072,12 @@ class Project:
         category_id_to_feature_hash: Dict[CategoryID, str],
         image_id_to_frame_index: Dict[ImageID, FrameIndex],
     ) -> None:
+        """Import labels from a COCO format into your Encord project
+
+        Args:
+            labels_dict (Dict[str, Any]): Raw label dictionary conforming to Encord format
+            category_id_to_feature_hash (Dict[CategoryID, str]): Dictionary mapping category_id as used in the COCO data to the feature hash for the corresponding element in this Ontology
+            image_id_to_frame_index (Dict[ImageID, FrameIndex]): Dictionary mapping int to FrameIndex(data_hash, frame_offset) which is used to identify the corresponding frame in the Encord setting
+        """
         coco_importer = CocoImporter(self, labels_dict, category_id_to_feature_hash, image_id_to_frame_index)
         coco_importer.encode()
