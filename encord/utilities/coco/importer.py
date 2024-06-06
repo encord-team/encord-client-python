@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
+from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
 from encord.objects.coordinates import BoundingBoxCoordinates, PointCoordinate, PolygonCoordinates
 from encord.objects.ontology_object import Object
@@ -63,17 +64,21 @@ class CocoImporter:
             img_h, img_w = frame_view.height, frame_view.width
             for annotation in annotations:
                 encord_object = self.category_to_encord[annotation.category_id]
-                if annotation.segmentation:
-                    polygon = annotation.segmentation
-                    points = [
-                        PointCoordinate(x=polygon[i] / img_w, y=polygon[i + 1] / img_h)
-                        for i in range(0, len(polygon), 2)
-                    ]
-                    polygon_coordinates = PolygonCoordinates(values=points)
+                if annotation.segmentation is not None and encord_object.shape in [Shape.POLYGON, Shape.BITMASK]:
+                    if encord_object.shape == Shape.POLYGON:
+                        polygon = annotation.segmentation
+                        points = [
+                            PointCoordinate(x=polygon[i] / img_w, y=polygon[i + 1] / img_h)
+                            for i in range(0, len(polygon), 2)
+                        ]
+                        coordinates = PolygonCoordinates(values=points)
+                    elif encord_object.shape == Shape.BITMASK:
+                        mask = annotation.segmentation
+                        coordinates = BitmaskCoordinates(mask.astype(bool))
                     object_instance = encord_object.create_instance()
-                    object_instance.set_for_frames(polygon_coordinates, frames=frame_index.frame)
+                    object_instance.set_for_frames(coordinates, frames=frame_index.frame)
                     label_row.add_object_instance(object_instance)
-                elif len(annotation.bbox or []) == 4:
+                elif encord_object.shape == Shape.BOUNDING_BOX:
                     try:
                         x, y, w, h = crop_box_to_image_size(*annotation.bbox, img_w=img_w, img_h=img_h)
                     except ValueError as e:

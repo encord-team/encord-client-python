@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple, Optional, Union
+
+from nptyping import NDArray
 
 ImageID = int
 CategoryID = int
@@ -26,7 +28,7 @@ class CocoAnnotation:
     id_: int
     image_id: ImageID
     iscrowd: int
-    segmentation: List
+    segmentation: Union[List, NDArray]
     keypoints: Optional[List[int]] = None
     num_keypoints: Optional[int] = None
     track_id: Optional[int] = None

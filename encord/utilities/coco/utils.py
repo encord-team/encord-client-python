@@ -1,13 +1,14 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
+from nptyping import NDArray
 from pycocotools.mask import decode, frPyObjects, merge
 
 from encord.utilities.coco.datastructure import CocoBbox
 
 
-def annToRLE(ann, h, w):
+def annToRLE(ann: Dict[str,Any], h: int, w: int):
     """
     Convert annotation which can be polygons, uncompressed RLE to RLE.
     :return: binary mask (numpy 2D array)
@@ -27,7 +28,7 @@ def annToRLE(ann, h, w):
     return rle
 
 
-def annToMask(ann, h, w):
+def annToMask(ann, h:int, w: int):
     """
     Convert annotation which can be polygons, uncompressed RLE, or RLE to binary mask.
     :return: binary mask (numpy 2D array)
@@ -35,8 +36,22 @@ def annToMask(ann, h, w):
     rle = annToRLE(ann, h, w)
     return decode(rle)
 
+def parse_annotation(annotation, h: int, w: int) -> Union[list, NDArray]:
+    segm = annotation["segmentation"]
+    if isinstance(segm, list):
+        # polygon
+        return segm
+    elif segm.get("counts") and isinstance(segm.get("counts"), list):
+        # uncompressed RLE
+        rle = frPyObjects(segm, h,w)
+        return decode(rle)
+    else:
+        # raw rle
+        rle = segm
+        return decode(rle)
 
-def crop_box_to_image_size(x, y, w, h, img_w: int, img_h: int) -> Tuple[int, int, int, int]:
+
+def crop_box_to_image_size(x: float, y: float, w: float, h: float, img_w: int, img_h: int) -> Tuple[int, int, int, int]:
     if x > img_w:
         raise ValueError(f"x coordinate {x} of bounding box outside the image of width {img_w}")
     if y > img_h:
