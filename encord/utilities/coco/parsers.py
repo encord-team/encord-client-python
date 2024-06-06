@@ -1,6 +1,6 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
-from encord.utilities.coco.datastructure import CocoAnnotation, ImageID
+from encord.utilities.coco.datastructure import CocoAnnotation, CocoBbox, ImageID
 from encord.utilities.coco.utils import parse_annotation
 
 
@@ -17,7 +17,8 @@ def parse_annotations(annotations: List[Dict]) -> Dict[ImageID, List[CocoAnnotat
         elif isinstance(segmentations, list) and not isinstance(segmentations[0], list):
             segmentations = [segmentations]
         elif isinstance(segmentations, dict):
-            h, w = segmentations["size"]
+            size: Tuple[int, int] = segmentations["size"]
+            h, w = size
             segment = parse_annotation(annotation, h, w)
             segmentations = [segment]
 
@@ -28,7 +29,7 @@ def parse_annotations(annotations: List[Dict]) -> Dict[ImageID, List[CocoAnnotat
             annot_dict[img_id].append(
                 CocoAnnotation(
                     area=annotation["area"],
-                    bbox=annotation["bbox"],
+                    bbox=CocoBbox(*annotation["bbox"]),
                     category_id=annotation["category_id"],
                     id_=annotation["id"],
                     image_id=annotation["image_id"],

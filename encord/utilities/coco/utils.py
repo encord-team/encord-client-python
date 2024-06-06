@@ -22,7 +22,9 @@ def parse_annotation(annotation, h: int, w: int) -> Union[list, NDArray]:
         return decode(rle)
 
 
-def crop_box_to_image_size(x: int, y: int, w: int, h: int, img_w: int, img_h: int) -> Tuple[int, int, int, int]:
+def crop_box_to_image_size(
+    x: float, y: float, w: float, h: float, img_w: float, img_h: float
+) -> Tuple[float, float, float, float]:
     if x > img_w:
         raise ValueError(f"x coordinate {x} of bounding box outside the image of width {img_w}")
     if y > img_h:
