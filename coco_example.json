@@ -1,6 +1,6 @@
 {
     "info": {
-        "description": "CAPTURE-f8ade084.jpeg",
+        "description": "searay-overnight-cabin-cruiser-04292020.jpg",
         "contributor": null,
         "date_created": null,
         "url": null,
@@ -26,16 +26,8 @@
     ],
     "images": [
         {
-            "coco_url": "cord-images-prod/Fgv98FfXSmTmd5iHwX4SRBGqNs53/78f603ee-1a5c-43c1-9f3f-40497442b284",
-            "id": 0,
-            "image_title": "CAPTURE-f8ade084.jpeg",
-            "file_name": "images/78f603ee-1a5c-43c1-9f3f-40497442b284.jpeg",
-            "height": 5464,
-            "width": 8192
-        },
-        {
             "coco_url": "cord-images-prod/Fgv98FfXSmTmd5iHwX4SRBGqNs53/698bcf23-f986-442b-b10e-91c9b60fee65",
-            "id": 1,
+            "id": 0,
             "image_title": "searay-overnight-cabin-cruiser-04292020.jpg",
             "file_name": "images/698bcf23-f986-442b-b10e-91c9b60fee65.jpg",
             "height": 5611,
@@ -52,7 +44,7 @@
                 2246.044023
             ],
             "category_id": 2,
-            "image_id": 1,
+            "image_id": 0,
             "iscrowd": 0,
             "segmentation": [
                 [
@@ -448,6 +440,62 @@
             "attributes": {
                 "track_id": 0,
                 "encord_track_uuid": "RA0W0cUx",
+                "classifications": {},
+                "manual_annotation": true
+            }
+        },
+        {
+            "area": 54276.0,
+            "bbox": [
+                4175.0,
+                1459.0,
+                262.0,
+                262.0
+            ],
+            "category_id": 1,
+            "image_id": 0,
+            "iscrowd": 0,
+            "segmentation": {
+                "size": [
+                    5611,
+                    8416
+                ],
+                "counts": "[]nZf0P1T^5>D:G8H8I6J6J6J6K4K6K4L4L4L4L4L4M2M4L4M2M4M2M4M2N2M4M2N2M4M2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2O0O2N2N2O0O2N2N2O0O2N2O0O2N2O0O2O0O2N2O0O2O0O2O0O2O0O2O0O2O0O2O000O2O0O2O000O2O000O2O000O2O000O2O00000O2O00000O2O0000000O2O00000000000O2O00000000000000000000000000000000000000000000000000000000000001N1000000000001N100000001N1000001N1000001N10001N10001N10001N10001N101N10001N101N101N101N101N101N101N2N101N101N2N101N2N101N2N2N101N2N2N101N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N3L3N2N3L3N2N3L3N3L3N3L4L3N3L4L4L4L4L4L5J5L5J6J6J6J7H8H9F<Bj[YYe0"
+            },
+            "keypoints": null,
+            "num_keypoints": null,
+            "id": 1,
+            "attributes": {
+                "track_id": 1,
+                "encord_track_uuid": "VP6jtiRm",
+                "classifications": {},
+                "manual_annotation": true
+            }
+        },
+        {
+            "area": 54276.0,
+            "bbox": [
+                2980.0,
+                1153.0,
+                262.0,
+                262.0
+            ],
+            "category_id": 1,
+            "image_id": 0,
+            "iscrowd": 0,
+            "segmentation": {
+                "size": [
+                    5611,
+                    8416
+                ],
+                "counts": "PTZn?P1T^5>D:G8H8I6J6J6J6K4K6K4L4L4L4L4L4M2M4L4M2M4M2M4M2N2M4M2N2M4M2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2O0O2N2N2O0O2N2N2O0O2N2O0O2N2O0O2O0O2N2O0O2O0O2O0O2O0O2O0O2O0O2O000O2O0O2O000O2O000O2O000O2O000O2O00000O2O00000O2O0000000O2O00000000000O2O00000000000000000000000000000000000000000000000000000000000001N1000000000001N100000001N1000001N1000001N10001N10001N10001N10001N101N10001N101N101N101N101N101N101N2N101N101N2N101N2N101N2N2N101N2N2N101N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N2N3L3N2N3L3N2N3L3N3L3N3L4L3N3L4L4L4L4L4L5J5L5J6J6J6J7H8H9F<BUemek0"
+            },
+            "keypoints": null,
+            "num_keypoints": null,
+            "id": 2,
+            "attributes": {
+                "track_id": 2,
+                "encord_track_uuid": "F9LzR0hB",
                 "classifications": {},
                 "manual_annotation": true
             }
