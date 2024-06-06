@@ -828,6 +828,7 @@ class EncordUserClient:
 
         Args:
             item_uuid: The UUID of the item to retrieve.
+            sign_url: If `True`, pre-fetch a signed URL for the item (otherwise the URL will be signed on demand).
 
         Returns:
             The storage item. See :class:`encord.storage.StorageItem` for details.
@@ -845,6 +846,7 @@ class EncordUserClient:
 
         Args:
             item_uuids: list of UUIDs of items to retrieve.
+            sign_url: If `True`, pre-fetch a signed URLs for the items (otherwise the URLs will be signed on demand).
 
         Returns:
             A list of storage items. See :class:`encord.storage.StorageItem` for details.
