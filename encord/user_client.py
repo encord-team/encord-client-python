@@ -850,7 +850,7 @@ class EncordUserClient:
             A list of storage items. See :class:`encord.storage.StorageItem` for details.
 
         Raises:
-            :class:`encord.exceptions.AuthorizationError` : If some the items with the given UUIDs do not exist or
+            :class:`encord.exceptions.AuthorizationError` : If some of the items with the given UUIDs do not exist or
                 the user does not have access to them.
         """
         return StorageItem._get_items(self._api_client, item_uuids, sign_url)
