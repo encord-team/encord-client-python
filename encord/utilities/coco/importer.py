@@ -85,9 +85,16 @@ class CocoImporter:
                     label_row.add_object_instance(object_instance)
                 elif encord_object.shape == Shape.BOUNDING_BOX:
                     try:
-                        x, y, w, h = crop_box_to_image_size(*annotation.bbox, img_w=img_w, img_h=img_h)
+                        x, y, w, h = crop_box_to_image_size(
+                            annotation.bbox.x,
+                            annotation.bbox.y,
+                            annotation.bbox.w,
+                            annotation.bbox.h,
+                            img_w=img_w,
+                            img_h=img_h,
+                        )
                     except ValueError as e:
-                        logger.warning(f"<magenta>Skipping annotation with id {annotation.id_}</magenta> {str(e)}")
+                        logger.warning(f"kipping annotation with id {annotation.id_} {str(e)}")
                         continue
                     bounding_box = BoundingBoxCoordinates(
                         height=h / img_h, width=w / img_w, top_left_x=x / img_w, top_left_y=y / img_h
