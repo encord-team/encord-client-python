@@ -61,6 +61,6 @@ def mask_to_polygon(mask: np.ndarray) -> Tuple[Optional[List[Any]], CocoBbox]:
     for contour in contours:
         # Valid polygons have >= 6 coordinates (3 points)
         if contour.size >= 6:
-            return contour.squeeze(1).tolist(), (x, y, w, h)
+            return contour.squeeze(1).tolist(), CocoBbox(x, y, w, h)
 
-    return None, (x, y, w, h)
+    return None, CocoBbox(x, y, w, h)

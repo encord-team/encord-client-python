@@ -45,8 +45,8 @@ class CocoImporter:
             map_category_to_encord_object[id] = object
         self.category_to_encord = map_category_to_encord_object
 
-        label_hashes = list({frame_index.label_hash for frame_index in self._image_id_to_frame_index.values()})
-        label_rows = self._project.list_label_rows_v2(label_hashes=label_hashes)
+        data_hashes = list({frame_index.data_hash for frame_index in self._image_id_to_frame_index.values()})
+        label_rows = self._project.list_label_rows_v2(data_hashes=data_hashes)
         with self._project.create_bundle() as bundle:
             for row in label_rows:
                 row.initialise_labels(bundle=bundle)
@@ -55,15 +55,15 @@ class CocoImporter:
     def encode(self) -> None:
         for image_id, annotations in self._annotations.items():
             frame_index = self._image_id_to_frame_index[image_id]
-            rows = [row for row in self._label_rows if row.label_hash == frame_index.label_hash]
+            rows = [row for row in self._label_rows if row.data_hash == frame_index.data_hash]
             if not len(rows) == 1:
-                raise ValueError(f"Label hash {frame_index.label_hash} not found in project")
+                raise ValueError(f"Data hash {frame_index.data_hash} not found in project")
             label_row = rows[0]
             frame_view = label_row.get_frame_view(self._image_id_to_frame_index[image_id].frame)
             img_h, img_w = frame_view.height, frame_view.width
             for annotation in annotations:
                 encord_object = self.category_to_encord[annotation.category_id]
-                if annotation.segmentation and len(annotation.bbox or []) != 4:
+                if annotation.segmentation:
                     polygon = annotation.segmentation
                     points = [
                         PointCoordinate(x=polygon[i] / img_w, y=polygon[i + 1] / img_h)
