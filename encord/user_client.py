@@ -838,6 +838,23 @@ class EncordUserClient:
         """
         return StorageItem._get_item(self._api_client, item_uuid, sign_url)
 
+    def get_storage_items(self, item_uuids: List[UUID], sign_url: bool = False) -> List[StorageItem]:
+        """
+        Get storage items by their UUIDs, in bulk. Useful for retrieving multiple items at once, e.g. when getting
+        items pointed to by :attr:`encord.orm.dataset.DataRow.backing_item_uuid` for all data rows of a dataset.
+
+        Args:
+            item_uuids: list of UUIDs of items to retrieve.
+
+        Returns:
+            A list of storage items. See :class:`encord.storage.StorageItem` for details.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If some the items with the given UUIDs do not exist or
+                the user does not have access to them.
+        """
+        return StorageItem._get_items(self._api_client, item_uuids, sign_url)
+
     def list_storage_folders(
         self,
         *,
