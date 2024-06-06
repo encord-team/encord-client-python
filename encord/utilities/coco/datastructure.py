@@ -18,7 +18,6 @@ class CocoBbox(NamedTuple):
     h: float
 
 
-
 @dataclass
 class CocoAnnotation:
     area: float
