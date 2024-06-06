@@ -1,6 +1,8 @@
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
+
+from nptyping import NDArray
 
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
@@ -65,6 +67,7 @@ class CocoImporter:
             for annotation in annotations:
                 encord_object = self.category_to_encord[annotation.category_id]
                 if annotation.segmentation is not None and encord_object.shape in [Shape.POLYGON, Shape.BITMASK]:
+                    coordinates: Union[PolygonCoordinates, BitmaskCoordinates]
                     if encord_object.shape == Shape.POLYGON:
                         polygon = annotation.segmentation
                         points = [
@@ -74,6 +77,8 @@ class CocoImporter:
                         coordinates = PolygonCoordinates(values=points)
                     elif encord_object.shape == Shape.BITMASK:
                         mask = annotation.segmentation
+                        if not isinstance(mask, NDArray):
+                            raise ValueError("Unhappy")
                         coordinates = BitmaskCoordinates(mask.astype(bool))
                     object_instance = encord_object.create_instance()
                     object_instance.set_for_frames(coordinates, frames=frame_index.frame)
