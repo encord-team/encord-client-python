@@ -37,8 +37,8 @@ logger = logging.getLogger()
 def build_category_id_to_encord_ontology_object_map(
     project: Project,
     category_id_to_feature_hash: Dict[CategoryID, str],
-) -> dict[CategoryID, Object]:
-    map_category_to_encord_object: dict[CategoryID, Object] = {}
+) -> Dict[CategoryID, Object]:
+    map_category_to_encord_object: Dict[CategoryID, Object] = {}
     for id, feature_hash in category_id_to_feature_hash.items():
         object_ = project.ontology_structure.get_child_by_hash(feature_node_hash=feature_hash, type_=Object)
         map_category_to_encord_object[id] = object_
@@ -47,8 +47,8 @@ def build_category_id_to_encord_ontology_object_map(
 
 
 def initialise_label_rows(
-    project: Project, image_id_to_frame_index: dict[ImageID, FrameIndex]
-) -> dict[str, LabelRowV2]:
+    project: Project, image_id_to_frame_index: Dict[ImageID, FrameIndex]
+) -> Dict[str, LabelRowV2]:
     data_hashes = list({frame_index.data_hash for frame_index in image_id_to_frame_index.values()})
     label_rows = project.list_label_rows_v2(data_hashes=data_hashes)
     with project.create_bundle() as bundle:
@@ -60,8 +60,8 @@ def initialise_label_rows(
 def import_coco_labels(
     project: Project,
     coco: CocoRootModel,
-    category_id_to_feature_hash: dict[CategoryID, str],
-    image_id_to_frame_index: dict[ImageID, FrameIndex],
+    category_id_to_feature_hash: Dict[CategoryID, str],
+    image_id_to_frame_index: Dict[ImageID, FrameIndex],
 ) -> None:
     label_rows = initialise_label_rows(project, image_id_to_frame_index)
     category_id_to_objects = build_category_id_to_encord_ontology_object_map(project, category_id_to_feature_hash)

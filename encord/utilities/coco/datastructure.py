@@ -1,7 +1,7 @@
 import importlib.metadata as importlib_metadata
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, NamedTuple
+from typing import Any, List, NamedTuple, Optional, Union
 
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.coordinates import (
@@ -36,12 +36,12 @@ class FrameIndex:
 
 
 class CocoInfoModel(BaseModel):
-    year: int | None
-    version: str | None
-    description: str | None
-    contributor: str | None
-    url: str | None
-    date_created: str | None
+    year: Optional[int]
+    version: Optional[str]
+    description: Optional[str]
+    contributor: Optional[str]
+    url: Optional[str]
+    date_created: Optional[str]
 
 
 class CocoLicenseModel(BaseModel):
@@ -54,17 +54,17 @@ class CocoImageModel(BaseModel):
     id: ImageID
     width: int
     height: int
-    file_name: str | None
-    license: int | None
-    flickr_url: str | None
-    coco_url: str | None
+    file_name: Optional[str]
+    license: Optional[int]
+    flickr_url: Optional[str]
+    coco_url: Optional[str]
     date_captured: datetime
 
 
 class CocoCategoryModel(BaseModel):
     id: CategoryID
     name: str
-    supercategory: str | None
+    supercategory: Optional[str]
 
 
 # ints in documentation but this gives more flexibility
@@ -94,7 +94,7 @@ class PointTuple(NamedTuple):
 
 
 class CocoPolygon(RootModel):
-    root: list[PointTuple]
+    root: List[PointTuple]
 
     @model_validator(mode="before")
     @classmethod
@@ -139,7 +139,7 @@ class CocoAnnotationModel(BaseModel):
     id: int
     image_id: ImageID
     category_id: int
-    segmentation: CocoPolygon | list[CocoPolygon] | CocoRLE
+    segmentation: Union[CocoPolygon, List[CocoPolygon], CocoRLE]
     area: float
     bbox: CocoBoundingBox
     iscrowd: bool
@@ -147,7 +147,7 @@ class CocoAnnotationModel(BaseModel):
 
 class CocoRootModel(BaseModel):
     info: CocoInfoModel
-    categories: list[CocoCategoryModel]
-    images: list[CocoImageModel]
-    annotations: list[CocoAnnotationModel]
-    licenses: list[CocoLicenseModel]
+    categories: List[CocoCategoryModel]
+    images: List[CocoImageModel]
+    annotations: List[CocoAnnotationModel]
+    licenses: List[CocoLicenseModel]
