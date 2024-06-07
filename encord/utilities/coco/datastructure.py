@@ -3,8 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, NamedTuple
 
-from pydantic import BaseModel, RootModel, model_validator
-
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.coordinates import (
     BoundingBoxCoordinates,
@@ -14,7 +12,8 @@ from encord.objects.coordinates import (
 
 try:
     import pycocotools.mask as coco_mask_utils
-except ModuleNotFoundError:
+    from pydantic import BaseModel, RootModel, model_validator
+except ImportError:
     raise ModuleNotFoundError(
         "The optional dependency `pycocotools` must be installed to import coco projects. You can install it with `pip install encord[pycocotools]"
     )
@@ -22,7 +21,7 @@ except ModuleNotFoundError:
 
 pydantic_version_str = importlib_metadata.version("pydantic")
 pydantic_version = int(pydantic_version_str.split(".")[0])
-if pydantic_version < 2:
+if pydantic_version < 3:
     ModuleNotFoundError("To be able to import coco projects, you must have `pydantic>=2.0`")
 
 
