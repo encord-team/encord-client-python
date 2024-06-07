@@ -44,7 +44,6 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
-from encord.utilities.coco.importer import CocoImporter
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
@@ -56,7 +55,11 @@ class Project:
     """
 
     def __init__(
-        self, client: EncordClientProject, project_instance: ProjectDTO, ontology: Ontology, api_client: ApiClient
+        self,
+        client: EncordClientProject,
+        project_instance: ProjectDTO,
+        ontology: Ontology,
+        api_client: ApiClient,
     ):
         self._client = client
         self._project_instance = project_instance
@@ -510,7 +513,10 @@ class Project:
             get_model_training_labels: Whether the `model_training_labels` field should be retrieved.
         """
         return self._client.get_training_metadata(
-            model_iteration_uids, get_created_at, get_training_final_loss, get_model_training_labels
+            model_iteration_uids,
+            get_created_at,
+            get_training_final_loss,
+            get_model_training_labels,
         )
 
     def create_model_row(
@@ -791,7 +797,13 @@ class Project:
             user_email: Filter by the annotator email.
         """
         return self._client.get_label_logs(
-            user_hash, data_hash, from_unix_seconds, to_unix_seconds, after, before, user_email
+            user_hash,
+            data_hash,
+            from_unix_seconds,
+            to_unix_seconds,
+            after,
+            before,
+            user_email,
         )
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
@@ -1069,7 +1081,7 @@ class Project:
             project_hash=self.project_hash,
             after=after,
             before=before,
-            group_by=CollaboratorTimersGroupBy.DATA_UNIT if group_by_data_unit else CollaboratorTimersGroupBy.PROJECT,
+            group_by=(CollaboratorTimersGroupBy.DATA_UNIT if group_by_data_unit else CollaboratorTimersGroupBy.PROJECT),
             page_size=100,
         )
 
@@ -1091,5 +1103,8 @@ class Project:
             category_id_to_feature_hash (Dict[CategoryID, str]): Dictionary mapping category_id as used in the COCO data to the feature hash for the corresponding element in this Ontology
             image_id_to_frame_index (Dict[ImageID, FrameIndex]): Dictionary mapping int to FrameIndex(data_hash, frame_offset) which is used to identify the corresponding frame in the Encord setting
         """
-        coco_importer = CocoImporter(self, labels_dict, category_id_to_feature_hash, image_id_to_frame_index)
-        coco_importer.encode()
+        from encord.utilities.coco.datastructure import CocoRootModel
+        from encord.utilities.coco.importer import import_coco_labels
+
+        coco = CocoRootModel.model_validate(labels_dict)
+        import_coco_labels(self, coco, category_id_to_feature_hash, image_id_to_frame_index)
