@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Protocol, Sequence, Union, runtime_checkable
+from typing import Any, Dict, List, Optional, Protocol, Sequence, Tuple, Union, runtime_checkable
 
 from encord.exceptions import EncordException
 from encord.orm.base_dto import BaseDTO
@@ -111,28 +111,21 @@ def _mask_to_rle(mask: bytes) -> List[int]:
     rle_counts.append(c)
     return rle_counts
 
-def transpose_bytearray(byte_data, shape):
+
+def transpose_bytearray(byte_data: bytes, shape: Tuple[int, int]) -> bytearray:
     """
-    Transpose a 2D array represented by a bytearray.
-    
-    Parameters:
-    - byte_data: bytearray, representing the 2D array
-    - shape: tuple, shape of the original 2D array (rows, cols)
-    
-    Returns:
-    - transposed_byte_data: bytearray, representing the transposed 2D array
+    Transpose a 2D array represented by bytes.
     """
     rows, cols = shape
-    
     # Create a new bytearray to hold the transposed data
     transposed_byte_data = bytearray(len(byte_data))
-    
     # Transpose the 2D array
     for row in range(rows):
         for col in range(cols):
             transposed_byte_data[col * rows + row] = byte_data[row * cols + col]
 
     return transposed_byte_data
+
 
 class BitmaskCoordinates:
     class EncodedBitmask(BaseDTO):
