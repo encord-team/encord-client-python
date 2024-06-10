@@ -71,7 +71,7 @@ class GenericBaseDTO(BaseDTOInterface, BaseModel):
         return self.model_dump(by_alias=by_alias, exclude_none=exclude_none, mode="json")  # type: ignore[attr-defined]
 
 
-def dto_validator(mode: str = "before") -> Callable:
+def dto_validator(mode: Literal["before", "after"] = "before") -> Callable:
     def decorator(func: Callable) -> Callable:
         return model_validator(mode=mode)(func)  # type: ignore
 

@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, Type, TypeVar
+from typing import Any, Callable, Dict, Literal, Type, TypeVar
 
 from pydantic import BaseModel, Field, PrivateAttr, ValidationError, root_validator, validator
 from pydantic.generics import GenericModel
@@ -63,7 +63,7 @@ class GenericBaseDTO(BaseDTOInterface, GenericModel):
         return json.loads(self.json(by_alias=by_alias, exclude_none=exclude_none))  # type: ignore[attr-defined]
 
 
-def dto_validator(mode: str = "before") -> Callable:
+def dto_validator(mode: Literal["before", "after"] = "before") -> Callable:
     def decorator(func: Callable) -> Callable:
         return root_validator(pre=(mode == "before"))(func)  # type: ignore
 
