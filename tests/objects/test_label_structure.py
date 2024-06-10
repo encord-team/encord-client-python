@@ -984,3 +984,11 @@ def test_classification_can_be_added_edited_and_removed(ontology):
     label_row.remove_classification(classification_instance)
 
     assert len(label_row.get_classification_instances()) == 0
+
+
+def test_can_provide_object_classification_hashes():
+    object_instance = box_ontology_item.create_instance(object_hash="ObjectHash")
+    assert object_instance.object_hash == "ObjectHash"
+
+    classification_instance = text_classification.create_instance(classification_hash="ClassificationHash")
+    assert classification_instance.classification_hash == "ClassificationHash"

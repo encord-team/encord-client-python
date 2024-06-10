@@ -32,9 +32,13 @@ class Object(OntologyElement):
     def children(self) -> Sequence[OntologyElement]:
         return self.attributes
 
-    def create_instance(self) -> ObjectInstance:
-        """Create a :class:`encord.objects.ObjectInstance` to be used with a label row."""
-        return ObjectInstance(self)
+    def create_instance(self, object_hash: Optional[str] = None) -> ObjectInstance:
+        """
+        Create a :class:`encord.objects.ObjectInstance` to be used with a label row.
+        Args:
+            object_hash: str = None. object_hash for the created instance
+        """
+        return ObjectInstance(self, object_hash=object_hash)
 
     @classmethod
     def from_dict(cls, d: dict) -> Object:

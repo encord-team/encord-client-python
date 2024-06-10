@@ -32,9 +32,12 @@ class Classification(OntologyElement):
     def children(self) -> Sequence[OntologyElement]:
         return self.attributes
 
-    def create_instance(self) -> ClassificationInstance:
-        """Create a :class:`encord.objects.ClassificationInstance` to be used with a label row."""
-        return ClassificationInstance(self)
+    def create_instance(self, classification_hash: Optional[str] = None) -> ClassificationInstance:
+        """Create a :class:`encord.objects.ClassificationInstance` to be used with a label row.
+        Args:
+            classification_hash: str = None. Classification hash for the created instance.
+        """
+        return ClassificationInstance(self, classification_hash=classification_hash)
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
