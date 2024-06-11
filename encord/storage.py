@@ -627,6 +627,7 @@ class StorageFolder:
         name: Optional[str] = None,
         description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
+        bundle: Optional[Bundle] = None,
     ) -> None:
         """
         Update the folder's modifiable properties. Any parameters that are not provided will not be updated.
@@ -635,6 +636,8 @@ class StorageFolder:
             name: New folder name.
             description: New folder description.
             client_metadata: New client metadata.
+            bundle: Optional :class:`encord.http.Bundle` to use for the operation. If provided, the operation
+                will be bundled into a single server call with other item updates using the same bundle.
 
         Returns:
             None
@@ -642,16 +645,36 @@ class StorageFolder:
         if name is None and description is None and client_metadata is None:
             return
 
-        self._orm_folder = self._api_client.patch(
-            f"storage/folders/{self.uuid}",
-            params=None,
-            payload=PatchFolderPayload(
-                name=name,
-                description=description,
-                client_metadata=client_metadata,
-            ),
-            result_type=orm_storage.StorageFolder,
-        )
+        if bundle is not None:
+            bundled_operation(
+                bundle,
+                operation=self._api_client.get_bound_operation(StorageFolder._patch_multiple_folders),
+                payload=orm_storage.BundledPatchFolderPayload(
+                    folder_patches={
+                        str(self.uuid): PatchFolderPayload(
+                            name=name,
+                            description=description,
+                            client_metadata=client_metadata,
+                        ),
+                    },
+                ),
+                result_mapper=BundleResultMapper[orm_storage.StorageFolder](
+                    result_mapping_predicate=lambda r: str(r.uuid),
+                    result_handler=BundleResultHandler(predicate=str(self.uuid), handler=self._set_orm_folder),
+                ),
+                limit=STORAGE_BUNDLE_CREATE_LIMIT,
+            )
+        else:
+            self._orm_folder = self._api_client.patch(
+                f"storage/folders/{self.uuid}",
+                params=None,
+                payload=PatchFolderPayload(
+                    name=name,
+                    description=description,
+                    client_metadata=client_metadata,
+                ),
+                result_type=orm_storage.StorageFolder,
+            )
 
     def move_to_folder(self, target_folder: Optional[Union["StorageFolder", UUID]]) -> None:
         """
@@ -729,9 +752,12 @@ class StorageFolder:
         """
         Refetch data for the folder.
         """
-        self._orm_folder = self._api_client.get(
-            f"storage/folders/{self.uuid}", params=None, result_type=orm_storage.StorageFolder
+        self._set_orm_folder(
+            self._api_client.get(f"storage/folders/{self.uuid}", params=None, result_type=orm_storage.StorageFolder)
         )
+
+    def _set_orm_folder(self, orm_folder: orm_storage.StorageFolder) -> None:
+        self._orm_folder = orm_folder
 
     def _get_upload_signed_urls(
         self, item_type: StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
@@ -946,6 +972,21 @@ class StorageFolder:
 
         for item in paged_items:
             yield StorageItem(api_client, item)
+
+    @staticmethod
+    def _patch_multiple_folders(
+        api_client: ApiClient,
+        folder_patches: Dict[str, PatchFolderPayload],
+    ) -> List[orm_storage.StorageFolder]:
+        return api_client.patch(
+            "storage/folders/patch-bulk",
+            params=None,
+            payload=orm_storage.PatchFoldersBulkPayload(folder_patches=folder_patches),
+            result_type=Page[orm_storage.StorageFolder],
+        ).results
+
+    def _set_orm_item(self, orm_item: orm_storage.StorageItem) -> None:
+        self._orm_item = orm_item
 
 
 class StorageItem:
