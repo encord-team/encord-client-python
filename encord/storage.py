@@ -985,9 +985,6 @@ class StorageFolder:
             result_type=Page[orm_storage.StorageFolder],
         ).results
 
-    def _set_orm_item(self, orm_item: orm_storage.StorageItem) -> None:
-        self._orm_item = orm_item
-
 
 class StorageItem:
     def __init__(self, api_client: ApiClient, orm_item: orm_storage.StorageItem):
