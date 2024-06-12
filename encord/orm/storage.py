@@ -40,6 +40,13 @@ class StorageLocationName(CamelStrEnum):
     DIRECT_ACCESS = auto()
 
 
+class PathElement(BaseDTO):
+    uuid: UUID
+    parent_uuid: Optional[UUID]
+    name: str
+    synced_dataset_hash: Optional[UUID]
+
+
 class StorageFolder(BaseDTO):
     uuid: UUID
     parent: Optional[UUID]
@@ -51,6 +58,7 @@ class StorageFolder(BaseDTO):
     last_edited_at: datetime
     user_role: StorageUserRole
     synced_dataset_hash: Optional[UUID]
+    path_to_root: List[PathElement]
 
 
 class StorageItem(BaseDTO):
