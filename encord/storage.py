@@ -29,6 +29,7 @@ from encord.orm.storage import (
     ListItemsParams,
     PatchFolderPayload,
     PatchItemPayload,
+    PathElement,
     ReencodeVideoItemsRequest,
     ReencodeVideoItemsResponse,
     StorageFolderSummary,
@@ -73,6 +74,10 @@ class StorageFolder:
             if self._orm_folder.client_metadata is not None:
                 self._parsed_metadata = json.loads(self._orm_folder.client_metadata)
         return self._parsed_metadata
+
+    @property
+    def path_to_root(self) -> List[PathElement]:
+        return self._orm_folder.path_to_root
 
     def list_items(
         self,
