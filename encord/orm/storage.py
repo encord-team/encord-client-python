@@ -278,6 +278,10 @@ class PatchFolderPayload(BaseDTO):
     client_metadata: Optional[dict] = None
 
 
+class PatchFoldersBulkPayload(BaseDTO):
+    folder_patches: Dict[str, PatchFolderPayload]
+
+
 class StorageFolderSummary(BaseDTO):
     files: int
     folders: int
@@ -373,6 +377,15 @@ class BundledPatchItemPayload:
 
     def add(self, other: BundledPatchItemPayload) -> BundledPatchItemPayload:
         self.item_patches.update(other.item_patches)
+        return self
+
+
+@dataclass
+class BundledPatchFolderPayload:
+    folder_patches: Dict[str, PatchFolderPayload]
+
+    def add(self, other: BundledPatchFolderPayload) -> BundledPatchFolderPayload:
+        self.folder_patches.update(other.folder_patches)
         return self
 
 
