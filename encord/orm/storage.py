@@ -9,7 +9,7 @@ from uuid import UUID
 from encord.http.v2.api_client import ApiClient
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, Field
-from encord.orm.dataset import LongPollingStatus
+from encord.orm.dataset import DataUnitError, LongPollingStatus
 
 try:
     from typing import Literal
@@ -142,6 +142,9 @@ class UploadLongPollingState(BaseDTO):
 
     units_error_count: int
     """Number of upload job units that have error status."""
+
+    unit_errors: List[DataUnitError]
+    """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
 
 class CustomerProvidedVideoMetadata(BaseDTO):
