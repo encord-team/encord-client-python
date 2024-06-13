@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Any, Dict, Type, TypeVar, get_origin
+from functools import wraps
+from typing import Any, Callable, Dict, Literal, Type, TypeVar, get_origin
 
 # TODO: invent some dependency version dependent type checking to get rid of this ignore
 from pydantic import (  # type: ignore[attr-defined]
@@ -9,6 +10,7 @@ from pydantic import (  # type: ignore[attr-defined]
     Field,
     ValidationError,
     field_validator,
+    model_validator,
 )
 
 from encord.common.time_parser import parse_datetime
@@ -66,3 +68,10 @@ class GenericBaseDTO(BaseDTOInterface, BaseModel):
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
         return self.model_dump(by_alias=by_alias, exclude_none=exclude_none, mode="json")  # type: ignore[attr-defined]
+
+
+def dto_validator(mode: Literal["before", "after"] = "before") -> Callable:
+    def decorator(func: Callable) -> Callable:
+        return model_validator(mode=mode)(func)  # type: ignore
+
+    return decorator
