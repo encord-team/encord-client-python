@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Iterable, Optional, Tuple, Type, TypeVar
 from uuid import UUID
 
+from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.orm.base_dto import BaseDTO
 
@@ -56,7 +57,7 @@ class WorkflowClient:
             result_type=type_,
         )
 
-    def action(self, stage_uuid: UUID, action: WorkflowAction) -> None:
+    def action(self, stage_uuid: UUID, action: WorkflowAction, *, bundle: Optional[Bundle] = None) -> None:
         self.api_client.post(
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/actions",
             params=None,
