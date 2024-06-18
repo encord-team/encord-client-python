@@ -1013,7 +1013,7 @@ class DataUnitError(BaseDTO):
     """Opaque ID of the process. Please quote this when contacting Encord support."""
 
     action_description: str
-    """Human-readable description of the action that failed (e.g. 'Uploading DICOM series'."""
+    """Human-readable description of the action that failed (e.g. 'Uploading DICOM series')."""
 
 
 class DatasetDataLongPolling(BaseDTO):
