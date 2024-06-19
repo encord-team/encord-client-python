@@ -776,7 +776,7 @@ class StorageLocation(IntEnum):
     AWS = (1,)
     GCP = (2,)
     AZURE = 3
-    OTC = 4
+    S3_COMPATIBLE = 4
 
     NEW_STORAGE = -99
     """
@@ -797,8 +797,8 @@ class StorageLocation(IntEnum):
             return "GCP_STR"
         elif self == StorageLocation.AZURE:
             return "AZURE_STR"
-        elif self == StorageLocation.OTC:
-            return "OTC_STR"
+        elif self == StorageLocation.S3_COMPATIBLE:
+            return "S3_COMPATIBLE_STR"
         else:
             return "NEW_STORAGE"
 
