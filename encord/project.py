@@ -31,6 +31,7 @@ from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
+from encord.utilities.coco_encoder import CocoEncoder
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
@@ -1063,3 +1064,21 @@ class Project:
 
     def list_datasets(self) -> Iterable[ProjectDataset]:
         return self._client.list_project_datasets(self._project_instance.project_hash)
+
+    def export_label_rows_to_COCO(
+        self,
+        label_hashes: Optional[List[str]] = None,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
+    ) -> Dict[str, Any]:
+        label_rows = self.list_label_rows_v2(label_hashes=label_hashes)
+        with self.create_bundle() as bundle:
+            for row in label_rows:
+                row.initialise_labels(
+                    include_object_feature_hashes=include_object_feature_hashes,
+                    include_classification_feature_hashes=include_classification_feature_hashes,
+                    bundle=bundle,
+                )
+        labels = [row.to_encord_dict() for row in label_rows]
+        coco_labels = CocoEncoder(labels, ontology=self.ontology_structure).encode()
+        return coco_labels
