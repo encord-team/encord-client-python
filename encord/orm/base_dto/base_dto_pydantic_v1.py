@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from typing import Any, Dict, Type, TypeVar
 
-from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic import BaseModel, Field, PrivateAttr, ValidationError, validator
 from pydantic.generics import GenericModel
 
 from encord.common.time_parser import parse_datetime
