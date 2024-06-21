@@ -51,7 +51,7 @@ jobs:
       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
-          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}/*.xml
+          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
           check_name: Unit test report (Pydantic 1.x)
 
   unit-tests-python-3-8-pydantic-2:
@@ -71,7 +71,7 @@ jobs:
       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
-          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}/*.xml
+          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
           check_name: Unit test report ((Pydantic 2.x)
 
   integration-tests-python-3-11:
@@ -100,5 +100,5 @@ jobs:
       - name: Publish integration test report Python 3.11
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
-          files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
+          files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           check_name: SDK integration test report
