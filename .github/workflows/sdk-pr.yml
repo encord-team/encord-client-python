@@ -49,7 +49,7 @@ jobs:
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
 
       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
           check_name: Unit test report (Pydantic 1.x)
@@ -69,7 +69,7 @@ jobs:
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
 
       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
           check_name: Unit test report ((Pydantic 2.x)
@@ -98,7 +98,7 @@ jobs:
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
 
       - name: Publish integration test report Python 3.11
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          files: ./encord-backend/projects/sdk-integration-tests/${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           check_name: SDK integration test report
