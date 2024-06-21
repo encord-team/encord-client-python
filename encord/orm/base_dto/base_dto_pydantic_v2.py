@@ -7,6 +7,7 @@ from pydantic import (  # type: ignore[attr-defined]
     ConfigDict,  # type: ignore[attr-defined]
     Extra,
     Field,
+    PrivateAttr,
     ValidationError,
     field_validator,
 )

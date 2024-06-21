@@ -4,6 +4,7 @@ from typing import Iterable, List, Literal, Optional, TypeVar, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
+from encord.http.bundle import Bundle
 from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
@@ -59,14 +60,14 @@ class AnnotationTask(WorkflowTask):
     label_branch_name: str
     assignee: Optional[str]
 
-    def submit(self) -> None:
+    def submit(self, *, bundle: Optional[Bundle] = None) -> None:
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionSubmit(task_uuid=self.uuid))
+        workflow_client.action(stage_uuid, _ActionSubmit(task_uuid=self.uuid), bundle=bundle)
 
-    def assign(self, assignee: str) -> None:
+    def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee))
+        workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
-    def release(self) -> None:
+    def release(self, *, bundle: Optional[Bundle] = None) -> None:
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid))
+        workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
