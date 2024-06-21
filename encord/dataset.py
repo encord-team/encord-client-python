@@ -334,7 +334,7 @@ class Dataset:
             duplicates_behaviour: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also
                 :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`
         """
-        return self._client.link_items(item_uuids, duplicates_behavior.value)
+        return self._client.link_items(item_uuids, duplicates_behavior)
 
     def delete_image_group(self, data_hash: str):
         """

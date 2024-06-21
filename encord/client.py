@@ -81,6 +81,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     AddPrivateDataResponse,
+    DataLinkDuplicatesBehavior,
     DataRow,
     DataRows,
     DatasetAccessSettings,
@@ -587,13 +588,26 @@ class EncordClientDataset(EncordClient):
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
 
-    def link_items(self, item_uuids: List[uuid.UUID], duplicates_behavior: str) -> List[DataRow]:
+    def link_items(
+        self,
+        item_uuids: List[uuid.UUID],
+        duplicates_behavior: DataLinkDuplicatesBehavior = DataLinkDuplicatesBehavior.SKIP,
+    ) -> List[DataRow]:
+        """
+        Link storage items to the dataset, creating new data rows.
+
+        Args:
+            item_uuids: List of item UUIDs to link to the dataset
+            duplicates_behaviour: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also
+                :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`
+        """
+
         data_row_dicts = self._querier.basic_setter(
             DatasetLinkItems,
             uid=self._querier.resource_id,
             payload={
                 "item_uuids": [str(item_uuid) for item_uuid in item_uuids],
-                "duplicates_behavior": duplicates_behavior,
+                "duplicates_behavior": duplicates_behavior.value,
             },
         )
         return DataRow.from_dict_list(data_row_dicts)
