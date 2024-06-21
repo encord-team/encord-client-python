@@ -587,12 +587,16 @@ class EncordClientDataset(EncordClient):
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
 
-    def link_items(self, item_uuids: List[uuid.UUID]) -> List[DataRow]:
-        return self._querier.basic_setter(
+    def link_items(self, item_uuids: List[uuid.UUID], duplicates_behavior: str) -> List[DataRow]:
+        data_row_dicts = self._querier.basic_setter(
             DatasetLinkItems,
             uid=self._querier.resource_id,
-            payload={"item_uuids": [str(item_uuid) for item_uuid in item_uuids]},
+            payload={
+                "item_uuids": [str(item_uuid) for item_uuid in item_uuids],
+                "duplicates_behavior": duplicates_behavior,
+            },
         )
+        return DataRow.from_dict_list(data_row_dicts)
 
     def delete_image_group(self, data_hash: str):
         """
