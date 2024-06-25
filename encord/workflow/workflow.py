@@ -1,3 +1,15 @@
+"""
+---
+title: "Workflow"
+slug: "sdk-ref-workflows"
+hidden: false
+metadata: 
+  title: "Workflows"
+  description: "Encord SDK Workflow class."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from typing import List, Optional, Type, TypeVar, Union

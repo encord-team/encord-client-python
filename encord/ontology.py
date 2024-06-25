@@ -1,3 +1,15 @@
+"""
+---
+title: "Ontology"
+slug: "sdk-ref-ontology"
+hidden: false
+metadata: 
+  title: "Ontology"
+  description: "Encord SDK Ontology class"
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 import datetime
 from typing import Iterable, List, Union
 from uuid import UUID

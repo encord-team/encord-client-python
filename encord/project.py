@@ -1,3 +1,15 @@
+"""
+---
+title: "Project"
+slug: "sdk-ref-project"
+hidden: false
+metadata: 
+  title: "Project"
+  description: "Encord SDK Project class"
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 import datetime
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 from uuid import UUID
