@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - DICOM Metadata"
+slug: "sdk-ref-objects-dicom-metadata"
+hidden: false
+metadata: 
+  title: "Objects - DICOM Metadata"
+  description: "Encord SDK Objects - DICOM Metadata."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from typing import Optional
 
 from encord.orm.base_dto import BaseDTO

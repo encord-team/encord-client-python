@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Bitmask"
+slug: "sdk-ref-objects-bitmask"
+hidden: false
+metadata: 
+  title: "Objects - Bitmask"
+  description: "Encord SDK Objects - Bitmask class."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Protocol, Sequence, Union, runtime_checkable

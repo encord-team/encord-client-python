@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Coordinates"
+slug: "sdk-ref-objects-coordinates"
+hidden: false
+metadata: 
+  title: "Objects - Coordinates"
+  description: "Encord SDK Objects - Coordinates."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

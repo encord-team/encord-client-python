@@ -1,3 +1,15 @@
+"""
+---
+title: "Review Stage"
+slug: "sdk-ref-stage-review"
+hidden: false
+metadata: 
+  title: "Review Stage"
+  description: "Encord SDK Review Stage."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from typing import Iterable, List, Literal, Optional, Union
