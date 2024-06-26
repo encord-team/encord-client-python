@@ -3,7 +3,7 @@
 title: "Objects - Attributes"
 slug: "sdk-ref-objects-attributes"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Attributes"
   description: "Encord SDK Objects - Attributes class."
 category: "64e481b57b6027003f20aaa0"

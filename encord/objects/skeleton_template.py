@@ -3,7 +3,7 @@
 title: "Objects - Skeleton Objects"
 slug: "sdk-ref-objects-skelly"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Skeleton Objects"
   description: "Encord SDK Objects - Skeleton Objects."
 category: "64e481b57b6027003f20aaa0"

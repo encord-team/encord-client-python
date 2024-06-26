@@ -3,7 +3,7 @@
 title: "Objects - Answers"
 slug: "sdk-ref-objects-answer"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Answers"
   description: "Encord SDK Objects - Answers class."
 category: "64e481b57b6027003f20aaa0"

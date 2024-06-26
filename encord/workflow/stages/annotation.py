@@ -3,7 +3,7 @@
 title: "Annotation Stage"
 slug: "sdk-ref-stage-annotation"
 hidden: false
-metadata: 
+metadata:
   title: "Annotation Stage"
   description: "Encord SDK Annotation Stage."
 category: "64e481b57b6027003f20aaa0"

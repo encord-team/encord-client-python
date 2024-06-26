@@ -3,7 +3,7 @@
 title: "Final Stage"
 slug: "sdk-ref-stage-final"
 hidden: false
-metadata: 
+metadata:
   title: "Final Stage"
   description: "Encord SDK Final Stages: Complete and Archive."
 category: "64e481b57b6027003f20aaa0"

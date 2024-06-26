@@ -3,7 +3,7 @@
 title: "Objects - DICOM Metadata"
 slug: "sdk-ref-objects-dicom-metadata"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - DICOM Metadata"
   description: "Encord SDK Objects - DICOM Metadata."
 category: "64e481b57b6027003f20aaa0"

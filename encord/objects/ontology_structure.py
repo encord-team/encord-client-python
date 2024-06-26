@@ -3,7 +3,7 @@
 title: "Objects - Ontology Structure"
 slug: "sdk-ref-objects-ont-structure"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Ontology Structure"
   description: "Encord SDK Objects - Ontology Structure."
 category: "64e481b57b6027003f20aaa0"

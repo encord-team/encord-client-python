@@ -3,7 +3,7 @@
 title: "Objects - Ontology Object"
 slug: "sdk-ref-objects-ont-object"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Ontology Object"
   description: "Encord SDK Objects - Ontology Object."
 category: "64e481b57b6027003f20aaa0"

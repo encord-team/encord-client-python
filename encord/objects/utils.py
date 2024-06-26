@@ -3,7 +3,7 @@
 title: "Objects - Utils"
 slug: "sdk-ref-objects-utils"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Utils"
   description: "Encord SDK Objects - Utils."
 category: "64e481b57b6027003f20aaa0"

@@ -3,7 +3,7 @@
 title: "Objects - Bundled Operations"
 slug: "sdk-ref-objects-bundled-op"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Bundled Operations"
   description: "Encord SDK Objects - Bundled Operations."
 category: "64e481b57b6027003f20aaa0"

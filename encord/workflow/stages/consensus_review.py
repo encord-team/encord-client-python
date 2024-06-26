@@ -3,7 +3,7 @@
 title: "Consensus Review Stage"
 slug: "sdk-ref-stage-consen-review"
 hidden: false
-metadata: 
+metadata:
   title: "Consensus Review Stage"
   description: "Encord SDK Consensus Review Stage."
 category: "64e481b57b6027003f20aaa0"

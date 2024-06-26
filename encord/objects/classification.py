@@ -3,7 +3,7 @@
 title: "Objects - Classification"
 slug: "sdk-ref-objects-classification"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Classification"
   description: "Encord SDK Objects - Classification."
 category: "64e481b57b6027003f20aaa0"

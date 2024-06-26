@@ -3,7 +3,7 @@
 title: "Objects - Frames"
 slug: "sdk-ref-objects-frames"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Frames"
   description: "Encord SDK Objects - Frames."
 category: "64e481b57b6027003f20aaa0"

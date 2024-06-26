@@ -3,7 +3,7 @@
 title: "Objects - Options"
 slug: "sdk-ref-objects-options"
 hidden: false
-metadata: 
+metadata:
   title: "Objects - Options"
   description: "Encord SDK Objects - Options."
 category: "64e481b57b6027003f20aaa0"
