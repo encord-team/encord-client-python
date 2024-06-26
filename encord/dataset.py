@@ -3,7 +3,7 @@
 title: "Dataset"
 slug: "sdk-ref-dataset"
 hidden: false
-metadata: 
+metadata:
   title: "Dataset"
   description: "Encord SDK Dataset class"
 category: "64e481b57b6027003f20aaa0"

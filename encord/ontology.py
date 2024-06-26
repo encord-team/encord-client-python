@@ -3,7 +3,7 @@
 title: "Ontology"
 slug: "sdk-ref-ontology"
 hidden: false
-metadata: 
+metadata:
   title: "Ontology"
   description: "Encord SDK Ontology class"
 category: "64e481b57b6027003f20aaa0"

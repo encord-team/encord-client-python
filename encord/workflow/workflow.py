@@ -3,7 +3,7 @@
 title: "Workflow"
 slug: "sdk-ref-workflows"
 hidden: false
-metadata: 
+metadata:
   title: "Workflows"
   description: "Encord SDK Workflow class."
 category: "64e481b57b6027003f20aaa0"

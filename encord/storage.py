@@ -3,7 +3,7 @@
 title: "Storage"
 slug: "sdk-ref-storage"
 hidden: false
-metadata: 
+metadata:
   title: "Storage"
   description: "Encord SDK StorageFolder and StorageItem classes"
 category: "64e481b57b6027003f20aaa0"

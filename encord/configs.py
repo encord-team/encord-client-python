@@ -3,7 +3,7 @@
 title: "Configs"
 slug: "sdk-ref-configs"
 hidden: false
-metadata: 
+metadata:
   title: "Configs"
   description: "Encord SDK Configs classes."
 category: "64e481b57b6027003f20aaa0"

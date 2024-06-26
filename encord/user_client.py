@@ -3,7 +3,7 @@
 title: "User Client"
 slug: "sdk-ref-user-client"
 hidden: false
-metadata: 
+metadata:
   title: "User Client"
   description: "Encord SDK EncordUserClient classe."
 category: "64e481b57b6027003f20aaa0"

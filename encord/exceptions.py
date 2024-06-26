@@ -3,7 +3,7 @@
 title: "Exceptions"
 slug: "sdk-ref-exceptions"
 hidden: false
-metadata: 
+metadata:
   title: "Exceptions"
   description: "Encord SDK Exceptions."
 category: "64e481b57b6027003f20aaa0"
