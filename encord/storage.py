@@ -1,3 +1,15 @@
+"""
+---
+title: "Storage"
+slug: "sdk-ref-storage"
+hidden: false
+metadata:
+  title: "Storage"
+  description: "Encord SDK StorageFolder and StorageItem classes"
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 import json
 import mimetypes
 import os
