@@ -10,7 +10,6 @@ category: "64e481b57b6027003f20aaa0"
 ---
 """
 
-
 from datetime import datetime
 from pathlib import Path
 from typing import Collection, Dict, Iterable, List, Optional, TextIO, Union
