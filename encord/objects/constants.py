@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Constants"
+slug: "sdk-ref-objects-constant"
+hidden: false
+metadata:
+  title: "Objects - Constants"
+  description: "Encord SDK Objects - Constants."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 # for backwards compatibility

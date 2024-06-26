@@ -1,3 +1,15 @@
+"""
+---
+title: "Annotation Stage"
+slug: "sdk-ref-stage-annotation"
+hidden: false
+metadata:
+  title: "Annotation Stage"
+  description: "Encord SDK Annotation Stage."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from typing import Iterable, List, Literal, Optional, TypeVar, Union

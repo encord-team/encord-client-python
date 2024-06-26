@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Classification Instance"
+slug: "sdk-ref-objects-classification-instance"
+hidden: false
+metadata:
+  title: "Objects - Classification Instance"
+  description: "Encord SDK Objects - Classification Instance."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from collections import defaultdict
