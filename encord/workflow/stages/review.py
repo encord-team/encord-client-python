@@ -27,6 +27,7 @@ class _ReviewTasksQueryParams(TasksQueryParams):
     data_hashes: Optional[List[UUID]] = None
     dataset_hashes: Optional[List[UUID]] = None
     data_title_contains: Optional[str] = None
+    statuses: Optional[List[ReviewTaskStatus]] = None
 
 
 class ReviewStage(WorkflowStageBase):
@@ -39,12 +40,14 @@ class ReviewStage(WorkflowStageBase):
         data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
+        status: Union[ReviewTaskStatus, List[ReviewTaskStatus], None] = None,
     ) -> Iterable[ReviewTask]:
         params = _ReviewTasksQueryParams(
             user_emails=ensure_list(assignee),
             data_hashes=ensure_uuid_list(data_hash),
             dataset_hashes=ensure_uuid_list(dataset_hash),
             data_title_contains=data_title,
+            statuses=ensure_list(status),
         )
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid
