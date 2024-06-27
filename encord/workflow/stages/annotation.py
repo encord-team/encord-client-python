@@ -12,6 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+from enum import Enum, auto
 from typing import Iterable, List, Literal, Optional, TypeVar, Union
 from uuid import UUID
 
@@ -55,6 +56,7 @@ class AnnotationStage(WorkflowStageBase):
 
 class _ActionSubmit(WorkflowAction):
     action: Literal["SUBMIT"] = "SUBMIT"
+    resolve_label_reviews: bool = True
 
 
 class _ActionAssign(WorkflowAction):
@@ -66,7 +68,16 @@ class _ActionRelease(WorkflowAction):
     action: Literal["RELEASE"] = "RELEASE"
 
 
+class AnnotationTaskStatus(str, Enum):
+    NEW = "NEW"
+    ASSIGNED = "ASSIGNED"
+    RELEASED = "RELEASED"
+    SKIPPED = "SKIPPED"
+    REOPENED = "REOPENED"
+
+
 class AnnotationTask(WorkflowTask):
+    status: AnnotationTaskStatus
     data_hash: UUID
     data_title: str
     label_branch_name: str

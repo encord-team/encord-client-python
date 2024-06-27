@@ -12,6 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
@@ -70,6 +71,13 @@ class _ActionRelease(WorkflowAction):
     action: Literal["RELEASE"] = "RELEASE"
 
 
+class ConsensusReviewTaskStatus(str, Enum):
+    NEW = "NEW"
+    ASSIGNED = "ASSIGNED"
+    RELEASED = "RELEASED"
+    REOPENED = "REOPENED"
+
+
 class ConsensusReviewOption(BaseDTO):
     annotator: str
     label_branch_name: str
@@ -77,9 +85,10 @@ class ConsensusReviewOption(BaseDTO):
 
 
 class ConsensusReviewTask(WorkflowTask):
-    assignee: Optional[str]
+    status: ConsensusReviewTaskStatus
     data_hash: UUID
     data_title: str
+    assignee: Optional[str]
     options: List[ConsensusReviewOption]
 
     def approve(self, *, bundle: Optional[Bundle] = None) -> None:

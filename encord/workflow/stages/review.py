@@ -12,6 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
@@ -70,10 +71,18 @@ class _ActionRelease(WorkflowAction):
     action: Literal["RELEASE"] = "RELEASE"
 
 
+class ReviewTaskStatus(str, Enum):
+    NEW = "NEW"
+    ASSIGNED = "ASSIGNED"
+    RELEASED = "RELEASED"
+    REOPENED = "REOPENED"
+
+
 class ReviewTask(WorkflowTask):
-    assignee: Optional[str]
+    status: ReviewTaskStatus
     data_hash: UUID
     data_title: str
+    assignee: Optional[str]
 
     def approve(self, *, bundle: Optional[Bundle] = None) -> None:
         workflow_client, stage_uuid = self._get_client_data()
