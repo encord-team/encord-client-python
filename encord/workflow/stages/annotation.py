@@ -74,6 +74,7 @@ class AnnotationTaskStatus(str, Enum):
     RELEASED = "RELEASED"
     SKIPPED = "SKIPPED"
     REOPENED = "REOPENED"
+    COMPLETED = "COMPLETED"
 
 
 class AnnotationTask(WorkflowTask):
