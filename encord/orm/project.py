@@ -1,3 +1,15 @@
+"""
+---
+title: "Project DEPRECATED"
+slug: "sdk-ref-project-deprecated"
+hidden: false
+metadata:
+  title: "Project DEPRECATED"
+  description: "Encord SDK Project DEPRECATED."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

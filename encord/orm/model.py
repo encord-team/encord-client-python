@@ -1,3 +1,15 @@
+"""
+---
+title: "Model"
+slug: "sdk-ref-model"
+hidden: false
+metadata:
+  title: "Model"
+  description: "Encord SDK Model."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

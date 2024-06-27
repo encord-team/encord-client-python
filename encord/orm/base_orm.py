@@ -1,3 +1,15 @@
+"""
+---
+title: "BaseORM"
+slug: "sdk-ref-base-orm"
+hidden: false
+metadata:
+  title: "Base ORM"
+  description: "Encord SDK Base ORM."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

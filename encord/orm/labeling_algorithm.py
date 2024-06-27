@@ -1,3 +1,15 @@
+"""
+---
+title: "Labeling Algorithm"
+slug: "sdk-ref-labeling-algorithm"
+hidden: false
+metadata:
+  title: "Labeling Algorithm"
+  description: "Encord SDK Labbeling Algorithm."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

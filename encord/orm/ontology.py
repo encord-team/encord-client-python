@@ -1,3 +1,15 @@
+"""
+---
+title: "Ontology DEPRECATED"
+slug: "sdk-ref-ontology-deprecated"
+hidden: false
+metadata:
+  title: "Ontology DEPRECATED"
+  description: "Encord SDK Ontology DEPRECATED."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 # Copyright (c) 2023 Cord Technologies Limited
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may

@@ -1,3 +1,15 @@
+"""
+---
+title: "Querier"
+slug: "sdk-ref-querier"
+hidden: false
+metadata:
+  title: "Querier"
+  description: "Encord SDK Querier."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

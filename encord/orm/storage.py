@@ -1,3 +1,15 @@
+"""
+---
+title: "ORM Storage"
+slug: "sdk-ref-orm-storage"
+hidden: false
+metadata:
+  title: "ORM Storage"
+  description: "Encord SDK ORM Storage."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
