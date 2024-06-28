@@ -1,15 +1,3 @@
-"""
----
-title: "Label Log"
-slug: "sdk-ref-label-log"
-hidden: false
-metadata:
-  title: "Label Log"
-  description: "Encord SDK Label Log."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 from __future__ import annotations
 
 from datetime import datetime

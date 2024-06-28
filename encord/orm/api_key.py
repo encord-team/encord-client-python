@@ -1,15 +1,3 @@
-"""
----
-title: "API Key Meta"
-slug: "sdk-ref-api-key-meta"
-hidden: false
-metadata:
-  title: "API Key Meta"
-  description: "Encord SDK API Key Meta."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

@@ -1,15 +1,3 @@
-"""
----
-title: "Dataset with User Role
-slug: "sdk-ref-dataset-with-user-role"
-hidden: false
-metadata:
-  title: "Dataset with User Role"
-  description: "Encord SDK Dataset with User Role."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 #
 # Copyright (c) 2022 Cord Technologies Limited
 #

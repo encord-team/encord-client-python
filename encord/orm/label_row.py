@@ -1,15 +1,3 @@
-"""
----
-title: "Label Row"
-slug: "sdk-ref-label-row"
-hidden: false
-metadata:
-  title: "Label Row"
-  description: "Encord SDK Label Row."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #
