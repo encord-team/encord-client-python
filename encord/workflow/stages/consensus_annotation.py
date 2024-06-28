@@ -32,6 +32,10 @@ class _AnnotationTasksQueryParams(TasksQueryParams):
 class ConsensusAnnotationStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.CONSENSUS_ANNOTATION] = WorkflowStageType.CONSENSUS_ANNOTATION
 
+    """
+    The Annotate stage in a Consensus Project.
+    """
+
     def get_tasks(
         self,
         *,
@@ -40,6 +44,25 @@ class ConsensusAnnotationStage(WorkflowStageBase):
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
     ) -> Iterable[ConsensusAnnotationTask]:
+        """
+        **Params**
+
+        - assignee: User assigned to a task.
+        - data_hash: Unique ID for the data unit.
+        - dataset_hash: Unique ID for the dataset that the data unit belongs to.
+        - data_title: Name of the data unit.
+
+        **Returns**
+
+        Returns tasks in the stage with the following information:
+
+        - uuid: Unique identifier for the task.
+        - created_at: Time and date the task was created.
+        - updated_at: Time and date the task was last edited.
+        - data_hash: Unique identifier for the data unit.
+        - data_title: Name/title of the data unit.
+        - subtasks: A list of subtasks that follow the task format for AnotationTask.
+        """
         params = _AnnotationTasksQueryParams(
             user_emails=ensure_list(assignee),
             data_hashes=ensure_uuid_list(data_hash),
@@ -55,6 +78,20 @@ class ConsensusAnnotationStage(WorkflowStageBase):
 
 
 class ConsensusAnnotationTask(WorkflowTask):
+    """
+    Tasks in the Annotate stage of a Consensus Project.
+
+    **Params**
+
+    - data_hash: Unique ID for the data unit.
+    - data_title: Name of the data unit.
+    - subtasks: List[AnnotationTask] = Field(default_factory=list): Tasks from individual annotators in a Consensus Project.
+
+    Returns
+
+    Returns nothing.
+    """
+
     data_hash: UUID
     data_title: str
     subtasks: List[AnnotationTask] = Field(default_factory=list)
