@@ -1,15 +1,3 @@
-"""
----
-title: "Utilities - Labels"
-slug: "sdk-ref-utilities-labels"
-hidden: false
-metadata:
-  title: "Client Utilities"
-  description: "Encord SDK Client Utilities."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

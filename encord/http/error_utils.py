@@ -1,15 +1,3 @@
-"""
----
-title: "HTTP Error Utils"
-slug: "sdk-ref-http-error-utils"
-hidden: false
-metadata:
-  title: "HTTP Error Utils"
-  description: "Encord SDK HTTP Error Utils."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

@@ -1,15 +1,3 @@
-"""
----
-title: "Request"
-slug: "sdk-ref-request"
-hidden: false
-metadata:
-  title: "Request"
-  description: "Encord SDK Request."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

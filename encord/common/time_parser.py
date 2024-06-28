@@ -1,15 +1,3 @@
-"""
----
-title: "Time Parser"
-slug: "sdk-ref-time-parser"
-hidden: false
-metadata:
-  title: "Time Parser"
-  description: "Encord SDK Time Parser."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 import contextlib
 from datetime import datetime
 from functools import lru_cache

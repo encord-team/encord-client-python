@@ -1,15 +1,3 @@
-"""
----
-title: "V2 Error Utils"
-slug: "sdk-ref-v2-error-utils"
-hidden: false
-metadata:
-  title: "V2 Error Utils"
-  description: "Encord SDK V2 Error Utils."
-category: "64e481b57b6027003f20aaa0"
----
-"""
-
 from encord.exceptions import (
     AuthenticationError,
     AuthorisationError,
