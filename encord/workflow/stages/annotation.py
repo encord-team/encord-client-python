@@ -55,6 +55,7 @@ class AnnotationStage(WorkflowStageBase):
 
 class _ActionSubmit(WorkflowAction):
     action: Literal["SUBMIT"] = "SUBMIT"
+    resolve_label_reviews: bool = True
 
 
 class _ActionAssign(WorkflowAction):
