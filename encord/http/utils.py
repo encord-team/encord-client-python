@@ -1,3 +1,15 @@
+"""
+---
+title: "CloudUpload"
+slug: "sdk-ref-cloudupload"
+hidden: false
+metadata:
+  title: "CloudUpload"
+  description: "Encord SDK CloudUpload class."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 import logging
 import mimetypes
 import os.path

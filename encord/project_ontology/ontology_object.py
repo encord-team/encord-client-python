@@ -1,3 +1,15 @@
+"""
+---
+title: "OntologyObject DEPRECATED"
+slug: "sdk-ref-ontology-object-deprecated"
+hidden: false
+metadata:
+  title: "OntologyObject DEPRECATED"
+  description: "Encord SDK OntologyObject DEPRECATED."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from dataclasses import dataclass
 
 from encord.project_ontology.object_type import ObjectShape

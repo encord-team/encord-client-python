@@ -1,3 +1,15 @@
+"""
+---
+title: "Constants"
+slug: "sdk-ref-constants"
+hidden: false
+metadata:
+  title: "Constants"
+  description: "Encord SDK Constants."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from dataclasses import dataclass
 
 DEFAULT_CONNECTION_RETRIES = 3

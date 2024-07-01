@@ -1,3 +1,15 @@
+"""
+---
+title: "ClassificationType DEPRECATED"
+slug: "sdk-ref-classification-type-deprecated"
+hidden: false
+metadata:
+  title: "ClassificationType DEPRECATED"
+  description: "Encord SDK ClassificationType DEPRECATED."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from enum import Enum
 
 

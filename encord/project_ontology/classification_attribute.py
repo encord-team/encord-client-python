@@ -1,3 +1,15 @@
+"""
+---
+title: "ClassificationAttribute DEPRECATED"
+slug: "sdk-ref-classification-attribute-deprecated"
+hidden: false
+metadata:
+  title: "ClassificationAttribute DEPRECATED"
+  description: "Encord SDK ClassificationAttribute DEPRECATED."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from dataclasses import dataclass
 from typing import Iterable, Optional
 

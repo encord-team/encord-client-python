@@ -1,3 +1,15 @@
+"""
+---
+title: "Utilities - Client"
+slug: "sdk-ref-utilities-client"
+hidden: false
+metadata:
+  title: "Utilities - Client"
+  description: "Encord SDK Utilities - Client."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #

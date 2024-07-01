@@ -1,3 +1,15 @@
+"""
+---
+title: "Utilities - Project"
+slug: "sdk-ref-utilities-project"
+hidden: false
+metadata:
+  title: "Utilities - Project"
+  description: "Encord SDK Utilities - Project."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from typing import List, Set
 
 from encord.orm.model import ModelConfiguration

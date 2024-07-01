@@ -1,3 +1,15 @@
+"""
+---
+title: "Bundle (Batch)"
+slug: "sdk-ref-bundle"
+hidden: false
+metadata:
+  title: "Bundle"
+  description: "Encord SDK Bundle (Batch)."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 import logging
