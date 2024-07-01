@@ -32,9 +32,9 @@ class ReviewStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.REVIEW] = WorkflowStageType.REVIEW
 
     """
-    The Review stage for non-Consensus Projects.
+    The Review stage for Workflows.
 
-    You can use this stage for Consensus and non-Consensus Projects.
+    This stage can appear in Consensus and non-Consensus Workflows.
 
     ❗️ CRITICAL INFORMATION: To move (approve or reject) tasks in a REVIEW stage, you MUST assign yourself as the user assigned to the task.
     """
@@ -64,7 +64,7 @@ class ReviewStage(WorkflowStageBase):
 
         **Returns**
 
-        Returns tasks in the stage with the following information:
+        Returns annotation tasks for the stage:
 
         - uuid: Unique identifier for the task.
         - created_at: Time and date the task was created.
@@ -118,10 +118,6 @@ class ReviewTask(WorkflowTask):
     - reject: Rejects a task.
     - assign: Assigns a task to a user.
     - release: Releases a task from the current user.
-
-    **Returns**
-
-    Returns nothing.
     """
 
     def approve(self, *, bundle: Optional[Bundle] = None) -> None:

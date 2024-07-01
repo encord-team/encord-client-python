@@ -33,7 +33,7 @@ class ConsensusReviewStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.CONSENSUS_REVIEW] = WorkflowStageType.CONSENSUS_REVIEW
 
     """
-    The Review stage for Consensus Projects.
+    The Review stage for Consensus Workflows.
 
     ❗️ CRITICAL INFORMATION: To move (approve or reject) tasks in a REVIEW stage, you MUST assign yourself as the user assigned to the task.
     """

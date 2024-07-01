@@ -76,8 +76,4 @@ class FinalStageTask(WorkflowTask):
 
     - dataset_hash: Unique ID for the dataset that the data unit belongs to.
     - data_title: Name of the data unit.
-
-    **Returns**
-
-    Returns nothing.
     """

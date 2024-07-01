@@ -90,7 +90,7 @@ class Workflow:
 
         **Returns**
 
-        Returns Workflow stages from non-Consensus and Consensus Projects.
+        Returns Workflow stages (`type_`) from non-Consensus and Consensus Projects.
         """
         for stage in self.stages:
             if (uuid is not None and stage.uuid == _ensure_uuid(uuid)) or (name is not None and stage.title == name):

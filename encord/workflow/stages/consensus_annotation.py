@@ -54,7 +54,7 @@ class ConsensusAnnotationStage(WorkflowStageBase):
 
         **Returns**
 
-        Returns tasks in the stage with the following information:
+        Returns a list of ConsensusAnnotationTask classes, with the following information:
 
         - uuid: Unique identifier for the task.
         - created_at: Time and date the task was created.
@@ -86,10 +86,6 @@ class ConsensusAnnotationTask(WorkflowTask):
     - data_hash: Unique ID for the data unit.
     - data_title: Name of the data unit.
     - subtasks: List[AnnotationTask] = Field(default_factory=list): Tasks from individual annotators in a Consensus Project.
-
-    Returns
-
-    Returns nothing.
     """
 
     data_hash: UUID
