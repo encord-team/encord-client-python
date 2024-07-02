@@ -32,6 +32,12 @@ class _AnnotationTasksQueryParams(TasksQueryParams):
 class AnnotationStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.ANNOTATION] = WorkflowStageType.ANNOTATION
 
+    """
+    An Annotate stage in a non-Consensus Project.
+
+    You can use this stage in Consensus and non-Consensus Projects.
+    """
+
     def get_tasks(
         self,
         *,
@@ -40,6 +46,17 @@ class AnnotationStage(WorkflowStageBase):
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
     ) -> Iterable[AnnotationTask]:
+        """
+        **Params**
+
+        - name: Name of the stage.
+        - uuid: Unique identifier for the stage.
+        - type_: The type of stage.
+
+        **Returns
+
+        Returns Annotatoin Workflow stages from non-Consensus and Consensus Projects.
+        """
         params = _AnnotationTasksQueryParams(
             user_emails=ensure_list(assignee),
             data_hashes=ensure_uuid_list(data_hash),
@@ -72,6 +89,23 @@ class AnnotationTask(WorkflowTask):
     data_title: str
     label_branch_name: str
     assignee: Optional[str]
+
+    """
+    Tasks in non-Consensus Annotate stage.
+
+    **Params**
+
+    - assignee: User assigned to a task.
+    - data_hash: Unique ID for the data unit.
+    - data_title: Name of the data unit.
+    - label_branch_name: Name of the label branch
+
+    Allowed actions:
+
+    - submit: Submits a task for review.
+    - assign: Assigns a task to a user.
+    - release: Releases a task from the current user.
+    """
 
     def submit(self, *, bundle: Optional[Bundle] = None) -> None:
         workflow_client, stage_uuid = self._get_client_data()

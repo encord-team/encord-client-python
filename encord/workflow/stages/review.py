@@ -31,6 +31,14 @@ class _ReviewTasksQueryParams(TasksQueryParams):
 class ReviewStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.REVIEW] = WorkflowStageType.REVIEW
 
+    """
+    The Review stage for Workflows.
+
+    This stage can appear in Consensus and non-Consensus Workflows.
+
+    ❗️ CRITICAL INFORMATION: To move (approve or reject) tasks in a REVIEW stage, you MUST assign yourself as the user assigned to the task.
+    """
+
     def get_tasks(
         self,
         *,
@@ -45,6 +53,26 @@ class ReviewStage(WorkflowStageBase):
             dataset_hashes=ensure_uuid_list(dataset_hash),
             data_title_contains=data_title,
         )
+
+        """
+        **Parameters**
+
+        - assignee: User assigned to a task.
+        - data_hash: Unique ID for the data unit.
+        - dataset_hash: Unique ID for the dataset that the data unit belongs to.
+        - data_title: Name of the data unit.
+
+        **Returns**
+
+        Returns annotation tasks for the stage:
+
+        - uuid: Unique identifier for the task.
+        - created_at: Time and date the task was created.
+        - updated_at: Time and date the task was last edited.
+        - assignee: The user currently assigned to the task. The value is None if no one is assigned to the task.
+        - data_hash: Unique identifier for the data unit.
+        - data_title: Name/title of the data unit.
+        """
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
@@ -74,6 +102,23 @@ class ReviewTask(WorkflowTask):
     assignee: Optional[str]
     data_hash: UUID
     data_title: str
+
+    """
+    Tasks in non-Consensus Review stages.
+
+    **Params**
+
+    - assignee: Optional[str]
+    - data_hash: UUID
+    - data_title: str
+
+    Allowed actions:
+
+    - approve: Approves a task
+    - reject: Rejects a task.
+    - assign: Assigns a task to a user.
+    - release: Releases a task from the current user.
+    """
 
     def approve(self, *, bundle: Optional[Bundle] = None) -> None:
         workflow_client, stage_uuid = self._get_client_data()

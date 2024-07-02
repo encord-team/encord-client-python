@@ -32,6 +32,12 @@ class _ReviewTasksQueryParams(TasksQueryParams):
 class ConsensusReviewStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.CONSENSUS_REVIEW] = WorkflowStageType.CONSENSUS_REVIEW
 
+    """
+    The Review stage for Consensus Workflows.
+
+    ❗️ CRITICAL INFORMATION: To move (approve or reject) tasks in a REVIEW stage, you MUST assign yourself as the user assigned to the task.
+    """
+
     def get_tasks(
         self,
         *,
@@ -47,6 +53,26 @@ class ConsensusReviewStage(WorkflowStageBase):
             data_title_contains=data_title,
         )
 
+        """
+        **Params**
+
+        - assignee: User assigned to a task.
+        - data_hash: Unique ID for the data unit.
+        - dataset_hash: Unique ID for the dataset that the data unit belongs to.
+        - data_title: Name of the data unit.
+
+        **Returns**
+
+        Returns tasks in the stage with the following information:
+
+        - uuid: Unique identifier for the task.
+        - created_at: Time and date the task was created.
+        - updated_at: Time and date the task was last edited.
+        - assignee: The user currently assigned to the task. The value is None if no one is assigned to the task.
+        - data_hash: Unique identifier for the data unit.
+        - data_title: Name/title of the data unit.
+        - options: List of ConsensusReviewOptions. ConsensusReviewOptions are the labels avaialble for each subtask. ConsensusReviewOptions include the following information: annotator, label_branch_name, label_hash.
+        """
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ConsensusReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
@@ -81,6 +107,28 @@ class ConsensusReviewTask(WorkflowTask):
     data_hash: UUID
     data_title: str
     options: List[ConsensusReviewOption]
+
+    """
+    Tasks in the Review stage of a Consensus Project.
+
+    **Params**
+
+    - assignee: User assigned to a task.
+    - data_hash: Unique ID for the data unit.
+    - data_title: Name of the data unit.
+    - options: Specify the labels for the task.
+
+    Allowed actions:
+
+    - approve: Approves a task
+    - reject: Rejects a task.
+    - assign: Assigns a task to a user.
+    - release: Releases a task from the current user.
+
+    **Returns**
+
+    Returns nothing.
+    """
 
     def approve(self, *, bundle: Optional[Bundle] = None) -> None:
         workflow_client, stage_uuid = self._get_client_data()
