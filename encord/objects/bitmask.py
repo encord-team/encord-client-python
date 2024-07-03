@@ -124,6 +124,30 @@ def _mask_to_rle(mask: bytes) -> List[int]:
     return rle_counts
 
 
+def transpose_bytearray(byte_data, shape):
+    """
+    Transpose a 2D array represented by a bytearray.
+
+    Parameters:
+    - byte_data: bytearray, representing the 2D array
+    - shape: tuple, shape of the original 2D array (rows, cols)
+
+    Returns:
+    - transposed_byte_data: bytearray, representing the transposed 2D array
+    """
+    rows, cols = shape
+
+    # Create a new bytearray to hold the transposed data
+    transposed_byte_data = bytearray(len(byte_data))
+
+    # Transpose the 2D array
+    for row in range(rows):
+        for col in range(cols):
+            transposed_byte_data[col * rows + row] = byte_data[row * cols + col]
+
+    return transposed_byte_data
+
+
 class BitmaskCoordinates:
     class EncodedBitmask(BaseDTO):
         top: int

@@ -1,8 +1,9 @@
 import json
 from datetime import datetime
-from typing import Any, Dict, Type, TypeVar
+from functools import wraps
+from typing import Any, Callable, Dict, Type, TypeVar
 
-from pydantic import BaseModel, Field, PrivateAttr, ValidationError, validator
+from pydantic import BaseModel, Field, PrivateAttr, ValidationError, root_validator, validator
 from pydantic.generics import GenericModel
 
 from encord.common.time_parser import parse_datetime
@@ -60,3 +61,10 @@ class GenericBaseDTO(BaseDTOInterface, GenericModel):
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
         # Pydantic v1 is missing the 'model_dump()' method, the below is suboptimal but works
         return json.loads(self.json(by_alias=by_alias, exclude_none=exclude_none))  # type: ignore[attr-defined]
+
+
+def dto_validator(mode: str = "before") -> Callable:
+    def decorator(func: Callable) -> Callable:
+        return root_validator(pre=(mode == "before"))(func)  # type: ignore
+
+    return decorator

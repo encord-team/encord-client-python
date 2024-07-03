@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass, field
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     List,
@@ -72,14 +71,14 @@ def import_coco_labels(
         if frame_idx is None:
             # TODO not clear how to propagate errors
             logger.warning(
-                f'Image id `{annotation.image_id}` form `labels_dict["annotations"][{i}]` could not be matched with the provided `image_id_to_frame_index`. Skipping this annotation.'
+                f'Image id `{annotation.image_id}` from `labels_dict["annotations"][{i}]` could not be matched with the provided `image_id_to_frame_index`. Skipping this annotation.'
             )
             continue
 
         label_row = label_rows.get(frame_idx.data_hash)
         if label_row is None:
             logger.warning(
-                f"Data hash `{frame_idx.data_hash}` form `image_id_to_frame_index` could not be matched with a data hash in the provided `project`. Skipping annotation ad index {i}."
+                f"Data hash `{frame_idx.data_hash}` from `image_id_to_frame_index` could not be matched with a data hash in the provided `project`. Skipping annotation ad index {i}."
             )
             # TODO not clear how to propagate errors
             continue
@@ -119,7 +118,7 @@ def import_coco_labels(
                 isinstance(segmentation, list) and isinstance(segmentation[0], CocoPolygon)
             ):
                 raise ValueError(
-                    f"A mismatch between the format in the `labels_dict` and the expected shape in the ontology object with feature node hash {ont_obj.feature_node_hash} was detected for annotation id {annotation.id}. Expected format was a polygon or a list of polygons."
+                    f"A mismatch between the format in the `labels_dict` and the expected shape in the ontology object with feature node hash {ont_obj.feature_node_hash} was detected for annotation id {annotation.id}. Expected format was a polygon or a list of polygons. {segmentation}"
                 )
             if isinstance(segmentation, CocoPolygon):
                 segmentation = [segmentation]
