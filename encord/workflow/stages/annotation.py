@@ -53,9 +53,9 @@ class AnnotationStage(WorkflowStageBase):
         - uuid: Unique identifier for the stage.
         - type_: The type of stage.
 
-        **Returns
+        **Returns**
 
-        Returns Annotatoin Workflow stages from non-Consensus and Consensus Projects.
+        Returns Annotation Workflow tasks (see `AnnotationTask` class) from non-Consensus and Consensus Projects.
         """
         params = _AnnotationTasksQueryParams(
             user_emails=ensure_list(assignee),

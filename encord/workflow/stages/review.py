@@ -64,7 +64,8 @@ class ReviewStage(WorkflowStageBase):
 
         **Returns**
 
-        Returns annotation tasks for the stage:
+        Returns a list of Review tasks (see `ReviewTask` class) in the stage with the following information:
+:
 
         - uuid: Unique identifier for the task.
         - created_at: Time and date the task was created.
@@ -114,7 +115,7 @@ class ReviewTask(WorkflowTask):
 
     Allowed actions:
 
-    - approve: Approves a task
+    - approve: Approves a task.
     - reject: Rejects a task.
     - assign: Assigns a task to a user.
     - release: Releases a task from the current user.
