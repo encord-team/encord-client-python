@@ -84,16 +84,6 @@ class PointTuple(NamedTuple):
 class CocoPolygon(BaseDTO):
     values: List[PointTuple]
 
-    @dto_validator(mode="before")
-    @classmethod
-    def validate_polygon(cls, _value: Any) -> Any:
-        if not (isinstance(_value, list) and len(_value) > 0):
-            return None
-        if not isinstance(_value[0], list):
-            return None
-
-        return {"values": [(_value[0][i], _value[0][i + 1]) for i in range(0, len(_value[0]), 2)]}
-
     def to_encord(self, img_w: int, img_h: int) -> PolygonCoordinates:
         return PolygonCoordinates(values=[PointCoordinate(x=p.x / img_w, y=p.y / img_h) for p in self.values])
 
