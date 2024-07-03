@@ -63,7 +63,7 @@ class ConsensusReviewStage(WorkflowStageBase):
 
         **Returns**
 
-        Returns tasks in the stage with the following information:
+        Returns a list of Consensus Review tasks (see `ConsensusReviewTask` class) in the stage with the following information:
 
         - uuid: Unique identifier for the task.
         - created_at: Time and date the task was created.
@@ -120,7 +120,7 @@ class ConsensusReviewTask(WorkflowTask):
 
     Allowed actions:
 
-    - approve: Approves a task
+    - approve: Approves a task.
     - reject: Rejects a task.
     - assign: Assigns a task to a user.
     - release: Releases a task from the current user.

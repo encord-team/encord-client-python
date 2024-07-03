@@ -54,7 +54,7 @@ class FinalStage(WorkflowStageBase):
 
         **Returns**
 
-        Returns tasks in the stage with the following information:
+        Returns a list of tasks (see `FinalStageTask` class) in the stage with the following information:
 
         - uuid: Unique identifier for the task.
         - created_at: Time and date the task was created.
