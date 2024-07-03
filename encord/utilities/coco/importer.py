@@ -11,13 +11,7 @@ from typing import (
     ValuesView,
 )
 
-from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
-from encord.objects.coordinates import (
-    BoundingBoxCoordinates,
-    PointCoordinate,
-    PolygonCoordinates,
-)
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.objects.ontology_object import Object
 from encord.project import Project

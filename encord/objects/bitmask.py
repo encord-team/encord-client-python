@@ -128,13 +128,22 @@ def transpose_bytearray(byte_data: bytes, shape: Tuple[int, int]) -> bytearray:
     """
     Transpose a 2D array represented by bytes.
     """
-    rows, cols = shape
-    # Create a new bytearray to hold the transposed data
-    transposed_byte_data = bytearray(len(byte_data))
-    # Transpose the 2D array
-    for row in range(rows):
-        for col in range(cols):
-            transposed_byte_data[col * rows + row] = byte_data[row * cols + col]
+    np_found = True
+    try:
+        import numpy as np
+    except ImportError:
+        np_found = False
+    if not np_found:
+        rows, cols = shape
+        # Create a new bytearray to hold the transposed data
+        transposed_byte_data = bytearray(len(byte_data))
+        # Transpose the 2D array
+        for row in range(rows):
+            for col in range(cols):
+                transposed_byte_data[col * rows + row] = byte_data[row * cols + col]
+    else:
+        np_byte_data = np.frombuffer(byte_data, dtype=np.int8).reshape(shape)
+        transposed_byte_data = bytearray(np_byte_data.T.tobytes())
 
     return transposed_byte_data
 
