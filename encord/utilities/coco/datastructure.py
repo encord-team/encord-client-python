@@ -3,9 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List, NamedTuple, Optional, Union
 
-# import pycocotools.mask as coco_mask_utils
 from encord.objects.bitmask import (
-    # BitmaskCoordinates,
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,
@@ -13,15 +11,7 @@ from encord.objects.bitmask import (
     transpose_bytearray,
 )
 from encord.objects.coordinates import BitmaskCoordinates, BoundingBoxCoordinates, PointCoordinate, PolygonCoordinates
-from encord.orm.base_dto import BaseDTO, Field, dto_validator
-
-# try:
-#     import pycocotools.mask as coco_mask_utils
-#     from pydantic import BaseModel, RootModel, model_validator
-# except ImportError:
-#     raise ModuleNotFoundError(
-#         "The optional dependency `pycocotools` must be installed to import coco projects. You can install it with `pip install encord[pycocotools]"
-#     )
+from encord.orm.base_dto import BaseDTO, dto_validator
 
 ImageID = int
 CategoryID = int
@@ -117,16 +107,18 @@ class CocoRLE(BaseDTO):
     def parse_rle(cls, _value: Any) -> Any:
         if not isinstance(_value, dict):
             # This is not RLE
-            return None
+            raise ValueError
+
+        # Note: It's essential to transpose the input and output coordinates when using pycocotools' functions,
+        # in order to address the distinction between treating masks as C-contiguous (row-major order, Encord's
+        # implementation) versus pycocotools' expectation of Fortran-contiguous (column-major order, COCO's API
+        # implementation) data.
 
         if isinstance(_value["counts"], list):
-            mask = _rle_to_mask(_value["counts"])
+            mask = _rle_to_mask(_value["counts"], _value["size"][0] * _value["size"][1])
             mask = transpose_bytearray(mask, shape=(_value["size"][1], _value["size"][0]))
             rle = {"size": _value["size"], "counts": _rle_to_string(_mask_to_rle(mask))}
-            # return cls(size=_value["size"], counts=_rle_to_string(_value["counts"]))
         elif isinstance(_value["counts"], str):
-            # return cls(size=_value["size"], counts=_value["counts"])
-            # rle = {"size": _value["size"], _value["counts"]]}
             mask = _rle_to_mask(_string_to_rle(_value["counts"]), _value["size"][0] * _value["size"][1])
             mask = transpose_bytearray(mask, shape=(_value["size"][1], _value["size"][0]))
             rle_str = _rle_to_string(_mask_to_rle(mask))
@@ -140,10 +132,21 @@ class CocoRLE(BaseDTO):
             top=0, left=0, height=self.size.height, width=self.size.width, rle_string=self.counts
         )
         return BitmaskCoordinates(encoded_bitmask)
-        # return BitmaskCoordinates(coco_mask_utils.decode(self.dict()).astype(bool))
 
 
 class CocoAnnotationModel(BaseDTO):
+    @dto_validator(mode="before")
+    def polygon_validator(cls, _value):
+        segm = _value["segmentation"]
+        if isinstance(segm, list) and len(segm) > 0 and isinstance(segm[0], list):
+            coords = [(segm[0][i], segm[0][i + 1]) for i in range(0, len(segm[0]), 2)]
+            poly = CocoPolygon.from_dict({"values": coords})
+            _value["segmentation"] = poly
+        elif isinstance(segm, dict) and "counts" in segm:
+            rle = CocoRLE.from_dict(segm)
+            _value["segmentation"] = rle
+        return _value
+
     id: int
     image_id: ImageID
     category_id: int

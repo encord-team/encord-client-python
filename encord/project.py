@@ -1106,5 +1106,5 @@ class Project:
         from encord.utilities.coco.datastructure import CocoRootModel
         from encord.utilities.coco.importer import import_coco_labels
 
-        coco = CocoRootModel.model_validate(labels_dict)
+        coco = CocoRootModel.from_dict(labels_dict)
         import_coco_labels(self, coco, category_id_to_feature_hash, image_id_to_frame_index)
