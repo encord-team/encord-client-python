@@ -1,3 +1,15 @@
+"""
+---
+title: "Enums"
+slug: "sdk-ref-enums"
+hidden: false
+metadata:
+  title: "Enums"
+  description: "Encord SDK Enums."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from typing import Any

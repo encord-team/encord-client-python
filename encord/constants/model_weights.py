@@ -1,3 +1,15 @@
+"""
+---
+title: "Model Weights"
+slug: "sdk-ref-model-weights"
+hidden: false
+metadata:
+  title: "Model Weights"
+  description: "Encord SDK Model Weights."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 #
 # Copyright (c) 2023 Cord Technologies Limited
 #
