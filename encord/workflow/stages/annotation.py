@@ -23,6 +23,15 @@ from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
 
 
+class AnnotationTaskStatus(str, Enum):
+    NEW = "NEW"
+    ASSIGNED = "ASSIGNED"
+    RELEASED = "RELEASED"
+    SKIPPED = "SKIPPED"
+    REOPENED = "REOPENED"
+    COMPLETED = "COMPLETED"
+
+
 class _AnnotationTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
     data_hashes: Optional[List[UUID]] = None
@@ -69,15 +78,6 @@ class _ActionAssign(WorkflowAction):
 
 class _ActionRelease(WorkflowAction):
     action: Literal["RELEASE"] = "RELEASE"
-
-
-class AnnotationTaskStatus(str, Enum):
-    NEW = "NEW"
-    ASSIGNED = "ASSIGNED"
-    RELEASED = "RELEASED"
-    SKIPPED = "SKIPPED"
-    REOPENED = "REOPENED"
-    COMPLETED = "COMPLETED"
 
 
 class AnnotationTask(WorkflowTask):

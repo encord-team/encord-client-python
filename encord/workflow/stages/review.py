@@ -22,6 +22,13 @@ from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
 
 
+class ReviewTaskStatus(str, Enum):
+    NEW = "NEW"
+    ASSIGNED = "ASSIGNED"
+    RELEASED = "RELEASED"
+    REOPENED = "REOPENED"
+
+
 class _ReviewTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
     data_hashes: Optional[List[UUID]] = None
@@ -72,13 +79,6 @@ class _ActionAssign(WorkflowAction):
 
 class _ActionRelease(WorkflowAction):
     action: Literal["RELEASE"] = "RELEASE"
-
-
-class ReviewTaskStatus(str, Enum):
-    NEW = "NEW"
-    ASSIGNED = "ASSIGNED"
-    RELEASED = "RELEASED"
-    REOPENED = "REOPENED"
 
 
 class ReviewTask(WorkflowTask):
