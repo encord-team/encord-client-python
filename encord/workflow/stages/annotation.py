@@ -12,6 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+from enum import Enum, auto
 from typing import Iterable, List, Literal, Optional, TypeVar, Union
 from uuid import UUID
 
@@ -22,11 +23,21 @@ from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
 
 
+class AnnotationTaskStatus(str, Enum):
+    NEW = "NEW"
+    ASSIGNED = "ASSIGNED"
+    RELEASED = "RELEASED"
+    SKIPPED = "SKIPPED"
+    REOPENED = "REOPENED"
+    COMPLETED = "COMPLETED"
+
+
 class _AnnotationTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
     data_hashes: Optional[List[UUID]] = None
     dataset_hashes: Optional[List[UUID]] = None
     data_title_contains: Optional[str] = None
+    statuses: Optional[List[AnnotationTaskStatus]] = None
 
 
 class AnnotationStage(WorkflowStageBase):
@@ -45,6 +56,7 @@ class AnnotationStage(WorkflowStageBase):
         data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
+        status: Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]] = None,
     ) -> Iterable[AnnotationTask]:
         """
         **Params**
@@ -62,6 +74,7 @@ class AnnotationStage(WorkflowStageBase):
             data_hashes=ensure_uuid_list(data_hash),
             dataset_hashes=ensure_uuid_list(dataset_hash),
             data_title_contains=data_title,
+            statuses=ensure_list(status),
         )
 
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=AnnotationTask):
@@ -85,6 +98,7 @@ class _ActionRelease(WorkflowAction):
 
 
 class AnnotationTask(WorkflowTask):
+    status: AnnotationTaskStatus
     data_hash: UUID
     data_title: str
     label_branch_name: str
