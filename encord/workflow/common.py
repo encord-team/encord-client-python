@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
 from uuid import UUID
 
-from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
+from encord.http.bundle import Bundle, bundled_operation
 from encord.http.v2.api_client import ApiClient
 from encord.orm.base_dto import BaseDTO, PrivateAttr
 
@@ -42,7 +42,8 @@ class WorkflowAction(BaseDTO):
     task_uuid: UUID
 
 
-T = TypeVar("T", bound=WorkflowTask)
+TaskT = TypeVar("TaskT", bound=WorkflowTask)
+ReviewT = TypeVar("ReviewT", bound=BaseDTO)
 
 
 @dataclass
@@ -61,7 +62,7 @@ class WorkflowClient:
     api_client: ApiClient
     project_hash: UUID
 
-    def get_tasks(self, stage_uuid: UUID, params: TasksQueryParams, type_: Type[T]) -> Iterable[T]:
+    def get_tasks(self, stage_uuid: UUID, params: TasksQueryParams, type_: Type[TaskT]) -> Iterable[TaskT]:
         return self.api_client.get_paged_iterator(
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks",
             params=params,
@@ -83,5 +84,27 @@ class WorkflowClient:
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/actions",
             params=None,
             payload=actions,
+            result_type=None,
+        )
+
+    def get_label_reviews(self, stage_uuid: UUID, task_uuid: UUID, type_: Type[ReviewT]) -> Iterable[ReviewT]:
+        return self.api_client.get_paged_iterator(
+            path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks/{task_uuid}/reviews",
+            params=TasksQueryParams(),
+            result_type=type_,
+        )
+
+    def label_review_action(
+        self,
+        stage_uuid: UUID,
+        task_uuid: UUID,
+        review_uuid: UUID,
+        action: WorkflowAction,
+        *,
+        bundle: Optional[Bundle] = None,
+    ) -> Iterable[ReviewT]:
+        return self.api_client.post(
+            path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks/{task_uuid}/reviews/{review_uuid}/actions",
+            params=TasksQueryParams(),
             result_type=None,
         )

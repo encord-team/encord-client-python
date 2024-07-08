@@ -18,8 +18,38 @@ from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
+from encord.orm.base_dto import BaseDTO, Field, PrivateAttr
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
+
+
+class LabelReviewStatus(str, Enum):
+    STUB = "STUB"
+
+
+class _LabelReviewActionApprove(BaseDTO):
+    pass
+
+
+class _LabelReviewActionReject(BaseDTO):
+    pass
+
+
+class LabelReview(BaseDTO):
+    _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
+
+    uuid: UUID = Field(alias="reviewUuid")
+    status: LabelReviewStatus = LabelReviewStatus.STUB
+
+    granularity_type: str
+    granularity_hash: str
+
+    def approve(self, *, bundle: Optional[Bundle] = None):
+        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client.action(stage_uuid, _LabelReviewActionApprove(task_uuid=self.uuid), bundle=bundle)
+
+    def reject(self, *, bundle: Optional[Bundle] = None):
+        pass
 
 
 class ReviewTaskStatus(str, Enum):
@@ -177,3 +207,9 @@ class ReviewTask(WorkflowTask):
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
+
+    def get_label_reviews(self) -> Iterable[LabelReview]:
+        workflow_client, stage_uuid = self._get_client_data()
+        for r in workflow_client.get_label_reviews(stage_uuid, self.uuid, type_=LabelReview):
+            r._workflow_client = self._workflow_client
+            yield r

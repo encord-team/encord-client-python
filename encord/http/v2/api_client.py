@@ -20,7 +20,7 @@ from encord.http.v2.error_utils import handle_error_response
 from encord.http.v2.payloads import Page
 from encord.orm.base_dto import BaseDTO, BaseDTOInterface
 
-T = TypeVar("T", bound=Union[BaseDTOInterface, uuid.UUID, int, str])
+T = TypeVar("T", bound=Union[Sequence[BaseDTOInterface], BaseDTOInterface, uuid.UUID, int, str])
 
 
 class ApiClient:
