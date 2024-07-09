@@ -787,7 +787,7 @@ class EncordUserClient:
     def create_storage_folder(
         self,
         name: str,
-        description: Optional[str],
+        description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         parent_folder: Optional[Union[StorageFolder, UUID]] = None,
     ) -> StorageFolder:
