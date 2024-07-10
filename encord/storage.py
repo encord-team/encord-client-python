@@ -59,7 +59,7 @@ STORAGE_BUNDLE_CREATE_LIMIT = 1000
 class StorageFolder:
     """
     Represents a storage folder within the Encord system.
-    
+
     Attributes:
         api_client (ApiClient): The API client used for making requests.
         orm_folder (orm_storage.StorageFolder): ORM representation of the storage folder.
@@ -167,8 +167,8 @@ class StorageFolder:
 
         Args:
             search (Optional[str]): Search string to filter items by name.
-            is_in_dataset (Optional[bool]): Filter items by whether they are linked to any dataset. 
-                                            `True` and `False` select only linked and only unlinked items, respectively. 
+            is_in_dataset (Optional[bool]): Filter items by whether they are linked to any dataset.
+                                            `True` and `False` select only linked and only unlinked items, respectively.
                                             `None` includes all items regardless of their dataset links.
             item_types (Optional[List[StorageItemType]]): Filter items by type.
             order (orm_storage.FoldersSortBy): Sort order. Defaults to orm_storage.FoldersSortBy.NAME.
@@ -205,6 +205,7 @@ class StorageFolder:
         """
         self._api_client.delete(f"storage/folders/{self.uuid}", params=None, result_type=None)
 
+
 def upload_image(
     self,
     file_path: Union[Path, str],
@@ -218,9 +219,9 @@ def upload_image(
     Args:
         file_path (Union[Path, str]): Path to the image file (e.g., '/home/user/data/image.png').
         title (Optional[str]): The image title. If unspecified, this will be the file name.
-        client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image. 
+        client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image.
                                                      Should be a dictionary that is JSON-serializable.
-        cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object 
+        cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
                                                      to overwrite the default values.
 
     Returns:
@@ -230,9 +231,7 @@ def upload_image(
         AuthorizationError: If the user is not authorized to access the folder.
         EncordException: If the image could not be uploaded, e.g., due to being in an unsupported format.
     """
-    upload_url_info = self._get_upload_signed_urls(
-        item_type=StorageItemType.IMAGE, count=1, frames_subfolder_name=None
-    )
+    upload_url_info = self._get_upload_signed_urls(item_type=StorageItemType.IMAGE, count=1, frames_subfolder_name=None)
     if len(upload_url_info) != 1:
         raise EncordException("Can't access upload location")
 
@@ -264,6 +263,7 @@ def upload_image(
     else:
         return upload_result.items_with_names[0].item_uuid
 
+
 def upload_video(
     self,
     file_path: Union[Path, str],
@@ -279,13 +279,13 @@ def upload_video(
         file_path (Union[Path, str]): Path to the video file (e.g., '/home/user/data/video.mp4').
         title (Optional[str]): The video title. If unspecified, this will be the file name. This title should include an extension.
                                For example, "encord_video.mp4".
-        client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the video. 
+        client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the video.
                                                     Should be a dictionary that is JSON-serializable.
-        video_metadata (Optional[CustomerProvidedVideoMetadata]): Optional media metadata for a video file; if provided, 
-                                                                  Encord service will skip frame synchronization checks and 
-                                                                  will use the values specified here to render the video 
+        video_metadata (Optional[CustomerProvidedVideoMetadata]): Optional media metadata for a video file; if provided,
+                                                                  Encord service will skip frame synchronization checks and
+                                                                  will use the values specified here to render the video
                                                                   in the label editor.
-        cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object to 
+        cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object to
                                                      overwrite the default values.
 
     Returns:
@@ -295,9 +295,7 @@ def upload_video(
         AuthorizationError: If the user is not authorized to access the folder.
         EncordException: If the video could not be uploaded, e.g., due to being in an unsupported format.
     """
-    upload_url_info = self._get_upload_signed_urls(
-        item_type=StorageItemType.VIDEO, count=1, frames_subfolder_name=None
-    )
+    upload_url_info = self._get_upload_signed_urls(item_type=StorageItemType.VIDEO, count=1, frames_subfolder_name=None)
     if len(upload_url_info) != 1:
         raise EncordException("Can't access upload location")
 
@@ -334,6 +332,7 @@ def upload_video(
     else:
         return upload_result.items_with_names[0].item_uuid
 
+
 def re_encode_videos(self, storage_items: List[UUID], process_title: str, force_full_reencoding: bool) -> UUID:
     """
     Re-encodes the specified video items.
@@ -357,6 +356,7 @@ def re_encode_videos(self, storage_items: List[UUID], process_title: str, force_
         result_type=UUID,
     )
 
+
 def get_re_encoding_status(self, process_hash: UUID) -> ReencodeVideoItemsResponse:
     """
     Retrieves the status of a re-encoding process.
@@ -370,6 +370,7 @@ def get_re_encoding_status(self, process_hash: UUID) -> ReencodeVideoItemsRespon
     return self._api_client.get(
         f"/storage/items/reencode/{process_hash}", params=None, result_type=ReencodeVideoItemsResponse
     )
+
 
 def create_dicom_series(
     self,
@@ -443,6 +444,7 @@ def create_dicom_series(
     else:
         return upload_result.items_with_names[0].item_uuid
 
+
 def create_image_group(
     self,
     file_paths: Collection[Union[Path, str]],
@@ -479,6 +481,7 @@ def create_image_group(
         client_metadata=client_metadata,
         cloud_upload_settings=cloud_upload_settings,
     )
+
 
 def create_image_sequence(
     self,
@@ -517,6 +520,7 @@ def create_image_sequence(
         client_metadata=client_metadata,
         cloud_upload_settings=cloud_upload_settings,
     )
+
 
 def _create_image_group_or_sequence(
     self,
@@ -593,6 +597,7 @@ def _create_image_group_or_sequence(
     else:
         return upload_result.items_with_names[0].item_uuid
 
+
 def add_private_data_to_folder_start(
     self,
     integration_id: str,
@@ -612,6 +617,7 @@ def add_private_data_to_folder_start(
     """
     return self._add_data_to_folder_start(integration_id, private_files, ignore_errors)
 
+
 def add_private_data_to_folder_get_result(
     self,
     upload_job_id: UUID,
@@ -628,6 +634,7 @@ def add_private_data_to_folder_get_result(
         orm_storage.UploadLongPollingState: The state of the upload job.
     """
     return self._add_data_to_folder_get_result(upload_job_id, timeout_seconds)
+
 
 def list_subfolders(
     self,
@@ -664,6 +671,7 @@ def list_subfolders(
         ),
     )
 
+
 def find_subfolders(
     self,
     search: Optional[str] = None,
@@ -698,6 +706,7 @@ def find_subfolders(
             page_size=page_size,
         ),
     )
+
 
 def find_items(
     self,
@@ -744,6 +753,7 @@ def find_items(
 
     return StorageFolder._list_items(self._api_client, f"storage/folders/{self.uuid}/items", params)
 
+
 def get_summary(self) -> StorageFolderSummary:
     """
     Get a summary of the folder (total size, number of items, etc).
@@ -759,6 +769,7 @@ def get_summary(self) -> StorageFolderSummary:
         params=None,
         result_type=StorageFolderSummary,
     )
+
 
 def update(
     self,
@@ -814,6 +825,7 @@ def update(
             result_type=orm_storage.StorageFolder,
         )
 
+
 def move_to_folder(self, target_folder: Optional[Union["StorageFolder", UUID]]) -> None:
     """
     Move the folder to another folder (specify folder object or UUID), or to the root level if `target_folder` is None.
@@ -836,6 +848,7 @@ def move_to_folder(self, target_folder: Optional[Union["StorageFolder", UUID]]) 
     )
 
     self.refetch_data()
+
 
 def move_items_to_folder(
     self,
@@ -871,6 +884,7 @@ def move_items_to_folder(
         result_type=None,
     )
 
+
 def delete_storage_items(self, item_uuids: List[UUID], remove_unused_frames: bool = True) -> None:
     """
     Delete storage items by their UUIDs.
@@ -878,7 +892,7 @@ def delete_storage_items(self, item_uuids: List[UUID], remove_unused_frames: boo
     Args:
         item_uuids (List[UUID]): List of UUIDs of items to delete. All the items should be immediate children
             of the current folder.
-        remove_unused_frames (bool): If `True` (default), remove individual images or DICOM files from image groups or 
+        remove_unused_frames (bool): If `True` (default), remove individual images or DICOM files from image groups or
             DICOM series that are not used in any other item.
 
     Returns:
@@ -891,6 +905,7 @@ def delete_storage_items(self, item_uuids: List[UUID], remove_unused_frames: boo
         result_type=None,  # we don't need a result here, even though the server provides it
     )
 
+
 def refetch_data(self) -> None:
     """
     Refetch data for the folder.
@@ -901,6 +916,7 @@ def refetch_data(self) -> None:
     self._set_orm_folder(
         self._api_client.get(f"storage/folders/{self.uuid}", params=None, result_type=orm_storage.StorageFolder)
     )
+
 
 def _set_orm_folder(self, orm_folder: orm_storage.StorageFolder) -> None:
     """
@@ -913,6 +929,7 @@ def _set_orm_folder(self, orm_folder: orm_storage.StorageFolder) -> None:
         None
     """
     self._orm_folder = orm_folder
+
 
 def _get_upload_signed_urls(
     self, item_type: StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
@@ -941,6 +958,7 @@ def _get_upload_signed_urls(
 
     return urls.results
 
+
 def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str:
     """
     Guess the title based on the file path if not provided.
@@ -958,6 +976,7 @@ def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str
     if isinstance(file_path, str):
         file_path = Path(file_path)
     return file_path.name
+
 
 def _get_content_type(self, file_path: Union[Path, str], item_type: StorageItemType) -> str:
     """
@@ -982,6 +1001,7 @@ def _get_content_type(self, file_path: Union[Path, str], item_type: StorageItemT
     else:
         raise ValueError(f"Unsupported upload item type `{item_type}`")
 
+
 def _upload_local_file(
     self,
     file_path: Union[Path, str],
@@ -1005,8 +1025,16 @@ def _upload_local_file(
     """
     content_type = self._get_content_type(file_path, item_type)
 
-    max_retries = cloud_upload_settings.max_retries if cloud_upload_settings.max_retries is not None else DEFAULT_REQUESTS_SETTINGS.max_retries
-    backoff_factor = cloud_upload_settings.backoff_factor if cloud_upload_settings.backoff_factor is not None else DEFAULT_REQUESTS_SETTINGS.backoff_factor
+    max_retries = (
+        cloud_upload_settings.max_retries
+        if cloud_upload_settings.max_retries is not None
+        else DEFAULT_REQUESTS_SETTINGS.max_retries
+    )
+    backoff_factor = (
+        cloud_upload_settings.backoff_factor
+        if cloud_upload_settings.backoff_factor is not None
+        else DEFAULT_REQUESTS_SETTINGS.backoff_factor
+    )
 
     _upload_single_file(
         str(file_path),
@@ -1018,6 +1046,7 @@ def _upload_local_file(
         max_retries=max_retries,
         backoff_factor=backoff_factor,
     )
+
 
 def _add_data(
     self,
@@ -1054,6 +1083,7 @@ def _add_data(
         raise encord.exceptions.EncordException(f"folder.add_data errors occurred {res.errors}")
     else:
         raise ValueError(f"res.status={res.status}, this should never happen")
+
 
 def _add_data_to_folder_start(
     self,
@@ -1115,6 +1145,7 @@ def _add_data_to_folder_start(
 
     return upload_job_id
 
+
 def _add_data_to_folder_get_result(
     self,
     upload_job_id: UUID,
@@ -1172,6 +1203,7 @@ def _add_data_to_folder_get_result(
 
             time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
 
+
 @staticmethod
 def _get_folder(api_client: ApiClient, folder_uuid: UUID) -> "StorageFolder":
     """
@@ -1184,10 +1216,9 @@ def _get_folder(api_client: ApiClient, folder_uuid: UUID) -> "StorageFolder":
     Returns:
         StorageFolder: The storage folder object.
     """
-    orm_folder = api_client.get(
-        f"storage/folders/{folder_uuid}", params=None, result_type=orm_storage.StorageFolder
-    )
+    orm_folder = api_client.get(f"storage/folders/{folder_uuid}", params=None, result_type=orm_storage.StorageFolder)
     return StorageFolder(api_client, orm_folder)
+
 
 @staticmethod
 def _list_folders(
@@ -1216,6 +1247,7 @@ def _list_folders(
 
     for orm_folder in paged_folders:
         yield StorageFolder(api_client, orm_folder)
+
 
 @staticmethod
 def _list_items(
@@ -1248,6 +1280,7 @@ def _list_items(
 
     for item in paged_items:
         yield StorageItem(api_client, item)
+
 
 @staticmethod
 def _patch_multiple_folders(
@@ -1409,6 +1442,7 @@ class StorageItem:
         """Optional[int]: The frame count of the storage item."""
         return self._orm_item.frame_count
 
+
 def get_signed_url(self, refetch: bool = False) -> Optional[str]:
     """
     Get a signed URL for downloading the item.
@@ -1549,6 +1583,7 @@ def delete(self, remove_unused_frames=True) -> None:
         payload=orm_storage.DeleteItemsPayload(child_uuids=[self.uuid], remove_unused_frames=remove_unused_frames),
         result_type=None,  # we don't need a result here, even though the server provides it
     )
+
 
 def move_to_folder(
     self,
