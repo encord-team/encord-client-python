@@ -59,15 +59,19 @@ class AnnotationStage(WorkflowStageBase):
         status: Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]] = None,
     ) -> Iterable[AnnotationTask]:
         """
-        **Params**
+        Retrieves tasks for the AnnotationStage.
 
-        - name: Name of the stage.
-        - uuid: Unique identifier for the stage.
-        - type_: The type of stage.
+        **Parameters**
+
+        - `assignee` (Union[List[str], str, None]): A list of user emails or a single user email to filter tasks by assignee.
+        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
+        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
+        - `data_title` (Optional[str]): A string to filter tasks by data title.
+        - `status` (Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]]): A status or a list of statuses to filter tasks by their status.
 
         **Returns**
 
-        Returns Annotation Workflow tasks (see `AnnotationTask` class) from non-Consensus and Consensus Projects.
+        An iterable of `AnnotationTask` instances from both non-Consensus and Consensus Projects.
         """
         params = _AnnotationTasksQueryParams(
             user_emails=ensure_list(assignee),
@@ -105,30 +109,53 @@ class AnnotationTask(WorkflowTask):
     assignee: Optional[str]
 
     """
-    Tasks in non-Consensus Annotate stage.
+    Represents a task in a non-Consensus Annotate stage.
 
-    **Params**
+    **Attributes**
 
-    - assignee: User assigned to a task.
-    - data_hash: Unique ID for the data unit.
-    - data_title: Name of the data unit.
-    - label_branch_name: Name of the label branch
+    - `status` (AnnotationTaskStatus): The current status of the task.
+    - `data_hash` (UUID): Unique ID for the data unit.
+    - `data_title` (str): Name of the data unit.
+    - `label_branch_name` (str): Name of the label branch.
+    - `assignee` (Optional[str]): User assigned to the task.
 
-    Allowed actions:
+    **Allowed actions**
 
-    - submit: Submits a task for review.
-    - assign: Assigns a task to a user.
-    - release: Releases a task from the current user.
+    - `submit`: Submits a task for review.
+    - `assign`: Assigns a task to a user.
+    - `release`: Releases a task from the current user.
     """
 
     def submit(self, *, bundle: Optional[Bundle] = None) -> None:
+        """
+        Submits the task for review.
+
+        **Parameters**
+
+        - `bundle` (Optional[Bundle]): Optional bundle to be included with the submission.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionSubmit(task_uuid=self.uuid), bundle=bundle)
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
+        """
+        Assigns the task to a user.
+
+        **Parameters**
+
+        - `assignee` (str): The email of the user to assign the task to.
+        - `bundle` (Optional[Bundle]): Optional bundle to be included with the assignment.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
+        """
+        Releases the task from the current user.
+
+        **Parameters**
+
+        - `bundle` (Optional[Bundle]): Optional bundle to be included with the release.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
