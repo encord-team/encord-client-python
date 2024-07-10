@@ -857,6 +857,7 @@ class Project:
         """
         return self._client.set_label_status(label_hash, label_status)
 
+    @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def get_label_row(
         self,
         uid: str,
@@ -904,6 +905,7 @@ class Project:
             include_reviews=include_reviews,
         )
 
+    @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def get_label_rows(
         self,
         uids: List[str],
@@ -984,6 +986,7 @@ class Project:
             include_reviews=include_reviews,
         )
 
+    @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def save_label_row(self, uid, label, validate_before_saving: bool = False):
         """
         DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
@@ -1013,6 +1016,7 @@ class Project:
         """
         return self._client.save_label_row(uid, label, validate_before_saving)
 
+    @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def create_label_row(self, uid: str):
         """
         DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
