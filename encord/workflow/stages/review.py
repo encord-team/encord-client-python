@@ -20,11 +20,15 @@ from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
 from encord.orm.base_dto import BaseDTO, Field, PrivateAttr
 from encord.orm.workflow import WorkflowStageType
-from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
+from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowClient, WorkflowStageBase, WorkflowTask
 
 
 class LabelReviewStatus(str, Enum):
-    STUB = "STUB"
+    NEW = "NEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    RESOLVED = "RESOLVED"
+    REOPENED = "REOPENED"
 
 
 class _LabelReviewActionApprove(BaseDTO):
@@ -39,7 +43,7 @@ class LabelReview(BaseDTO):
     _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
 
     uuid: UUID = Field(alias="reviewUuid")
-    status: LabelReviewStatus = LabelReviewStatus.STUB
+    status: LabelReviewStatus
 
     granularity_type: str
     granularity_hash: str
