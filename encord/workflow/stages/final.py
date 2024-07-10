@@ -39,29 +39,30 @@ class FinalStage(WorkflowStageBase):
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
     ) -> Iterable[FinalStageTask]:
+        """
+        Retrieves tasks for the FinalStage.
+
+        **Parameters**
+
+        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID(s) for the data unit(s).
+        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID(s) for the dataset(s) that the data unit(s) belongs to.
+        - `data_title` (Optional[str]): A string to filter tasks by the data unit's name.
+
+        **Returns**
+
+        An iterable of `FinalStageTask` instances with the following information:
+        - `uuid`: Unique identifier for the task.
+        - `created_at`: Time and date the task was created.
+        - `updated_at`: Time and date the task was last edited.
+        - `data_hash`: Unique identifier for the data unit.
+        - `data_title`: Name/title of the data unit.
+        """
         params = _FinalTasksQueryParams(
             data_hashes=ensure_uuid_list(data_hash),
             dataset_hashes=ensure_uuid_list(dataset_hash),
             data_title_contains=data_title,
         )
 
-        """
-        **Parameters**
-
-        - data_hash: Unique ID for the data unit.
-        - dataset_hash: Unique ID for the dataset that the data unit belongs to.
-        - data_title: Name of the data unit.
-
-        **Returns**
-
-        Returns a list of tasks (see `FinalStageTask` class) in the stage with the following information:
-
-        - uuid: Unique identifier for the task.
-        - created_at: Time and date the task was created.
-        - updated_at: Time and date the task was last edited.
-        - data_hash: Unique identifier for the data unit.
-        - data_title: Name/title of the data unit.
-        """
         yield from self._workflow_client.get_tasks(self.uuid, params, type_=FinalStageTask)
 
 
@@ -70,10 +71,10 @@ class FinalStageTask(WorkflowTask):
     data_title: str
 
     """
-    Tasks in a FinalStage can only be queried. No actions can be taken on the task.
+    Represents tasks in a FinalStage, which can only be queried. No actions can be taken on the task.
 
-    **Parameters**
+    **Attributes**
 
-    - dataset_hash: Unique ID for the dataset that the data unit belongs to.
-    - data_title: Name of the data unit.
+    - `data_hash` (UUID): Unique ID for the data unit.
+    - `data_title` (str): Name of the data unit.
     """
