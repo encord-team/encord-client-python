@@ -44,8 +44,6 @@ class ReviewStage(WorkflowStageBase):
     The Review stage for Workflows.
 
     This stage can appear in Consensus and non-Consensus Workflows.
-
-    ❗️ CRITICAL INFORMATION: To move (approve or reject) tasks in a REVIEW stage, you MUST assign yourself as the user assigned to the task.
     """
 
     def get_tasks(
