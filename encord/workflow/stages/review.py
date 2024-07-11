@@ -13,14 +13,21 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from enum import Enum
-from typing import Iterable, List, Literal, Optional, Union
+from typing import Iterable, List, Literal, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
 from encord.orm.base_dto import BaseDTO, Field, PrivateAttr
 from encord.orm.workflow import WorkflowStageType
-from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowClient, WorkflowStageBase, WorkflowTask
+from encord.workflow.common import (
+    TasksQueryParams,
+    WorkflowAction,
+    WorkflowClient,
+    WorkflowReviewAction,
+    WorkflowStageBase,
+    WorkflowTask,
+)
 
 
 class LabelReviewStatus(str, Enum):
@@ -31,16 +38,22 @@ class LabelReviewStatus(str, Enum):
     REOPENED = "REOPENED"
 
 
-class _LabelReviewActionApprove(BaseDTO):
-    pass
+class _LabelReviewActionApprove(WorkflowReviewAction):
+    action: Literal["APPROVE"] = "APPROVE"
 
 
-class _LabelReviewActionReject(BaseDTO):
-    pass
+class _LabelReviewActionReject(WorkflowReviewAction):
+    action: Literal["REJECT"] = "REJECT"
+
+
+class _LabelReviewActionReopen(WorkflowReviewAction):
+    action: Literal["REOPEN"] = "REOPEN"
 
 
 class LabelReview(BaseDTO):
     _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
+    _stage_uuid: Optional[UUID] = PrivateAttr(None)
+    _task_uuid: Optional[UUID] = PrivateAttr(None)
 
     uuid: UUID = Field(alias="reviewUuid")
     status: LabelReviewStatus
@@ -48,12 +61,29 @@ class LabelReview(BaseDTO):
     granularity_type: str
     granularity_hash: str
 
+    def _get_client_data(self) -> Tuple[WorkflowClient, UUID, UUID]:
+        assert self._workflow_client
+        assert self._stage_uuid
+        assert self._task_uuid
+        return self._workflow_client, self._stage_uuid, self._task_uuid
+
     def approve(self, *, bundle: Optional[Bundle] = None):
-        workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _LabelReviewActionApprove(task_uuid=self.uuid), bundle=bundle)
+        workflow_client, stage_uuid, task_uuid = self._get_client_data()
+        workflow_client.label_review_action(
+            stage_uuid, task_uuid, _LabelReviewActionApprove(review_uuid=self.uuid), bundle=bundle
+        )
 
     def reject(self, *, bundle: Optional[Bundle] = None):
-        pass
+        workflow_client, stage_uuid, task_uuid = self._get_client_data()
+        workflow_client.label_review_action(
+            stage_uuid, task_uuid, _LabelReviewActionReject(review_uuid=self.uuid), bundle=bundle
+        )
+
+    def reopen(self, *, bundle: Optional[Bundle] = None):
+        workflow_client, stage_uuid, task_uuid = self._get_client_data()
+        workflow_client.label_review_action(
+            stage_uuid, task_uuid, _LabelReviewActionReopen(review_uuid=self.uuid), bundle=bundle
+        )
 
 
 class ReviewTaskStatus(str, Enum):
@@ -216,4 +246,6 @@ class ReviewTask(WorkflowTask):
         workflow_client, stage_uuid = self._get_client_data()
         for r in workflow_client.get_label_reviews(stage_uuid, self.uuid, type_=LabelReview):
             r._workflow_client = self._workflow_client
+            r._stage_uuid = self._stage_uuid
+            r._task_uuid = self.uuid
             yield r

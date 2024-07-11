@@ -57,6 +57,23 @@ class BundledWorkflowActionPayload:
         return self
 
 
+class WorkflowReviewAction(BaseDTO):
+    review_uuid: UUID
+
+
+@dataclass
+class BundledReviewActionPayload:
+    stage_uuid: UUID
+    task_uuid: UUID
+    actions: list[WorkflowReviewAction]
+
+    def add(self, other: BundledReviewActionPayload) -> BundledReviewActionPayload:
+        assert self.stage_uuid == other.stage_uuid, "It's only possible to bundle actions for one stage at a time"
+        assert self.task_uuid == other.task_uuid, "It's only possible to bundle review actions one task at a time"
+        self.actions.extend(other.actions)
+        return self
+
+
 @dataclass
 class WorkflowClient:
     api_client: ApiClient
@@ -98,13 +115,23 @@ class WorkflowClient:
         self,
         stage_uuid: UUID,
         task_uuid: UUID,
-        review_uuid: UUID,
-        action: WorkflowAction,
+        action: WorkflowReviewAction,
         *,
         bundle: Optional[Bundle] = None,
-    ) -> Iterable[ReviewT]:
-        return self.api_client.post(
-            path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks/{task_uuid}/reviews/{review_uuid}/actions",
+    ) -> None:
+        if not bundle:
+            self._label_review_action(stage_uuid, task_uuid, [action])
+        else:
+            bundled_operation(
+                bundle=bundle,
+                operation=self._label_review_action,
+                payload=BundledReviewActionPayload(stage_uuid=stage_uuid, task_uuid=task_uuid, actions=[action]),
+            )
+
+    def _label_review_action(self, stage_uuid: UUID, task_uuid: UUID, actions: Sequence[WorkflowReviewAction]) -> None:
+        self.api_client.post(
+            path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks/{task_uuid}/reviews/actions",
             params=TasksQueryParams(),
+            payload=actions,
             result_type=None,
         )
