@@ -68,18 +68,39 @@ class LabelReview(BaseDTO):
         return self._workflow_client, self._stage_uuid, self._task_uuid
 
     def approve(self, *, bundle: Optional[Bundle] = None):
+        """
+        Approves the review.
+
+        **Parameters**
+
+        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        """
         workflow_client, stage_uuid, task_uuid = self._get_client_data()
         workflow_client.label_review_action(
             stage_uuid, task_uuid, _LabelReviewActionApprove(review_uuid=self.uuid), bundle=bundle
         )
 
     def reject(self, *, bundle: Optional[Bundle] = None):
+        """
+        Rejects the review.
+
+        **Parameters**
+
+        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        """
         workflow_client, stage_uuid, task_uuid = self._get_client_data()
         workflow_client.label_review_action(
             stage_uuid, task_uuid, _LabelReviewActionReject(review_uuid=self.uuid), bundle=bundle
         )
 
     def reopen(self, *, bundle: Optional[Bundle] = None):
+        """
+        Reopens the review.
+
+        **Parameters**
+
+        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        """
         workflow_client, stage_uuid, task_uuid = self._get_client_data()
         workflow_client.label_review_action(
             stage_uuid, task_uuid, _LabelReviewActionReopen(review_uuid=self.uuid), bundle=bundle
@@ -242,7 +263,23 @@ class ReviewTask(WorkflowTask):
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
 
-    def get_label_reviews(self) -> Iterable[LabelReview]:
+    def get_label_reviews(
+        self, status: Union[ReviewTaskStatus, List[ReviewTaskStatus], None] = None
+    ) -> Iterable[LabelReview]:
+        """
+        Retrieves label reviews for the Review task.
+
+        **Parameters**
+        - `status` (Union[ReviewTaskStatus, List[ReviewTaskStatus], None]): Status of the task.
+
+        **Returns**
+
+        An iterable of `ReviewTask` instances with the following information:
+        - `uuid`: Unique identifier for label review.
+        - `status`: Current status of the label review.
+        - `granularity_type`: Type of the label.
+        - `granularity_hash`: Unique identifier for the granularity hash - a feature hash in the project ontology.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         for r in workflow_client.get_label_reviews(stage_uuid, self.uuid, type_=LabelReview):
             r._workflow_client = self._workflow_client
