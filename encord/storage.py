@@ -48,6 +48,8 @@ from encord.orm.storage import (
     StorageFolderSummary,
     StorageItemSummary,
     StorageItemType,
+    StorageLocationName,
+    UploadLongPollingState,
     UploadSignedUrlsPayload,
 )
 
@@ -146,7 +148,7 @@ class StorageFolder:
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
         item_types: Optional[List[StorageItemType]] = None,
-        order: orm_storage.FoldersSortBy = orm_storage.FoldersSortBy.NAME,
+        order: FoldersSortBy = FoldersSortBy.NAME,
         get_signed_urls: bool = False,
         desc: bool = False,
         page_size: int = 100,
@@ -160,7 +162,7 @@ class StorageFolder:
                                             `True` and `False` select only linked and only unlinked items, respectively.
                                             `None` includes all items regardless of their dataset links.
             item_types (Optional[List[StorageItemType]]): Filter items by type.
-            order (orm_storage.FoldersSortBy): Sort order. Defaults to orm_storage.FoldersSortBy.NAME.
+            order (FoldersSortBy): Sort order. Defaults to FoldersSortBy.NAME.
             get_signed_urls (bool): Whether to get signed URLs for the items. Defaults to False.
             desc (bool): Sort in descending order. Defaults to False.
             page_size (int): Number of items to return per page. Defaults to 100.
@@ -584,7 +586,7 @@ class StorageFolder:
         self,
         upload_job_id: UUID,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
-    ) -> orm_storage.UploadLongPollingState:
+    ) -> UploadLongPollingState:
         """
         Retrieves the result of adding private data to a folder in Encord storage.
 
@@ -593,7 +595,7 @@ class StorageFolder:
             timeout_seconds (int): The timeout in seconds for the upload job.
 
         Returns:
-            orm_storage.UploadLongPollingState: The state of the upload job.
+            UploadLongPollingState: The state of the upload job.
         """
         return self._add_data_to_folder_get_result(upload_job_id, timeout_seconds)
 
@@ -1165,8 +1167,8 @@ class StorageItem:
         return self._orm_item.backed_data_units_count
 
     @property
-    def storage_location(self) -> orm_storage.StorageLocationName:
-        """orm_storage.StorageLocationName: The storage location name."""
+    def storage_location(self) -> StorageLocationName:
+        """StorageLocationName: The storage location name."""
         return self._orm_item.storage_location
 
     @property
