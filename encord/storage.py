@@ -66,13 +66,6 @@ class StorageFolder:
     """
 
     def __init__(self, api_client: ApiClient, orm_folder: orm_storage.StorageFolder):
-        """
-        Initializes a StorageFolder instance.
-
-        Args:
-            api_client (ApiClient): The API client used for making requests.
-            orm_folder (orm_storage.StorageFolder): ORM representation of the storage folder.
-        """
         self._api_client = api_client
         self._orm_folder = orm_folder
         self._parsed_metadata: Optional[Dict[str, Any]] = None
@@ -1112,13 +1105,6 @@ class StorageFolder:
 
 class StorageItem:
     def __init__(self, api_client: ApiClient, orm_item: orm_storage.StorageItem):
-        """
-        Initialize a StorageItem instance.
-
-        Args:
-            api_client (ApiClient): The API client used to make requests.
-            orm_item (orm_storage.StorageItem): The ORM storage item object.
-        """
         self._api_client = api_client
         self._orm_item = orm_item
         self._parsed_metadata: Optional[Dict[str, Any]] = None
