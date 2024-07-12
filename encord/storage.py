@@ -526,27 +526,6 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]],
         cloud_upload_settings: CloudUploadSettings,
     ) -> UUID:
-        """
-        Uploads an image group or sequence to Encord storage.
-
-        Args:
-            file_paths (Collection[Union[Path, str]]): A list of paths to image files, e.g.,
-                ['/home/user/data/img1.png', '/home/user/data/img2.png'].
-            title (Optional[str]): The title of the image group or sequence. If unspecified, this will be randomly generated.
-                This title should NOT include an extension.
-            create_video (bool): If True, a video will be created from the images (for sequences). If False, only the images
-                will be uploaded (for groups).
-            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image group
-                or sequence. Should be a dictionary that is JSON-serializable.
-            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
-                to overwrite the default values.
-
-        Returns:
-            UUID: The UUID of the newly created image group or sequence item.
-
-        Raises:
-            EncordException: If the upload location cannot be accessed or if the upload fails.
-        """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.IMAGE, count=len(file_paths), frames_subfolder_name=None
         )
@@ -903,31 +882,11 @@ class StorageFolder:
         )
 
     def _set_orm_folder(self, orm_folder: orm_storage.StorageFolder) -> None:
-        """
-        Set the ORM folder.
-
-        Args:
-            orm_folder (orm_storage.StorageFolder): The ORM folder to set.
-
-        Returns:
-            None
-        """
         self._orm_folder = orm_folder
 
     def _get_upload_signed_urls(
         self, item_type: StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
     ) -> List[orm_storage.UploadSignedUrl]:
-        """
-        Get signed URLs for uploading items.
-
-        Args:
-            item_type (StorageItemType): The type of items to upload.
-            count (int): Number of signed URLs to generate.
-            frames_subfolder_name (Optional[str]): Optional subfolder name for frames.
-
-        Returns:
-            List[orm_storage.UploadSignedUrl]: A list of signed URLs for uploading items.
-        """
         urls = self._api_client.post(
             f"storage/folders/{self.uuid}/upload-signed-urls",
             params=None,
@@ -942,16 +901,6 @@ class StorageFolder:
         return urls.results
 
     def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str:
-        """
-        Guess the title based on the file path if not provided.
-
-        Args:
-            title (Optional[str]): The provided title.
-            file_path (Union[Path, str]): The file path.
-
-        Returns:
-            str: The guessed or provided title.
-        """
         if title:
             return title
 
@@ -960,19 +909,6 @@ class StorageFolder:
         return file_path.name
 
     def _get_content_type(self, file_path: Union[Path, str], item_type: StorageItemType) -> str:
-        """
-        Get the content type for a file based on its path and type.
-
-        Args:
-            file_path (Union[Path, str]): The file path.
-            item_type (StorageItemType): The type of the item.
-
-        Returns:
-            str: The content type of the file.
-
-        Raises:
-            ValueError: If the item type is unsupported.
-        """
         if item_type == StorageItemType.IMAGE:
             return mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
         elif item_type == StorageItemType.VIDEO:
@@ -990,19 +926,6 @@ class StorageFolder:
         signed_url: str,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> None:
-        """
-        Upload a local file to the cloud using a signed URL.
-
-        Args:
-            file_path (Union[Path, str]): Path to the local file.
-            title (str): Title of the file.
-            item_type (StorageItemType): Type of the item.
-            signed_url (str): Signed URL for the upload.
-            cloud_upload_settings (CloudUploadSettings): Settings for cloud upload.
-
-        Returns:
-            None
-        """
         content_type = self._get_content_type(file_path, item_type)
 
         max_retries = (
@@ -1033,21 +956,6 @@ class StorageFolder:
         private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> orm_storage.UploadLongPollingState:
-        """
-        Add data to the folder.
-
-        Args:
-            integration_id (Optional[str]): Integration ID.
-            private_files (Union[str, Dict, Path, TextIO, DataUploadItems]): Data to upload.
-            ignore_errors (bool): Whether to ignore errors.
-
-        Returns:
-            orm_storage.UploadLongPollingState: The upload polling state.
-
-        Raises:
-            encord.exceptions.EncordException: If upload errors occur.
-            ValueError: If the upload state is unexpected.
-        """
         upload_job_id = self._add_data_to_folder_start(
             integration_id,
             private_files,
@@ -1069,20 +977,6 @@ class StorageFolder:
         private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> UUID:
-        """
-        Start the process to add data to the folder.
-
-        Args:
-            integration_id (Optional[str]): Integration ID.
-            private_files (Union[str, Dict, Path, TextIO, DataUploadItems]): Data to upload.
-            ignore_errors (bool): Whether to ignore errors.
-
-        Returns:
-            UUID: The upload job ID.
-
-        Raises:
-            ValueError: If the type of `private_files` is unsupported.
-        """
         if isinstance(private_files, dict):
             files: Optional[dict] = private_files
         elif isinstance(private_files, str):
@@ -1128,21 +1022,6 @@ class StorageFolder:
         upload_job_id: UUID,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> orm_storage.UploadLongPollingState:
-        """
-        Retrieve the result of an ongoing data upload job by polling.
-
-        Args:
-            upload_job_id (UUID): The unique identifier of the upload job.
-            timeout_seconds (int): The maximum time to wait for the job to complete, in seconds (default is 7 days).
-
-        Returns:
-            orm_storage.UploadLongPollingState: The final state of the upload job.
-
-        Raises:
-            requests.exceptions.RequestException: If a request exception occurs.
-            encord.exceptions.RequestException: If an Encord request exception occurs.
-            ValueError: If the polling time exceeds the timeout.
-        """
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
 
@@ -1182,16 +1061,6 @@ class StorageFolder:
 
     @staticmethod
     def _get_folder(api_client: ApiClient, folder_uuid: UUID) -> "StorageFolder":
-        """
-        Retrieve a storage folder by its UUID.
-
-        Args:
-            api_client (ApiClient): The API client used to make the request.
-            folder_uuid (UUID): The UUID of the folder to retrieve.
-
-        Returns:
-            StorageFolder: The storage folder object.
-        """
         orm_folder = api_client.get(
             f"storage/folders/{folder_uuid}", params=None, result_type=orm_storage.StorageFolder
         )
@@ -1203,20 +1072,6 @@ class StorageFolder:
         path: str,
         params: orm_storage.ListFoldersParams,
     ) -> Iterable["StorageFolder"]:
-        """
-        List folders based on the provided parameters.
-
-        Args:
-            api_client (ApiClient): The API client used to make the request.
-            path (str): The API path for listing folders.
-            params (orm_storage.ListFoldersParams): Parameters for listing folders.
-
-        Yields:
-            StorageFolder: An iterable of storage folder objects.
-
-        Raises:
-            ValueError: If page_size is not between 1 and 1000.
-        """
         if params.page_size < 1 or params.page_size > 1000:
             raise ValueError("page_size should be between 1 and 1000")
 
@@ -1231,21 +1086,6 @@ class StorageFolder:
         path: str,
         params: orm_storage.ListItemsParams,
     ) -> Iterable["StorageItem"]:
-        """
-        List items based on the provided parameters.
-
-        Args:
-            api_client (ApiClient): The API client used to make the request.
-            path (str): The API path for listing items.
-            params (orm_storage.ListItemsParams): Parameters for listing items.
-
-        Yields:
-            StorageItem: An iterable of storage item objects.
-
-        Raises:
-            ValueError: If page_size is not between 1 and 1000.
-            ValueError: If neither 'search' nor 'item_types' is provided.
-        """
         if params.page_size < 1 or params.page_size > 1000:
             raise ValueError("page_size should be between 1 and 1000")
 
@@ -1262,16 +1102,6 @@ class StorageFolder:
         api_client: ApiClient,
         folder_patches: Dict[str, PatchFolderPayload],
     ) -> List[orm_storage.StorageFolder]:
-        """
-        Patch multiple folders with the provided patches.
-
-        Args:
-            api_client (ApiClient): The API client used to make the request.
-            folder_patches (Dict[str, PatchFolderPayload]): A dictionary of folder patches.
-
-        Returns:
-            List[orm_storage.StorageFolder]: A list of updated storage folder objects.
-        """
         return api_client.patch(
             "storage/folders/patch-bulk",
             params=None,
@@ -1606,17 +1436,6 @@ class StorageItem:
 
     @staticmethod
     def _get_item(api_client: ApiClient, item_uuid: UUID, get_signed_url: bool) -> "StorageItem":
-        """
-        Static method to fetch a single item by UUID.
-
-        Args:
-            api_client: Instance of `ApiClient` used for the API request.
-            item_uuid: UUID of the item to fetch.
-            get_signed_url: If `True`, includes a signed URL for downloading the item.
-
-        Returns:
-            StorageItem: Instance of `StorageItem` representing the fetched item.
-        """
         orm_item = api_client.get(
             f"storage/items/{item_uuid}",
             params=GetItemParams(sign_url=get_signed_url),
@@ -1626,17 +1445,6 @@ class StorageItem:
 
     @staticmethod
     def _get_items(api_client: ApiClient, item_uuids: List[UUID], get_signed_url: bool) -> List["StorageItem"]:
-        """
-        Static method to fetch multiple items by their UUIDs.
-
-        Args:
-            api_client: Instance of `ApiClient` used for the API request.
-            item_uuids: List of UUIDs of items to fetch.
-            get_signed_url: If `True`, includes signed URLs for downloading the items.
-
-        Returns:
-            List[StorageItem]: List of `StorageItem` instances representing the fetched items.
-        """
         orm_items = api_client.post(
             "storage/items/get-bulk",
             params=None,
@@ -1650,16 +1458,6 @@ class StorageItem:
         api_client: ApiClient,
         item_patches: Dict[str, PatchItemPayload],
     ) -> List[orm_storage.StorageItem]:
-        """
-        Static method to patch multiple items.
-
-        Args:
-            api_client: Instance of `ApiClient` used for the API request.
-            item_patches: Dictionary where keys are item UUIDs and values are `PatchItemPayload` objects.
-
-        Returns:
-            List[orm_storage.StorageItem]: List of `StorageItem` instances representing the patched items.
-        """
         return api_client.patch(
             "storage/items/patch-bulk",
             params=None,
@@ -1668,13 +1466,4 @@ class StorageItem:
         ).results
 
     def _set_orm_item(self, orm_item: orm_storage.StorageItem) -> None:
-        """
-        Sets the internal ORM item object for the instance.
-
-        Args:
-            orm_item: ORM item object representing the item's data.
-
-        Returns:
-            None
-        """
         self._orm_item = orm_item
