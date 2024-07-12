@@ -57,6 +57,10 @@ STORAGE_BUNDLE_CREATE_LIMIT = 1000
 
 
 class StorageFolder:
+    """
+    Represents a storage folder within the Encord system.
+    """
+
     def __init__(self, api_client: ApiClient, orm_folder: orm_storage.StorageFolder):
         self._api_client = api_client
         self._orm_folder = orm_folder
@@ -64,27 +68,63 @@ class StorageFolder:
 
     @property
     def uuid(self) -> UUID:
+        """
+        Gets the unique identifier of the folder.
+
+        Returns:
+            UUID: The UUID of the folder.
+        """
         return self._orm_folder.uuid
 
     @property
     def parent_uuid(self) -> Optional[UUID]:
+        """
+        Gets the unique identifier of the parent folder.
+
+        Returns:
+            Optional[UUID]: The UUID of the parent folder, or None if there is no parent.
+        """
         return self._orm_folder.parent
 
     @property
     def parent(self) -> Optional["StorageFolder"]:
+        """
+        Gets the parent folder.
+
+        Returns:
+            Optional[StorageFolder]: The parent StorageFolder object, or None if there is no parent.
+        """
         parent_uuid = self._orm_folder.parent
         return None if parent_uuid is None else self._get_folder(self._api_client, parent_uuid)
 
     @property
     def name(self) -> str:
+        """
+        Gets the name of the folder.
+
+        Returns:
+            str: The name of the folder.
+        """
         return self._orm_folder.name
 
     @property
     def description(self) -> str:
+        """
+        Gets the description of the folder.
+
+        Returns:
+            str: The description of the folder.
+        """
         return self._orm_folder.description
 
     @property
     def client_metadata(self) -> Optional[Dict[str, Any]]:
+        """
+        Gets the client metadata of the folder.
+
+        Returns:
+            Optional[Dict[str, Any]]: The client metadata as a dictionary, or None if there is no metadata.
+        """
         if self._parsed_metadata is None:
             if self._orm_folder.client_metadata is not None:
                 self._parsed_metadata = json.loads(self._orm_folder.client_metadata)
@@ -92,6 +132,12 @@ class StorageFolder:
 
     @property
     def path_to_root(self) -> List[PathElement]:
+        """
+        Gets the path elements from the current folder to the root.
+
+        Returns:
+            List[PathElement]: A list of PathElement objects representing the path to the root.
+        """
         return self._orm_folder.path_to_root
 
     def list_items(
@@ -106,20 +152,21 @@ class StorageFolder:
         page_size: int = 100,
     ) -> Iterable["StorageItem"]:
         """
-        List items in the folder.
+        Lists items in the folder.
 
         Args:
-            search: Search string to filter items by name.
-            is_in_dataset: Filter items by whether they are linked to any dataset. `True` and `False` select
-                only linked and only unlinked items, respectively. `None` includes all items regardless of their
-                dataset links.
-            item_types: Filter items by type.
-            order: Sort order.
-            desc: Sort in descending order.
-            page_size: Number of items to return per page.
+            search (Optional[str]): Search string to filter items by name.
+            is_in_dataset (Optional[bool]): Filter items by whether they are linked to any dataset.
+                                            `True` and `False` select only linked and only unlinked items, respectively.
+                                            `None` includes all items regardless of their dataset links.
+            item_types (Optional[List[StorageItemType]]): Filter items by type.
+            order (orm_storage.FoldersSortBy): Sort order. Defaults to orm_storage.FoldersSortBy.NAME.
+            get_signed_urls (bool): Whether to get signed URLs for the items. Defaults to False.
+            desc (bool): Sort in descending order. Defaults to False.
+            page_size (int): Number of items to return per page. Defaults to 100.
 
         Returns:
-            Iterable of items in the folder.
+            Iterable[StorageItem]: Iterable of items in the folder.
         """
         params = ListItemsParams(
             search=search,
@@ -142,6 +189,9 @@ class StorageFolder:
             yield StorageItem(self._api_client, item)
 
     def delete(self) -> None:
+        """
+        Deletes the folder.
+        """
         self._api_client.delete(f"storage/folders/{self.uuid}", params=None, result_type=None)
 
     def upload_image(
@@ -152,24 +202,22 @@ class StorageFolder:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """
-        Upload image to a folder in Encord storage.
+        Uploads an image to a folder in Encord storage.
 
         Args:
-            file_path: path to image e.g. '/home/user/data/image.png'
-            title:
-                The image title. If unspecified, this will be the file name.
-            client_metadata:
-                Optional arbitrary metadata to be associated with the image. Should be a dictionary
-                that is JSON-serializable.
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            file_path (Union[Path, str]): Path to the image file (e.g., '/home/user/data/image.png').
+            title (Optional[str]): The image title. If unspecified, this will be the file name.
+            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image.
+                                                        Should be a dictionary that is JSON-serializable.
+            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
+                                                        to overwrite the default values.
 
         Returns:
-            UUID of the newly created image item.
+            UUID: The UUID of the newly created image item.
 
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the image could not be uploaded, e.g. due to being in an unsupported format.
+            EncordException: If the image could not be uploaded, e.g., due to being in an unsupported format.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.IMAGE, count=1, frames_subfolder_name=None
@@ -201,7 +249,7 @@ class StorageFolder:
         )
 
         if upload_result.status == LongPollingStatus.ERROR:
-            raise EncordException(f"Could not register image, errors occured {upload_result.errors}")
+            raise EncordException(f"Could not register image, errors occurred {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
 
@@ -214,28 +262,27 @@ class StorageFolder:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """
-        Upload video to a folder in Encord storage.
+        Uploads a video to a folder in Encord storage.
 
         Args:
-            file_path: path to video e.g. '/home/user/data/video.mp4'
-            title:
-                The video title. If unspecified, this will be the file name. This title should include an extension.
-                For example "encord_video.mp4".
-            client_metadata:
-                Optional arbitrary metadata to be associated with the video. Should be a dictionary
-                that is JSON-serializable.
-            video_metadata:
-                Optional media metadata for a video file; if provided, Encord service will skip frame
-                synchronisation checks and will use the values specified here to render the video in the label editor.
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            file_path (Union[Path, str]): Path to the video file (e.g., '/home/user/data/video.mp4').
+            title (Optional[str]): The video title. If unspecified, this will be the file name. This title should include an extension.
+                                For example, "encord_video.mp4".
+            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the video.
+                                                        Should be a dictionary that is JSON-serializable.
+            video_metadata (Optional[CustomerProvidedVideoMetadata]): Optional media metadata for a video file; if provided,
+                                                                    Encord service will skip frame synchronization checks and
+                                                                    will use the values specified here to render the video
+                                                                    in the label editor.
+            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object to
+                                                        overwrite the default values.
 
         Returns:
-            UUID of the newly created video item.
+            UUID: The UUID of the newly created video item.
 
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the video could not be uploaded, e.g. due to being in an unsupported format.
+            EncordException: If the video could not be uploaded, e.g., due to being in an unsupported format.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.VIDEO, count=1, frames_subfolder_name=None
@@ -272,11 +319,22 @@ class StorageFolder:
         )
 
         if upload_result.status == LongPollingStatus.ERROR:
-            raise EncordException(f"Could not register video, errors occured {upload_result.errors}")
+            raise EncordException(f"Could not register video, errors occurred {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
 
     def re_encode_videos(self, storage_items: List[UUID], process_title: str, force_full_reencoding: bool) -> UUID:
+        """
+        Re-encodes the specified video items.
+
+        Args:
+            storage_items (List[UUID]): List of UUIDs representing the video items to be re-encoded.
+            process_title (str): Title for the re-encoding process.
+            force_full_reencoding (bool): Flag to force full re-encoding.
+
+        Returns:
+            UUID: The UUID of the re-encoding process.
+        """
         return self._api_client.post(
             "/storage/items/reencode",
             params=None,
@@ -289,6 +347,15 @@ class StorageFolder:
         )
 
     def get_re_encoding_status(self, process_hash: UUID) -> ReencodeVideoItemsResponse:
+        """
+        Retrieves the status of a re-encoding process.
+
+        Args:
+            process_hash (UUID): The UUID of the re-encoding process.
+
+        Returns:
+            ReencodeVideoItemsResponse: Response object containing the status of the re-encoding process.
+        """
         return self._api_client.get(
             f"/storage/items/reencode/{process_hash}", params=None, result_type=ReencodeVideoItemsResponse
         )
@@ -301,26 +368,24 @@ class StorageFolder:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         """
-        Upload a DICOM series to a folder in Encord storage.
+        Uploads a DICOM series to a folder in Encord storage.
 
         Args:
-            file_paths: a list of paths to DICOM files, e.g.
-                ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
-            title:
-                The title of the DICOM series. If unspecified this will be randomly generated for you. This title should
-                NOT include an extension. For example "encord_image_group".
-            client_metadata:
-                Optional arbitrary metadata to be associated with the video. Should be a dictionary
-                that is JSON-serializable.
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            file_paths (Sequence[Union[str, Path]]): A list of paths to DICOM files, e.g.,
+                ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm'].
+            title (Optional[str]): The title of the DICOM series. If unspecified, this will be randomly generated.
+                This title should NOT include an extension. For example, "encord_image_group".
+            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the DICOM series.
+                Should be a dictionary that is JSON-serializable.
+            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
+                to overwrite the default values.
 
         Returns:
-            UUID of the newly created DICOM series item.
+            UUID: The UUID of the newly created DICOM series item.
 
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the series could not be uploaded, e.g. due to being in an unsupported format.
+            EncordException: If the series could not be uploaded, e.g., due to being in an unsupported format.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.DICOM_FILE, count=len(file_paths), frames_subfolder_name=None
@@ -363,7 +428,7 @@ class StorageFolder:
         )
 
         if upload_result.status == LongPollingStatus.ERROR:
-            raise EncordException(f"Could not register DICOM series, errors occured {upload_result.errors}")
+            raise EncordException(f"Could not register DICOM series, errors occurred {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
 
@@ -375,28 +440,26 @@ class StorageFolder:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         """
-        Create an image group in Encord storage. Choose this type of image upload for non-sequential images that are
-        logically connected (e.g. multiple views of the same object). See also :meth:`.Folder.create_image_sequence`
+        Creates an image group in Encord storage. Choose this type of image upload for non-sequential images that are
+        logically connected (e.g., multiple views of the same object). See also :meth:`.Folder.create_image_sequence`
         and :meth:`.Folder.upload_image`.
 
         Args:
-            file_paths: a list of paths to images, e.g.
-                ['/home/user/data/img1.png', '/home/user/data/img2.png']
-            title:
-                The title of the image group. If unspecified this will be randomly generated for you. This title should
-                NOT include an extension. For example "encord_image_group".
-            client_metadata:
-                Optional arbitrary metadata to be associated with the image group. Should be a dictionary
-                that is JSON-serializable.
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            file_paths (Collection[Union[Path, str]]): A list of paths to images, e.g.,
+                ['/home/user/data/img1.png', '/home/user/data/img2.png'].
+            title (Optional[str]): The title of the image group. If unspecified, this will be randomly generated.
+                This title should NOT include an extension. For example, "encord_image_group".
+            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image group.
+                Should be a dictionary that is JSON-serializable.
+            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
+                to overwrite the default values.
 
         Returns:
-            UUID of the newly created image group item.
+            UUID: The UUID of the newly created image group item.
 
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the images could not be uploaded, e.g. due to being in an unsupported format.
+            EncordException: If the images could not be uploaded, e.g., due to being in an unsupported format.
         """
         return self._create_image_group_or_sequence(
             file_paths,
@@ -414,29 +477,27 @@ class StorageFolder:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         """
-        Create an image group in Encord storage. Choose this type of image upload for sequential images (a timelapse
+        Creates an image sequence in Encord storage. Choose this type of image upload for sequential images (a timelapse
         or similar). A compressed video will be created from the images.
 
         See also :meth:`.Folder.create_image_group` and :meth:`.Folder.upload_image`.
 
         Args:
-            file_paths: a list of paths to images, e.g.
-                ['/home/user/data/img1.png', '/home/user/data/img2.png']
-            title:
-                The title of the image sequence. If unspecified this will be randomly generated for you. This title s
-                should NOT include an extension. For example "front camera 2024-04-01".
-            client_metadata:
-                Optional arbitrary metadata to be associated with the image sequence. Should be a dictionary
-                that is JSON-serializable.
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            file_paths (Collection[Union[Path, str]]): A list of paths to images, e.g.,
+                ['/home/user/data/img1.png', '/home/user/data/img2.png'].
+            title (Optional[str]): The title of the image sequence. If unspecified, this will be randomly generated.
+                This title should NOT include an extension. For example, "front camera 2024-04-01".
+            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image sequence.
+                Should be a dictionary that is JSON-serializable.
+            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
+                to overwrite the default values.
 
         Returns:
-            UUID of the newly created image sequence item.
+            UUID: The UUID of the newly created image sequence item.
 
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the images could not be uploaded, e.g. due to being in an unsupported format.
+            EncordException: If the images could not be uploaded, e.g., due to being in an unsupported format.
         """
         return self._create_image_group_or_sequence(
             file_paths,
@@ -453,7 +514,7 @@ class StorageFolder:
         create_video: bool,
         client_metadata: Optional[Dict[str, Any]],
         cloud_upload_settings: CloudUploadSettings,
-    ):
+    ) -> UUID:
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.IMAGE, count=len(file_paths), frames_subfolder_name=None
         )
@@ -496,7 +557,7 @@ class StorageFolder:
         )
 
         if upload_result.status == LongPollingStatus.ERROR:
-            raise EncordException(f"Could not register image group, errors occured {upload_result.errors}")
+            raise EncordException(f"Could not register image group, errors occurred {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
 
@@ -506,6 +567,17 @@ class StorageFolder:
         private_files: Union[str, Dict, Path, TextIO],
         ignore_errors: bool = False,
     ) -> UUID:
+        """
+        Starts the process of adding private data to a folder in Encord storage.
+
+        Args:
+            integration_id (str): The integration ID for the folder.
+            private_files (Union[str, Dict, Path, TextIO]): The private files to be added.
+            ignore_errors (bool): If True, errors will be ignored during the upload process.
+
+        Returns:
+            UUID: The UUID of the upload job.
+        """
         return self._add_data_to_folder_start(integration_id, private_files, ignore_errors)
 
     def add_private_data_to_folder_get_result(
@@ -513,6 +585,16 @@ class StorageFolder:
         upload_job_id: UUID,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> orm_storage.UploadLongPollingState:
+        """
+        Retrieves the result of adding private data to a folder in Encord storage.
+
+        Args:
+            upload_job_id (UUID): The UUID of the upload job.
+            timeout_seconds (int): The timeout in seconds for the upload job.
+
+        Returns:
+            orm_storage.UploadLongPollingState: The state of the upload job.
+        """
         return self._add_data_to_folder_get_result(upload_job_id, timeout_seconds)
 
     def list_subfolders(
@@ -525,20 +607,19 @@ class StorageFolder:
         page_size: int = 100,
     ) -> Iterable["StorageFolder"]:
         """
-        List subfolders of the current folder.
+        Lists subfolders of the current folder.
 
         Args:
-            search: Search string to filter folders by name (optional)
-            dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
+            search (Optional[str]): Search string to filter folders by name.
+            dataset_synced (Optional[bool]): Include or exclude folders that are mirrored by a dataset. If `None`,
                 no filtering is applied.
-            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
-            desc: If True, sort in descending order.
-            page_size: Number of folders to return per page.
+            order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            desc (bool): If True, sort in descending order.
+            page_size (int): Number of folders to return per page.
 
         Returns:
-            Iterable of :class:`encord.StorageFolder` objects.
+            Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
         """
-
         return StorageFolder._list_folders(
             self._api_client,
             f"storage/folders/{self.uuid}/folders",
@@ -560,20 +641,19 @@ class StorageFolder:
         page_size: int = 100,
     ) -> Iterable["StorageFolder"]:
         """
-        Recursively search for storage folders, starting from this folder.
+        Recursively searches for storage folders, starting from this folder.
 
         Args:
-            search: Search string to filter folders by name (optional)
-            dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
+            search (Optional[str]): Search string to filter folders by name.
+            dataset_synced (Optional[bool]): Include or exclude folders that are mirrored by a dataset. If `None`,
                 no filtering is applied.
-            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
-            desc: If True, sort in descending order.
-            page_size: Number of folders to return per page.
+            order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            desc (bool): If True, sort in descending order.
+            page_size (int): Number of folders to return per page.
 
         Returns:
-            Iterable of :class:`encord.StorageFolder` objects.
+            Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
         """
-
         return StorageFolder._list_folders(
             self._api_client,
             f"storage/folders/{self.uuid}/folders",
@@ -596,25 +676,26 @@ class StorageFolder:
         desc: bool = False,
         get_signed_urls: bool = False,
         page_size: int = 100,
-    ):
+    ) -> Iterable["StorageItem"]:
         """
         Recursively search for storage items, starting from this folder.
 
         Args:
-            search: Search string to filter items by name.
-            is_in_dataset: Filter items by whether they are linked to any dataset. `True` and `False` select
+            search (Optional[str]): Search string to filter items by name.
+            is_in_dataset (Optional[bool]): Filter items by whether they are linked to any dataset. `True` and `False` select
                 only linked and only unlinked items, respectively. `None` includes all items regardless of their
                 dataset links.
-            item_types: Filter items by type.
-            order: Sort order.
-            desc: Sort in descending order.
-            get_signed_urls: If True, return signed URLs for the items.
-            page_size: Number of items to return per page.
-
-        At least one of `search` or `item_types` must be provided.
+            item_types (Optional[List[StorageItemType]]): Filter items by type.
+            order (FoldersSortBy): Sort order.
+            desc (bool): Sort in descending order.
+            get_signed_urls (bool): If True, return signed URLs for the items.
+            page_size (int): Number of items to return per page.
 
         Returns:
-            Iterable of items in the folder and its subfolders.
+            Iterable[StorageItem]: An iterable of items in the folder and its subfolders.
+
+        Raises:
+            ValueError: If neither `search` nor `item_types` are provided.
         """
 
         params = ListItemsParams(
@@ -633,8 +714,13 @@ class StorageFolder:
 
     def get_summary(self) -> StorageFolderSummary:
         """
-        Get a summary of the folder (total size, number of items, etc). See :class:`encord.StorageFolderSummary` for
-        exact set of information provided.
+        Get a summary of the folder (total size, number of items, etc).
+
+        Returns:
+            StorageFolderSummary: A summary of the folder.
+
+        See Also:
+            :class:`encord.StorageFolderSummary` for the exact set of information provided.
         """
         return self._api_client.get(
             f"storage/folders/{self.uuid}/summary",
@@ -653,10 +739,10 @@ class StorageFolder:
         Update the folder's modifiable properties. Any parameters that are not provided will not be updated.
 
         Args:
-            name: New folder name.
-            description: New folder description.
-            client_metadata: New client metadata.
-            bundle: Optional :class:`encord.http.Bundle` to use for the operation. If provided, the operation
+            name (Optional[str]): New folder name.
+            description (Optional[str]): New folder description.
+            client_metadata (Optional[Dict[str, Any]]): New client metadata.
+            bundle (Optional[Bundle]): Optional :class:`encord.http.Bundle` to use for the operation. If provided, the operation
                 will be bundled into a single server call with other item updates using the same bundle.
 
         Returns:
@@ -698,8 +784,13 @@ class StorageFolder:
 
     def move_to_folder(self, target_folder: Optional[Union["StorageFolder", UUID]]) -> None:
         """
-        Move the folder to another folder (specify folder object or UUID),
-        or to the root level if `target_folder` is None.
+        Move the folder to another folder (specify folder object or UUID), or to the root level if `target_folder` is None.
+
+        Args:
+            target_folder (Optional[Union[StorageFolder, UUID]]): The target folder to move to, or `None` to move to the root level.
+
+        Returns:
+            None
         """
         target_folder_uuid = target_folder.uuid if isinstance(target_folder, StorageFolder) else target_folder
         self._api_client.post(
@@ -724,15 +815,15 @@ class StorageFolder:
         Move items (list of `StorageItem` objects or UUIDs) to another folder (specify folder object or UUID).
 
         Args:
-            target_folder: Target folder to move items to.
-            items_to_move: List of items to move. All the items should be immediate children
+            target_folder (Union[StorageFolder, UUID]): Target folder to move items to.
+            items_to_move (Sequence[Union[UUID, StorageItem]]): List of items to move. All the items should be immediate children
                 of the current folder.
-            allow_mirror_dataset_changes: If `True`, allow moving items that are linked to a mirror dataset. By default,
+            allow_mirror_dataset_changes (bool): If `True`, allow moving items that are linked to a mirror dataset. By default,
                 moving such items is prohibited, as it would result in data units being removed from a dataset,
                 potentially deleting related annotations and other data.
 
         Returns:
-            `None`
+            None
         """
         target_folder_uuid = target_folder if isinstance(target_folder, UUID) else target_folder.uuid
 
@@ -748,18 +839,18 @@ class StorageFolder:
             result_type=None,
         )
 
-    def delete_storage_items(self, item_uuids: List[UUID], remove_unused_frames=True) -> None:
+    def delete_storage_items(self, item_uuids: List[UUID], remove_unused_frames: bool = True) -> None:
         """
         Delete storage items by their UUIDs.
 
         Args:
-            item_uuids: List of UUIDs of items to delete. All the items should be immediate children
+            item_uuids (List[UUID]): List of UUIDs of items to delete. All the items should be immediate children
                 of the current folder.
-            remove_unused_frames: If `True` (which is default), then for every image group or DICOM series item,
-            find and remove the individual images or DICOM files that are not used in any other item.
+            remove_unused_frames (bool): If `True` (default), remove individual images or DICOM files from image groups or
+                DICOM series that are not used in any other item.
 
         Returns:
-            `None`
+            None
         """
         self._api_client.post(
             f"/storage/folders/{self.uuid}/items/delete",
@@ -771,6 +862,9 @@ class StorageFolder:
     def refetch_data(self) -> None:
         """
         Refetch data for the folder.
+
+        Returns:
+            None
         """
         self._set_orm_folder(
             self._api_client.get(f"storage/folders/{self.uuid}", params=None, result_type=orm_storage.StorageFolder)
@@ -823,15 +917,16 @@ class StorageFolder:
     ) -> None:
         content_type = self._get_content_type(file_path, item_type)
 
-        if cloud_upload_settings.max_retries is not None:
-            max_retries = cloud_upload_settings.max_retries
-        else:
-            max_retries = DEFAULT_REQUESTS_SETTINGS.max_retries
-
-        if cloud_upload_settings.backoff_factor is not None:
-            backoff_factor = cloud_upload_settings.backoff_factor
-        else:
-            backoff_factor = DEFAULT_REQUESTS_SETTINGS.backoff_factor
+        max_retries = (
+            cloud_upload_settings.max_retries
+            if cloud_upload_settings.max_retries is not None
+            else DEFAULT_REQUESTS_SETTINGS.max_retries
+        )
+        backoff_factor = (
+            cloud_upload_settings.backoff_factor
+            if cloud_upload_settings.backoff_factor is not None
+            else DEFAULT_REQUESTS_SETTINGS.backoff_factor
+        )
 
         _upload_single_file(
             str(file_path),
@@ -861,7 +956,7 @@ class StorageFolder:
         if res.status == LongPollingStatus.DONE:
             return res
         elif res.status == LongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"folder.add_data errors occured {res.errors}")
+            raise encord.exceptions.EncordException(f"folder.add_data errors occurred {res.errors}")
         else:
             raise ValueError(f"res.status={res.status}, this should never happen")
 
@@ -966,7 +1061,6 @@ class StorageFolder:
         path: str,
         params: orm_storage.ListFoldersParams,
     ) -> Iterable["StorageFolder"]:
-        """ """
         if params.page_size < 1 or params.page_size > 1000:
             raise ValueError("page_size should be between 1 and 1000")
 
@@ -981,7 +1075,6 @@ class StorageFolder:
         path: str,
         params: orm_storage.ListItemsParams,
     ) -> Iterable["StorageItem"]:
-        """ """
         if params.page_size < 1 or params.page_size > 1000:
             raise ValueError("page_size should be between 1 and 1000")
 
@@ -1014,29 +1107,43 @@ class StorageItem:
 
     @property
     def uuid(self) -> UUID:
+        """UUID: The unique identifier of the storage item."""
         return self._orm_item.uuid
 
     @property
     def parent_folder_uuid(self) -> UUID:
+        """UUID: The UUID of the parent folder."""
         return self._orm_item.parent
 
     def parent_folder(self) -> StorageFolder:
+        """
+        Retrieve the parent folder of the storage item.
+
+        Returns:
+            StorageFolder: The parent folder.
+        """
         return StorageFolder._get_folder(self._api_client, self.parent_folder_uuid)
 
     @property
     def item_type(self) -> StorageItemType:
+        """StorageItemType: The type of the storage item."""
         return self._orm_item.item_type
 
     @property
     def name(self) -> str:
+        """str: The name of the storage item."""
         return self._orm_item.name
 
     @property
     def description(self) -> str:
+        """str: The description of the storage item."""
         return self._orm_item.description
 
     @property
     def client_metadata(self) -> Optional[Dict[str, Any]]:
+        """
+        Optional[Dict[str, Any]]: The client metadata of the storage item.
+        """
         if self._parsed_metadata is None:
             if self._orm_item.client_metadata is not None:
                 self._parsed_metadata = json.loads(self._orm_item.client_metadata)
@@ -1044,74 +1151,98 @@ class StorageItem:
 
     @property
     def created_at(self) -> datetime:
+        """datetime: The creation time of the storage item."""
         return self._orm_item.created_at
 
     @property
     def last_edited_at(self) -> datetime:
+        """datetime: The last edited time of the storage item."""
         return self._orm_item.last_edited_at
 
     @property
     def backed_data_units_count(self) -> int:
+        """int: The number of backed data units."""
         return self._orm_item.backed_data_units_count
 
     @property
     def storage_location(self) -> orm_storage.StorageLocationName:
+        """orm_storage.StorageLocationName: The storage location name."""
         return self._orm_item.storage_location
 
     @property
     def integration_hash(self) -> Optional[UUID]:
+        """Optional[UUID]: The integration hash."""
         return self._orm_item.integration_hash
 
     @property
     def url(self) -> Optional[str]:
+        """Optional[str]: The URL of the storage item."""
         return self._orm_item.url
 
     @property
     def file_size(self) -> Optional[int]:
+        """Optional[int]: The file size of the storage item."""
         return self._orm_item.file_size
 
     @property
     def mime_type(self) -> Optional[str]:
+        """Optional[str]: The MIME type of the storage item."""
         return self._orm_item.mime_type
 
     @property
     def duration(self) -> Optional[float]:
+        """Optional[float]: The duration of the storage item."""
         return self._orm_item.duration
 
     @property
     def fps(self) -> Optional[float]:
+        """Optional[float]: The frames per second of the storage item."""
         return self._orm_item.fps
 
     @property
     def height(self) -> Optional[int]:
+        """Optional[int]: The height of the storage item."""
         return self._orm_item.height
 
     @property
     def width(self) -> Optional[int]:
+        """Optional[int]: The width of the storage item."""
         return self._orm_item.width
 
     @property
     def dicom_instance_uid(self) -> Optional[str]:
+        """Optional[str]: The DICOM instance UID of the storage item."""
         return self._orm_item.dicom_instance_uid
 
     @property
     def dicom_study_uid(self) -> Optional[str]:
+        """Optional[str]: The DICOM study UID of the storage item."""
         return self._orm_item.dicom_study_uid
 
     @property
     def dicom_series_uid(self) -> Optional[str]:
+        """Optional[str]: The DICOM series UID of the storage item."""
         return self._orm_item.dicom_series_uid
 
     @property
     def frame_count(self) -> Optional[int]:
+        """Optional[int]: The frame count of the storage item."""
         return self._orm_item.frame_count
 
     def get_signed_url(self, refetch: bool = False) -> Optional[str]:
         """
-        Get a signed URL for the item. This URL can be used to download the item.
+        Get a signed URL for downloading the item.
 
-        Will return `None` if the item is "synthetic" entity: an image group or a DICOM series. Note
-        that image sequences are backed by a video file and will have a signed URL.
+        Returns `None` if the item is a synthetic entity (e.g., image group or DICOM series).
+
+        Args:
+            refetch: If `True`, forces fetching a new signed URL even if one is cached.
+
+        Returns:
+            Optional[str]: Signed URL for downloading the item, or `None` if not supported.
+
+        Raises:
+            ValueError: If the item type is DICOM series or image group (unsupported for signed URLs).
         """
         if self.item_type == StorageItemType.DICOM_SERIES or self.item_type == StorageItemType.IMAGE_GROUP:
             return None  # not supported for these types. Maybe raise ValueError instead?
@@ -1123,8 +1254,10 @@ class StorageItem:
 
     def get_summary(self) -> StorageItemSummary:
         """
-        Get a summary of the item (linked datasets, etc.). See :class:`encord.StorageItemSummary` for
-        exact set of information provided.
+        Retrieve a summary of the item, including linked datasets and other information.
+
+        Returns:
+            StorageItemSummary: Object containing summary information about the item.
         """
         return self._api_client.get(
             f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}/summary",
@@ -1134,14 +1267,13 @@ class StorageItem:
 
     def get_child_items(self, get_signed_urls: bool = False) -> Iterable["StorageItem"]:
         """
-        Get child items of the item (e.g. frames of an image group or files of DICOM series).
-        Only returns those items that are accessible to the user. See also :meth:`.get_summary`.
+        Get child items of the item, such as frames of an image group or files of DICOM series.
 
         Args:
-            get_signed_urls: If True, get signed URLs for the child items.
+            get_signed_urls: If `True`, include signed URLs for child items.
 
         Returns:
-            List of child items. The list will be emtpy if the item has no children (e.g. it's a Video)
+            Iterable[StorageItem]: List of child items accessible to the user.
         """
         if self.item_type not in {
             StorageItemType.IMAGE_GROUP,
@@ -1166,17 +1298,22 @@ class StorageItem:
         bundle: Optional[Bundle] = None,
     ) -> None:
         """
-        Update the item's modifiable properties. Any parameters that are not provided will not be updated.
+        Update modifiable properties of the item.
 
         Args:
             name: New item name.
             description: New item description.
             client_metadata: New client metadata.
-            bundle: Optional :class:`encord.http.Bundle` to use for the operation. If provided, the operation
-                will be bundled into a single server call with other item updates using the same bundle.
+            bundle: Optional bundle to use for bundling operations.
 
         Returns:
             None
+
+        Notes:
+            If no parameters are provided, the function does nothing.
+
+            If `bundle` is provided, the operation is bundled into a single server call with other item updates
+            using the same bundle.
         """
         if name is None and description is None and client_metadata is None:
             return
@@ -1217,8 +1354,7 @@ class StorageItem:
         Delete the item from the storage.
 
         Args:
-            remove_unused_frames: If `True` (which is default) and the item is an image group or a DICOM series,
-            find and remove the individual images or DICOM files that are not used in any other item.
+            remove_unused_frames: If `True` (default), remove individual images or DICOM files not used elsewhere.
 
         Returns:
             None
@@ -1236,15 +1372,18 @@ class StorageItem:
         allow_mirror_dataset_changes: bool = False,
     ):
         """
-        Move the item to another folder (specify folder object or UUID).
+        Move the item to another folder.
 
         Args:
-            target_folder: Target folder to move the item to. Should be a `StorageFolder` object or a UUID.
+            target_folder: Target folder to move the item to. Can be a `StorageFolder` object or a UUID.
+            allow_mirror_dataset_changes: If `True`, allows moving items linked to a mirror dataset.
+                Default is `False`, which prohibits such moves to prevent data loss.
 
-            allow_mirror_dataset_changes: If `True`, allow moving items that are linked to a mirror dataset. By default,
-                moving such items is prohibited, as it would result in data units being removed from a dataset,
-                potentially deleting related annotations and other data.
+        Returns:
+            None
 
+        Notes:
+            This method updates the item's parent folder and refetches item data after the move.
         """
         target_folder_uuid = target_folder if isinstance(target_folder, UUID) else target_folder.uuid
         self._api_client.post(
@@ -1261,7 +1400,13 @@ class StorageItem:
 
     def refetch_data(self, get_signed_url: bool = False) -> None:
         """
-        Refetch data for the item.
+        Refetches data for the item, updating its attributes.
+
+        Args:
+            get_signed_url: If `True`, refetches the signed URL for downloading the item.
+
+        Returns:
+            None
         """
         self._set_orm_item(
             self._api_client.get(
@@ -1286,7 +1431,7 @@ class StorageItem:
             "storage/items/get-bulk",
             params=None,
             payload=GetItemsBulkPayload(item_uuids=item_uuids, sign_urls=get_signed_url),
-            result_type=Page[orm_storage.StorageItem],  # it's always just one page here
+            result_type=Page[orm_storage.StorageItem],
         )
         return [StorageItem(api_client, orm_item) for orm_item in orm_items.results]
 
