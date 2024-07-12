@@ -35,6 +35,7 @@ from encord.http.v2.payloads import Page
 from encord.orm.dataset import LongPollingStatus
 from encord.orm.storage import (
     CustomerProvidedVideoMetadata,
+    CustomerProvidedAudioMetadata,
     DataUploadItems,
     FoldersSortBy,
     GetItemParams,
@@ -563,6 +564,76 @@ class StorageFolder:
         else:
             return upload_result.items_with_names[0].item_uuid
 
+    def upload_audio(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+        audio_metadata: Optional[CustomerProvidedAudioMetadata] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ) -> UUID:  # TODO this should return an item?
+        """
+        Upload audio to a folder in Encord storage.
+
+        Args:
+            file_path: path to audio e.g. '/home/user/data/audio.mp3'
+            title:
+                The audio title. If unspecified, this will be the file name. This title should include an extension.
+                For example "encord_audio.mp4".
+            client_metadata:
+                Optional arbitrary metadata to be associated with the audio. Should be a dictionary
+                that is JSON-serializable.
+            audio_metadata:
+                Optional media metadata for a audio file; if provided, Encord service will skip scanning the audio file
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        Returns:
+            UUID of the newly created audio item.
+
+        Raises:
+            AuthorizationError: If the user is not authorized to access the folder.
+            EncordException: If the audio could not be uploaded, e.g. due to being in an unsupported format.
+        """
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.AUDIO, count=1, frames_subfolder_name=None
+        )
+        if len(upload_url_info) != 1:
+            raise EncordException("Can't access upload location")
+
+        title = self._guess_title(title, file_path)
+
+        self._upload_local_file(
+            file_path,
+            title,
+            StorageItemType.AUDIO,
+            upload_url_info[0].signed_url,
+            cloud_upload_settings,
+        )
+
+        upload_result = self._add_data(
+            integration_id=None,
+            private_files=DataUploadItems(
+                audio=[
+                    orm_storage.DataUploadAudio(
+                        object_url=upload_url_info[
+                            0
+                        ].object_key,  # this is actually ignored when placeholder_item_uuid is set
+                        placeholder_item_uuid=upload_url_info[0].item_uuid,
+                        title=title,
+                        client_metadata=client_metadata or {},
+                        audio_metadata=audio_metadata,
+                    )
+                ],
+            ),
+            ignore_errors=False,
+        )
+
+        if upload_result.status == LongPollingStatus.ERROR:
+            raise EncordException(f"Could not register audio, errors occured {upload_result.errors}")
+        else:
+            return upload_result.items_with_names[0].item_uuid
+
     def add_private_data_to_folder_start(
         self,
         integration_id: str,
@@ -922,7 +993,8 @@ class StorageFolder:
     def _get_content_type(self, file_path: Union[Path, str], item_type: StorageItemType) -> str:
         if item_type == StorageItemType.IMAGE:
             return mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
-        elif item_type == StorageItemType.VIDEO:
+        # TODO QUESTION: Not entirely sure if this is right.
+        elif item_type == StorageItemType.VIDEO or item_type == StorageItemType.AUDIO:
             return "application/octet-stream"
         elif item_type == StorageItemType.DICOM_FILE:
             return "application/dicom"

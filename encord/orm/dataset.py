@@ -918,6 +918,17 @@ class SingleImage(Image):
     success: bool
 
 
+class Audio(base_orm.BaseORM):
+    """An audio object with supporting information."""
+
+    DB_FIELDS = OrderedDict([("data_hash", str), ("title", str), ("file_link", str), ("backing_item_uuid", UUID)])
+
+    NON_UPDATABLE_FIELDS = {
+        "data_hash",
+        "backing_item_uuid",
+    }
+
+
 @dataclasses.dataclass(frozen=True)
 class Images:
     """Uploading multiple images in a batch mode."""

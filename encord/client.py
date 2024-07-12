@@ -99,7 +99,7 @@ from encord.orm.dataset import (
     LongPollingStatus,
     ReEncodeVideoTask,
     SingleImage,
-    Video,
+    Video, Audio,
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.group import (
@@ -587,6 +587,29 @@ class EncordClientDataset(EncordClient):
             return Image({"data_hash": upload["data_hash"], "title": upload["title"], "file_link": upload["file_link"]})
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
+
+    def upload_audio(
+            self,
+            file_path: Union[str, Path],
+            cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+            title: Optional[str] = None,
+            folder_uuid: Optional[uuid.UUID] = None,
+        ) -> Audio:
+            """
+            This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
+            """
+            if os.path.exists(file_path):
+                signed_urls = upload_to_signed_url_list(
+                    [file_path], self._config, self._querier, Video, cloud_upload_settings=cloud_upload_settings
+                )
+                res = upload_video_to_encord(signed_urls[0], title, folder_uuid, self._querier)
+                if res:
+                    logger.info("Upload complete.")
+                    return Audio(res)
+                else:
+                    raise encord.exceptions.EncordException(message="An error has occurred during audio upload.")
+            else:
+                raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
     def link_items(
         self,

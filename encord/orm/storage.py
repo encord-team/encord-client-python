@@ -24,6 +24,7 @@ class StorageItemType(CamelStrEnum):
     IMAGE_SEQUENCE = auto()
     DICOM_FILE = auto()
     DICOM_SERIES = auto()
+    AUDIO= auto()
 
 
 class StorageUserRole(CamelStrEnum):
@@ -166,6 +167,26 @@ class CustomerProvidedVideoMetadata(BaseDTO):
     mime_type: str
     """MIME type of the video file (e.g. `video/mp4` or `video/webm`)."""
 
+class CustomerProvidedAudioMetadata(BaseDTO):
+    """
+    Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files
+    """
+    duration: float
+    """Video duration in (float) seconds."""
+    file_size: int
+    """Size of the video file in bytes."""
+    mime_type: str
+    """MIME type of the video file (e.g. `video/mp4` or `video/webm`)."""
+    sample_rate: int
+    """Sample rate (int) in Hz."""
+    bit_depth: int
+    """Size of each sample (int) in bits."""
+    codec: str
+    """Codec (e.g. mp3, pcm)."""
+    layout: str
+    """Type of layout (e.g. mono, stereo)"""
+
+
 
 class DataUploadImage(BaseDTO):
     object_url: str
@@ -229,6 +250,16 @@ class DataUploadDicomSeries(BaseDTO):
 
     external_file_type: Literal["DICOM"] = "DICOM"
 
+class DataUploadAudio(BaseDTO):
+    object_url: str
+    title: Optional[str] = None
+    client_metadata: Dict = Field(default_factory=dict)
+
+    audio_metadata: Optional[CustomerProvidedAudioMetadata] = None
+    external_file_type: Literal["AUDIO"] = "AUDIO"
+
+    placeholder_item_uuid: Optional[UUID] = None
+
 
 class DataUploadItems(BaseDTO):
     videos: List[DataUploadVideo] = Field(default_factory=list)
@@ -236,6 +267,7 @@ class DataUploadItems(BaseDTO):
     dicom_series: List[DataUploadDicomSeries] = Field(default_factory=list)
     images: List[DataUploadImage] = Field(default_factory=list)
     image_groups_from_items: List[DataUploadImageGroupFromItems] = Field(default_factory=list)
+    audio: List[DataUploadAudio] = Field(default_factory=list)
     skip_duplicate_urls: bool = False
 
 
