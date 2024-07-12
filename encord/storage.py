@@ -59,10 +59,6 @@ STORAGE_BUNDLE_CREATE_LIMIT = 1000
 class StorageFolder:
     """
     Represents a storage folder within the Encord system.
-
-    Attributes:
-        api_client (ApiClient): The API client used for making requests.
-        orm_folder (orm_storage.StorageFolder): ORM representation of the storage folder.
     """
 
     def __init__(self, api_client: ApiClient, orm_folder: orm_storage.StorageFolder):
