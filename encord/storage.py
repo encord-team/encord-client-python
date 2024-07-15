@@ -579,7 +579,7 @@ class StorageFolder:
             file_path: path to audio e.g. '/home/user/data/audio.mp3'
             title:
                 The audio title. If unspecified, this will be the file name. This title should include an extension.
-                For example "encord_audio.mp4".
+                For example "encord_audio.mp3".
             client_metadata:
                 Optional arbitrary metadata to be associated with the audio. Should be a dictionary
                 that is JSON-serializable.
