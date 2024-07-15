@@ -804,19 +804,8 @@ class EncordUserClient:
         Returns:
             The created storage folder. See :class:`encord.storage.StorageFolder` for details.
         """
-        if isinstance(parent_folder, StorageFolder):
-            parent_folder = parent_folder.uuid
 
-        payload = CreateStorageFolderPayload(
-            name=name,
-            description=description,
-            parent=parent_folder,
-            client_metadata=json.dumps(client_metadata) if client_metadata is not None else None,
-        )
-        folder_orm = self._api_client.post(
-            "storage/folders", params=None, payload=payload, result_type=OrmStorageFolder
-        )
-        return StorageFolder(self._api_client, folder_orm)
+        return StorageFolder._create_folder(self._api_client, name, description, client_metadata, parent_folder)
 
     def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
         """
