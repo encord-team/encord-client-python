@@ -667,6 +667,26 @@ class StorageFolder:
             ),
         )
 
+    def create_subfolder(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+    ) -> "StorageFolder":
+        """
+        Create a new subfolder of this folder. See also :meth:`encord.user_client.EncordUserClient.create_storage_folder`.
+
+        Args:
+            name: The name of the folder.
+            description: The description of the folder.
+            client_metadata: Optional arbitrary metadata to be associated with the folder. Should be a dictionary
+                that is JSON-serializable.
+
+        Returns:
+            The created storage folder. See :class:`encord.storage.StorageFolder` for details.
+        """
+        return StorageFolder._create_folder(self._api_client, name, description, client_metadata, self)
+
     def find_items(
         self,
         search: Optional[str] = None,
@@ -1097,6 +1117,41 @@ class StorageFolder:
             payload=orm_storage.PatchFoldersBulkPayload(folder_patches=folder_patches),
             result_type=Page[orm_storage.StorageFolder],
         ).results
+
+    @staticmethod
+    def _create_folder(
+        api_client: ApiClient,
+        name: str,
+        description: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+        parent_folder: Optional[Union["StorageFolder", UUID]] = None,
+    ) -> "StorageFolder":
+        """
+        Create a new storage folder.
+
+        Args:
+            name: The name of the folder.
+            description: The description of the folder.
+            client_metadata: Optional arbitrary metadata to be associated with the folder. Should be a dictionary
+                that is JSON-serializable.
+            parent_folder: The parent folder of the folder; or `None` if the folder is to be created at the root level.
+
+        Returns:
+            The created storage folder. See :class:`encord.storage.StorageFolder` for details.
+        """
+        if isinstance(parent_folder, StorageFolder):
+            parent_folder = parent_folder.uuid
+
+        payload = orm_storage.CreateStorageFolderPayload(
+            name=name,
+            description=description,
+            parent=parent_folder,
+            client_metadata=json.dumps(client_metadata) if client_metadata is not None else None,
+        )
+        folder_orm = api_client.post(
+            "storage/folders", params=None, payload=payload, result_type=orm_storage.StorageFolder
+        )
+        return StorageFolder(api_client, folder_orm)
 
 
 class StorageItem:
