@@ -31,7 +31,9 @@ from encord.orm.dataset import (
     SignedImagesURL,
     SignedImageURL,
     SignedVideoURL,
-    Video, Audio, SignedAudioURL,
+    Video,
+    Audio,
+    SignedAudioURL,
 )
 
 PROGRESS_BAR_FILE_FACTOR = 100
@@ -60,7 +62,9 @@ class CloudUploadSettings:
     """
 
 
-def _get_content_type(orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], file_path: str) -> Optional[str]:
+def _get_content_type(
+    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], file_path: str
+) -> Optional[str]:
     if orm_class == Images:
         return mimetypes.guess_type(file_path)[0]
     elif orm_class == Video or orm_class == Audio:
@@ -116,7 +120,7 @@ def upload_to_signed_url_list(
 
 
 def upload_video_to_encord(
-    signed_url: Union[SignedVideoURL, SignedImageURL, SignedDicomURL],
+    signed_url: Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL],
     video_title: Optional[str],
     folder_uuid: Optional[UUID],
     querier: Querier,

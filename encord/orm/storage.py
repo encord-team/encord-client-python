@@ -24,7 +24,7 @@ class StorageItemType(CamelStrEnum):
     IMAGE_SEQUENCE = auto()
     DICOM_FILE = auto()
     DICOM_SERIES = auto()
-    AUDIO= auto()
+    AUDIO = auto()
 
 
 class StorageUserRole(CamelStrEnum):
@@ -167,10 +167,12 @@ class CustomerProvidedVideoMetadata(BaseDTO):
     mime_type: str
     """MIME type of the video file (e.g. `video/mp4` or `video/webm`)."""
 
+
 class CustomerProvidedAudioMetadata(BaseDTO):
     """
     Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files
     """
+
     duration_seconds: float
     """Video duration in (float) seconds."""
     file_size: int
@@ -185,7 +187,6 @@ class CustomerProvidedAudioMetadata(BaseDTO):
     """Codec (e.g. mp3, pcm)."""
     num_channels: int
     """Number of channels"""
-
 
 
 class DataUploadImage(BaseDTO):
@@ -249,6 +250,7 @@ class DataUploadDicomSeries(BaseDTO):
     client_metadata: Dict = Field(default_factory=dict)
 
     external_file_type: Literal["DICOM"] = "DICOM"
+
 
 class DataUploadAudio(BaseDTO):
     object_url: str

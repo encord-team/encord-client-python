@@ -99,7 +99,8 @@ from encord.orm.dataset import (
     LongPollingStatus,
     ReEncodeVideoTask,
     SingleImage,
-    Video, Audio,
+    Video,
+    Audio,
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.group import (
@@ -595,7 +596,6 @@ class EncordClientDataset(EncordClient):
         title: Optional[str] = None,
         folder_uuid: Optional[uuid.UUID] = None,
     ) -> Audio:
-
         if os.path.exists(file_path):
             signed_urls = upload_to_signed_url_list(
                 [file_path], self._config, self._querier, Audio, cloud_upload_settings=cloud_upload_settings

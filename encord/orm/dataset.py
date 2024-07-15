@@ -855,10 +855,12 @@ class SignedImagesURL(base_orm.BaseListORM):
 
     BASE_ORM_TYPE = SignedImageURL
 
+
 class SignedAudioURL(base_orm.BaseORM):
     """A signed URL object with supporting information."""
 
     DB_FIELDS = OrderedDict([("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)])
+
 
 class SignedDicomURL(base_orm.BaseORM):
     """A signed URL object with supporting information."""
