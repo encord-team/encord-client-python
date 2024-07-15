@@ -1,3 +1,15 @@
+"""
+---
+title: "Dataset"
+slug: "sdk-ref-dataset"
+hidden: false
+metadata:
+  title: "Dataset"
+  description: "Encord SDK Dataset class"
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from datetime import datetime
 from pathlib import Path
 from typing import Collection, Dict, Iterable, List, Optional, TextIO, Union
@@ -9,6 +21,7 @@ from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     AddPrivateDataResponse,
+    DataLinkDuplicatesBehavior,
     DataRow,
     DatasetAccessSettings,
     DatasetDataLongPolling,
@@ -320,8 +333,20 @@ class Dataset:
         folder_uuid = folder.uuid if isinstance(folder, StorageFolder) else folder
         return self._client.upload_image(file_path, title, cloud_upload_settings, folder_uuid)
 
-    def link_items(self, item_uuids: List[UUID]) -> List[DataRow]:
-        return self._client.link_items(item_uuids)
+    def link_items(
+        self,
+        item_uuids: List[UUID],
+        duplicates_behavior: DataLinkDuplicatesBehavior = DataLinkDuplicatesBehavior.SKIP,
+    ) -> List[DataRow]:
+        """
+        Link storage items to the dataset, creating new data rows.
+
+        Args:
+            item_uuids: List of item UUIDs to link to the dataset
+            duplicates_behaviour: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also
+                :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`
+        """
+        return self._client.link_items(item_uuids, duplicates_behavior)
 
     def delete_image_group(self, data_hash: str):
         """

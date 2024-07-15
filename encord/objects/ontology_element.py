@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Ontology element"
+slug: "sdk-ref-objects-ont-element"
+hidden: false
+metadata:
+  title: "Objects - Ontology element"
+  description: "Encord SDK Objects - Ontology element."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

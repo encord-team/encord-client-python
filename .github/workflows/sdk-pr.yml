@@ -15,6 +15,7 @@ env:
 
   INTEGRATION_TEST_REPORT_PYTHON_3_11: integration-test-report-python3_11.xml
   INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+  INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
 
 concurrency:
   group: cord-client-${{ github.ref }}-pr
@@ -42,11 +43,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Run unit tests for Python 3.8
+      - name: Run unit tests for Python 3.8 (Pydantic 1.x)
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.8.16
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
+
+      - name: Publish unit test report Python 3.8 (Pydantic 2.x)
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
+          check_name: Unit test report (Pydantic 1.x)
 
   unit-tests-python-3-8-pydantic-2:
     name: Run unit tests (Python 3.8, Pydantic 2.x)
@@ -55,12 +62,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Run unit tests for Python 3.8
+      - name: Run unit tests for Python 3.8 (Pydantic 2.x)
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.8.16
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
+
+      - name: Publish unit test report Python 3.8 (Pydantic 2.x)
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
+          check_name: Unit test report ((Pydantic 2.x)
 
   integration-tests-python-3-11:
     name: Run integration tests for Python 3.11
@@ -83,4 +96,11 @@ jobs:
           integration-tests-location: ./encord-backend/projects/sdk-integration-tests
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
+
+      - name: Publish integration test report Python 3.11
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: ./encord-backend/projects/sdk-integration-tests/${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          check_name: SDK integration test report

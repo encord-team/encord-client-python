@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Attributes"
+slug: "sdk-ref-objects-attributes"
+hidden: false
+metadata:
+  title: "Objects - Attributes"
+  description: "Encord SDK Objects - Attributes class."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from abc import abstractmethod

@@ -20,6 +20,7 @@ env:
 
   INTEGRATION_TEST_REPORT_PYTHON_3_11: integration-test-report-python3_11.xml
   INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+  INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
 
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
   BACKEND_REPO: cord-team/cord-backend
@@ -186,6 +187,7 @@ jobs:
           integration-tests-location: ./encord-backend/projects/sdk-integration-tests
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
 
 

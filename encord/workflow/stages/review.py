@@ -1,5 +1,18 @@
+"""
+---
+title: "Review Stage"
+slug: "sdk-ref-stage-review"
+hidden: false
+metadata:
+  title: "Review Stage"
+  description: "Encord SDK Review Stage."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
+from enum import Enum
 from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
@@ -9,15 +22,29 @@ from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
 
 
+class ReviewTaskStatus(str, Enum):
+    NEW = "NEW"
+    ASSIGNED = "ASSIGNED"
+    RELEASED = "RELEASED"
+    REOPENED = "REOPENED"
+
+
 class _ReviewTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
     data_hashes: Optional[List[UUID]] = None
     dataset_hashes: Optional[List[UUID]] = None
     data_title_contains: Optional[str] = None
+    statuses: Optional[List[ReviewTaskStatus]] = None
 
 
 class ReviewStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.REVIEW] = WorkflowStageType.REVIEW
+
+    """
+    The Review stage for Workflows.
+
+    This stage can appear in Consensus and non-Consensus Workflows.
+    """
 
     def get_tasks(
         self,
@@ -26,13 +53,37 @@ class ReviewStage(WorkflowStageBase):
         data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
+        status: Union[ReviewTaskStatus, List[ReviewTaskStatus], None] = None,
     ) -> Iterable[ReviewTask]:
+        """
+        Retrieves tasks for the ReviewStage.
+
+        **Parameters**
+
+        - `assignee` (Union[List[str], str, None]): User assigned to a task.
+        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID for the data unit.
+        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID for the dataset that the data unit belongs to.
+        - `data_title` (Optional[str]): Name of the data unit.
+        - `status` (Union[ReviewTaskStatus, List[ReviewTaskStatus], None]): Status of the task.
+
+        **Returns**
+
+        An iterable of `ReviewTask` instances with the following information:
+        - `uuid`: Unique identifier for the task.
+        - `created_at`: Time and date the task was created.
+        - `updated_at`: Time and date the task was last edited.
+        - `assignee`: The user currently assigned to the task. The value is None if no one is assigned to the task.
+        - `data_hash`: Unique identifier for the data unit.
+        - `data_title`: Name/title of the data unit.
+        """
         params = _ReviewTasksQueryParams(
             user_emails=ensure_list(assignee),
             data_hashes=ensure_uuid_list(data_hash),
             dataset_hashes=ensure_uuid_list(dataset_hash),
             data_title_contains=data_title,
+            statuses=ensure_list(status),
         )
+
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
@@ -59,22 +110,70 @@ class _ActionRelease(WorkflowAction):
 
 
 class ReviewTask(WorkflowTask):
-    assignee: Optional[str]
+    status: ReviewTaskStatus
     data_hash: UUID
     data_title: str
+    assignee: Optional[str]
+
+    """
+    Tasks in non-Consensus Review stages.
+
+    **Attributes**
+
+    - `status` (ReviewTaskStatus): Status of the review task.
+    - `data_hash` (UUID): Unique identifier for the data unit.
+    - `data_title` (str): Name of the data unit.
+    - `assignee` (Optional[str]): User assigned to the task.
+
+    **Allowed actions**
+
+    - `approve`: Approves a task.
+    - `reject`: Rejects a task.
+    - `assign`: Assigns a task to a user.
+    - `release`: Releases a task from the current user.
+    """
 
     def approve(self, *, bundle: Optional[Bundle] = None) -> None:
+        """
+        Approves the task.
+
+        **Parameters**
+
+        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionApprove(task_uuid=self.uuid), bundle=bundle)
 
     def reject(self, *, bundle: Optional[Bundle] = None) -> None:
+        """
+        Rejects the task.
+
+        **Parameters**
+
+        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionReject(task_uuid=self.uuid), bundle=bundle)
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
+        """
+        Assigns the task to a user.
+
+        **Parameters**
+
+        - `assignee` (str): The user to assign the task to.
+        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
+        """
+        Releases the task from the current user.
+
+        **Parameters**
+
+        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)

@@ -1,3 +1,15 @@
+"""
+---
+title: "Workflow"
+slug: "sdk-ref-workflows"
+hidden: false
+metadata:
+  title: "Workflows"
+  description: "Encord SDK Workflow class."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from typing import List, Optional, Type, TypeVar, Union
@@ -53,6 +65,10 @@ def _ensure_uuid(v: str | UUID) -> UUID:
 class Workflow:
     stages: List[WorkflowStage] = []
 
+    """
+    Workflow class in Projects.
+    """
+
     def __init__(self, api_client: ApiClient, project_hash: UUID, workflow_orm: WorkflowDTO):
         workflow_client = WorkflowClient(api_client, project_hash)
 
@@ -65,6 +81,17 @@ class Workflow:
         uuid: Optional[UUID | str] = None,
         type_: Optional[Type[WorkflowStageT]] = None,
     ) -> WorkflowStageT:
+        """
+        **Params**
+
+        - name: Name of the stage.
+        - uuid: Unique identifier for the stage.
+        - type_: The type of stage.
+
+        **Returns**
+
+        Returns a list of Workflow stages (`type_`) from non-Consensus and Consensus Projects.
+        """
         for stage in self.stages:
             if (uuid is not None and stage.uuid == _ensure_uuid(uuid)) or (name is not None and stage.title == name):
                 if type_ is not None and not isinstance(stage, type_):

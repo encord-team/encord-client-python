@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Ontology Structure"
+slug: "sdk-ref-objects-ont-structure"
+hidden: false
+metadata:
+  title: "Objects - Ontology Structure"
+  description: "Encord SDK Objects - Ontology Structure."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

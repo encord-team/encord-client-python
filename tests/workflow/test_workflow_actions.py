@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 from encord.http.bundle import Bundle
-from encord.workflow import AnnotationStage, AnnotationTask, Workflow
+from encord.workflow import AnnotationStage, AnnotationTask, AnnotationTaskStatus, Workflow
 
 
 def test_bulk_assign_annotations(workflow: Workflow) -> None:
@@ -19,6 +19,7 @@ def test_bulk_assign_annotations(workflow: Workflow) -> None:
                 data_title=f"data unit {x}",
                 label_branch_name="main",
                 assignee=None,
+                status=AnnotationTaskStatus.NEW,
             )
             for x in range(0, 3)
         ]

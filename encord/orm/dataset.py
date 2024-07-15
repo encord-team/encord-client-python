@@ -49,6 +49,12 @@ class DatasetUsers:
     pass
 
 
+class DataLinkDuplicatesBehavior(Enum):
+    DUPLICATE = "DUPLICATE"
+    FAIL = "FAIL"
+    SKIP = "SKIP"
+
+
 @dataclasses.dataclass(frozen=True)
 class DataClientMetadata:
     payload: dict

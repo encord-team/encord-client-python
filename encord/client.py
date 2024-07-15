@@ -81,6 +81,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     AddPrivateDataResponse,
+    DataLinkDuplicatesBehavior,
     DataRow,
     DataRows,
     DatasetAccessSettings,
@@ -587,12 +588,29 @@ class EncordClientDataset(EncordClient):
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
 
-    def link_items(self, item_uuids: List[uuid.UUID]) -> List[DataRow]:
-        return self._querier.basic_setter(
+    def link_items(
+        self,
+        item_uuids: List[uuid.UUID],
+        duplicates_behavior: DataLinkDuplicatesBehavior = DataLinkDuplicatesBehavior.SKIP,
+    ) -> List[DataRow]:
+        """
+        Link storage items to the dataset, creating new data rows.
+
+        Args:
+            item_uuids: List of item UUIDs to link to the dataset
+            duplicates_behaviour: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also
+                :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`
+        """
+
+        data_row_dicts = self._querier.basic_setter(
             DatasetLinkItems,
             uid=self._querier.resource_id,
-            payload={"item_uuids": [str(item_uuid) for item_uuid in item_uuids]},
+            payload={
+                "item_uuids": [str(item_uuid) for item_uuid in item_uuids],
+                "duplicates_behavior": duplicates_behavior.value,
+            },
         )
+        return DataRow.from_dict_list(data_row_dicts)
 
     def delete_image_group(self, data_hash: str):
         """
@@ -674,9 +692,9 @@ class EncordClientDataset(EncordClient):
             payload=payload,
         )["process_hash"]
 
-        print(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
-        print("SDK process can be terminated, this will not affect successful job execution.")
-        print("You can follow the progress in the web app via notifications.")
+        logger.info(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
+        logger.info("SDK process can be terminated, this will not affect successful job execution.")
+        logger.info("You can follow the progress in the web app via notifications.")
 
         return process_hash
 
@@ -709,7 +727,7 @@ class EncordClientDataset(EncordClient):
                 )
 
                 if res.status == LongPollingStatus.DONE:
-                    print(f"add_private_data_to_dataset job completed with upload_job_id={upload_job_id}.")
+                    logger.info(f"add_private_data_to_dataset job completed with upload_job_id={upload_job_id}.")
 
                 polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
                 polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
@@ -721,9 +739,9 @@ class EncordClientDataset(EncordClient):
                 files_total_count = res.units_pending_count + res.units_done_count + res.units_error_count
 
                 if files_finished_count != files_total_count:
-                    print(f"Processed {files_finished_count}/{files_total_count} files")
+                    logger.info(f"Processed {files_finished_count}/{files_total_count} files")
                 else:
-                    print("Processed all files, dataset data linking and task creation is performed, please wait")
+                    logger.info("Processed all files, dataset data linking and task creation is performed, please wait")
 
                 failed_requests_count = 0
             except (requests.exceptions.RequestException, encord.exceptions.RequestException):
