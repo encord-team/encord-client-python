@@ -171,7 +171,7 @@ class CustomerProvidedAudioMetadata(BaseDTO):
     """
     Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files
     """
-    duration: float
+    duration_seconds: float
     """Video duration in (float) seconds."""
     file_size: int
     """Size of the video file in bytes."""
@@ -183,8 +183,8 @@ class CustomerProvidedAudioMetadata(BaseDTO):
     """Size of each sample (int) in bits."""
     codec: str
     """Codec (e.g. mp3, pcm)."""
-    layout: str
-    """Type of layout (e.g. mono, stereo)"""
+    num_channels: int
+    """Number of channels"""
 
 
 
