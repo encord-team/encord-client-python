@@ -92,6 +92,10 @@ class StorageItem(BaseDTO):
     dicom_study_uid: Optional[str]
     dicom_series_uid: Optional[str]
     frame_count: Optional[int]
+    audio_sample_rate: Optional[int]
+    audio_bit_depth: Optional[int]
+    audio_codec: Optional[str]
+    audio_num_channels: Optional[int]
 
 
 class CreateStorageFolderPayload(BaseDTO):

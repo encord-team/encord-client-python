@@ -605,7 +605,9 @@ class EncordClientDataset(EncordClient):
                 logger.info("Upload complete.")
                 return Audio(res)
             else:
-                raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
+                raise encord.exceptions.EncordException(message="An error has occurred during audio upload.")
+        else:
+            raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
     def link_items(
         self,

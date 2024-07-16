@@ -1358,6 +1358,27 @@ class StorageItem:
         """Optional[int]: The frame count of the storage item."""
         return self._orm_item.frame_count
 
+    @property
+    def audio_sample_rate(self) -> Optional[int]:
+        """Optional[int]: The number of samples taken per second (in Hz)."""
+        return self._orm_item.audio_sample_rate
+
+    @property
+    def audio_bit_depth(self) -> Optional[int]:
+        """Optional[int]: The number of bits that represent each audio sample."""
+        return self._orm_item.audio_bit_depth
+
+    @property
+    def audio_codec(self) -> Optional[str]:
+        """Optional[int]: The codec of the audio file (e.g., mp3 or flac)."""
+        return self._orm_item.audio_codec
+
+    @property
+    def audio_num_channels(self) -> Optional[int]:
+        """Optional[int]: The number of channels."""
+        return self._orm_item.audio_num_channels
+
+
     def get_signed_url(self, refetch: bool = False) -> Optional[str]:
         """
         Get a signed URL for downloading the item.
