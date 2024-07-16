@@ -24,6 +24,7 @@ class StorageItemType(CamelStrEnum):
     IMAGE_SEQUENCE = auto()
     DICOM_FILE = auto()
     DICOM_SERIES = auto()
+    AUDIO = auto()
 
 
 class StorageUserRole(CamelStrEnum):
@@ -91,6 +92,10 @@ class StorageItem(BaseDTO):
     dicom_study_uid: Optional[str]
     dicom_series_uid: Optional[str]
     frame_count: Optional[int]
+    audio_sample_rate: Optional[int]
+    audio_bit_depth: Optional[int]
+    audio_codec: Optional[str]
+    audio_num_channels: Optional[int]
 
 
 class CreateStorageFolderPayload(BaseDTO):
@@ -167,6 +172,27 @@ class CustomerProvidedVideoMetadata(BaseDTO):
     """MIME type of the video file (e.g. `video/mp4` or `video/webm`)."""
 
 
+class CustomerProvidedAudioMetadata(BaseDTO):
+    """
+    Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files
+    """
+
+    duration_seconds: float
+    """Audio duration in (float) seconds."""
+    file_size: int
+    """Size of the audio file in bytes."""
+    mime_type: str
+    """MIME type of the audio file (for example: `audio/mpeg` or `audio/wav`)."""
+    sample_rate: int
+    """Sample rate (int) in Hz."""
+    bit_depth: int
+    """Size of each sample (int) in bits."""
+    codec: str
+    """Codec (for example: mp3, pcm)."""
+    num_channels: int
+    """Number of channels"""
+
+
 class DataUploadImage(BaseDTO):
     object_url: str
     title: Optional[str] = None
@@ -230,12 +256,24 @@ class DataUploadDicomSeries(BaseDTO):
     external_file_type: Literal["DICOM"] = "DICOM"
 
 
+class DataUploadAudio(BaseDTO):
+    object_url: str
+    title: Optional[str] = None
+    client_metadata: Dict = Field(default_factory=dict)
+
+    audio_metadata: Optional[CustomerProvidedAudioMetadata] = None
+    external_file_type: Literal["AUDIO"] = "AUDIO"
+
+    placeholder_item_uuid: Optional[UUID] = None
+
+
 class DataUploadItems(BaseDTO):
     videos: List[DataUploadVideo] = Field(default_factory=list)
     image_groups: List[DataUploadImageGroup] = Field(default_factory=list)
     dicom_series: List[DataUploadDicomSeries] = Field(default_factory=list)
     images: List[DataUploadImage] = Field(default_factory=list)
     image_groups_from_items: List[DataUploadImageGroupFromItems] = Field(default_factory=list)
+    audio: List[DataUploadAudio] = Field(default_factory=list)
     skip_duplicate_urls: bool = False
 
 
