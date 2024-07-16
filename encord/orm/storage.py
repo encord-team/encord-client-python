@@ -178,17 +178,17 @@ class CustomerProvidedAudioMetadata(BaseDTO):
     """
 
     duration_seconds: float
-    """Video duration in (float) seconds."""
+    """Audio duration in (float) seconds."""
     file_size: int
-    """Size of the video file in bytes."""
+    """Size of the audio file in bytes."""
     mime_type: str
-    """MIME type of the video file (e.g. `video/mp4` or `video/webm`)."""
+    """MIME type of the audio file (for example: `audio/mpeg` or `audio/wav`)."""
     sample_rate: int
     """Sample rate (int) in Hz."""
     bit_depth: int
     """Size of each sample (int) in bits."""
     codec: str
-    """Codec (e.g. mp3, pcm)."""
+    """Codec (for example: mp3, pcm)."""
     num_channels: int
     """Number of channels"""
 

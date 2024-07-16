@@ -573,18 +573,18 @@ class StorageFolder:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """
-        Upload audio to a folder in Encord storage.
+        Upload audio to a Folder in Encord storage.
 
         Args:
-            file_path: path to audio e.g. '/home/user/data/audio.mp3'
+            file_path: File path to audio. For example: '/home/user/data/audio.mp3'
             title:
-                The audio title. If unspecified, this will be the file name. This title should include an extension.
+                The audio title. If unspecified, the file name is the title. This title should include an extension.
                 For example "encord_audio.mp3".
             client_metadata:
-                Optional arbitrary metadata to be associated with the audio. Should be a dictionary
+                Optional custom metadata to be associated with the audio. Should be a dictionary
                 that is JSON-serializable.
             audio_metadata:
-                Optional media metadata for a audio file; if provided, Encord service will skip scanning the audio file
+                Optional media metadata for an audio file; if provided, Encord service skips scanning the audio file
             cloud_upload_settings:
                 Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
@@ -593,7 +593,7 @@ class StorageFolder:
 
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the audio could not be uploaded, e.g. due to being in an unsupported format.
+            EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.AUDIO, count=1, frames_subfolder_name=None
