@@ -24,16 +24,16 @@ from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError
 from encord.http.querier import Querier, create_new_session
 from encord.orm.dataset import (
+    Audio,
     DicomSeries,
     Images,
+    SignedAudioURL,
     SignedDicomsURL,
     SignedDicomURL,
     SignedImagesURL,
     SignedImageURL,
     SignedVideoURL,
     Video,
-    Audio,
-    SignedAudioURL,
 )
 
 PROGRESS_BAR_FILE_FACTOR = 100

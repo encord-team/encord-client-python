@@ -81,6 +81,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     AddPrivateDataResponse,
+    Audio,
     DataLinkDuplicatesBehavior,
     DataRow,
     DataRows,
@@ -100,7 +101,6 @@ from encord.orm.dataset import (
     ReEncodeVideoTask,
     SingleImage,
     Video,
-    Audio,
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.group import (
