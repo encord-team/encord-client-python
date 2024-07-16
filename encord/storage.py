@@ -1365,7 +1365,7 @@ class StorageItem:
 
     @property
     def audio_bit_depth(self) -> Optional[int]:
-        """Optional[int]: The number of bits that represent each audio sample."""
+        """Optional[int]: The number of bits used to record each audio sample."""
         return self._orm_item.audio_bit_depth
 
     @property
