@@ -1378,7 +1378,6 @@ class StorageItem:
         """Optional[int]: The number of channels."""
         return self._orm_item.audio_num_channels
 
-
     def get_signed_url(self, refetch: bool = False) -> Optional[str]:
         """
         Get a signed URL for downloading the item.
