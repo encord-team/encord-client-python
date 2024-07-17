@@ -58,8 +58,8 @@ class LabelReview(BaseDTO):
     uuid: UUID = Field(alias="reviewUuid")
     status: LabelReviewStatus
 
-    granularity_type: str
-    granularity_hash: str
+    label_type: str
+    label_id: str
 
     def _get_client_data(self) -> Tuple[WorkflowClient, UUID, UUID]:
         assert self._workflow_client
