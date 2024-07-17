@@ -107,7 +107,7 @@ class Ontology:
 
     def list_groups(self) -> Iterable[OntologyGroup]:
         """
-        List all groups that have access to a particular ontology
+        List all groups that have access to a particular ontology.
         """
         ontology_hash = convert_to_uuid(self.ontology_hash)
         page = self.api_client.get(f"ontologies/{ontology_hash}/groups", params=None, result_type=Page[OntologyGroup])
@@ -116,11 +116,11 @@ class Ontology:
 
     def add_group(self, group_hash: Union[List[UUID], UUID], user_role: OntologyUserRole):
         """
-        Add group to an ontology
+        Add group to an ontology.
 
         Args:
-            group_hash: List of group hashes to be added
-            user_role: user role that the group will be given
+            group_hash: List of group hashes to be added.
+            user_role: User role that the group will be given.
 
         Returns:
             None
@@ -138,10 +138,10 @@ class Ontology:
 
     def remove_group(self, group_hash: Union[List[UUID], UUID]):
         """
-        Remove group from ontology
+        Remove group from ontology.
 
         Args:
-            group_hash: List of group_hashes to be removed
+            group_hash: List of group hashes to be removed.
 
         Returns:
             None

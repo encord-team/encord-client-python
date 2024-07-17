@@ -856,6 +856,12 @@ class SignedImagesURL(base_orm.BaseListORM):
     BASE_ORM_TYPE = SignedImageURL
 
 
+class SignedAudioURL(base_orm.BaseORM):
+    """A signed URL object with supporting information."""
+
+    DB_FIELDS = OrderedDict([("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)])
+
+
 class SignedDicomURL(base_orm.BaseORM):
     """A signed URL object with supporting information."""
 
@@ -916,6 +922,17 @@ class SingleImage(Image):
     """For native single image upload."""
 
     success: bool
+
+
+class Audio(base_orm.BaseORM):
+    """An audio object with supporting information."""
+
+    DB_FIELDS = OrderedDict([("data_hash", str), ("title", str), ("file_link", str), ("backing_item_uuid", UUID)])
+
+    NON_UPDATABLE_FIELDS = {
+        "data_hash",
+        "backing_item_uuid",
+    }
 
 
 @dataclasses.dataclass(frozen=True)

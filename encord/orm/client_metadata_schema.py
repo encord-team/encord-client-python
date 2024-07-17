@@ -14,6 +14,7 @@ class ClientMetadataSchemaTypes(StringEnum):
     GEOSPATIAL = "geospatial"
     ENUM = "enum"
     EMBEDDING = "embedding"
+    LONG_STRING = "long_string"
 
 
 class ClientMetadataSchema(BaseDTO):
