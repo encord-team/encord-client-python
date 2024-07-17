@@ -33,6 +33,7 @@ from encord.http.utils import CloudUploadSettings, _upload_single_file
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.dataset import LongPollingStatus
+from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, StorageFolderGroup
 from encord.orm.storage import (
     CustomerProvidedAudioMetadata,
     CustomerProvidedVideoMetadata,
@@ -50,6 +51,7 @@ from encord.orm.storage import (
     StorageItemSummary,
     StorageItemType,
     StorageLocationName,
+    StorageUserRole,
     UploadLongPollingState,
     UploadSignedUrlsPayload,
 )
@@ -951,6 +953,52 @@ class StorageFolder:
             payload=orm_storage.DeleteItemsPayload(child_uuids=item_uuids, remove_unused_frames=remove_unused_frames),
             result_type=None,  # we don't need a result here, even though the server provides it
         )
+
+    def list_groups(self) -> Iterable[StorageFolderGroup]:
+        """
+        List all groups that have access to this folder.
+        """
+        page = self._api_client.get(
+            f"/storage/folders/{self.uuid}/groups", params=None, result_type=Page[StorageFolderGroup]
+        )
+
+        yield from page.results
+
+    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: StorageUserRole):
+        """
+        Allow access to this folder for members of a group.
+
+        Args:
+            group_hash: Group hash, or a list of group hashes to be added.
+            user_role: User role that the group will be given.
+
+        Returns:
+            None
+        """
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        payload = AddStorageFolderGroupsPayload(group_hash_list=group_hash, user_role=user_role)
+        self._api_client.post(
+            f"/storage/folders/{self.uuid}/groups",
+            params=None,
+            payload=payload,
+            result_type=None,
+        )
+
+    def remove_group(self, group_hash: Union[List[UUID], UUID]):
+        """
+        Revoke access to the folder from the members of a group.
+
+        Args:
+            group_hash: Group hash, or a list of group hashes to be removed.
+
+        Returns:
+            None
+        """
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        params = RemoveGroupsParams(group_hash_list=group_hash)
+        self._api_client.delete(f"/storage/folders/{self.uuid}/groups", params=params, result_type=None)
 
     def refetch_data(self) -> None:
         """
