@@ -168,7 +168,7 @@ class StorageFolder:
             order (FoldersSortBy): Sort order. Defaults to FoldersSortBy.NAME.
             get_signed_urls (bool): Whether to get signed URLs for the items. Defaults to False.
             desc (bool): Sort in descending order. Defaults to False.
-            page_size (int): Number of items to return per page. Defaults to 100.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageItem]: Iterable of items in the folder.
@@ -690,7 +690,7 @@ class StorageFolder:
                 no filtering is applied.
             order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc (bool): If True, sort in descending order.
-            page_size (int): Number of folders to return per page.
+            page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
@@ -724,7 +724,7 @@ class StorageFolder:
                 no filtering is applied.
             order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc (bool): If True, sort in descending order.
-            page_size (int): Number of folders to return per page.
+            page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
@@ -784,7 +784,7 @@ class StorageFolder:
             order (FoldersSortBy): Sort order.
             desc (bool): Sort in descending order.
             get_signed_urls (bool): If True, return signed URLs for the items.
-            page_size (int): Number of items to return per page.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageItem]: An iterable of items in the folder and its subfolders.
