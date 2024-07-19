@@ -168,7 +168,7 @@ class StorageFolder:
             order (FoldersSortBy): Sort order. Defaults to FoldersSortBy.NAME.
             get_signed_urls (bool): Whether to get signed URLs for the items. Defaults to False.
             desc (bool): Sort in descending order. Defaults to False.
-            page_size (int): Number of items to return per page. Defaults to 100, maximum allowed is 1000.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageItem]: Iterable of items in the folder.
