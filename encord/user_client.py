@@ -953,7 +953,7 @@ class EncordUserClient:
             order: Sort order.
             desc: Sort in descending order.
             get_signed_urls: If True, return signed URLs for the items.
-            page_size: Number of items to return per page. Default is 100, maximum allowed is 1000.
+            page_size: Number of items to return per page. Default if not specified is 100. Maximum value is 1000.
 
         At least one of `search` or `item_types` must be provided.
 
