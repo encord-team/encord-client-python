@@ -876,7 +876,7 @@ class EncordUserClient:
                 no filtering is applied.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
-            page_size: Number of folders to return per page. Default is 100, maximum allowed is 1000.
+            page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable of :class:`encord.StorageFolder` objects.
