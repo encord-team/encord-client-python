@@ -277,8 +277,8 @@ class ReviewTask(WorkflowTask):
         An iterable of `ReviewTask` instances with the following information:
         - `uuid`: Unique identifier for label review.
         - `status`: Current status of the label review.
-        - `granularity_type`: Type of the label.
-        - `granularity_hash`: Unique identifier for the granularity hash - a feature hash in the project ontology.
+        - `label_type`: Type of the label. Can be either Object or Classification.
+        - `label_id`: Unique identifier of the label.
         """
         workflow_client, stage_uuid = self._get_client_data()
         for r in workflow_client.get_label_reviews(stage_uuid, self.uuid, type_=LabelReview):
