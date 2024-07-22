@@ -177,7 +177,7 @@ class CustomerProvidedAudioMetadata(BaseDTO):
     Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files
     """
 
-    duration_seconds: float
+    duration: float
     """Audio duration in (float) seconds."""
     file_size: int
     """Size of the audio file in bytes."""
