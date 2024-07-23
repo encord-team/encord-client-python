@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
 from uuid import UUID
 
-from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
+from encord.http.bundle import Bundle, bundled_operation
 from encord.http.v2.api_client import ApiClient
 from encord.orm.base_dto import BaseDTO, PrivateAttr
 
@@ -42,7 +42,8 @@ class WorkflowAction(BaseDTO):
     task_uuid: UUID
 
 
-T = TypeVar("T", bound=WorkflowTask)
+TaskT = TypeVar("TaskT", bound=WorkflowTask)
+ReviewT = TypeVar("ReviewT", bound=BaseDTO)
 
 
 @dataclass
@@ -56,12 +57,29 @@ class BundledWorkflowActionPayload:
         return self
 
 
+class WorkflowReviewAction(BaseDTO):
+    review_uuid: UUID
+
+
+@dataclass
+class BundledReviewActionPayload:
+    stage_uuid: UUID
+    task_uuid: UUID
+    actions: list[WorkflowReviewAction]
+
+    def add(self, other: BundledReviewActionPayload) -> BundledReviewActionPayload:
+        assert self.stage_uuid == other.stage_uuid, "It's only possible to bundle actions for one stage at a time"
+        assert self.task_uuid == other.task_uuid, "It's only possible to bundle review actions one task at a time"
+        self.actions.extend(other.actions)
+        return self
+
+
 @dataclass
 class WorkflowClient:
     api_client: ApiClient
     project_hash: UUID
 
-    def get_tasks(self, stage_uuid: UUID, params: TasksQueryParams, type_: Type[T]) -> Iterable[T]:
+    def get_tasks(self, stage_uuid: UUID, params: TasksQueryParams, type_: Type[TaskT]) -> Iterable[TaskT]:
         return self.api_client.get_paged_iterator(
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks",
             params=params,
@@ -82,6 +100,38 @@ class WorkflowClient:
         self.api_client.post(
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/actions",
             params=None,
+            payload=actions,
+            result_type=None,
+        )
+
+    def get_label_reviews(self, stage_uuid: UUID, task_uuid: UUID, type_: Type[ReviewT]) -> Iterable[ReviewT]:
+        return self.api_client.get_paged_iterator(
+            path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks/{task_uuid}/reviews",
+            params=TasksQueryParams(),
+            result_type=type_,
+        )
+
+    def label_review_action(
+        self,
+        stage_uuid: UUID,
+        task_uuid: UUID,
+        action: WorkflowReviewAction,
+        *,
+        bundle: Optional[Bundle] = None,
+    ) -> None:
+        if not bundle:
+            self._label_review_action(stage_uuid, task_uuid, [action])
+        else:
+            bundled_operation(
+                bundle=bundle,
+                operation=self._label_review_action,
+                payload=BundledReviewActionPayload(stage_uuid=stage_uuid, task_uuid=task_uuid, actions=[action]),
+            )
+
+    def _label_review_action(self, stage_uuid: UUID, task_uuid: UUID, actions: Sequence[WorkflowReviewAction]) -> None:
+        self.api_client.post(
+            path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks/{task_uuid}/reviews/actions",
+            params=TasksQueryParams(),
             payload=actions,
             result_type=None,
         )
