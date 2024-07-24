@@ -20,7 +20,7 @@ class AgentTaskStatus(str, Enum):
     COMPLETED = "COMPLETED"
 
 
-class AnnotationTask(WorkflowTask):
+class AgentTask(WorkflowTask):
     status: AgentTaskStatus
     data_hash: UUID
     data_title: str
@@ -43,6 +43,9 @@ class AnnotationTask(WorkflowTask):
     ...
     """
 
+    def action(self, action: str) -> None:
+        pass
+
 
 class _AgentTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
@@ -56,9 +59,7 @@ class AgentStage(WorkflowStageBase):
     stage_type: Literal[WorkflowStageType.AGENT] = WorkflowStageType.AGENT
 
     """
-    An Annotate stage in a non-Consensus Project.
-
-    You can use this stage in Consensus and non-Consensus Projects.
+    An Agent stage.
     """
 
     def get_tasks(
@@ -69,9 +70,9 @@ class AgentStage(WorkflowStageBase):
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
         status: Optional[AgentTaskStatus | List[AgentTaskStatus]] = None,
-    ) -> Iterable[AnnotationTask]:
+    ) -> Iterable[AgentTask]:
         """
-        Retrieves tasks for the AnnotationStage.
+        Retrieves tasks for the AgentStage.
 
         **Parameters**
 
@@ -93,7 +94,7 @@ class AgentStage(WorkflowStageBase):
             statuses=ensure_list(status),
         )
 
-        for task in self._workflow_client.get_tasks(self.uuid, params, type_=AnnotationTask):
+        for task in self._workflow_client.get_tasks(self.uuid, params, type_=AgentTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
             yield task

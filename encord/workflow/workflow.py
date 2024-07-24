@@ -54,7 +54,13 @@ def _construct_stage(workflow_client: WorkflowClient, node: WorkflowNode) -> Wor
 
 
 WorkflowStageT = TypeVar(
-    "WorkflowStageT", AnnotationStage, ReviewStage, ConsensusAnnotationStage, ConsensusReviewStage, FinalStage
+    "WorkflowStageT",
+    AnnotationStage,
+    ReviewStage,
+    ConsensusAnnotationStage,
+    ConsensusReviewStage,
+    FinalStage,
+    AgentStage,
 )
 
 
