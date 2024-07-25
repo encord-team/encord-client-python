@@ -596,6 +596,18 @@ class StorageFolder:
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
+        
+        #### audio_metadata
+
+        audio_metadata for audio files; if provided, frame synchronization checks are skipped.
+
+        - duration: float - Audio duration in seconds.
+        - file_size: int - Size of the audio file in bytes.
+        - mime_type: str - MIME type of the audio file (for example: `audio/mpeg` or `audio/wav`).
+        - sample_rate: int - Sample rate (int) in Hz.
+        - bit_depth: int - Size of each sample (int) in bits.
+        - codec: str - Codec (for example: mp3, pcm).
+        - num_channels: int - Number of channels.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.AUDIO, count=1, frames_subfolder_name=None
