@@ -596,7 +596,7 @@ class StorageFolder:
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
-        
+
         #### audio_metadata
 
         audio_metadata for audio files; if provided, frame synchronization checks are skipped.
