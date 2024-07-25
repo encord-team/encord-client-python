@@ -20,6 +20,12 @@ class AgentTaskStatus(str, Enum):
     COMPLETED = "COMPLETED"
 
 
+class _ActionCustom(WorkflowAction):
+    action: Literal["CUSTOM_ACTION"] = "CUSTOM_ACTION"
+    uuid: str | None = None
+    name: str | None = None
+
+
 class AgentTask(WorkflowTask):
     status: AgentTaskStatus
     data_hash: UUID
@@ -43,8 +49,12 @@ class AgentTask(WorkflowTask):
     ...
     """
 
-    def action(self, action: str) -> None:
-        pass
+    def action(self, name: str | None = None, uuid: str | None = None, *, bundle: Optional[Bundle] = None) -> None:
+        if not name and not uuid:
+            ValueError("Either 'name' or 'uuid' parameter must be provided.")
+
+        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client.action(stage_uuid, _ActionCustom(task_uuid=self.uuid, name=name, uuid=uuid), bundle=bundle)
 
 
 class _AgentTasksQueryParams(TasksQueryParams):
