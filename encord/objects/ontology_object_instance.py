@@ -823,6 +823,8 @@ class DynamicAnswerManager:
 
             if to_remove_answer is not None:
                 self._frames_to_answers[frame].remove(to_remove_answer)
+                if self._frames_to_answers[frame] == set():
+                    del self._frames_to_answers[frame]
                 self._answers_to_frames[to_remove_answer].remove(frame)
                 if self._answers_to_frames[to_remove_answer] == set():
                     del self._answers_to_frames[to_remove_answer]
