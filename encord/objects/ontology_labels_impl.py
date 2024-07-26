@@ -1163,7 +1163,12 @@ class LabelRowV2:
         if data_type == DataType.IMG_GROUP:
             data_sequence: Union[str, int] = str(frame_level_data.frame_number)
 
-        elif data_type == DataType.VIDEO or data_type == DataType.DICOM or data_type == DataType.IMAGE or data_type == DataType.NIFTI:
+        elif (
+            data_type == DataType.VIDEO
+            or data_type == DataType.DICOM
+            or data_type == DataType.IMAGE
+            or data_type == DataType.NIFTI
+        ):
             data_sequence = frame_level_data.frame_number
 
         elif data_type == DataType.DICOM_STUDY:
