@@ -1162,12 +1162,16 @@ class LabelRowV2:
         match data_type:
             case DataType.IMG_GROUP:
                 data_sequence: Union[str, int] = str(frame_level_data.frame_number)
+
             case DataType.VIDEO | DataType.DICOM | DataType.IMAGE | DataType.NIFTI:
                 data_sequence = frame_level_data.frame_number
+
             case DataType.DICOM_STUDY:
                 pass
+
             case DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+
             case _:
                 exhaustive_guard(data_type)
 
@@ -1198,13 +1202,17 @@ class LabelRowV2:
             case DataType.IMAGE | DataType.IMG_GROUP:
                 frame = frame_level_data.frame_number
                 ret.update(self._to_encord_label(frame))
+
             case DataType.VIDEO | DataType.DICOM | DataType.NIFTI:
                 for frame in self._frame_to_hashes.keys():
                     ret[str(frame)] = self._to_encord_label(frame)
+
             case DataType.DICOM_STUDY:
                 pass
+
             case DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+
             case _:
                 exhaustive_guard(data_type)
 
@@ -1411,6 +1419,7 @@ class LabelRowV2:
 
             case DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+
             case _:
                 exhaustive_guard(data_type)
 
@@ -1461,6 +1470,7 @@ class LabelRowV2:
                         classification_answers,
                         frame,
                     )
+
                 case DataType.VIDEO | DataType.DICOM | DataType.NIFTI:
                     for frame, frame_data in data_unit["labels"].items():
                         frame_num = int(frame)
