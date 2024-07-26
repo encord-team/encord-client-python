@@ -4,6 +4,7 @@ from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO
 from encord.orm.dataset import DatasetUserRole
+from encord.orm.storage import StorageUserRole
 from encord.utilities.ontology_user import OntologyUserRole
 from encord.utilities.project_user import ProjectUserRole
 
@@ -15,19 +16,24 @@ class Group(BaseDTO):
     created_at: datetime
 
 
-class ProjectGroup(Group):
+class EntityGroup(Group):
+    is_same_organisation: bool
+
+
+class ProjectGroup(EntityGroup):
     user_role: ProjectUserRole
-    is_same_organisation: bool
 
 
-class OntologyGroup(Group):
+class OntologyGroup(EntityGroup):
     user_role: OntologyUserRole
-    is_same_organisation: bool
 
 
-class DatasetGroup(Group):
+class DatasetGroup(EntityGroup):
     user_role: DatasetUserRole
-    is_same_organisation: bool
+
+
+class StorageFolderGroup(EntityGroup):
+    user_role: StorageUserRole
 
 
 class AddGroupsPayload(BaseDTO):
@@ -44,6 +50,10 @@ class AddDatasetGroupsPayload(AddGroupsPayload):
 
 class AddOntologyGroupsPayload(AddGroupsPayload):
     user_role: OntologyUserRole
+
+
+class AddStorageFolderGroupsPayload(AddGroupsPayload):
+    user_role: StorageUserRole
 
 
 class RemoveGroupsParams(BaseDTO):

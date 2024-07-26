@@ -33,6 +33,7 @@ from encord.http.utils import CloudUploadSettings, _upload_single_file
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.dataset import LongPollingStatus
+from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, StorageFolderGroup
 from encord.orm.storage import (
     CustomerProvidedAudioMetadata,
     CustomerProvidedVideoMetadata,
@@ -50,6 +51,7 @@ from encord.orm.storage import (
     StorageItemSummary,
     StorageItemType,
     StorageLocationName,
+    StorageUserRole,
     UploadLongPollingState,
     UploadSignedUrlsPayload,
 )
@@ -166,7 +168,7 @@ class StorageFolder:
             order (FoldersSortBy): Sort order. Defaults to FoldersSortBy.NAME.
             get_signed_urls (bool): Whether to get signed URLs for the items. Defaults to False.
             desc (bool): Sort in descending order. Defaults to False.
-            page_size (int): Number of items to return per page. Defaults to 100.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageItem]: Iterable of items in the folder.
@@ -594,6 +596,18 @@ class StorageFolder:
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
+
+        #### audio_metadata
+
+        audio_metadata for audio files; if provided, frame synchronization checks are skipped.
+
+        - duration: float - Audio duration in seconds.
+        - file_size: int - Size of the audio file in bytes.
+        - mime_type: str - MIME type of the audio file (for example: `audio/mpeg` or `audio/wav`).
+        - sample_rate: int - Sample rate (int) in Hz.
+        - bit_depth: int - Size of each sample (int) in bits.
+        - codec: str - Codec (for example: mp3, pcm).
+        - num_channels: int - Number of channels.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.AUDIO, count=1, frames_subfolder_name=None
@@ -688,7 +702,7 @@ class StorageFolder:
                 no filtering is applied.
             order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc (bool): If True, sort in descending order.
-            page_size (int): Number of folders to return per page.
+            page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
@@ -722,7 +736,7 @@ class StorageFolder:
                 no filtering is applied.
             order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc (bool): If True, sort in descending order.
-            page_size (int): Number of folders to return per page.
+            page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
@@ -782,7 +796,7 @@ class StorageFolder:
             order (FoldersSortBy): Sort order.
             desc (bool): Sort in descending order.
             get_signed_urls (bool): If True, return signed URLs for the items.
-            page_size (int): Number of items to return per page.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageItem]: An iterable of items in the folder and its subfolders.
@@ -951,6 +965,52 @@ class StorageFolder:
             payload=orm_storage.DeleteItemsPayload(child_uuids=item_uuids, remove_unused_frames=remove_unused_frames),
             result_type=None,  # we don't need a result here, even though the server provides it
         )
+
+    def list_groups(self) -> Iterable[StorageFolderGroup]:
+        """
+        List all groups that have access to this folder.
+        """
+        page = self._api_client.get(
+            f"/storage/folders/{self.uuid}/groups", params=None, result_type=Page[StorageFolderGroup]
+        )
+
+        yield from page.results
+
+    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: StorageUserRole):
+        """
+        Allow access to this folder for members of a group.
+
+        Args:
+            group_hash: Group hash, or a list of group hashes to be added.
+            user_role: User role that the group will be given.
+
+        Returns:
+            None
+        """
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        payload = AddStorageFolderGroupsPayload(group_hash_list=group_hash, user_role=user_role)
+        self._api_client.post(
+            f"/storage/folders/{self.uuid}/groups",
+            params=None,
+            payload=payload,
+            result_type=None,
+        )
+
+    def remove_group(self, group_hash: Union[List[UUID], UUID]):
+        """
+        Revoke access to the folder from the members of a group.
+
+        Args:
+            group_hash: Group hash, or a list of group hashes to be removed.
+
+        Returns:
+            None
+        """
+        if isinstance(group_hash, UUID):
+            group_hash = [group_hash]
+        params = RemoveGroupsParams(group_hash_list=group_hash)
+        self._api_client.delete(f"/storage/folders/{self.uuid}/groups", params=params, result_type=None)
 
     def refetch_data(self) -> None:
         """
