@@ -23,9 +23,27 @@ from encord.orm.skeleton_template import SkeletonTemplateCoordinate
 class SkeletonTemplate(SkeletonTemplateORM):
     @property
     def required_vertices(self) -> Set[str]:
+        """
+        Get the set of required vertex names for the skeleton.
+
+        Returns:
+            Set[str]: A set containing the names of the required vertices.
+        """
         return {coordinate.name for coordinate in self.skeleton.values()}
 
     def create_instance(self, provided_coordinates: List[SkeletonCoordinate]) -> SkeletonCoordinates:
+        """
+        Create an instance of SkeletonCoordinates with the provided coordinates.
+
+        Args:
+            provided_coordinates (List[SkeletonCoordinate]): A list of SkeletonCoordinate objects to align.
+
+        Returns:
+            SkeletonCoordinates: An instance of SkeletonCoordinates with aligned coordinates.
+
+        Raises:
+            ValueError: If the provided vertices do not match the required vertices.
+        """
         provided_vertices = {provided_coordinate.name for provided_coordinate in provided_coordinates}
         if provided_vertices != self.required_vertices:
             difference = provided_vertices.symmetric_difference(self.required_vertices)
