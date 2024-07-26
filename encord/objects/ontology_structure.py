@@ -24,8 +24,6 @@ from encord.objects.ontology_element import (
     OntologyElement,
     OntologyElementT,
     OntologyNestedElement,
-    _assert_singular_result_list,
-    _get_element_by_hash,
 )
 from encord.objects.ontology_object import Object
 from encord.objects.skeleton_template import SkeletonTemplate
@@ -49,8 +47,11 @@ class OntologyStructure:
         an invalid state. Throws if nothing is found or if the type is not matched.
 
         Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
+            feature_node_hash: The feature_node_hash of the child node to search for in the ontology.
             type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+        
+        Raises:
+            OntologyError: If the item with the specified feature_node_hash is not found or if the type does not match.
         """
         for object_ in self.objects:
             if object_.feature_node_hash == feature_node_hash:
@@ -82,6 +83,9 @@ class OntologyStructure:
         Args:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the child node. Only a node that matches this type will be returned.
+        
+        Raises:
+            OntologyError: If no child node with the specified title and type is found, or if multiple matches are found.
         """
         found_items = self.get_children_by_title(title, type_)
         _assert_singular_result_list(found_items, title, type_)
@@ -99,6 +103,9 @@ class OntologyStructure:
         Args:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the item. Only nodes that match this type will be returned.
+        
+        Returns:
+            List[OntologyElementT]: A list of child nodes with the matching title and type.
         """
         ret: List[OntologyElement] = []
         for object_ in self.objects:
@@ -124,8 +131,13 @@ class OntologyStructure:
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> OntologyStructure:
         """
+        Create an OntologyStructure from a dictionary.
+
         Args:
-            d: a JSON blob of an "ontology structure" (e.g. from Encord web app)
+            d: A JSON blob of an "ontology structure" (e.g. from Encord web app)
+
+        Returns:
+            OntologyStructure: The created OntologyStructure object.
 
         Raises:
             KeyError: If the dict is missing a required field.
@@ -145,11 +157,10 @@ class OntologyStructure:
 
     def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
         """
-        Returns:
-            The dict equivalent to the ontology.
+        Convert the OntologyStructure to a dictionary.
 
-        Raises:
-            KeyError: If the dict is missing a required field.
+        Returns:
+            Dict[str, List[Dict[str, Any]]]: The dictionary representation of the ontology.
         """
         ret: Dict[str, List[Dict[str, Any]]] = dict()
         ontology_objects: List[Dict[str, Any]] = list()
@@ -177,33 +188,18 @@ class OntologyStructure:
         """
         Adds an object class definition to the structure.
 
-        .. code::
-
-            structure = ontology_structure.OntologyStructure()
-
-            eye = structure.add_object(
-                name="Eye",
-            )
-            nose = structure.add_object(
-                name="Nose",
-            )
-            nose_detail = nose.add_attribute(
-                encord.objects.common.ChecklistAttribute,
-            )
-            nose_detail.add_option(feature_node_hash="2bc17c88", label="Is it a cute nose?")
-            nose_detail.add_option(feature_node_hash="86eaa4f2", label="Is it a wet nose? ")
-
         Args:
-            name: the user-visible name of the object
-            shape: the kind of object (bounding box, polygon, etc). See :py:class:`encord.objects.common.Shape` enum for possible values
-            uid: integer identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing structure
-            color: the color of the object in the label editor. Normally auto-assigned, should be in '#1A2B3F' syntax.
-            feature_node_hash: global identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing structure
+            name: The user-visible name of the object.
+            shape: The kind of object (bounding box, polygon, etc). See :py:class:`encord.objects.common.Shape` enum for possible values.
+            uid: Integer identifier of the object. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
+            color: The color of the object in the label editor. Normally auto-assigned, should be in '#1A2B3F' syntax.
+            feature_node_hash: Global identifier of the object. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
 
         Returns:
-            the created object class that can be further customised with attributes.
+            Object: The created object class that can be further customized with attributes.
+        
+        Raises:
+            ValueError: If a duplicate uid or feature_node_hash is provided.
         """
         if uid is None:
             if self.objects:
@@ -241,30 +237,17 @@ class OntologyStructure:
         feature_node_hash: Optional[str] = None,
     ) -> Classification:
         """
-        Adds an classification definition to the ontology.
-
-        .. code::
-
-            structure = ontology_structure.OntologyStructure()
-
-            cls = structure.add_classification(feature_node_hash="a39d81c0")
-            cat_standing = cls.add_attribute(
-                encord.objects.common.RadioAttribute,
-                feature_node_hash="a6136d14",
-                name="Is the cat standing?",
-                required=True,
-            )
-            cat_standing.add_option(feature_node_hash="a3aeb48d", label="Yes")
-            cat_standing.add_option(feature_node_hash="d0a4b373", label="No")
+        Adds a classification definition to the ontology.
 
         Args:
-            uid: integer identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing structure
-            feature_node_hash: global identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing structure
+            uid: Integer identifier of the object. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
+            feature_node_hash: Global identifier of the object. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
 
         Returns:
-            the created classification node. Note that classification attribute should be further specified by calling its `add_attribute()` method.
+            Classification: The created classification node. Note that classification attribute should be further specified by calling its `add_attribute()` method.
+        
+        Raises:
+            ValueError: If a duplicate uid or feature_node_hash is provided.
         """
         if uid is None:
             if self.classifications:
@@ -290,6 +273,16 @@ class OntologyStructure:
         skeleton_template: SkeletonTemplate,
         feature_node_hash: Optional[str] = None,
     ) -> None:
+        """
+        Adds a skeleton template to the ontology structure.
+
+        Args:
+            skeleton_template: The SkeletonTemplate object to be added.
+            feature_node_hash: Global identifier of the skeleton template. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
+        
+        Raises:
+            ValueError: If a skeleton template with the same name already exists in the ontology.
+        """
         if feature_node_hash is None:
             feature_node_hash = str(uuid4())[:8]
         skeleton_template.feature_node_hash = feature_node_hash
