@@ -66,6 +66,7 @@ from encord.orm.label_row import (
     LabelStatus,
     WorkflowGraphNode,
 )
+from encord.utilities.type_utilities import exhaustive_guard
 
 log = logging.getLogger(__name__)
 
@@ -1158,12 +1159,17 @@ class LabelRowV2:
         ret: Dict[str, Any] = {}
 
         data_type = self._label_row_read_only_data.data_type
-        if data_type == DataType.IMG_GROUP:
-            data_sequence: Union[str, int] = str(frame_level_data.frame_number)
-        elif data_type in (DataType.VIDEO, DataType.DICOM, DataType.IMAGE):
-            data_sequence = frame_level_data.frame_number
-        else:
-            raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+        match data_type:
+            case DataType.IMG_GROUP:
+                data_sequence: Union[str, int] = str(frame_level_data.frame_number)
+            case DataType.VIDEO | DataType.DICOM | DataType.IMAGE | DataType.NIFTI:
+                data_sequence = frame_level_data.frame_number
+            case DataType.DICOM_STUDY:
+                pass
+            case DataType.MISSING_DATA_TYPE:
+                raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+            case _:
+                exhaustive_guard(data_type)
 
         ret["data_hash"] = frame_level_data.image_hash
         ret["data_title"] = frame_level_data.image_title
@@ -1188,13 +1194,19 @@ class LabelRowV2:
         ret: Dict[str, Any] = {}
         data_type = self._label_row_read_only_data.data_type
 
-        if data_type in [DataType.IMAGE, DataType.IMG_GROUP]:
-            frame = frame_level_data.frame_number
-            ret.update(self._to_encord_label(frame))
-
-        elif data_type in [DataType.VIDEO, DataType.DICOM]:
-            for frame in self._frame_to_hashes.keys():
-                ret[str(frame)] = self._to_encord_label(frame)
+        match data_type:
+            case DataType.IMAGE | DataType.IMG_GROUP:
+                frame = frame_level_data.frame_number
+                ret.update(self._to_encord_label(frame))
+            case DataType.VIDEO | DataType.DICOM | DataType.NIFTI:
+                for frame in self._frame_to_hashes.keys():
+                    ret[str(frame)] = self._to_encord_label(frame)
+            case DataType.DICOM_STUDY:
+                pass
+            case DataType.MISSING_DATA_TYPE:
+                raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+            case _:
+                exhaustive_guard(data_type)
 
         return ret
 
@@ -1373,37 +1385,34 @@ class LabelRowV2:
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
         data_type = DataType(label_row_dict["data_type"])
 
-        if data_type == DataType.VIDEO:
-            video_dict = list(label_row_dict["data_units"].values())[0]
-            data_link = video_dict["data_link"]
-            # Dimensions should be always there
-            # But we have some older entries that don't have them
-            # So setting them to None for now until the format is not guaranteed to be enforced
-            height = video_dict.get("height")
-            width = video_dict.get("width")
+        match data_type:
+            case DataType.VIDEO | DataType.IMAGE:
+                data_dict = list(label_row_dict["data_units"].values())[0]
+                data_link = data_dict["data_link"]
+                # Dimensions should be always there
+                # But we have some older entries that don't have them
+                # So setting them to None for now until the format is not guaranteed to be enforced
+                height = data_dict.get("height")
+                width = data_dict.get("width")
 
-        elif data_type == DataType.DICOM:
-            dicom_dict = list(label_row_dict["data_units"].values())[0]
-            data_link = None
-            height = dicom_dict["height"]
-            width = dicom_dict["width"]
+            case DataType.DICOM | DataType.NIFTI:
+                dicom_dict = list(label_row_dict["data_units"].values())[0]
+                data_link = None
+                height = dicom_dict["height"]
+                width = dicom_dict["width"]
 
-        elif data_type == DataType.IMAGE:
-            image_dict = list(label_row_dict["data_units"].values())[0]
-            data_link = image_dict["data_link"]
-            # Dimensions should be always there
-            # But we have some older entries that don't have them
-            # So setting them to None for now until the format is not guaranteed to be enforced
-            height = image_dict.get("height")
-            width = image_dict.get("width")
+            case DataType.IMG_GROUP:
+                data_link = None
+                height = None
+                width = None
 
-        elif data_type == DataType.IMG_GROUP:
-            data_link = None
-            height = None
-            width = None
+            case DataType.DICOM_STUDY:
+                pass
 
-        else:
-            raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+            case DataType.MISSING_DATA_TYPE:
+                raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
+            case _:
+                exhaustive_guard(data_type)
 
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
@@ -1442,24 +1451,33 @@ class LabelRowV2:
 
         for data_unit in label_row_dict["data_units"].values():
             data_type = DataType(label_row_dict["data_type"])
-            if data_type in {DataType.IMG_GROUP, DataType.IMAGE}:
-                frame = int(data_unit["data_sequence"])
-                self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
-                self._add_classification_instances_from_classifications(
-                    data_unit["labels"].get("classifications", []),
-                    classification_answers,
-                    frame,
-                )
-            elif data_type in {DataType.VIDEO, DataType.DICOM}:
-                for frame, frame_data in data_unit["labels"].items():
-                    frame_num = int(frame)
-                    self._add_object_instances_from_objects(frame_data["objects"], frame_num)
+
+            match data_type:
+                case DataType.IMG_GROUP | DataType.IMAGE:
+                    frame = int(data_unit["data_sequence"])
+                    self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
                     self._add_classification_instances_from_classifications(
-                        frame_data["classifications"], classification_answers, frame_num
+                        data_unit["labels"].get("classifications", []),
+                        classification_answers,
+                        frame,
                     )
-                    self._add_frame_metadata(frame_num, frame_data.get("metadata"))
-            else:
-                raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
+                case DataType.VIDEO | DataType.DICOM | DataType.NIFTI:
+                    for frame, frame_data in data_unit["labels"].items():
+                        frame_num = int(frame)
+                        self._add_object_instances_from_objects(frame_data["objects"], frame_num)
+                        self._add_classification_instances_from_classifications(
+                            frame_data["classifications"], classification_answers, frame_num
+                        )
+                        self._add_frame_metadata(frame_num, frame_data.get("metadata"))
+
+                case DataType.DICOM_STUDY:
+                    pass
+
+                case DataType.MISSING_DATA_TYPE:
+                    raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
+
+                case _:
+                    exhaustive_guard(data_type)
 
             self._add_data_unit_metadata(data_type, data_unit.get("metadata"))
 
