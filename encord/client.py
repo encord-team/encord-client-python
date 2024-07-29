@@ -667,7 +667,7 @@ class EncordClientDataset(EncordClient):
         if res.status == LongPollingStatus.DONE:
             return AddPrivateDataResponse(dataset_data_list=res.data_hashes_with_titles)
         elif res.status == LongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"add_private_data_to_dataset errors occured {res.errors}")
+            raise encord.exceptions.EncordException(f"add_private_data_to_dataset errors occurred {res.errors}")
         else:
             raise ValueError(f"res.status={res.status}, this should never happen")
 
