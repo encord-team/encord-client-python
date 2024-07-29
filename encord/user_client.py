@@ -875,6 +875,9 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
+            org_access: if `True`, and if the caller it `ADMIN` of their organisation, the results will contain the
+                folders belonging to the organisation, instead of those personally accessible to the user. If enabled
+                but the user is not an organisation admin, the `AuthorisationError` will be raised. Default is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
@@ -913,6 +916,9 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
+            org_access: if `True`, and if the caller it `ADMIN` of their organisation, the results will contain the
+                folders belonging to the organisation, instead of those personally accessible to the user. If enabled
+                but the user is not an organisation admin, the `AuthorisationError` will be raised. Default is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
@@ -955,6 +961,9 @@ class EncordUserClient:
                 only linked and only unlinked items, respectively. `None` includes all items regardless of their
                 dataset links.
             item_types: Filter items by type.
+            org_access: if `True`, and if the caller it `ADMIN` of their organisation, the results will contain the
+                items belonging to the organisation, instead of those personally accessible to the user. If enabled
+                but the user is not an organisation admin, the `AuthorisationError` will be raised. Default is `False`.
             order: Sort order.
             desc: Sort in descending order.
             get_signed_urls: If True, return signed URLs for the items.
