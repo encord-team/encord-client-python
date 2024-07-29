@@ -644,7 +644,7 @@ class StorageFolder:
         )
 
         if upload_result.status == LongPollingStatus.ERROR:
-            raise EncordException(f"Could not register audio, errors occured {upload_result.errors}")
+            raise EncordException(f"Could not register audio, errors occurred {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
 
