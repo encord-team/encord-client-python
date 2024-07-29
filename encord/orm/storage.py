@@ -298,6 +298,7 @@ class ListItemsParams(BaseDTO):
     is_recursive: Optional[bool] = False
     is_in_dataset: Optional[bool]
     item_types: List[StorageItemType]
+    include_org_access: Optional[bool] = None
     order: FoldersSortBy
     desc: bool
     page_token: Optional[str]
@@ -309,6 +310,7 @@ class ListFoldersParams(BaseDTO):
     search: Optional[str] = None
     is_recursive: Optional[bool] = False
     dataset_synced: Optional[bool] = None
+    include_org_access: Optional[bool] = None
     order: FoldersSortBy = FoldersSortBy.NAME
     desc: bool = False
     page_token: Optional[str] = None
