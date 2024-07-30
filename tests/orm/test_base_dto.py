@@ -2,8 +2,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import List
 
+import pytest
+from pydantic import ValidationError
+
 from encord.common.constants import DATETIME_LONG_STRING_FORMAT, DATETIME_STRING_FORMAT
-from encord.orm.base_dto import BaseDTO
+from encord.exceptions import EncordException
+from encord.orm.base_dto import BaseDTO, dto_validator
 from encord.orm.dataset import DatasetDataLongPolling, LongPollingStatus
 
 
@@ -83,3 +87,28 @@ def test_complex_model_deserialization():
     assert model.data_hashes_with_titles[0].data_hash == "abc"
     assert model.data_hashes_with_titles[0].title == "dummy title"
     assert model.data_hashes_with_titles[0].backing_item_uuid == backing_item_uuid
+
+
+class TestModelWithValidator(TestModel):
+    @dto_validator(mode="before")
+    def validate(cls, values):
+        number: int = values.get("number_value")
+        assert number > 0
+        return values
+
+
+def test_dto_validator():
+    time_value = datetime.now()
+    data_dict = {
+        "text_value": "abc",
+        "number_value": 22,
+        "datetime_value": time_value.strftime(DATETIME_LONG_STRING_FORMAT),
+    }
+    valid_case = TestModelWithValidator.from_dict(data_dict)
+    assert valid_case.number_value == 22
+
+    invalid_data = data_dict
+    invalid_data["number_value"] = -10
+
+    with pytest.raises(EncordException):
+        TestModelWithValidator.from_dict(invalid_data)
