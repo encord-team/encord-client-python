@@ -151,6 +151,9 @@ class UploadLongPollingState(BaseDTO):
     unit_errors: List[DataUnitError]
     """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
+    file_name: Optional[str] = None
+    """Name of the JSON or CSV file that contained the list of URLs to ingest form the cloud bucket. Optional."""
+
 
 class CustomerProvidedVideoMetadata(BaseDTO):
     """
@@ -282,6 +285,7 @@ class PostUploadJobParams(BaseDTO):
     external_files: Optional[dict] = None
     integration_hash: Optional[UUID] = None
     ignore_errors: bool = False
+    file_name: Optional[str] = None
 
 
 class GetUploadJobParams(BaseDTO):
