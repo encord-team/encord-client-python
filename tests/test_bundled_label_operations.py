@@ -174,6 +174,7 @@ def test_bundled_label_save(save_label_rows_mock: MagicMock, project: Project):
 @patch.object(EncordClientProject, "save_label_rows")
 def test_bundled_label_save_with_explicit_bundle_size(save_label_rows_mock: MagicMock, project: Project):
     label_rows = get_valid_label_rows(project)
+    assert len(label_rows) == 3
 
     bundle = project.create_bundle(bundle_size=2)
     for row in label_rows:
