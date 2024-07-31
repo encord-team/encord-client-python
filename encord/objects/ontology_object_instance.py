@@ -129,6 +129,13 @@ class ObjectInstance:
         """
         return self._ontology_object.name
 
+    @property
+    def _last_frame(self) -> Union[int, float]:
+        if self._parent is None or self._parent.data_type is DataType.DICOM:
+            return float("inf")
+        else:
+            return self._parent.number_of_frames
+
     def get_answer(
         self,
         attribute: Attribute,
@@ -402,23 +409,23 @@ class ObjectInstance:
         """
         Place the object onto the specified frame(s).
 
-        If the object already exists on the frame and overwrite is set to `True`, 
+        If the object already exists on the frame and overwrite is set to `True`,
         the currently specified values will be overwritten.
 
         Args:
-            coordinates: The coordinates of the object in the frame. 
+            coordinates: The coordinates of the object in the frame.
                 This will throw an error if the type of the coordinates does not match the type of the attribute in the object instance.
             frames: The frames to add the object instance to. Defaults to the first frame for convenience.
-            overwrite: If `True`, overwrite existing data for the given frames. 
-                This will not reset all the non-specified values. 
+            overwrite: If `True`, overwrite existing data for the given frames.
+                This will not reset all the non-specified values.
                 If `False` and data already exists for the given frames, raises an error.
-            created_at: Optionally specify the creation time of the object instance on this frame. 
+            created_at: Optionally specify the creation time of the object instance on this frame.
                 Defaults to `datetime.now()`.
-            created_by: Optionally specify the creator of the object instance on this frame. 
+            created_by: Optionally specify the creator of the object instance on this frame.
                 Defaults to the current SDK user.
-            last_edited_at: Optionally specify the last edit time of the object instance on this frame. 
+            last_edited_at: Optionally specify the last edit time of the object instance on this frame.
                 Defaults to `datetime.now()`.
-            last_edited_by: Optionally specify the last editor of the object instance on this frame. 
+            last_edited_by: Optionally specify the last editor of the object instance on this frame.
                 Defaults to the current SDK user.
             confidence: Optionally specify the confidence of the object instance on this frame. Defaults to `1.0`.
             manual_annotation: Optionally specify whether the object instance on this frame was manually annotated. Defaults to `True`.
@@ -672,11 +679,21 @@ class ObjectInstance:
             self._check_if_frame_view_is_valid()
             return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
 
+        def _get_object_frame_instance_data(self) -> ObjectInstance.FrameData:
+            return self._object_instance._frames_to_instance_data[self._frame]
+
+        def _check_if_frame_view_is_valid(self) -> None:
+            if self._frame not in self._object_instance._frames_to_instance_data:
+                raise LabelRowError(
+                    "Trying to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frame"
+                )
+
     @dataclass
     class FrameInfo:
         """
         Contains metadata information about a frame.
         """
+
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
         """None defaults to the user of the SDK once uploaded to the server."""
@@ -763,6 +780,7 @@ class ObjectInstance:
             coordinates (Coordinates): The coordinates associated with the frame.
             object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
         """
+
         coordinates: Coordinates
         object_frame_instance_info: ObjectInstance.FrameInfo
         # Probably the above can be flattened out into this class.
@@ -773,7 +791,6 @@ class ObjectInstance:
         attribute: Attribute,
         ranges: Optional[Ranges],
     ) -> None:
-
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)
         else:
@@ -781,7 +798,6 @@ class ObjectInstance:
             static_answer.set(answer)
 
     def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute) -> None:
-
         if attribute.dynamic:
             ranges = ranges_list_to_ranges(answer_dict["range"])
         else:
@@ -805,13 +821,11 @@ class ObjectInstance:
             raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
     def _is_attribute_valid_child_of_object_instance(self, attribute: Attribute) -> bool:
-
         is_static_child = attribute.feature_node_hash in self._static_answer_map
         is_dynamic_child = self._dynamic_answer_manager.is_valid_dynamic_attribute(attribute)
         return is_dynamic_child or is_static_child
 
     def _is_selectable_child_attribute(self, attribute: Attribute) -> bool:
-
         ontology_object = self._ontology_object
         for search_attribute in ontology_object.attributes:
             if search_attribute.dynamic:
@@ -822,45 +836,40 @@ class ObjectInstance:
         return False
 
     def _get_all_static_answers(self) -> List[Answer]:
-
         return list(self._static_answer_map.values())
 
     def _get_all_dynamic_answers(self) -> List[Tuple[Answer, Ranges]]:
-
         return self._dynamic_answer_manager.get_all_answers()
 
     def __repr__(self) -> str:
-
         return (
             f"ObjectInstance(object_hash={self._object_hash}, object_name={self._ontology_object.name}, "
             f"feature_hash={self._ontology_object.feature_node_hash})"
         )
 
     def __hash__(self) -> int:
-
         return hash(id(self))
 
     def __lt__(self, other: ObjectInstance) -> bool:
-
         return self._object_hash < other._object_hash
 
 
-    def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
-        """
-        Check if the coordinate type matches the expected type for the ontology object.
+def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
+    """
+    Check if the coordinate type matches the expected type for the ontology object.
 
-        Args:
-            coordinates (Coordinates): The coordinates to check.
-            ontology_object (Object): The ontology object to check against.
+    Args:
+        coordinates (Coordinates): The coordinates to check.
+        ontology_object (Object): The ontology object to check against.
 
-        Raises:
-            LabelRowError: If the coordinate type does not match the expected type.
-        """
-        expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
-        if not isinstance(coordinates, expected_coordinate_type):
-            raise LabelRowError(
-                f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
-            )
+    Raises:
+        LabelRowError: If the coordinate type does not match the expected type.
+    """
+    expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
+    if not isinstance(coordinates, expected_coordinate_type):
+        raise LabelRowError(
+            f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
+        )
 
 
 class DynamicAnswerManager:
@@ -950,7 +959,6 @@ class DynamicAnswerManager:
         self._set_answer(answer, attribute, frames)
 
     def _set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Frames) -> None:
-
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:
             self._object_instance.check_within_range(frame)
@@ -1016,7 +1024,7 @@ class DynamicAnswerManager:
             List[Tuple[Answer, Ranges]]: A list of tuples containing the answer and its associated ranges.
         """
         return [(answer, frames_to_ranges(frames)) for answer, frames in self._answers_to_frames.items()]
-    
+
     def copy(self) -> DynamicAnswerManager:
         """
         Create a deep copy of the DynamicAnswerManager instance.
@@ -1056,12 +1064,14 @@ class AnswerForFrames:
     Attributes:
         answer (Union[str, Option, Iterable[Option]]): The answer set for the frames.
         ranges (Ranges): The ranges representing the frames where the answer is set.
-        
+
     The ranges are essentially a run-length encoding of the frames where the unique answer is set.
     They are sorted in ascending order.
     """
+
     answer: Union[str, Option, Iterable[Option]]
     ranges: Ranges
+
 
 AnswersForFrames = List[AnswerForFrames]
 """
