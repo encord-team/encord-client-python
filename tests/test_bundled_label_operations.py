@@ -169,3 +169,28 @@ def test_bundled_label_save(save_label_rows_mock: MagicMock, project: Project):
     assert args is not None
     assert len(args["uids"]) == 3, "Expected 3 updates bundled"
     assert len(args["payload"]) == 3, "Expected 3 updates bundled"
+
+
+@patch.object(EncordClientProject, "save_label_rows")
+def test_bundled_label_save_with_explicit_bundle_size(save_label_rows_mock: MagicMock, project: Project):
+    label_rows = get_valid_label_rows(project)
+
+    bundle = project.create_bundle(bundle_size=2)
+    for row in label_rows:
+        row.save(bundle=bundle)
+
+    save_label_rows_mock.assert_not_called()
+
+    bundle.execute()
+
+    assert save_label_rows_mock.call_count == 2
+
+    args_0 = save_label_rows_mock.call_args_list[0][1]
+    assert args_0 is not None
+    assert len(args_0["uids"]) == 2, "Expected 2 updates bundled in the first bundle"
+    assert len(args_0["payload"]) == 2, "Expected 2 updates bundled in the fist bundle"
+
+    args_1 = save_label_rows_mock.call_args_list[1][1]
+    assert args_1 is not None
+    assert len(args_1["uids"]) == 1, "Expected 1 updates bundled in the first bundle"
+    assert len(args_1["payload"]) == 1, "Expected 1 updates bundled in the fist bundle"

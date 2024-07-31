@@ -115,7 +115,8 @@ class Bundle:
                 # At this point all labels will be initialised
     """
 
-    def __init__(self) -> None:
+    def __init__(self, bundle_size: Optional[int] = None) -> None:
+        self._bundle_size = bundle_size
         self._operations: Dict[Callable, BundledOperation] = {}
 
     def __register_operation(
@@ -146,7 +147,7 @@ class Bundle:
         """
         result_mapping_getter = result_mapper.result_mapping_predicate if result_mapper else None
         result_handler = result_mapper.result_handler if result_mapper else None
-        self.__register_operation(type(payload), operation, result_mapping_getter, limit).append(
+        self.__register_operation(type(payload), operation, result_mapping_getter, self._bundle_size or limit).append(
             payload, result_handler
         )
 
