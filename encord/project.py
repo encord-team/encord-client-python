@@ -1028,16 +1028,20 @@ class Project:
         """
         return self._client.create_label_row(uid)
 
-    def create_bundle(self) -> Bundle:
+    def create_bundle(self, bundle_size: Optional[int] = None) -> Bundle:
         """
         Initializes a bundle to reduce the number of network calls performed by the Encord SDK.
 
         See the :class:`encord.http.bundle.Bundle` documentation for more details.
 
+        Args:
+            bundle_size: maximum number of items bundled. If more actions provided to the bundle, they will be
+                automatically split into separate api calls.
+
         Returns:
             Bundle: An instance of the Bundle class.
         """
-        return Bundle()
+        return Bundle(bundle_size=bundle_size)
 
     def list_collaborator_timers(
         self,
