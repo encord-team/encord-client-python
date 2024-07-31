@@ -963,7 +963,7 @@ class EncordUserClient:
             item_types: Filter items by type.
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                items belonging to the organization, instead of those accessible to the user. If enabled
-                but the user is not an organisation admin, the `AuthorisationError` will be raised. Default is `False`.
+                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
             order: Sort order.
             desc: Sort in descending order.
             get_signed_urls: If True, return signed URLs for the items.
