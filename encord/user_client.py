@@ -876,7 +876,7 @@ class EncordUserClient:
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
-                folders belonging to the organisation, instead of those personally accessible to the user. If enabled
+                folders belonging to the organization, instead of those accessible to the user. If enabled
                 but the user is not an organisation admin, the `AuthorisationError` will be raised. Default is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
