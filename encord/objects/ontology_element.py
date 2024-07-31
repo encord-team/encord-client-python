@@ -37,7 +37,7 @@ class OntologyElement(ABC):
     @property
     def children(self) -> Sequence[OntologyElement]:
         """
-        Returns an empty sequence of children nodes for this ontology element. 
+        Returns an empty sequence of children nodes for this ontology element.
         This method is meant to be overridden by subclasses that have actual child nodes.
         """
         return []
@@ -125,7 +125,6 @@ def _assert_singular_result_list(
     title: str,
     type_: Any,
 ) -> None:
-
     if len(found_items) == 0:
         raise OntologyError(f"No item was found in the ontology with the given title `{title}` and type `{type_}`")
     elif len(found_items) > 1:
@@ -139,7 +138,6 @@ def _assert_singular_result_list(
 def _get_element_by_hash(
     feature_node_hash: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
 ) -> Optional[OntologyNestedElementT]:
-
     for element in elements:
         if element.feature_node_hash == feature_node_hash:
             return checked_cast(element, type_)
@@ -154,7 +152,6 @@ def _get_element_by_hash(
 def _get_elements_by_title(
     title: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
 ) -> List[OntologyNestedElementT]:
-
     res: List[OntologyNestedElementT] = []
     for element in elements:
         if element.title == title and does_type_match(element, type_):
@@ -167,7 +164,6 @@ def _get_elements_by_title(
 
 
 def _nested_id_from_json_str(attribute_id: str) -> NestedID:
-
     nested_ids = attribute_id.split(".")
     return [int(x) for x in nested_ids]
 
@@ -177,7 +173,6 @@ def _build_identifiers(
     local_uid: Optional[int] = None,
     feature_node_hash: Optional[str] = None,
 ) -> Tuple[int, str]:
-
     if local_uid is None:
         if existent_items:
             local_uid = max([item.uid[-1] for item in existent_items]) + 1
@@ -196,5 +191,4 @@ def _build_identifiers(
 
 
 def _decode_nested_uid(nested_uid: list) -> str:
-
     return ".".join([str(uid) for uid in nested_uid])
