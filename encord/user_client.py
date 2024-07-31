@@ -961,7 +961,7 @@ class EncordUserClient:
                 only linked and only unlinked items, respectively. `None` includes all items regardless of their
                 dataset links.
             item_types: Filter items by type.
-            org_access: if `True`, and if the caller it `ADMIN` of their organisation, the results will contain the
+            org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                 items belonging to the organisation, instead of those personally accessible to the user. If enabled
                 but the user is not an organisation admin, the `AuthorisationError` will be raised. Default is `False`.
             order: Sort order.
