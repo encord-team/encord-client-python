@@ -20,10 +20,10 @@ class AgentTaskStatus(str, Enum):
     COMPLETED = "COMPLETED"
 
 
-class _ActionCustom(WorkflowAction):
-    action: Literal["CUSTOM_ACTION"] = "CUSTOM_ACTION"
-    uuid: str | None = None
-    name: str | None = None
+class _ActionPathway(WorkflowAction):
+    action: Literal["PATHWAY_ACTION"] = "PATHWAY_ACTION"
+    pathway_uuid: str | None = None
+    pathway_name: str | None = None
 
 
 class AgentTask(WorkflowTask):
@@ -49,12 +49,18 @@ class AgentTask(WorkflowTask):
     ...
     """
 
-    def action(self, name: str | None = None, uuid: str | None = None, *, bundle: Optional[Bundle] = None) -> None:
-        if not name and not uuid:
-            ValueError("Either 'name' or 'uuid' parameter must be provided.")
+    def proceed(
+        self, pathway_name: str | None = None, pathway_uuid: str | None = None, *, bundle: Optional[Bundle] = None
+    ) -> None:
+        if not pathway_name and not pathway_uuid:
+            ValueError("Either `pathway_name` or `pathway_uuid` parameter must be provided.")
 
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionCustom(task_uuid=self.uuid, name=name, uuid=uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionPathway(task_uuid=self.uuid, pathway_name=pathway_name, pathway_uuid=pathway_uuid),
+            bundle=bundle,
+        )
 
 
 class _AgentTasksQueryParams(TasksQueryParams):
