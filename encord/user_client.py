@@ -875,7 +875,7 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
-            org_access: if `True`, and if the caller it `ADMIN` of their organisation, the results will contain the
+            org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                 folders belonging to the organisation, instead of those personally accessible to the user. If enabled
                 but the user is not an organisation admin, the `AuthorisationError` will be raised. Default is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
