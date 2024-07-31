@@ -1120,11 +1120,13 @@ class StorageFolder:
         private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> UUID:
+        file_name: Optional[str] = None
         if isinstance(private_files, dict):
             files: Optional[dict] = private_files
         elif isinstance(private_files, str):
             if os.path.exists(private_files):
                 text_contents = Path(private_files).read_text(encoding="utf-8")
+                file_name = Path(private_files).name
             else:
                 text_contents = private_files
 
@@ -1132,9 +1134,11 @@ class StorageFolder:
         elif isinstance(private_files, Path):
             text_contents = private_files.read_text(encoding="utf-8")
             files = json.loads(text_contents)
+            file_name = private_files.name
         elif isinstance(private_files, TextIO):
             text_contents = private_files.read()
             files = json.loads(text_contents)
+            file_name = Path(private_files.name).name
         elif isinstance(private_files, DataUploadItems):
             files = None
         else:
@@ -1145,6 +1149,7 @@ class StorageFolder:
             external_files=files,
             integration_hash=UUID(integration_id) if integration_id is not None else None,
             ignore_errors=ignore_errors,
+            file_name=file_name,
         )
 
         upload_job_id = self._api_client.post(
