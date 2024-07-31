@@ -22,8 +22,8 @@ class AgentTaskStatus(str, Enum):
 
 class _ActionPathway(WorkflowAction):
     action: Literal["PATHWAY_ACTION"] = "PATHWAY_ACTION"
-    pathway_uuid: str | None = None
-    pathway_name: str | None = None
+    pathway_uuid: Optional[str] = None
+    pathway_name: Optional[str] = None
 
 
 class AgentTask(WorkflowTask):
