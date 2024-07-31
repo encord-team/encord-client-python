@@ -24,6 +24,8 @@ from encord.objects.ontology_element import (
     OntologyElement,
     OntologyElementT,
     OntologyNestedElement,
+    _assert_singular_result_list,
+    _get_element_by_hash,
 )
 from encord.objects.ontology_object import Object
 from encord.objects.skeleton_template import SkeletonTemplate
@@ -49,7 +51,7 @@ class OntologyStructure:
         Args:
             feature_node_hash: The feature_node_hash of the child node to search for in the ontology.
             type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
-        
+
         Raises:
             OntologyError: If the item with the specified feature_node_hash is not found or if the type does not match.
         """
@@ -83,7 +85,7 @@ class OntologyStructure:
         Args:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the child node. Only a node that matches this type will be returned.
-        
+
         Raises:
             OntologyError: If no child node with the specified title and type is found, or if multiple matches are found.
         """
@@ -103,7 +105,7 @@ class OntologyStructure:
         Args:
             title: The exact title of the child node to search for in the ontology.
             type_: The expected type of the item. Only nodes that match this type will be returned.
-        
+
         Returns:
             List[OntologyElementT]: A list of child nodes with the matching title and type.
         """
@@ -197,7 +199,7 @@ class OntologyStructure:
 
         Returns:
             Object: The created object class that can be further customized with attributes.
-        
+
         Raises:
             ValueError: If a duplicate uid or feature_node_hash is provided.
         """
@@ -245,7 +247,7 @@ class OntologyStructure:
 
         Returns:
             Classification: The created classification node. Note that classification attribute should be further specified by calling its `add_attribute()` method.
-        
+
         Raises:
             ValueError: If a duplicate uid or feature_node_hash is provided.
         """
@@ -279,7 +281,7 @@ class OntologyStructure:
         Args:
             skeleton_template: The SkeletonTemplate object to be added.
             feature_node_hash: Global identifier of the skeleton template. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
-        
+
         Raises:
             ValueError: If a skeleton template with the same name already exists in the ontology.
         """
