@@ -165,6 +165,7 @@ class Bundle:
                         result_handler = operation.result_handlers.get(operation.result_mapper(br))
                         if result_handler is not None:
                             result_handler(br)
+        self._operations = {}
 
     def __enter__(self):
         return self
