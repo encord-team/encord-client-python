@@ -28,8 +28,13 @@ from encord.objects.ontology_element import OntologyElement
 @dataclass
 class Classification(OntologyElement):
     """
-    Represents a whole-image classification as part of Ontology structure. Wraps a single Attribute that describes
+    Represents a whole-image classification as part of the Ontology structure. Wraps a single Attribute that describes
     the image in general rather than an individual object.
+
+    Attributes:
+        uid (int): The unique identifier for the classification.
+        feature_node_hash (str): A unique hash identifying the feature node.
+        attributes (List[Attribute]): A list of attributes associated with this classification.
     """
 
     uid: int
@@ -38,18 +43,44 @@ class Classification(OntologyElement):
 
     @property
     def title(self) -> str:
+        """
+        Returns the title of the classification, which is the name of the first attribute.
+
+        Returns:
+            str: The title of the classification.
+        """
         return self.attributes[0].name
 
     @property
     def children(self) -> Sequence[OntologyElement]:
+        """
+        Returns the attributes of the classification as children elements.
+
+        Returns:
+            Sequence[OntologyElement]: The attributes of the classification.
+        """
         return self.attributes
 
     def create_instance(self) -> ClassificationInstance:
-        """Create a :class:`encord.objects.ClassificationInstance` to be used with a label row."""
+        """
+        Create a ClassificationInstance to be used with a label row.
+
+        Returns:
+            ClassificationInstance: An instance of ClassificationInstance.
+        """
         return ClassificationInstance(self)
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
+        """
+        Create a Classification instance from a dictionary.
+
+        Args:
+            d (dict): A dictionary containing classification information.
+
+        Returns:
+            Classification: An instance of Classification.
+        """
         attributes_ret: List[Attribute] = [attribute_from_dict(attribute_dict) for attribute_dict in d["attributes"]]
         return Classification(
             uid=int(d["id"]),
@@ -58,6 +89,15 @@ class Classification(OntologyElement):
         )
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the Classification instance to a dictionary.
+
+        Returns:
+            Dict[str, Any]: A dictionary representation of the classification.
+
+        Raises:
+            ValueError: If the classification does not have any attributes.
+        """
         ret: Dict[str, Any] = {
             "id": str(self.uid),
             "featureNodeHash": self.feature_node_hash,
@@ -81,19 +121,19 @@ class Classification(OntologyElement):
         Adds an attribute to the classification.
 
         Args:
-            cls: attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`
-            name: the user-visible name of the attribute
-            local_uid: integer identifier of the attribute. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
-            feature_node_hash: global identifier of the attribute. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
-            required: whether the label editor would mark this attribute as 'required'
+            cls (Type[AttributeType]): The attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`.
+            name (str): The user-visible name of the attribute.
+            local_uid (Optional[int]): Integer identifier of the attribute. Normally auto-generated; omit this unless
+                                       the aim is to create an exact clone of an existing ontology.
+            feature_node_hash (Optional[str]): Global identifier of the attribute. Normally auto-generated; omit this
+                                               unless the aim is to create an exact clone of an existing ontology.
+            required (bool): Whether the label editor would mark this attribute as 'required'.
 
         Returns:
-            the created attribute that can be further specified with Options, where appropriate
+            AttributeType: The created attribute that can be further specified with Options, where appropriate.
 
         Raises:
-            ValueError: if the classification already has an attribute assigned
+            ValueError: If the classification already has an attribute assigned.
         """
         if self.attributes:
             raise ValueError("Classification should have exactly one root attribute")
