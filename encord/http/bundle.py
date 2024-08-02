@@ -154,34 +154,6 @@ def bundled_operation(
     result_mapper: Optional[BundleResultMapper] = None,
     limit: int = LABEL_ROW_BUNDLE_DEFAULT_LIMIT,
 ) -> None:
-    """
-    Executes or bundles an operation with the provided payload.
-
-    This function either performs the given operation immediately with the provided payload
-    or adds it to a bundle for later execution. The function requires the payload to be a
-    dataclass instance.
-
-    Parameters:
-        bundle: The bundle to which the operation and payload are added if bundling is enabled.
-                If `bundle` is falsy, the operation is executed immediately.
-        operation: The function or operation to be executed or bundled. This operation should
-                   accept the payload as keyword arguments.
-        payload (BundlablePayloadT): The data to be used as arguments for the operation.
-                                     This must be a dataclass instance.
-        result_mapper (Optional[BundleResultMapper]): An optional result mapper to handle the
-                                                      operation's result. It maps and processes
-                                                      the results based on specified predicates
-                                                      and handlers.
-        limit (int): The limit for bundling operations. Defaults to `LABEL_ROW_BUNDLE_DEFAULT_LIMIT`.
-
-    Raises:
-        AssertionError: If the payload is not a dataclass instance.
-        AssertionError: If the result length is not 1 when `bundle` is falsy.
-        AssertionError: If the result mapping predicate does not match the result handler predicate.
-
-    Returns:
-        None
-    """
     assert is_dataclass(payload), "Bundling only works with dataclasses"
     if not bundle:
         result = operation(**asdict(payload))
