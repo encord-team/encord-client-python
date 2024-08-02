@@ -69,6 +69,21 @@ from encord.http.v2.request_signer import sign_request
 
 
 class BaseConfig(ABC):
+    """
+    Abstract base class for configuration.
+
+    Args:
+        endpoint (str): The API endpoint URL.
+        requests_settings (RequestsSettings): Settings for HTTP requests.
+
+    Attributes:
+        read_timeout (int): Timeout for read operations.
+        write_timeout (int): Timeout for write operations.
+        connect_timeout (int): Timeout for connection operations.
+        endpoint (str): The API endpoint URL.
+        requests_settings (RequestsSettings): Settings for HTTP requests.
+    """
+
     def __init__(self, endpoint: str, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS):
         self.read_timeout: int = requests_settings.read_timeout
         self.write_timeout: int = requests_settings.write_timeout
@@ -79,10 +94,30 @@ class BaseConfig(ABC):
 
     @abstractmethod
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+        """
+        Define headers for a request.
+
+        Args:
+            resource_id (Optional[str]): The resource ID.
+            resource_type (Optional[str]): The resource type.
+            data (str): The request data.
+
+        Returns:
+            Dict[str, Any]: A dictionary of headers.
+        """
         pass
 
     @abstractmethod
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        """
+        Define headers for a request (v2).
+
+        Args:
+            request (PreparedRequest): The prepared request.
+
+        Returns:
+            PreparedRequest: The prepared request with headers defined.
+        """
         pass
 
 
@@ -100,30 +135,69 @@ def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
 
 class UserConfig(BaseConfig):
     """
-    Just a wrapper redirecting some of the requests towards the "/public/user" endpoint rather than just "/public"
+    Configuration for user-specific requests, redirecting to the "/public/user" endpoint.
+
+    Args:
+        config (Config): The base configuration.
+
+    Attributes:
+        config (Config): The base configuration.
     """
 
-    def __init__(
-        self,
-        config: Config,
-    ):
+    def __init__(self, config: Config):
         self.config = config
         super().__init__(endpoint=config.domain + ENCORD_PUBLIC_USER_PATH, requests_settings=config.requests_settings)
 
     @property
     def domain(self) -> str:
+        """
+        Get the domain from the base configuration.
+
+        Returns:
+            str: The domain.
+        """
         return self.config.domain
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+        """
+        Define headers for a user-specific request.
+
+        Args:
+            resource_id (Optional[str]): The resource ID.
+            resource_type (Optional[str]): The resource type.
+            data (str): The request data.
+
+        Returns:
+            Dict[str, Any]: A dictionary of headers.
+        """
         return self.config.define_headers(resource_id, resource_type, data)
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        """
+        Define headers for a user-specific request (v2).
+
+        Args:
+            request (PreparedRequest): The prepared request.
+
+        Returns:
+            PreparedRequest: The prepared request with headers defined.
+        """
         return self.config.define_headers_v2(request)
 
 
 class Config(BaseConfig):
     """
-    Config defining endpoint, project id, API key, and timeouts.
+    Configuration defining endpoint, project ID, API key, and timeouts.
+
+    Args:
+        web_file_path (str): The web file path for the endpoint.
+        domain (Optional[str]): The domain.
+        websocket_endpoint (str): The WebSocket endpoint.
+        requests_settings (RequestsSettings): Settings for HTTP requests.
+
+    Attributes:
+        websocket_endpoint (str): The WebSocket endpoint.
+        domain (str): The domain.
     """
 
     def __init__(
@@ -143,6 +217,16 @@ class Config(BaseConfig):
 
 
 def get_env_resource_id() -> str:
+    """
+    Get the resource ID from environment variables.
+
+    Returns:
+        str: The resource ID.
+
+    Raises:
+        encord.exceptions.InitialisationError: If both project and dataset IDs are found.
+        encord.exceptions.AuthenticationError: If no project or dataset ID is found.
+    """
     project_id = os.environ.get(_ENCORD_PROJECT_ID) or os.environ.get(_CORD_PROJECT_ID)
     dataset_id = os.environ.get(_ENCORD_DATASET_ID) or os.environ.get(_CORD_DATASET_ID)
     if (project_id is not None) and (dataset_id is not None):
@@ -166,6 +250,15 @@ def get_env_resource_id() -> str:
 
 
 def get_env_api_key() -> str:
+    """
+    Get the API key from environment variables.
+
+    Returns:
+        str: The API key.
+
+    Raises:
+        encord.exceptions.AuthenticationError: If no API key is found.
+    """
     api_key = os.environ.get(_ENCORD_API_KEY) or os.environ.get(_CORD_API_KEY)
     if api_key is None:
         raise encord.exceptions.AuthenticationError(message="API key not provided")
@@ -175,10 +268,14 @@ def get_env_api_key() -> str:
 
 def get_env_ssh_key() -> str:
     """
-    Returns the raw ssh key by looking up the `ENCORD_SSH_KEY_FILE` and `ENCORD_SSH_KEY` environment variables
-    in the mentioned order and returns the first successfully identified key.
+    Get the raw SSH key from environment variables.
+
+    Returns:
+        str: The raw SSH key.
+
+    Raises:
+        ResourceNotFoundError: If the SSH key file or key is not found or is empty.
     """
-    # == 1. Look for key file
     ssh_file = os.environ.get(_ENCORD_SSH_KEY_FILE)
     if ssh_file:
         ssh_file = os.path.abspath(os.path.expanduser(ssh_file))
@@ -191,7 +288,6 @@ def get_env_ssh_key() -> str:
         with open(ssh_file, encoding="ascii") as f:
             return f.read()
 
-    # == 2. Look for raw key
     raw_ssh_key = os.environ.get(_ENCORD_SSH_KEY)
     if raw_ssh_key is None:
         raise ResourceNotFoundError(
@@ -208,6 +304,21 @@ def get_env_ssh_key() -> str:
 
 
 class ApiKeyConfig(Config):
+    """
+    Configuration for API key-based authorization.
+
+    Args:
+        resource_id (Optional[str]): The resource ID.
+        api_key (Optional[str]): The API key.
+        domain (Optional[str]): The domain.
+        requests_settings (RequestsSettings): Settings for HTTP requests.
+
+    Attributes:
+        resource_id (Optional[str]): The resource ID.
+        api_key (str): The API key.
+        _headers (Dict[str, str]): Default headers for requests.
+    """
+
     def __init__(
         self,
         resource_id: Optional[str] = None,
@@ -231,9 +342,29 @@ class ApiKeyConfig(Config):
         super().__init__(web_file_path=web_file_path, domain=domain, requests_settings=requests_settings)
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+        """
+        Define headers for an API key-based request.
+
+        Args:
+            resource_id (Optional[str]): The resource ID.
+            resource_type (Optional[str]): The resource type.
+            data (str): The request data.
+
+        Returns:
+            Dict[str, Any]: A dictionary of headers.
+        """
         return self._headers
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        """
+        Define headers for an API key-based request (v2).
+
+        Args:
+            request (PreparedRequest): The prepared request.
+
+        Raises:
+            NotImplementedError: API key authorization is not supported for the Encord API v2.
+        """
         raise NotImplementedError("API key authorization is not supported for the Encord API v2")
 
 
@@ -242,6 +373,20 @@ CordConfig = EncordConfig
 
 
 class SshConfig(Config):
+    """
+    Configuration for SSH key-based authorization.
+
+    Args:
+        private_key (Ed25519PrivateKey): The private SSH key.
+        domain (str): The domain.
+        requests_settings (RequestsSettings): Settings for HTTP requests.
+
+    Attributes:
+        private_key (Ed25519PrivateKey): The private SSH key.
+        public_key (Ed25519PublicKey): The public SSH key.
+        public_key_hex (str): The public key in hexadecimal format.
+    """
+
     def __init__(
         self,
         private_key: Ed25519PrivateKey,
@@ -255,6 +400,17 @@ class SshConfig(Config):
         super().__init__(domain=domain, requests_settings=requests_settings)
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+        """
+        Define headers for an SSH key-based request.
+
+        Args:
+            resource_id (Optional[str]): The resource ID.
+            resource_type (Optional[str]): The resource type.
+            data (str): The request data.
+
+        Returns:
+            Dict[str, Any]: A dictionary of headers.
+        """
         signature = _get_signature(data, self.private_key)
         return {
             "Accept": "application/json",
@@ -266,6 +422,15 @@ class SshConfig(Config):
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        """
+        Define headers for an SSH key-based request (v2).
+
+        Args:
+            request (PreparedRequest): The prepared request.
+
+        Returns:
+            PreparedRequest: The prepared request with headers defined.
+        """
         return sign_request(request, self.public_key_hex, self.private_key)
 
     @staticmethod
@@ -276,7 +441,7 @@ class SshConfig(Config):
         **kwargs,
     ) -> SshConfig:
         """
-        Instantiate a UserConfig object by the content of a private ssh key.
+        Instantiate a SshConfig object by the content of a private SSH key.
 
         Args:
             ssh_private_key: The content of a private key file.
@@ -284,11 +449,10 @@ class SshConfig(Config):
             requests_settings: The requests settings for all outgoing network requests.
 
         Returns:
-            UserConfig.
+            SshConfig: The SSH configuration.
 
         Raises:
             ValueError: If the provided key content is not of the correct format.
-
         """
         key_bytes = ssh_private_key.encode()
         password_bytes = password.encode() if password else None
@@ -301,6 +465,18 @@ class SshConfig(Config):
 
 
 class BearerConfig(Config):
+    """
+    Configuration for bearer token-based authorization.
+
+    Args:
+        token (str): The bearer token.
+        domain (str): The domain.
+        requests_settings (RequestsSettings): Settings for HTTP requests.
+
+    Attributes:
+        token (str): The bearer token.
+    """
+
     def __init__(
         self,
         token: str,
@@ -311,6 +487,17 @@ class BearerConfig(Config):
         super().__init__(domain=domain, requests_settings=requests_settings)
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+        """
+        Define headers for a bearer token-based request.
+
+        Args:
+            resource_id (Optional[str]): The resource ID.
+            resource_type (Optional[str]): The resource type.
+            data (str): The request data.
+
+        Returns:
+            Dict[str, Any]: A dictionary of headers.
+        """
         return {
             "Accept": "application/json",
             "Accept-Encoding": "gzip",
@@ -321,6 +508,15 @@ class BearerConfig(Config):
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
+        """
+        Define headers for a bearer token-based request (v2).
+
+        Args:
+            request (PreparedRequest): The prepared request.
+
+        Returns:
+            PreparedRequest: The prepared request with headers defined.
+        """
         request.headers["Authorization"] = f"Bearer {self.token}"
         return request
 
@@ -330,4 +526,14 @@ class BearerConfig(Config):
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
     ) -> BearerConfig:
+        """
+        Instantiate a BearerConfig object using a bearer token.
+
+        Args:
+            token: The bearer token.
+            requests_settings: The requests settings for all outgoing network requests.
+
+        Returns:
+            BearerConfig: The bearer token configuration.
+        """
         return BearerConfig(token=token, requests_settings=requests_settings, **kwargs)

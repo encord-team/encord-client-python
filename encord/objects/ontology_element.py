@@ -36,11 +36,19 @@ class OntologyElement(ABC):
 
     @property
     def children(self) -> Sequence[OntologyElement]:
+        """
+        Returns an empty sequence of children nodes for this ontology element.
+        This method is meant to be overridden by subclasses that have actual child nodes.
+        """
         return []
 
     @property
     @abstractmethod
     def title(self) -> str:
+        """
+        Abstract property that should return the title of the ontology element.
+        Must be implemented by subclasses.
+        """
         raise NotImplementedError("This method is not implemented for this class")
 
     def get_child_by_hash(
@@ -49,13 +57,16 @@ class OntologyElement(ABC):
         type_: Optional[Type[OntologyNestedElementT]] = None,
     ) -> OntologyNestedElementT:
         """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
-        more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
-        an invalid state. Throws if nothing is found or if the type is not matched.
+        Retrieves the first child node of this ontology element with the matching feature node hash.
+        If multiple children have the same hash, the ontology is in an invalid state.
+        Throws an exception if no matching child is found or if the type does not match.
 
         Args:
-            feature_node_hash: the feature_node_hash of the child node to search for in the ontology.
-            type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
+            feature_node_hash: The feature node hash of the child node to find.
+            type_: Optional type to check the type of the child node.
+
+        Returns:
+            The child node with the specified feature node hash and type.
         """
         found_item = _get_element_by_hash(feature_node_hash, self.children)
         if found_item is None:
@@ -69,12 +80,14 @@ class OntologyElement(ABC):
         type_: Optional[Type[OntologyNestedElementT]] = None,
     ) -> List[OntologyNestedElementT]:
         """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
-        Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
+        Retrieves all child nodes of this ontology element that match the specified title and type.
 
         Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the item. Only nodes that match this type will be returned.
+            title: The exact title of the child nodes to find.
+            type_: Optional type to filter the child nodes.
+
+        Returns:
+            A list of child nodes with the specified title and type.
         """
         return _get_elements_by_title(title, self.children, type_=type_)
 
@@ -84,13 +97,18 @@ class OntologyElement(ABC):
         type_: Optional[Type[OntologyNestedElementT]] = None,
     ) -> OntologyNestedElementT:
         """
-        Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
-        than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
-        will be thrown as well.
+        Retrieves a single child node of this ontology element that matches the specified title and type.
+        Throws an exception if more than one or no child with the specified title and type is found.
 
         Args:
-            title: The exact title of the child node to search for in the ontology.
-            type_: The expected type of the child node. Only a node that matches this type will be returned.
+            title: The exact title of the child node to find.
+            type_: Optional type to check the type of the child node.
+
+        Returns:
+            The child node with the specified title and type.
+
+        Raises:
+            OntologyError: If more than one or no matching child is found.
         """
         found_items = self.get_children_by_title(title, type_)
         _assert_singular_result_list(found_items, title, type_)

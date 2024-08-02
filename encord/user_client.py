@@ -863,6 +863,7 @@ class EncordUserClient:
         *,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
+        org_access: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
@@ -874,6 +875,9 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
+            org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
+                folders belonging to the organization, instead of those accessible to the user. If enabled
+                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
@@ -888,6 +892,7 @@ class EncordUserClient:
             ListFoldersParams(
                 search=search,
                 dataset_synced=dataset_synced,
+                include_org_access=org_access,
                 order=order,
                 desc=desc,
                 page_size=page_size,
@@ -899,6 +904,7 @@ class EncordUserClient:
         *,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
+        org_access: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
@@ -910,6 +916,9 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
+            org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
+                folders belonging to the organization, instead of those accessible to the user. If enabled
+               but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
@@ -924,6 +933,7 @@ class EncordUserClient:
             ListFoldersParams(
                 search=search,
                 dataset_synced=dataset_synced,
+                include_org_access=org_access,
                 order=order,
                 desc=desc,
                 page_size=page_size,
@@ -936,6 +946,7 @@ class EncordUserClient:
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
         item_types: Optional[List[StorageItemType]] = None,
+        org_access: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         get_signed_urls: bool = False,
@@ -950,6 +961,9 @@ class EncordUserClient:
                 only linked and only unlinked items, respectively. `None` includes all items regardless of their
                 dataset links.
             item_types: Filter items by type.
+            org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
+               items belonging to the organization, instead of those accessible to the user. If enabled
+                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
             order: Sort order.
             desc: Sort in descending order.
             get_signed_urls: If True, return signed URLs for the items.
@@ -965,6 +979,7 @@ class EncordUserClient:
             search=search,
             is_in_dataset=is_in_dataset,
             item_types=item_types or [],
+            include_org_access=org_access,
             order=order,
             desc=desc,
             page_token=None,
