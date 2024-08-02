@@ -83,36 +83,6 @@ class Bundle:
     method to initiate bundled operations.
 
     To execute batch you can either call  :meth:`.execute()` directly, or use a Context Manager.
-
-        .. code::
-
-                # Code example of performing batched label initialisation
-                project = ... # assuming you already have instantiated this Project object
-                label_rows = project.list_label_rows_v2()
-                bundle = project.create_bundle()
-                for label_row in label_rows:
-                    label_row.initialise_labels(bundle=bundle)
-                    # no real network operations happened at this point
-
-                # now, trigger the actual network interaction
-                bundle.execute()
-
-                # all labels are initialised at this point
-
-
-        And this is the same flow with the Context Manager approach:
-
-        .. code::
-
-                # Code example of performing batched label initialisation
-                project = ... # assuming you already have instantiated this Project object
-                label_rows = project.list_label_rows_v2()
-                with project.create_bundle() as bundle:
-                    for label_row in label_rows:
-                        label_row.initialise_labels(bundle=bundle)
-                        # no real network operations happened at this point
-
-                # At this point all labels will be initialised
     """
 
     def __init__(self, bundle_size: Optional[int] = None) -> None:
@@ -184,6 +154,34 @@ def bundled_operation(
     result_mapper: Optional[BundleResultMapper] = None,
     limit: int = LABEL_ROW_BUNDLE_DEFAULT_LIMIT,
 ) -> None:
+    """
+    Executes or bundles an operation with the provided payload.
+
+    This function either performs the given operation immediately with the provided payload
+    or adds it to a bundle for later execution. The function requires the payload to be a
+    dataclass instance.
+
+    Parameters:
+        bundle: The bundle to which the operation and payload are added if bundling is enabled.
+                If `bundle` is falsy, the operation is executed immediately.
+        operation: The function or operation to be executed or bundled. This operation should
+                   accept the payload as keyword arguments.
+        payload (BundlablePayloadT): The data to be used as arguments for the operation.
+                                     This must be a dataclass instance.
+        result_mapper (Optional[BundleResultMapper]): An optional result mapper to handle the
+                                                      operation's result. It maps and processes
+                                                      the results based on specified predicates
+                                                      and handlers.
+        limit (int): The limit for bundling operations. Defaults to `LABEL_ROW_BUNDLE_DEFAULT_LIMIT`.
+
+    Raises:
+        AssertionError: If the payload is not a dataclass instance.
+        AssertionError: If the result length is not 1 when `bundle` is falsy.
+        AssertionError: If the result mapping predicate does not match the result handler predicate.
+
+    Returns:
+        None
+    """
     assert is_dataclass(payload), "Bundling only works with dataclasses"
     if not bundle:
         result = operation(**asdict(payload))
