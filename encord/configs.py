@@ -63,8 +63,16 @@ _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 logger = logging.getLogger(__name__)
 
+import platform
+from uuid import uuid4
+
 from requests import PreparedRequest
 
+from encord._version import __version__ as encord_version
+from encord.http.common import (
+    HEADER_CLOUD_TRACE_CONTEXT,
+    HEADER_USER_AGENT,
+)
 from encord.http.v2.request_signer import sign_request
 
 
@@ -202,6 +210,14 @@ class Config(BaseConfig):
         self.domain = domain
         endpoint = domain + web_file_path
         super().__init__(endpoint, requests_settings=requests_settings)
+
+    @staticmethod
+    def _user_agent() -> str:
+        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
+
+    @staticmethod
+    def _tracing_id() -> str:
+        return f"{uuid4().hex}/1;o=1"
 
 
 def get_env_resource_id() -> str:
@@ -419,6 +435,8 @@ class SshConfig(Config):
             "ResourceType": resource_type or "",
             "ResourceID": resource_id or "",
             "Authorization": self._get_ssh_authorization_header(self.public_key_hex, signature),
+            HEADER_USER_AGENT: self._user_agent(),
+            HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -431,6 +449,9 @@ class SshConfig(Config):
         Returns:
             PreparedRequest: The prepared request with headers defined.
         """
+        request.headers[HEADER_USER_AGENT] = self._user_agent()
+        request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
+
         return sign_request(request, self.public_key_hex, self.private_key)
 
     @staticmethod
@@ -505,6 +526,8 @@ class BearerConfig(Config):
             "ResourceID": resource_id or "",
             "ResourceType": resource_type or "",
             "Authorization": f"Bearer {self.token}",
+            HEADER_USER_AGENT: self._user_agent(),
+            HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -518,6 +541,9 @@ class BearerConfig(Config):
             PreparedRequest: The prepared request with headers defined.
         """
         request.headers["Authorization"] = f"Bearer {self.token}"
+        request.headers[HEADER_USER_AGENT] = self._user_agent()
+        request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
+
         return request
 
     @staticmethod

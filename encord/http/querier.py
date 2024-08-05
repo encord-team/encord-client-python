@@ -14,8 +14,6 @@
 # under the License.
 import dataclasses
 import logging
-import platform
-import uuid
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Type, TypeVar, Union
 
@@ -25,12 +23,10 @@ import requests.exceptions
 from requests import Session
 from requests.adapters import HTTPAdapter, Retry
 
-from encord._version import __version__ as encord_version
 from encord.configs import ApiKeyConfig, BaseConfig
 from encord.exceptions import RequestException, ResourceNotFoundError
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
-    HEADER_USER_AGENT,
     RequestContext,
 )
 from encord.http.error_utils import check_error_response
@@ -161,14 +157,6 @@ class Querier:
             raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
 
     @staticmethod
-    def _user_agent():
-        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
-
-    @staticmethod
-    def _tracing_id() -> str:
-        return f"{uuid.uuid4().hex}/1;o=1"
-
-    @staticmethod
     def _exception_context(request: requests.PreparedRequest) -> RequestContext:
         try:
             x_cloud_trace_context = request.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
@@ -191,8 +179,6 @@ class Querier:
         request.headers = self._config.define_headers(
             resource_id=self.resource_id, resource_type=self.resource_type, data=request.data
         )
-        request.headers[HEADER_USER_AGENT] = self._user_agent()
-        request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
         return request
 
     def _execute(self, request: Request, retryable=False, enable_logging: bool = True) -> Tuple[Any, RequestContext]:

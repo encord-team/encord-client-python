@@ -1,5 +1,4 @@
 import inspect
-import platform
 import uuid
 from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
@@ -7,12 +6,10 @@ from urllib.parse import urljoin
 import requests
 from requests import PreparedRequest, Response
 
-from encord._version import __version__ as encord_version
 from encord.configs import Config
 from encord.exceptions import EncordException, RequestException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
-    HEADER_USER_AGENT,
     RequestContext,
 )
 from encord.http.utils import create_new_session
@@ -43,14 +40,6 @@ class ApiClient:
         except Exception:
             return RequestContext()
 
-    @staticmethod
-    def _user_agent() -> str:
-        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
-
-    @staticmethod
-    def _tracing_id() -> str:
-        return f"{uuid.uuid4().hex}/1;o=1"
-
     def _build_url(self, path: str) -> str:
         if path.startswith("/"):
             path = path[1:]
@@ -58,15 +47,6 @@ class ApiClient:
         if url.endswith("/"):
             url = url[:-1]
         return url
-
-    def _headers(self):
-        return {
-            "Accept": "application/json",
-            "Accept-Encoding": "gzip",
-            "Content-Type": "application/json",
-            HEADER_USER_AGENT: self._user_agent(),
-            HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
-        }
 
     def get_bound_operation(self, operation: Callable) -> Callable:
         """
@@ -159,7 +139,6 @@ class ApiClient:
         req = requests.Request(
             method=method,
             url=self._build_url(path),
-            headers=self._headers(),
             params=params_dict,
             json=payload_serialised,
         ).prepare()
@@ -171,9 +150,7 @@ class ApiClient:
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
 
-        req = requests.Request(
-            method=method, url=self._build_url(path), headers=self._headers(), params=params_dict
-        ).prepare()
+        req = requests.Request(method=method, url=self._build_url(path), params=params_dict).prepare()
 
         return self._request(req, result_type=result_type)  # type: ignore
 
