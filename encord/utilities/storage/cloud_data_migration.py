@@ -73,7 +73,7 @@ def update_storage_item_cloud_info(
         raise ValueError("item must be either a StorageItem instance, a UUID, or a URL")
 
     if not new_url and not new_cloud_integration:
-        raise ValueError("At least on of `new_url` or `new_cloud_integration` must be provided")
+        raise ValueError("At least one of `new_url` or `new_cloud_integration` must be provided")
 
     new_cloud_integration_hash: Optional[UUID] = None
 
