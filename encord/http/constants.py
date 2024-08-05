@@ -11,6 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 from dataclasses import dataclass
+from typing import Callable, Optional
 
 DEFAULT_CONNECTION_RETRIES = 3
 DEFAULT_MAX_RETRIES = 3
@@ -44,6 +45,9 @@ class RequestsSettings:
 
     write_timeout: int = DEFAULT_WRITE_TIMEOUT
     """Maximum number of seconds to send request payload"""
+
+    trace_id_provider: Optional[Callable[[], str]] = None
+    """Function that supplies trace id for every request issued by the library. Random if not provided."""
 
 
 DEFAULT_REQUESTS_SETTINGS = RequestsSettings()

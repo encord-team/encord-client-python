@@ -215,8 +215,9 @@ class Config(BaseConfig):
     def _user_agent() -> str:
         return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
 
-    @staticmethod
-    def _tracing_id() -> str:
+    def _tracing_id(self) -> str:
+        if self.requests_settings.trace_id_provider:
+            return self.requests_settings.trace_id_provider()
         return f"{uuid4().hex}/1;o=1"
 
 
