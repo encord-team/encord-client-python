@@ -2,7 +2,6 @@ import base64
 import hashlib
 from datetime import datetime
 from typing import Dict, Union
-from urllib.parse import unquote
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from requests import PreparedRequest
@@ -10,8 +9,8 @@ from requests import PreparedRequest
 _SIGNATURE_LABEL = "encord-sig"
 
 """
-This file implements request signing according to the following RFC:
-https://datatracker.ietf.org/doc/html/rfc9421
+This file implements request signing according to the following RFC draft:
+https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures
 """
 
 
@@ -51,7 +50,7 @@ def sign_request(request: PreparedRequest, key_id: str, private_key: Ed25519Priv
 
     signature_elements = {
         "@method": request.method.upper(),
-        "@request-target": unquote(request.path_url),
+        "@request-target": request.path_url,
         "content-digest": content_digest,
     }
 
