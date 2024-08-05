@@ -63,8 +63,16 @@ _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 logger = logging.getLogger(__name__)
 
+import platform
+from uuid import uuid4
+
 from requests import PreparedRequest
 
+from encord._version import __version__ as encord_version
+from encord.http.common import (
+    HEADER_CLOUD_TRACE_CONTEXT,
+    HEADER_USER_AGENT,
+)
 from encord.http.v2.request_signer import sign_request
 
 
@@ -119,18 +127,6 @@ class BaseConfig(ABC):
             PreparedRequest: The prepared request with headers defined.
         """
         pass
-
-
-def _get_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
-    hash_builder = hashlib.sha256()
-    hash_builder.update(data.encode())
-    contents_hash = hash_builder.digest()
-
-    return private_key.sign(contents_hash)
-
-
-def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
-    return f"{public_key_hex}:{signature.hex()}"
 
 
 class UserConfig(BaseConfig):
@@ -214,6 +210,15 @@ class Config(BaseConfig):
         self.domain = domain
         endpoint = domain + web_file_path
         super().__init__(endpoint, requests_settings=requests_settings)
+
+    @staticmethod
+    def _user_agent() -> str:
+        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
+
+    def _tracing_id(self) -> str:
+        if self.requests_settings.trace_id_provider:
+            return self.requests_settings.trace_id_provider()
+        return f"{uuid4().hex}/1;o=1"
 
 
 def get_env_resource_id() -> str:
@@ -399,6 +404,18 @@ class SshConfig(Config):
 
         super().__init__(domain=domain, requests_settings=requests_settings)
 
+    @staticmethod
+    def _get_v1_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
+        hash_builder = hashlib.sha256()
+        hash_builder.update(data.encode())
+        contents_hash = hash_builder.digest()
+
+        return private_key.sign(contents_hash)
+
+    @staticmethod
+    def _get_v1_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
+        return f"{public_key_hex}:{signature.hex()}"
+
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         """
         Define headers for an SSH key-based request.
@@ -411,14 +428,16 @@ class SshConfig(Config):
         Returns:
             Dict[str, Any]: A dictionary of headers.
         """
-        signature = _get_signature(data, self.private_key)
+        signature = self._get_v1_signature(data, self.private_key)
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Accept-Encoding": "gzip",
             "ResourceType": resource_type or "",
             "ResourceID": resource_id or "",
-            "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
+            "Authorization": self._get_v1_ssh_authorization_header(self.public_key_hex, signature),
+            HEADER_USER_AGENT: self._user_agent(),
+            HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -431,6 +450,9 @@ class SshConfig(Config):
         Returns:
             PreparedRequest: The prepared request with headers defined.
         """
+        request.headers[HEADER_USER_AGENT] = self._user_agent()
+        request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
+
         return sign_request(request, self.public_key_hex, self.private_key)
 
     @staticmethod
@@ -505,6 +527,8 @@ class BearerConfig(Config):
             "ResourceID": resource_id or "",
             "ResourceType": resource_type or "",
             "Authorization": f"Bearer {self.token}",
+            HEADER_USER_AGENT: self._user_agent(),
+            HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -518,6 +542,9 @@ class BearerConfig(Config):
             PreparedRequest: The prepared request with headers defined.
         """
         request.headers["Authorization"] = f"Bearer {self.token}"
+        request.headers[HEADER_USER_AGENT] = self._user_agent()
+        request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
+
         return request
 
     @staticmethod

@@ -13,7 +13,7 @@ from cryptography.hazmat.primitives.serialization import (
 from requests import PreparedRequest, Session
 
 from encord.client import EncordClient
-from encord.configs import _get_signature, _get_ssh_authorization_header
+from encord.configs import SshConfig
 from encord.http.v2.payloads import Page
 from encord.orm.analytics import CollaboratorTimer
 from encord.orm.ontology import Ontology as OrmOntology
@@ -127,8 +127,10 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
 def get_encord_auth_header(request: PreparedRequest) -> str:
     private_key = load_ssh_private_key(DUMMY_PRIVATE_KEY.encode(), None)
     public_key = private_key.public_key()
-    signature = _get_signature(request.body, private_key)
-    return _get_ssh_authorization_header(public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex(), signature)
+    signature = SshConfig._get_v1_signature(request.body, private_key)
+    return SshConfig._get_v1_ssh_authorization_header(
+        public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex(), signature
+    )
 
 
 @patch.object(Session, "send")
