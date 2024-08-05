@@ -405,7 +405,7 @@ class SshConfig(Config):
         super().__init__(domain=domain, requests_settings=requests_settings)
 
     @staticmethod
-    def _get_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
+    def _get_v1_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
         hash_builder = hashlib.sha256()
         hash_builder.update(data.encode())
         contents_hash = hash_builder.digest()
@@ -413,7 +413,7 @@ class SshConfig(Config):
         return private_key.sign(contents_hash)
 
     @staticmethod
-    def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
+    def _get_v1_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
         return f"{public_key_hex}:{signature.hex()}"
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
@@ -428,14 +428,14 @@ class SshConfig(Config):
         Returns:
             Dict[str, Any]: A dictionary of headers.
         """
-        signature = self._get_signature(data, self.private_key)
+        signature = self._get_v1_signature(data, self.private_key)
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Accept-Encoding": "gzip",
             "ResourceType": resource_type or "",
             "ResourceID": resource_id or "",
-            "Authorization": self._get_ssh_authorization_header(self.public_key_hex, signature),
+            "Authorization": self._get_v1_ssh_authorization_header(self.public_key_hex, signature),
             HEADER_USER_AGENT: self._user_agent(),
             HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
         }
