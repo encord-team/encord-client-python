@@ -178,11 +178,11 @@ class ApiClient:
 
             if result_type is None or (res_json is None and allow_none):
                 return None
-            if result_type == int:
+            if result_type is int:
                 return int(res_json)
-            elif result_type == str:
+            elif result_type is str:
                 return str(res_json)
-            elif result_type == uuid.UUID:
+            elif result_type is uuid.UUID:
                 return uuid.UUID(res_json)
             elif issubclass(result_type, BaseDTOInterface):
                 return result_type.from_dict(res_json)
