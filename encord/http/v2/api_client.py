@@ -31,19 +31,6 @@ class ApiClient:
         self._bound_callbacks: Dict[Callable, Callable] = {}
 
     @staticmethod
-    def _exception_context_from_response(response: Response) -> RequestContext:
-        try:
-            x_cloud_trace_context = response.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
-            if x_cloud_trace_context is None:
-                return RequestContext()
-
-            x_cloud_trace_context = x_cloud_trace_context.split(";")[0]
-            trace_id, span_id = (x_cloud_trace_context.split("/") + [None, None])[:2]
-            return RequestContext(trace_id=trace_id, span_id=span_id)
-        except Exception:
-            return RequestContext()
-
-    @staticmethod
     def _exception_context(request: requests.PreparedRequest) -> RequestContext:
         try:
             x_cloud_trace_context = request.headers.get(HEADER_CLOUD_TRACE_CONTEXT)

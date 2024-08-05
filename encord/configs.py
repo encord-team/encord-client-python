@@ -121,18 +121,6 @@ class BaseConfig(ABC):
         pass
 
 
-def _get_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
-    hash_builder = hashlib.sha256()
-    hash_builder.update(data.encode())
-    contents_hash = hash_builder.digest()
-
-    return private_key.sign(contents_hash)
-
-
-def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
-    return f"{public_key_hex}:{signature.hex()}"
-
-
 class UserConfig(BaseConfig):
     """
     Configuration for user-specific requests, redirecting to the "/public/user" endpoint.
@@ -399,6 +387,18 @@ class SshConfig(Config):
 
         super().__init__(domain=domain, requests_settings=requests_settings)
 
+    @staticmethod
+    def _get_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
+        hash_builder = hashlib.sha256()
+        hash_builder.update(data.encode())
+        contents_hash = hash_builder.digest()
+
+        return private_key.sign(contents_hash)
+
+    @staticmethod
+    def _get_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
+        return f"{public_key_hex}:{signature.hex()}"
+
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         """
         Define headers for an SSH key-based request.
@@ -411,14 +411,14 @@ class SshConfig(Config):
         Returns:
             Dict[str, Any]: A dictionary of headers.
         """
-        signature = _get_signature(data, self.private_key)
+        signature = self._get_signature(data, self.private_key)
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Accept-Encoding": "gzip",
             "ResourceType": resource_type or "",
             "ResourceID": resource_id or "",
-            "Authorization": _get_ssh_authorization_header(self.public_key_hex, signature),
+            "Authorization": self._get_ssh_authorization_header(self.public_key_hex, signature),
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
