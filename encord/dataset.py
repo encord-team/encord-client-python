@@ -431,8 +431,7 @@ class Dataset:
         Append data hosted on a private cloud to an existing dataset.
 
         For a more complete example of safe uploads, please follow the guide found in our docs under
-        :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud
-        <tutorials/datasets:Adding data from a private cloud>`
+        :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud`
 
         Args:
             integration_id:
