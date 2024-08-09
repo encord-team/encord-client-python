@@ -28,15 +28,24 @@ def get_bbox_from_polygon(polygon: CocoPolygon) -> CocoBoundingBox:
     return CocoBoundingBox(x=min_x, y=min_y, w=max_x - min_x, h=max_y - min_y)
 
 
+def polygon_area(polygon: CocoPolygon) -> float:
+    area = 0.0
+    for i in range(len(polygon.values)):
+        area += polygon.values[i - 1].x * (polygon.values[i].y - polygon.values[i - 2].y)
+    return abs(area / 2)
+
+
 def test_coco_annotation_model_with_missing_segmentation_field(coco_sample: dict) -> None:
     for ann in coco_sample["annotations"]:
         ann.pop("segmentation")
         ann_model = CocoAnnotationModel.from_dict(ann)
-        # Check that the generated segmentation is a polygon with 4 points
+        # Assert the generated segmentation is a polygon with 4 points
         assert isinstance(ann_model.segmentation, CocoPolygon) and len(ann_model.segmentation.values) == 4
-        # Check that the bounding box containing the polygon is the same as the input bounding box
+        # Assert the bounding box containing the generated polygon is the same as the input bounding box
         containing_bbox = get_bbox_from_polygon(ann_model.segmentation)
         assert np.allclose(containing_bbox, ann_model.bbox)
+        # Assert the area of the generated polygon is the same as the area of the input bounding box
+        assert np.isclose(polygon_area(ann_model.segmentation), ann_model.bbox.w * ann_model.bbox.h)
 
 
 def test_coco_model_label_validation(coco_sample: dict) -> None:
