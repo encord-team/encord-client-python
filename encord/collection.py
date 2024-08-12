@@ -1,15 +1,13 @@
 import uuid
-from datetime import datetime
-from pathlib import Path
-from typing import Collection, Dict, Iterable, List, Optional, TextIO, Union
+from typing import List, Optional
 from uuid import UUID
 from encord.http.v2.api_client import ApiClient
 from encord.orm.collection import Collection as OrmCollection, GetCollectionParams, GetCollectionsResponse, \
     CreateCollectionParams, CreateCollectionPayload, UpdateCollectionPayload
 from encord.exceptions import (
-    AuthenticationError,
     AuthorisationError,
 )
+
 
 class Collection:
     """
@@ -64,7 +62,9 @@ class Collection:
         raise AuthorisationError("Collection not found")
 
     @staticmethod
-    def _get_collections(api_client: ApiClient, top_level_folder_uuid: UUID | None, collection_uuids) -> "List[Collection]":
+    def _get_collections(
+            api_client: ApiClient, top_level_folder_uuid: UUID | None, collection_uuids
+    ) -> "List[Collection]":
         params = GetCollectionParams(top_level_folder_uuid=top_level_folder_uuid, collection_uuids=collection_uuids)
         orm_item = api_client.get(
             f"index/collections",
@@ -76,15 +76,19 @@ class Collection:
 
     @staticmethod
     def _delete_collection(api_client: ApiClient, collection_uuid: UUID) -> None:
-        orm_item = api_client.delete(
+        api_client.delete(
             f"index/collections/{collection_uuid}",
             params=None,
             result_type=None,
         )
-        print("response is: ", orm_item)
 
     @staticmethod
-    def _create_collection(api_client: ApiClient, top_level_folder_uuid: UUID, name: str, description: str = "") -> UUID:
+    def _create_collection(
+            api_client: ApiClient,
+            top_level_folder_uuid: UUID,
+            name: str,
+            description: str = ""
+    ) -> UUID:
         params = CreateCollectionParams(top_level_folder_uuid=top_level_folder_uuid)
         payload = CreateCollectionPayload(name=name, description=description)
         orm_item = api_client.post(
@@ -93,18 +97,16 @@ class Collection:
             payload=payload,
             result_type=UUID,
         )
-        print("response is: ", orm_item)
         return orm_item
 
     @staticmethod
     def _update_collection(api_client: ApiClient, collection_uuid: UUID, name: str | None = None,
                            description: str | None = None) -> None:
         payload = UpdateCollectionPayload(name=name, description=description)
-        orm_item = api_client.patch(
+        api_client.patch(
             f"index/collections/{collection_uuid}",
             params=None,
             payload=payload,
             result_type=None,
         )
-        print("response is: ", orm_item)
 
