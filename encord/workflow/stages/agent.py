@@ -53,7 +53,7 @@ class AgentTask(WorkflowTask):
         self, pathway_name: str | None = None, pathway_uuid: str | None = None, *, bundle: Optional[Bundle] = None
     ) -> None:
         if not pathway_name and not pathway_uuid:
-            ValueError("Either `pathway_name` or `pathway_uuid` parameter must be provided.")
+            raise ValueError("Either `pathway_name` or `pathway_uuid` parameter must be provided.")
 
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
