@@ -83,36 +83,6 @@ class Bundle:
     method to initiate bundled operations.
 
     To execute batch you can either call  :meth:`.execute()` directly, or use a Context Manager.
-
-        .. code::
-
-                # Code example of performing batched label initialisation
-                project = ... # assuming you already have instantiated this Project object
-                label_rows = project.list_label_rows_v2()
-                bundle = project.create_bundle()
-                for label_row in label_rows:
-                    label_row.initialise_labels(bundle=bundle)
-                    # no real network operations happened at this point
-
-                # now, trigger the actual network interaction
-                bundle.execute()
-
-                # all labels are initialised at this point
-
-
-        And this is the same flow with the Context Manager approach:
-
-        .. code::
-
-                # Code example of performing batched label initialisation
-                project = ... # assuming you already have instantiated this Project object
-                label_rows = project.list_label_rows_v2()
-                with project.create_bundle() as bundle:
-                    for label_row in label_rows:
-                        label_row.initialise_labels(bundle=bundle)
-                        # no real network operations happened at this point
-
-                # At this point all labels will be initialised
     """
 
     def __init__(self, bundle_size: Optional[int] = None) -> None:

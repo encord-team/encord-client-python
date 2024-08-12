@@ -158,7 +158,7 @@ class Project:
 
             from encord.orm.label_row import LabelRowMetadata
 
-            project = user_client.get_project("<project_hash>")
+            project = user_client.get_project("[project_hash]")
 
             label_rows = LabelRowMetadata.from_list(project.label_rows)
 
@@ -432,7 +432,7 @@ class Project:
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
         """
-        DEPRECATED: Prefer using :class:`Ontology <encord.ontology.Ontology>` to manipulate ontology.
+        DEPRECATED: Prefer using :class:`Ontology [encord.ontology.Ontology]` to manipulate ontology.
 
         Add an object to an ontology.
 
@@ -465,7 +465,7 @@ class Project:
         options: Optional[Iterable[str]] = None,
     ):
         """
-        DEPRECATED: Prefer using :class:`Ontology <encord.ontology.Ontology>` to manipulate ontology.
+        DEPRECATED: Prefer using :class:`Ontology encord.ontology.Ontology` to manipulate ontology.
 
         Add a classification to an ontology.
 
@@ -499,7 +499,7 @@ class Project:
 
             from encord.utilities.project_utilities import get_all_model_iteration_uids
 
-            project = client_instance.get_project(<project_hash>)
+            project = client_instance.get_project([project_hash])
 
             model_configurations = project.list_models()
             all_model_iteration_uids = get_all_model_iteration_uids(model_configurations)
@@ -552,7 +552,7 @@ class Project:
         Args:
             title: Model title.
             description: Model description.
-            features: List of <feature_node_hashes> which are IDs of ontology objects or classifications to be included in the model.
+            features: List of feature_node_hashes which are IDs of ontology objects or classifications to be included in the model.
             model: The model type to be used. For backwards compatibility purposes, strings corresponding to the values of
                 the :class:`.AutomationModels` Enum are also allowed.
 
@@ -694,11 +694,11 @@ class Project:
             key_frames: Labels for frames to be interpolated. Key frames are consumed in the form::
 
                 {
-                    "<frame_number>": {
+                    "[frame_number]": {
                         "objects": [
                             {
-                                "objectHash": "<object_hash>",
-                                "featureHash": "<feature_hash>",
+                                "objectHash": "[object_hash]",
+                                "featureHash": "[feature_hash]",
                                 "polygon": {
                                     "0": { "x": x1, "y": y1, },
                                     "1": { "x": x2, "y": y2, },
@@ -735,11 +735,11 @@ class Project:
             frames: Labels for frames to be fitted. Frames are consumed in the form::
 
                 {
-                    "<frame_number>": {
+                    "[frame_number]": {
                         "objects": [
                             {
-                                "objectHash": "<object_hash>",
-                                "featureHash": "<feature_hash>",
+                                "objectHash": "[object_hash]",
+                                "featureHash": "[feature_hash]",
                                 "polygon": {
                                     "0": { "x": x1, "y": y1, },
                                     "1": { "x": x2, "y": y2, },

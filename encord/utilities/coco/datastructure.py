@@ -1,4 +1,3 @@
-import importlib.metadata as importlib_metadata
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List, NamedTuple, Optional, Union
@@ -127,8 +126,18 @@ class CocoRLE(BaseDTO):
 class CocoAnnotationModel(BaseDTO):
     @dto_validator(mode="before")
     def polygon_validator(cls, _value):
-        segm = _value["segmentation"]
-        if isinstance(segm, list) and len(segm) > 0 and isinstance(segm[0], list):
+        segm = _value.get("segmentation")
+        if segm is None:
+            # Generate a polygon from the existing bounding box
+            bbox = CocoBoundingBox(*_value["bbox"])
+            coords = [
+                (bbox.x, bbox.y),
+                (bbox.x, bbox.y + bbox.h),
+                (bbox.x + bbox.w, bbox.y + bbox.h),
+                (bbox.x + bbox.w, bbox.y),
+            ]
+            _value["segmentation"] = CocoPolygon.from_dict({"values": coords})
+        elif isinstance(segm, list) and len(segm) > 0 and isinstance(segm[0], list):
             coords = [(segm[0][i], segm[0][i + 1]) for i in range(0, len(segm[0]), 2)]
             poly = CocoPolygon.from_dict({"values": coords})
             _value["segmentation"] = poly

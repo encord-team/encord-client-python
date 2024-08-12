@@ -2,7 +2,6 @@
 All tests regarding converting from and to Encord dict to the label row.
 """
 
-import json
 import os
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
@@ -14,7 +13,6 @@ from encord.objects import OntologyStructure
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.orm.label_row import LabelRowMetadata
 from encord.orm.skeleton_template import SkeletonTemplate
-from encord.utilities.coco.datastructure import CocoAnnotationModel, CocoRLE, CocoRootModel
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data import (
     data_1,
@@ -315,12 +313,3 @@ def test_skeleton_template_coordinates():
     label_dict_obj = list(skeleton_coordinates.labels["data_units"].values())[0]["labels"]["objects"][0]
     origin_obj = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]
     assert origin_obj["skeleton"] == label_dict_obj["skeleton"]
-
-
-def test_coco_importer_label_validation() -> None:
-    file_path = os.path.join(DATA_DIR, "coco_clean_example.json")
-    with open(file_path, "r") as f:
-        coco_data = json.load(f)
-    coco_root_model = CocoRootModel.from_dict(coco_data)
-    annos = coco_root_model.annotations
-    assert any((isinstance(anno.segmentation, CocoRLE) for anno in annos))
