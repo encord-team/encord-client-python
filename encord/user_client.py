@@ -1023,9 +1023,7 @@ class EncordUserClient:
         return Collection._get_collection(self._api_client, collection_uuid=collection_hash)
 
     def get_collections(
-            self,
-            top_level_folder_hash: Union[str, UUID, None] = None,
-            collection_hash_list: List[Union[str, UUID]] = []
+        self, top_level_folder_hash: Union[str, UUID, None] = None, collection_hash_list: List[Union[str, UUID]] = []
     ) -> List[Collection]:
         """
         Get collections by top level folder or list of collection hash.
@@ -1047,10 +1045,7 @@ class EncordUserClient:
         ]
         return Collection._get_collections(self._api_client, top_level_folder_hash, collection_hash_list)
 
-    def delete_collection(
-            self,
-            collection_hash: Union[str, UUID]
-    ) -> None:
+    def delete_collection(self, collection_hash: Union[str, UUID]) -> None:
         """
         Delete a collection by its id if it exists.
 
@@ -1067,12 +1062,7 @@ class EncordUserClient:
             collection_hash = UUID(collection_hash)
         Collection._delete_collection(self._api_client, collection_hash)
 
-    def create_collection(
-            self,
-            top_level_folder_hash: Union[str, UUID],
-            name: str,
-            description: str = ""
-    ) -> UUID:
+    def create_collection(self, top_level_folder_hash: Union[str, UUID], name: str, description: str = "") -> UUID:
         """
         Create a collection.
 
@@ -1092,10 +1082,7 @@ class EncordUserClient:
         return Collection._create_collection(self._api_client, top_level_folder_hash, name, description)
 
     def update_collection(
-            self,
-            collection_hash: Union[str, UUID],
-            name: str | None = None,
-            description: str | None = None
+        self, collection_hash: Union[str, UUID], name: str | None = None, description: str | None = None
     ) -> None:
         """
         Update a collection if it exists

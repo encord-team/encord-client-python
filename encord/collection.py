@@ -1,11 +1,18 @@
 import uuid
 from typing import List, Optional
 from uuid import UUID
-from encord.http.v2.api_client import ApiClient
-from encord.orm.collection import Collection as OrmCollection, GetCollectionParams, GetCollectionsResponse, \
-    CreateCollectionParams, CreateCollectionPayload, UpdateCollectionPayload
+
 from encord.exceptions import (
     AuthorisationError,
+)
+from encord.http.v2.api_client import ApiClient
+from encord.orm.collection import Collection as OrmCollection
+from encord.orm.collection import (
+    CreateCollectionParams,
+    CreateCollectionPayload,
+    GetCollectionParams,
+    GetCollectionsResponse,
+    UpdateCollectionPayload,
 )
 
 
@@ -15,6 +22,7 @@ class Collection:
     Collections are a logical grouping of data items that can be used to
     create datasets and perform various data curation flows.
     """
+
     def __init__(self, client: ApiClient, orm_collection: OrmCollection):
         self._client = client
         self._collection_instance = orm_collection
@@ -51,9 +59,9 @@ class Collection:
 
     @staticmethod
     def _get_collection(api_client: ApiClient, collection_uuid: UUID) -> "Collection":
-        params = GetCollectionParams(collection_uuids=[collection_uuid])
+        params = GetCollectionParams(uuids=[collection_uuid])
         orm_item = api_client.get(
-            f"index/collections",
+            "index/collections",
             params=params,
             result_type=GetCollectionsResponse,
         )
@@ -63,15 +71,15 @@ class Collection:
 
     @staticmethod
     def _get_collections(
-            api_client: ApiClient, top_level_folder_uuid: UUID | None, collection_uuids
+        api_client: ApiClient, top_level_folder_uuid: UUID | None, collection_uuids
     ) -> "List[Collection]":
-        params = GetCollectionParams(top_level_folder_uuid=top_level_folder_uuid, collection_uuids=collection_uuids)
+        params = GetCollectionParams(topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuids)
         orm_item = api_client.get(
-            f"index/collections",
+            "index/collections",
             params=params,
             result_type=GetCollectionsResponse,
         )
-        collections = [Collection(api_client, item) for item in orm_item.results ]
+        collections = [Collection(api_client, item) for item in orm_item.results]
         return collections
 
     @staticmethod
@@ -84,15 +92,12 @@ class Collection:
 
     @staticmethod
     def _create_collection(
-            api_client: ApiClient,
-            top_level_folder_uuid: UUID,
-            name: str,
-            description: str = ""
+        api_client: ApiClient, top_level_folder_uuid: UUID, name: str, description: str = ""
     ) -> UUID:
-        params = CreateCollectionParams(top_level_folder_uuid=top_level_folder_uuid)
+        params = CreateCollectionParams(topLevelFolderUuid=top_level_folder_uuid)
         payload = CreateCollectionPayload(name=name, description=description)
         orm_item = api_client.post(
-            f"index/collections",
+            "index/collections",
             params=params,
             payload=payload,
             result_type=UUID,
@@ -100,8 +105,9 @@ class Collection:
         return orm_item
 
     @staticmethod
-    def _update_collection(api_client: ApiClient, collection_uuid: UUID, name: str | None = None,
-                           description: str | None = None) -> None:
+    def _update_collection(
+        api_client: ApiClient, collection_uuid: UUID, name: str | None = None, description: str | None = None
+    ) -> None:
         payload = UpdateCollectionPayload(name=name, description=description)
         api_client.patch(
             f"index/collections/{collection_uuid}",
@@ -109,4 +115,3 @@ class Collection:
             payload=payload,
             result_type=None,
         )
-
