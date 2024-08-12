@@ -37,8 +37,9 @@ class StorageLocationName(CamelStrEnum):
     GCP = auto()
     S3 = auto()
     AZURE = auto()
-    OPEN_TELEKOM = auto()
+    OPEN_TELEKOM = auto()  # TODO: Remove when enough people have updated their sdk to include S3_COMPATIBLE below
     DIRECT_ACCESS = auto()
+    S3_COMPATIBLE = auto()
 
 
 class PathElement(BaseDTO):
