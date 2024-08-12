@@ -18,6 +18,7 @@ class WorkflowStageType(str, Enum):
     CONSENSUS_ANNOTATION = "CONSENSUS_ANNOTATION"
     CONSENSUS_REVIEW = "CONSENSUS_REVIEW"
     DONE = "DONE"
+    AGENT = "AGENT"
 
 
 class LabelWorkflowGraphNode:
