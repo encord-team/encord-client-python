@@ -180,16 +180,11 @@ class ApiClient:
             connect_retries=req_settings.connection_retries,
         ) as session:
             context = self._exception_context(req)
-<<<<<<< HEAD
-
             try:
                 res = session.send(req, timeout=timeouts)
             except Exception as e:
                 raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
-=======
-            res = session.send(req, timeout=timeouts)
->>>>>>> 434f100 (feat: crud collections)
             if res.status_code != 200:
                 self._handle_error(res, context)
 
