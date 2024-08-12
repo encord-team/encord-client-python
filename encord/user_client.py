@@ -15,6 +15,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -23,6 +24,7 @@ from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
+from encord.collection import Collection
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
@@ -998,8 +1000,120 @@ class EncordUserClient:
     def set_client_metadata_schema_from_dict(self, json_dict: Dict[str, ClientMetadataSchemaTypes]):
         set_client_metadata_schema_from_dict(self._api_client, json_dict)
 
+
     def metadata_schema(self) -> MetadataSchema:
         return MetadataSchema(self._api_client)
+
+    def get_collection(self, collection_hash: Union[str, UUID]) -> Collection:
+        """
+        Get a collection by its id/hash.
+
+        Args:
+            collection_hash: The hash of the collection to retrieve.
+
+        Returns:
+            The collection. See :class:`encord.collection.Collection` for details.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+                the user does not have access to it.
+        """
+        if isinstance(collection_hash, str):
+            collection_hash = UUID(collection_hash)
+        return Collection._get_collection(self._api_client, collection_uuid=collection_hash)
+
+    def get_collections(
+            self,
+            top_level_folder_hash: Union[str, UUID, None] = None,
+            collection_hash_list: List[Union[str, UUID]] = []
+    ) -> List[Collection]:
+        """
+        Get collections by top level folder or list of collection hash.
+
+        Args:
+            top_level_folder_hash: The hash of the top level folder
+            collection_hash_list: The list of collection hash to be retrieved.
+
+        Returns:
+            The list of collections which match the given criteria
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(top_level_folder_hash, str):
+            top_level_folder_hash = UUID(top_level_folder_hash)
+        collection_hash_list = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in collection_hash_list
+        ]
+        return Collection._get_collections(self._api_client, top_level_folder_hash, collection_hash_list)
+
+    def delete_collection(
+            self,
+            collection_hash: Union[str, UUID]
+    ) -> None:
+        """
+        Delete a collection by its id if it exists.
+
+        Args:
+            collection_hash: The hash of the collection to delete.
+
+        Returns:
+            None
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(collection_hash, str):
+            collection_hash = UUID(collection_hash)
+        Collection._delete_collection(self._api_client, collection_hash)
+
+    def create_collection(
+            self,
+            top_level_folder_hash: Union[str, UUID],
+            name: str,
+            description: str = ""
+    ) -> UUID:
+        """
+        Create a collection.
+
+        Args:
+            top_level_folder_hash: The folder in which the collection will be created.
+            name: The name of the collection
+            description: The description of the collection
+
+        Returns:
+            The UUID of the newly created collection
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+        """
+        if isinstance(top_level_folder_hash, str):
+            top_level_folder_hash = UUID(top_level_folder_hash)
+        return Collection._create_collection(self._api_client, top_level_folder_hash, name, description)
+
+    def update_collection(
+            self,
+            collection_hash: Union[str, UUID],
+            name: str | None = None,
+            description: str | None = None
+    ) -> None:
+        """
+        Update a collection if it exists
+
+        Args:
+            collection_hash: The hash of the collection to update.
+            name: Updated name of the collection
+            description: Updated description of the collection
+
+        Returns:
+            None
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(collection_hash, str):
+            collection_hash = UUID(str(collection_hash))
+        Collection._update_collection(self._api_client, collection_hash, name, description)
 
 
 class ListingFilter(Enum):
