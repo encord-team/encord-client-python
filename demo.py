@@ -13,7 +13,7 @@ user_client = EncordUserClient.create_with_ssh_private_key(
 collection = user_client.get_collection("8920ba66-6660-49eb-8aac-c468acef9a03")
 print(collection)
 
-collections = user_client.get_collections(top_level_folder_hash="6e63713e-0416-4c41-a52b-48cdc0753da1")
+collections = user_client.get_collections(top_level_folder_uuid="6e63713e-0416-4c41-a52b-48cdc0753da1")
 print(len(collections))
 # id = user_client.create_collection("6e63713d-0416-4c41-a52b-48cdc0753da1", "Types are better now", )
 # user_client.delete_collection("8920ba66-6660-49eb-8aac-c468acef9a02")
