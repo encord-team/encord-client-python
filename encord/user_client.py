@@ -37,6 +37,7 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.metadata_schema import MetadataSchema
 from encord.objects import OntologyStructure
 from encord.objects.common import (
     DeidentifyRedactTextMode,
@@ -989,11 +990,16 @@ class EncordUserClient:
 
         return StorageFolder._list_items(self._api_client, "storage/search/items", params)
 
+    @deprecated("CURRENT", ".metadata_schema()")
     def get_client_metadata_schema(self) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
         return get_client_metadata_schema(self._api_client)
 
+    @deprecated("CURRENT", ".metadata_schema()")
     def set_client_metadata_schema_from_dict(self, json_dict: Dict[str, ClientMetadataSchemaTypes]):
         set_client_metadata_schema_from_dict(self._api_client, json_dict)
+
+    def metadata_schema(self) -> MetadataSchema:
+        return MetadataSchema(self._api_client)
 
 
 class ListingFilter(Enum):
