@@ -661,7 +661,7 @@ class Project:
         where the job was initialized.
 
         Args:
-            model_hash: A model_hash (uid) string.
+            model_hash: A unique identifier (UUID) for the model. The format is a string.
             label_rows: List of label row uids (hashes) for training.
             epochs: Number of passes through the training dataset.
             weights: Model weights.
