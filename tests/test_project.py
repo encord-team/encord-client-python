@@ -42,12 +42,12 @@ UID = "d958ddbb-fcd0-477a-adf9-de14431dbbd2"
 @pytest.mark.parametrize("weights", [None, "invalid-weight"])
 def test_invalid_weights_raises(project: Project, weights):
     with pytest.raises(EncordException) as excinfo:
-        project.model_train(
-            uid=UID,
-            label_rows=[],
+        project.model_train_start(
+            model_hash=UID,
+            label_rows=[uuid.uuid4()],
             epochs=500,
-            batch_size=24,
             weights=weights,
+            batch_size=24,
             device=Device.CUDA,
         )
 
@@ -57,12 +57,12 @@ def test_invalid_weights_raises(project: Project, weights):
 @pytest.mark.parametrize("device", [None, "gpu"])
 def test_invalid_device_raises(project: Project, device):
     with pytest.raises(EncordException) as trainExcInfo:
-        project.model_train(
-            uid=UID,
-            label_rows=[],
+        project.model_train_start(
+            model_hash=UID,
+            label_rows=[uuid.uuid4()],
             epochs=500,
-            batch_size=24,
             weights=faster_rcnn_R_101_C4_3x,
+            batch_size=24,
             device=device,
         )
 
