@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
@@ -28,12 +29,12 @@ class Collection:
         self._collection_instance = orm_collection
 
     @property
-    def collection_hash(self) -> uuid.UUID:
+    def uuid(self) -> uuid.UUID:
         """
-        Get the collection hash (i.e. the collection ID).
+        Get the collection uuid (i.e. the collection ID).
 
         Returns:
-            str: The collection hash.
+            str: The collection uuid.
         """
         return self._collection_instance.uuid
 
@@ -56,6 +57,26 @@ class Collection:
             Optional[str]: The collection description.
         """
         return self._collection_instance.description
+
+    @property
+    def created_at(self) -> Optional[datetime]:
+        """
+        Get the collection creation timestamp
+
+        Returns:
+            Optional[datetime]: The collection creation timestamp.
+        """
+        return self._collection_instance.created_at
+
+    @property
+    def last_edited_at(self) -> Optional[datetime]:
+        """
+        Get the collection last edit timestamp
+
+        Returns:
+            Optional[datetime]: The collection last edit timestamp.
+        """
+        return self._collection_instance.last_edited_at
 
     @staticmethod
     def _get_collection(api_client: ApiClient, collection_uuid: UUID) -> "Collection":
