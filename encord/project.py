@@ -652,7 +652,7 @@ class Project:
     ) -> UUID:
         """
         This method initializes model training in Encord's backend.
-        Once the training_hash (UUID) has been returned, you can exit the terminal
+        Once the training_hash (UUID) is returned, you can exit the terminal
         while the job continues uninterrupted.
 
         You can check job status at any point using
