@@ -703,7 +703,7 @@ class Project:
             timeout_seconds:
                 Number of seconds the method waits while waiting for a response.
                 If `timeout_seconds == 0`, only a single checking request is performed.
-                Response will be immediately returned.
+                Responses are immediately returned.
 
         Returns:
             Response containing details about job status, errors, and progress.
