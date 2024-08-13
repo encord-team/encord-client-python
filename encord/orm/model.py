@@ -15,13 +15,16 @@
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
-from typing import List, Optional
+from enum import Enum, auto
+from typing import List, Optional, Union
+from uuid import UUID
 
 from encord.common.time_parser import parse_datetime
 from encord.constants.model import AutomationModels
 from encord.exceptions import EncordException
 from encord.orm import base_orm
+from encord.orm.analytics import CamelStrEnum
+from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 from encord.utilities.common import ENCORD_CONTACT_SUPPORT_EMAIL
 
@@ -247,3 +250,42 @@ class ModelTrainingParams(base_orm.BaseORM):
             ("device", str),
         ]
     )
+
+
+class PublicModelTrainStartPayload(BaseDTO):
+    label_rows: List[UUID]
+    epochs: int
+    batch_size: int
+    model: str
+    training_weights_link: Optional[str] = None
+    device: str
+
+
+class PublicModelTrainGetResultParams(BaseDTO):
+    timeout_seconds: int
+
+
+class PublicModelTrainGetResultLongPollingStatus(str, Enum):
+    DONE = "DONE"
+    ERROR = "ERROR"
+    PENDING = "PENDING"
+
+
+class PublicModelTrainGetResultResponseDoneResult(BaseDTO):
+    model_hash: UUID
+    training_hash: UUID
+    title: str
+    type: str
+    model: str
+    framework: str
+    epochs: int
+    batch_size: int
+    final_loss: float
+    weights_link: str
+    created_at: datetime
+    duration: int
+
+
+class PublicModelTrainGetResultResponse(BaseDTO):
+    status: PublicModelTrainGetResultLongPollingStatus
+    result: Optional[PublicModelTrainGetResultResponseDoneResult] = None

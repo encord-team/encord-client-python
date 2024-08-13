@@ -641,43 +641,79 @@ class Project:
             rdp_thresh,
         )
 
-    def model_train(
+    def model_train_start(
         self,
-        uid: str,
-        label_rows: Optional[List[str]] = None,
-        epochs: Optional[int] = None,
+        model_hash: Union[str, UUID],
+        label_rows: List[Union[str, UUID]],
+        epochs: int,
+        weights: ModelTrainingWeights,
         batch_size: int = 24,
-        weights: Optional[ModelTrainingWeights] = None,
         device: Device = Device.CUDA,
-    ):
+    ) -> UUID:
         """
-        Train a model created on the platform.
+        This method initializes model training in Encord's backend.
+        Once the training_hash (UUID) has been returned, you can exit the terminal
+        while the job continues uninterrupted.
+
+        You can check job status at any point using
+        the :meth:`model_train_get_result` method.
+        This can be done in a separate Python session to the one
+        where the job was initialized.
 
         Args:
-            uid: A model_hash (uid) string.
+            model_hash: A model_hash (uid) string.
             label_rows: List of label row uids (hashes) for training.
             epochs: Number of passes through the training dataset.
-            batch_size: Number of training examples utilized in one iteration.
             weights: Model weights.
+            batch_size: Number of training examples utilized in one iteration.
             device: Device (CPU or CUDA, default is CUDA).
 
         Returns:
-            ModelIteration: A model iteration object.
+            UUID: A model iteration training_hash.
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
             AuthorisationError: If access to the specified resource is restricted.
             ModelWeightsInconsistentError: If the passed model weights are incompatible with the selected model.
             ResourceNotFoundError: If no model exists by the specified model_hash (uid).
-            UnknownError: If an error occurs during training.
         """
-        return self._client.model_train(
-            uid,
+
+        return self._client.model_train_start(
+            model_hash,
             label_rows,
             epochs,
-            batch_size,
             weights,
+            batch_size,
             device,
+        )
+
+    def model_train_get_result(
+        self,
+        model_hash: Union[str, UUID],
+        training_hash: Union[str, UUID],
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> dict:
+        """
+        Fetch model training status, perform long polling process for `timeout_seconds`.
+
+        Args:
+            model_hash:
+                UUID Identifier of the model.
+            training_hash:
+                UUID Identifier of the model iteration. This ID enables the user to track the job progress via SDK or web app.
+            timeout_seconds:
+                Number of seconds the method will wait while waiting for a response.
+                If `timeout_seconds == 0`, only a single checking request is performed.
+                Response will be immediately returned.
+
+        Returns:
+            Response containing details about job status, errors, and progress.
+
+        """
+
+        return self._client.model_train_get_result(
+            model_hash,
+            training_hash,
+            timeout_seconds,
         )
 
     def object_interpolation(
