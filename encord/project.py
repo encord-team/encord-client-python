@@ -699,7 +699,7 @@ class Project:
             model_hash:
                 UUID Identifier of the model.
             training_hash:
-                UUID Identifier of the model iteration. This ID enables the user to track the job progress via SDK or web app.
+                A unique identifier(UUID) of the model iteration. This ID enables the user to track the job progress using the SDK or web app.
             timeout_seconds:
                 Number of seconds the method waits while waiting for a response.
                 If `timeout_seconds == 0`, only a single checking request is performed.
