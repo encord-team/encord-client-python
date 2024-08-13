@@ -1382,13 +1382,15 @@ class EncordClientProject(EncordClient):
 
         if res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
             if res.result is None:
-                raise ValueError(f"{res.status=}, res.result is None, this should never happen")
+                raise ValueError(f"{res.status=}, res.result should not be None with DONE status")
 
             return res.result.dict()
         elif res.status == PublicModelTrainGetResultLongPollingStatus.ERROR:
             raise encord.exceptions.EncordException("model_train error occurred")
         else:
-            raise ValueError(f"res.status={res.status}, this should never happen")
+            raise ValueError(
+                f"res.status={res.status}, only DONE and ERROR status is expected after successful long polling"
+            )
 
     def object_interpolation(
         self,
