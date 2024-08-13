@@ -1324,7 +1324,8 @@ class EncordClientProject(EncordClient):
 
         logger.info(f"model_train job started with training_hash={training_hash}.")
         logger.info("SDK process can be terminated, this will not affect successful job execution.")
-        logger.info("You can follow the progress in the web app via notifications.")
+        logger.info("You can follow the progress in the SDK using model_train_get_result method.")
+        logger.info("You can also follow the progress in the web app via notifications.")
 
         return training_hash
 
