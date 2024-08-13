@@ -697,7 +697,7 @@ class Project:
 
         Args:
             model_hash:
-                UUID Identifier of the model.
+               A unique identifier (UUID) for the model.
             training_hash:
                 A unique identifier(UUID) of the model iteration. This ID enables the user to track the job progress using the SDK or web app.
             timeout_seconds:
