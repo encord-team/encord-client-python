@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Annotated, Literal, Sequence
+from typing import Literal, Sequence
+from typing_extensions import Annotated
 
 from pydantic import BaseModel, Field, RootModel
 
