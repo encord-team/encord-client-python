@@ -125,13 +125,12 @@ class Collection:
         )
         return orm_item
 
-    @staticmethod
-    def _update_collection(
-        api_client: ApiClient, collection_uuid: UUID, name: str | None = None, description: str | None = None
+    def update_collection(
+        self, name: str | None = None, description: str | None = None
     ) -> None:
         payload = UpdateCollectionPayload(name=name, description=description)
-        api_client.patch(
-            f"index/collections/{collection_uuid}",
+        self._client.patch(
+            f"index/collections/{self.uuid}",
             params=None,
             payload=payload,
             result_type=None,

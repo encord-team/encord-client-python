@@ -25,6 +25,7 @@ from uuid import UUID
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.collection import Collection
+from encord.preset import Preset
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
@@ -1080,16 +1081,54 @@ class EncordUserClient:
             top_level_folder_uuid = UUID(top_level_folder_uuid)
         return Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
 
-    def update_collection(
-        self, collection_uuid: Union[str, UUID], name: str | None = None, description: str | None = None
-    ) -> None:
+    def get_preset(self, preset_uuid: Union[str, UUID]) -> Preset:
         """
-        Update a collection if it exists
+        Get a preset by its uuid/id.
 
         Args:
-            collection_uuid: The uuid of the collection to update.
-            name: Updated name of the collection
-            description: Updated description of the collection
+            preset_uuid: The hash of the preset to retrieve.
+
+        Returns:
+            The preset. See :class:`encord.preset.Preset` for details.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+                the user does not have access to it.
+        """
+        if isinstance(preset_uuid, str):
+            preset_uuid = UUID(preset_uuid)
+        return Preset._get_preset(self._api_client, preset_uuid=preset_uuid)
+
+
+    def get_presets(
+        self, top_level_folder_uuid: Union[str, UUID, None] = None, preset_uuid_list: List[Union[str, UUID]] = []
+    ) -> List[Preset]:
+        """
+        Get collections by top level folder or list of collection hash.
+
+        Args:
+            top_level_folder_uuid: The hash of the top level folder
+            preset_uuid_list: The list of collection hash to be retrieved.
+
+        Returns:
+            The list of collections which match the given criteria
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(top_level_folder_uuid, str):
+            top_level_folder_uuid = UUID(top_level_folder_uuid)
+        preset_uuid_list = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuid_list
+        ]
+        return Preset._get_presets(self._api_client, top_level_folder_uuid, preset_uuid_list)
+
+    def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
+        """
+        Delete a preset by its id if it exists.
+
+        Args:
+            preset_uuid: The uuid/id of the preset to delete.
 
         Returns:
             None
@@ -1097,9 +1136,9 @@ class EncordUserClient:
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
-        if isinstance(collection_uuid, str):
-            collection_uuid = UUID(str(collection_uuid))
-        Collection._update_collection(self._api_client, collection_uuid, name, description)
+        if isinstance(preset_uuid, str):
+            preset_uuid = UUID(preset_uuid)
+        Preset._delete_preset(self._api_client, preset_uuid)
 
 
 class ListingFilter(Enum):

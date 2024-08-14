@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO, Field
