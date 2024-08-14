@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, RootModel
 
 from encord.http.v2.api_client import ApiClient
 
-__all__ = ["MetadataSchema", "MetadataSchemaError", "ClientMetadataSchemaTypeEmbedding"]
+__all__ = ["MetadataSchema", "MetadataSchemaError"]
 
 
 class _NumberFormat(Enum):
@@ -37,7 +37,7 @@ class _ClientMetadataSchemaTypeEnum(BaseModel):
     values: Sequence[str] = Field([], min_length=1, max_length=256)
 
 
-class ClientMetadataSchemaTypeEmbedding(BaseModel):
+class _ClientMetadataSchemaTypeEmbedding(BaseModel):
     ty: Literal["embedding"] = "embedding"
     size: int = Field(gt=0, le=4096)
 
@@ -56,8 +56,9 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
     TEXT = "text"
     BOOLEAN = "boolean"
     DATETIME = "datetime"
+    UUID = "uuid"
 
-    def to_simple_str(self) -> Literal["boolean", "datetime", "uuid", "number", "varchar", "text"]:
+    def to_simple_str(self) -> Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "uuid"]:
         if self.value == "number":
             return "number"
         elif self.value == "varchar":
@@ -68,6 +69,8 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
             return "boolean"
         elif self.value == "datetime":
             return "datetime"
+        elif self.value == "uuid":
+            return "uuid"
         else:
             raise ValueError(f"Unknown simple type: {self}")
 
@@ -97,7 +100,7 @@ class _ClientMetadataSchemaOption(
             | _ClientMetadataSchemaTypeVarChar
             | _ClientMetadataSchemaTypeDateTime
             | _ClientMetadataSchemaTypeEnum
-            | ClientMetadataSchemaTypeEmbedding
+            | _ClientMetadataSchemaTypeEmbedding
             | _ClientMetadataSchemaTypeText
             | _ClientMetadataSchemaTypeUUID
             | _ClientMetadataSchemaTypeVariant
@@ -110,10 +113,18 @@ class _ClientMetadataSchemaOption(
 
 
 class _ClientMetadataSchema(RootModel[dict[str, _ClientMetadataSchemaOption]]):
+    """
+    Internal type for a metadata schema.
+    """
+
     pass
 
 
 class MetadataSchemaError(RuntimeError):
+    """
+    Raised when an invariant is violated when mutating metadata schemas
+    """
+
     pass
 
 
@@ -170,7 +181,7 @@ class MetadataSchema:
         """
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
-        self._schema[k] = _ClientMetadataSchemaOption(root=ClientMetadataSchemaTypeEmbedding(size=size))
+        self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEmbedding(size=size))
         self._dirty = True
 
     def set_key_schema(
@@ -233,7 +244,7 @@ class MetadataSchema:
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
         v = self._schema[k].root
-        if isinstance(v, ClientMetadataSchemaTypeEmbedding):
+        if isinstance(v, _ClientMetadataSchemaTypeEmbedding):
             return "embedding"
         elif isinstance(v, _ClientMetadataSchemaTypeVariant):
             return v.hint.to_simple_str()
@@ -259,7 +270,7 @@ class MetadataSchema:
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
         v = self._schema[k].root
-        if isinstance(v, ClientMetadataSchemaTypeEmbedding):
+        if isinstance(v, _ClientMetadataSchemaTypeEmbedding):
             return v.size
         else:
             raise MetadataSchemaError(f"{k} does not refer to an embedding")
