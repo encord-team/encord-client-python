@@ -1104,14 +1104,14 @@ class EncordUserClient:
         self, top_level_folder_uuid: Union[str, UUID, None] = None, preset_uuid_list: List[Union[str, UUID]] = []
     ) -> List[Preset]:
         """
-        Get collections by top level folder or list of collection hash.
+        Get presets by top level folder or list of collection hash.
 
         Args:
             top_level_folder_uuid: The hash of the top level folder
-            preset_uuid_list: The list of collection hash to be retrieved.
+            preset_uuid_list: The list of preset hash to be retrieved.
 
         Returns:
-            The list of collections which match the given criteria
+            The list of presets which match the given criteria
 
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
