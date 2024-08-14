@@ -94,6 +94,10 @@ class _ClientMetadataSchemaTypeUser(BaseModel):
     ty: Literal["user"] = "user"
 
 
+class _ClientMetadataSchemaTypeTombstone(BaseModel):
+    ty: Literal["tombstone"] = "tombstone"
+
+
 class _ClientMetadataSchemaOption(
     RootModel[
         Annotated[
@@ -108,6 +112,7 @@ class _ClientMetadataSchemaOption(
                 _ClientMetadataSchemaTypeUUID,
                 _ClientMetadataSchemaTypeVariant,
                 _ClientMetadataSchemaTypeUser,
+                _ClientMetadataSchemaTypeTombstone,
             ],
             Field(discriminator="ty"),
         ]
@@ -188,7 +193,57 @@ class MetadataSchema:
         self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEmbedding(size=size))
         self._dirty = True
 
-    def set_key_schema(
+    def add_enum(self, k: str, *, values: Sequence[str]) -> None:
+        """
+        Adds a new enum to the metadata schema.
+        Parameters:
+        -----------
+        k : str
+            The key under which the embedding will be stored in the schema.
+        values : Sequence[str]
+            The set of values for the enum (min 1, max 256).
+        Raises:
+        -------
+        MetadataSchemaError
+            If the key `k` is already defined in the schema.
+        """
+        if k in self._schema:
+            raise MetadataSchemaError(f"{k} is already defined")
+        if len(values) == 0:
+            raise MetadataSchemaError("Must provide at least 1 value")
+        elif len(values) >= 256:
+            raise MetadataSchemaError("Cannot provide more than 256 values")
+        self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEnum(values=sorted(values)))
+        self._dirty = True
+
+    def add_enum_options(self, k: str, *, values: Sequence[str]) -> None:
+        """
+        Adds a new enum to the metadata schema.
+        Parameters:
+        -----------
+        k : str
+            The key referencing the enum.
+        values : Sequence[str]
+            The set of new values to add to the enum (min 1, max 256).
+        Raises:
+        -------
+        MetadataSchemaError
+            If the key `k` is not defined in the schema or is not an enum.
+        """
+        if k not in self._schema:
+            raise MetadataSchemaError(f"{k} is already defined")
+        v = self._schema[k].root
+        if not isinstance(v, _ClientMetadataSchemaTypeEnum):
+            raise MetadataSchemaError(f"{k} is not an enum")
+        new_values = list(v.values) + list(values)
+        if len(new_values) == 0 or len(values) == 0:
+            raise MetadataSchemaError("Must provide at least 1 value")
+        elif len(new_values) >= 256:
+            raise MetadataSchemaError("Cannot provide more than 256 values")
+        self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEnum(values=sorted(new_values)))
+        self._dirty = True
+
+    def set_key_schema_hint(
         self,
         k: str,
         *,
@@ -216,9 +271,32 @@ class MetadataSchema:
                 raise MetadataSchemaError(f"{k} is already defined")
         if schema == "embedding":
             raise MetadataSchemaError("Embedding must be created explicitly")
+        elif schema == "enum":
+            raise MetadataSchemaError("Enum must be created explicitly")
         self._schema[k] = _ClientMetadataSchemaOption(
             root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(schema))
         )
+        self._dirty = True
+
+    def delete_key(self, k: str) -> None:
+        """
+        Delete a metadata key from the schema, this cannot be undone.
+        Parameters:
+        -----------
+        k : str
+            The key for which the metadata type is being deleted.
+        Raises:
+        -------
+        MetadataSchemaError
+            If the key `k` is already deleted or not present in the schema
+        """
+        if k in self._schema:
+            v = self._schema[k]
+            if isinstance(v.root, _ClientMetadataSchemaTypeTombstone):
+                raise MetadataSchemaError(f"{k} is already deleted")
+        else:
+            raise MetadataSchemaError(f"{k} is not defined")
+        self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeTombstone())
         self._dirty = True
 
     def keys(self) -> Sequence[str]:
@@ -231,7 +309,9 @@ class MetadataSchema:
         """
         return list(self._schema.keys())
 
-    def get_key_type(self, k: str) -> Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding"]:
+    def get_key_type(
+        self, k: str
+    ) -> Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]:
         """
         Retrieves the metadata type associated with a given key.
         Parameters:
@@ -240,7 +320,7 @@ class MetadataSchema:
             The key for which the metadata type is to be retrieved.
         Returns:
         --------
-        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding"]
+        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]
             The metadata type associated with the key `k`.
         Raises:
         -------
@@ -252,8 +332,12 @@ class MetadataSchema:
         v = self._schema[k].root
         if isinstance(v, _ClientMetadataSchemaTypeEmbedding):
             return "embedding"
+        elif isinstance(v, _ClientMetadataSchemaTypeEnum):
+            return "enum"
         elif isinstance(v, _ClientMetadataSchemaTypeVariant):
             return v.hint.to_simple_str()
+        elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
+            raise MetadataSchemaError(f"{k} has been deleted")
         else:
             raise MetadataSchemaError(f"{k} is not supported in the current SDK")
 
@@ -280,3 +364,27 @@ class MetadataSchema:
             return v.size
         else:
             raise MetadataSchemaError(f"{k} does not refer to an embedding")
+
+    def get_enum_options(self, k: str) -> Sequence[str]:
+        """
+        Retrieves all values associated with a given enum.
+        Parameters:
+        -----------
+        k : str
+            The key for which the metadata type is to be retrieved.
+        Returns:
+        --------
+        Sequence[str]
+            The list of all values associated with an enum type
+        Raises:
+        -------
+        MetadataSchemaError
+            If the key `k` is not defined in the schema or is not an enum
+        """
+        if k not in self._schema:
+            raise MetadataSchemaError(f"{k} is not defined")
+        v = self._schema[k].root
+        if isinstance(v, _ClientMetadataSchemaTypeEnum):
+            return sorted(v.values)
+        else:
+            raise MetadataSchemaError(f"{k} does not refer to an enum")
