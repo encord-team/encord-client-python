@@ -1,8 +1,8 @@
 from enum import Enum
-from typing import Literal, Sequence
-from typing_extensions import Annotated
+from typing import Literal, Sequence, Union
 
 from pydantic import BaseModel, Field, RootModel
+from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
 
@@ -75,6 +75,7 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
         else:
             raise ValueError(f"Unknown simple type: {self}")
 
+    @classmethod
     def _missing_(cls, value):
         if value in ("text", "long_string"):
             return cls.TEXT
@@ -96,16 +97,18 @@ class _ClientMetadataSchemaTypeUser(BaseModel):
 class _ClientMetadataSchemaOption(
     RootModel[
         Annotated[
-            _ClientMetadataSchemaTypeNumber
-            | _ClientMetadataSchemaTypeBoolean
-            | _ClientMetadataSchemaTypeVarChar
-            | _ClientMetadataSchemaTypeDateTime
-            | _ClientMetadataSchemaTypeEnum
-            | _ClientMetadataSchemaTypeEmbedding
-            | _ClientMetadataSchemaTypeText
-            | _ClientMetadataSchemaTypeUUID
-            | _ClientMetadataSchemaTypeVariant
-            | _ClientMetadataSchemaTypeUser,
+            Union[
+                _ClientMetadataSchemaTypeNumber,
+                _ClientMetadataSchemaTypeBoolean,
+                _ClientMetadataSchemaTypeVarChar,
+                _ClientMetadataSchemaTypeDateTime,
+                _ClientMetadataSchemaTypeEnum,
+                _ClientMetadataSchemaTypeEmbedding,
+                _ClientMetadataSchemaTypeText,
+                _ClientMetadataSchemaTypeUUID,
+                _ClientMetadataSchemaTypeVariant,
+                _ClientMetadataSchemaTypeUser,
+            ],
             Field(discriminator="ty"),
         ]
     ]
@@ -161,7 +164,7 @@ class MetadataSchema:
             self._api_client.post(
                 "organisation/metadata-schema",
                 params=None,
-                payload=_ClientMetadataSchema(root=self._schema),
+                payload=_ClientMetadataSchema.from_dict(self._schema),
                 result_type=None,
             )
             self._dirty = False
@@ -189,7 +192,7 @@ class MetadataSchema:
         self,
         k: str,
         *,
-        metadata_type: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+        schema: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
     ) -> None:
         """
         Sets a simple metadata type for a given key in the schema.
@@ -197,7 +200,7 @@ class MetadataSchema:
         -----------
         k : str
             The key for which the metadata type is being set.
-        metadata_type : Literal[
+        schema : Literal[
             "boolean", "datetime", "number", "uuid",
             "text", "varchar", "string", "long_string"
         ]
@@ -211,8 +214,10 @@ class MetadataSchema:
             v = self._schema[k]
             if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
                 raise MetadataSchemaError(f"{k} is already defined")
+        if schema == "embedding":
+            raise MetadataSchemaError("Embedding must be created explicitly")
         self._schema[k] = _ClientMetadataSchemaOption(
-            root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(metadata_type))
+            root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(schema))
         )
         self._dirty = True
 
