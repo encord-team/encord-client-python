@@ -17,6 +17,9 @@ def test_metadata_schema() -> None:
     with pytest.raises(MetadataSchemaError):
         meta.set_key_schema_hint("yolo", schema="embedding")  # type: ignore[arg-type]
 
+    with pytest.raises(MetadataSchemaError):
+        meta.set_key_schema_hint("embed512", schema="boolean")
+
     meta.set_key_schema_hint("a", schema="number")
     meta.set_key_schema_hint("b", schema="boolean")
     meta.set_key_schema_hint("c", schema="string")
@@ -34,3 +37,6 @@ def test_metadata_schema() -> None:
 
     meta.add_enum_options("en", values=["h2"])
     assert meta.get_enum_options("en") == ["h", "h2"]
+
+    with pytest.raises(MetadataSchemaError):
+        meta.set_key_schema_hint("en", schema="boolean")
