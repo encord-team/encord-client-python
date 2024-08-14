@@ -57,11 +57,11 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
     BOOLEAN = "boolean"
     DATETIME = "datetime"
 
-    def to_simple_str(self) -> Literal["boolean", "datetime", "uuid", "number", "string", "text"]:
+    def to_simple_str(self) -> Literal["boolean", "datetime", "uuid", "number", "varchar", "text"]:
         if self.value == "number":
             return "number"
         elif self.value == "varchar":
-            return "string"
+            return "varchar"
         elif self.value == "text":
             return "text"
         elif self.value == "boolean":
@@ -118,6 +118,14 @@ class MetadataSchemaError(RuntimeError):
 
 
 class MetadataSchema:
+    """
+    A class to manage the metadata schema for an organization.
+    Methods:
+    --------
+    save() -> None
+        Saves the metadata schema to the backend if it has been modified.
+    """
+
     _dirty: bool
     _schema: dict[str, _ClientMetadataSchemaOption]
     _api_client: ApiClient
@@ -134,6 +142,9 @@ class MetadataSchema:
         self._dirty = False
 
     def save(self) -> None:
+        """
+        Saves the metadata schema to the backend if changes have been made.
+        """
         if self._dirty:
             self._api_client.post(
                 "organisation/metadata-schema",
@@ -144,12 +155,46 @@ class MetadataSchema:
             self._dirty = False
 
     def add_embedding(self, k: str, *, size: int) -> None:
+        """
+        Adds a new embedding to the metadata schema.
+        Parameters:
+        -----------
+        k : str
+            The key under which the embedding will be stored in the schema.
+        size : int
+            The size of the embedding.
+        Raises:
+        -------
+        MetadataSchemaError
+            If the key `k` is already defined in the schema.
+        """
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
         self._schema[k] = _ClientMetadataSchemaOption(root=ClientMetadataSchemaTypeEmbedding(size=size))
         self._dirty = True
 
-    def set_simple(self, k: str, *, metadata_type: Literal["boolean", "datetime", "uuid"]) -> None:
+    def set_key_schema(
+        self,
+        k: str,
+        *,
+        metadata_type: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+    ) -> None:
+        """
+        Sets a simple metadata type for a given key in the schema.
+        Parameters:
+        -----------
+        k : str
+            The key for which the metadata type is being set.
+        metadata_type : Literal[
+            "boolean", "datetime", "number", "uuid",
+            "text", "varchar", "string", "long_string"
+        ]
+            The type of metadata to be associated with the key. Must be a valid identifier.
+        Raises:
+        -------
+        MetadataSchemaError
+            If the key `k` is already defined in the schema with a conflicting type.
+        """
         if k in self._schema:
             v = self._schema[k]
             if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
@@ -160,17 +205,61 @@ class MetadataSchema:
         self._dirty = True
 
     def keys(self) -> Sequence[str]:
+        """
+        Returns a sequence of all keys defined in the metadata schema.
+        Returns:
+        --------
+        Sequence[str]
+            A list of keys present in the metadata schema.
+        """
         return list(self._schema.keys())
 
-    def get_metadata(
-        self, k: str
-    ) -> ClientMetadataSchemaTypeEmbedding | Literal["boolean", "datetime", "uuid", "number", "string", "text"]:
+    def get_key_type(self, k: str) -> Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding"]:
+        """
+        Retrieves the metadata type associated with a given key.
+        Parameters:
+        -----------
+        k : str
+            The key for which the metadata type is to be retrieved.
+        Returns:
+        --------
+        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding"]
+            The metadata type associated with the key `k`.
+        Raises:
+        -------
+        MetadataSchemaError
+            If the key `k` is not defined in the schema or is not supported by the current SDK.
+        """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
-        v = self._schema[k]
+        v = self._schema[k].root
         if isinstance(v, ClientMetadataSchemaTypeEmbedding):
-            return v
+            return "embedding"
         elif isinstance(v, _ClientMetadataSchemaTypeVariant):
             return v.hint.to_simple_str()
         else:
             raise MetadataSchemaError(f"{k} is not supported in the current SDK")
+
+    def get_embedding_size(self, k: str) -> int:
+        """
+        Retrieves size associated with a given embedding.
+        Parameters:
+        -----------
+        k : str
+            The key for which the metadata type is to be retrieved.
+        Returns:
+        --------
+        int
+            The size of the embedding
+        Raises:
+        -------
+        MetadataSchemaError
+            If the key `k` is not defined in the schema or is not an embedding
+        """
+        if k not in self._schema:
+            raise MetadataSchemaError(f"{k} is not defined")
+        v = self._schema[k].root
+        if isinstance(v, ClientMetadataSchemaTypeEmbedding):
+            return v.size
+        else:
+            raise MetadataSchemaError(f"{k} does not refer to an embedding")
