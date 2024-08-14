@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal, Sequence, Union
+from typing import Dict, Literal, Sequence, Union
 
 from pydantic import BaseModel, Field, RootModel
 from typing_extensions import Annotated
@@ -116,7 +116,7 @@ class _ClientMetadataSchemaOption(
     pass
 
 
-class _ClientMetadataSchema(RootModel[dict[str, _ClientMetadataSchemaOption]]):
+class _ClientMetadataSchema(RootModel[Dict[str, _ClientMetadataSchemaOption]]):
     """
     Internal type for a metadata schema.
     """
@@ -142,15 +142,15 @@ class MetadataSchema:
     """
 
     _dirty: bool
-    _schema: dict[str, _ClientMetadataSchemaOption]
+    _schema: Dict[str, _ClientMetadataSchemaOption]
     _api_client: ApiClient
 
     def __init__(self, api_client: ApiClient) -> None:
         self._api_client = api_client
-        schema_opt: _ClientMetadataSchema = api_client.get(
+        schema_opt: _ClientMetadataSchema = api_client.get(  # type: ignore[type-var]
             "organisation/metadata-schema",
             params=None,
-            result_type=_ClientMetadataSchema,
+            result_type=_ClientMetadataSchema,  # type: ignore[arg-type]
             allow_none=True,
         )
         self._schema = schema_opt.root if schema_opt is not None else {}
@@ -164,7 +164,7 @@ class MetadataSchema:
             self._api_client.post(
                 "organisation/metadata-schema",
                 params=None,
-                payload=_ClientMetadataSchema.from_dict(self._schema),
+                payload=_ClientMetadataSchema.model_validate(self._schema),  # type: ignore[arg-type]
                 result_type=None,
             )
             self._dirty = False
