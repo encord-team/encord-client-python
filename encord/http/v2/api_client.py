@@ -166,7 +166,10 @@ class ApiClient:
         ) as session:
             context = self._exception_context(req)
 
-            res = session.send(req, timeout=timeouts)
+            try:
+                res = session.send(req, timeout=timeouts)
+            except Exception as e:
+                raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
             if res.status_code != 200:
                 self._handle_error(res, context)
