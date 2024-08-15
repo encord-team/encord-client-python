@@ -203,7 +203,10 @@ class Querier:
             backoff_factor=req_settings.backoff_factor,
             connect_retries=req_settings.connection_retries,
         ) as session:
-            res = session.send(req, timeout=timeouts)
+            try:
+                res = session.send(req, timeout=timeouts)
+            except Exception as e:
+                raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
             try:
                 res_json = orjson.loads(res.content)

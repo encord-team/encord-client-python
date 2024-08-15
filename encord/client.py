@@ -131,8 +131,11 @@ from encord.orm.model import (
     ModelInferenceParams,
     ModelOperations,
     ModelRow,
-    ModelTrainingParams,
     ModelTrainingWeights,
+    PublicModelTrainGetResultLongPollingStatus,
+    PublicModelTrainGetResultParams,
+    PublicModelTrainGetResultResponse,
+    PublicModelTrainStartPayload,
     TrainingMetadata,
 )
 from encord.orm.project import (
@@ -1276,27 +1279,28 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(Model, uid, payload=model)
 
-    def model_train(
+    def model_train_start(
         self,
-        uid: str,
-        label_rows: Optional[List[str]] = None,
-        epochs: Optional[int] = None,
+        model_hash: Union[str, UUID],
+        label_rows: List[Union[str, UUID]],
+        epochs: int,
+        weights: ModelTrainingWeights,
         batch_size: int = 24,
-        weights: Optional[ModelTrainingWeights] = None,
         device: Device = Device.CUDA,
-    ):
+    ) -> UUID:
         """
-        This function is documented in :meth:`encord.project.Project.model_train`.
+        This function is documented in :meth:`encord.project.Project.model_train_start`.
         """
-        if label_rows is None:
+
+        if not label_rows:
             raise encord.exceptions.EncordException(
                 message="You must pass a list of label row uid's (hashes) to train a model."
             )
 
-        if epochs is None:
+        if not epochs:
             raise encord.exceptions.EncordException(message="You must set number of epochs to train a model.")
 
-        if batch_size is None:
+        if not batch_size:
             raise encord.exceptions.EncordException(message="You must set a batch size to train a model.")
 
         if weights is None or not isinstance(weights, ModelTrainingWeights):
@@ -1304,24 +1308,90 @@ class EncordClientProject(EncordClient):
                 message="You must pass weights from the `encord.constants.model_weights` module to train a model."
             )
 
-        training_params = ModelTrainingParams(
-            {
-                "label_rows": label_rows,
-                "epochs": epochs,
-                "batch_size": batch_size,
-                "weights": weights,
-                "device": _device_to_string(device),
-            }
+        training_hash = self._get_api_client().post(
+            f"ml-models/{model_hash}/training",
+            params=None,
+            payload=PublicModelTrainStartPayload(
+                label_rows=[x if isinstance(x, UUID) else UUID(x) for x in label_rows],
+                epochs=epochs,
+                batch_size=batch_size,
+                model=weights.model,
+                training_weights_link=weights.training_weights_link,
+                device=_device_to_string(device),
+            ),
+            result_type=UUID,
         )
 
-        model = Model(
-            {
-                "model_operation": ModelOperations.TRAIN.value,
-                "model_parameters": training_params,
-            }
-        )
+        logger.info(f"model_train job started with training_hash={training_hash}.")
+        logger.info("SDK process can be terminated, this will not affect successful job execution.")
+        logger.info("You can follow the progress in the SDK using model_train_get_result method.")
+        logger.info("You can also follow the progress in the web app via notifications.")
 
-        return self._querier.basic_setter(Model, uid, payload=model)
+        return training_hash
+
+    def model_train_get_result(
+        self,
+        model_hash: Union[str, UUID],
+        training_hash: Union[str, UUID],
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> dict:
+        """
+        This function is documented in :meth:`encord.project.Project.model_train_get_result`.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                logger.info(f"__model_train_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._get_api_client().get(
+                    f"ml-models/{model_hash}/{training_hash}/training",
+                    params=PublicModelTrainGetResultParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=PublicModelTrainGetResultResponse,
+                )
+
+                if tmp_res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
+                    logger.info(f"model_train job completed with training_hash={training_hash}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    PublicModelTrainGetResultLongPollingStatus.DONE,
+                    PublicModelTrainGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
+            if res.result is None:
+                raise ValueError(f"{res.status=}, res.result should not be None with DONE status")
+
+            return res.result.dict()
+        elif res.status == PublicModelTrainGetResultLongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException("model_train error occurred")
+        else:
+            raise ValueError(
+                f"res.status={res.status}, only DONE and ERROR status is expected after successful long polling"
+            )
 
     def object_interpolation(
         self,
