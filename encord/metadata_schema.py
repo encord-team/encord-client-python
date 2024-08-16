@@ -137,6 +137,24 @@ class MetadataSchemaError(RuntimeError):
     pass
 
 
+def _is_valid_metadata_key(value: str) -> bool:
+    if value.startswith("$") or value == "":
+        return False
+    for extra_char in ["-", "_", " "]:
+        value = value.replace(extra_char, "")
+    if value == "":
+        return False
+    # deprecated special-keys
+    if value in ("keyframes",):
+        return False
+    return value.isalnum()
+
+
+def _assert_valid_metadata_key(value: str) -> None:
+    if not _is_valid_metadata_key(value):
+        raise MetadataSchemaError(f"{value} is an invalid format for a metadata key")
+
+
 class MetadataSchema:
     """
     A class to manage the metadata schema for an organization.
@@ -190,6 +208,7 @@ class MetadataSchema:
         """
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
+        _assert_valid_metadata_key(k)
         self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEmbedding(size=size))
         self._dirty = True
 
@@ -209,6 +228,7 @@ class MetadataSchema:
         """
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
+        _assert_valid_metadata_key(k)
         if len(values) == 0:
             raise MetadataSchemaError("Must provide at least 1 value")
         elif len(values) >= 256:
@@ -232,6 +252,7 @@ class MetadataSchema:
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
+        _assert_valid_metadata_key(k)
         v = self._schema[k].root
         if not isinstance(v, _ClientMetadataSchemaTypeEnum):
             raise MetadataSchemaError(f"{k} is not an enum")
@@ -269,6 +290,7 @@ class MetadataSchema:
             v = self._schema[k]
             if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
                 raise MetadataSchemaError(f"{k} is already defined")
+        _assert_valid_metadata_key(k)
         if schema == "embedding":
             raise MetadataSchemaError("Embedding must be created explicitly")
         elif schema == "enum":
@@ -296,6 +318,7 @@ class MetadataSchema:
                 raise MetadataSchemaError(f"{k} is already deleted")
         else:
             raise MetadataSchemaError(f"{k} is not defined")
+        _assert_valid_metadata_key(k)
         self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeTombstone())
         self._dirty = True
 
@@ -329,6 +352,7 @@ class MetadataSchema:
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
+        _assert_valid_metadata_key(k)
         v = self._schema[k].root
         if isinstance(v, _ClientMetadataSchemaTypeEmbedding):
             return "embedding"
@@ -359,6 +383,7 @@ class MetadataSchema:
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
+        _assert_valid_metadata_key(k)
         v = self._schema[k].root
         if isinstance(v, _ClientMetadataSchemaTypeEmbedding):
             return v.size
@@ -383,6 +408,7 @@ class MetadataSchema:
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
+        _assert_valid_metadata_key(k)
         v = self._schema[k].root
         if isinstance(v, _ClientMetadataSchemaTypeEnum):
             return sorted(v.values)
