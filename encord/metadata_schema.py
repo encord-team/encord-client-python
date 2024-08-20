@@ -172,7 +172,7 @@ class MetadataSchema:
     def __init__(self, api_client: ApiClient) -> None:
         self._api_client = api_client
         schema_opt: _ClientMetadataSchema = api_client.get(  # type: ignore[type-var]
-            "organisation/metadata-schema",
+            "organisation/client-metadata-schema-v2",
             params=None,
             result_type=_ClientMetadataSchema,  # type: ignore[arg-type]
             allow_none=True,
@@ -186,7 +186,7 @@ class MetadataSchema:
         """
         if self._dirty:
             self._api_client.post(
-                "organisation/metadata-schema",
+                "organisation/client-metadata-schema-v2",
                 params=None,
                 payload=_ClientMetadataSchema.model_validate(self._schema),  # type: ignore[arg-type]
                 result_type=None,
