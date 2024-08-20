@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 from typing import Dict, Literal, Sequence, Union
 
@@ -264,11 +265,11 @@ class MetadataSchema:
         self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEnum(values=sorted(new_values)))
         self._dirty = True
 
-    def set_key_schema_hint(
+    def add_dynamic(
         self,
         k: str,
         *,
-        schema: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+        ty: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
     ) -> None:
         """
         Sets a simple metadata type for a given key in the schema.
@@ -291,12 +292,12 @@ class MetadataSchema:
             if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
                 raise MetadataSchemaError(f"{k} is already defined")
         _assert_valid_metadata_key(k)
-        if schema == "embedding":
+        if ty == "embedding":
             raise MetadataSchemaError("Embedding must be created explicitly")
-        elif schema == "enum":
+        elif ty == "enum":
             raise MetadataSchemaError("Enum must be created explicitly")
         self._schema[k] = _ClientMetadataSchemaOption(
-            root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(schema))
+            root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(ty))
         )
         self._dirty = True
 
@@ -362,6 +363,18 @@ class MetadataSchema:
             return v.hint.to_simple_str()
         elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
             raise MetadataSchemaError(f"{k} has been deleted")
+        elif isinstance(v, _ClientMetadataSchemaTypeBoolean):
+            return "boolean"
+        elif isinstance(v, _ClientMetadataSchemaTypeNumber):
+            return "number"
+        elif isinstance(v, _ClientMetadataSchemaTypeDateTime):
+            return "datetime"
+        elif isinstance(v, _ClientMetadataSchemaTypeVarChar):
+            return "varchar"
+        elif isinstance(v, _ClientMetadataSchemaTypeText):
+            return "text"
+        elif isinstance(v, _ClientMetadataSchemaTypeUUID):
+            return "uuid"
         else:
             raise MetadataSchemaError(f"{k} is not supported in the current SDK")
 
@@ -414,3 +427,40 @@ class MetadataSchema:
             return sorted(v.values)
         else:
             raise MetadataSchemaError(f"{k} does not refer to an enum")
+
+    def __repr__(self):
+        return json.dumps({k: self._schema[k].model_dump(mode="json") for k in sorted(self._schema.keys())})
+
+    def __str__(self) -> str:
+        schema = "Metadata Schema:\n"
+        schema += "----------------\n"
+        max_length = max([len(k) for k in self._schema.keys()], default=0)
+        for k in sorted(self._schema.keys()):
+            v = self._schema[k].root
+            ty_hint_str: str
+            padding: str = " " * (max_length - len(k))
+            if isinstance(v, _ClientMetadataSchemaTypeEmbedding):
+                ty_hint_str = f"embedding(size={v.size})"
+            elif isinstance(v, _ClientMetadataSchemaTypeEnum):
+                ty_hint_str = f"enum(values={sorted(v.values)})"
+            elif isinstance(v, _ClientMetadataSchemaTypeVariant):
+                ty_hint_str = f"dynamic(hint={v.hint.to_simple_str()})"
+            elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
+                continue
+            elif isinstance(v, _ClientMetadataSchemaTypeBoolean):
+                ty_hint_str = "boolean"
+            elif isinstance(v, _ClientMetadataSchemaTypeNumber):
+                ty_hint_str = "number"
+            elif isinstance(v, _ClientMetadataSchemaTypeDateTime):
+                ty_hint_str = "datetime"
+            elif isinstance(v, _ClientMetadataSchemaTypeVarChar):
+                ty_hint_str = "varchar"
+            elif isinstance(v, _ClientMetadataSchemaTypeText):
+                ty_hint_str = "text"
+            elif isinstance(v, _ClientMetadataSchemaTypeUUID):
+                ty_hint_str = "uuid"
+            else:
+                raise MetadataSchemaError(f"{k} is not supported in the current SDK")
+            schema += f" - '{k}': {padding}{ty_hint_str}\n"
+
+        return schema

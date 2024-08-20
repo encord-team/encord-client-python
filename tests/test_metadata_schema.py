@@ -15,20 +15,20 @@ def test_metadata_schema() -> None:
     assert meta.get_embedding_size("embed512") == 512
 
     with pytest.raises(MetadataSchemaError):
-        meta.set_key_schema_hint("yolo", schema="embedding")  # type: ignore[arg-type]
+        meta.add_dynamic("yolo", ty="embedding")  # type: ignore[arg-type]
 
     with pytest.raises(MetadataSchemaError):
-        meta.set_key_schema_hint("embed512", schema="boolean")
+        meta.add_dynamic("embed512", ty="boolean")
 
-    meta.set_key_schema_hint("a", schema="number")
-    meta.set_key_schema_hint("b", schema="boolean")
-    meta.set_key_schema_hint("c", schema="string")
-    meta.set_key_schema_hint("d", schema="text")
-    meta.set_key_schema_hint("e", schema="varchar")
-    meta.set_key_schema_hint("f", schema="long_string")
-    meta.set_key_schema_hint("g", schema="long_string")
-    meta.set_key_schema_hint("a", schema="long_string")
-    meta.set_key_schema_hint("g", schema="number")
+    meta.add_dynamic("a", ty="number")
+    meta.add_dynamic("b", ty="boolean")
+    meta.add_dynamic("c", ty="string")
+    meta.add_dynamic("d", ty="text")
+    meta.add_dynamic("e", ty="varchar")
+    meta.add_dynamic("f", ty="long_string")
+    meta.add_dynamic("g", ty="long_string")
+    meta.add_dynamic("a", ty="long_string")
+    meta.add_dynamic("g", ty="number")
 
     meta.delete_key("g")
 
@@ -39,4 +39,17 @@ def test_metadata_schema() -> None:
     assert meta.get_enum_options("en") == ["h", "h2"]
 
     with pytest.raises(MetadataSchemaError):
-        meta.set_key_schema_hint("en", schema="boolean")
+        meta.add_dynamic("en", ty="boolean")
+
+    assert f"{meta}".strip() == """
+Metadata Schema:
+----------------
+ - 'a':        dynamic(hint=text)
+ - 'b':        dynamic(hint=boolean)
+ - 'c':        dynamic(hint=varchar)
+ - 'd':        dynamic(hint=text)
+ - 'e':        dynamic(hint=varchar)
+ - 'embed512': embedding(size=512)
+ - 'en':       enum(values=['h', 'h2'])
+ - 'f':        dynamic(hint=text)
+    """.strip()
