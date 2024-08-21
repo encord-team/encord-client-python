@@ -1006,10 +1006,10 @@ class EncordUserClient:
 
     def get_collection(self, collection_uuid: Union[str, UUID]) -> Collection:
         """
-        Get collection by uuid/id.
+        Get collection by unique identifier (UUID).
 
         Args:
-            collection_uuid: The hash of the collection to retrieve.
+            collection_uuid: The unique identifier of the collection to retrieve.
 
         Returns:
             The collection. See :class:`encord.collection.Collection` for details.
@@ -1027,10 +1027,10 @@ class EncordUserClient:
         self, collection_uuid_list: List[str | UUID], page_size: Optional[int] = None
     ) -> Iterable[Collection]:
         """
-        Get collections by uuid/id.
+        Get collections by list of collection UUIDs.
 
         Args:
-            collection_uuid_list: The hash of the collections to retrieve.
+            collection_uuid_list: The unique identifiers (UUIDs) of the collections to retrieve.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
             The collection. See :class:`encord.collection.Collection` for details.
@@ -1049,13 +1049,13 @@ class EncordUserClient:
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
     ) -> Iterable[Collection]:
         """
-        Get collections by top level folder or list of collection hash.
+        Get collections by top level folder.
 
         Args:
-            top_level_folder_uuid: The hash of the top level folder
+            top_level_folder_uuid: The unique identifier of the top level folder.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
-            The list of collections which match the given criteria
+            The list of collections which match the given criteria.
 
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
@@ -1068,10 +1068,10 @@ class EncordUserClient:
 
     def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:
         """
-        Delete a collection by its id if it exists.
+        Delete a collection by its UUID if it exists.
 
         Args:
-            collection_uuid: The uuid/id of the collection to delete.
+            collection_uuid: The unique identifier (UUID) of the collection to delete.
 
         Returns:
             None
@@ -1088,12 +1088,12 @@ class EncordUserClient:
         Create a collection.
 
         Args:
-            top_level_folder_uuid: The folder in which the collection will be created.
-            name: The name of the collection
-            description: The description of the collection
+            top_level_folder_uuid: The unique identifier (UUID) of the folder that the collection is created in.
+            name: The name of the collection.
+            description: The description of the collection.
 
         Returns:
-            The UUID of the newly created collection
+            The UUID of the newly created collection.
 
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
@@ -1104,10 +1104,10 @@ class EncordUserClient:
 
     def get_preset(self, preset_uuid: Union[str, UUID]) -> Preset:
         """
-        Get a preset by its uuid/id.
+        Get a preset by its unique identifier (UUID).
 
         Args:
-            preset_uuid: The hash of the preset to retrieve.
+            preset_uuid: The unique identifier of the preset to retrieve.
 
         Returns:
             The preset. See :class:`encord.preset.Preset` for details.
@@ -1124,13 +1124,13 @@ class EncordUserClient:
         self, preset_uuid_list: List[Union[str, UUID]] = [], page_size: Optional[int] = None
     ) -> Iterable[Preset]:
         """
-        Get presets by top level folder or list of collection hash.
+        Get presets by list of preset unique identifiers (UUIDs).
 
         Args:
-            preset_uuid_list: The list of preset hash to be retrieved.
+            preset_uuid_list: The list of unique identifiers (UUIDs) to be retrieved.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
-            The list of presets which match the given criteria
+            The list of presets which match the given criteria.
 
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
@@ -1144,14 +1144,14 @@ class EncordUserClient:
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
     ) -> Iterable[Preset]:
         """
-        Get presets by top level folder or list of collection hash.
+        Get presets by top level folder.
 
         Args:
-            top_level_folder_uuid: The hash of the top level folder
+            top_level_folder_uuid: The unique identifier of the top level folder.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
-            The list of presets which match the given criteria
+            The list of presets which match the given criteria.
 
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
@@ -1162,7 +1162,7 @@ class EncordUserClient:
 
     def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
         """
-        Delete a preset by its id if it exists.
+        Delete a preset by its unique identifier (UUID) if it exists.
 
         Args:
             preset_uuid: The uuid/id of the preset to delete.
