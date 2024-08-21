@@ -265,11 +265,11 @@ class MetadataSchema:
         self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEnum(values=sorted(new_values)))
         self._dirty = True
 
-    def add_dynamic(
+    def add_scalar(
         self,
         k: str,
         *,
-        ty: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+        hint: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
     ) -> None:
         """
         Sets a simple metadata type for a given key in the schema.
@@ -292,12 +292,12 @@ class MetadataSchema:
             if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
                 raise MetadataSchemaError(f"{k} is already defined")
         _assert_valid_metadata_key(k)
-        if ty == "embedding":
+        if hint == "embedding":
             raise MetadataSchemaError("Embedding must be created explicitly")
-        elif ty == "enum":
+        elif hint == "enum":
             raise MetadataSchemaError("Enum must be created explicitly")
         self._schema[k] = _ClientMetadataSchemaOption(
-            root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(ty))
+            root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(hint))
         )
         self._dirty = True
 
@@ -444,7 +444,7 @@ class MetadataSchema:
             elif isinstance(v, _ClientMetadataSchemaTypeEnum):
                 ty_hint_str = f"enum(values={sorted(v.values)})"
             elif isinstance(v, _ClientMetadataSchemaTypeVariant):
-                ty_hint_str = f"dynamic(hint={v.hint.to_simple_str()})"
+                ty_hint_str = f"scalar(hint={v.hint.to_simple_str()})"
             elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
                 continue
             elif isinstance(v, _ClientMetadataSchemaTypeBoolean):

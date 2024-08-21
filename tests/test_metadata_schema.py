@@ -15,20 +15,20 @@ def test_metadata_schema() -> None:
     assert meta.get_embedding_size("embed512") == 512
 
     with pytest.raises(MetadataSchemaError):
-        meta.add_dynamic("yolo", ty="embedding")  # type: ignore[arg-type]
+        meta.add_scalar("yolo", hint="embedding")  # type: ignore[arg-type]
 
     with pytest.raises(MetadataSchemaError):
-        meta.add_dynamic("embed512", ty="boolean")
+        meta.add_scalar("embed512", hint="boolean")
 
-    meta.add_dynamic("a", ty="number")
-    meta.add_dynamic("b", ty="boolean")
-    meta.add_dynamic("c", ty="string")
-    meta.add_dynamic("d", ty="text")
-    meta.add_dynamic("e", ty="varchar")
-    meta.add_dynamic("f", ty="long_string")
-    meta.add_dynamic("g", ty="long_string")
-    meta.add_dynamic("a", ty="long_string")
-    meta.add_dynamic("g", ty="number")
+    meta.add_scalar("a", hint="number")
+    meta.add_scalar("b", hint="boolean")
+    meta.add_scalar("c", hint="string")
+    meta.add_scalar("d", hint="text")
+    meta.add_scalar("e", hint="varchar")
+    meta.add_scalar("f", hint="long_string")
+    meta.add_scalar("g", hint="long_string")
+    meta.add_scalar("a", hint="long_string")
+    meta.add_scalar("g", hint="number")
 
     meta.delete_key("g")
 
@@ -39,20 +39,20 @@ def test_metadata_schema() -> None:
     assert meta.get_enum_options("en") == ["h", "h2"]
 
     with pytest.raises(MetadataSchemaError):
-        meta.add_dynamic("en", ty="boolean")
+        meta.add_scalar("en", hint="boolean")
 
     assert (
         f"{meta}".strip()
         == """
 Metadata Schema:
 ----------------
- - 'a':        dynamic(hint=text)
- - 'b':        dynamic(hint=boolean)
- - 'c':        dynamic(hint=varchar)
- - 'd':        dynamic(hint=text)
- - 'e':        dynamic(hint=varchar)
+ - 'a':        scalar(hint=text)
+ - 'b':        scalar(hint=boolean)
+ - 'c':        scalar(hint=varchar)
+ - 'd':        scalar(hint=text)
+ - 'e':        scalar(hint=varchar)
  - 'embed512': embedding(size=512)
  - 'en':       enum(values=['h', 'h2'])
- - 'f':        dynamic(hint=text)
+ - 'f':        scalar(hint=text)
     """.strip()
     )
