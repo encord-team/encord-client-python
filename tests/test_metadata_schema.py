@@ -41,7 +41,9 @@ def test_metadata_schema() -> None:
     with pytest.raises(MetadataSchemaError):
         meta.add_dynamic("en", ty="boolean")
 
-    assert f"{meta}".strip() == """
+    assert (
+        f"{meta}".strip()
+        == """
 Metadata Schema:
 ----------------
  - 'a':        dynamic(hint=text)
@@ -53,3 +55,4 @@ Metadata Schema:
  - 'en':       enum(values=['h', 'h2'])
  - 'f':        dynamic(hint=text)
     """.strip()
+    )
