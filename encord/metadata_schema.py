@@ -269,7 +269,7 @@ class MetadataSchema:
         self,
         k: str,
         *,
-        hint: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+        data_type: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
     ) -> None:
         """
         Sets a simple metadata type for a given key in the schema.
@@ -282,6 +282,8 @@ class MetadataSchema:
             "text", "varchar", "string", "long_string"
         ]
             The type of metadata to be associated with the key. Must be a valid identifier.
+            "string" is an alias of "varchar"
+            "long_string" is an alias of "text"
         Raises:
         -------
         MetadataSchemaError
@@ -292,12 +294,12 @@ class MetadataSchema:
             if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
                 raise MetadataSchemaError(f"{k} is already defined")
         _assert_valid_metadata_key(k)
-        if hint == "embedding":
+        if data_type == "embedding":
             raise MetadataSchemaError("Embedding must be created explicitly")
-        elif hint == "enum":
+        elif data_type == "enum":
             raise MetadataSchemaError("Enum must be created explicitly")
         self._schema[k] = _ClientMetadataSchemaOption(
-            root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(hint))
+            root=_ClientMetadataSchemaTypeVariant(hint=_ClientMetadataSchemaTypeVariantHint(data_type))
         )
         self._dirty = True
 

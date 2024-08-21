@@ -15,20 +15,20 @@ def test_metadata_schema() -> None:
     assert meta.get_embedding_size("embed512") == 512
 
     with pytest.raises(MetadataSchemaError):
-        meta.add_scalar("yolo", hint="embedding")  # type: ignore[arg-type]
+        meta.add_scalar("yolo", data_type="embedding")  # type: ignore[arg-type]
 
     with pytest.raises(MetadataSchemaError):
-        meta.add_scalar("embed512", hint="boolean")
+        meta.add_scalar("embed512", data_type="boolean")
 
-    meta.add_scalar("a", hint="number")
-    meta.add_scalar("b", hint="boolean")
-    meta.add_scalar("c", hint="string")
-    meta.add_scalar("d", hint="text")
-    meta.add_scalar("e", hint="varchar")
-    meta.add_scalar("f", hint="long_string")
-    meta.add_scalar("g", hint="long_string")
-    meta.add_scalar("a", hint="long_string")
-    meta.add_scalar("g", hint="number")
+    meta.add_scalar("a", data_type="number")
+    meta.add_scalar("b", data_type="boolean")
+    meta.add_scalar("c", data_type="string")
+    meta.add_scalar("d", data_type="text")
+    meta.add_scalar("e", data_type="varchar")
+    meta.add_scalar("f", data_type="long_string")
+    meta.add_scalar("g", data_type="long_string")
+    meta.add_scalar("a", data_type="long_string")
+    meta.add_scalar("g", data_type="number")
 
     meta.delete_key("g")
 
@@ -39,7 +39,7 @@ def test_metadata_schema() -> None:
     assert meta.get_enum_options("en") == ["h", "h2"]
 
     with pytest.raises(MetadataSchemaError):
-        meta.add_scalar("en", hint="boolean")
+        meta.add_scalar("en", data_type="boolean")
 
     assert (
         f"{meta}".strip()
