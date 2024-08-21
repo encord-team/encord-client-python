@@ -9,6 +9,8 @@ from encord.orm.base_dto import BaseDTO, Field
 class GetCollectionParams(BaseDTO):
     top_level_folder_uuid: Optional[UUID] = Field(default=None, alias="topLevelFolderUuid")
     collection_uuids: Optional[List[UUID]] = Field(default=[], alias="uuids")
+    page_token: Optional[str] = Field(default=None, alias="pageToken")
+    page_size: Optional[int] = Field(default=None, alias="pageSize")
 
 
 class CreateCollectionParams(BaseDTO):

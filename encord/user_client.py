@@ -25,7 +25,6 @@ from uuid import UUID
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.collection import Collection
-from encord.preset import Preset
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
@@ -80,6 +79,7 @@ from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import CreateStorageFolderPayload, ListFoldersParams, ListItemsParams, StorageItemType
 from encord.orm.storage import StorageFolder as OrmStorageFolder
+from encord.preset import Preset
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
@@ -1006,7 +1006,7 @@ class EncordUserClient:
 
     def get_collection(self, collection_uuid: Union[str, UUID]) -> Collection:
         """
-        Get a collection by its uuid/id.
+        Get collection by uuid/id.
 
         Args:
             collection_uuid: The hash of the collection to retrieve.
@@ -1020,18 +1020,40 @@ class EncordUserClient:
         """
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
+
         return Collection._get_collection(self._api_client, collection_uuid=collection_uuid)
 
     def get_collections(
-        self, top_level_folder_uuid: Union[str, UUID, None] = None, collection_uuid_list: List[Union[str, UUID]] = []
-    ) -> List[Collection]:
+        self, collection_uuid_list: List[str | UUID], page_size: Optional[int] = None
+    ) -> Iterable[Collection]:
+        """
+        Get collections by uuid/id.
+
+        Args:
+            collection_uuid_list: The hash of the collections to retrieve.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The collection. See :class:`encord.collection.Collection` for details.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+                the user does not have access to it.
+        """
+        collections = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuid_list
+        ]
+
+        return Collection._get_collections(self._api_client, collection_uuid_list=collections, page_size=page_size)
+
+    def list_collections(
+        self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
+    ) -> Iterable[Collection]:
         """
         Get collections by top level folder or list of collection hash.
 
         Args:
             top_level_folder_uuid: The hash of the top level folder
-            collection_uuid_list: The list of collection hash to be retrieved.
-
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
             The list of collections which match the given criteria
 
@@ -1040,10 +1062,9 @@ class EncordUserClient:
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
-        collection_uuid_list = [
-            UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuid_list
-        ]
-        return Collection._get_collections(self._api_client, top_level_folder_uuid, collection_uuid_list)
+        return Collection._list_collections(
+            self._api_client, top_level_folder_uuid=top_level_folder_uuid, page_size=page_size
+        )
 
     def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:
         """
@@ -1099,16 +1120,35 @@ class EncordUserClient:
             preset_uuid = UUID(preset_uuid)
         return Preset._get_preset(self._api_client, preset_uuid=preset_uuid)
 
-
     def get_presets(
-        self, top_level_folder_uuid: Union[str, UUID, None] = None, preset_uuid_list: List[Union[str, UUID]] = []
-    ) -> List[Preset]:
+        self, preset_uuid_list: List[Union[str, UUID]] = [], page_size: Optional[int] = None
+    ) -> Iterable[Preset]:
+        """
+        Get presets by top level folder or list of collection hash.
+
+        Args:
+            preset_uuid_list: The list of preset hash to be retrieved.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of presets which match the given criteria
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        preset_uuid_list = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuid_list
+        ]
+        return Preset._get_presets(self._api_client, preset_uuid_list, page_size=page_size)
+
+    def list_presets(
+        self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
+    ) -> Iterable[Preset]:
         """
         Get presets by top level folder or list of collection hash.
 
         Args:
             top_level_folder_uuid: The hash of the top level folder
-            preset_uuid_list: The list of preset hash to be retrieved.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             The list of presets which match the given criteria
@@ -1118,10 +1158,7 @@ class EncordUserClient:
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
-        preset_uuid_list = [
-            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuid_list
-        ]
-        return Preset._get_presets(self._api_client, top_level_folder_uuid, preset_uuid_list)
+        return Preset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
 
     def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
         """

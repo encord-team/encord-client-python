@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import Iterable, List, Optional
 from uuid import UUID
 
 from encord.exceptions import (
@@ -79,6 +79,21 @@ class Collection:
         return self._collection_instance.last_edited_at
 
     @staticmethod
+    def _get_collections(
+        api_client: ApiClient,
+        collection_uuid_list: List[UUID],
+        page_size: Optional[int] = None,
+    ) -> "Iterable[Collection]":
+        params = GetCollectionParams(uuids=collection_uuid_list, pageSize=page_size)
+        paged_items = api_client.get_paged_iterator(
+            "index/collections",
+            params=params,
+            result_type=OrmCollection,
+        )
+        for item in paged_items:
+            yield Collection(api_client, item)
+
+    @staticmethod
     def _get_collection(api_client: ApiClient, collection_uuid: UUID) -> "Collection":
         params = GetCollectionParams(uuids=[collection_uuid])
         orm_item = api_client.get(
@@ -88,20 +103,22 @@ class Collection:
         )
         if len(orm_item.results) > 0:
             return Collection(api_client, orm_item.results[0])
-        raise AuthorisationError("Collection not found")
+        raise AuthorisationError("No collection found")
 
     @staticmethod
-    def _get_collections(
-        api_client: ApiClient, top_level_folder_uuid: UUID | None, collection_uuids
-    ) -> "List[Collection]":
-        params = GetCollectionParams(topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuids)
-        orm_item = api_client.get(
+    def _list_collections(
+        api_client: ApiClient,
+        top_level_folder_uuid: UUID | None,
+        page_size: Optional[int] = None,
+    ) -> "Iterable[Collection]":
+        params = GetCollectionParams(topLevelFolderUuid=top_level_folder_uuid, pageSize=page_size)
+        paged_items = api_client.get_paged_iterator(
             "index/collections",
             params=params,
-            result_type=GetCollectionsResponse,
+            result_type=OrmCollection,
         )
-        collections = [Collection(api_client, item) for item in orm_item.results]
-        return collections
+        for item in paged_items:
+            yield Collection(api_client, item)
 
     @staticmethod
     def _delete_collection(api_client: ApiClient, collection_uuid: UUID) -> None:
@@ -125,9 +142,7 @@ class Collection:
         )
         return orm_item
 
-    def update_collection(
-        self, name: str | None = None, description: str | None = None
-    ) -> None:
+    def update_collection(self, name: str | None = None, description: str | None = None) -> None:
         payload = UpdateCollectionPayload(name=name, description=description)
         self._client.patch(
             f"index/collections/{self.uuid}",
