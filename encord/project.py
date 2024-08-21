@@ -729,6 +729,7 @@ class Project:
         Args:
             key_frames: Labels for frames to be interpolated. Key frames are consumed in the form::
 
+            ```python
                 {
                     "[frame_number]": {
                         "objects": [
@@ -746,6 +747,7 @@ class Project:
                     },
                     # ...,
                 }
+            ```
 
             objects_to_interpolate: List of object uids (hashes) of objects to interpolate.
 
