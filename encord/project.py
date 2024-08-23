@@ -772,6 +772,7 @@ class Project:
         Args:
             frames: Labels for frames to be fitted. Frames are consumed in the form::
 
+            ```python
                 {
                     "[frame_number]": {
                         "objects": [
@@ -789,13 +790,16 @@ class Project:
                     },
                     # ...,
                 }
+            ```
 
             video: Metadata of the video for which bounding box fitting needs to be run::
 
+            ```
                 {
                     "width": w,
                     "height": h,
                 }
+            ```
 
         Returns:
             dict: Full set of filled frames including fitted objects.
