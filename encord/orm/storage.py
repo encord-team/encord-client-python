@@ -25,6 +25,7 @@ class StorageItemType(CamelStrEnum):
     DICOM_FILE = auto()
     DICOM_SERIES = auto()
     AUDIO = auto()
+    NIFTI = auto()
 
 
 class StorageUserRole(CamelStrEnum):
@@ -221,6 +222,15 @@ class DataUploadVideo(BaseDTO):
     placeholder_item_uuid: Optional[UUID] = None
 
 
+class DataUploadNifti(BaseDTO):
+    object_url: str
+    title: Optional[str] = None
+    client_metadata: Dict = Field(default_factory=dict)
+
+    external_file_type: Literal["NIFTI"] = "NIFTI"
+    placeholder_item_uuid: Optional[UUID] = None
+
+
 class DataUploadImageGroupImage(BaseDTO):
     url: str
     title: Optional[str]
@@ -282,6 +292,7 @@ class DataUploadItems(BaseDTO):
     images: List[DataUploadImage] = Field(default_factory=list)
     image_groups_from_items: List[DataUploadImageGroupFromItems] = Field(default_factory=list)
     audio: List[DataUploadAudio] = Field(default_factory=list)
+    nifti: List[DataUploadNifti] = Field(default_factory=list)
     skip_duplicate_urls: bool = False
 
 
