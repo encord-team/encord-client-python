@@ -7,7 +7,7 @@ from encord.exceptions import (
     AuthorisationError,
 )
 from encord.http.v2.api_client import ApiClient
-from encord.orm.collection import Collection as OrmCollection
+from encord.orm.collection import Collection as OrmCollection, GetCollectionItemsParams
 from encord.orm.collection import (
     CreateCollectionParams,
     CreateCollectionPayload,
@@ -150,3 +150,13 @@ class Collection:
             payload=payload,
             result_type=None,
         )
+
+    def get_items(self, page_size: Optional[int] = None,) -> list[str]:
+        params = GetCollectionItemsParams(page_size=page_size)
+        paged_items = self._client.get_paged_iterator(
+            f"index/collections/{self.uuid}/items",
+            params=params,
+            result_type=str,
+        )
+        for item in paged_items:
+            yield item
