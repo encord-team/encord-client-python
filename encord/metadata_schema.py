@@ -239,7 +239,7 @@ class MetadataSchema:
 
     def add_enum_options(self, k: str, *, values: Sequence[str]) -> None:
         """
-        Adds a new enum to the metadata schema.
+        Adds extra valid enum values to an existing enum schema.
         Parameters:
         -----------
         k : str
