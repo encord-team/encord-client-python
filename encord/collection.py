@@ -171,16 +171,3 @@ class Collection:
                 yield StorageItem(api_client=self._client, orm_item=item)
             else:
                 yield StorageItemInaccessible(orm_item=item)
-
-    def get_item_uuids(
-        self,
-        page_size: Optional[int] = None,
-    ) -> Iterable[UUID]:
-        params = GetCollectionItemsParams(pageSize=page_size)
-        paged_items = self._client.get_paged_iterator(
-            f"index/collections/{self.uuid}/item-uuids",
-            params=params,
-            result_type=UUID,
-        )
-        for item in paged_items:
-            yield item
