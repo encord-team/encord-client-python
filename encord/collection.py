@@ -34,7 +34,7 @@ class Collection:
     @property
     def uuid(self) -> uuid.UUID:
         """
-        Get the collection uuid (i.e. the collection ID).
+        Get the collection unique identifier (UUID).
 
         Returns:
             str: The collection uuid.
