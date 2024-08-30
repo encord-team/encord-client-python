@@ -123,7 +123,7 @@ class Preset:
             result_type=None,
         )
 
-    def get_filters(self) -> PresetFilter:
+    def get_filters_json(self) -> PresetFilter:
         return self._client.get(
             f"index/presets/{self._preset_instance.uuid}",
             params=None,
