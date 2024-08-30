@@ -99,6 +99,10 @@ class StorageItem(BaseDTO):
     audio_num_channels: Optional[int]
 
 
+class StorageItemInaccessible(BaseDTO):
+    uuid: UUID
+
+
 class CreateStorageFolderPayload(BaseDTO):
     name: str
     description: Optional[str]

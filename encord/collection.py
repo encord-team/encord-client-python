@@ -1,20 +1,23 @@
 import uuid
 from datetime import datetime
-from typing import Iterable, List, Optional
+from typing import Iterable, Iterator, List, Optional, Union
 from uuid import UUID
 
+import encord.orm.storage as orm_storage
 from encord.exceptions import (
     AuthorisationError,
 )
 from encord.http.v2.api_client import ApiClient
-from encord.orm.collection import Collection as OrmCollection, GetCollectionItemsParams
+from encord.orm.collection import Collection as OrmCollection
 from encord.orm.collection import (
     CreateCollectionParams,
     CreateCollectionPayload,
+    GetCollectionItemsParams,
     GetCollectionParams,
     GetCollectionsResponse,
     UpdateCollectionPayload,
 )
+from encord.storage import StorageItem, StorageItemInaccessible
 
 
 class Collection:
@@ -151,12 +154,45 @@ class Collection:
             result_type=None,
         )
 
-    def get_items(self, page_size: Optional[int] = None,) -> list[str]:
-        params = GetCollectionItemsParams(page_size=page_size)
+    def get_items(
+        self,
+        page_size: Optional[int] = None,
+    ) -> Iterable[StorageItem]:
+        params = GetCollectionItemsParams(pageSize=page_size)
         paged_items = self._client.get_paged_iterator(
-            f"index/collections/{self.uuid}/items",
+            f"index/collections/{self.uuid}/accessible-items",
             params=params,
-            result_type=str,
+            result_type=orm_storage.StorageItem,
+        )
+        for item in paged_items:
+            yield StorageItem(api_client=self._client, orm_item=item)
+
+    def get_items_include_inaccessible(
+        self, page_size: Optional[int] = None
+    ) -> Iterable[StorageItem | StorageItemInaccessible]:
+        params = GetCollectionItemsParams(pageSize=page_size)
+        paged_items: Iterator[Union[orm_storage.StorageItem, orm_storage.StorageItemInaccessible]] = (
+            self._client.get_paged_iterator(
+                f"index/collections/{self.uuid}/all-items",
+                params=params,
+                result_type=Union[orm_storage.StorageItem, orm_storage.StorageItemInaccessible],
+            )
+        )
+        for item in paged_items:
+            if isinstance(item, orm_storage.StorageItem):
+                yield StorageItem(api_client=self._client, orm_item=item)
+            else:
+                yield StorageItemInaccessible(orm_item=item)
+
+    def get_item_uuids(
+        self,
+        page_size: Optional[int] = None,
+    ) -> Iterable[UUID]:
+        params = GetCollectionItemsParams(pageSize=page_size)
+        paged_items = self._client.get_paged_iterator(
+            f"index/collections/{self.uuid}/item-uuids",
+            params=params,
+            result_type=UUID,
         )
         for item in paged_items:
             yield item

@@ -16,6 +16,7 @@ class GetCollectionParams(BaseDTO):
 class CreateCollectionParams(BaseDTO):
     top_level_folder_uuid: Optional[UUID] = Field(default=None, alias="topLevelFolderUuid")
 
+
 class GetCollectionItemsParams(BaseDTO):
     page_token: Optional[str] = Field(default=None, alias="pageToken")
     page_size: Optional[int] = Field(default=None, alias="pageSize")
