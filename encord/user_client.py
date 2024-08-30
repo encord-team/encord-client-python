@@ -1023,36 +1023,20 @@ class EncordUserClient:
 
         return Collection._get_collection(self._api_client, collection_uuid=collection_uuid)
 
-    def get_collections(
-        self, collection_uuid_list: List[str | UUID], page_size: Optional[int] = None
-    ) -> Iterable[Collection]:
-        """
-        Get collections by list of collection UUIDs.
-
-        Args:
-            collection_uuid_list: The unique identifiers (UUIDs) of the collections to retrieve.
-            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
-        Returns:
-            The collection. See :class:`encord.collection.Collection` for details.
-
-        Raises:
-            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
-                the user does not have access to it.
-        """
-        collections = [
-            UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuid_list
-        ]
-
-        return Collection._get_collections(self._api_client, collection_uuid_list=collections, page_size=page_size)
-
     def list_collections(
-        self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
+        self,
+        top_level_folder_uuid: Union[str, UUID, None] = None,
+        collection_uuid_list: List[str | UUID] | None = None,
+        page_size: Optional[int] = None,
     ) -> Iterable[Collection]:
         """
-        Get collections by top level folder.
+        Get collections by top level folder or list of collection IDs.
+        If both top_level_folder_uuid and collection_uuid_list are preset
+        then the intersection of the two conditions is returned.
 
         Args:
             top_level_folder_uuid: The unique identifier of the top level folder.
+            collection_uuid_list: The unique identifiers (UUIDs) of the collections to retrieve.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
             The list of collections which match the given criteria.
@@ -1062,8 +1046,16 @@ class EncordUserClient:
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
+        collections = (
+            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuid_list]
+            if collection_uuid_list is not None
+            else None
+        )
         return Collection._list_collections(
-            self._api_client, top_level_folder_uuid=top_level_folder_uuid, page_size=page_size
+            self._api_client,
+            top_level_folder_uuid=top_level_folder_uuid,
+            collection_uuid_list=collections,
+            page_size=page_size,
         )
 
     def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:

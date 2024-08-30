@@ -82,21 +82,6 @@ class Collection:
         return self._collection_instance.last_edited_at
 
     @staticmethod
-    def _get_collections(
-        api_client: ApiClient,
-        collection_uuid_list: List[UUID],
-        page_size: Optional[int] = None,
-    ) -> "Iterable[Collection]":
-        params = GetCollectionParams(uuids=collection_uuid_list, pageSize=page_size)
-        paged_items = api_client.get_paged_iterator(
-            "index/collections",
-            params=params,
-            result_type=OrmCollection,
-        )
-        for item in paged_items:
-            yield Collection(api_client, item)
-
-    @staticmethod
     def _get_collection(api_client: ApiClient, collection_uuid: UUID) -> "Collection":
         params = GetCollectionParams(uuids=[collection_uuid])
         orm_item = api_client.get(
@@ -112,9 +97,12 @@ class Collection:
     def _list_collections(
         api_client: ApiClient,
         top_level_folder_uuid: UUID | None,
+        collection_uuid_list: List[UUID] | None,
         page_size: Optional[int] = None,
     ) -> "Iterable[Collection]":
-        params = GetCollectionParams(topLevelFolderUuid=top_level_folder_uuid, pageSize=page_size)
+        params = GetCollectionParams(
+            topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuid_list, pageSize=page_size
+        )
         paged_items = api_client.get_paged_iterator(
             "index/collections",
             params=params,
