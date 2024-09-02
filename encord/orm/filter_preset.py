@@ -13,7 +13,7 @@ class GetPresetParams(BaseDTO):
     page_size: Optional[int] = Field(default=None, alias="pageSize")
 
 
-class Preset(BaseDTO):
+class FilterPreset(BaseDTO):
     uuid: uuid.UUID
     name: str
     description: Optional[str]
@@ -21,10 +21,10 @@ class Preset(BaseDTO):
     last_updated_at: Optional[datetime] = Field(default=None, alias="lastUpdatedAt")
 
 
-class PresetFilter(BaseDTO):
+class FilterPresetDefinition(BaseDTO):
     local_filters: Optional[dict] = Field(default=None, alias="localFilters")
     global_filters: Optional[dict] = Field(default=None, alias="globalFilters")
 
 
 class GetPresetsResponse(BaseDTO):
-    results: List[Preset]
+    results: List[FilterPreset]

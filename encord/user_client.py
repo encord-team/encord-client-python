@@ -30,6 +30,7 @@ from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
+from encord.filterpreset import FilterPreset
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
@@ -79,7 +80,6 @@ from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import CreateStorageFolderPayload, ListFoldersParams, ListItemsParams, StorageItemType
 from encord.orm.storage import StorageFolder as OrmStorageFolder
-from encord.preset import Preset
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
@@ -1094,7 +1094,7 @@ class EncordUserClient:
             top_level_folder_uuid = UUID(top_level_folder_uuid)
         return Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
 
-    def get_preset(self, preset_uuid: Union[str, UUID]) -> Preset:
+    def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
         """
         Get a preset by its unique identifier (UUID).
 
@@ -1110,11 +1110,11 @@ class EncordUserClient:
         """
         if isinstance(preset_uuid, str):
             preset_uuid = UUID(preset_uuid)
-        return Preset._get_preset(self._api_client, preset_uuid=preset_uuid)
+        return FilterPreset._get_preset(self._api_client, preset_uuid=preset_uuid)
 
-    def get_presets(
+    def get_filter_presets(
         self, preset_uuid_list: List[Union[str, UUID]] = [], page_size: Optional[int] = None
-    ) -> Iterable[Preset]:
+    ) -> Iterable[FilterPreset]:
         """
         Get presets by list of preset unique identifiers (UUIDs).
 
@@ -1130,11 +1130,11 @@ class EncordUserClient:
         preset_uuid_list = [
             UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuid_list
         ]
-        return Preset._get_presets(self._api_client, preset_uuid_list, page_size=page_size)
+        return FilterPreset._get_presets(self._api_client, preset_uuid_list, page_size=page_size)
 
     def list_presets(
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
-    ) -> Iterable[Preset]:
+    ) -> Iterable[FilterPreset]:
         """
         Get presets by top level folder.
 
@@ -1150,7 +1150,7 @@ class EncordUserClient:
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
-        return Preset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
+        return FilterPreset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
 
     def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
         """
@@ -1167,7 +1167,7 @@ class EncordUserClient:
         """
         if isinstance(preset_uuid, str):
             preset_uuid = UUID(preset_uuid)
-        Preset._delete_preset(self._api_client, preset_uuid)
+        FilterPreset._delete_preset(self._api_client, preset_uuid)
 
 
 class ListingFilter(Enum):

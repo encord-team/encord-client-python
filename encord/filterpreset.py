@@ -7,21 +7,21 @@ from encord.exceptions import (
     AuthorisationError,
 )
 from encord.http.v2.api_client import ApiClient
-from encord.orm.preset import (
+from encord.orm.filter_preset import FilterPreset as OrmFilterPreset
+from encord.orm.filter_preset import (
+    FilterPresetDefinition,
     GetPresetParams,
     GetPresetsResponse,
-    PresetFilter,
 )
-from encord.orm.preset import Preset as OrmPreset
 
 
-class Preset:
+class FilterPreset:
     """
     Represents preset in Index.
     Preset is a group of filters persisted which can be re-used for faster data curation.
     """
 
-    def __init__(self, client: ApiClient, orm_preset: OrmPreset):
+    def __init__(self, client: ApiClient, orm_preset: OrmFilterPreset):
         self._client = client
         self._preset_instance = orm_preset
 
@@ -76,7 +76,7 @@ class Preset:
         return self._preset_instance.last_updated_at
 
     @staticmethod
-    def _get_preset(api_client: ApiClient, preset_uuid: UUID) -> "Preset":
+    def _get_preset(api_client: ApiClient, preset_uuid: UUID) -> "FilterPreset":
         params = GetPresetParams(uuids=[preset_uuid])
         orm_item = api_client.get(
             "index/presets",
@@ -84,7 +84,7 @@ class Preset:
             result_type=GetPresetsResponse,
         )
         if len(orm_item.results) > 0:
-            return Preset(api_client, orm_item.results[0])
+            return FilterPreset(api_client, orm_item.results[0])
         raise AuthorisationError("Collection not found")
 
     @staticmethod
@@ -92,28 +92,28 @@ class Preset:
         api_client: ApiClient,
         preset_uuids,
         page_size: Optional[int] = None,
-    ) -> "Iterable[Preset]":
+    ) -> "Iterable[FilterPreset]":
         params = GetPresetParams(uuids=preset_uuids, pageSize=page_size)
         paged_items = api_client.get_paged_iterator(
             "index/presets",
             params=params,
-            result_type=OrmPreset,
+            result_type=OrmFilterPreset,
         )
         for item in paged_items:
-            yield Preset(api_client, item)
+            yield FilterPreset(api_client, item)
 
     @staticmethod
     def _list_presets(
         api_client: ApiClient, top_level_folder_uuid: UUID | None, page_size: Optional[int] = None
-    ) -> "Iterable[Preset]":
+    ) -> "Iterable[FilterPreset]":
         params = GetPresetParams(topLevelFolderUuid=top_level_folder_uuid, pageSize=page_size)
         paged_items = api_client.get_paged_iterator(
             "index/presets",
             params=params,
-            result_type=OrmPreset,
+            result_type=OrmFilterPreset,
         )
         for item in paged_items:
-            yield Preset(api_client, item)
+            yield FilterPreset(api_client, item)
 
     @staticmethod
     def _delete_preset(api_client: ApiClient, preset_uuid: UUID) -> None:
@@ -123,35 +123,9 @@ class Preset:
             result_type=None,
         )
 
-    def get_filters_json(self) -> PresetFilter:
+    def get_filters_json(self) -> FilterPresetDefinition:
         return self._client.get(
             f"index/presets/{self._preset_instance.uuid}",
             params=None,
-            result_type=PresetFilter,
+            result_type=FilterPresetDefinition,
         )
-
-    # @staticmethod
-    # def _create_collection(
-    #     api_client: ApiClient, top_level_folder_uuid: UUID, name: str, description: str = ""
-    # ) -> UUID:
-    #     params = CreateCollectionParams(topLevelFolderUuid=top_level_folder_uuid)
-    #     payload = CreateCollectionPayload(name=name, description=description)
-    #     orm_item = api_client.post(
-    #         "index/collections",
-    #         params=params,
-    #         payload=payload,
-    #         result_type=UUID,
-    #     )
-    #     return orm_item
-
-    # @staticmethod
-    # def _update_collection(
-    #     api_client: ApiClient, collection_uuid: UUID, name: str | None = None, description: str | None = None
-    # ) -> None:
-    #     payload = UpdateCollectionPayload(name=name, description=description)
-    #     api_client.patch(
-    #         f"index/collections/{collection_uuid}",
-    #         params=None,
-    #         payload=payload,
-    #         result_type=None,
-    #     )
