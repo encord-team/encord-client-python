@@ -142,7 +142,7 @@ class Collection:
             result_type=None,
         )
 
-    def get_items(
+    def list_items(
         self,
         page_size: Optional[int] = None,
     ) -> Iterable[StorageItem]:
@@ -155,7 +155,7 @@ class Collection:
         for item in paged_items:
             yield StorageItem(api_client=self._client, orm_item=item)
 
-    def get_items_include_inaccessible(
+    def list_items_include_inaccessible(
         self, page_size: Optional[int] = None
     ) -> Iterable[StorageItem | StorageItemInaccessible]:
         params = GetCollectionItemsParams(pageSize=page_size)
