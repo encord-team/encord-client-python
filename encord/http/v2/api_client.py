@@ -121,6 +121,11 @@ class ApiClient:
             return [p.to_dict() for p in payload]
         elif isinstance(payload, BaseDTO):
             return payload.to_dict()
+        elif isinstance(payload, BaseModel):
+            if hasattr(payload, "model_dump"):
+                return payload.model_dump(mode="json")
+            else:
+                return payload.dict()
         elif payload is None:
             return None
         else:
