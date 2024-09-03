@@ -122,6 +122,7 @@ class ApiClient:
         elif isinstance(payload, BaseDTO):
             return payload.to_dict()
         elif isinstance(payload, BaseModel):
+            # use new pydantic v2 function is it exists, otherwise use fallback
             if hasattr(payload, "model_dump"):
                 return payload.model_dump(mode="json")
             else:
@@ -193,6 +194,7 @@ class ApiClient:
             elif issubclass(result_type, BaseDTOInterface):
                 return result_type.from_dict(res_json)
             elif issubclass(result_type, BaseModel):
+                # use new pydantic v2 function is it exists, otherwise use fallback
                 if hasattr(result_type, "model_validate"):
                     return result_type.model_validate(res_json)
                 else:
