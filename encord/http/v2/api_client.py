@@ -4,6 +4,7 @@ from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, Typ
 from urllib.parse import urljoin
 
 import requests
+from pydantic import BaseModel
 from requests import PreparedRequest, Response
 
 from encord.configs import Config
@@ -120,6 +121,12 @@ class ApiClient:
             return [p.to_dict() for p in payload]
         elif isinstance(payload, BaseDTO):
             return payload.to_dict()
+        elif isinstance(payload, BaseModel):
+            # use new pydantic v2 function if it exists, otherwise use fallback
+            if hasattr(payload, "model_dump"):
+                return payload.model_dump(mode="json")
+            else:
+                return payload.dict()
         elif payload is None:
             return None
         else:
@@ -189,6 +196,12 @@ class ApiClient:
                 return uuid.UUID(res_json)
             elif issubclass(result_type, BaseDTOInterface):
                 return result_type.from_dict(res_json)
+            elif issubclass(result_type, BaseModel):
+                # use new pydantic v2 function if it exists, otherwise use fallback
+                if hasattr(result_type, "model_validate"):
+                    return result_type.model_validate(res_json)
+                else:
+                    return result_type.validate(res_json)
             else:
                 raise ValueError(f"Unsupported result type {result_type}")
 
