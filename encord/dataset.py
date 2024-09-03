@@ -248,7 +248,7 @@ class Dataset:
         Args:
             file_path: Path to the video, e.g., '/home/user/data/video.mp4'.
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
-            title: The video title. If unspecified, this will be the file name. This title should include an extension. or example, "encord_video.mp4".
+            title: The video title. If unspecified, this will be the file name. This title should include an extension. For example: "encord_video.mp4".
             folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in. This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
 
         Returns:
