@@ -248,10 +248,8 @@ class Dataset:
         Args:
             file_path: Path to the video, e.g., '/home/user/data/video.mp4'.
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
-            title: The video title. If unspecified, this will be the file name. This title should include an extension.
-                   For example, "encord_video.mp4".
-            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in.
-                    This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
+            title: The video title. If unspecified, this will be the file name. This title should include an extension. or example, "encord_video.mp4".
+            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in. This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
 
         Returns:
             Video: An object describing the created video, see :class:`encord.orm.dataset.Video`.
@@ -284,12 +282,9 @@ class Dataset:
             file_paths: A list of paths to images, e.g., ['/home/user/data/img1.png', '/home/user/data/img2.png'].
             max_workers: DEPRECATED: This argument will be ignored.
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
-            title: The title of the image group. If unspecified, this will be randomly generated for you. This title should
-                   NOT include an extension. For example, "encord_image_group".
-            create_video: A flag specifying how image groups are stored. If `True`, a compressed video will be created from
-                          the image groups. `True` was the previous default support. If `False`, the images are saved as a sequence of images.
-            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in.
-                    This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
+            title: The title of the image group. If unspecified, this will be randomly generated for you. This title should NOT include an extension. For example, "encord_image_group".
+            create_video: A flag specifying how image groups are stored. If `True`, a compressed video will be created from the image groups. `True` was the previous default support. If `False`, the images are saved as a sequence of images.
+            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in. This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
 
         Returns:
             List[ImageGroup]: A list containing the object(s) describing the created data unit(s). See :class:`encord.orm.dataset.ImageGroup`.
@@ -317,18 +312,10 @@ class Dataset:
         Upload a DICOM series to Encord storage.
 
         Args:
-            file_paths:
-                A collection of paths to DICOM files.
-                Example: ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
-            title:
-                The title of the DICOM series. If unspecified, a random title will be generated.
-                This title should NOT include an extension.
-                Example: "encord_image_group"
-            folder:
-                When uploading to a non-mirror dataset, specify the folder to store the file in.
-                This can be either a `StorageFolder` instance or the UUID of the folder.
+            file_paths: A collection of paths to DICOM files. Example: ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title: The title of the DICOM series. If unspecified, a random title will be generated. This title should NOT include an extension. Example: "encord_image_group"
+            folder: When uploading to a non-mirror dataset, specify the folder to store the file in. This can be either a `StorageFolder` instance or the UUID of the folder.
 
         Returns:
             A dictionary describing the created series.
@@ -358,17 +345,10 @@ class Dataset:
         using the :meth:`.Dataset.create_image_group` function.
 
         Args:
-            file_path:
-                The file path to the image.
-            title:
-                The image title. If unspecified, the file name will be used.
-                This title should include an extension.
-                Example: "encord_image.png"
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
-            folder:
-                When uploading to a non-mirror dataset, specify the folder to store the file in.
-                This can be either a `StorageFolder` instance or the UUID of the folder.
+            file_path: The file path to the image.
+            title: The image title. If unspecified, the file name will be used. This title should include an extension. Example: "encord_image.png"
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            folder: When uploading to a non-mirror dataset, specify the folder to store the file in. This can be either a `StorageFolder` instance or the UUID of the folder.
 
         Returns:
             Uploaded Image object.
@@ -386,11 +366,8 @@ class Dataset:
         Link storage items to the dataset, creating new data rows.
 
         Args:
-            item_uuids:
-                List of item UUIDs to link to the dataset.
-            duplicates_behavior:
-                The behavior to follow when encountering duplicates.
-                Defaults to `SKIP`. See also :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`.
+            item_uuids: List of item UUIDs to link to the dataset.
+            duplicates_behavior: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`.
 
         Returns:
             List of DataRow objects representing linked items.
@@ -403,8 +380,7 @@ class Dataset:
         Delete an image group in Encord storage.
 
         Args:
-            data_hash:
-                The hash of the image group to delete.
+            data_hash: The hash of the image group to delete.
 
         """
         return self._client.delete_image_group(data_hash)
@@ -414,9 +390,7 @@ class Dataset:
         Delete a video/image group from a dataset.
 
         Args:
-            data_hashes:
-                List of hashes of the videos/image_groups you'd like to delete.
-                All should belong to the same dataset.
+            data_hashes: List of hashes of the videos/image_groups you'd like to delete. All should belong to the same dataset.
 
         """
         return self._client.delete_data(data_hashes)
@@ -434,13 +408,9 @@ class Dataset:
         :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud`
 
         Args:
-            integration_id:
-                The `EntityId` of the cloud integration you wish to use.
-            private_files:
-                A path to a JSON file, JSON string, Python dictionary, or a `Path` object
-                containing the files you wish to add.
-            ignore_errors:
-                When set to `True`, prevent individual errors from stopping the upload process.
+            integration_id: The `EntityId` of the cloud integration you wish to use.
+            private_files: A path to a JSON file, JSON string, Python dictionary, or a `Path` object containing the files you wish to add.
+            ignore_errors: When set to `True`, prevent individual errors from stopping the upload process.
 
         Returns:
             List of DatasetDataInfo objects containing data_hash and title.
@@ -469,16 +439,10 @@ class Dataset:
         where the upload was initialized.
 
         Args:
-            integration_id:
-                The `EntityId` of the cloud integration you wish to use.
-            private_files:
-                A path to a JSON file, JSON string, Python dictionary, or a `Path` object
-                containing the files you wish to add.
-            ignore_errors:
-                When set to `True`, prevent individual errors from stopping the upload process.
-            folder:
-                When uploading to a non-mirror dataset, specify the folder to store the file in.
-                This can be either a `StorageFolder` instance or the UUID of the folder.
+            integration_id: The `EntityId` of the cloud integration you wish to use.
+            private_files:A path to a JSON file, JSON string, Python dictionary, or a `Path` object containing the files you wish to add.
+            ignore_errors: When set to `True`, prevent individual errors from stopping the upload process.
+            folder: When uploading to a non-mirror dataset, specify the folder to store the file in. This can be either a `StorageFolder` instance or the UUID of the folder.
 
         Returns:
             UUID Identifier of the upload job.
@@ -497,12 +461,8 @@ class Dataset:
         Fetch data upload status, perform long polling process for `timeout_seconds`.
 
         Args:
-            upload_job_id:
-                UUID Identifier of the upload job. This ID enables the user to track the job progress via SDK or web app.
-            timeout_seconds:
-                Number of seconds the method will wait while waiting for a response.
-                If `timeout_seconds == 0`, only a single checking request is performed.
-                Response will be immediately returned.
+            upload_job_id: UUID Identifier of the upload job. This ID enables the user to track the job progress via SDK or web app.
+            timeout_seconds: Number of seconds the method will wait while waiting for a response. If `timeout_seconds == 0`, only a single checking request is performed. Response will be immediately returned.
 
         Returns:
             Response containing details about job status, errors, and progress.
@@ -518,10 +478,8 @@ class Dataset:
         Update a data item.
 
         Args:
-            data_hash:
-                Data hash of the item being updated.
-            new_title:
-                New title of the data item being updated.
+            data_hash: Data hash of the item being updated.
+            new_title: New title of the data item being updated.
 
         Returns:
         Boolean indicating whether the update was successful.
@@ -534,9 +492,7 @@ class Dataset:
         Launch an async task that can re-encode a list of videos.
 
         Args:
-            data_hashes:
-                List of hashes of the videos you'd like to re-encode.
-                All should belong to the same dataset.
+            data_hashes: List of hashes of the videos you'd like to re-encode. All should belong to the same dataset.
 
         Returns:
             Entity ID of the async task launched.
@@ -549,8 +505,7 @@ class Dataset:
         Returns the status of an existing async task aimed at re-encoding videos.
 
         Args:
-            job_id:
-                ID of the async task that was launched to re-encode the videos.
+            job_id: ID of the async task that was launched to re-encode the videos.
 
         Returns:
             Object containing the status of the task, along with info about the new encoded videos
@@ -564,8 +519,7 @@ class Dataset:
         Returns an optical character recognition result for a given image group.
 
         Args:
-            image_group_id:
-                The ID of the image group in this dataset to run OCR on.
+            image_group_id: The ID of the image group in this dataset to run OCR on.
 
         Returns:
             List of ImageGroupOCR objects representing the text and corresponding coordinates
