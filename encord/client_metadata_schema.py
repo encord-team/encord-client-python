@@ -5,7 +5,7 @@ from encord.common.deprecated import deprecated
 from encord.http.v2.api_client import ApiClient
 
 
-@deprecated("CURRENT")
+@deprecated("0.1.132")
 def set_client_metadata_schema_from_dict(api_client: ApiClient, json_dict: Dict[str, orm.ClientMetadataSchemaTypes]):
     """
     Set the client metadata schema from a dictionary.
@@ -28,7 +28,7 @@ def set_client_metadata_schema_from_dict(api_client: ApiClient, json_dict: Dict[
     api_client.post("organisation/client-metadata-schema", params=None, payload=payload, result_type=None)
 
 
-@deprecated("CURRENT")
+@deprecated("0.1.132")
 def get_client_metadata_schema(api_client: ApiClient) -> Optional[Dict[str, orm.ClientMetadataSchemaTypes]]:
     """
     Retrieve the client metadata schema.

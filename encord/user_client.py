@@ -990,11 +990,11 @@ class EncordUserClient:
 
         return StorageFolder._list_items(self._api_client, "storage/search/items", params)
 
-    @deprecated("CURRENT", ".metadata_schema()")
+    @deprecated("0.1.132", ".metadata_schema()")
     def get_client_metadata_schema(self) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
         return get_client_metadata_schema(self._api_client)
 
-    @deprecated("CURRENT", ".metadata_schema()")
+    @deprecated("0.1.132", ".metadata_schema()")
     def set_client_metadata_schema_from_dict(self, json_dict: Dict[str, ClientMetadataSchemaTypes]):
         set_client_metadata_schema_from_dict(self._api_client, json_dict)
 
