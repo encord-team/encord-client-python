@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from typing import Type
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -41,7 +42,7 @@ def api_client():
 
 @pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2])
 @patch.object(Session, "send")
-def test_constructed_url_is_correct(send: MagicMock, api_client: ApiClient, payload_type: type[TestPayload]) -> None:
+def test_constructed_url_is_correct(send: MagicMock, api_client: ApiClient, payload_type: Type[TestPayload]) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"payload": "hello world"}
@@ -61,7 +62,7 @@ def test_constructed_url_is_correct(send: MagicMock, api_client: ApiClient, payl
 
 @pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2])
 @patch.object(Session, "send")
-def test_payload_url_serialisation(send: MagicMock, api_client: ApiClient, payload_type: type[TestPayload]) -> None:
+def test_payload_url_serialisation(send: MagicMock, api_client: ApiClient, payload_type: Type[TestPayload]) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"payload": "hello world"}
@@ -83,7 +84,7 @@ def test_payload_url_serialisation(send: MagicMock, api_client: ApiClient, paylo
 @pytest.mark.parametrize("param_type", [TestComplexPayload, TestComplexPayloadV2])
 @patch.object(Session, "send")
 def test_payload_body_serialisation(
-    send: MagicMock, api_client: ApiClient, payload_type: type[TestPayload], param_type: type[TestComplexPayload]
+    send: MagicMock, api_client: ApiClient, payload_type: Type[TestPayload], param_type: Type[TestComplexPayload]
 ) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
