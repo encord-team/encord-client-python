@@ -41,16 +41,16 @@ def api_client():
 
 
 @pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2])
-@pytest.mark.parameterize("allow_none", [False, True])
+@pytest.mark.parametrize("allow_none", [False, True])
 @patch.object(Session, "send")
 def test_constructed_url_is_correct(
     send: MagicMock, api_client: ApiClient, payload_type: Type[TestPayload], allow_none: bool
 ) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"payload": "hello world"}
-    mock_response.content = json.dumps({"payload": "hello world"})
-    send.return_value = None if allow_none else mock_response
+    mock_response.json.return_value = None if allow_none else {"payload": "hello world"}
+    mock_response.content = "null" if allow_none else json.dumps({"payload": "hello world"})
+    send.return_value = mock_response
 
     res = [
         api_client.get("/", params=None, result_type=payload_type, allow_none=allow_none),
@@ -73,16 +73,16 @@ def test_constructed_url_is_correct(
 
 
 @pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2])
-@pytest.mark.parameterize("allow_none", [False, True])
+@pytest.mark.parametrize("allow_none", [False, True])
 @patch.object(Session, "send")
 def test_payload_url_serialisation(
     send: MagicMock, api_client: ApiClient, payload_type: Type[TestPayload], allow_none: bool
 ) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"payload": "hello world"}
-    mock_response.content = json.dumps({"payload": "hello world"})
-    send.return_value = None if allow_none else mock_response
+    mock_response.json.return_value = None if allow_none else {"payload": "hello world"}
+    mock_response.content = "null" if allow_none else json.dumps({"payload": "hello world"})
+    send.return_value = mock_response
 
     expected_time = datetime.fromisoformat("2024-02-01T01:02:03+01:00")
     payload = TestComplexPayload(text="test", number=0.01, time=expected_time)
@@ -108,13 +108,12 @@ def test_payload_body_serialisation(
     api_client: ApiClient,
     payload_type: Type[TestPayload],
     param_type: Type[TestComplexPayload],
-    allow_none: bool,
 ) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"payload": "hello world"}
-    mock_response.content = json.dumps({"payload": "hello world"})
-    send.return_value = None if payload_type is None else mock_response
+    mock_response.json.return_value = None if payload_type is None else {"payload": "hello world"}
+    mock_response.content = "null" if payload_type is None else json.dumps({"payload": "hello world"})
+    send.return_value = mock_response
 
     expected_time = datetime.fromisoformat("2024-02-01T01:02:03+01:00")
     payload = param_type(text="test", number=0.01, time=expected_time)
