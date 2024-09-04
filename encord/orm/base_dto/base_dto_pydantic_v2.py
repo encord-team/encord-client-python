@@ -9,6 +9,7 @@ from pydantic import (  # type: ignore[attr-defined]
     Extra,
     Field,
     PrivateAttr,
+    RootModel,  # type: ignore[attr-defined]
     ValidationError,
     field_validator,
     model_validator,
@@ -76,3 +77,6 @@ def dto_validator(mode: Literal["before", "after"] = "before") -> Callable:
         return model_validator(mode=mode)(func)  # type: ignore
 
     return decorator
+
+
+RootModelDTO = RootModel

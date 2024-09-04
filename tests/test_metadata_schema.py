@@ -5,6 +5,19 @@ import pytest
 from encord.metadata_schema import MetadataSchema, MetadataSchemaError
 
 
+def test_root_model() -> None:
+    import encord.metadata_schema as metadata_schema
+
+    _ClientMetadataSchema = metadata_schema._ClientMetadataSchema
+    _ClientMetadataSchemaOption = metadata_schema._ClientMetadataSchemaOption
+    _ClientMetadataSchema.model_validate({})
+
+    a = _ClientMetadataSchema.model_validate({"k": {"ty": "variant", "hint": "number"}})
+    assert isinstance(a.root["k"], _ClientMetadataSchemaOption)
+    assert a.root["k"].root.hint.value == "number"
+    assert a.model_dump(mode="json") == {"k": {"ty": "variant", "hint": "number"}}
+
+
 def test_metadata_schema() -> None:
     meta = MetadataSchema(MagicMock())
     meta._schema = {}

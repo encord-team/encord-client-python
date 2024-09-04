@@ -2,12 +2,14 @@ import json
 from enum import Enum
 from typing import Dict, Literal, Sequence, Union
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
 
 __all__ = ["MetadataSchema", "MetadataSchemaError"]
+
+from encord.orm.base_dto import RootModelDTO
 
 
 class _NumberFormat(Enum):
@@ -100,7 +102,7 @@ class _ClientMetadataSchemaTypeTombstone(BaseModel):
 
 
 class _ClientMetadataSchemaOption(
-    RootModel[
+    RootModelDTO[
         Annotated[
             Union[
                 _ClientMetadataSchemaTypeNumber,
@@ -122,7 +124,7 @@ class _ClientMetadataSchemaOption(
     pass
 
 
-class _ClientMetadataSchema(RootModel[Dict[str, _ClientMetadataSchemaOption]]):
+class _ClientMetadataSchema(RootModelDTO[Dict[str, _ClientMetadataSchemaOption]]):
     """
     Internal type for a metadata schema.
     """
@@ -177,7 +179,7 @@ class MetadataSchema:
             result_type=_ClientMetadataSchema,  # type: ignore[arg-type]
             allow_none=True,
         )
-        self._schema = schema_opt.root if schema_opt is not None else {}
+        self._schema = schema_opt.root if schema_opt is not None else {}  # type: ignore[assignment]
         self._dirty = False
 
     def save(self) -> None:
