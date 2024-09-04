@@ -2,11 +2,11 @@ import json
 from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, Dict, Generic, Literal, Type, TypeVar
-from typing_extensions import Self
 
 from pydantic import BaseModel, Field, PrivateAttr, ValidationError, root_validator, validator
 from pydantic.generics import GenericModel
 from pydantic.json import pydantic_encoder
+from typing_extensions import Self
 
 from encord.common.time_parser import parse_datetime
 from encord.common.utils import snake_to_camel

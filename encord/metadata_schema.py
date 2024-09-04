@@ -179,7 +179,7 @@ class MetadataSchema:
             result_type=_ClientMetadataSchema,  # type: ignore[arg-type]
             allow_none=True,
         )
-        self._schema = schema_opt.root if schema_opt is not None else {}
+        self._schema = schema_opt.root if schema_opt is not None else {}  # type: ignore[assignment]
         self._dirty = False
 
     def save(self) -> None:
