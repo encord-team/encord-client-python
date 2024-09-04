@@ -1,7 +1,8 @@
 import json
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, Generic, Literal, Self, Type, TypeVar
+from typing import Any, Callable, Dict, Generic, Literal, Type, TypeVar
+from typing_extensions import Self
 
 from pydantic import BaseModel, Field, PrivateAttr, ValidationError, root_validator, validator
 from pydantic.generics import GenericModel
