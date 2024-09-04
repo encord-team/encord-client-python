@@ -201,8 +201,8 @@ class MetadataSchema:
 
         **Parameters:**
 
-        k : str: The key under which the embedding will be stored in the schema.
-        size : int: The size of the embedding.
+        - k : str: The key under which the embedding will be stored in the schema.
+        - size : int: The size of the embedding.
 
         **Raises:**
 
