@@ -7,26 +7,9 @@ from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
 
-try:
-    from pydantic import RootModel
-except ImportError:
-    from typing import Generic, TypeVar
-
-    Type = TypeVar("Type", bound=BaseModel)
-
-    class RootModel(BaseModel, Generic[Type]):
-        __root__: Type
-
-        def __init__(cls, *args, **kwargs):
-            root = args[0] if len(args) > 0 else kwargs.pop("root", None)
-            super().__init__(*args, __root__=root, **kwargs)
-
-        @property
-        def root(self) -> Type:
-            return self.__root__
-
-
 __all__ = ["MetadataSchema", "MetadataSchemaError"]
+
+from encord.orm.base_dto import RootModelDTO
 
 
 class _NumberFormat(Enum):
@@ -119,7 +102,7 @@ class _ClientMetadataSchemaTypeTombstone(BaseModel):
 
 
 class _ClientMetadataSchemaOption(
-    RootModel[
+    RootModelDTO[
         Annotated[
             Union[
                 _ClientMetadataSchemaTypeNumber,
@@ -141,7 +124,7 @@ class _ClientMetadataSchemaOption(
     pass
 
 
-class _ClientMetadataSchema(RootModel[Dict[str, _ClientMetadataSchemaOption]]):
+class _ClientMetadataSchema(RootModelDTO[Dict[str, _ClientMetadataSchemaOption]]):
     """
     Internal type for a metadata schema.
     """
