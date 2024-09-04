@@ -337,9 +337,35 @@ class MetadataSchema:
         """
         return list(self._schema.keys())
 
+    def has_key(self, k: str) -> bool:
+        """
+        Check if any definition exists for a key.
+        Parameters:
+        -----------
+        k : str
+            The key for which the metadata type is to be retrieved.
+        Returns:
+        """
+        return k in self._schema
+
+    def is_key_deleted(self, k: str) -> bool:
+        """
+        Check if the key is defined as deleted. (Tombstone type)
+        Parameters:
+        -----------
+        k : str
+            The key for which the metadata type is to be retrieved.
+        Returns:
+        """
+        if k not in self._schema:
+            return False
+        _assert_valid_metadata_key(k)
+        v = self._schema[k].root
+        return isinstance(v, _ClientMetadataSchemaTypeTombstone)
+
     def get_key_type(
         self, k: str
-    ) -> Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]:
+    ) -> Union[Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"], None]:
         """
         Retrieves the metadata type associated with a given key.
         Parameters:
@@ -353,10 +379,10 @@ class MetadataSchema:
         Raises:
         -------
         MetadataSchemaError
-            If the key `k` is not defined in the schema or is not supported by the current SDK.
+            If the key `k` is not supported by the current SDK.
         """
         if k not in self._schema:
-            raise MetadataSchemaError(f"{k} is not defined")
+            return None
         _assert_valid_metadata_key(k)
         v = self._schema[k].root
         if isinstance(v, _ClientMetadataSchemaTypeEmbedding):
@@ -366,7 +392,7 @@ class MetadataSchema:
         elif isinstance(v, _ClientMetadataSchemaTypeVariant):
             return v.hint.to_simple_str()
         elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
-            raise MetadataSchemaError(f"{k} has been deleted")
+            return None
         elif isinstance(v, _ClientMetadataSchemaTypeBoolean):
             return "boolean"
         elif isinstance(v, _ClientMetadataSchemaTypeNumber):
