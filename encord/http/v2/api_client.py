@@ -99,7 +99,9 @@ class ApiClient:
             else:
                 break
 
-    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None, allow_none: bool = False) -> T:
+    def delete(
+        self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None, allow_none: bool = False
+    ) -> T:
         return self._request_without_payload("DELETE", path, params, result_type, allow_none=allow_none)
 
     def post(
@@ -153,7 +155,12 @@ class ApiClient:
         return self._request(req, result_type=result_type)  # type: ignore
 
     def _request_without_payload(
-        self, method: str, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]], allow_none: bool = False,
+        self,
+        method: str,
+        path: str,
+        params: Optional[BaseDTO],
+        result_type: Optional[Type[T]],
+        allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
 
