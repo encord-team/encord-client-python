@@ -42,8 +42,17 @@ def test_metadata_schema() -> None:
     meta.add_scalar("g", data_type="long_string")
     meta.add_scalar("a", data_type="long_string")
     meta.add_scalar("g", data_type="number")
+    meta.add_scalar("g", data_type="text")
+    meta.add_scalar("g", data_type="number")
+
+    assert meta.has_key("g")
+    assert not meta.has_key("g2")
+    assert meta.get_key_type("g2") is None
 
     meta.delete_key("g")
+    assert meta.has_key("g")
+    assert meta.is_key_deleted("g")
+    assert meta.get_key_type("g") is None
 
     meta.add_enum("en", values=["h"])
     assert meta.get_enum_options("en") == ["h"]
