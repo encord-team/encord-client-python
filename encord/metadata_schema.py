@@ -2,10 +2,29 @@ import json
 from enum import Enum
 from typing import Dict, Literal, Sequence, Union
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
+
+try:
+    from pydantic import RootModel
+except ImportError:
+    from typing import Generic, TypeVar
+
+    Type = TypeVar("Type", bound=BaseModel)
+
+    class RootModel(BaseModel, Generic[Type]):
+        __root__: Type
+
+        def __init__(cls, *args, **kwargs):
+            root = args[0] if len(args) > 0 else kwargs.pop("root", None)
+            super().__init__(*args, __root__=root, **kwargs)
+
+        @property
+        def root(self) -> Type:
+            return self.__root__
+
 
 __all__ = ["MetadataSchema", "MetadataSchemaError"]
 
