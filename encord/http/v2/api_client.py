@@ -69,7 +69,7 @@ class ApiClient:
             raise RuntimeError(f"Operation {operation} does not have an 'api_client' parameter")
 
     def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
-        return self._request_without_payload("GET", path, params, result_type)
+        return self._request_without_payload("GET", path, params, result_type, allow_none=allow_none)
 
     def get_paged_iterator(
         self,
@@ -99,8 +99,8 @@ class ApiClient:
             else:
                 break
 
-    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None) -> T:
-        return self._request_without_payload("DELETE", path, params, result_type)
+    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None, allow_none: bool = False) -> T:
+        return self._request_without_payload("DELETE", path, params, result_type, allow_none=allow_none)
 
     def post(
         self,
@@ -153,13 +153,13 @@ class ApiClient:
         return self._request(req, result_type=result_type)  # type: ignore
 
     def _request_without_payload(
-        self, method: str, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]]
+        self, method: str, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]], allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
 
         req = requests.Request(method=method, url=self._build_url(path), params=params_dict).prepare()
 
-        return self._request(req, result_type=result_type)  # type: ignore
+        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
     def _request(self, req: PreparedRequest, result_type: Optional[Type[T]], allow_none: bool = False):
         req = self._config.define_headers_v2(req)
