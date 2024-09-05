@@ -15,6 +15,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -23,11 +24,13 @@ from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
+from encord.collection import Collection
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
+from encord.filterpreset import FilterPreset
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
@@ -1000,6 +1003,171 @@ class EncordUserClient:
 
     def metadata_schema(self) -> MetadataSchema:
         return MetadataSchema(self._api_client)
+
+    def get_collection(self, collection_uuid: Union[str, UUID]) -> Collection:
+        """
+        Get collection by unique identifier (UUID).
+
+        Args:
+            collection_uuid: The unique identifier of the collection to retrieve.
+
+        Returns:
+            The collection. See :class:`encord.collection.Collection` for details.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+                the user does not have access to it.
+        """
+        if isinstance(collection_uuid, str):
+            collection_uuid = UUID(collection_uuid)
+
+        return Collection._get_collection(self._api_client, collection_uuid=collection_uuid)
+
+    def list_collections(
+        self,
+        top_level_folder_uuid: Union[str, UUID, None] = None,
+        collection_uuid_list: List[str | UUID] | None = None,
+        page_size: Optional[int] = None,
+    ) -> Iterable[Collection]:
+        """
+        Get collections by top level folder or list of collection IDs.
+        If both top_level_folder_uuid and collection_uuid_list are preset
+        then the intersection of the two conditions is returned.
+
+        Args:
+            top_level_folder_uuid: The unique identifier of the top level folder.
+            collection_uuid_list: The unique identifiers (UUIDs) of the collections to retrieve.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of collections which match the given criteria.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(top_level_folder_uuid, str):
+            top_level_folder_uuid = UUID(top_level_folder_uuid)
+        collections = (
+            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuid_list]
+            if collection_uuid_list is not None
+            else None
+        )
+        return Collection._list_collections(
+            self._api_client,
+            top_level_folder_uuid=top_level_folder_uuid,
+            collection_uuid_list=collections,
+            page_size=page_size,
+        )
+
+    def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:
+        """
+        Delete a collection by its UUID if it exists.
+
+        Args:
+            collection_uuid: The unique identifier (UUID) of the collection to delete.
+
+        Returns:
+            None
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(collection_uuid, str):
+            collection_uuid = UUID(collection_uuid)
+        Collection._delete_collection(self._api_client, collection_uuid)
+
+    def create_collection(self, top_level_folder_uuid: Union[str, UUID], name: str, description: str = "") -> UUID:
+        """
+        Create a collection.
+
+        Args:
+            top_level_folder_uuid: The unique identifier (UUID) of the folder that the collection is created in.
+            name: The name of the collection.
+            description: The description of the collection.
+
+        Returns:
+            The UUID of the newly created collection.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+        """
+        if isinstance(top_level_folder_uuid, str):
+            top_level_folder_uuid = UUID(top_level_folder_uuid)
+        return Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
+
+    def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
+        """
+        Get a preset by its unique identifier (UUID).
+
+        Args:
+            preset_uuid: The unique identifier of the preset to retrieve.
+
+        Returns:
+            The preset. See :class:`encord.preset.Preset` for details.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+                the user does not have access to it.
+        """
+        if isinstance(preset_uuid, str):
+            preset_uuid = UUID(preset_uuid)
+        return FilterPreset._get_preset(self._api_client, preset_uuid=preset_uuid)
+
+    def get_filter_presets(
+        self, preset_uuid_list: List[Union[str, UUID]] = [], page_size: Optional[int] = None
+    ) -> Iterable[FilterPreset]:
+        """
+        Get presets by list of preset unique identifiers (UUIDs).
+
+        Args:
+            preset_uuid_list: The list of unique identifiers (UUIDs) to be retrieved.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of presets which match the given criteria.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        preset_uuid_list = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuid_list
+        ]
+        return FilterPreset._get_presets(self._api_client, preset_uuid_list, page_size=page_size)
+
+    def list_presets(
+        self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
+    ) -> Iterable[FilterPreset]:
+        """
+        Get presets by top level folder.
+
+        Args:
+            top_level_folder_uuid: The unique identifier of the top level folder.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+
+        Returns:
+            The list of presets which match the given criteria.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(top_level_folder_uuid, str):
+            top_level_folder_uuid = UUID(top_level_folder_uuid)
+        return FilterPreset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
+
+    def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
+        """
+        Delete a preset by its unique identifier (UUID) if it exists.
+
+        Args:
+            preset_uuid: The uuid/id of the preset to delete.
+
+        Returns:
+            None
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(preset_uuid, str):
+            preset_uuid = UUID(preset_uuid)
+        FilterPreset._delete_preset(self._api_client, preset_uuid)
 
 
 class ListingFilter(Enum):
