@@ -180,6 +180,7 @@ class ApiClient:
             connect_retries=req_settings.connection_retries,
         ) as session:
             context = self._exception_context(req)
+
             try:
                 res = session.send(req, timeout=timeouts)
             except Exception as e:
