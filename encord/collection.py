@@ -133,7 +133,7 @@ class Collection:
         )
         return orm_item
 
-    def update_collection(self, name: Union[str, None] = None, description: Optional[str] = None) -> None:
+    def update_collection(self, name: Optional[str] = None, description: Optional[str] = None) -> None:
         payload = UpdateCollectionPayload(name=name, description=description)
         self._client.patch(
             f"index/collections/{self.uuid}",
