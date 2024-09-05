@@ -163,7 +163,7 @@ class Collection:
             self._client.get_paged_iterator(
                 f"index/collections/{self.uuid}/all-items",
                 params=params,
-                result_type=Union[orm_storage.StorageItem, orm_storage.StorageItemInaccessible],
+                result_type=Union[orm_storage.StorageItem, orm_storage.StorageItemInaccessible],  # type: ignore[arg-type]
             )
         )
         for item in paged_items:
