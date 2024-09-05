@@ -1293,16 +1293,6 @@ class StorageFolder:
         return StorageFolder(api_client, folder_orm)
 
 
-class StorageItemInaccessible:
-    def __init__(self, orm_item: orm_storage.StorageItemInaccessible):
-        self._orm_item = orm_item
-
-    @property
-    def uuid(self) -> UUID:
-        """UUID: The unique identifier of the storage item."""
-        return self._orm_item.uuid
-
-
 class StorageItem:
     def __init__(self, api_client: ApiClient, orm_item: orm_storage.StorageItem):
         self._api_client = api_client
