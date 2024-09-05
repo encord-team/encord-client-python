@@ -144,9 +144,7 @@ class ApiClient:
         result_type: Optional[Type[T]],
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
-        print(f"{params_dict}")
         payload_serialised = self._serialise_payload(payload)
-        print(f"{payload_serialised}")
 
         req = requests.Request(
             method=method,
