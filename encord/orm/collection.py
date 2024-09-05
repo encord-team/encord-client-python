@@ -28,8 +28,8 @@ class CreateCollectionPayload(BaseDTO):
 
 
 class UpdateCollectionPayload(BaseDTO):
-    name: str | None = None
-    description: str | None = None
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 
 class Collection(BaseDTO):

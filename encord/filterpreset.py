@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Union
 from uuid import UUID
 
 from encord.exceptions import (
@@ -104,7 +104,7 @@ class FilterPreset:
 
     @staticmethod
     def _list_presets(
-        api_client: ApiClient, top_level_folder_uuid: UUID | None, page_size: Optional[int] = None
+        api_client: ApiClient, top_level_folder_uuid: Union[UUID, None], page_size: Optional[int] = None
     ) -> "Iterable[FilterPreset]":
         params = GetPresetParams(topLevelFolderUuid=top_level_folder_uuid, pageSize=page_size)
         paged_items = api_client.get_paged_iterator(

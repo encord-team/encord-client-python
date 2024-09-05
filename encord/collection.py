@@ -96,8 +96,8 @@ class Collection:
     @staticmethod
     def _list_collections(
         api_client: ApiClient,
-        top_level_folder_uuid: UUID | None,
-        collection_uuid_list: List[UUID] | None,
+        top_level_folder_uuid: Union[UUID, None],
+        collection_uuid_list: Union[List[UUID], None],
         page_size: Optional[int] = None,
     ) -> "Iterable[Collection]":
         params = GetCollectionParams(
@@ -133,7 +133,7 @@ class Collection:
         )
         return orm_item
 
-    def update_collection(self, name: str | None = None, description: str | None = None) -> None:
+    def update_collection(self, name: Union[str, None] = None, description: Optional[str, None] = None) -> None:
         payload = UpdateCollectionPayload(name=name, description=description)
         self._client.patch(
             f"index/collections/{self.uuid}",
