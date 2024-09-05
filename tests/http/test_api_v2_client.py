@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import Type
+from typing import Type, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,7 +10,7 @@ from requests import Session
 
 from encord.configs import SshConfig
 from encord.http.v2.api_client import ApiClient
-from encord.orm.base_dto import BaseDTO
+from encord.orm.base_dto import BaseDTO, RootModelDTO
 
 PRIVATE_KEY = Ed25519PrivateKey.generate()
 
@@ -21,6 +21,10 @@ class TestPayload(BaseDTO):
 
 class TestPayloadV2(BaseModel):
     payload: str
+
+
+class TestPayloadV3(RootModelDTO[Union[TestPayloadV2, None]]):
+    pass
 
 
 class TestComplexPayload(BaseDTO):
@@ -40,7 +44,7 @@ def api_client():
     return ApiClient(config=SshConfig(PRIVATE_KEY))
 
 
-@pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2])
+@pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2, TestPayloadV3])
 @pytest.mark.parametrize("allow_none", [False, True])
 @patch.object(Session, "send")
 def test_constructed_url_is_correct(
@@ -64,7 +68,10 @@ def test_constructed_url_is_correct(
     else:
         for r in res:
             assert r is not None
-            assert r.payload == "hello world"
+            if payload_type == TestPayloadV3:
+                assert r.root.payload == "hello world"
+            else:
+                assert r.payload == "hello world"
 
     assert send.call_args_list[0].args[0].url == "https://api.encord.com/v2/public"
     assert send.call_args_list[1].args[0].url == "https://api.encord.com/v2/public/test"
@@ -72,7 +79,7 @@ def test_constructed_url_is_correct(
     assert send.call_args_list[3].args[0].url == "https://api.encord.com/v2/public/test"
 
 
-@pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2])
+@pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2, TestPayloadV3])
 @pytest.mark.parametrize("allow_none", [False, True])
 @patch.object(Session, "send")
 def test_payload_url_serialisation(
@@ -92,7 +99,10 @@ def test_payload_url_serialisation(
         assert res is None
     else:
         assert res is not None
-        assert res.payload == "hello world"
+        if payload_type == TestPayloadV3:
+            assert res.root.payload == "hello world"
+        else:
+            assert res.payload == "hello world"
 
     assert (
         send.call_args_list[0].args[0].url
@@ -100,7 +110,7 @@ def test_payload_url_serialisation(
     )
 
 
-@pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2, None])
+@pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2, TestPayloadV3, None])
 @pytest.mark.parametrize("param_type", [TestComplexPayload, TestComplexPayloadV2])
 @patch.object(Session, "send")
 def test_payload_body_serialisation(
@@ -123,7 +133,10 @@ def test_payload_body_serialisation(
         assert r is None
     else:
         assert r is not None
-        assert r.payload == "hello world"
+        if payload_type == TestPayloadV3:
+            assert r.root.payload == "hello world"
+        else:
+            assert r.payload == "hello world"
 
     assert send.call_args_list[0].args[0].url == "https://api.encord.com/v2/public"
     assert (

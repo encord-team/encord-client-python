@@ -1,4 +1,5 @@
 import inspect
+import json
 import uuid
 from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
@@ -128,7 +129,7 @@ class ApiClient:
             if hasattr(payload, "model_dump"):
                 return payload.model_dump(mode="json")
             else:
-                return payload.dict()
+                return json.loads(payload.json())
         elif payload is None:
             return None
         else:
@@ -143,7 +144,9 @@ class ApiClient:
         result_type: Optional[Type[T]],
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
+        print(f"{params_dict}")
         payload_serialised = self._serialise_payload(payload)
+        print(f"{payload_serialised}")
 
         req = requests.Request(
             method=method,
