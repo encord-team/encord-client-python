@@ -157,7 +157,7 @@ class Collection:
 
     def list_items_include_inaccessible(
         self, page_size: Optional[int] = None
-    ) -> Iterable[StorageItem | StorageItemInaccessible]:
+    ) -> Iterable[Union[StorageItem, StorageItemInaccessible]]:
         params = GetCollectionItemsParams(pageSize=page_size)
         paged_items: Iterator[Union[orm_storage.StorageItem, orm_storage.StorageItemInaccessible]] = (
             self._client.get_paged_iterator(
