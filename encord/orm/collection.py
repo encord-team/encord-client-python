@@ -42,3 +42,15 @@ class Collection(BaseDTO):
 
 class GetCollectionsResponse(BaseDTO):
     results: List[Collection]
+
+
+class CollectionBulkItemRequest(BaseDTO):
+    item_uuids: List[uuid.UUID] = Field(default=list(), alias="item_uuids")
+
+
+class CollectionBulkItemResponse(BaseDTO):
+    failed_items: List[uuid.UUID]
+
+
+class CollectionBulkPresetRequest(BaseDTO):
+    preset_uuid: uuid.UUID = Field(default=None, alias="preset_uuid")

@@ -7,9 +7,13 @@ import encord.orm.storage as orm_storage
 from encord.exceptions import (
     AuthorisationError,
 )
+from encord.filterpreset import FilterPreset
 from encord.http.v2.api_client import ApiClient
 from encord.orm.collection import Collection as OrmCollection
 from encord.orm.collection import (
+    CollectionBulkItemRequest,
+    CollectionBulkItemResponse,
+    CollectionBulkPresetRequest,
     CreateCollectionParams,
     CreateCollectionPayload,
     GetCollectionItemsParams,
@@ -171,3 +175,73 @@ class Collection:
                 yield StorageItem(api_client=self._client, orm_item=item)
             else:
                 yield StorageItemInaccessible(orm_item=item)
+
+    def add_items(self, item_list: list[Union[UUID, str]]) -> CollectionBulkItemResponse:
+        """
+        Add items to the collection
+
+        Args:
+            item_list: The list containing ids of items to be added
+        """
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_list]
+        print("this is the uuid list:", uuid_list)
+        res = self._client.post(
+            f"index/collections/{self.uuid}/add-items",
+            params=None,
+            payload=CollectionBulkItemRequest(item_uuids=uuid_list),
+            result_type=CollectionBulkItemResponse,
+        )
+        return res
+
+    def remove_items(self, item_list: list[Union[UUID, str]]) -> CollectionBulkItemResponse:
+        """
+        Remove items from the collection
+
+        Args:
+            item_list: The list containing ids of items to be removed
+        """
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_list]
+        res = self._client.post(
+            f"index/collections/{self.uuid}/remove-items",
+            params=None,
+            payload=CollectionBulkItemRequest(item_uuids=uuid_list),
+            result_type=CollectionBulkItemResponse,
+        )
+        return res
+
+    def add_preset_items(self, preset: FilterPreset | UUID | str) -> None:
+        """
+        Async operation to add items which satisfy the given preset
+        to the collection
+
+        Args:
+            preset: The preset or preset id to add to the collection
+        """
+        if isinstance(preset, FilterPreset):
+            preset_uuid = preset.uuid
+        elif isinstance(preset, str):
+            preset_uuid = UUID(preset)
+        else:
+            preset_uuid = preset
+        self._client.post(
+            f"index/collections/{self.uuid}/add-preset-items",
+            params=None,
+            payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
+            result_type=None,
+        )
+
+    def remove_preset_items(self, preset: FilterPreset | UUID) -> None:
+        """
+        Async operation to remove items which satisfy the given preset
+        from the collection
+
+        Args:
+            preset: The preset or preset id to add to the collection
+        """
+        preset_uuid = preset if isinstance(preset, UUID) else preset.uuid
+        self._client.post(
+            f"index/collections/{self.uuid}/remove-preset-items",
+            params=None,
+            payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
+            result_type=None,
+        )
