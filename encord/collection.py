@@ -209,7 +209,7 @@ class Collection:
         )
         return res
 
-    def add_preset_items(self, preset: FilterPreset | UUID | str) -> None:
+    def add_preset_items(self, preset: Union[FilterPreset, UUID, str]) -> None:
         """
         Async operation to add items which satisfy the given preset
         to the collection
@@ -230,7 +230,7 @@ class Collection:
             result_type=None,
         )
 
-    def remove_preset_items(self, preset: FilterPreset | UUID) -> None:
+    def remove_preset_items(self, preset: Union[FilterPreset, UUID]) -> None:
         """
         Async operation to remove items which satisfy the given preset
         from the collection
