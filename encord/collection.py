@@ -184,7 +184,6 @@ class Collection:
             item_list: The list containing ids of items to be added
         """
         uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_list]
-        print("this is the uuid list:", uuid_list)
         res = self._client.post(
             f"index/collections/{self.uuid}/add-items",
             params=None,
