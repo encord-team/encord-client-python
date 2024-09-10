@@ -22,7 +22,12 @@ from encord.orm.base_dto.base_dto_interface import BaseDTOInterface, T
 
 
 class BaseDTO(BaseDTOInterface, BaseModel):
-    model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)  # type: ignore[typeddict-unknown-key,typeddict-item]
+    model_config = ConfigDict(
+        extra="ignore",
+        populate_by_name=True,
+        alias_generator=snake_to_camel,
+        protected_namespaces=(),  # otherwise clash with model_ prefixes
+    )  # type: ignore[typeddict-unknown-key,typeddict-item]
 
     @field_validator("*", mode="before")
     def parse_datetime(cls, value, info):
@@ -49,7 +54,12 @@ DataT = TypeVar("DataT")
 
 
 class GenericBaseDTO(BaseDTOInterface, BaseModel):
-    model_config = ConfigDict(extra="ignore", populate_by_name=True, alias_generator=snake_to_camel)  # type: ignore[typeddict-unknown-key,typeddict-item]
+    model_config = ConfigDict(
+        extra="ignore",
+        populate_by_name=True,
+        alias_generator=snake_to_camel,
+        protected_namespaces=(),  # otherwise clash with model_ prefixes
+    )  # type: ignore[typeddict-unknown-key,typeddict-item]
 
     @field_validator("*", mode="before")
     def parse_datetime(cls, value, info):
