@@ -228,8 +228,11 @@ class Collection:
             payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
             result_type=None,
         )
+        print(
+            f"Submitted request to add items matching filter_preset:{preset_uuid} to collection:{self.uuid}. It is an async operation and can take some time to complete."
+        )
 
-    def remove_preset_items(self, preset: Union[FilterPreset, UUID]) -> None:
+    def remove_preset_items(self, preset: Union[FilterPreset, UUID, str]) -> None:
         """
         Async operation to remove items which satisfy the given preset
         from the collection
@@ -237,10 +240,18 @@ class Collection:
         Args:
             preset: The preset or preset id to add to the collection
         """
-        preset_uuid = preset if isinstance(preset, UUID) else preset.uuid
+        if isinstance(preset, FilterPreset):
+            preset_uuid = preset.uuid
+        elif isinstance(preset, str):
+            preset_uuid = UUID(preset)
+        else:
+            preset_uuid = preset
         self._client.post(
             f"index/collections/{self.uuid}/remove-preset-items",
             params=None,
             payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
             result_type=None,
+        )
+        print(
+            f"Submitted request to remove items matching filter_preset:{preset_uuid} from collection:{self.uuid}. It is an async operation and can take some time to complete."
         )
