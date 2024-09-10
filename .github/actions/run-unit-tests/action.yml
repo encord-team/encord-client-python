@@ -46,7 +46,7 @@ runs:
 
       - name: Override pydantic version
         if: ${{ inputs.pydantic-version }}
-        run: poetry add pydantic=${{ inputs.pydantic-version }} --no-interaction
+        run: poetry run python -m pip install pydantic==${{ inputs.pydantic-version }}
         shell: bash
 
       - name: Run tests

@@ -1,9 +1,11 @@
 import inspect
+import json
 import uuid
 from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
+from pydantic import BaseModel
 from requests import PreparedRequest, Response
 
 from encord.configs import Config
@@ -68,7 +70,7 @@ class ApiClient:
             raise RuntimeError(f"Operation {operation} does not have an 'api_client' parameter")
 
     def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
-        return self._request_without_payload("GET", path, params, result_type)
+        return self._request_without_payload("GET", path, params, result_type, allow_none=allow_none)
 
     def get_paged_iterator(
         self,
@@ -98,8 +100,10 @@ class ApiClient:
             else:
                 break
 
-    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None) -> T:
-        return self._request_without_payload("DELETE", path, params, result_type)
+    def delete(
+        self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None, allow_none: bool = False
+    ) -> T:
+        return self._request_without_payload("DELETE", path, params, result_type, allow_none=allow_none)
 
     def post(
         self,
@@ -120,6 +124,12 @@ class ApiClient:
             return [p.to_dict() for p in payload]
         elif isinstance(payload, BaseDTO):
             return payload.to_dict()
+        elif isinstance(payload, BaseModel):
+            # use new pydantic v2 function if it exists, otherwise use fallback
+            if hasattr(payload, "model_dump"):
+                return payload.model_dump(mode="json")
+            else:
+                return json.loads(payload.json())
         elif payload is None:
             return None
         else:
@@ -146,13 +156,18 @@ class ApiClient:
         return self._request(req, result_type=result_type)  # type: ignore
 
     def _request_without_payload(
-        self, method: str, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]]
+        self,
+        method: str,
+        path: str,
+        params: Optional[BaseDTO],
+        result_type: Optional[Type[T]],
+        allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
 
         req = requests.Request(method=method, url=self._build_url(path), params=params_dict).prepare()
 
-        return self._request(req, result_type=result_type)  # type: ignore
+        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
     def _request(self, req: PreparedRequest, result_type: Optional[Type[T]], allow_none: bool = False):
         req = self._config.define_headers_v2(req)
@@ -189,6 +204,12 @@ class ApiClient:
                 return uuid.UUID(res_json)
             elif issubclass(result_type, BaseDTOInterface):
                 return result_type.from_dict(res_json)
+            elif issubclass(result_type, BaseModel):
+                # use new pydantic v2 function if it exists, otherwise use fallback
+                if hasattr(result_type, "model_validate"):
+                    return result_type.model_validate(res_json)
+                else:
+                    return result_type.validate(res_json)
             else:
                 raise ValueError(f"Unsupported result type {result_type}")
 

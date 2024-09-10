@@ -99,6 +99,10 @@ class StorageItem(BaseDTO):
     audio_num_channels: Optional[int]
 
 
+class StorageItemInaccessible(BaseDTO):
+    uuid: UUID
+
+
 class CreateStorageFolderPayload(BaseDTO):
     name: str
     description: Optional[str]
@@ -460,3 +464,12 @@ class JobStatus(CamelStrEnum):
 class ReencodeVideoItemsResponse(BaseDTO):
     status: JobStatus
     result: Optional[Union[list, dict]]
+
+
+class StorageItemsMigratePayload(BaseDTO):
+    urls_map: Optional[Dict[str, Optional[str]]]
+    items_map: Optional[Dict[UUID, Optional[str]]]
+    from_integration_hash: Optional[UUID] = None
+    to_integration_hash: Optional[UUID] = None
+    validate_access: bool = False
+    skip_missing: bool = False

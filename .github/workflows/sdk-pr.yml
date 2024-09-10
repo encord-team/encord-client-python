@@ -47,9 +47,10 @@ jobs:
         uses: ./.github/actions/run-unit-tests
         with:
           python-version: 3.8.16
+          pydantic-version: 1.10.14
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
 
-      - name: Publish unit test report Python 3.8 (Pydantic 2.x)
+      - name: Publish unit test report Python 3.8 (Pydantic 1.x)
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
