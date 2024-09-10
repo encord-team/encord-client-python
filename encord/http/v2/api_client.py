@@ -145,6 +145,7 @@ class ApiClient:
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
         payload_serialised = self._serialise_payload(payload)
+
         req = requests.Request(
             method=method,
             url=self._build_url(path),
