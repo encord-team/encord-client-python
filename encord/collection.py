@@ -253,5 +253,6 @@ class Collection:
             result_type=None,
         )
         print(
-            f"Submitted request to remove items matching filter_preset:{preset_uuid} from collection:{self.uuid}. It is an async operation and can take some time to complete."
+            f"Submitted request to remove items matching filter_preset:{preset_uuid} from collection:{self.uuid}."
+            f"It is an async operation and can take some time to complete."
         )
