@@ -176,7 +176,7 @@ class Collection:
             else:
                 yield StorageItemInaccessible(orm_item=item)
 
-    def add_items(self, item_list: list[Union[UUID, str]]) -> CollectionBulkItemResponse:
+    def add_items(self, item_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
         Add items to the collection
 
@@ -192,7 +192,7 @@ class Collection:
         )
         return res
 
-    def remove_items(self, item_list: list[Union[UUID, str]]) -> CollectionBulkItemResponse:
+    def remove_items(self, item_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
         Remove items from the collection
 
