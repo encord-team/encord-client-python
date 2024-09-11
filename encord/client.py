@@ -592,26 +592,6 @@ class EncordClientDataset(EncordClient):
         else:
             raise encord.exceptions.EncordException("Image upload failed.")
 
-    def upload_audio(
-        self,
-        file_path: Union[str, Path],
-        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
-        title: Optional[str] = None,
-        folder_uuid: Optional[uuid.UUID] = None,
-    ) -> Audio:
-        if os.path.exists(file_path):
-            signed_urls = upload_to_signed_url_list(
-                [file_path], self._config, self._querier, Audio, cloud_upload_settings=cloud_upload_settings
-            )
-            res = upload_video_to_encord(signed_urls[0], title, folder_uuid, self._querier)
-            if res:
-                logger.info("Upload complete.")
-                return Audio(res)
-            else:
-                raise encord.exceptions.EncordException(message="An error has occurred during audio upload.")
-        else:
-            raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
-
     def link_items(
         self,
         item_uuids: List[uuid.UUID],
