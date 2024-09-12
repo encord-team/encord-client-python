@@ -179,14 +179,14 @@ class Collection:
             else:
                 yield StorageItemInaccessible(orm_item=item)
 
-    def add_items(self, item_id_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
+    def add_items(self, storage_item_id_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
         Add storage items to the collection
 
         Args:
-            item_id_list: The list containing ids of storage items to be added to the collection
+            storage_item_id_list: The list containing ids of storage items to be added to the collection
         """
-        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_id_list]
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in storage_item_id_list]
         res = self._client.post(
             f"index/collections/{self.uuid}/add-items",
             params=None,
@@ -195,14 +195,14 @@ class Collection:
         )
         return res
 
-    def remove_items(self, item_id_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
+    def remove_items(self, storage_item_id_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
         Remove storage items from the collection
 
         Args:
-            item_id_list: The list containing ids of storage items to be removed from the collection
+            storage_item_id_list: The list containing ids of storage items to be removed from the collection
         """
-        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_id_list]
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in storage_item_id_list]
         res = self._client.post(
             f"index/collections/{self.uuid}/remove-items",
             params=None,
