@@ -179,14 +179,14 @@ class Collection:
             else:
                 yield StorageItemInaccessible(orm_item=item)
 
-    def add_items(self, item_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
+    def add_items(self, item_id_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
-        Add items to the collection
+        Add storage items to the collection
 
         Args:
-            item_list: The list containing ids of items to be added
+            item_id_list: The list containing ids of storage items to be added to the collection
         """
-        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_list]
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_id_list]
         res = self._client.post(
             f"index/collections/{self.uuid}/add-items",
             params=None,
@@ -195,14 +195,14 @@ class Collection:
         )
         return res
 
-    def remove_items(self, item_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
+    def remove_items(self, item_id_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
-        Remove items from the collection
+        Remove storage items from the collection
 
         Args:
-            item_list: The list containing ids of items to be removed
+            item_id_list: The list containing ids of storage items to be removed from the collection
         """
-        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_list]
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in item_id_list]
         res = self._client.post(
             f"index/collections/{self.uuid}/remove-items",
             params=None,
@@ -211,20 +211,20 @@ class Collection:
         )
         return res
 
-    def add_preset_items(self, preset: Union[FilterPreset, UUID, str]) -> None:
+    def add_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
         """
-        Async operation to add items which satisfy the given preset
+        Async operation to add storage items which satisfy the given filter-preset
         to the collection
 
         Args:
-            preset: The preset or preset id to add to the collection
+            filter_preset: The filter-preset or filter-preset id to add to the collection
         """
-        if isinstance(preset, FilterPreset):
-            preset_uuid = preset.uuid
-        elif isinstance(preset, str):
-            preset_uuid = UUID(preset)
+        if isinstance(filter_preset, FilterPreset):
+            preset_uuid = filter_preset.uuid
+        elif isinstance(filter_preset, str):
+            preset_uuid = UUID(filter_preset)
         else:
-            preset_uuid = preset
+            preset_uuid = filter_preset
         self._client.post(
             f"index/collections/{self.uuid}/add-preset-items",
             params=None,
@@ -236,20 +236,20 @@ class Collection:
             f"It is an async operation and can take some time to complete."
         )
 
-    def remove_preset_items(self, preset: Union[FilterPreset, UUID, str]) -> None:
+    def remove_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
         """
-        Async operation to remove items which satisfy the given preset
+        Async operation to remove storage items which satisfy the given filter-preset
         from the collection
 
         Args:
-            preset: The preset or preset id to add to the collection
+            filter_preset: The filter-preset or filter-preset id to add to the collection
         """
-        if isinstance(preset, FilterPreset):
-            preset_uuid = preset.uuid
-        elif isinstance(preset, str):
-            preset_uuid = UUID(preset)
+        if isinstance(filter_preset, FilterPreset):
+            preset_uuid = filter_preset.uuid
+        elif isinstance(filter_preset, str):
+            preset_uuid = UUID(filter_preset)
         else:
-            preset_uuid = preset
+            preset_uuid = filter_preset
         self._client.post(
             f"index/collections/{self.uuid}/remove-preset-items",
             params=None,
