@@ -45,7 +45,7 @@ class GetCollectionsResponse(BaseDTO):
 
 
 class CollectionBulkItemRequest(BaseDTO):
-    item_uuids: List[uuid.UUID] = Field(default=list(), alias="item_uuids")
+    item_uuids: List[uuid.UUID]
 
 
 class CollectionBulkItemResponse(BaseDTO):
@@ -53,4 +53,4 @@ class CollectionBulkItemResponse(BaseDTO):
 
 
 class CollectionBulkPresetRequest(BaseDTO):
-    preset_uuid: uuid.UUID = Field(default=None, alias="preset_uuid")
+    preset_uuid: uuid.UUID

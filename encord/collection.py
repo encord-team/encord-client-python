@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime
 from typing import Iterable, Iterator, List, Optional, Union
@@ -22,6 +23,8 @@ from encord.orm.collection import (
     UpdateCollectionPayload,
 )
 from encord.storage import StorageItem, StorageItemInaccessible
+
+log = logging.getLogger(__name__)
 
 
 class Collection:
@@ -228,8 +231,9 @@ class Collection:
             payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
             result_type=None,
         )
-        print(
-            f"Submitted request to add items matching filter_preset:{preset_uuid} to collection:{self.uuid}. It is an async operation and can take some time to complete."
+        log.info(
+            f"Submitted request to add items matching filter_preset:{preset_uuid} to collection:{self.uuid}."
+            f"It is an async operation and can take some time to complete."
         )
 
     def remove_preset_items(self, preset: Union[FilterPreset, UUID, str]) -> None:
@@ -252,7 +256,7 @@ class Collection:
             payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
             result_type=None,
         )
-        print(
+        log.info(
             f"Submitted request to remove items matching filter_preset:{preset_uuid} from collection:{self.uuid}."
             f"It is an async operation and can take some time to complete."
         )
