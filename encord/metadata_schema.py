@@ -161,10 +161,10 @@ def _assert_valid_metadata_key(value: str) -> None:
 class MetadataSchema:
     """
     A class to manage the metadata schema for an organization.
-    Methods:
-    --------
-    save() -> None
-        Saves the metadata schema to the backend if it has been modified.
+
+    **Methods:**
+
+    save() -> None: Saves the metadata schema to the backend if it has been modified.
     """
 
     _dirty: bool
@@ -198,16 +198,15 @@ class MetadataSchema:
     def add_embedding(self, k: str, *, size: int) -> None:
         """
         Adds a new embedding to the metadata schema.
-        Parameters:
-        -----------
-        k : str
-            The key under which the embedding will be stored in the schema.
-        size : int
-            The size of the embedding.
-        Raises:
-        -------
-        MetadataSchemaError
-            If the key `k` is already defined in the schema.
+
+        **Parameters:**
+
+        - k : str: The key under which the embedding will be stored in the schema.
+        - size : int: The size of the embedding.
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is already defined in the schema.
         """
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
@@ -218,16 +217,15 @@ class MetadataSchema:
     def add_enum(self, k: str, *, values: Sequence[str]) -> None:
         """
         Adds a new enum to the metadata schema.
-        Parameters:
-        -----------
-        k : str
-            The key under which the embedding will be stored in the schema.
-        values : Sequence[str]
-            The set of values for the enum (min 1, max 256).
-        Raises:
-        -------
-        MetadataSchemaError
-            If the key `k` is already defined in the schema.
+
+        **Parameters:**
+
+        - k : str: The key under which the embedding will be stored in the schema.
+        - values : Sequence[str]: The set of values for the enum (min 1, max 256).
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is already defined in the schema.
         """
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
@@ -242,16 +240,15 @@ class MetadataSchema:
     def add_enum_options(self, k: str, *, values: Sequence[str]) -> None:
         """
         Adds extra valid enum values to an existing enum schema.
-        Parameters:
-        -----------
-        k : str
-            The key referencing the enum.
-        values : Sequence[str]
-            The set of new values to add to the enum (min 1, max 256).
-        Raises:
-        -------
-        MetadataSchemaError
-            If the key `k` is not defined in the schema or is not an enum.
+
+        **Parameters:**
+
+        - k : str: The key referencing the enum.
+        - values : Sequence[str]: The set of new values to add to the enum (min 1, max 256).
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is not defined in the schema or is not an enum.
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
@@ -275,21 +272,18 @@ class MetadataSchema:
     ) -> None:
         """
         Sets a simple metadata type for a given key in the schema.
-        Parameters:
-        -----------
-        k : str
-            The key for which the metadata type is being set.
-        schema : Literal[
-            "boolean", "datetime", "number", "uuid",
-            "text", "varchar", "string", "long_string"
-        ]
-            The type of metadata to be associated with the key. Must be a valid identifier.
-            "string" is an alias of "varchar"
-            "long_string" is an alias of "text"
-        Raises:
-        -------
-        MetadataSchemaError
-            If the key `k` is already defined in the schema with a conflicting type.
+
+        **Parameters:**
+
+        - k : str: The key for which the metadata type is being set.
+        - schema : Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"]
+                   The type of metadata to be associated with the key. Must be a valid identifier.
+                   "string" is an alias of "varchar"
+                   "long_string" is an alias of "text"
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is already defined in the schema with a conflicting type.
         """
         if k in self._schema:
             v = self._schema[k]
@@ -308,14 +302,14 @@ class MetadataSchema:
     def delete_key(self, k: str) -> None:
         """
         Delete a metadata key from the schema, this cannot be undone.
-        Parameters:
-        -----------
-        k : str
-            The key for which the metadata type is being deleted.
-        Raises:
-        -------
-        MetadataSchemaError
-            If the key `k` is already deleted or not present in the schema
+
+        **Parameters:**
+
+        k : str: The key for which the metadata type is being deleted.
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is already deleted or not present in the schema
         """
         if k in self._schema:
             v = self._schema[k]
@@ -330,32 +324,30 @@ class MetadataSchema:
     def keys(self) -> Sequence[str]:
         """
         Returns a sequence of all keys defined in the metadata schema.
-        Returns:
-        --------
-        Sequence[str]
-            A list of keys present in the metadata schema.
+
+        **Returns:**
+
+        Sequence[str]: A list of keys present in the metadata schema.
         """
         return list(self._schema.keys())
 
     def has_key(self, k: str) -> bool:
         """
         Check if any definition exists for a key.
-        Parameters:
-        -----------
-        k : str
-            The key for which the metadata type is to be retrieved.
-        Returns:
+
+        **Parameters:**
+
+        k : str: The key for which the metadata type is to be retrieved.
         """
         return k in self._schema
 
     def is_key_deleted(self, k: str) -> bool:
         """
         Check if the key is defined as deleted. (Tombstone type)
-        Parameters:
-        -----------
-        k : str
-            The key for which the metadata type is to be retrieved.
-        Returns:
+
+        **Parameters:**
+
+        k : str: The key for which the metadata type is to be retrieved.
         """
         if k not in self._schema:
             return False
@@ -368,18 +360,18 @@ class MetadataSchema:
     ) -> Union[Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"], None]:
         """
         Retrieves the metadata type associated with a given key.
-        Parameters:
-        -----------
-        k : str
-            The key for which the metadata type is to be retrieved.
-        Returns:
-        --------
-        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]
-            The metadata type associated with the key `k`.
+
+        **Parameters:**
+
+        k : str: The key for which the metadata type is to be retrieved.
+
+        **Returns:**
+
+        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]: The metadata type associated with the key `k`.
+
         Raises:
-        -------
-        MetadataSchemaError
-            If the key `k` is not supported by the current SDK.
+
+        MetadataSchemaError: If the key `k` is not supported by the current SDK.
         """
         if k not in self._schema:
             return None
@@ -411,18 +403,18 @@ class MetadataSchema:
     def get_embedding_size(self, k: str) -> int:
         """
         Retrieves size associated with a given embedding.
-        Parameters:
-        -----------
-        k : str
-            The key for which the metadata type is to be retrieved.
-        Returns:
-        --------
-        int
-            The size of the embedding
-        Raises:
-        -------
-        MetadataSchemaError
-            If the key `k` is not defined in the schema or is not an embedding
+
+        **Parameters:**
+
+        k : str: The key for which the metadata type is to be retrieved.
+
+        **Returns:**
+
+        int: The size of the embedding
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is not defined in the schema or is not an embedding
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
@@ -436,18 +428,18 @@ class MetadataSchema:
     def get_enum_options(self, k: str) -> Sequence[str]:
         """
         Retrieves all values associated with a given enum.
-        Parameters:
-        -----------
-        k : str
-            The key for which the metadata type is to be retrieved.
-        Returns:
-        --------
-        Sequence[str]
-            The list of all values associated with an enum type
-        Raises:
-        -------
-        MetadataSchemaError
-            If the key `k` is not defined in the schema or is not an enum
+
+        **Parameters:**
+
+        k : str: The key for which the metadata type is to be retrieved.
+
+        **Returns:**
+
+        Sequence[str]: The list of all values associated with an enum type.
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is not defined in the schema or is not an enum.
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
