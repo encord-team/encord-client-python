@@ -1075,7 +1075,9 @@ class EncordUserClient:
             collection_uuid = UUID(collection_uuid)
         Collection._delete_collection(self._api_client, collection_uuid)
 
-    def create_collection(self, top_level_folder_uuid: Union[str, UUID], name: str, description: str = "") -> UUID:
+    def create_collection(
+        self, top_level_folder_uuid: Union[str, UUID], name: str, description: str = ""
+    ) -> Collection:
         """
         Create a collection.
 
@@ -1085,14 +1087,15 @@ class EncordUserClient:
             description: The description of the collection.
 
         Returns:
-            The UUID of the newly created collection.
+            Collection: Newly created collection.
 
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
-        return Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
+        new_uuid = Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
+        return self.get_collection(new_uuid)
 
     def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
         """
