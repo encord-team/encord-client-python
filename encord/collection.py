@@ -8,7 +8,7 @@ import encord.orm.storage as orm_storage
 from encord.exceptions import (
     AuthorisationError,
 )
-from encord.filterpreset import FilterPreset
+from encord.filter_preset import FilterPreset
 from encord.http.v2.api_client import ApiClient
 from encord.orm.collection import Collection as OrmCollection
 from encord.orm.collection import (
