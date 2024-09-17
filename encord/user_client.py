@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -1028,7 +1028,7 @@ class EncordUserClient:
         top_level_folder_uuid: Union[str, UUID, None] = None,
         collection_uuids: List[str | UUID] | None = None,
         page_size: Optional[int] = None,
-    ) -> Iterable[Collection]:
+    ) -> Generator[Collection]:
         """
         Get collections by top level folder or list of collection IDs.
         If both top_level_folder_uuid and collection_uuid_list are preset
@@ -1114,7 +1114,7 @@ class EncordUserClient:
 
     def get_filter_presets(
         self, preset_uuids: List[Union[str, UUID]] = [], page_size: Optional[int] = None
-    ) -> Iterable[FilterPreset]:
+    ) -> Generator[FilterPreset]:
         """
         Get presets by list of preset unique identifiers (UUIDs).
 
@@ -1132,7 +1132,7 @@ class EncordUserClient:
 
     def list_presets(
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
-    ) -> Iterable[FilterPreset]:
+    ) -> Generator[FilterPreset]:
         """
         Get presets by top level folder.
 
