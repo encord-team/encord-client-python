@@ -1026,7 +1026,7 @@ class EncordUserClient:
     def list_collections(
         self,
         top_level_folder_uuid: Union[str, UUID, None] = None,
-        collection_uuid_list: List[str | UUID] | None = None,
+        collection_uuids: List[str | UUID] | None = None,
         page_size: Optional[int] = None,
     ) -> Iterable[Collection]:
         """
@@ -1036,7 +1036,7 @@ class EncordUserClient:
 
         Args:
             top_level_folder_uuid: The unique identifier of the top level folder.
-            collection_uuid_list: The unique identifiers (UUIDs) of the collections to retrieve.
+            collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
             The list of collections which match the given criteria.
@@ -1047,14 +1047,14 @@ class EncordUserClient:
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
         collections = (
-            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuid_list]
-            if collection_uuid_list is not None
+            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuids]
+            if collection_uuids is not None
             else None
         )
         return Collection._list_collections(
             self._api_client,
             top_level_folder_uuid=top_level_folder_uuid,
-            collection_uuid_list=collections,
+            collection_uuids=collections,
             page_size=page_size,
         )
 
@@ -1113,13 +1113,13 @@ class EncordUserClient:
         return FilterPreset._get_preset(self._api_client, preset_uuid=preset_uuid)
 
     def get_filter_presets(
-        self, preset_uuid_list: List[Union[str, UUID]] = [], page_size: Optional[int] = None
+        self, preset_uuids: List[Union[str, UUID]] = [], page_size: Optional[int] = None
     ) -> Iterable[FilterPreset]:
         """
         Get presets by list of preset unique identifiers (UUIDs).
 
         Args:
-            preset_uuid_list: The list of unique identifiers (UUIDs) to be retrieved.
+            preset_uuids: The list of unique identifiers (UUIDs) to be retrieved.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
             The list of presets which match the given criteria.
@@ -1127,10 +1127,8 @@ class EncordUserClient:
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
-        preset_uuid_list = [
-            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuid_list
-        ]
-        return FilterPreset._get_presets(self._api_client, preset_uuid_list, page_size=page_size)
+        preset_uuids = [UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids]
+        return FilterPreset._get_presets(self._api_client, preset_uuids, page_size=page_size)
 
     def list_presets(
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None

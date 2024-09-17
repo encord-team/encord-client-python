@@ -104,11 +104,11 @@ class Collection:
     def _list_collections(
         api_client: ApiClient,
         top_level_folder_uuid: Union[UUID, None],
-        collection_uuid_list: Union[List[UUID], None],
+        collection_uuids: Union[List[UUID], None],
         page_size: Optional[int] = None,
     ) -> "Iterable[Collection]":
         params = GetCollectionParams(
-            topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuid_list, pageSize=page_size
+            topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuids, pageSize=page_size
         )
         paged_items = api_client.get_paged_iterator(
             "index/collections",
@@ -200,16 +200,16 @@ class Collection:
             else:
                 yield StorageItemInaccessible(orm_item=item)
 
-    def add_items(self, storage_item_id_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
+    def add_items(self, storage_item_ids: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
         Add storage items to the collection.
 
         Args:
-            storage_item_id_list (List[Union[UUID, str]]): The list of storage item UUIDs or strings to be added.
+            storage_item_ids (List[Union[UUID, str]]): The list of storage item UUIDs or strings to be added.
         Returns:
             CollectionBulkItemResponse: The response after adding items to the collection.
         """
-        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in storage_item_id_list]
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in storage_item_ids]
         res = self._client.post(
             f"index/collections/{self.uuid}/add-items",
             params=None,
@@ -218,16 +218,16 @@ class Collection:
         )
         return res
 
-    def remove_items(self, storage_item_id_list: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
+    def remove_items(self, storage_item_ids: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
         Remove storage items from the collection.
 
         Args:
-            storage_item_id_list (List[Union[UUID, str]]): The list of storage item UUIDs or strings to be removed.
+            storage_item_ids (List[Union[UUID, str]]): The list of storage item UUIDs or strings to be removed.
         Returns:
             CollectionBulkItemResponse: The response after removing items from the collection.
         """
-        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in storage_item_id_list]
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in storage_item_ids]
         res = self._client.post(
             f"index/collections/{self.uuid}/remove-items",
             params=None,
