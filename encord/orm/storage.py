@@ -285,6 +285,15 @@ class DataUploadItems(BaseDTO):
     skip_duplicate_urls: bool = False
 
 
+class DatasetDataLongPollingParams(BaseDTO):
+    data_items: DataUploadItems | None
+    files: dict | None
+    integration_id: UUID | None
+    ignore_errors: bool
+    folder_uuid: UUID | None
+    file_name: str | None
+
+
 class PostUploadJobParams(BaseDTO):
     data_items: Optional[DataUploadItems] = None
     external_files: Optional[dict] = None

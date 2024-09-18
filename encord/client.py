@@ -65,9 +65,7 @@ from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
-    upload_images_to_encord,
     upload_to_signed_url_list,
-    upload_video_to_encord,
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
@@ -151,6 +149,16 @@ from encord.orm.project import (
 )
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectDTO as ProjectOrmV2
+from encord.orm.storage import (
+    DatasetDataLongPollingParams,
+    DataUploadDicomSeries,
+    DataUploadDicomSeriesDicomFile,
+    DataUploadImage,
+    DataUploadImageGroup,
+    DataUploadImageGroupImage,
+    DataUploadItems,
+    DataUploadVideo,
+)
 from encord.orm.workflow import (
     LabelWorkflowGraphNode,
     LabelWorkflowGraphNodePayload,
@@ -165,6 +173,7 @@ from encord.utilities.project_user import ProjectUser, ProjectUserRole
 LONG_POLLING_RESPONSE_RETRY_N = 3
 LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
 LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
+LONG_POLLING_MAX_REQUEST_SINGLE_ITEM_TIME_SECONDS = 10
 
 logger = logging.getLogger(__name__)
 
@@ -444,6 +453,46 @@ class EncordClientDataset(EncordClient):
         params = RemoveGroupsParams(group_hash_list=group_hash)
         self._get_api_client().delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
 
+    def __add_data_to_dataset_get_result(
+        self,
+        upload_job_id: str,
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> DatasetDataLongPolling:
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                res = self._querier.basic_getter(
+                    DatasetDataLongPolling,
+                    self._querier.resource_id,
+                    payload={
+                        "process_hash": upload_job_id,
+                        "timeout_seconds": min(
+                            polling_available_seconds,
+                            LONG_POLLING_MAX_REQUEST_SINGLE_ITEM_TIME_SECONDS,
+                        ),
+                    },
+                )
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or res.status in [LongPollingStatus.DONE, LongPollingStatus.ERROR]:
+                    return res
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
     def upload_video(
         self,
         file_path: Union[str, Path],
@@ -454,18 +503,58 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
-        if os.path.exists(file_path):
-            signed_urls = upload_to_signed_url_list(
-                [file_path], self._config, self._querier, Video, cloud_upload_settings=cloud_upload_settings
-            )
-            res = upload_video_to_encord(signed_urls[0], title, folder_uuid, self._querier)
-            if res:
-                logger.info("Upload complete.")
-                return Video(res)
-            else:
-                raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
-        else:
+        if not os.path.exists(file_path):
             raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
+
+        signed_url = upload_to_signed_url_list(
+            [file_path],
+            self._config,
+            self._querier,
+            Video,
+            cloud_upload_settings=cloud_upload_settings,
+        )[0]
+
+        upload_job_id = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=DataUploadItems(
+                    videos=[
+                        DataUploadVideo(
+                            object_url=signed_url["file_link"],
+                            title=title or signed_url["title"],
+                        )
+                    ],
+                ),
+                files=None,
+                integration_id=None,
+                ignore_errors=False,
+                folder_uuid=folder_uuid,
+                file_name=None,
+            ),
+        )["process_hash"]
+
+        res = self.__add_data_to_dataset_get_result(upload_job_id)
+
+        if res.status == LongPollingStatus.DONE:
+            if len(res.data_hashes_with_titles) != 1:
+                encord.exceptions.EncordException(
+                    f"An error has occurred during video upload. len({res.data_hashes_with_titles=}) != 1"
+                )
+
+            res_item = res.data_hashes_with_titles[0]
+            logger.info("Upload complete.")
+
+            return Video(  # Video model types annotations are not correct
+                {
+                    "data_hash": res_item.data_hash,
+                    "title": res_item.title,
+                }
+            )
+        elif res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(f"An error has occurred during video upload. {res.errors}")
+        else:
+            raise ValueError(f"res.status={res.status}, this should never happen")
 
     def create_image_group(
         self,
@@ -484,33 +573,63 @@ class EncordClientDataset(EncordClient):
             if not os.path.exists(file_path):
                 raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
-        successful_uploads = upload_to_signed_url_list(
-            file_paths, self._config, self._querier, Images, cloud_upload_settings=cloud_upload_settings
+        signed_urls = upload_to_signed_url_list(
+            file_paths,
+            self._config,
+            self._querier,
+            Images,
+            cloud_upload_settings=cloud_upload_settings,
         )
-        if not successful_uploads:
+
+        if not signed_urls:
             raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
-        upload_images_to_encord(successful_uploads, self._querier)
 
-        image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
-        payload = {
-            "image_group_title": title,
-            "create_video": create_video,
-        }
-        if folder_uuid is not None:
-            payload["folder_uuid"] = str(folder_uuid)
+        upload_job_id = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=DataUploadItems(
+                    image_groups=[
+                        DataUploadImageGroup(
+                            images=[
+                                DataUploadImageGroupImage(
+                                    url=x["file_link"],
+                                    title=x["title"],
+                                )
+                                for x in signed_urls
+                            ],
+                            title=title,
+                            create_video=create_video,
+                        )
+                    ],
+                ),
+                files=None,
+                integration_id=None,
+                ignore_errors=False,
+                folder_uuid=folder_uuid,
+                file_name=None,
+            ),
+        )["process_hash"]
 
-        res = self._querier.basic_setter(
-            ImageGroup,
-            uid=image_hash_list,  # type: ignore
-            payload=payload,
-        )
+        res = self.__add_data_to_dataset_get_result(upload_job_id)
 
-        if res:
-            titles = [video_data.get("title") for video_data in res]
+        if res.status == LongPollingStatus.DONE:
+            titles = [x.title for x in res.data_hashes_with_titles]
             logger.info(f"Upload successful! {titles} created.")
-            return [ImageGroup(obj) for obj in res]
+
+            return [
+                ImageGroup(
+                    {
+                        "data_hash": x.data_hash,
+                        "title": x.title,
+                    }
+                )
+                for x in res.data_hashes_with_titles
+            ]
+        elif res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(f"An error has occurred during image group creation. {res.errors}")
         else:
-            raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
+            raise ValueError(f"res.status={res.status}, this should never happen")
 
     def create_dicom_series(
         self,
@@ -526,37 +645,63 @@ class EncordClientDataset(EncordClient):
             if not os.path.exists(file_path):
                 raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
-        successful_uploads = upload_to_signed_url_list(
+        signed_urls = upload_to_signed_url_list(
             file_paths=file_paths,
             config=self._config,
             querier=self._querier,
             orm_class=DicomSeries,
             cloud_upload_settings=cloud_upload_settings,
         )
-        if not successful_uploads:
+
+        if not signed_urls:
             raise encord.exceptions.EncordException("DICOM files upload failed. The DICOM series was not created.")
 
-        dicom_files = [
-            {
-                "id": file["data_hash"],
-                "uri": file["file_link"],
-                "title": file["title"],
+        upload_job_id = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=DataUploadItems(
+                    dicom_series=[
+                        DataUploadDicomSeries(
+                            dicom_files=[
+                                DataUploadDicomSeriesDicomFile(
+                                    url=x["file_link"],
+                                    title=x["title"],
+                                )
+                                for x in signed_urls
+                            ],
+                            title=title,
+                        )
+                    ],
+                ),
+                files=None,
+                integration_id=None,
+                ignore_errors=False,
+                folder_uuid=folder_uuid,
+                file_name=None,
+            ),
+        )["process_hash"]
+
+        res = self.__add_data_to_dataset_get_result(upload_job_id)
+
+        if res.status == LongPollingStatus.DONE:
+            if len(res.data_hashes_with_titles) != 1:
+                encord.exceptions.EncordException(
+                    f"An error has occurred during the DICOM series creation. len({res.data_hashes_with_titles=}) != 1"
+                )
+
+            res_item = res.data_hashes_with_titles[0]
+
+            return {
+                "data_hash": res_item.data_hash,
+                "title": res_item.title,
             }
-            for file in successful_uploads
-        ]
-
-        payload = {
-            "title": title,
-        }
-
-        if folder_uuid is not None:
-            payload["folder_uuid"] = str(folder_uuid)
-
-        res = self._querier.basic_setter(DicomSeries, uid=dicom_files, payload=payload)
-        if not res:
-            raise encord.exceptions.EncordException(message="An error has occurred during the DICOM series creation.")
-
-        return res
+        elif res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(
+                f"An error has occurred during the DICOM series creation. {res.errors}"
+            )
+        else:
+            raise ValueError(f"res.status={res.status}, this should never happen")
 
     def upload_image(
         self,
@@ -570,27 +715,64 @@ class EncordClientDataset(EncordClient):
         """
         if isinstance(file_path, str):
             file_path = Path(file_path)
+
         if not file_path.is_file():
             raise encord.exceptions.EncordException(message=f"{str(file_path)} does not point to a file.")
 
-        successful_uploads = upload_to_signed_url_list(
-            [str(file_path)], self._config, self._querier, Images, cloud_upload_settings=cloud_upload_settings
+        signed_urls = upload_to_signed_url_list(
+            [str(file_path)],
+            self._config,
+            self._querier,
+            Images,
+            cloud_upload_settings=cloud_upload_settings,
         )
-        if not successful_uploads:
+
+        if not signed_urls:
             raise encord.exceptions.EncordException("Image upload failed.")
 
-        upload = successful_uploads[0]
-        if folder_uuid is not None:
-            upload["folder_uuid"] = str(folder_uuid)
-        if title is not None:
-            upload["title"] = title
+        signed_url = signed_urls[0]
 
-        res = self._querier.basic_setter(SingleImage, uid=None, payload=upload)
+        upload_job_id = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=DataUploadItems(
+                    images=[
+                        DataUploadImage(
+                            object_url=signed_url["file_link"],
+                            title=title or signed_url["title"],
+                        )
+                    ],
+                ),
+                files=None,
+                integration_id=None,
+                ignore_errors=False,
+                folder_uuid=folder_uuid,
+                file_name=None,
+            ),
+        )["process_hash"]
 
-        if res["success"]:
-            return Image({"data_hash": upload["data_hash"], "title": upload["title"], "file_link": upload["file_link"]})
+        res = self.__add_data_to_dataset_get_result(upload_job_id)
+
+        if res.status == LongPollingStatus.DONE:
+            if len(res.data_hashes_with_titles) != 1:
+                encord.exceptions.EncordException(
+                    f"An error has occurred during the image upload. len({res.data_hashes_with_titles=}) != 1"
+                )
+
+            res_item = res.data_hashes_with_titles[0]
+
+            return Image(
+                {
+                    "data_hash": res_item.data_hash,
+                    "title": res_item.title,
+                    "file_link": signed_url["file_link"],
+                }
+            )
+        elif res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(f"An error has occurred during the image upload. {res.errors}")
         else:
-            raise encord.exceptions.EncordException("Image upload failed.")
+            raise ValueError(f"res.status={res.status}, this should never happen")
 
     def link_items(
         self,
@@ -666,34 +848,37 @@ class EncordClientDataset(EncordClient):
         """
         if isinstance(private_files, dict):
             files = private_files
-        elif isinstance(private_files, str):
-            if os.path.exists(private_files):
-                text_contents = Path(private_files).read_text(encoding="utf-8")
-            else:
-                text_contents = private_files
-
+            file_name: str | None = None
+        elif isinstance(private_files, str) and os.path.exists(private_files):
+            text_contents = Path(private_files).read_text(encoding="utf-8")
             files = json.loads(text_contents)
+            file_name = Path(private_files).name
+        elif isinstance(private_files, str) and (not os.path.exists(private_files)):
+            text_contents = private_files
+            files = json.loads(text_contents)
+            file_name = None
         elif isinstance(private_files, Path):
             text_contents = private_files.read_text(encoding="utf-8")
             files = json.loads(text_contents)
+            file_name = private_files.name
         elif isinstance(private_files, typing.TextIO):
             text_contents = private_files.read()
             files = json.loads(text_contents)
+            file_name = None
         else:
             raise ValueError(f"Type [{type(private_files)}] of argument private_files is not supported")
 
-        payload = {
-            "files": files,
-            "integration_id": integration_id,
-            "ignore_errors": ignore_errors,
-        }
-        if folder_uuid is not None:
-            payload["folder_uuid"] = str(folder_uuid)
-
         process_hash = self._querier.basic_setter(
             DatasetDataLongPolling,
-            self._querier.resource_id,
-            payload=payload,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=None,
+                files=files,
+                integration_id=UUID(integration_id),
+                ignore_errors=ignore_errors,
+                folder_uuid=folder_uuid,
+                file_name=file_name,
+            ),
         )["process_hash"]
 
         logger.info(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
