@@ -575,7 +575,7 @@ class EncordUserClient:
 
     def __upload_cvat_images(
         self, images_paths: List[Path], used_base_path: Path, dataset_name: str
-    ) -> Tuple[str, Dict[str, dict[str, str]]]:
+    ) -> Tuple[str, Dict[str, Dict[str, str]]]:
         """
         This function does not create any image groups yet.
         Returns:
