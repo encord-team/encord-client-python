@@ -425,7 +425,7 @@ class LabelRowV2:
         overwrite: bool = False,
         bundle: Optional[Bundle] = None,
         *,
-        include_signed_url: bool = False,
+        include_signed_url: bool = False
     ) -> None:
         """
         Initialize labels from the Encord server.
@@ -453,6 +453,7 @@ class LabelRowV2:
                 initialization is delayed and performed along with other objects in the same bundle.
             include_signed_url: If `True`, the :attr:`.data_link` property will contain a signed URL.
                 See documentation for :attr:`.data_link` for more details.
+            branch_name: Name of branch
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -468,6 +469,7 @@ class LabelRowV2:
                 payload=BundledCreateRowsPayload(
                     uids=[self.data_hash],
                     get_signed_url=include_signed_url,
+                    branch_name=self.branch_name
                 ),
                 result_mapper=BundleResultMapper[OrmLabelRow](
                     result_mapping_predicate=lambda r: r["data_hash"],
