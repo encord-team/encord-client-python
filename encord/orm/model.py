@@ -211,7 +211,6 @@ class ModelTrainingWeights(base_orm.BaseORM):
 
     ORM:
 
-    training_config_link,
     training_weights_link,
 
     """
@@ -219,7 +218,6 @@ class ModelTrainingWeights(base_orm.BaseORM):
     DB_FIELDS = OrderedDict(
         [
             ("model", str),
-            ("training_config_link", str),
             ("training_weights_link", str),
         ]
     )
