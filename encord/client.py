@@ -848,7 +848,7 @@ class EncordClientDataset(EncordClient):
         """
         if isinstance(private_files, dict):
             files = private_files
-            file_name: str | None = None
+            file_name: Optional[str] = None
         elif isinstance(private_files, str) and os.path.exists(private_files):
             text_contents = Path(private_files).read_text(encoding="utf-8")
             files = json.loads(text_contents)
