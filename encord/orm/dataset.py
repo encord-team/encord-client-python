@@ -31,6 +31,7 @@ from encord.exceptions import EncordException
 from encord.orm import base_orm
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
+from encord.orm.storage import DataUploadItems
 from encord.utilities.common import _get_dict_without_none_keys
 
 
@@ -1072,3 +1073,12 @@ class DatasetDataLongPolling(BaseDTO):
 @dataclasses.dataclass(frozen=True)
 class DatasetLinkItems:
     pass
+
+
+class DatasetDataLongPollingParams(BaseDTO):
+    data_items: DataUploadItems | None
+    files: dict | None
+    integration_id: UUID | None
+    ignore_errors: bool
+    folder_uuid: UUID | None
+    file_name: str | None

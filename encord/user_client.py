@@ -35,7 +35,6 @@ from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
-    upload_images_to_encord,
     upload_to_signed_url_list,
 )
 from encord.http.v2.api_client import ApiClient
@@ -507,24 +506,19 @@ class EncordUserClient:
         images_paths, used_base_path = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(
-            images_paths, used_base_path, dataset_name
-        )
+        dataset_hash, image_title_to_image = self.__upload_cvat_images(images_paths, used_base_path, dataset_name)
         log.info("Image upload completed.")
 
         # This is a bit hacky, but allows more flexibility for CVAT project imports
         if import_method.map_filename_to_cvat_name:
-            image_title_to_image_hash_map = {
-                import_method.map_filename_to_cvat_name(key): value
-                for key, value in image_title_to_image_hash_map.items()
+            image_title_to_image = {
+                import_method.map_filename_to_cvat_name(key): value for key, value in image_title_to_image.items()
             }
 
         payload = {
-            "cvat": {
-                "annotations_base64": annotations_base64,
-            },
+            "cvat": {"annotations_base64": annotations_base64},
             "dataset_hash": dataset_hash,
-            "image_title_to_image_hash_map": image_title_to_image_hash_map,
+            "image_title_to_image": image_title_to_image,
             "review_mode": review_mode,
             "transform_bounding_boxes_to_polygons": transform_bounding_boxes_to_polygons,
         }
@@ -581,7 +575,7 @@ class EncordUserClient:
 
     def __upload_cvat_images(
         self, images_paths: List[Path], used_base_path: Path, dataset_name: str
-    ) -> Tuple[str, Dict[str, str]]:
+    ) -> Tuple[str, Dict[str, dict[str, str]]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -605,14 +599,16 @@ class EncordUserClient:
         if len(images_paths) != len(successful_uploads):
             raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
 
-        upload_images_to_encord(successful_uploads, querier)
-
-        image_title_to_image_hash_map = {}
+        image_title_to_image = {}
         for image_path, successful_upload in zip(images_paths, successful_uploads):
             trimmed_image_path_str = str(image_path.relative_to(used_base_path))
-            image_title_to_image_hash_map[trimmed_image_path_str] = successful_upload.data_hash
+            image_title_to_image[trimmed_image_path_str] = {
+                "data_hash": successful_upload.data_hash,
+                "file_link": successful_upload.file_link,
+                "title": successful_upload.title,
+            }
 
-        return dataset_hash, image_title_to_image_hash_map
+        return dataset_hash, image_title_to_image
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)

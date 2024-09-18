@@ -119,36 +119,6 @@ def upload_to_signed_url_list(
     return successful_uploads
 
 
-def upload_video_to_encord(
-    signed_url: Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL],
-    video_title: Optional[str],
-    folder_uuid: Optional[UUID],
-    querier: Querier,
-) -> Video:
-    payload = {
-        "signed_url": signed_url["signed_url"],
-        "data_hash": signed_url["data_hash"],
-        "title": signed_url["title"],
-        "file_link": signed_url["file_link"],
-        "video_title": video_title,
-    }
-    if folder_uuid is not None:
-        payload["folder_uuid"] = str(folder_uuid)
-
-    return querier.basic_put(
-        Video,
-        uid=signed_url.get("data_hash"),
-        payload=payload,
-        enable_logging=False,
-    )
-
-
-def upload_images_to_encord(
-    signed_urls: List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]], querier: Querier
-) -> Images:
-    return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
-
-
 def _get_signed_url(
     file_name: str, orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], querier: Querier
 ) -> Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]:
