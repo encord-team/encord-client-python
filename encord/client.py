@@ -488,14 +488,12 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
-        if not os.path.exists(file_path):
-            raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
         signed_url = upload_to_signed_url_list(
-            [file_path],
-            self._config,
-            self._querier,
-            Video,
+            file_paths=[file_path],
+            config=self._config,
+            querier=self._querier,
+            orm_class=Video,
             cloud_upload_settings=cloud_upload_settings,
         )[0]
 
@@ -554,15 +552,12 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
         """
-        for file_path in file_paths:
-            if not os.path.exists(file_path):
-                raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
         signed_urls = upload_to_signed_url_list(
-            file_paths,
-            self._config,
-            self._querier,
-            Images,
+            file_paths=file_paths,
+            config=self._config,
+            querier=self._querier,
+            orm_class=Images,
             cloud_upload_settings=cloud_upload_settings,
         )
 
@@ -626,9 +621,6 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_dicom_series`.
         """
-        for file_path in file_paths:
-            if not os.path.exists(file_path):
-                raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
         signed_urls = upload_to_signed_url_list(
             file_paths=file_paths,
@@ -698,17 +690,12 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_image`.
         """
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
-
-        if not file_path.is_file():
-            raise encord.exceptions.EncordException(message=f"{str(file_path)} does not point to a file.")
 
         signed_urls = upload_to_signed_url_list(
-            [str(file_path)],
-            self._config,
-            self._querier,
-            Images,
+            file_paths=[file_path],
+            config=self._config,
+            querier=self._querier,
+            orm_class=Images,
             cloud_upload_settings=cloud_upload_settings,
         )
 

@@ -21,7 +21,7 @@ from uuid import UUID
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
-from encord.exceptions import CloudUploadError
+from encord.exceptions import CloudUploadError, EncordException
 from encord.http.querier import Querier, create_new_session
 from encord.orm.dataset import (
     Audio,
@@ -85,6 +85,11 @@ def upload_to_signed_url_list(
     """Upload files and return the upload returns in the same order as the file paths supplied."""
     failed_uploads = []
     successful_uploads = []
+
+    for file_path in file_paths:
+        if not os.path.exists(file_path):
+            raise EncordException(message=f"{file_path} does not point to a file.")
+
     for file_path in tqdm(file_paths):
         file_path = str(file_path)
         content_type = _get_content_type(orm_class, file_path)
