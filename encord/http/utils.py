@@ -119,12 +119,6 @@ def upload_to_signed_url_list(
     return successful_uploads
 
 
-def upload_images_to_encord(
-    signed_urls: List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]], querier: Querier
-) -> Images:
-    return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
-
-
 def _get_signed_url(
     file_name: str, orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], querier: Querier
 ) -> Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]:
