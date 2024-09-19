@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -30,12 +30,11 @@ from encord.common.time_parser import parse_datetime
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
-from encord.filterpreset import FilterPreset
+from encord.filter_preset import FilterPreset
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
-    upload_images_to_encord,
     upload_to_signed_url_list,
 )
 from encord.http.v2.api_client import ApiClient
@@ -507,24 +506,19 @@ class EncordUserClient:
         images_paths, used_base_path = self.__get_images_paths(annotations_base64, images_directory_path)
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(
-            images_paths, used_base_path, dataset_name
-        )
+        dataset_hash, image_title_to_image = self.__upload_cvat_images(images_paths, used_base_path, dataset_name)
         log.info("Image upload completed.")
 
         # This is a bit hacky, but allows more flexibility for CVAT project imports
         if import_method.map_filename_to_cvat_name:
-            image_title_to_image_hash_map = {
-                import_method.map_filename_to_cvat_name(key): value
-                for key, value in image_title_to_image_hash_map.items()
+            image_title_to_image = {
+                import_method.map_filename_to_cvat_name(key): value for key, value in image_title_to_image.items()
             }
 
         payload = {
-            "cvat": {
-                "annotations_base64": annotations_base64,
-            },
+            "cvat": {"annotations_base64": annotations_base64},
             "dataset_hash": dataset_hash,
-            "image_title_to_image_hash_map": image_title_to_image_hash_map,
+            "image_title_to_image": image_title_to_image,
             "review_mode": review_mode,
             "transform_bounding_boxes_to_polygons": transform_bounding_boxes_to_polygons,
         }
@@ -581,7 +575,7 @@ class EncordUserClient:
 
     def __upload_cvat_images(
         self, images_paths: List[Path], used_base_path: Path, dataset_name: str
-    ) -> Tuple[str, Dict[str, str]]:
+    ) -> Tuple[str, Dict[str, Dict[str, str]]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -605,14 +599,16 @@ class EncordUserClient:
         if len(images_paths) != len(successful_uploads):
             raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
 
-        upload_images_to_encord(successful_uploads, querier)
-
-        image_title_to_image_hash_map = {}
+        image_title_to_image = {}
         for image_path, successful_upload in zip(images_paths, successful_uploads):
             trimmed_image_path_str = str(image_path.relative_to(used_base_path))
-            image_title_to_image_hash_map[trimmed_image_path_str] = successful_upload.data_hash
+            image_title_to_image[trimmed_image_path_str] = {
+                "data_hash": successful_upload.data_hash,
+                "file_link": successful_upload.file_link,
+                "title": successful_upload.title,
+            }
 
-        return dataset_hash, image_title_to_image_hash_map
+        return dataset_hash, image_title_to_image
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)
@@ -1026,9 +1022,9 @@ class EncordUserClient:
     def list_collections(
         self,
         top_level_folder_uuid: Union[str, UUID, None] = None,
-        collection_uuid_list: List[str | UUID] | None = None,
+        collection_uuids: List[str | UUID] | None = None,
         page_size: Optional[int] = None,
-    ) -> Iterable[Collection]:
+    ) -> Generator[Collection]:
         """
         Get collections by top level folder or list of collection IDs.
         If both top_level_folder_uuid and collection_uuid_list are preset
@@ -1036,7 +1032,7 @@ class EncordUserClient:
 
         Args:
             top_level_folder_uuid: The unique identifier of the top level folder.
-            collection_uuid_list: The unique identifiers (UUIDs) of the collections to retrieve.
+            collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
             The list of collections which match the given criteria.
@@ -1047,14 +1043,14 @@ class EncordUserClient:
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
         collections = (
-            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuid_list]
-            if collection_uuid_list is not None
+            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuids]
+            if collection_uuids is not None
             else None
         )
         return Collection._list_collections(
             self._api_client,
             top_level_folder_uuid=top_level_folder_uuid,
-            collection_uuid_list=collections,
+            collection_uuids=collections,
             page_size=page_size,
         )
 
@@ -1075,7 +1071,9 @@ class EncordUserClient:
             collection_uuid = UUID(collection_uuid)
         Collection._delete_collection(self._api_client, collection_uuid)
 
-    def create_collection(self, top_level_folder_uuid: Union[str, UUID], name: str, description: str = "") -> UUID:
+    def create_collection(
+        self, top_level_folder_uuid: Union[str, UUID], name: str, description: str = ""
+    ) -> Collection:
         """
         Create a collection.
 
@@ -1085,14 +1083,15 @@ class EncordUserClient:
             description: The description of the collection.
 
         Returns:
-            The UUID of the newly created collection.
+            Collection: Newly created collection.
 
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
-        return Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
+        new_uuid = Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
+        return self.get_collection(new_uuid)
 
     def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
         """
@@ -1113,13 +1112,13 @@ class EncordUserClient:
         return FilterPreset._get_preset(self._api_client, preset_uuid=preset_uuid)
 
     def get_filter_presets(
-        self, preset_uuid_list: List[Union[str, UUID]] = [], page_size: Optional[int] = None
-    ) -> Iterable[FilterPreset]:
+        self, preset_uuids: List[Union[str, UUID]] = [], page_size: Optional[int] = None
+    ) -> Generator[FilterPreset]:
         """
         Get presets by list of preset unique identifiers (UUIDs).
 
         Args:
-            preset_uuid_list: The list of unique identifiers (UUIDs) to be retrieved.
+            preset_uuids: The list of unique identifiers (UUIDs) to be retrieved.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
         Returns:
             The list of presets which match the given criteria.
@@ -1127,14 +1126,12 @@ class EncordUserClient:
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
-        preset_uuid_list = [
-            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuid_list
-        ]
-        return FilterPreset._get_presets(self._api_client, preset_uuid_list, page_size=page_size)
+        preset_uuids = [UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids]
+        return FilterPreset._get_presets(self._api_client, preset_uuids, page_size=page_size)
 
     def list_presets(
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
-    ) -> Iterable[FilterPreset]:
+    ) -> Generator[FilterPreset]:
         """
         Get presets by top level folder.
 

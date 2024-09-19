@@ -1,17 +1,3 @@
-#
-# Copyright (c) 2023 Cord Technologies Limited
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
@@ -211,7 +197,6 @@ class ModelTrainingWeights(base_orm.BaseORM):
 
     ORM:
 
-    training_config_link,
     training_weights_link,
 
     """
@@ -219,7 +204,6 @@ class ModelTrainingWeights(base_orm.BaseORM):
     DB_FIELDS = OrderedDict(
         [
             ("model", str),
-            ("training_config_link", str),
             ("training_weights_link", str),
         ]
     )
