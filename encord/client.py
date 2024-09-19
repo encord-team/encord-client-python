@@ -539,7 +539,7 @@ class EncordClientDataset(EncordClient):
         elif res.status == LongPollingStatus.ERROR:
             raise encord.exceptions.EncordException(f"An error has occurred during video upload. {res.errors}")
         else:
-            raise RuntimeError(f"Job in unexpected res.status={res.status} after the timeout")
+            raise ValueError(f"res.status={res.status}, this should never happen")
 
     def create_image_group(
         self,
