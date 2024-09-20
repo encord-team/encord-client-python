@@ -583,7 +583,6 @@ class EncordUserClient:
             * A map from an image title to the image hash which is stored in the DB.
         """
 
-        file_path_strings = list(map(lambda x: str(x), images_paths))
         dataset_info = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
         dataset_hash = dataset_info.dataset_hash
@@ -594,7 +593,11 @@ class EncordUserClient:
         querier = dataset._client._querier
 
         successful_uploads = upload_to_signed_url_list(
-            file_path_strings, self._config, querier, Images, CloudUploadSettings()
+            file_paths=images_paths,
+            config=self._config,
+            querier=querier,
+            orm_class=Images,
+            cloud_upload_settings=CloudUploadSettings(),
         )
         if len(images_paths) != len(successful_uploads):
             raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
