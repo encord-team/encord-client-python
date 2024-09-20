@@ -143,7 +143,7 @@ class MetadataSchemaError(RuntimeError):
 def _is_valid_metadata_key(value: str) -> bool:
     if value.startswith("$") or value == "":
         return False
-    for extra_char in ["-", "_", " "]:
+    for extra_char in ["-", "_", " ", "."]:
         value = value.replace(extra_char, "")
     if value == "":
         return False
