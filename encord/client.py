@@ -580,6 +580,7 @@ class EncordClientDataset(EncordClient):
                             ],
                             title=title,
                             create_video=create_video,
+                            cluster_by_resolution=create_video,  # cluster_by_resolution only if videos are created
                         )
                     ],
                 ),
