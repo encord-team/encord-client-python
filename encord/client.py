@@ -521,12 +521,12 @@ class EncordClientDataset(EncordClient):
 
         if res.status == LongPollingStatus.DONE:
             if len(res.data_hashes_with_titles) != 1:
-                encord.exceptions.EncordException(
-                    f"An error has occurred during video upload. len({res.data_hashes_with_titles=}) != 1"
+                raise encord.exceptions.EncordException(
+                    f"An error has occurred during video upload. len({res.data_hashes_with_titles=}) != 1, {upload_job_id=}"
                 )
 
             res_item = res.data_hashes_with_titles[0]
-            logger.info("Upload complete.")
+            logger.info(f"Upload complete. {upload_job_id=}")
 
             return Video(  # Video model types annotations are not correct
                 {
@@ -535,9 +535,11 @@ class EncordClientDataset(EncordClient):
                 }
             )
         elif res.status == LongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"An error has occurred during video upload. {res.errors}")
+            raise encord.exceptions.EncordException(
+                f"An error has occurred during video upload. {res.errors=}, {upload_job_id=}"
+            )
         else:
-            raise ValueError(f"res.status={res.status}, this should never happen")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def create_image_group(
         self,
@@ -595,8 +597,13 @@ class EncordClientDataset(EncordClient):
         res = self.__add_data_to_dataset_get_result(upload_job_id)
 
         if res.status == LongPollingStatus.DONE:
+            if not res.data_hashes_with_titles:
+                raise encord.exceptions.EncordException(
+                    f"An error has occurred during image group creation. {res.data_hashes_with_titles=} is empty, {upload_job_id=}"
+                )
+
             titles = [x.title for x in res.data_hashes_with_titles]
-            logger.info(f"Upload successful! {titles} created.")
+            logger.info(f"Upload successful! {titles} created, {upload_job_id=}")
 
             return [
                 ImageGroup(
@@ -608,9 +615,11 @@ class EncordClientDataset(EncordClient):
                 for x in res.data_hashes_with_titles
             ]
         elif res.status == LongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"An error has occurred during image group creation. {res.errors}")
+            raise encord.exceptions.EncordException(
+                f"An error has occurred during image group creation. {res.errors=}, {upload_job_id=}"
+            )
         else:
-            raise ValueError(f"res.status={res.status}, this should never happen")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def create_dicom_series(
         self,
@@ -664,8 +673,8 @@ class EncordClientDataset(EncordClient):
 
         if res.status == LongPollingStatus.DONE:
             if len(res.data_hashes_with_titles) != 1:
-                encord.exceptions.EncordException(
-                    f"An error has occurred during the DICOM series creation. len({res.data_hashes_with_titles=}) != 1"
+                raise encord.exceptions.EncordException(
+                    f"An error has occurred during the DICOM series creation. len({res.data_hashes_with_titles=}) != 1, {upload_job_id=}"
                 )
 
             res_item = res.data_hashes_with_titles[0]
@@ -676,10 +685,10 @@ class EncordClientDataset(EncordClient):
             }
         elif res.status == LongPollingStatus.ERROR:
             raise encord.exceptions.EncordException(
-                f"An error has occurred during the DICOM series creation. {res.errors}"
+                f"An error has occurred during the DICOM series creation. {res.errors=}, {upload_job_id=}"
             )
         else:
-            raise ValueError(f"res.status={res.status}, this should never happen")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def upload_image(
         self,
@@ -729,8 +738,8 @@ class EncordClientDataset(EncordClient):
 
         if res.status == LongPollingStatus.DONE:
             if len(res.data_hashes_with_titles) != 1:
-                encord.exceptions.EncordException(
-                    f"An error has occurred during the image upload. len({res.data_hashes_with_titles=}) != 1"
+                raise encord.exceptions.EncordException(
+                    f"An error has occurred during the image upload. len({res.data_hashes_with_titles=}) != 1, {upload_job_id=}"
                 )
 
             res_item = res.data_hashes_with_titles[0]
@@ -743,9 +752,11 @@ class EncordClientDataset(EncordClient):
                 }
             )
         elif res.status == LongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"An error has occurred during the image upload. {res.errors}")
+            raise encord.exceptions.EncordException(
+                f"An error has occurred during the image upload. {res.errors=}, {upload_job_id=}"
+            )
         else:
-            raise ValueError(f"res.status={res.status}, this should never happen")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def link_items(
         self,
@@ -805,9 +816,11 @@ class EncordClientDataset(EncordClient):
         if res.status == LongPollingStatus.DONE:
             return AddPrivateDataResponse(dataset_data_list=res.data_hashes_with_titles)
         elif res.status == LongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"add_private_data_to_dataset errors occurred {res.errors}")
+            raise encord.exceptions.EncordException(
+                f"add_private_data_to_dataset errors occurred {res.errors=}, {upload_job_id=}"
+            )
         else:
-            raise ValueError(f"res.status={res.status}, this should never happen")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def add_private_data_to_dataset_start(
         self,
@@ -1525,11 +1538,9 @@ class EncordClientProject(EncordClient):
 
             return res.result.dict()
         elif res.status == PublicModelTrainGetResultLongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException("model_train error occurred")
+            raise encord.exceptions.EncordException(f"model_train error occurred, {model_hash=}, {training_hash=}")
         else:
-            raise ValueError(
-                f"res.status={res.status}, only DONE and ERROR status is expected after successful long polling"
-            )
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
 
     def object_interpolation(
         self,
