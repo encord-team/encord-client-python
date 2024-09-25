@@ -212,7 +212,7 @@ class Project:
         include_client_metadata: bool = False,
         include_images_data: bool = False,
         include_all_label_branches: bool = False,
-        branch_name: Optional[str] = None
+        branch_name: Optional[str] = None,
     ) -> List[LabelRowV2]:
         """
         List label rows with various filtering options.
@@ -253,7 +253,7 @@ class Project:
             include_client_metadata=include_client_metadata,
             include_images_data=include_images_data,
             include_all_label_branches=include_all_label_branches,
-            branch_name=branch_name
+            branch_name=branch_name,
         )
         label_rows = [
             LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas

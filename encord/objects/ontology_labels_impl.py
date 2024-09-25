@@ -425,7 +425,7 @@ class LabelRowV2:
         overwrite: bool = False,
         bundle: Optional[Bundle] = None,
         *,
-        include_signed_url: bool = False
+        include_signed_url: bool = False,
     ) -> None:
         """
         Initialize labels from the Encord server.
@@ -467,9 +467,7 @@ class LabelRowV2:
                 bundle,
                 operation=self._project_client.create_label_rows,
                 payload=BundledCreateRowsPayload(
-                    uids=[self.data_hash],
-                    get_signed_url=include_signed_url,
-                    branch_name=self.branch_name
+                    uids=[self.data_hash], get_signed_url=include_signed_url, branch_name=self.branch_name
                 ),
                 result_mapper=BundleResultMapper[OrmLabelRow](
                     result_mapping_predicate=lambda r: r["data_hash"],
