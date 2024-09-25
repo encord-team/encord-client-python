@@ -256,7 +256,7 @@ class Project:
             branch_name=branch_name
         )
         label_rows = [
-            LabelRowV2(label_row_metadata , self._client, self._ontology) for label_row_metadata in label_row_metadatas
+            LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
         ]
         return label_rows
 
