@@ -7,7 +7,7 @@ on:
 
 env:
   PYTHON: 3.8
-  POETRY: 1.7.0
+  POETRY: 1.8.3
   UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python-3_8_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python-3_8_p2.xml
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
