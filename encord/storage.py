@@ -1227,7 +1227,7 @@ class StorageFolder:
             upload_job_id (UUID): The unique identifier of the upload job to be canceled.
 
         Returns:
-            AddDataToFolderJobCancelResponse: A response object indicating the result of the cancel operation.
+            AddDataToFolderJobCancelResponse: A response indicating the result of the cancelled job.
         """
 
         return self._api_client.post(
