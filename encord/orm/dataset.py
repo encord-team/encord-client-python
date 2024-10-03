@@ -1020,6 +1020,8 @@ class LongPollingStatus(str, Enum):
       cancellation will be available.
     - The presence of cancelled data units (`units_cancelled_count`) indicates that some data upload
       units were interrupted and cancelled before completion.
+    - If `ignore_errors` was set to `True`, the job may continue despite errors, and cancellation will
+      only apply to the unprocessed units.
     """
 
 
