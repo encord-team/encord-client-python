@@ -1224,7 +1224,7 @@ class StorageFolder:
         Cancels a data upload in progress job, associated with this folder.
 
         Args:
-            upload_job_id (UUID): The unique identifier of the upload job to be canceled.
+            upload_job_id (UUID): The unique identifier for the upload job.
 
         Returns:
             AddDataToFolderJobCancelResponse: A response indicating the result of the cancelled job.
