@@ -63,12 +63,15 @@ def test_metadata_schema() -> None:
     with pytest.raises(MetadataSchemaError):
         meta.add_scalar("en", data_type="boolean")
 
+    meta.add_scalar("a.b", data_type="boolean")
+
     assert (
         f"{meta}".strip()
         == """
 Metadata Schema:
 ----------------
  - 'a':        scalar(hint=text)
+ - 'a.b':      scalar(hint=boolean)
  - 'b':        scalar(hint=boolean)
  - 'c':        scalar(hint=varchar)
  - 'd':        scalar(hint=text)

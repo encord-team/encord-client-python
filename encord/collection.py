@@ -1,15 +1,20 @@
+import logging
 import uuid
 from datetime import datetime
-from typing import Iterable, Iterator, List, Optional, Union
+from typing import Generator, Iterator, List, Optional, Union
 from uuid import UUID
 
 import encord.orm.storage as orm_storage
 from encord.exceptions import (
     AuthorisationError,
 )
+from encord.filter_preset import FilterPreset
 from encord.http.v2.api_client import ApiClient
 from encord.orm.collection import Collection as OrmCollection
 from encord.orm.collection import (
+    CollectionBulkItemRequest,
+    CollectionBulkItemResponse,
+    CollectionBulkPresetRequest,
     CreateCollectionParams,
     CreateCollectionPayload,
     GetCollectionItemsParams,
@@ -18,6 +23,8 @@ from encord.orm.collection import (
     UpdateCollectionPayload,
 )
 from encord.storage import StorageItem, StorageItemInaccessible
+
+log = logging.getLogger(__name__)
 
 
 class Collection:
@@ -37,14 +44,14 @@ class Collection:
         Get the collection unique identifier (UUID).
 
         Returns:
-            str: The collection uuid.
+            uuid.UUID: The collection UUID.
         """
         return self._collection_instance.uuid
 
     @property
     def name(self) -> str:
         """
-        Get the collection name
+        Get the collection name.
 
         Returns:
             str: The collection name.
@@ -54,30 +61,30 @@ class Collection:
     @property
     def description(self) -> Optional[str]:
         """
-        Get the collection description
+        Get the collection description.
 
         Returns:
-            Optional[str]: The collection description.
+            Optional[str]: The collection description, or None if not available.
         """
         return self._collection_instance.description
 
     @property
     def created_at(self) -> Optional[datetime]:
         """
-        Get the collection creation timestamp
+        Get the collection creation timestamp.
 
         Returns:
-            Optional[datetime]: The collection creation timestamp.
+            Optional[datetime]: The timestamp when the collection was created, or None if not available.
         """
         return self._collection_instance.created_at
 
     @property
     def last_edited_at(self) -> Optional[datetime]:
         """
-        Get the collection last edit timestamp
+        Get the collection last edit timestamp.
 
         Returns:
-            Optional[datetime]: The collection last edit timestamp.
+            Optional[datetime]: The timestamp when the collection was last edited, or None if not available.
         """
         return self._collection_instance.last_edited_at
 
@@ -97,11 +104,11 @@ class Collection:
     def _list_collections(
         api_client: ApiClient,
         top_level_folder_uuid: Union[UUID, None],
-        collection_uuid_list: Union[List[UUID], None],
+        collection_uuids: Union[List[UUID], None],
         page_size: Optional[int] = None,
-    ) -> "Iterable[Collection]":
+    ) -> "Generator[Collection]":
         params = GetCollectionParams(
-            topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuid_list, pageSize=page_size
+            topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuids, pageSize=page_size
         )
         paged_items = api_client.get_paged_iterator(
             "index/collections",
@@ -134,6 +141,12 @@ class Collection:
         return orm_item
 
     def update_collection(self, name: Optional[str] = None, description: Optional[str] = None) -> None:
+        """
+        Update the collection's name and/or description.
+        Args:
+           name (Optional[str]): The new name for the collection.
+           description (Optional[str]): The new description for the collection.
+        """
         payload = UpdateCollectionPayload(name=name, description=description)
         self._client.patch(
             f"index/collections/{self.uuid}",
@@ -145,7 +158,14 @@ class Collection:
     def list_items(
         self,
         page_size: Optional[int] = None,
-    ) -> Iterable[StorageItem]:
+    ) -> "Generator[StorageItem]":
+        """
+        List storage items in the collection.
+        Args:
+            page_size (Optional[int]): The number of items to fetch per page.
+        Returns:
+            Generator[StorageItem]: An iterator containing storage items in the collection.
+        """
         params = GetCollectionItemsParams(pageSize=page_size)
         paged_items = self._client.get_paged_iterator(
             f"index/collections/{self.uuid}/accessible-items",
@@ -157,7 +177,15 @@ class Collection:
 
     def list_items_include_inaccessible(
         self, page_size: Optional[int] = None
-    ) -> Iterable[Union[StorageItem, StorageItemInaccessible]]:
+    ) -> "Generator[Union[StorageItem, StorageItemInaccessible]]":
+        """
+        List storage items in the collection, including those that are inaccessible.
+        Args:
+            page_size (Optional[int]): The number of items to fetch per page.
+        Returns:
+            Generator[Union[StorageItem, StorageItemInaccessible]]: An iterator containing both accessible
+            and inaccessible storage items in the collection.
+        """
         params = GetCollectionItemsParams(pageSize=page_size)
         paged_items: Iterator[Union[orm_storage.StorageItem, orm_storage.StorageItemInaccessible]] = (
             self._client.get_paged_iterator(
@@ -171,3 +199,87 @@ class Collection:
                 yield StorageItem(api_client=self._client, orm_item=item)
             else:
                 yield StorageItemInaccessible(orm_item=item)
+
+    def add_items(self, storage_item_uuids: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
+        """
+        Add storage items to the collection.
+
+        Args:
+            storage_item_uuids (List[Union[UUID, str]]): The list of storage item UUIDs or strings to be added.
+        Returns:
+            CollectionBulkItemResponse: The response after adding items to the collection.
+        """
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in storage_item_uuids]
+        res = self._client.post(
+            f"index/collections/{self.uuid}/add-items",
+            params=None,
+            payload=CollectionBulkItemRequest(item_uuids=uuid_list),
+            result_type=CollectionBulkItemResponse,
+        )
+        return res
+
+    def remove_items(self, storage_item_uuids: List[Union[UUID, str]]) -> CollectionBulkItemResponse:
+        """
+        Remove storage items from the collection.
+
+        Args:
+            storage_item_uuids (List[Union[UUID, str]]): The list of storage item UUIDs or strings to be removed.
+        Returns:
+            CollectionBulkItemResponse: The response after removing items from the collection.
+        """
+        uuid_list = [item if isinstance(item, UUID) else UUID(item) for item in storage_item_uuids]
+        res = self._client.post(
+            f"index/collections/{self.uuid}/remove-items",
+            params=None,
+            payload=CollectionBulkItemRequest(item_uuids=uuid_list),
+            result_type=CollectionBulkItemResponse,
+        )
+        return res
+
+    def add_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
+        """
+         Async operation to add storage items matching a filter preset to the collection.
+
+        Args:
+             filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
+        """
+        if isinstance(filter_preset, FilterPreset):
+            preset_uuid = filter_preset.uuid
+        elif isinstance(filter_preset, str):
+            preset_uuid = UUID(filter_preset)
+        else:
+            preset_uuid = filter_preset
+        self._client.post(
+            f"index/collections/{self.uuid}/add-preset-items",
+            params=None,
+            payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
+            result_type=None,
+        )
+        log.info(
+            f"Submitted request to add items matching filter_preset:{preset_uuid} to collection:{self.uuid}."
+            f"It is an async operation and can take some time to complete."
+        )
+
+    def remove_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
+        """
+        Async operation to remove storage items matching a filter preset from the collection.
+
+        Args:
+            filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
+        """
+        if isinstance(filter_preset, FilterPreset):
+            preset_uuid = filter_preset.uuid
+        elif isinstance(filter_preset, str):
+            preset_uuid = UUID(filter_preset)
+        else:
+            preset_uuid = filter_preset
+        self._client.post(
+            f"index/collections/{self.uuid}/remove-preset-items",
+            params=None,
+            payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
+            result_type=None,
+        )
+        log.info(
+            f"Submitted request to remove items matching filter_preset:{preset_uuid} from collection:{self.uuid}."
+            f"It is an async operation and can take some time to complete."
+        )

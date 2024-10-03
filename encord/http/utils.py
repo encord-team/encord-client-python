@@ -21,7 +21,7 @@ from uuid import UUID
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
-from encord.exceptions import CloudUploadError
+from encord.exceptions import CloudUploadError, EncordException
 from encord.http.querier import Querier, create_new_session
 from encord.orm.dataset import (
     Audio,
@@ -85,6 +85,11 @@ def upload_to_signed_url_list(
     """Upload files and return the upload returns in the same order as the file paths supplied."""
     failed_uploads = []
     successful_uploads = []
+
+    for file_path in file_paths:
+        if not os.path.exists(file_path):
+            raise EncordException(message=f"{file_path} does not point to a file.")
+
     for file_path in tqdm(file_paths):
         file_path = str(file_path)
         content_type = _get_content_type(orm_class, file_path)
@@ -117,36 +122,6 @@ def upload_to_signed_url_list(
         logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
 
     return successful_uploads
-
-
-def upload_video_to_encord(
-    signed_url: Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL],
-    video_title: Optional[str],
-    folder_uuid: Optional[UUID],
-    querier: Querier,
-) -> Video:
-    payload = {
-        "signed_url": signed_url["signed_url"],
-        "data_hash": signed_url["data_hash"],
-        "title": signed_url["title"],
-        "file_link": signed_url["file_link"],
-        "video_title": video_title,
-    }
-    if folder_uuid is not None:
-        payload["folder_uuid"] = str(folder_uuid)
-
-    return querier.basic_put(
-        Video,
-        uid=signed_url.get("data_hash"),
-        payload=payload,
-        enable_logging=False,
-    )
-
-
-def upload_images_to_encord(
-    signed_urls: List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]], querier: Querier
-) -> Images:
-    return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
 
 
 def _get_signed_url(
