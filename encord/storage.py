@@ -1220,6 +1220,16 @@ class StorageFolder:
         self,
         upload_job_id: UUID,
     ) -> orm_storage.AddDataToFolderJobCancelResponse:
+        """
+        Cancels an ongoing data upload job associated with this folder.
+
+        Args:
+            upload_job_id (UUID): The unique identifier of the upload job to be canceled.
+
+        Returns:
+            AddDataToFolderJobCancelResponse: A response object indicating the result of the cancel operation.
+        """
+
         return self._api_client.post(
             f"storage/folders/{self.uuid}/data-upload-jobs/{upload_job_id}/cancel",
             params=None,
