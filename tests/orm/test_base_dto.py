@@ -75,6 +75,7 @@ def test_complex_model_deserialization():
         "units_pending_count": 5,
         "units_done_count": 5,
         "units_error_count": 2,
+        "units_cancelled_count": 0,
         "data_hashes_with_titles": [
             {"data_hash": "abc", "title": "dummy title", "backing_item_uuid": str(backing_item_uuid)}
         ],
