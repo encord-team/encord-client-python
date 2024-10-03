@@ -1221,7 +1221,7 @@ class StorageFolder:
         upload_job_id: UUID,
     ) -> orm_storage.AddDataToFolderJobCancelResponse:
         """
-        Cancels an ongoing data upload job associated with this folder.
+        Cancels a data upload in progress job, associated with this folder.
 
         Args:
             upload_job_id (UUID): The unique identifier of the upload job to be canceled.
