@@ -1129,8 +1129,10 @@ class EncordUserClient:
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
-        preset_uuids = [UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids]
-        return FilterPreset._get_presets(self._api_client, preset_uuids, page_size=page_size)
+        internal_preset_uuids: List[UUID] = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids
+        ]
+        return FilterPreset._get_presets(self._api_client, internal_preset_uuids, page_size=page_size)
 
     def list_presets(
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
