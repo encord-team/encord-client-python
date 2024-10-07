@@ -144,7 +144,7 @@ class EncordUserClient:
         orm_dataset = client.get_dataset()
         return Dataset(client, orm_dataset)
 
-    def get_project(self, project_hash: str) -> Project:
+    def get_project(self, project_hash: str | UUID) -> Project:
         """
         Get the Project class to access project fields and manipulate a project.
 
@@ -163,7 +163,7 @@ class EncordUserClient:
         # Querying ontology using project querier to avoid permission error,
         # as there might be only read-only ontology structure access in scope of the project,
         # not full access, that is implied by get_ontology method
-        querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=project_hash)
+        querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=str(project_hash))
         client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
         project_orm = client.get_project_v2()
 
