@@ -38,6 +38,7 @@ class BundledGetRowsPayload:
 class BundledCreateRowsPayload:
     uids: List[str]
     get_signed_url: bool
+    branch_name: Optional[str]
 
     def add(self, other: BundledCreateRowsPayload) -> BundledCreateRowsPayload:
         self.uids.extend(other.uids)
