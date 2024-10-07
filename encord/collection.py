@@ -106,7 +106,7 @@ class Collection:
         top_level_folder_uuid: Union[UUID, None],
         collection_uuids: Union[List[UUID], None],
         page_size: Optional[int] = None,
-    ) -> "Iterator[Collection]":
+    ) -> Iterator["Collection"]:
         params = GetCollectionParams(
             topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuids, pageSize=page_size
         )
@@ -158,7 +158,7 @@ class Collection:
     def list_items(
         self,
         page_size: Optional[int] = None,
-    ) -> "Iterator[StorageItem]":
+    ) -> Iterator[StorageItem]:
         """
         List storage items in the collection.
         Args:
@@ -177,7 +177,7 @@ class Collection:
 
     def list_items_include_inaccessible(
         self, page_size: Optional[int] = None
-    ) -> "Iterator[Union[StorageItem, StorageItemInaccessible]]":
+    ) -> Iterator[Union[StorageItem, StorageItemInaccessible]]:
         """
         List storage items in the collection, including those that are inaccessible.
         Args:
