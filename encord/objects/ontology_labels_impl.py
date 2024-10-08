@@ -1752,7 +1752,7 @@ class LabelRowV2:
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
         data_type = DataType(label_row_dict["data_type"])
 
-        if data_type == DataType.VIDEO or data_type == DataType.IMAGE:
+        if data_type == DataType.VIDEO or data_type == DataType.IMAGE or data_type == DataType.PDF:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
             # Dimensions should be always there
@@ -1819,7 +1819,7 @@ class LabelRowV2:
         for data_unit in label_row_dict["data_units"].values():
             data_type = DataType(label_row_dict["data_type"])
 
-            if data_type == DataType.IMG_GROUP or data_type == DataType.IMAGE:
+            if data_type == DataType.IMG_GROUP or data_type == DataType.IMAGE or data_type == DataType.PDF:
                 frame = int(data_unit["data_sequence"])
                 self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
                 self._add_classification_instances_from_classifications(
