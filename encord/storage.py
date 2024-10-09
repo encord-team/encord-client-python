@@ -594,11 +594,13 @@ class StorageFolder:
                 nifti=[
                     orm_storage.DataUploadNifti(
                         object_url=upload_url_info[0].object_key,
+                        placeholder_item_uuid=upload_url_info[0].item_uuid,
                         title=title,
                         client_metadata=client_metadata or {},
                     )
                 ]
             ),
+            ignore_errors=False,
         )
 
         if upload_result.status == LongPollingStatus.ERROR:
