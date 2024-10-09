@@ -593,7 +593,9 @@ class StorageFolder:
             private_files=DataUploadItems(
                 nifti=[
                     orm_storage.DataUploadNifti(
-                        object_url=upload_url_info[0].object_key,
+                        object_url=upload_url_info[
+                            0
+                        ].object_key,  # this is actually ignored when placeholder_item_uuid is set
                         placeholder_item_uuid=upload_url_info[0].item_uuid,
                         title=title,
                         client_metadata=client_metadata or {},
