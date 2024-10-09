@@ -1523,6 +1523,7 @@ class LabelRowV2:
             or data_type == DataType.DICOM
             or data_type == DataType.IMAGE
             or data_type == DataType.NIFTI
+            or data_type == DataType.PDF
         ):
             data_sequence = frame_level_data.frame_number
 
@@ -1558,7 +1559,7 @@ class LabelRowV2:
         ret: Dict[str, Any] = {}
         data_type = self._label_row_read_only_data.data_type
 
-        if data_type == DataType.IMAGE or data_type == DataType.IMG_GROUP:
+        if data_type == DataType.IMAGE or data_type == DataType.IMG_GROUP or data_type == DataType.PDF:
             frame = frame_level_data.frame_number
             ret.update(self._to_encord_label(frame))
 
