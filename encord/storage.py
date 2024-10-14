@@ -1232,11 +1232,20 @@ class StorageFolder:
                 polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
                 polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
 
-                if polling_available_seconds == 0 or res.status in [LongPollingStatus.DONE, LongPollingStatus.ERROR]:
+                if (polling_available_seconds == 0) or (
+                    res.status
+                    in [
+                        LongPollingStatus.DONE,
+                        LongPollingStatus.ERROR,
+                        LongPollingStatus.CANCELLED,
+                    ]
+                ):
                     return res
 
-                files_finished_count = res.units_done_count + res.units_error_count
-                files_total_count = res.units_pending_count + res.units_done_count + res.units_error_count
+                files_finished_count = res.units_done_count + res.units_error_count + res.units_cancelled_count
+                files_total_count = (
+                    res.units_pending_count + res.units_done_count + res.units_error_count + res.units_cancelled_count
+                )
 
                 if files_finished_count != files_total_count:
                     logger.info(f"Processed {files_finished_count}/{files_total_count} files")
@@ -1251,6 +1260,27 @@ class StorageFolder:
                     raise
 
                 time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+    def add_data_to_folder_job_cancel(
+        self,
+        upload_job_id: UUID,
+    ) -> orm_storage.AddDataToFolderJobCancelResponse:
+        """
+        Cancels a data upload in progress job, associated with this folder.
+
+        Args:
+            upload_job_id (UUID): The unique identifier for the upload job.
+
+        Returns:
+            AddDataToFolderJobCancelResponse: A response indicating the result of the cancelled job.
+        """
+
+        return self._api_client.post(
+            f"storage/folders/{self.uuid}/data-upload-jobs/{upload_job_id}/cancel",
+            params=None,
+            payload=None,
+            result_type=orm_storage.AddDataToFolderJobCancelResponse,
+        )
 
     @staticmethod
     def _get_folder(api_client: ApiClient, folder_uuid: UUID) -> "StorageFolder":
