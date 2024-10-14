@@ -1006,24 +1006,6 @@ class LongPollingStatus(str, Enum):
     Information about errors is available in the `units_error_count: int` and `errors: List[str]` attributes.
     """
 
-    CANCELLED = "CANCELLED"
-    """
-    Job was cancelled explicitly by the user through the Encord UI or via the Encord SDK using the
-    `add_data_to_folder_job_cancel` method.
-
-    In the context of this status:
-    - The job may have been partially processed, but it was explicitly interrupted before completion
-      by a user action.
-    - Cancellation can occur either manually through the Encord UI or programmatically using the SDK
-      method `add_data_to_folder_job_cancel`.
-    - Once a job is cancelled, no further processing will occur, and any processed data before the
-      cancellation will be available.
-    - The presence of cancelled data units (`units_cancelled_count`) indicates that some data upload
-      units were interrupted and cancelled before completion.
-    - If `ignore_errors` was set to `True`, the job may continue despite errors, and cancellation will
-      only apply to the unprocessed units.
-    """
-
 
 class DataUnitError(BaseDTO):
     """
@@ -1071,9 +1053,6 @@ class DatasetDataLongPolling(BaseDTO):
 
     units_error_count: int
     """Number of upload job units that have error status."""
-
-    units_cancelled_count: int
-    """Number of upload job units that have been cancelled."""
 
 
 @dataclasses.dataclass(frozen=True)

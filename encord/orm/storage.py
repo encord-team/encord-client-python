@@ -154,9 +154,6 @@ class UploadLongPollingState(BaseDTO):
     units_error_count: int
     """Number of upload job units that have error status."""
 
-    units_cancelled_count: int
-    """Number of upload job units that have been cancelled."""
-
     unit_errors: List[DataUnitError]
     """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
@@ -496,7 +493,3 @@ class StorageItemsMigratePayload(BaseDTO):
     to_integration_hash: Optional[UUID] = None
     validate_access: bool = False
     skip_missing: bool = False
-
-
-class AddDataToFolderJobCancelResponse(BaseDTO):
-    units_cancelled_count: int
