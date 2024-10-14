@@ -1026,6 +1026,7 @@ class EncordClientProject(EncordClient):
         workflow_graph_node_title_eq: Optional[str] = None,
         workflow_graph_node_title_like: Optional[str] = None,
         include_all_label_branches: bool = False,
+        branch_name: Optional[str] = None,
     ) -> List[LabelRowMetadata]:
         """
         This function is documented in :meth:`encord.project.Project.list_label_rows`.
@@ -1056,6 +1057,7 @@ class EncordClientProject(EncordClient):
             "include_images_data": include_images_data,
             "include_workflow_graph_node": include_workflow_graph_node,
             "include_all_label_branches": include_all_label_branches,
+            "branch_name": branch_name,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
 
@@ -1216,7 +1218,9 @@ class EncordClientProject(EncordClient):
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload={"get_signed_url": get_signed_url})
 
-    def create_label_rows(self, uids: List[str], *, get_signed_url=False) -> List[LabelRow]:
+    def create_label_rows(
+        self, uids: List[str], *, get_signed_url=False, branch_name: Optional[str] = None
+    ) -> List[LabelRow]:
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -1229,7 +1233,9 @@ class EncordClientProject(EncordClient):
             List[LabelRow]: A list of created label rows
         """
         return self._querier.put_multiple(
-            LabelRow, uid=uids, payload={"multi_request": True, "get_signed_url": get_signed_url}
+            LabelRow,
+            uid=uids,
+            payload={"multi_request": True, "get_signed_url": get_signed_url, "branch_name": branch_name},
         )
 
     def submit_label_row_for_review(self, uid):

@@ -453,6 +453,7 @@ class LabelRowV2:
                 initialization is delayed and performed along with other objects in the same bundle.
             include_signed_url: If `True`, the :attr:`.data_link` property will contain a signed URL.
                 See documentation for :attr:`.data_link` for more details.
+            branch_name: Name of branch
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -466,8 +467,7 @@ class LabelRowV2:
                 bundle,
                 operation=self._project_client.create_label_rows,
                 payload=BundledCreateRowsPayload(
-                    uids=[self.data_hash],
-                    get_signed_url=include_signed_url,
+                    uids=[self.data_hash], get_signed_url=include_signed_url, branch_name=self.branch_name
                 ),
                 result_mapper=BundleResultMapper[OrmLabelRow](
                     result_mapping_predicate=lambda r: r["data_hash"],
