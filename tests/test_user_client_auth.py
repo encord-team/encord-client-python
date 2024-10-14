@@ -172,7 +172,14 @@ def test_v1_public_user_resource_when_initialised_with_ssh_key(mock_send, bearer
     mock_send.side_effect = make_side_effects()
 
     user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=DUMMY_PRIVATE_KEY)
-    user_client.get_datasets()
+
+    class DatasetWithUserRole:
+        pass
+
+    user_client._querier.get_multiple(
+        DatasetWithUserRole,
+        payload={},
+    )
 
     assert mock_send.call_count == 1
     for mock_call in mock_send.call_args_list:
@@ -188,7 +195,14 @@ def test_v1_public_user_resource_when_initialised_with_bearer_auth(mock_send, be
     mock_send.side_effect = make_side_effects()
 
     user_client = EncordUserClient.create_with_bearer_token(bearer_token)
-    user_client.get_datasets()
+
+    class DatasetWithUserRole:
+        pass
+
+    user_client._querier.get_multiple(
+        DatasetWithUserRole,
+        payload={},
+    )
 
     assert mock_send.call_count == 1
     for mock_call in mock_send.call_args_list:

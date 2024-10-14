@@ -533,8 +533,7 @@ class DataRows(dict, Formatter):
         return DataRow.from_dict(json_dict)
 
 
-@dataclasses.dataclass(frozen=True)
-class DatasetInfo:
+class DatasetInfo(BaseDTO):
     """
     This class represents a dataset in the context of listing
     """
@@ -1058,3 +1057,30 @@ class DatasetDataLongPolling(BaseDTO):
 @dataclasses.dataclass(frozen=True)
 class DatasetLinkItems:
     pass
+
+
+class DatasetsWithUserRolesListParams(BaseDTO):
+    title_eq: Optional[str]
+    title_like: Optional[str]
+    description_eq: Optional[str]
+    description_like: Optional[str]
+    created_before: Optional[datetime]
+    created_after: Optional[datetime]
+    edited_before: Optional[datetime]
+    edited_after: Optional[datetime]
+
+
+class DatasetsWithUserRolesListResponseItem(BaseDTO):
+    dataset_hash: UUID
+    user_hash: str
+    title: str
+    description: str
+    storage_location: StorageLocation
+    created_at: datetime
+    last_edited_at: datetime
+    backing_folder_uuid: UUID | None
+    user_role: DatasetUserRole
+
+
+class DatasetsWithUserRolesListResponse(BaseDTO):
+    result: list[DatasetsWithUserRolesListResponseItem]
