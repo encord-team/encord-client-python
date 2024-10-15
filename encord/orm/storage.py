@@ -161,6 +161,17 @@ class UploadLongPollingState(BaseDTO):
     """Name of the JSON or CSV file that contained the list of URLs to ingest form the cloud bucket. Optional."""
 
 
+class CustomerProvidedImageMetadata(BaseDTO):
+    """
+    Media metadata for an image file; if provided, Encord service will use the values here instead of scanning the files
+    """
+
+    mime_type: str
+    file_size: int
+    height: int
+    width: int
+
+
 class CustomerProvidedVideoMetadata(BaseDTO):
     """
     Media metadata for a video file; if provided, Encord service will skip frame synchronisation checks
@@ -207,6 +218,7 @@ class DataUploadImage(BaseDTO):
     title: Optional[str] = None
     client_metadata: Dict = Field(default_factory=dict)
     external_file_type: Literal["IMAGE"] = "IMAGE"
+    image_metadata: Optional[CustomerProvidedImageMetadata] = None
 
     placeholder_item_uuid: Optional[UUID] = None
 
@@ -233,7 +245,8 @@ class DataUploadNifti(BaseDTO):
 
 class DataUploadImageGroupImage(BaseDTO):
     url: str
-    title: Optional[str]
+    title: Optional[str] = None
+    image_metadata: Optional[CustomerProvidedImageMetadata] = None
 
     placeholder_item_uuid: Optional[UUID] = None
 
