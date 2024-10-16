@@ -539,13 +539,15 @@ class DatasetInfo(BaseDTO):
     """
 
     dataset_hash: str
-    user_hash: str
+    user_email: str
     title: str
     description: str
-    type: int
     created_at: datetime
     last_edited_at: datetime
-    backing_folder_uuid: Optional[UUID] = None
+
+    user_hash: str | None = None  # this field will be removed soon
+    type: int | None = None  # this field will be removed soon
+    backing_folder_uuid: Optional[UUID] = None  # this field will be removed soon
 
 
 class Dataset(dict, Formatter):
@@ -1072,14 +1074,16 @@ class DatasetsWithUserRolesListParams(BaseDTO):
 
 class DatasetsWithUserRolesListResponseItem(BaseDTO):
     dataset_hash: UUID
-    user_hash: str
+    user_email: str
     title: str
     description: str
-    storage_location: StorageLocation
     created_at: datetime
     last_edited_at: datetime
-    backing_folder_uuid: UUID | None
     user_role: DatasetUserRole
+
+    user_hash: str | None = None  # this field will be removed soon
+    storage_location: StorageLocation | None = None  # this field will be removed soon
+    backing_folder_uuid: UUID | None = None  # this field will be removed soon
 
 
 class DatasetsWithUserRolesListResponse(BaseDTO):

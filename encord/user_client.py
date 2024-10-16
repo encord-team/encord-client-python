@@ -293,6 +293,7 @@ class EncordUserClient:
                 "dataset": DatasetInfo(
                     dataset_hash=str(x.dataset_hash),
                     user_hash=x.user_hash,
+                    user_email=x.user_email,
                     title=x.title,
                     description=x.description,
                     type=x.storage_location,
