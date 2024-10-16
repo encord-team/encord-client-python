@@ -739,7 +739,7 @@ class CreateDatasetResponse(dict, Formatter):
 
     @property
     @deprecated("0.1.141", alternative=".user_email")
-    def user_hash(self) -> str:
+    def user_hash(self) -> Optional[str]:
         """
         DEPRECATED: Prefer using the user_email property instead.
         This property will be removed in future versions.
