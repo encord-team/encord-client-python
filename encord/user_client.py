@@ -50,7 +50,9 @@ from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
+    CreateDatasetPayload,
     CreateDatasetResponse,
+    CreateDatasetResponseV2,
     DatasetAccessSettings,
     DatasetAPIKey,
     DatasetInfo,
@@ -177,6 +179,36 @@ class EncordUserClient:
         orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
         return Ontology(querier, orm_ontology, self._api_client)
 
+    def __create_dataset(
+        self,
+        title: str,
+        description: Optional[str],
+        storage_location: StorageLocation,
+        create_backing_folder: bool,
+        legacy_call: bool,
+    ) -> CreateDatasetResponse:
+        res = self._api_client.post(
+            "datasets",
+            params=None,
+            payload=CreateDatasetPayload(
+                title=title,
+                description=description,
+                storage_location=storage_location,
+                create_backing_folder=create_backing_folder,
+                legacy_call=legacy_call,
+            ),
+            result_type=CreateDatasetResponseV2,
+        )
+
+        return CreateDatasetResponse(
+            title=title,
+            storage_location=storage_location,
+            dataset_hash=str(res.dataset_hash),
+            user_hash=res.user_hash,
+            user_email=res.user_email,
+            backing_folder_uuid=res.backing_folder_uuid,
+        )
+
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
         self,
@@ -187,7 +219,14 @@ class EncordUserClient:
         """
         DEPRECATED - please use `create_dataset` instead.
         """
-        return self.create_dataset(dataset_title, dataset_type, dataset_description)
+
+        return self.__create_dataset(
+            title=dataset_title,
+            description=dataset_description,
+            storage_location=dataset_type,
+            create_backing_folder=True,
+            legacy_call=True,
+        )
 
     def create_dataset(
         self,
@@ -207,17 +246,14 @@ class EncordUserClient:
         Returns:
             CreateDatasetResponse
         """
-        dataset = {
-            "title": dataset_title,
-            "type": dataset_type,
-            "create_backing_folder": create_backing_folder,
-        }
 
-        if dataset_description:
-            dataset["description"] = dataset_description
-
-        result = self._querier.basic_setter(OrmDataset, uid=None, payload=dataset)
-        return CreateDatasetResponse.from_dict(result)
+        return self.__create_dataset(
+            title=dataset_title,
+            description=dataset_description,
+            storage_location=dataset_type,
+            create_backing_folder=create_backing_folder,
+            legacy_call=False,
+        )
 
     def create_dataset_api_key(
         self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]

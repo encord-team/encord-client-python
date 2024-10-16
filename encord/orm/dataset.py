@@ -688,7 +688,8 @@ class CreateDatasetResponse(dict, Formatter):
         title: str,
         storage_location: int,
         dataset_hash: str,
-        user_hash: str,
+        user_hash: Optional[str],
+        user_email: str,
         backing_folder_uuid: Optional[UUID],
     ):
         """
@@ -707,6 +708,7 @@ class CreateDatasetResponse(dict, Formatter):
                 "type": storage_location,
                 "dataset_hash": dataset_hash,
                 "user_hash": user_hash,
+                "user_email": user_email,
                 "backing_folder_uuid": backing_folder_uuid,
             }
         )
@@ -736,12 +738,32 @@ class CreateDatasetResponse(dict, Formatter):
         self["dataset_hash"] = value
 
     @property
+    @deprecated("0.1.141", alternative=".user_email")
     def user_hash(self) -> str:
+        """
+        DEPRECATED: Prefer using the user_email property instead.
+        This property will be removed in future versions.
+        """
+
         return self["user_hash"]
 
     @user_hash.setter
+    @deprecated("0.1.141", alternative=".user_email")
     def user_hash(self, value: str) -> None:
+        """
+        DEPRECATED: Prefer using the user_email property instead.
+        This property will be removed in future versions.
+        """
+
         self["user_hash"] = value
+
+    @property
+    def user_email(self) -> str:
+        return self["user_email"]
+
+    @user_email.setter
+    def user_email(self, value: str) -> None:
+        self["user_email"] = value
 
     @property
     def backing_folder_uuid(self) -> Optional[UUID]:
@@ -759,6 +781,7 @@ class CreateDatasetResponse(dict, Formatter):
             storage_location=json_dict["type"],
             dataset_hash=json_dict["dataset_hash"],
             user_hash=json_dict["user_hash"],
+            user_email=json_dict["user_email"],
             backing_folder_uuid=UUID(backing_folder_uuid_value) if backing_folder_uuid_value else None,
         )
 
@@ -1058,3 +1081,24 @@ class DatasetDataLongPolling(BaseDTO):
 @dataclasses.dataclass(frozen=True)
 class DatasetLinkItems:
     pass
+
+
+class CreateDatasetPayload(BaseDTO):
+    title: str
+    description: Optional[str]
+
+    storage_location: StorageLocation  # this field will be removed soon
+    create_backing_folder: bool  # this field will be removed soon
+
+    # only for analytics, to know if customers are
+    # using depreciated EncordUserClient.create_private_dataset
+    # this is only place which should pass legacy_call=True
+    legacy_call: bool  # this field will be removed soon
+
+
+class CreateDatasetResponseV2(BaseDTO):
+    dataset_hash: UUID
+    user_email: str
+
+    user_hash: Optional[str] = None  # this field will be removed soon
+    backing_folder_uuid: Optional[UUID] = None  # this field will be removed soon
