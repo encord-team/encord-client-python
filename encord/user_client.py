@@ -61,6 +61,7 @@ from encord.orm.dataset import (
     DicomDeidentifyTask,
     Images,
     StorageLocation,
+    dataset_user_role_str_enum_to_int_enum,
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.group import Group as OrmGroup
@@ -301,7 +302,7 @@ class EncordUserClient:
                     last_edited_at=x.last_edited_at,
                     backing_folder_uuid=x.backing_folder_uuid,
                 ),
-                "user_role": DatasetUserRole(x.user_role),
+                "user_role": dataset_user_role_str_enum_to_int_enum(x.user_role),
             }
             for x in res.result
         ]

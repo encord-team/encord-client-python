@@ -4,7 +4,7 @@ import dataclasses
 import json
 from collections import OrderedDict
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from types import MappingProxyType
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -15,6 +15,7 @@ from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 from encord.utilities.common import _get_dict_without_none_keys
@@ -23,6 +24,18 @@ from encord.utilities.common import _get_dict_without_none_keys
 class DatasetUserRole(IntEnum):
     ADMIN = 0
     USER = 1
+
+
+class DatasetUserRoleV2(CamelStrEnum):
+    ADMIN = auto()
+    USER = auto()
+
+
+def dataset_user_role_str_enum_to_int_enum(str_enum: DatasetUserRoleV2) -> DatasetUserRole:
+    return {
+        DatasetUserRoleV2.ADMIN: DatasetUserRole.ADMIN,
+        DatasetUserRoleV2.USER: DatasetUserRole.USER,
+    }[str_enum]
 
 
 class DatasetUser(BaseDTO):
@@ -1079,7 +1092,7 @@ class DatasetsWithUserRolesListResponseItem(BaseDTO):
     description: str
     created_at: datetime
     last_edited_at: datetime
-    user_role: DatasetUserRole
+    user_role: DatasetUserRoleV2
 
     user_hash: str | None = None  # this field will be removed soon
     storage_location: StorageLocation | None = None  # this field will be removed soon
