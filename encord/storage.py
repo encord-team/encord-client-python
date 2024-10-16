@@ -695,7 +695,7 @@ class StorageFolder:
     def add_private_data_to_folder_start(
         self,
         integration_id: str,
-        private_files: Union[str, Dict, Path, TextIO],
+        private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> UUID:
         """
