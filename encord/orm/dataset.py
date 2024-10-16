@@ -22,6 +22,10 @@ from encord.utilities.common import _get_dict_without_none_keys
 
 
 class DatasetUserRole(IntEnum):
+    """
+    DEPRECATED - prefer using the :class:`encord.orm.dataset.DatasetUserRoleV2` instead
+    """
+
     ADMIN = 0
     USER = 1
 
