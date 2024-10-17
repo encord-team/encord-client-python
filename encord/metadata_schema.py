@@ -124,7 +124,7 @@ class _ClientMetadataSchemaTypeTombstoneDeletedTy(
 
 class _ClientMetadataSchemaTypeTombstone(BaseModel):
     ty: Literal["tombstone"] = "tombstone"
-    deleted_ty: _ClientMetadataSchemaTypeTombstoneDeletedTy | None = None
+    deleted_ty: Union[_ClientMetadataSchemaTypeTombstoneDeletedTy,  None] = None
 
 
 class _ClientMetadataSchemaOption(
