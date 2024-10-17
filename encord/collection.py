@@ -1,5 +1,4 @@
 import logging
-import uuid
 from datetime import datetime
 from typing import Iterator, List, Optional, Sequence, Union
 from uuid import UUID
@@ -39,12 +38,12 @@ class Collection:
         self._collection_instance = orm_collection
 
     @property
-    def uuid(self) -> uuid.UUID:
+    def uuid(self) -> UUID:
         """
         Get the collection unique identifier (UUID).
 
         Returns:
-            uuid.UUID: The collection UUID.
+            UUID: The collection UUID.
         """
         return self._collection_instance.uuid
 
@@ -87,6 +86,16 @@ class Collection:
             Optional[datetime]: The timestamp when the collection was last edited, or None if not available.
         """
         return self._collection_instance.last_edited_at
+
+    @property
+    def top_level_folder_uuid(self) -> UUID:
+        """
+        Get the uuid of the top level folder that the collection is on.
+
+        Returns:
+            UUID: the uuid of the top level folder that the collection is on
+        """
+        return self._collection_instance.top_level_folder_uuid
 
     @staticmethod
     def _get_collection(api_client: ApiClient, collection_uuid: UUID) -> "Collection":
