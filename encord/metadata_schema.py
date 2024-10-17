@@ -104,16 +104,16 @@ class _ClientMetadataSchemaTypeTombstoneDeletedTy(
     RootModelDTO[
         Annotated[
             Union[
-                _ClientMetadataSchemaTypeNumber
-                | _ClientMetadataSchemaTypeBoolean
-                | _ClientMetadataSchemaTypeVarChar
-                | _ClientMetadataSchemaTypeDateTime
-                | _ClientMetadataSchemaTypeEnum
-                | _ClientMetadataSchemaTypeEmbedding
-                | _ClientMetadataSchemaTypeText
-                | _ClientMetadataSchemaTypeUUID
-                | _ClientMetadataSchemaTypeVariant
-                | _ClientMetadataSchemaTypeUser
+                _ClientMetadataSchemaTypeNumber,
+                _ClientMetadataSchemaTypeBoolean,
+                _ClientMetadataSchemaTypeVarChar,
+                _ClientMetadataSchemaTypeDateTime,
+                _ClientMetadataSchemaTypeEnum,
+                _ClientMetadataSchemaTypeEmbedding,
+                _ClientMetadataSchemaTypeText,
+                _ClientMetadataSchemaTypeUUID,
+                _ClientMetadataSchemaTypeVariant,
+                _ClientMetadataSchemaTypeUser,
             ],
             Field(discriminator="ty"),
         ]
@@ -320,7 +320,7 @@ class MetadataSchema:
 
         if k in self._schema:
             v = self._schema[k].root
-            if not isinstance(v, _ClientMetadataSchemaTypeVariant | _ClientMetadataSchemaTypeTombstone):
+            if not isinstance(v, (_ClientMetadataSchemaTypeVariant, _ClientMetadataSchemaTypeTombstone)):
                 raise MetadataSchemaError(f"{k} is already defined")
             elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
                 if v.deleted_ty is None:
