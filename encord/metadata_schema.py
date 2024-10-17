@@ -100,22 +100,31 @@ class _ClientMetadataSchemaTypeUser(BaseModel):
     ty: Literal["user"] = "user"
 
 
+class _ClientMetadataSchemaTypeTombstoneDeletedTy(
+    RootModelDTO[
+        Annotated[
+            Union[
+                _ClientMetadataSchemaTypeNumber
+                | _ClientMetadataSchemaTypeBoolean
+                | _ClientMetadataSchemaTypeVarChar
+                | _ClientMetadataSchemaTypeDateTime
+                | _ClientMetadataSchemaTypeEnum
+                | _ClientMetadataSchemaTypeEmbedding
+                | _ClientMetadataSchemaTypeText
+                | _ClientMetadataSchemaTypeUUID
+                | _ClientMetadataSchemaTypeVariant
+                | _ClientMetadataSchemaTypeUser
+            ],
+            Field(discriminator="ty"),
+        ]
+    ]
+):
+    pass
+
+
 class _ClientMetadataSchemaTypeTombstone(BaseModel):
     ty: Literal["tombstone"] = "tombstone"
-    deleted_ty: Annotated[
-        _ClientMetadataSchemaTypeNumber
-        | _ClientMetadataSchemaTypeBoolean
-        | _ClientMetadataSchemaTypeVarChar
-        | _ClientMetadataSchemaTypeDateTime
-        | _ClientMetadataSchemaTypeEnum
-        | _ClientMetadataSchemaTypeEmbedding
-        | _ClientMetadataSchemaTypeText
-        | _ClientMetadataSchemaTypeUUID
-        | _ClientMetadataSchemaTypeVariant
-        | _ClientMetadataSchemaTypeUser
-        | None,
-        Field(discriminator="ty"),
-    ] = None
+    deleted_ty: _ClientMetadataSchemaTypeTombstoneDeletedTy | None = None
 
 
 class _ClientMetadataSchemaOption(
@@ -316,7 +325,7 @@ class MetadataSchema:
             elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
                 if v.deleted_ty is None:
                     raise MetadataSchemaError(f"{k} is hard deleted")
-                elif not isinstance(v.deleted_ty, _ClientMetadataSchemaTypeVariant):
+                elif not isinstance(v.deleted_ty.root, _ClientMetadataSchemaTypeVariant):
                     raise MetadataSchemaError(f"{k} is cannot be restored with this type")
         _assert_valid_metadata_key(k)
         if data_type == "embedding":
@@ -347,7 +356,9 @@ class MetadataSchema:
         if isinstance(deleted_ty, _ClientMetadataSchemaTypeTombstone):
             raise MetadataSchemaError(f"{k} is already deleted")
         self._schema[k] = _ClientMetadataSchemaOption(
-            root=_ClientMetadataSchemaTypeTombstone(deleted_ty=None if hard else deleted_ty)
+            root=_ClientMetadataSchemaTypeTombstone(
+                deleted_ty=None if hard else _ClientMetadataSchemaTypeTombstoneDeletedTy(root=deleted_ty)
+            )
         )
         self._dirty = True
 
@@ -372,7 +383,7 @@ class MetadataSchema:
             raise MetadataSchemaError(f"{k} is not defined")
         if tombstone_ty.deleted_ty is None:
             raise MetadataSchemaError(f"{k} was hard deleted, this does not support restore")
-        self._schema[k] = _ClientMetadataSchemaOption(root=tombstone_ty.deleted_ty)
+        self._schema[k] = _ClientMetadataSchemaOption(root=tombstone_ty.deleted_ty.root)
         self._dirty = True
 
     def keys(self) -> Sequence[str]:
