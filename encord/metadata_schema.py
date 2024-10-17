@@ -272,7 +272,7 @@ class MetadataSchema:
         k: str,
         *,
         data_type: Union[
-            Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+            Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"],
             MetadataSchemaScalarType,
         ],
     ) -> None:
@@ -282,7 +282,7 @@ class MetadataSchema:
         **Parameters:**
 
         - k : str: The key for which the metadata type is being set.
-        - data_type : Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"]
+        - data_type : Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"]
                    The type of metadata to be associated with the key. Must be a valid identifier.
                    "string" is an alias of "varchar"
                    "long_string" is an alias of "text"
