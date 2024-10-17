@@ -71,8 +71,11 @@ def test_metadata_schema() -> None:
 
     meta.add_scalar("a.b", data_type="boolean")
     meta.delete_key("a.b")
+    assert meta.is_key_deleted("a.b")
     meta.restore_key("a.b")
+    assert not meta.is_key_deleted("a.b")
     meta.delete_key("a.b")
+    assert meta.is_key_deleted("a.b")
     with pytest.raises(MetadataSchemaError):
         meta.add_enum("a.b", values=["C"])
     with pytest.raises(MetadataSchemaError):
