@@ -1,7 +1,7 @@
 import logging
 import uuid
 from datetime import datetime
-from typing import Generator, Iterator, List, Optional, Union
+from typing import Iterator, List, Optional, Union
 from uuid import UUID
 
 import encord.orm.storage as orm_storage
@@ -106,7 +106,7 @@ class Collection:
         top_level_folder_uuid: Union[UUID, None],
         collection_uuids: Union[List[UUID], None],
         page_size: Optional[int] = None,
-    ) -> "Generator[Collection]":
+    ) -> Iterator["Collection"]:
         params = GetCollectionParams(
             topLevelFolderUuid=top_level_folder_uuid, uuids=collection_uuids, pageSize=page_size
         )
@@ -158,13 +158,13 @@ class Collection:
     def list_items(
         self,
         page_size: Optional[int] = None,
-    ) -> "Generator[StorageItem]":
+    ) -> Iterator[StorageItem]:
         """
         List storage items in the collection.
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
         Returns:
-            Generator[StorageItem]: An iterator containing storage items in the collection.
+            Iterator[StorageItem]: An iterator containing storage items in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
         paged_items = self._client.get_paged_iterator(
@@ -177,13 +177,13 @@ class Collection:
 
     def list_items_include_inaccessible(
         self, page_size: Optional[int] = None
-    ) -> "Generator[Union[StorageItem, StorageItemInaccessible]]":
+    ) -> Iterator[Union[StorageItem, StorageItemInaccessible]]:
         """
         List storage items in the collection, including those that are inaccessible.
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
         Returns:
-            Generator[Union[StorageItem, StorageItemInaccessible]]: An iterator containing both accessible
+            Iterator[Union[StorageItem, StorageItemInaccessible]]: An iterator containing both accessible
             and inaccessible storage items in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)

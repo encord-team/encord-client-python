@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -1027,7 +1027,7 @@ class EncordUserClient:
         top_level_folder_uuid: Union[str, UUID, None] = None,
         collection_uuids: List[str | UUID] | None = None,
         page_size: Optional[int] = None,
-    ) -> Generator[Collection]:
+    ) -> Iterator[Collection]:
         """
         Get collections by top level folder or list of collection IDs.
         If both top_level_folder_uuid and collection_uuid_list are preset
@@ -1116,7 +1116,7 @@ class EncordUserClient:
 
     def get_filter_presets(
         self, preset_uuids: List[Union[str, UUID]] = [], page_size: Optional[int] = None
-    ) -> Generator[FilterPreset]:
+    ) -> Iterator[FilterPreset]:
         """
         Get presets by list of preset unique identifiers (UUIDs).
 
@@ -1129,12 +1129,14 @@ class EncordUserClient:
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
-        preset_uuids = [UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids]
-        return FilterPreset._get_presets(self._api_client, preset_uuids, page_size=page_size)
+        internal_preset_uuids: List[UUID] = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids
+        ]
+        return FilterPreset._get_presets(self._api_client, internal_preset_uuids, page_size=page_size)
 
     def list_presets(
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
-    ) -> Generator[FilterPreset]:
+    ) -> Iterator[FilterPreset]:
         """
         Get presets by top level folder.
 
