@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
 
-__all__ = ["MetadataSchema", "MetadataSchemaError"]
+__all__ = ["MetadataSchema", "MetadataSchemaError", "MetadataSchemaScalarType"]
 
 from encord.orm.base_dto import RootModelDTO
 
@@ -76,7 +76,7 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
         elif self.value == "uuid":
             return "uuid"
         else:
-            raise ValueError(f"Unknown simple type: {self}")
+            raise ValueError(f"Unknown simple schema type: {self}")
 
     @classmethod
     def _missing_(cls, value):
@@ -85,7 +85,10 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
         elif value in ("varchar", "string"):
             return cls.VARCHAR
 
-        raise ValueError("Unknown simple schema type")
+        raise ValueError(f"Unknown simple schema type: {value}")
+
+
+MetadataSchemaScalarType = _ClientMetadataSchemaTypeVariantHint
 
 
 class _ClientMetadataSchemaTypeVariant(BaseModel):
@@ -268,7 +271,10 @@ class MetadataSchema:
         self,
         k: str,
         *,
-        data_type: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+        data_type: Union[
+            Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"],
+            MetadataSchemaScalarType,
+        ],
     ) -> None:
         """
         Sets a simple metadata type for a given key in the schema.
@@ -276,7 +282,7 @@ class MetadataSchema:
         **Parameters:**
 
         - k : str: The key for which the metadata type is being set.
-        - schema : Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"]
+        - data_type : Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"]
                    The type of metadata to be associated with the key. Must be a valid identifier.
                    "string" is an alias of "varchar"
                    "long_string" is an alias of "text"
@@ -284,7 +290,11 @@ class MetadataSchema:
         **Raises:**
 
         MetadataSchemaError: If the key `k` is already defined in the schema with a conflicting type.
+        ValueError: If `data_type` is not a valid type of metadata identifier.
         """
+        if isinstance(data_type, MetadataSchemaScalarType):
+            data_type = data_type.to_simple_str()
+
         if k in self._schema:
             v = self._schema[k]
             if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
