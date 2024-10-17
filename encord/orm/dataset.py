@@ -4,7 +4,7 @@ import dataclasses
 import json
 from collections import OrderedDict
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from types import MappingProxyType
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -15,14 +15,31 @@ from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 from encord.utilities.common import _get_dict_without_none_keys
 
 
 class DatasetUserRole(IntEnum):
+    """
+    DEPRECATED - prefer using the :class:`encord.orm.dataset.DatasetUserRoleV2` instead
+    """
+
     ADMIN = 0
     USER = 1
+
+
+class DatasetUserRoleV2(CamelStrEnum):
+    ADMIN = auto()
+    USER = auto()
+
+
+def dataset_user_role_str_enum_to_int_enum(str_enum: DatasetUserRoleV2) -> DatasetUserRole:
+    return {
+        DatasetUserRoleV2.ADMIN: DatasetUserRole.ADMIN,
+        DatasetUserRoleV2.USER: DatasetUserRole.USER,
+    }[str_enum]
 
 
 class DatasetUser(BaseDTO):
@@ -533,20 +550,21 @@ class DataRows(dict, Formatter):
         return DataRow.from_dict(json_dict)
 
 
-@dataclasses.dataclass(frozen=True)
-class DatasetInfo:
+class DatasetInfo(BaseDTO):
     """
     This class represents a dataset in the context of listing
     """
 
     dataset_hash: str
-    user_hash: str
+    user_email: str
     title: str
     description: str
-    type: int
     created_at: datetime
     last_edited_at: datetime
-    backing_folder_uuid: Optional[UUID] = None
+
+    user_hash: str | None = None  # this field will be removed soon
+    type: int | None = None  # this field will be removed soon
+    backing_folder_uuid: Optional[UUID] = None  # this field will be removed soon
 
 
 class Dataset(dict, Formatter):
@@ -1058,3 +1076,32 @@ class DatasetDataLongPolling(BaseDTO):
 @dataclasses.dataclass(frozen=True)
 class DatasetLinkItems:
     pass
+
+
+class DatasetsWithUserRolesListParams(BaseDTO):
+    title_eq: Optional[str]
+    title_like: Optional[str]
+    description_eq: Optional[str]
+    description_like: Optional[str]
+    created_before: Optional[datetime]
+    created_after: Optional[datetime]
+    edited_before: Optional[datetime]
+    edited_after: Optional[datetime]
+
+
+class DatasetsWithUserRolesListResponseItem(BaseDTO):
+    dataset_hash: UUID
+    user_email: str
+    title: str
+    description: str
+    created_at: datetime
+    last_edited_at: datetime
+    user_role: DatasetUserRoleV2
+
+    user_hash: str | None = None  # this field will be removed soon
+    storage_location: StorageLocation | None = None  # this field will be removed soon
+    backing_folder_uuid: UUID | None = None  # this field will be removed soon
+
+
+class DatasetsWithUserRolesListResponse(BaseDTO):
+    result: list[DatasetsWithUserRolesListResponseItem]
