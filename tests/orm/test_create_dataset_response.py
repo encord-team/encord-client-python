@@ -10,6 +10,7 @@ DATASET_RESPONSE_JSON = {
     "dataset_hash": "460505dd-89ea-485a-b4ea-417558a26889",
     "backing_folder_uuid": "434df998-3aac-423d-bc29-1af33040e583",
     "user_hash": "yiA5JxmLEGSoEcJAuxr3AJdDDXE2",
+    "user_email": "sample-email@email.com",
 }
 
 
@@ -29,6 +30,7 @@ def test_create_dataset_response_fields():
     assert create_dataset_response.storage_location == StorageLocation.CORD_STORAGE
     assert create_dataset_response.dataset_hash == DATASET_RESPONSE_JSON["dataset_hash"]
     assert create_dataset_response.user_hash == DATASET_RESPONSE_JSON["user_hash"]
+    assert create_dataset_response.user_email == DATASET_RESPONSE_JSON["user_email"]
 
 
 def test_create_dataset_response_setters_and_getters():
@@ -37,16 +39,19 @@ def test_create_dataset_response_setters_and_getters():
     storage_location = StorageLocation.AWS
     dataset_hash = "123456"
     user_hash = "abcdef"
+    user_email = "abcdef@email.com"
 
     create_dataset_response.title = title
     create_dataset_response.storage_location = storage_location
     create_dataset_response.dataset_hash = dataset_hash
     create_dataset_response.user_hash = user_hash
+    create_dataset_response.user_hash = user_email
 
     assert create_dataset_response.title == title
     assert create_dataset_response.storage_location == storage_location
     assert create_dataset_response.dataset_hash == dataset_hash
     assert create_dataset_response.user_hash == user_hash
+    assert create_dataset_response.user_email == user_email
 
 
 def test_create_dataset_response_backwards_compatibility():
@@ -63,3 +68,4 @@ def test_create_dataset_response_backwards_compatibility():
     assert create_dataset_response["type"] == DATASET_RESPONSE_JSON["type"]
     assert create_dataset_response["dataset_hash"] == DATASET_RESPONSE_JSON["dataset_hash"]
     assert create_dataset_response["user_hash"] == DATASET_RESPONSE_JSON["user_hash"]
+    assert create_dataset_response["user_email"] == DATASET_RESPONSE_JSON["user_email"]
