@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
 
-__all__ = ["MetadataSchema", "MetadataSchemaError"]
+__all__ = ["MetadataSchema", "MetadataSchemaError", "MetadataSchemaScalarType"]
 
 from encord.orm.base_dto import RootModelDTO
 
@@ -86,6 +86,9 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
             return cls.VARCHAR
 
         raise ValueError(f"Unknown simple schema type: {value}")
+
+
+MetadataSchemaScalarType = _ClientMetadataSchemaTypeVariantHint
 
 
 class _ClientMetadataSchemaTypeVariant(BaseModel):
@@ -269,7 +272,8 @@ class MetadataSchema:
         k: str,
         *,
         data_type: Union[
-            Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"], str
+            Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+            MetadataSchemaScalarType,
         ],
     ) -> None:
         """
@@ -286,8 +290,11 @@ class MetadataSchema:
         **Raises:**
 
         MetadataSchemaError: If the key `k` is already defined in the schema with a conflicting type.
-        ValueError: If the type of metadata `data_type` is an invalid identifier.
+        ValueError: If `data_type` is not a valid type of metadata identifier.
         """
+        if isinstance(data_type, MetadataSchemaScalarType):
+            data_type = data_type.to_simple_str()
+
         if k in self._schema:
             v = self._schema[k]
             if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
