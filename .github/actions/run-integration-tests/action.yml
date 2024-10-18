@@ -55,6 +55,7 @@ runs:
         run: |
           cd ${{ inputs.integration-tests-location }}
           export PRIVATE_KEY="${{ inputs.private-key }}"
+          export PRIVATE_KEY_SERVICE_ACCOUNT="${{ inputs.private-key-service-account }}"
           export PRIVATE_KEY_NON_ORG='${{ inputs.private-key-non-org }}'
           export CORD_ENV="${{ inputs.environment }}"
           source $(poetry env info --path)/bin/activate
