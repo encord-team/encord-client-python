@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from encord.metadata_schema import MetadataSchema, MetadataSchemaError
+from encord.metadata_schema import MetadataSchema, MetadataSchemaError, MetadataSchemaScalarType
 
 
 def test_root_model() -> None:
@@ -65,11 +65,27 @@ def test_metadata_schema() -> None:
 
     meta.add_scalar("a.b", data_type="boolean")
 
+    meta.add_scalar("A", data_type=MetadataSchemaScalarType.NUMBER)
+    meta.add_scalar("B", data_type=MetadataSchemaScalarType.BOOLEAN)
+    meta.add_scalar("C", data_type=MetadataSchemaScalarType.DATETIME)
+    meta.add_scalar("D", data_type=MetadataSchemaScalarType.TEXT)
+    meta.add_scalar("E", data_type=MetadataSchemaScalarType.VARCHAR)
+    meta.add_scalar("F", data_type=MetadataSchemaScalarType.UUID)
+
+    for k in ["A", "B", "C", "D", "E", "F"]:
+        assert meta.has_key(k)
+
     assert (
         f"{meta}".strip()
         == """
 Metadata Schema:
 ----------------
+ - 'A':        scalar(hint=number)
+ - 'B':        scalar(hint=boolean)
+ - 'C':        scalar(hint=datetime)
+ - 'D':        scalar(hint=text)
+ - 'E':        scalar(hint=varchar)
+ - 'F':        scalar(hint=uuid)
  - 'a':        scalar(hint=text)
  - 'a.b':      scalar(hint=boolean)
  - 'b':        scalar(hint=boolean)
