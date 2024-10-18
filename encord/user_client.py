@@ -13,9 +13,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 import base64
-import json
 import logging
-import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -810,7 +808,7 @@ class EncordUserClient:
 
         return StorageFolder._create_folder(self._api_client, name, description, client_metadata, parent_folder)
 
-    def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
+    def get_storage_folder(self, folder_uuid: Union[UUID, str]) -> StorageFolder:
         """
         Get a storage folder by its UUID.
 
@@ -821,14 +819,17 @@ class EncordUserClient:
             The storage folder. See :class:`encord.storage.StorageFolder` for details.
 
         Raises:
+            ValueError: If `folder_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the folder with the given UUID does not exist or
                 the user does not have access to it.
         """
+        if isinstance(folder_uuid, str):
+            folder_uuid = UUID(folder_uuid)
         return StorageFolder._get_folder(self._api_client, folder_uuid)
 
-    def get_storage_item(self, item_uuid: UUID, sign_url: bool = False) -> StorageItem:
+    def get_storage_item(self, item_uuid: Union[UUID, str], sign_url: bool = False) -> StorageItem:
         """
-        Get a storage item by its UUID.
+        Get a storage item by its unique identifier.
 
         Args:
             item_uuid: The UUID of the item to retrieve.
@@ -838,12 +839,15 @@ class EncordUserClient:
             The storage item. See :class:`encord.storage.StorageItem` for details.
 
         Raises:
+            ValueError: If `item_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
+        if isinstance(item_uuid, str):
+            item_uuid = UUID(item_uuid)
         return StorageItem._get_item(self._api_client, item_uuid, sign_url)
 
-    def get_storage_items(self, item_uuids: List[UUID], sign_url: bool = False) -> List[StorageItem]:
+    def get_storage_items(self, item_uuids: List[Union[UUID, str]], sign_url: bool = False) -> List[StorageItem]:
         """
         Get storage items by their UUIDs, in bulk. Useful for retrieving multiple items at once, e.g. when getting
         items pointed to by :attr:`encord.orm.dataset.DataRow.backing_item_uuid` for all data rows of a dataset.
@@ -856,10 +860,12 @@ class EncordUserClient:
             A list of storage items. See :class:`encord.storage.StorageItem` for details.
 
         Raises:
+            ValueError: If any of the item uuids is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If some of the items with the given UUIDs do not exist or
                 the user does not have access to them.
         """
-        return StorageItem._get_items(self._api_client, item_uuids, sign_url)
+        internal_item_uuids: List[UUID] = [UUID(item) if isinstance(item, str) else item for item in item_uuids]
+        return StorageItem._get_items(self._api_client, internal_item_uuids, sign_url)
 
     def list_storage_folders(
         self,
@@ -1005,7 +1011,7 @@ class EncordUserClient:
 
     def get_collection(self, collection_uuid: Union[str, UUID]) -> Collection:
         """
-        Get collection by unique identifier (UUID).
+        Get a collection by its unique identifier (UUID).
 
         Args:
             collection_uuid: The unique identifier of the collection to retrieve.
@@ -1014,6 +1020,7 @@ class EncordUserClient:
             The collection. See :class:`encord.collection.Collection` for details.
 
         Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
@@ -1041,6 +1048,7 @@ class EncordUserClient:
             The list of collections which match the given criteria.
 
         Raises:
+            ValueError: If `top_level_folder_uuid` or any of the collection uuids is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
@@ -1068,6 +1076,7 @@ class EncordUserClient:
             None
 
         Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
@@ -1089,6 +1098,7 @@ class EncordUserClient:
             Collection: Newly created collection.
 
         Raises:
+            ValueError: If `top_level_folder_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
         """
         if isinstance(top_level_folder_uuid, str):
@@ -1107,6 +1117,7 @@ class EncordUserClient:
             The preset. See :class:`encord.preset.Preset` for details.
 
         Raises:
+            ValueError: If `preset_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
@@ -1127,6 +1138,7 @@ class EncordUserClient:
             The list of presets which match the given criteria.
 
         Raises:
+            ValueError: If any of the preset uuids is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         internal_preset_uuids: List[UUID] = [
@@ -1148,6 +1160,7 @@ class EncordUserClient:
             The list of presets which match the given criteria.
 
         Raises:
+            ValueError: If `top_level_folder_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
@@ -1165,6 +1178,7 @@ class EncordUserClient:
             None
 
         Raises:
+            ValueError: If `preset_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         if isinstance(preset_uuid, str):
