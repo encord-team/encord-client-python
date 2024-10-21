@@ -17,7 +17,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -847,13 +847,17 @@ class EncordUserClient:
             item_uuid = UUID(item_uuid)
         return StorageItem._get_item(self._api_client, item_uuid, sign_url)
 
-    def get_storage_items(self, item_uuids: List[Union[UUID, str]], sign_url: bool = False) -> List[StorageItem]:
+    def get_storage_items(
+        self,
+        item_uuids: Sequence[Union[UUID, str]],
+        sign_url: bool = False,
+    ) -> List[StorageItem]:
         """
         Get storage items by their UUIDs, in bulk. Useful for retrieving multiple items at once, e.g. when getting
         items pointed to by :attr:`encord.orm.dataset.DataRow.backing_item_uuid` for all data rows of a dataset.
 
         Args:
-            item_uuids: list of UUIDs of items to retrieve.
+            item_uuids: list of UUIDs of items to retrieve. Can be a list of strings or a list of UUID objects.
             sign_url: If `True`, pre-fetch a signed URLs for the items (otherwise the URLs will be signed on demand).
 
         Returns:
