@@ -17,7 +17,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -849,7 +849,7 @@ class EncordUserClient:
 
     def get_storage_items(
         self,
-        item_uuids: Union[List[Union[UUID, str]], List[UUID], List[str]],
+        item_uuids: Sequence[Union[UUID, str]],
         sign_url: bool = False,
     ) -> List[StorageItem]:
         """

@@ -1,7 +1,7 @@
 import logging
 import uuid
 from datetime import datetime
-from typing import Iterator, List, Optional, Union
+from typing import Iterator, List, Optional, Sequence, Union
 from uuid import UUID
 
 import encord.orm.storage as orm_storage
@@ -200,14 +200,12 @@ class Collection:
             else:
                 yield StorageItemInaccessible(orm_item=item)
 
-    def add_items(
-        self, storage_item_uuids: Union[List[Union[UUID, str]], List[UUID], List[str]]
-    ) -> CollectionBulkItemResponse:
+    def add_items(self, storage_item_uuids: Sequence[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
         Add storage items to the collection.
 
         Args:
-            storage_item_uuids (Union[List[Union[UUID, str]], List[UUID], List[str]]): The list of storage item UUIDs to be added.
+            storage_item_uuids (Sequence[Union[UUID, str]]): The list of storage item UUIDs to be added.
             Either UUIDs or string representations of UUIDs are accepted.
         Returns:
             CollectionBulkItemResponse: The response after adding items to the collection.
@@ -221,14 +219,12 @@ class Collection:
         )
         return res
 
-    def remove_items(
-        self, storage_item_uuids: Union[List[Union[UUID, str]], List[UUID], List[str]]
-    ) -> CollectionBulkItemResponse:
+    def remove_items(self, storage_item_uuids: Sequence[Union[UUID, str]]) -> CollectionBulkItemResponse:
         """
         Remove storage items from the collection.
 
         Args:
-            storage_item_uuids (Union[List[Union[UUID, str]], List[UUID], List[str]]): The list of storage item UUIDs to be removed.
+            storage_item_uuids (Sequence[Union[UUID, str]]): The list of storage item UUIDs to be removed.
             Either UUIDs or string representations of UUIDs are accepted.
         Returns:
             CollectionBulkItemResponse: The response after removing items from the collection.
