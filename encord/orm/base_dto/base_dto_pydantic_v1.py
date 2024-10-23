@@ -86,7 +86,7 @@ class RootModelDTO(GenericModel, Generic[RootType]):
             super().__init__(__root__=root)
 
     @property
-    def root(self) -> Type:
+    def root(self) -> RootType:
         return self.__root__  # type: ignore[return-value]
 
     @classmethod
