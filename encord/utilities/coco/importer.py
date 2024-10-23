@@ -40,10 +40,12 @@ def build_category_id_to_encord_ontology_object_map(
 
 
 def initialise_label_rows(
-    project: Project, image_id_to_frame_index: Dict[ImageID, FrameIndex]
+    project: Project,
+    image_id_to_frame_index: Dict[ImageID, FrameIndex],
+    branch_name: Optional[str] = None,
 ) -> Dict[str, LabelRowV2]:
     data_hashes = list({frame_index.data_hash for frame_index in image_id_to_frame_index.values()})
-    label_rows = project.list_label_rows_v2(data_hashes=data_hashes)
+    label_rows = project.list_label_rows_v2(data_hashes=data_hashes, branch_name=branch_name)
     with project.create_bundle() as bundle:
         for lr in label_rows:
             lr.initialise_labels(bundle=bundle)
@@ -55,8 +57,9 @@ def import_coco_labels(
     coco: CocoRootModel,
     category_id_to_feature_hash: Dict[CategoryID, str],
     image_id_to_frame_index: Dict[ImageID, FrameIndex],
+    branch_name: Optional[str] = None,
 ) -> None:
-    label_rows = initialise_label_rows(project, image_id_to_frame_index)
+    label_rows = initialise_label_rows(project, image_id_to_frame_index, branch_name=branch_name)
     category_id_to_objects = build_category_id_to_encord_ontology_object_map(project, category_id_to_feature_hash)
     coco_image_lookup = {i.id: i for i in coco.images}
 
