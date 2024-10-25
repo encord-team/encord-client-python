@@ -25,6 +25,7 @@ class StorageItemType(CamelStrEnum):
     DICOM_FILE = auto()
     DICOM_SERIES = auto()
     AUDIO = auto()
+    NIFTI = auto()
 
 
 class StorageUserRole(CamelStrEnum):
@@ -160,6 +161,21 @@ class UploadLongPollingState(BaseDTO):
     """Name of the JSON or CSV file that contained the list of URLs to ingest form the cloud bucket. Optional."""
 
 
+class CustomerProvidedImageMetadata(BaseDTO):
+    """
+    Media metadata for an image file; if provided, Encord service will use the values here instead of scanning the files
+    """
+
+    mime_type: str
+    """MIME type of the image file (e.g. `image/jpeg` or `image/png`)."""
+    file_size: int
+    """Size of the image file in bytes."""
+    height: int
+    """Height of the image in pixels."""
+    width: int
+    """Width of the image in pixels."""
+
+
 class CustomerProvidedVideoMetadata(BaseDTO):
     """
     Media metadata for a video file; if provided, Encord service will skip frame synchronisation checks
@@ -202,87 +218,209 @@ class CustomerProvidedAudioMetadata(BaseDTO):
 
 
 class DataUploadImage(BaseDTO):
+    """
+    Data about a single image item to be registered with Encord service.
+    """
+
     object_url: str
+    """"URL of the image file to be registered."""
     title: Optional[str] = None
+    """Title of the image item (derived from the URL if omitted)."""
     client_metadata: Dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the image item."""
     external_file_type: Literal["IMAGE"] = "IMAGE"
+    """Type of the external file."""
+    image_metadata: Optional[CustomerProvidedImageMetadata] = None
+    """Optional media metadata of the image file (if provided). See :class:`CustomerProvidedImageMetadata` for more details."""
 
     placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
 
 
 class DataUploadVideo(BaseDTO):
+    """
+    Data about a video item to be registered with Encord service.
+    """
+
     object_url: str
+    """URL of the video file to be registered."""
     title: Optional[str] = None
+    """Title of the video item (derived from the URL if omitted)."""
     client_metadata: Dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the video item."""
 
     external_file_type: Literal["VIDEO"] = "VIDEO"
+    """Type of the external file."""
     video_metadata: Optional[CustomerProvidedVideoMetadata] = None
+    """Optional media metadata of the video file (if provided). See :class:`CustomerProvidedVideoMetadata` for more details."""
 
     placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
+
+
+class DataUploadNifti(BaseDTO):
+    """
+    Data about a NIFTI item to be registered with Encord service.
+    """
+
+    object_url: str
+    """URL of the NIFTI file to be registered."""
+    title: Optional[str] = None
+    """Title of the NIFTI item (derived from the URL if omitted)."""
+    client_metadata: Dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the NIFTI item."""
+
+    external_file_type: Literal["NIFTI"] = "NIFTI"
+    """Type of the external file."""
+    placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
 
 
 class DataUploadImageGroupImage(BaseDTO):
+    """
+    Data about a single image item to be used as a frame in an image group or sequence.
+    """
+
     url: str
-    title: Optional[str]
+    """URL of the image file to be used as the frame in the image group."""
+    title: Optional[str] = None
+    """Title of the image item (derived from the URL if omitted)."""
+    image_metadata: Optional[CustomerProvidedImageMetadata] = None
+    """Optional media metadata of the image file (if provided). See :class:`CustomerProvidedImageMetadata` for more details."""
 
     placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
 
 
 class DataUploadImageGroup(BaseDTO):
+    """
+    Data about an image group or image sequence item to be registered with Encord service.
+    """
+
     images: List[DataUploadImageGroupImage]
+    """List of images to be used as frames in the image group. See :class:`DataUploadImageGroupImage` for more details."""
     title: Optional[str]
+    """Title of the image group item (requred if using cloud integration)."""
     client_metadata: Dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the image group item."""
     create_video: bool = False
+    """If set to `True`, create an image sequence backed by a video file uploaded to the cloud storage."""
 
     external_file_type: Literal["IMG_GROUP"] = "IMG_GROUP"
+    """Type of the external file."""
     cluster_by_resolution: bool = False
+    """For system use only."""
 
 
 class DataUploadImageGroupFromItems(BaseDTO):
+    """
+    Data about an image group item to be created from previously uploaded images.
+    """
+
     image_items: List[UUID]
+    """List of image items to be used as frames in the image group."""
     title: Optional[str]
+    """Title of the image group item (required if using cloud integration)."""
     client_metadata: Dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the image group."""
     create_video: bool
+    """If set to `True`, create an image sequence backed by a video file uploaded to the cloud storage."""
     video_url_prefix: Optional[str] = None
+    """URL prefix for the video file to be created from the image group."""
 
     external_file_type: Literal["IMG_GROUP_FROM_ITEMS"] = "IMG_GROUP_FROM_ITEMS"
+    """Type of the external file."""
     cluster_by_resolution: bool = False
+    """For system use only."""
 
 
 class DataUploadDicomSeriesDicomFile(BaseDTO):
+    """
+    Data about a single DICOM file to be used in a series item.
+    """
+
     url: str
+    """URL of the DICOM file to be registered with Encord service."""
     title: Optional[str]
+    """Title of the DICOM file (derived from the URL if omitted)."""
 
     placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
 
 
 class DataUploadDicomSeries(BaseDTO):
+    """
+    Data about a DICOM series item to be registered with Encord service.
+    """
+
     dicom_files: List[DataUploadDicomSeriesDicomFile]
+    """List of DICOM files to be used in the series item. See :class:`DataUploadDicomSeriesDicomFile` for more details."""
     title: Optional[str]
+    """Title of the DICOM series item (required if using cloud integration)."""
     client_metadata: Dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the DICOM series item."""
 
     external_file_type: Literal["DICOM"] = "DICOM"
+    """Type of the external file."""
 
 
 class DataUploadAudio(BaseDTO):
+    """
+    Data about an audio item to be registered with Encord service.
+    """
+
     object_url: str
+    """URL of the audio file to be registered."""
     title: Optional[str] = None
+    """Title of the audio item (derived from the URL if omitted)."""
     client_metadata: Dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the audio item."""
 
     audio_metadata: Optional[CustomerProvidedAudioMetadata] = None
+    """Optional media metadata of the audio file (if provided). See :class:`CustomerProvidedAudioMetadata` for more details."""
     external_file_type: Literal["AUDIO"] = "AUDIO"
+    """Type of the external file."""
 
     placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
 
 
 class DataUploadItems(BaseDTO):
+    """
+    A collection of items to be registered with Encord service.
+
+    A more structured alternative to using a JSON file.
+    """
+
     videos: List[DataUploadVideo] = Field(default_factory=list)
+    """List of video items to be registered. See :class:`DataUploadVideo` for more details."""
+
     image_groups: List[DataUploadImageGroup] = Field(default_factory=list)
+    """List of image group items to be registered. See :class:`DataUploadImageGroup` for more details."""
+
     dicom_series: List[DataUploadDicomSeries] = Field(default_factory=list)
+    """List of DICOM series items to be registered. See :class:`DataUploadDicomSeries` for more details."""
+
     images: List[DataUploadImage] = Field(default_factory=list)
+    """List of image items to be registered. See :class:`DataUploadImage` for more details."""
+
     image_groups_from_items: List[DataUploadImageGroupFromItems] = Field(default_factory=list)
+    """List of image group items to be created from previously uploaded images.
+    See :class:`DataUploadImageGroupFromItems` for more details."""
+
     audio: List[DataUploadAudio] = Field(default_factory=list)
+    """List of audio items to be registered. See :class:`DataUploadAudio` for more details."""
+
+    nifti: List[DataUploadNifti] = Field(default_factory=list)
+    """List of NIFTI items to be registered. See :class:`DataUploadNifti` for more details."""
+
     skip_duplicate_urls: bool = False
+    """If set to `True`, Encord service will skip items with URLs that already exist in the same folder.
+    Otherwise, duplicate items will be created."""
+
+    upsert_metadata: bool = False
+    """If set to `True`, Encord service will update metadata of existing items with the same URL in the same folder.
+    This flag has no effect if `skip_duplicate_urls` is set to `False`."""
 
 
 class DatasetDataLongPollingParams(BaseDTO):

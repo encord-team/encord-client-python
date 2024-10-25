@@ -210,7 +210,7 @@ class Querier:
 
 @contextmanager
 def create_new_session(
-    max_retries: Optional[int], backoff_factor: float, connect_retries
+    max_retries: Optional[int], backoff_factor: float, connect_retries: int
 ) -> Generator[Session, None, None]:
     retry_policy = Retry(
         connect=connect_retries,

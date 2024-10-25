@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from dataclasses import asdict, dataclass, is_dataclass
 from functools import reduce
-from typing import Callable, ClassVar, Dict, Generator, Generic, List, Optional, Protocol, Type, TypeVar
+from typing import Callable, ClassVar, Dict, Generic, Iterator, List, Optional, Protocol, Type, TypeVar
 
 from encord.http.limits import LABEL_ROW_BUNDLE_DEFAULT_LIMIT
 
@@ -70,7 +70,7 @@ class BundledOperation(Generic[BundlablePayloadT, R]):
         if result_handler is not None:
             self.result_handlers[result_handler.predicate] = result_handler.handler
 
-    def get_bundled_payload(self) -> Generator[BundlablePayloadT, None, None]:
+    def get_bundled_payload(self) -> Iterator[BundlablePayloadT]:
         for i in range(0, len(self.payloads), self.limit):
             yield reduce(lambda x, y: x.add(y), self.payloads[i : i + self.limit])
 
