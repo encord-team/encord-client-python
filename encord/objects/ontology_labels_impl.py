@@ -1526,6 +1526,9 @@ class LabelRowV2:
         ):
             data_sequence = frame_level_data.frame_number
 
+        elif data_type == DataType.AUDIO:
+            data_sequence = 0
+
         elif data_type == DataType.DICOM_STUDY:
             pass
 
@@ -1565,6 +1568,9 @@ class LabelRowV2:
         elif data_type == DataType.VIDEO or data_type == DataType.DICOM or data_type == DataType.NIFTI:
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
+
+        elif data_type == DataType.AUDIO:
+            return {}
 
         elif data_type == DataType.DICOM_STUDY:
             pass
@@ -1752,10 +1758,10 @@ class LabelRowV2:
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
         data_type = DataType(label_row_dict["data_type"])
 
-        if data_type == DataType.VIDEO or data_type == DataType.IMAGE:
+        if data_type == DataType.VIDEO or data_type == DataType.IMAGE or data_type == DataType.AUDIO:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
-            # Dimensions should be always there
+            # Dimensions should be always there (except for Audio which should be 0)
             # But we have some older entries that don't have them
             # So setting them to None for now until the format is not guaranteed to be enforced
             height = data_dict.get("height")
@@ -1842,6 +1848,10 @@ class LabelRowV2:
 
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
+
+            elif data_type == DataType.AUDIO:
+                # TODO: run _add_classification_instances_from_classifications here
+                pass
 
             else:
                 exhaustive_guard(data_type)
