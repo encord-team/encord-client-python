@@ -377,13 +377,12 @@ class MetadataSchema:
 
         MetadataSchemaError: If the key `k` is not already deleted or not present in the schema
         """
-        if k in self._schema:
-            v = self._schema[k]
-            tombstone_ty = v.root
-            if not isinstance(tombstone_ty, _ClientMetadataSchemaTypeTombstone):
-                raise MetadataSchemaError(f"{k} is not currently deleted")
-        else:
+        if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
+        v = self._schema[k]
+        tombstone_ty = v.root
+        if not isinstance(tombstone_ty, _ClientMetadataSchemaTypeTombstone):
+            raise MetadataSchemaError(f"{k} is not currently deleted")
         if tombstone_ty.deleted_ty is None:
             raise MetadataSchemaError(f"{k} was hard deleted, this does not support restore")
         self._schema[k] = _ClientMetadataSchemaOption(root=tombstone_ty.deleted_ty.root)
