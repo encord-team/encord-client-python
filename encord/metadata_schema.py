@@ -345,6 +345,9 @@ class MetadataSchema:
 
         k : str: The key for which the metadata type is being deleted.
 
+        hard: bool: If the deletion should prevent indexing of this key unconditionally.
+                Setting this to true prevents restoring the type definition in the future.
+
         **Raises:**
 
         MetadataSchemaError: If the key `k` is already deleted or not present in the schema
