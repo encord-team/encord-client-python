@@ -844,7 +844,7 @@ class LabelRowV2:
     def add_to_single_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
     ) -> None:
-        """This is an internal function, it is not meant to be called by the SDK user."""
+        # This is an internal function, it is not meant to be called by the SDK user.
         self._check_labelling_is_initalised()
 
         if isinstance(label_item, ObjectInstance):
