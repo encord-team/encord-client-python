@@ -435,18 +435,26 @@ class EncordUserClient:
         return EncordClientDataset.initialise(
             dataset_hash,
             dataset_api_key.api_key,
+            domain=self.user_config.domain,
             requests_settings=self._config.requests_settings,
             dataset_access_settings=dataset_access_settings,
         )
 
     @deprecated("0.1.98", ".get_project()")
-    def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
+    def get_project_client(
+        self,
+        project_hash: str,
+        **kwargs,
+    ) -> Union[EncordClientProject, EncordClientDataset]:
         """
         DEPRECATED - prefer using :meth:`get_project()` instead.
         """
         project_api_key: str = self.get_or_create_project_api_key(project_hash)
         return EncordClient.initialise(
-            project_hash, project_api_key, requests_settings=self._config.requests_settings, **kwargs
+            project_hash,
+            project_api_key,
+            domain=self.user_config.domain,
+            requests_settings=self._config.requests_settings,
         )
 
     def create_project_from_cvat(
