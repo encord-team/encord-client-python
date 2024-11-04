@@ -11,10 +11,11 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import datetime
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClientProject
+from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
@@ -27,6 +28,7 @@ from encord.orm.analytics import (
     CollaboratorTimersGroupBy,
 )
 from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
@@ -64,6 +66,7 @@ class Project:
         self._client = client
         self._project_instance = project_instance
         self._ontology = ontology
+        self._api_client = api_client
 
         if project_instance.workflow:
             self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
@@ -1144,3 +1147,169 @@ class Project:
 
         coco = CocoRootModel.from_dict(labels_dict)
         import_coco_labels(self, coco, category_id_to_feature_hash, image_id_to_frame_index)
+
+    def get_collection(self, collection_uuid: Union[str, UUID]) -> ProjectCollection:
+        """
+        Get a project collection by its unique identifier (UUID).
+
+        Args:
+            collection_uuid: The unique identifier of the collection to retrieve.
+
+        Returns:
+            The collection. See :class:`encord.collection.ProjectCollection` for details.
+
+        Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+                the user does not have access to it.
+        """
+        if isinstance(collection_uuid, str):
+            collection_uuid = UUID(collection_uuid)
+
+        return ProjectCollection._get_collection(self._api_client, collection_uuid=collection_uuid, self)
+
+    def list_collections(
+        self,
+        collection_uuids: List[str | UUID] | None = None,
+        page_size: Optional[int] = None,
+    ) -> Iterator[ProjectCollection]:
+        """
+        List all collections associated to the project.
+
+        Args:
+            collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of collections which match the given criteria.
+
+        Raises:
+            ValueError: If any of the collection uuids is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        collections = (
+            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuids]
+            if collection_uuids is not None
+            else None
+        )
+        return ProjectCollection._list_collections(
+            project=self,
+            collection_uuids=collections,
+            page_size=page_size,
+        )
+
+    def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:
+        """
+        Delete a project collection by its UUID if it exists.
+
+        Args:
+            collection_uuid: The unique identifier (UUID) of the collection to delete.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(collection_uuid, str):
+            collection_uuid = UUID(collection_uuid)
+        ProjectCollection._delete_collection(self, collection_uuid)
+
+    def create_collection(
+            self, name: str, description: str = "", collection_type: ProjectCollectionType = ProjectCollectionType.FRAME
+    ) -> ProjectCollection:
+        """
+        Create a prooject collection.
+
+        Args:
+            name: The name of the collection.
+            description: The description of the collection.
+            collection_type: The type of the collection, could be either frame or label.
+
+        Returns:
+            ProjectCollection: Newly created collection.
+
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+        """
+        new_uuid = ProjectCollection._create_collection(self,name, description, collection_type)
+        return self.get_collection(new_uuid)
+
+    # def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
+    #     """
+    #     Get a preset by its unique identifier (UUID).
+    #
+    #     Args:
+    #         preset_uuid: The unique identifier of the preset to retrieve.
+    #
+    #     Returns:
+    #         The preset. See :class:`encord.preset.Preset` for details.
+    #
+    #     Raises:
+    #         ValueError: If `preset_uuid` is a badly formed UUID.
+    #         :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+    #             the user does not have access to it.
+    #     """
+    #     if isinstance(preset_uuid, str):
+    #         preset_uuid = UUID(preset_uuid)
+    #     return FilterPreset._get_preset(self._api_client, preset_uuid=preset_uuid)
+    #
+    # def get_filter_presets(
+    #     self, preset_uuids: List[Union[str, UUID]] = [], page_size: Optional[int] = None
+    # ) -> Iterator[FilterPreset]:
+    #     """
+    #     Get presets by list of preset unique identifiers (UUIDs).
+    #
+    #     Args:
+    #         preset_uuids: The list of unique identifiers (UUIDs) to be retrieved.
+    #         page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+    #     Returns:
+    #         The list of presets which match the given criteria.
+    #
+    #     Raises:
+    #         ValueError: If any of the preset uuids is a badly formed UUID.
+    #         :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+    #     """
+    #     internal_preset_uuids: List[UUID] = [
+    #         UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids
+    #     ]
+    #     return FilterPreset._get_presets(self._api_client, internal_preset_uuids, page_size=page_size)
+    #
+    # def list_presets(
+    #     self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
+    # ) -> Iterator[FilterPreset]:
+    #     """
+    #     Get presets by top level folder.
+    #
+    #     Args:
+    #         top_level_folder_uuid: The unique identifier of the top level folder.
+    #         page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+    #
+    #     Returns:
+    #         The list of presets which match the given criteria.
+    #
+    #     Raises:
+    #         ValueError: If `top_level_folder_uuid` is a badly formed UUID.
+    #         :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+    #     """
+    #     if isinstance(top_level_folder_uuid, str):
+    #         top_level_folder_uuid = UUID(top_level_folder_uuid)
+    #     return FilterPreset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
+    #
+    # def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
+    #     """
+    #     Delete a preset by its unique identifier (UUID) if it exists.
+    #
+    #     Args:
+    #         preset_uuid: The uuid/id of the preset to delete.
+    #
+    #     Returns:
+    #         None
+    #
+    #     Raises:
+    #         ValueError: If `preset_uuid` is a badly formed UUID.
+    #         :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+    #     """
+    #     if isinstance(preset_uuid, str):
+    #         preset_uuid = UUID(preset_uuid)
+    #     FilterPreset._delete_preset(self._api_client, preset_uuid)

@@ -352,3 +352,52 @@ class LabelValidationState(BaseDTO):
     version: int
     is_valid: bool
     errors: List[str]
+
+
+class WorkflowGraphNodeDTO(BaseDTO):
+    uuid: str
+    title: str
+
+
+class LabelRowMetadataDTO(BaseDTO):
+    """
+    Contains helpful information about a label row.
+    """
+
+    label_hash: Optional[str] = None
+    """Only present if the label row is initiated"""
+    created_at: Optional[datetime.datetime] = None
+    """Only present if the label row is initiated"""
+    last_edited_at: Optional[datetime.datetime] = None
+    """Only present if the label row is initiated"""
+    branch_name: str
+    """Only present if the label row is initiated or branch_name is set specifically"""
+
+    data_hash: str
+    dataset_hash: str
+    dataset_title: str
+    data_title: str
+    data_type: str
+    data_link: Optional[str] = None
+    """Can be `None` for label rows of image groups or DICOM series."""
+    label_status: LabelStatus
+    """Can be `None` for TMS2 projects"""
+    annotation_task_status: Optional[AnnotationTaskStatus] = None
+    """Only available for TMS2 project"""
+    workflow_graph_node: Optional[WorkflowGraphNode] = None
+    is_shadow_data: bool = False
+    number_of_frames: int
+    duration: Optional[float] = None
+    """Only available for the VIDEO data_type"""
+    frames_per_second: Optional[int] = None
+    """Only available for the VIDEO data_type"""
+    height: Optional[int] = None
+    width: Optional[int] = None
+
+    priority: Optional[float] = None
+    """Only available for not complete tasks"""
+    client_metadata: Optional[dict] = None
+    images_data: Optional[list] = None
+    file_type: Optional[str] = None
+    """Only available for certain read requests"""
+    is_valid: bool = True

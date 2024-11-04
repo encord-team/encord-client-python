@@ -1,20 +1,21 @@
 import uuid
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional
-from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO, Field
+from encord.orm.label_row import LabelRowMetadataDTO
 
 
 class GetCollectionParams(BaseDTO):
-    top_level_folder_uuid: Optional[UUID] = Field(default=None, alias="topLevelFolderUuid")
-    collection_uuids: Optional[List[UUID]] = Field(default=[], alias="uuids")
+    top_level_folder_uuid: Optional[uuid.UUID] = Field(default=None, alias="topLevelFolderUuid")
+    collection_uuids: Optional[List[uuid.UUID]] = Field(default=[], alias="uuids")
     page_token: Optional[str] = Field(default=None, alias="pageToken")
     page_size: Optional[int] = Field(default=None, alias="pageSize")
 
 
 class CreateCollectionParams(BaseDTO):
-    top_level_folder_uuid: Optional[UUID] = Field(default=None, alias="topLevelFolderUuid")
+    top_level_folder_uuid: Optional[uuid.UUID] = Field(default=None, alias="topLevelFolderUuid")
 
 
 class GetCollectionItemsParams(BaseDTO):
@@ -54,3 +55,60 @@ class CollectionBulkItemResponse(BaseDTO):
 
 class CollectionBulkPresetRequest(BaseDTO):
     preset_uuid: uuid.UUID
+
+
+class ProjectCollectionType(Enum):
+    FRAME = "FRAME"
+    LABEL = "LABEL"
+
+
+class GetProjectCollectionParams(BaseDTO):
+    project_hash: Optional[uuid.UUID] = Field(default=None, alias="projectHash")
+    collection_uuids: Optional[List[uuid.UUID]] = Field(default=[], alias="uuids")
+    page_token: Optional[str] = Field(default=None, alias="pageToken")
+    page_size: Optional[int] = Field(default=None, alias="pageSize")
+
+
+class CreateProjectCollectionParams(BaseDTO):
+    project_hash: Optional[uuid.UUID] = Field(default=None, alias="projectHash")
+
+
+class CreateProjectCollectionPayload(CreateCollectionPayload):
+    collection_type: ProjectCollectionType
+
+
+class ProjectCollection(Collection):
+    collection_type: ProjectCollectionType
+
+
+class GetProjectCollectionsResponse(BaseDTO):
+    results: List[ProjectCollection]
+
+
+class ProjectCollectionItemFrameSpec(BaseDTO):
+    frame_index: int
+
+
+class ProjectCollectionItemObjectSpec(BaseDTO):
+    frame_index: int
+    object_hash: str
+
+
+class ProjectCollectionItemClassificationSpec(BaseDTO):
+    frame_index: int
+    classification_hash: str
+
+
+ProjectCollectionItemSpec = (
+    ProjectCollectionItemFrameSpec | ProjectCollectionItemObjectSpec | ProjectCollectionItemClassificationSpec
+)
+
+
+class ProjectCollectionItem(BaseDTO):
+    label_row_metadata: LabelRowMetadataDTO
+    specs: list[ProjectCollectionItemSpec]
+
+
+class ProjectCollectionBulkItemRequest(BaseDTO):
+    label_hash: uuid.UUID
+    specs: list[ProjectCollectionItemSpec]

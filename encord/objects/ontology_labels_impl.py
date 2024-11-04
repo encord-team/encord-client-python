@@ -63,6 +63,7 @@ from encord.ontology import Ontology
 from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRowMetadata,
+    LabelRowMetadataDTO,
     LabelStatus,
     WorkflowGraphNode,
 )
@@ -85,7 +86,7 @@ class LabelRowV2:
 
     def __init__(
         self,
-        label_row_metadata: LabelRowMetadata,
+        label_row_metadata: LabelRowMetadata | LabelRowMetadataDTO,
         project_client: EncordClientProject,
         ontology: Ontology,
     ) -> None:
