@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Iterable, Optional, Sequence, Tuple, Type, TypeVar
 from uuid import UUID
 
 from encord.http.bundle import Bundle, bundled_operation
@@ -16,7 +16,7 @@ class TasksQueryParams(BaseDTO):
 
 @dataclass(frozen=True)
 class WorkflowStageBase:
-    _workflow_client: WorkflowClient
+    _workflow_client: WorkflowClient = field(compare=False, hash=False)
     uuid: UUID
     title: str
 
