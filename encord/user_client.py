@@ -413,7 +413,7 @@ class EncordUserClient:
             edited_after: optional last modification date filter, 'greater'
 
         Returns:
-            list of (role, projects) pairs for project matching filter conditions.
+            list of (role, projects) pairs for Project matching filter conditions.
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
@@ -430,17 +430,17 @@ class EncordUserClient:
         workflow_template_hash: Optional[str] = None,
     ) -> str:
         """
-        Creates a new project and returns its uid ('project_hash')
+        Creates a new Project and returns its uid ('project_hash')
 
         Args:
-            project_title: the title of the project
-            dataset_hashes: a list of the dataset uids that the project will use
+            project_title: the title of the Project
+            dataset_hashes: a list of the Dataset uids that the project will use
             project_description: the optional description of the project
-            ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
-            workflow_settings: selects and configures the type of the quality control workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
-            workflow_template_hash: project will be created using a workflow based on the template provided.
+            ontology_hash: the uid of an Ontology to be used. If omitted, a new empty Ontology will be created
+            workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
+            workflow_template_hash: Project is created using a Workflow based on the template provided. To use the default Workflow template the workflow_template_hash argument must be omitted.
         Returns:
-            the uid of the project.
+            the uid of the Project.
         """
         project = {
             "title": project_title,
