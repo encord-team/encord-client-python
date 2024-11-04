@@ -32,6 +32,15 @@ class Range:
     def __repr__(self):
         return f"({self.start}:{self.end})"
 
+    def overlaps(self, other):
+        """Check if two ranges overlap"""
+        return self.start <= other.end and other.start <= self.end
+
+    def merge(self, other):
+        """Merge another range into this one."""
+        self.start = min(self.start, other.start)
+        self.end = max(self.end, other.end)
+
 
 Ranges = List[Range]
 FramesList = List[int]

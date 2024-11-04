@@ -53,7 +53,7 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
 )
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges, Range
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -67,6 +67,7 @@ from encord.orm.label_row import (
     WorkflowGraphNode,
 )
 from encord.utilities.type_utilities import exhaustive_guard
+from encord.utilities.range_utilities import RangeManager
 
 log = logging.getLogger(__name__)
 
@@ -105,6 +106,7 @@ class LabelRowV2:
         self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
+        self._classifications_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
 
         self._objects_map: Dict[str, ObjectInstance] = dict()
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
@@ -508,6 +510,7 @@ class LabelRowV2:
         self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
         self._frame_to_hashes = defaultdict(set)
         self._classifications_to_frames = defaultdict(set)
+        self._classifications_to_ranges = defaultdict(RangeManager)
 
         self._metadata = None
         self._frame_metadata = defaultdict(lambda: None)
@@ -787,7 +790,7 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
-        classification_instance.is_valid()
+        classification_instance.is_valid(self.data_type)
 
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -1485,7 +1488,10 @@ class LabelRowV2:
             ret[classification.classification_hash] = {
                 "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
+                "featureHash": classification.feature_hash,
+                "range": classification.range_list,
             }
+
         return ret
 
     @staticmethod
@@ -1545,14 +1551,19 @@ class LabelRowV2:
             ret["data_link"] = frame_level_data.data_link
 
         ret["data_type"] = frame_level_data.file_type
+
+
         ret["data_sequence"] = data_sequence
-        ret["width"] = frame_level_data.width
-        ret["height"] = frame_level_data.height
+
+        if self.data_type != DataType.AUDIO:
+            ret["width"] = frame_level_data.width
+            ret["height"] = frame_level_data.height
+
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
         if self._label_row_read_only_data.duration is not None:
             ret["data_duration"] = self._label_row_read_only_data.duration
-        if self._label_row_read_only_data.fps is not None:
+        if self._label_row_read_only_data.fps is not None and self.data_type != DataType.AUDIO:
             ret["data_fps"] = self._label_row_read_only_data.fps
 
         return ret
@@ -1699,11 +1710,19 @@ class LabelRowV2:
         return ret
 
     def _is_classification_already_present(self, classification: Classification, frames: Iterable[int]) -> Set[int]:
-        present_frames = self._classifications_to_frames.get(classification, set())
+        if self.data_type == DataType.AUDIO:
+            range_manager = self._classifications_to_ranges.get(classification, RangeManager())
+            return range_manager.intersection(frames)
+        else:
+            present_frames = self._classifications_to_frames.get(classification, set())
         return present_frames.intersection(frames)
 
     def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         self._classifications_to_frames[classification].update(frames)
+
+    def _add_ranges_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
+        ranges = frames_to_ranges(list(frames))
+        self._classifications_to_ranges[classification].add_ranges(ranges)
 
     def _remove_frames_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         present_frames = self._classifications_to_frames.get(classification, set())
@@ -1849,7 +1868,9 @@ class LabelRowV2:
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
+            # In the future, PDF and Text should come here
             elif data_type == DataType.AUDIO:
+                self._add_classification_instances_from_classifications_without_frames(classification_answers)
                 # TODO: run _add_classification_instances_from_classifications here
                 pass
 
@@ -1993,6 +2014,18 @@ class LabelRowV2:
             ):
                 self.add_classification_instance(classification_instance)
 
+    def _add_classification_instances_from_classifications_without_frames(
+        self, classification_answers: dict,
+    ):
+        for classification_answer in classification_answers.values():
+            # TODO: Handle case where classification instance already exists
+            ranges: Ranges = []
+            for range in classification_answer["range"]:
+                ranges.append(Range(range[0], range[1]))
+
+            classification_instance = self._create_new_classification_instance_with_ranges(classification_answer, ranges)
+            self.add_classification_instance(classification_instance)
+
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
         for payload in label_row_data_units.values():
@@ -2043,6 +2076,37 @@ class LabelRowV2:
 
         return None
 
+    # This is only to be used by non-frame modalities (e.g. Audio)
+    def _create_new_classification_instance_with_ranges(
+        self, classification_answer: dict, ranges: Ranges
+    ) -> ClassificationInstance:
+        feature_hash = classification_answer["featureHash"]
+        classification_hash = classification_answer["classificationHash"]
+
+        label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
+
+        range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
+
+        # We added these values to the ClassificationIndex when we introduced audio. It will not exist for older files.
+
+
+        classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
+        classification_instance.set_for_frames(
+            ranges,
+            created_at=range_view.created_at,
+            created_by=range_view.created_by,
+            confidence=range_view.confidence,
+            manual_annotation=range_view.manual_annotation,
+            last_edited_at=range_view.last_edited_at,
+            last_edited_by=range_view.last_edited_by,
+            reviews=range_view.reviews,
+            overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
+        )
+        answers_dict = classification_answer["classifications"]
+        self._add_static_answers_from_dict(classification_instance, answers_dict)
+
+        return classification_instance
+
     def _add_static_answers_from_dict(
         self, classification_instance: ClassificationInstance, answers_list: List[dict]
     ) -> None:
@@ -2053,6 +2117,7 @@ class LabelRowV2:
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
         classification_instance.set_frame_data(frame_view, frame)
+
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:

@@ -1,7 +1,7 @@
 """
 All tests regarding converting from and to Encord dict to the label row.
 """
-
+import json
 import os
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
@@ -25,6 +25,7 @@ from tests.objects.data import (
     video_with_dynamic_classifications_ui_constructed,
 )
 from tests.objects.data.all_ontology_types import all_ontology_types
+from tests.objects.data.audio_labels import AUDIO_LABELS
 from tests.objects.data.dicom_labels import dicom_labels
 from tests.objects.data.dynamic_classifications_ontology import (
     dynamic_classifications_ontology,
@@ -126,6 +127,22 @@ def test_serialise_image_with_object_answers():
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
 
+def test_serialise_audio():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 0
+    label_row_metadata_dict["data_type"] = "AUDIO"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(AUDIO_LABELS)
+
+    actual = label_row.to_encord_dict()
+    print(json.dumps(actual, indent=2))
+    deep_diff_enhanced(
+        actual,
+        AUDIO_LABELS,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+    )
 
 def test_serialise_dicom_with_dynamic_classifications():
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)

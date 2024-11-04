@@ -42,7 +42,7 @@ from encord.objects.attributes import (
 )
 from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges, Range, ranges_to_list
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
@@ -59,7 +59,6 @@ class ClassificationInstance:
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowV2] = None
         self._classification_hash = classification_hash or short_uuid_str()
-
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
 
@@ -94,6 +93,11 @@ class ClassificationInstance:
             return float("inf")
         else:
             return self._parent.number_of_frames
+
+    @property
+    def range_list(self) -> List[List[int]]:
+        frame_ranges = frames_to_ranges(self._frames_to_data.keys())
+        return ranges_to_list(frame_ranges)
 
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
@@ -175,8 +179,11 @@ class ClassificationInstance:
 
         if self.is_assigned_to_label_row():
             assert self._parent is not None
-            self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-            self._parent._add_to_frame_to_hashes_map(self, frames_list)
+            if self._parent is not DataType.AUDIO:
+                self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+                self._parent._add_to_frame_to_hashes_map(self, frames_list)
+            else:
+                self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
 
     def set_frame_data(self, frame_data: FrameData, frames: Frames) -> None:
         frames_list = frames_class_to_frames_list(frames)
@@ -186,8 +193,11 @@ class ClassificationInstance:
 
         if self.is_assigned_to_label_row():
             assert self._parent is not None
-            self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-            self._parent._add_to_frame_to_hashes_map(self, frames_list)
+            if self._parent.data_type is not DataType.AUDIO:
+                self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+                self._parent._add_to_frame_to_hashes_map(self, frames_list)
+            else:
+                self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
@@ -228,7 +238,7 @@ class ClassificationInstance:
         """
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
 
-    def is_valid(self) -> None:
+    def is_valid(self, data_type: DataType) -> None:
         if not len(self._frames_to_data) > 0:
             raise LabelRowError("ClassificationInstance is not on any frames. Please add it to at least one frame.")
 
@@ -464,7 +474,7 @@ class ClassificationInstance:
         def _check_if_frame_view_valid(self) -> None:
             if self._frame not in self._classification_instance._frames_to_data:
                 raise LabelRowError(
-                    "Trying to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frame."
+                    "Trying to use a ClassificationInstance.Annotation for a ClassificationInstance that is not on the frame."
                 )
 
         def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
@@ -482,15 +492,20 @@ class ClassificationInstance:
 
         @staticmethod
         def from_dict(d: dict) -> ClassificationInstance.FrameData:
-            if "lastEditedAt" in d:
+            if "lastEditedAt" in d and d["lastEditedAt"] is not None:
                 last_edited_at = parse_datetime(d["lastEditedAt"])
             else:
                 last_edited_at = datetime.now()
 
+            if "createdAt" in d and d['createdAt'] is not None:
+                created_at = parse_datetime(d["createdAt"])
+            else:
+                created_at = datetime.now()
+
             return ClassificationInstance.FrameData(
-                created_at=parse_datetime(d["createdAt"]),
+                created_at=created_at,
                 created_by=d["createdBy"],
-                confidence=d["confidence"],
+                confidence=d.get("confidence", DEFAULT_CONFIDENCE), # TODO QUESTION: Is setting a default alright here?
                 manual_annotation=d["manualAnnotation"],
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
