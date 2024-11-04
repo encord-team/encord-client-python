@@ -50,9 +50,7 @@ from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     CreateDatasetResponse,
     DatasetAccessSettings,
-    DatasetAPIKey,
     DatasetInfo,
-    DatasetScope,
     DatasetUserRole,
     DicomDeidentifyTask,
     Images,
@@ -73,14 +71,12 @@ from encord.orm.project import (
     ReviewMode,
 )
 from encord.orm.project import Project as OrmProject
-from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import CreateStorageFolderPayload, ListFoldersParams, ListItemsParams, StorageItemType
 from encord.orm.storage import StorageFolder as OrmStorageFolder
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
-    APIKeyScopes,
     CvatImporterError,
     CvatImporterSuccess,
     ImportMethod,
@@ -216,84 +212,6 @@ class EncordUserClient:
 
         result = self._querier.basic_setter(OrmDataset, uid=None, payload=dataset)
         return CreateDatasetResponse.from_dict(result)
-
-    @deprecated("0.1.141", ".get_dataset(...)")
-    def create_dataset_api_key(
-        self,
-        dataset_hash: str,
-        api_key_title: str,
-        dataset_scopes: List[DatasetScope],
-    ) -> DatasetAPIKey:
-        """
-        DEPRECATED: DatasetAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED -  Obtain dataset_client:
-        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
-
-        RECOMMENDED - Obtain dataset_client:
-        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
-        """
-
-        return DatasetAPIKey.from_dict(
-            self._querier.basic_setter(
-                DatasetAPIKey,
-                uid=None,
-                payload={
-                    "dataset_hash": dataset_hash,
-                    "title": api_key_title,
-                    "scopes": [x.value for x in dataset_scopes],
-                },
-            )
-        )
-
-    @deprecated("0.1.141", ".get_dataset(...)")
-    def get_dataset_api_keys(
-        self,
-        dataset_hash: str,
-    ) -> List[DatasetAPIKey]:
-        """
-        DEPRECATED: DatasetAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED -  Obtain dataset_client:
-        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
-
-        RECOMMENDED - Obtain dataset_client:
-        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
-        """
-
-        return self._querier.get_multiple(
-            DatasetAPIKey,
-            uid=None,
-            payload={"dataset_hash": dataset_hash},
-        )
-
-    @deprecated("0.1.141", ".get_dataset(...)")
-    def get_or_create_dataset_api_key(
-        self,
-        dataset_hash: str,
-    ) -> DatasetAPIKey:
-        """
-        DEPRECATED: DatasetAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED -  Obtain dataset_client:
-        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
-
-        RECOMMENDED - Obtain dataset_client:
-        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
-        """
-
-        for key in self.get_dataset_api_keys(dataset_hash):
-            if set(key.scopes) == set(DatasetScope):
-                return key
-
-        return self.create_dataset_api_key(
-            dataset_hash=dataset_hash,
-            api_key_title=f"{dataset_hash} - admin key",
-            dataset_scopes=list(DatasetScope),
-        )
 
     def get_datasets(
         self,
@@ -458,80 +376,6 @@ class EncordUserClient:
             project["workflow_template_id"] = workflow_template_hash
 
         return self._querier.basic_setter(OrmProject, uid=None, payload=project)
-
-    @deprecated("0.1.141", ".get_project(...)")
-    def create_project_api_key(
-        self,
-        project_hash: str,
-        api_key_title: str,
-        scopes: List[APIKeyScopes],
-    ) -> str:
-        """
-        DEPRECATED: ProjectAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED - Obtain project_client:
-        project_client = EncordClientProject.initialise(project_hash, project_api_key)
-
-        RECOMMENDED - Obtain project_client:
-        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
-        """
-
-        return self._querier.basic_setter(
-            ProjectAPIKey,
-            uid=project_hash,
-            payload={
-                "title": api_key_title,
-                "scopes": [x.value for x in scopes],
-            },
-        )
-
-    @deprecated("0.1.141", ".get_project(...)")
-    def get_project_api_keys(
-        self,
-        project_hash: str,
-    ) -> List[ProjectAPIKey]:
-        """
-        DEPRECATED: ProjectAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED - Obtain project_client:
-        project_client = EncordClientProject.initialise(project_hash, project_api_key)
-
-        RECOMMENDED - Obtain project_client:
-        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
-        """
-
-        return self._querier.get_multiple(
-            ProjectAPIKey,
-            uid=project_hash,
-        )
-
-    @deprecated("0.1.141", ".get_project(...)")
-    def get_or_create_project_api_key(
-        self,
-        project_hash: str,
-    ) -> str:
-        """
-        DEPRECATED: ProjectAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED - Obtain project_client:
-        project_client = EncordClientProject.initialise(project_hash, project_api_key)
-
-        RECOMMENDED - Obtain project_client:
-        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
-        """
-
-        for key in self.get_project_api_keys(project_hash):
-            if set(key.scopes) == set(APIKeyScopes):
-                return key.api_key
-
-        return self.create_project_api_key(
-            project_hash=project_hash,
-            api_key_title=f"{project_hash} - admin key",
-            scopes=list(APIKeyScopes),
-        )
 
     @deprecated("0.1.98", ".get_dataset()")
     def get_dataset_client(

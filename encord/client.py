@@ -1,21 +1,3 @@
-"""``encord.client`` provides a simple Python client that allows you
-to query project resources through the Encord API.
-
-Here is a simple example for instantiating the client for a project
-and obtaining project info:
-
-.. test_blurb2.py code::
-
-    from encord.client import EncordClient
-
-    client = EncordClient.initialize('YourProjectID', 'YourAPIKey')
-    client.get_project()
-
-    Returns:
-        Project: A project record instance. See Project ORM for details.
-
-"""
-
 from __future__ import annotations
 
 import base64
@@ -185,67 +167,6 @@ class EncordClient:
 
         return self._api_client
 
-    @staticmethod
-    def initialise(
-        resource_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-        domain: str = ENCORD_DOMAIN,
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-    ) -> Union[EncordClientProject, EncordClientDataset]:
-        """
-        Create and initialize a Encord client from a resource EntityId and API key.
-
-        Args:
-            resource_id: either of the following
-
-                * A <project_hash>.
-                  If ``None``, uses the ``ENCORD_PROJECT_ID`` environment variable.
-                  The ``CORD_PROJECT_ID`` environment variable is supported for backwards compatibility.
-
-                * A <dataset_hash>.
-                  If ``None``, uses the ``ENCORD_DATASET_ID`` environment variable.
-                  The ``CORD_DATASET_ID`` environment variable is supported for backwards compatibility.
-
-            api_key: An API key.
-                     If None, uses the ``ENCORD_API_KEY`` environment variable.
-                     The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
-            domain: The encord api-server domain.
-                If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
-            requests_settings: The RequestsSettings from this config
-
-        Returns:
-            EncordClient: A Encord client instance.
-        """
-        config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
-        return EncordClient.initialise_with_config(config)
-
-    @staticmethod
-    def initialise_with_config(config: ApiKeyConfig) -> Union[EncordClientProject, EncordClientDataset]:
-        """
-        Create and initialize a Encord client from a Encord config instance.
-
-        Args:
-            config: A Encord config instance.
-
-        Returns:
-            EncordClient: A Encord client instance.
-        """
-        querier = Querier(config, resource_id=config.resource_id)
-        key_type = querier.basic_getter(ApiKeyMeta)
-
-        if key_type.resource_type == TYPE_PROJECT:
-            logger.info("Initialising Encord client for project using key: %s", key_type.title)
-            return EncordClientProject(querier, config)
-
-        elif key_type.resource_type == TYPE_DATASET:
-            logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
-            return EncordClientDataset(querier, config)
-
-        else:
-            raise encord.exceptions.InitialisationError(
-                message=f"API key [{config.api_key}] is not associated with a project or dataset"
-            )
-
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return self._querier.get_multiple(CloudIntegration)
 
@@ -267,71 +188,6 @@ class EncordClientDataset(EncordClient):
     ):
         super().__init__(querier, config, api_client)
         self._dataset_access_settings = dataset_access_settings
-
-    @staticmethod
-    def initialise(
-        resource_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-        domain: str = ENCORD_DOMAIN,
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
-    ) -> EncordClientDataset:
-        """
-        Create and initialize a Encord client from a resource EntityId and API key.
-
-        Args:
-            resource_id: either of the following
-
-                * A <project_hash>.
-                  If ``None``, uses the ``ENCORD_PROJECT_ID`` environment variable.
-                  The ``CORD_PROJECT_ID`` environment variable is supported for backwards compatibility.
-
-                * A <dataset_hash>.
-                  If ``None``, uses the ``ENCORD_DATASET_ID`` environment variable.
-                  The ``CORD_DATASET_ID`` environment variable is supported for backwards compatibility.
-
-            api_key: An API key.
-                     If None, uses the ``ENCORD_API_KEY`` environment variable.
-                     The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
-            domain: The encord api-server domain.
-                If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
-            requests_settings: The RequestsSettings from this config
-            dataset_access_settings: Change the default :class:`encord.orm.dataset.DatasetAccessSettings`.
-
-        Returns:
-            EncordClientDataset: A Encord client dataset instance.
-        """
-        config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
-        return EncordClientDataset.initialise_with_config(config, dataset_access_settings=dataset_access_settings)
-
-    @staticmethod
-    def initialise_with_config(
-        config: ApiKeyConfig, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
-    ) -> EncordClientDataset:
-        """
-        Create and initialize a Encord client from a Encord config instance.
-
-        Args:
-            config: A Encord config instance.
-            dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
-
-        Returns:
-            EncordClientDataset: An Encord client dataset instance.
-        """
-        querier = Querier(config, resource_id=config.resource_id)
-        key_type = querier.basic_getter(ApiKeyMeta)
-
-        if key_type.resource_type == TYPE_PROJECT:
-            raise RuntimeError("Trying to initialise an EncordClientDataset using a project key.")
-
-        elif key_type.resource_type == TYPE_DATASET:
-            logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
-            return EncordClientDataset(querier, config, dataset_access_settings=dataset_access_settings)
-
-        else:
-            raise encord.exceptions.InitialisationError(
-                message=f"API key [{config.api_key}] is not associated with a project or dataset"
-            )
 
     def get_dataset(self) -> OrmDataset:
         """

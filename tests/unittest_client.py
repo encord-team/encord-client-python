@@ -2,6 +2,7 @@ import os
 import unittest
 import uuid
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 from encord.client import EncordClient
 from encord.exceptions import (
@@ -39,10 +40,17 @@ class UnitTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(UnitTests, cls).setUpClass()
-        cls.read_c = EncordClient.initialise(PROJECT_ID, LABEL_READ_KEY)
-        cls.write_c = EncordClient.initialise(PROJECT_ID, LABEL_WRITE_KEY)
-        cls.rw_c = EncordClient.initialise(PROJECT_ID, LABEL_READ_WRITE_KEY)
-        cls.dt_c = EncordClient.initialise(DATASET_ID, DATASET_KEY)
+
+        client = EncordClient(
+            querier=MagicMock(),
+            config=MagicMock(),
+            api_client=MagicMock(),
+        )
+
+        cls.read_c = client
+        cls.write_c = client
+        cls.rw_c = client
+        cls.dt_c = client
 
     def test_create_label_wrong_data_hash(self):
         with self.assertRaises(AuthorisationError):
@@ -56,24 +64,6 @@ class UnitTests(unittest.TestCase):
     def test_create_label_with_readonly(self):
         with self.assertRaises(OperationNotAllowed):
             self.read_c.create_label_row(DATA_ID)
-
-    def test_1(self):
-        with self.assertRaises(AuthenticationError) as excinfo:
-            EncordClient.initialise(PROJECT_ID)
-        self.assertEqual("API key not provided", str(excinfo.exception))
-
-    def test_2(self):
-        with self.assertRaises(AuthenticationError) as excinfo:
-            EncordClient.initialise(api_key=LABEL_READ_WRITE_KEY)
-        self.assertEqual("Project ID or dataset ID not provided", str(excinfo.exception))
-
-    def test_3(self):
-        with self.assertRaises(AuthenticationError):
-            EncordClient.initialise(PROJECT_ID, uuid.uuid4())
-
-    def test_4(self):
-        with self.assertRaises(AuthenticationError):
-            EncordClient.initialise(uuid.uuid4(), LABEL_READ_WRITE_KEY)
 
     def test_5(self):
         assert isinstance(self.rw_c.get_label_row(LABEL_ID), LabelRow)

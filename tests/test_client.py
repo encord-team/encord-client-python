@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from encord.client import EncordClient
@@ -22,18 +24,11 @@ def keys():
 
 @pytest.fixture
 def client(keys):
-    return EncordClient.initialise(resource_id=keys[0], api_key=keys[1])
-
-
-def test_initialise(keys):
-    assert isinstance(EncordClient.initialise(resource_id=keys[0], api_key=keys[1]), EncordClient)
-
-
-def test_missing_key(keys):
-    with pytest.raises(expected_exception=AuthenticationError) as excinfo:
-        EncordClient.initialise(resource_id=keys[0])
-
-    assert excinfo.value.message == "API key not provided"
+    return EncordClient(
+        querier=MagicMock(),
+        config=MagicMock(),
+        api_client=MagicMock(),
+    )
 
 
 def test_get_project(client):

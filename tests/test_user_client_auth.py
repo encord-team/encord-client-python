@@ -236,18 +236,3 @@ def test_v2_api_when_initialised_with_bearer_auth(mock_send, bearer_token):
         # Expect call to have correct resource type and id, and correct bearer auth
         assert mock_call.args[0].path_url.startswith("/v2/public/analytics/collaborators/timers")
         assert mock_call.args[0].headers["Authorization"] == f"Bearer {bearer_token}"
-
-
-@patch.object(Session, "send")
-def test_v1_public_when_initialised_with_api_key(mock_send, bearer_token):
-    mock_send.side_effect = make_side_effects()
-
-    client = EncordClient.initialise(resource_id="project-hash", api_key="dummy api key")
-    client.get_project()
-
-    assert mock_send.call_count == 2
-    mock_call = mock_send.call_args_list[1]  # Only ontology call goes to the public api v1 now
-
-    # Expect call to have correct resource type and id, and correct bearer auth
-    assert mock_call.args[0].path_url.startswith("/public")
-    assert mock_call.args[0].headers["Authorization"] == "dummy api key"
