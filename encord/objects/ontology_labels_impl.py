@@ -1729,6 +1729,10 @@ class LabelRowV2:
         for frame in frames:
             present_frames.remove(frame)
 
+    def _remove_ranges_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
+        ranges = frames_to_ranges(list(frames))
+        self._classifications_to_ranges[classification].remove_ranges(ranges)
+
     def _add_to_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frames: Iterable[int]
     ) -> None:

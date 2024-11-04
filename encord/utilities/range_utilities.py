@@ -33,11 +33,6 @@ class RangeManager:
         for new_range in new_ranges:
             self.add_range(new_range)
 
-    def update_range(self, old_range: Range, new_range: Range):
-        """Update an existing range by removing the old one and adding the new one."""
-        self.remove_range(old_range)
-        self.add_range(new_range)
-
     def remove_range(self, range_to_remove: Range):
         """Remove a specific range."""
         new_ranges = []
@@ -55,6 +50,11 @@ class RangeManager:
 
         self.ranges = new_ranges
 
+    def remove_ranges(self, ranges_to_remove: Ranges):
+        """Remove multiple ranges."""
+        for r in ranges_to_remove:
+            self.remove_range(r)
+
     def get_ranges(self):
         """Return the sorted list of merged ranges."""
         return sorted(self.ranges, key=lambda r: r.start)
@@ -71,17 +71,3 @@ class RangeManager:
         """Returns set of intersecting frames"""
         current_frames = self.get_ranges_as_frames()
         return current_frames.intersection(other_frames)
-
-# Example usage:
-ranges = [Range(start=1, end=5), Range(start=10, end=20), Range(start=25, end=30)]
-manager = RangeManager(ranges)
-print("Initial Ranges:", manager.get_ranges())  # Should show merged initial ranges
-
-manager.add_range(Range(start=3, end=12))
-print("After Adding [3, 12]:", manager.get_ranges())  # Should merge overlapping ranges
-
-manager.update_range(Range(start=20, end=25), Range(start=22, end=30))
-print("After Updating [20, 25] to [22, 30]:", manager.get_ranges())  # Should reflect update
-
-manager.remove_range(Range(start=10, end=12))
-print("After Removing [10, 12]:", manager.get_ranges())

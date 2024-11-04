@@ -60,7 +60,6 @@ class ClassificationInstance:
         self._parent: Optional[LabelRowV2] = None
         self._classification_hash = classification_hash or short_uuid_str()
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
-        # feature_node_hash of attribute to the answer.
 
         self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
 
