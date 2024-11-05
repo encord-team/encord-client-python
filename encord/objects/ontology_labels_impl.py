@@ -2040,7 +2040,6 @@ class LabelRowV2:
         self, classification_answers: dict,
     ):
         for classification_answer in classification_answers.values():
-            # TODO: Handle case where classification instance already exists
             ranges: Ranges = []
             for range in classification_answer["range"]:
                 ranges.append(Range(range[0], range[1]))
