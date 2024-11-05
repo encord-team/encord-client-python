@@ -127,9 +127,10 @@ def test_serialise_image_with_object_answers():
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
 
+
 def test_serialise_audio():
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
-    label_row_metadata_dict["frames_per_second"] = 0
+    label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
@@ -137,12 +138,12 @@ def test_serialise_audio():
     label_row.from_labels_dict(AUDIO_LABELS)
 
     actual = label_row.to_encord_dict()
-    print(json.dumps(actual, indent=2))
     deep_diff_enhanced(
         AUDIO_LABELS,
         actual,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
+
 
 def test_serialise_dicom_with_dynamic_classifications():
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)

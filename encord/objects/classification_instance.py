@@ -227,8 +227,12 @@ class ClassificationInstance:
 
         if self.is_assigned_to_label_row():
             assert self._parent is not None
-            self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
-            self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
+
+            if self._parent.data_type == DataType.AUDIO:
+                self._parent._remove_ranges_from_classification(self.ontology_item, frame_list)
+            else:
+                self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
+                self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
     def get_annotations(self) -> List[Annotation]:
         """

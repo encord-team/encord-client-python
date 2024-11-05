@@ -28,8 +28,11 @@ from encord.objects.frames import Range
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import all_types_structure
+from tests.objects.data.audio_labels import AUDIO_LABELS, EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
+from tests.objects.test_label_structure_converter import ontology_from_dict
 
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 polygon_ontology_item = all_types_structure.get_child_by_hash("ODkxMzAx", Object)
@@ -618,6 +621,63 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
 
     overlapping_classification_instance = ClassificationInstance(text_classification)
     overlapping_classification_instance.set_for_frames(1)
+    with pytest.raises(LabelRowError):
+        label_row.add_classification_instance(overlapping_classification_instance)
+
+    overlapping_classification_instance.remove_from_frames(1)
+    overlapping_classification_instance.set_for_frames(5)
+    label_row.add_classification_instance(overlapping_classification_instance)
+    with pytest.raises(LabelRowError):
+        overlapping_classification_instance.set_for_frames(1)
+
+    # Do not raise if overwrite flag is passed
+    overlapping_classification_instance.set_for_frames(1, overwrite=True)
+
+    label_row.remove_classification(classification_instance_1)
+    overlapping_classification_instance.set_for_frames(1)
+
+    with pytest.raises(LabelRowError):
+        overlapping_classification_instance.set_for_frames(3)
+
+    classification_instance_2.remove_from_frames(3)
+    overlapping_classification_instance.set_for_frames(3)
+
+
+def test_add_and_get_classification_instances_to_audio_label_row(ontology):
+
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "AUDIO"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
+    label_row.from_labels_dict(EMPTY_AUDIO_LABELS)
+
+    classification_instance_1 = ClassificationInstance(text_classification)
+    classification_instance_2 = ClassificationInstance(text_classification)
+    classification_instance_3 = ClassificationInstance(checklist_classification)
+
+    classification_instance_1.set_for_frames(Range(1, 2))
+    classification_instance_2.set_for_frames(Range(3, 4))
+    classification_instance_3.set_for_frames(Range(1, 4))
+
+    label_row.add_classification_instance(classification_instance_1)
+    label_row.add_classification_instance(classification_instance_2)
+    label_row.add_classification_instance(classification_instance_3)
+
+    classification_instances = label_row.get_classification_instances()
+    assert set(classification_instances) == {
+        classification_instance_1,
+        classification_instance_2,
+        classification_instance_3,
+    }
+
+    filtered_classification_instances = label_row.get_classification_instances(text_classification)
+    assert set(filtered_classification_instances) == {classification_instance_1, classification_instance_2}
+
+    overlapping_classification_instance = ClassificationInstance(text_classification)
+    overlapping_classification_instance.set_for_frames(1)
+
     with pytest.raises(LabelRowError):
         label_row.add_classification_instance(overlapping_classification_instance)
 

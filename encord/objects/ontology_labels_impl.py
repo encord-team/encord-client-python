@@ -53,7 +53,8 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
 )
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges, Range
+from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges, Range, \
+    ranges_list_to_ranges
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -825,8 +826,11 @@ class LabelRowV2:
         self._classifications_map[classification_hash] = classification_instance
         classification_instance._parent = self
 
-        self._classifications_to_frames[classification_instance.ontology_item].update(frames)
-        self._add_to_frame_to_hashes_map(classification_instance, frames)
+        if self.data_type == DataType.AUDIO:
+            self._classifications_to_ranges[classification_instance.ontology_item].add_ranges(frames_to_ranges(frames))
+        else:
+            self._classifications_to_frames[classification_instance.ontology_item].update(frames)
+            self._add_to_frame_to_hashes_map(classification_instance, frames)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
         """
@@ -839,10 +843,16 @@ class LabelRowV2:
 
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
-        all_frames = self._classifications_to_frames[classification_instance.ontology_item]
-        actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
-        for actual_frame in actual_frames:
-            all_frames.remove(actual_frame)
+        
+        if self.data_type == DataType.AUDIO:
+            range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
+            ranges_to_remove = ranges_list_to_ranges(classification_instance.range_list)
+            range_manager.remove_ranges(ranges_to_remove)
+        else:
+            all_frames = self._classifications_to_frames[classification_instance.ontology_item]
+            actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
+            for actual_frame in actual_frames:
+                all_frames.remove(actual_frame)
 
     def add_to_single_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
@@ -1488,12 +1498,19 @@ class LabelRowV2:
             ret[classification.classification_hash] = {
                 "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
+                "featureHash": classification.feature_hash,
             }
 
             # At some point, we also want to add these to the other modalities
             if self.data_type == DataType.AUDIO:
-                ret[classification.classification_hash]["featureHash"] = classification.feature_hash
+                annotation = classification.get_annotations()[0]
                 ret[classification.classification_hash]["range"] = classification.range_list
+                ret[classification.classification_hash]["createdBy"] = annotation.created_by
+                ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
+                    DATETIME_LONG_STRING_FORMAT)
+                ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
+                ret[classification.classification_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
 
         return ret
 
