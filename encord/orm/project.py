@@ -295,10 +295,6 @@ class ProjectImporter(BaseDTO):
     errors: List[str]
 
 
-class ProjectImporterCvatInfo(BaseDTO):
-    export_type: CvatExportType
-
-
 class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
 
