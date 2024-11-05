@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import base64
 import logging
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -67,7 +68,6 @@ from encord.orm.project import (
     CvatExportType,
     ManualReviewWorkflowSettings,
     ProjectImporter,
-    ProjectImporterCvatInfo,
     ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,
@@ -631,9 +631,14 @@ class EncordUserClient:
             raise ValueError(f"The file `{annotations_file_path}` does not exist.")
 
         with annotations_file_path.open("rb") as f:
-            annotations_base64 = base64.b64encode(f.read()).decode("utf-8")
+            annotations_bytes = f.read()
+            annotations_str = annotations_bytes.decode("utf-8")
+            annotations_base64 = base64.b64encode(annotations_bytes).decode("utf-8")
 
-        images_paths, used_base_path = self.__get_images_paths(annotations_base64, images_directory_path)
+        images_paths, used_base_path = self.__get_images_paths(
+            annotations_str,
+            images_directory_path,
+        )
 
         log.info("Starting image upload.")
         dataset_hash, image_title_to_image = self.__upload_cvat_images(images_paths, used_base_path, dataset_name)
@@ -669,16 +674,16 @@ class EncordUserClient:
         else:
             raise ValueError("The api server responded with an invalid payload.")
 
-    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> Tuple[List[Path], Path]:
-        payload = {"annotations_base64": annotations_base64}
-        project_info = self._querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
-        if "error" in project_info:
-            message = project_info["error"]["message"]
-            raise ValueError(message)
+    def __get_images_paths(
+        self,
+        annotations_str: str,
+        images_directory_path: Path,
+    ) -> Tuple[List[Path], Path]:
+        meta_tags = [x.tag for x in ET.fromstring(annotations_str).find("meta") or []]
 
-        export_type = project_info["success"]["export_type"]
-        if export_type == CvatExportType.PROJECT:
+        if "project" in meta_tags:
             default_path = images_directory_path.joinpath("default")
+
             if default_path not in list(images_directory_path.iterdir()):
                 raise ValueError("The expected directory 'default' was not found.")
 
@@ -686,16 +691,19 @@ class EncordUserClient:
             # NOTE: it is possible that here we also need to use the __get_recursive_image_paths
             images = list(default_path.iterdir())
 
-        elif export_type == CvatExportType.TASK:
+        elif "task" in meta_tags:
             used_base_path = images_directory_path
             images = self.__get_recursive_image_paths(images_directory_path)
+
         else:
             raise ValueError(
-                f"Received an unexpected response `{project_info}` from the server. Project import aborted."
+                "Neither the 'project' nor the 'task' field was found in the CVAT annotations' 'meta' "
+                "field. The annotation file is likely ill-formed."
             )
 
         if not images:
             raise ValueError("No images found in the provided data folder.")
+
         return images, used_base_path
 
     @staticmethod
