@@ -4,14 +4,18 @@ from encord.objects.frames import Ranges, Range
 
 
 class RangeManager:
+    """
+    Range Manager class to hold a list of frame ranges, and operate on them.
+    """
+
     def __init__(self, ranges: Optional[Ranges] = None):
         self.ranges: Ranges = []
         if ranges:
             for r in ranges:
                 self.add_range(r)
 
-    def add_range(self, new_range: Range):
-        """Add a range, merging any overlapping or contiguous ranges."""
+    def add_range(self, new_range: Range) -> None:
+        """Add a range, merging any overlapping ranges."""
         if not self.ranges:
             self.ranges.append(new_range)
             return
@@ -28,12 +32,12 @@ class RangeManager:
         merged_ranges.append(new_range)  # Add the new (merged) range
         self.ranges = sorted(merged_ranges, key=lambda r: r.start)
 
-    def add_ranges(self, new_ranges: Ranges):
-        """Add multiple ranges"""
+    def add_ranges(self, new_ranges: Ranges) -> None:
+        """Add multiple ranges."""
         for new_range in new_ranges:
             self.add_range(new_range)
 
-    def remove_range(self, range_to_remove: Range):
+    def remove_range(self, range_to_remove: Range) -> None:
         """Remove a specific range."""
         new_ranges = []
 
@@ -50,12 +54,12 @@ class RangeManager:
 
         self.ranges = new_ranges
 
-    def remove_ranges(self, ranges_to_remove: Ranges):
+    def remove_ranges(self, ranges_to_remove: Ranges) -> None:
         """Remove multiple ranges."""
         for r in ranges_to_remove:
             self.remove_range(r)
 
-    def get_ranges(self):
+    def get_ranges(self) -> Ranges:
         """Return the sorted list of merged ranges."""
         return sorted(self.ranges, key=lambda r: r.start)
 
