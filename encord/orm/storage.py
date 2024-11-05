@@ -498,6 +498,10 @@ class StorageFolderSummary(BaseDTO):
     image_sequences: int
     dicom_files: int
     dicom_series: int
+    niftis: int
+    audios: int
+    pdfs: int
+    plain_texts: int
     tombstones: int
     upload_jobs: int
     total_size: float
