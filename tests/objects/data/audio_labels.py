@@ -36,6 +36,8 @@ AUDIO_LABELS = {
                     },
                 ],
                 "range": [[0, 1]],
+                "createdBy": "user1Hash",
+                "manualAnnotation": True
             },
             "radioClassificationHash": {
                 "classificationHash": "radioClassificationHash",
@@ -63,6 +65,8 @@ AUDIO_LABELS = {
                     },
                 ],
                 "range": [[0, 1]],
+                "createdBy": "user1Hash",
+                "manualAnnotation": True
             },
             "checklistClassificationHash": {
                 "classificationHash": "checklistClassificationHash",
@@ -88,6 +92,8 @@ AUDIO_LABELS = {
                     },
                 ],
                 "range": [[0, 1]],
+                "createdBy": "user1Hash",
+                "manualAnnotation": True
             },
     },
     "object_actions": {},

@@ -139,8 +139,8 @@ def test_serialise_audio():
     actual = label_row.to_encord_dict()
     print(json.dumps(actual, indent=2))
     deep_diff_enhanced(
-        actual,
         AUDIO_LABELS,
+        actual,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
     )
 

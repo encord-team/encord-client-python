@@ -237,7 +237,7 @@ class ClassificationInstance:
         """
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
 
-    def is_valid(self, data_type: DataType) -> None:
+    def is_valid(self) -> None:
         if not len(self._frames_to_data) > 0:
             raise LabelRowError("ClassificationInstance is not on any frames. Please add it to at least one frame.")
 

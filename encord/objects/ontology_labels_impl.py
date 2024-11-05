@@ -790,7 +790,7 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
-        classification_instance.is_valid(self.data_type)
+        classification_instance.is_valid()
 
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -1488,9 +1488,12 @@ class LabelRowV2:
             ret[classification.classification_hash] = {
                 "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
-                "featureHash": classification.feature_hash,
-                "range": classification.range_list,
             }
+
+            # At some point, we also want to add these to the other modalities
+            if self.data_type == DataType.AUDIO:
+                ret[classification.classification_hash]["featureHash"] = classification.feature_hash
+                ret[classification.classification_hash]["range"] = classification.range_list
 
         return ret
 
@@ -1875,8 +1878,6 @@ class LabelRowV2:
             # In the future, PDF and Text should come here
             elif data_type == DataType.AUDIO:
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
-                # TODO: run _add_classification_instances_from_classifications here
-                pass
 
             else:
                 exhaustive_guard(data_type)
@@ -2090,9 +2091,6 @@ class LabelRowV2:
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
 
         range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
-
-        # We added these values to the ClassificationIndex when we introduced audio. It will not exist for older files.
-
 
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
         classification_instance.set_for_frames(
