@@ -681,7 +681,7 @@ class EncordUserClient:
     ) -> Tuple[List[Path], Path]:
         meta_tags = [x.tag for x in ET.fromstring(annotations_str).find("meta") or []]
 
-        if "project" in meta_tags:
+        if CvatExportType.PROJECT.value in meta_tags:
             default_path = images_directory_path.joinpath("default")
 
             if default_path not in list(images_directory_path.iterdir()):
@@ -691,7 +691,7 @@ class EncordUserClient:
             # NOTE: it is possible that here we also need to use the __get_recursive_image_paths
             images = list(default_path.iterdir())
 
-        elif "task" in meta_tags:
+        elif CvatExportType.TASK.value in meta_tags:
             used_base_path = images_directory_path
             images = self.__get_recursive_image_paths(images_directory_path)
 
