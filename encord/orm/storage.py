@@ -26,6 +26,8 @@ class StorageItemType(CamelStrEnum):
     DICOM_SERIES = auto()
     AUDIO = auto()
     NIFTI = auto()
+    PLAIN_TEXT = auto()
+    PDF = auto()
 
 
 class StorageUserRole(CamelStrEnum):
