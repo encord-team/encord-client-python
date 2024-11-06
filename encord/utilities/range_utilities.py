@@ -1,6 +1,6 @@
-from typing import Union, Optional, Iterable, Set
+from typing import Union, Optional, Iterable, Set, List, cast
 
-from encord.objects.frames import Ranges, Range
+from encord.objects.frames import Ranges, Range, Frames
 
 
 class RangeManager:
@@ -8,11 +8,22 @@ class RangeManager:
     Range Manager class to hold a list of frame ranges, and operate on them.
     """
 
-    def __init__(self, ranges: Optional[Ranges] = None):
+    def __init__(self, frame_class: Optional[Frames] = None):
         self.ranges: Ranges = []
-        if ranges:
-            for r in ranges:
-                self.add_range(r)
+        if isinstance(frame_class, int):
+            self.add_range(Range(start=frame_class, end=frame_class))
+        elif isinstance(frame_class, Range):
+            self.add_range(frame_class)
+        elif isinstance(frame_class, list):
+            if all(isinstance(x, int) for x in frame_class):
+                for frame in frame_class:
+                    self.add_range(Range(start=cast(int, frame), end=cast(int, frame)))
+            elif all(isinstance(x, Range) for x in frame_class):
+                self.add_ranges(cast(Ranges, frame_class))
+        elif frame_class is None:
+            self.ranges = []
+        else:
+            raise RuntimeError("Unexpected type for frames.")
 
     def add_range(self, new_range: Range) -> None:
         """Add a range, merging any overlapping ranges."""
@@ -61,7 +72,9 @@ class RangeManager:
 
     def get_ranges(self) -> Ranges:
         """Return the sorted list of merged ranges."""
-        return sorted(self.ranges, key=lambda r: r.start)
+        copied_ranges = [range.copy() for range in self.ranges]
+
+        return sorted(copied_ranges, key=lambda r: r.start)
 
     def get_ranges_as_frames(self) -> Set[int]:
         """Returns set of intersecting frames"""
@@ -71,7 +84,33 @@ class RangeManager:
 
         return res
 
-    def intersection(self, other_frames: Iterable[int]) -> Set[int]:
-        """Returns set of intersecting frames"""
-        current_frames = self.get_ranges_as_frames()
-        return current_frames.intersection(other_frames)
+    def intersection(self, other_frame_class: Frames) -> Ranges:
+        """Returns list of intersecting ranges"""
+        intersection_ranges: Ranges = []
+        other_range_manager = RangeManager(other_frame_class)
+        other_ranges = other_range_manager.get_ranges()
+        current_ranges = self.get_ranges()
+
+        # If either list of ranges is empty, there is no intersection
+        if len(other_ranges) == 0 or len(current_ranges) == 0:
+            return []
+
+        # Since ranges are sorted, we can use 2-pointer method to find intersections
+        current_index, other_index = 0, 0
+
+        while current_index < len(current_ranges) and other_index < len(other_ranges):
+            current_range = current_ranges[current_index]
+            other_range = other_ranges[other_index]
+
+            if current_range.overlaps(other_range):
+                intersect_start = max(current_range.start, other_range.start)
+                intersect_end = min(current_range.end, other_range.end)
+                intersection_ranges.append(Range(intersect_start, intersect_end))
+
+            # Move pointer for the range that ends first
+            if current_range.end < other_range.end:
+                current_index += 1
+            else:
+                other_index += 1
+
+        return intersection_ranges

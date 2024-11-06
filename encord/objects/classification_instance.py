@@ -49,6 +49,7 @@ from encord.objects.internal_helpers import (
 )
 from encord.objects.options import Option, _get_option_by_hash
 from encord.objects.utils import check_email, short_uuid_str
+from encord.utilities.range_utilities import RangeManager
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2
@@ -62,6 +63,10 @@ class ClassificationInstance:
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
+
+        # Only used for non-frame entities
+        self._use_range: bool = False
+        self._range_manager: RangeManager = RangeManager()
 
         self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
 
@@ -96,12 +101,62 @@ class ClassificationInstance:
             return self._parent.number_of_frames
 
     @property
-    def range_list(self) -> List[List[int]]:
-        frame_ranges = frames_to_ranges(self._frames_to_data.keys())
-        return ranges_to_list(frame_ranges)
+    def range_list(self) -> Ranges:
+        if self._use_range or (self._parent is not None and self._parent.data_type == DataType.AUDIO):
+            return self._range_manager.get_ranges()
+        else:
+            # TODO: Think about this
+            raise LabelRowError("No ranges available for this classification instance.")
 
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
+
+    def set_for_ranges(
+            self,
+            frames: Frames,
+            overwrite: bool,
+            created_at: Optional[datetime],
+            created_by: Optional[str],
+            confidence: float,
+            manual_annotation: bool,
+            last_edited_at: Optional[datetime],
+            last_edited_by: Optional[str],
+            reviews: Optional[List[dict]],
+    ):
+        new_range_manager = RangeManager(frame_class=frames)
+        conflicting_ranges = self._is_classification_already_present_on_range(new_range_manager.get_ranges())
+        if conflicting_ranges and not overwrite:
+            raise LabelRowError(
+                f"The classification '{self.classification_hash}' already exists "
+                f"on the ranges {conflicting_ranges}. "
+                f"Set 'overwrite' parameter to True to override."
+            )
+
+        new_range_manager.remove_ranges(conflicting_ranges)
+
+        ranges_to_add = new_range_manager.get_ranges()
+        for range_to_add in ranges_to_add:
+            self._check_within_range(range_to_add.end)
+
+        # TODO: Think about this and write comment
+        self._frames_to_data = {}
+        self._set_frame_and_frame_data(
+            frame=0,
+            overwrite=overwrite,
+            created_at=created_at,
+            created_by=created_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            reviews=reviews,
+        )
+
+        self._range_manager.add_ranges(ranges_to_add)
+
+        if self.is_assigned_to_label_row():
+            assert self._parent is not None
+            self._parent._add_ranges_to_classification(self.ontology_item, ranges_to_add)
 
     def set_for_frames(
         self,
@@ -115,6 +170,7 @@ class ClassificationInstance:
         last_edited_at: Optional[datetime] = None,
         last_edited_by: Optional[str] = None,
         reviews: Optional[List[dict]] = None,
+        use_range: bool = False,
     ) -> None:
         """
         Places the classification onto the specified frame. If the classification already exists on the frame and
@@ -142,6 +198,8 @@ class ClassificationInstance:
                 Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
             reviews:
                 Should only be set by internal functions.
+            use_range:
+                Should only be set by internal functions.
         """
         if created_at is None:
             created_at = datetime.now()
@@ -149,25 +207,11 @@ class ClassificationInstance:
         if last_edited_at is None:
             last_edited_at = datetime.now()
 
-        frames_list = frames_class_to_frames_list(frames)
+        self._use_range = use_range or (self._parent is not None and self._parent.data_type == DataType.AUDIO)
 
-        conflicting_frames_list = self._is_classification_already_present(frames_list)
-        if conflicting_frames_list and not overwrite:
-            raise LabelRowError(
-                f"The classification '{self.classification_hash}' already exists "
-                f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
-                f"Set 'overwrite' parameter to True to override."
-            )
-
-        frames_to_add = set(frames_list) - conflicting_frames_list if conflicting_frames_list else frames_list
-        if not frames_to_add:
-            # Nothing to do
-            return
-
-        for frame in frames_list:
-            self._check_within_range(frame)
-            self._set_frame_and_frame_data(
-                frame,
+        if self._use_range:
+            self.set_for_ranges(
+                frames=frames,
                 overwrite=overwrite,
                 created_at=created_at,
                 created_by=created_by,
@@ -178,27 +222,54 @@ class ClassificationInstance:
                 reviews=reviews,
             )
 
-        if self.is_assigned_to_label_row():
-            assert self._parent is not None
-            if self._parent is not DataType.AUDIO:
-                self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-                self._parent._add_to_frame_to_hashes_map(self, frames_list)
-            else:
-                self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
+        else:
+            frames_list = frames_class_to_frames_list(frames)
+
+            conflicting_frames_list = self._is_classification_already_present(frames_list)
+            if conflicting_frames_list and not overwrite:
+                raise LabelRowError(
+                    f"The classification '{self.classification_hash}' already exists "
+                    f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
+                    f"Set 'overwrite' parameter to True to override."
+                )
+
+            frames_to_add = set(frames_list) - conflicting_frames_list if conflicting_frames_list else frames_list
+            if not frames_to_add:
+                # Nothing to do
+                return
+
+            for frame in frames_list:
+                self._check_within_range(frame)
+                self._set_frame_and_frame_data(
+                    frame,
+                    overwrite=overwrite,
+                    created_at=created_at,
+                    created_by=created_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    reviews=reviews,
+                )
+
+            if self.is_assigned_to_label_row():
+                assert self._parent is not None
+                if self._parent is not DataType.AUDIO:
+                    self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+                    self._parent._add_to_frame_to_hashes_map(self, frames_list)
+                else:
+                    self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
 
     def set_frame_data(self, frame_data: FrameData, frames: Frames) -> None:
         frames_list = frames_class_to_frames_list(frames)
 
         for frame in frames_list:
-            self._frames_to_data[frame] = frame_data
+                self._frames_to_data[frame] = frame_data
 
         if self.is_assigned_to_label_row():
             assert self._parent is not None
-            if self._parent.data_type is not DataType.AUDIO:
-                self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-                self._parent._add_to_frame_to_hashes_map(self, frames_list)
-            else:
-                self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
+            self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+            self._parent._add_to_frame_to_hashes_map(self, frames_list)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
@@ -206,6 +277,14 @@ class ClassificationInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
+
+        # TODO: Think about this:
+        if self._use_range and frame != 0:
+            raise LabelRowError(
+                "This Classification Instance only works on ranges, technically only has one 'frame'"
+                "Use `get_annotation(0)` to get the frame data of the first frame."
+            )
+
         if isinstance(frame, str):
             # TODO: this check should be consistent for both string and integer frames,
             #       but currently it is not possible due to the parsing logic
@@ -593,7 +672,12 @@ class ClassificationInstance:
     def _is_classification_already_present(self, frames: Iterable[int]) -> Set[int]:
         if self._parent is None:
             return set()
-        return self._parent._is_classification_already_present(self.ontology_item, frames)
+        return self._parent._is_classification_already_present_on_frames(self.ontology_item, frames)
+
+    def _is_classification_already_present_on_range(self, ranges: Ranges) -> Ranges:
+        if self._parent is None:
+            return []
+        return self._parent._is_classification_already_present_on_ranges(self.ontology_item, ranges)
 
     def __repr__(self):
         return (

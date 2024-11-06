@@ -801,21 +801,58 @@ class LabelRowV2:
             )
 
         classification_hash = classification_instance.classification_hash
-        frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
-        already_present_frames = self._is_classification_already_present(
-            classification_instance.ontology_item,
-            frames,
-        )
         if classification_hash in self._classifications_map and not force:
             raise LabelRowError(
                 f"A ClassificationInstance for classification hash '{classification_hash}' already exists on the label row object. "
                 f"Pass 'force=True' to override it."
             )
 
-        if already_present_frames and not force:
+        """
+        Implementation here diverges because audio data will operate on ranges, whereas
+        everything else will operate on frames.
+        """
+        if self.data_type == DataType.AUDIO:
+            self._add_classification_instance_for_range(
+                classification_instance=classification_instance,
+                force=force,
+            )
+        else:
+            frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
+            already_present_frames = self._is_classification_already_present_on_frames(
+                classification_instance.ontology_item,
+                frames,
+            )
+
+            if already_present_frames and not force:
+                raise LabelRowError(
+                    f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
+                    f"Overlapping frames that were found are `{frames_to_ranges(already_present_frames)}`. "
+                    f"Make sure that you only add classifications which are on frames where the same type of "
+                    f"classification does not yet exist."
+                )
+
+            if classification_hash in self._classifications_map and force:
+                self._classifications_map.pop(classification_hash)
+
+            self._classifications_map[classification_hash] = classification_instance
+            classification_instance._parent = self
+
+            self._classifications_to_frames[classification_instance.ontology_item].update(frames)
+            self._add_to_frame_to_hashes_map(classification_instance, frames)
+
+    def _add_classification_instance_for_range(
+            self,
+            classification_instance: ClassificationInstance,
+            force: bool,
+    ):
+        classification_hash = classification_instance.classification_hash
+        ranges_to_add = classification_instance.range_list
+        already_present_ranges = self._is_classification_already_present_on_ranges(classification_instance.ontology_item, ranges_to_add)
+
+        if already_present_ranges and not force:
             raise LabelRowError(
                 f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
-                f"Overlapping frames that were found are `{frames_to_ranges(already_present_frames)}`. "
+                f"Overlapping frames that were found are `{already_present_ranges}`. "
                 f"Make sure that you only add classifications which are on frames where the same type of "
                 f"classification does not yet exist."
             )
@@ -826,11 +863,7 @@ class LabelRowV2:
         self._classifications_map[classification_hash] = classification_instance
         classification_instance._parent = self
 
-        if self.data_type == DataType.AUDIO:
-            self._classifications_to_ranges[classification_instance.ontology_item].add_ranges(frames_to_ranges(frames))
-        else:
-            self._classifications_to_frames[classification_instance.ontology_item].update(frames)
-            self._add_to_frame_to_hashes_map(classification_instance, frames)
+        self._classifications_to_ranges[classification_instance.ontology_item].add_ranges(ranges_to_add)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
         """
@@ -846,7 +879,7 @@ class LabelRowV2:
         
         if self.data_type == DataType.AUDIO:
             range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
-            ranges_to_remove = ranges_list_to_ranges(classification_instance.range_list)
+            ranges_to_remove = classification_instance.range_list
             range_manager.remove_ranges(ranges_to_remove)
         else:
             all_frames = self._classifications_to_frames[classification_instance.ontology_item]
@@ -1504,7 +1537,7 @@ class LabelRowV2:
             # At some point, we also want to add these to the other modalities
             if self.data_type == DataType.AUDIO:
                 annotation = classification.get_annotations()[0]
-                ret[classification.classification_hash]["range"] = classification.range_list
+                ret[classification.classification_hash]["range"] = [[range.start, range.end] for range in classification.range_list]
                 ret[classification.classification_hash]["createdBy"] = annotation.created_by
                 ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
                     DATETIME_LONG_STRING_FORMAT)
@@ -1729,20 +1762,28 @@ class LabelRowV2:
 
         return ret
 
-    def _is_classification_already_present(self, classification: Classification, frames: Iterable[int]) -> Set[int]:
-        if self.data_type == DataType.AUDIO:
-            range_manager = self._classifications_to_ranges.get(classification, RangeManager())
-            return range_manager.intersection(frames)
-        else:
-            present_frames = self._classifications_to_frames.get(classification, set())
+    def _is_classification_already_present_on_frames(
+            self,
+            classification: Classification,
+            frames: Iterable[int]
+    ) -> Set[int]:
+        present_frames = self._classifications_to_frames.get(classification, set())
+
         return present_frames.intersection(frames)
+
+    def _is_classification_already_present_on_ranges(
+            self,
+            classification: Classification,
+            ranges: Ranges,
+    ) -> Ranges:
+        range_manager = self._classifications_to_ranges.get(classification, RangeManager())
+        return range_manager.intersection(ranges)
 
     def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         self._classifications_to_frames[classification].update(frames)
 
-    def _add_ranges_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
-        ranges = frames_to_ranges(list(frames))
-        self._classifications_to_ranges[classification].add_ranges(ranges)
+    def _add_ranges_to_classification(self, classification: Classification, ranges_to_add: Ranges) -> None:
+        self._classifications_to_ranges[classification].add_ranges(ranges_to_add)
 
     def _remove_frames_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         present_frames = self._classifications_to_frames.get(classification, set())
@@ -2067,7 +2108,10 @@ class LabelRowV2:
         return frame_level_data
 
     def _create_new_classification_instance(
-        self, frame_classification_label: dict, frame: int, classification_answers: dict
+        self,
+        frame_classification_label: dict, 
+        frame: int,
+        classification_answers: dict,
     ) -> Optional[ClassificationInstance]:
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
@@ -2119,6 +2163,7 @@ class LabelRowV2:
             last_edited_by=range_view.last_edited_by,
             reviews=range_view.reviews,
             overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
+            use_range=True,
         )
         answers_dict = classification_answer["classifications"]
         self._add_static_answers_from_dict(classification_instance, answers_dict)

@@ -7,7 +7,7 @@ from encord.utilities.range_utilities import RangeManager
 @pytest.fixture
 def range_manager() -> RangeManager:
     initial_ranges = [Range(start=2, end=5), Range(start=10, end=20)]
-    return RangeManager(ranges=initial_ranges)
+    return RangeManager(frame_class=initial_ranges)
 
 
 def test_initialize_ranges(range_manager: RangeManager) -> None:
@@ -54,5 +54,17 @@ def test_get_ranges_as_frames(range_manager: RangeManager) -> None:
 
 
 def test_get_intersection_with_other_frames(range_manager: RangeManager) -> None:
-    frames = range_manager.intersection({1, 3, 16, 19, 25})
-    assert frames == {3, 16, 19}
+    other_frames = [1, 3, 16, 25]
+    intersecting_ranges = range_manager.intersection(other_frames)
+    assert intersecting_ranges[0].start == 3
+    assert intersecting_ranges[0].end == 3
+    assert intersecting_ranges[1].start == 16
+    assert intersecting_ranges[1].end == 16
+
+    other_ranges = [Range(start=0, end=3), Range(start=19, end=22)]
+    intersecting_ranges = range_manager.intersection(other_ranges)
+    assert intersecting_ranges[0].start == 2
+    assert intersecting_ranges[0].end == 3
+    assert intersecting_ranges[1].start == 19
+    assert intersecting_ranges[1].end == 20
+
