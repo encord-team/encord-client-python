@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from typing import Iterator, List, Optional, Union
 from uuid import UUID
@@ -7,12 +6,15 @@ from encord.exceptions import (
     AuthorisationError,
 )
 from encord.http.v2.api_client import ApiClient
-from encord.orm.filter_preset import FilterPreset as OrmFilterPreset
 from encord.orm.filter_preset import (
+    CreatePresetParams,
+    CreatePresetPayload,
     FilterPresetDefinition,
     GetPresetParams,
     GetPresetsResponse,
+    UpdatePresetPayload,
 )
+from encord.orm.filter_preset import FilterPreset as OrmFilterPreset
 
 
 class FilterPreset:
@@ -26,7 +28,7 @@ class FilterPreset:
         self._preset_instance = orm_preset
 
     @property
-    def uuid(self) -> uuid.UUID:
+    def uuid(self) -> UUID:
         """
         Get the preset uuid (i.e. the preset ID).
 
@@ -123,9 +125,47 @@ class FilterPreset:
             result_type=None,
         )
 
-    def get_filters_json(self) -> FilterPresetDefinition:
+    @staticmethod
+    def _create_preset(api_client: ApiClient, name: str, description: str = "", *, filter_preset_json: dict) -> UUID:
+        payload = CreatePresetPayload(
+            name=name,
+            description=description,
+            filter_preset_json=FilterPresetDefinition.from_dict(filter_preset_json).to_dict(),
+        )
+        return api_client.post(
+            "index/presets",
+            payload=payload,
+            params=CreatePresetParams(),
+            result_type=UUID,
+        )
+
+    def get_filter_preset_json(self) -> FilterPresetDefinition:
         return self._client.get(
             f"index/presets/{self._preset_instance.uuid}",
             params=None,
             result_type=FilterPresetDefinition,
+        )
+
+    def update_preset(
+        self, name: Optional[str] = None, description: Optional[str] = None, filter_preset_json: Optional[dict] = None
+    ) -> None:
+        """
+        Update the preset's definition.
+        Args:
+           name (Optional[str]): The new name for the preset.
+           description (Optional[str]): The new description for the preset.
+           filter_preset_json (Optional[dict]): The new filters for the preset in their raw json format.
+        """
+        filters_definition = None
+        if isinstance(filter_preset_json, dict):
+            filters_definition = FilterPresetDefinition.from_dict(filter_preset_json)
+        elif isinstance(filter_preset_json, FilterPresetDefinition):
+            filters_definition = filter_preset_json
+        payload = UpdatePresetPayload(name=name, description=description, filter_preset=filters_definition)
+        __import__("pdb").set_trace()
+        self._client.patch(
+            f"index/presets/{self.uuid}",
+            params=None,
+            payload=payload,
+            result_type=None,
         )
