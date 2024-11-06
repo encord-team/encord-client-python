@@ -778,7 +778,7 @@ class LabelRowV2:
         frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
         self._add_to_frame_to_hashes_map(object_instance, frames)
 
-    def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
+    def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False, use_range: bool = False) -> None:
         """
         Add a classification instance to the label row.
 
@@ -2152,7 +2152,8 @@ class LabelRowV2:
 
         range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
 
-        classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
+        # Need to set `use_range` to True here, so the classification_instance operates on ranges, and not on frames
+        classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash, use_range=True)
         classification_instance.set_for_frames(
             ranges,
             created_at=range_view.created_at,
@@ -2163,7 +2164,6 @@ class LabelRowV2:
             last_edited_by=range_view.last_edited_by,
             reviews=range_view.reviews,
             overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
-            use_range=True,
         )
         answers_dict = classification_answer["classifications"]
         self._add_static_answers_from_dict(classification_instance, answers_dict)

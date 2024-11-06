@@ -56,7 +56,13 @@ if TYPE_CHECKING:
 
 
 class ClassificationInstance:
-    def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
+    def __init__(
+            self,
+            ontology_classification: Classification,
+            *,
+            classification_hash: Optional[str] = None,
+            use_range: bool = False,
+    ):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowV2] = None
         self._classification_hash = classification_hash or short_uuid_str()
@@ -65,7 +71,7 @@ class ClassificationInstance:
         # feature_node_hash of attribute to the answer.
 
         # Only used for non-frame entities
-        self._use_range: bool = False
+        self._use_range = use_range
         self._range_manager: RangeManager = RangeManager()
 
         self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
@@ -138,7 +144,13 @@ class ClassificationInstance:
         for range_to_add in ranges_to_add:
             self._check_within_range(range_to_add.end)
 
-        # TODO: Think about this and write comment
+        """
+        At this point, this classification instance operates on ranges, NOT on frames.
+        We therefore empty the `frames_to_data_map`, and leave only FRAME 0 in the map.
+        The frame_data for FRAME 0 will be treated as the data for all "frames" in this 
+        classification instance.
+        """
+
         self._frames_to_data = {}
         self._set_frame_and_frame_data(
             frame=0,
@@ -170,7 +182,6 @@ class ClassificationInstance:
         last_edited_at: Optional[datetime] = None,
         last_edited_by: Optional[str] = None,
         reviews: Optional[List[dict]] = None,
-        use_range: bool = False,
     ) -> None:
         """
         Places the classification onto the specified frame. If the classification already exists on the frame and
@@ -207,7 +218,12 @@ class ClassificationInstance:
         if last_edited_at is None:
             last_edited_at = datetime.now()
 
-        self._use_range = use_range or (self._parent is not None and self._parent.data_type == DataType.AUDIO)
+        """
+        Classification Instance might be created before label row with `use_range = False`
+        If this instance is attached to a LabelRowV2 which has `data_type = AUDIO`,
+        then we need to convert the classification_instance to operate on ranges, not on frames.
+        """
+        self._use_range = self._use_range or (self._parent is not None and self._parent.data_type == DataType.AUDIO)
 
         if self._use_range:
             self.set_for_ranges(

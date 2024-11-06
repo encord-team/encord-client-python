@@ -61,14 +61,14 @@ class Classification(OntologyElement):
         """
         return self.attributes
 
-    def create_instance(self) -> ClassificationInstance:
+    def create_instance(self, use_range: bool = False) -> ClassificationInstance:
         """
         Create a ClassificationInstance to be used with a label row.
 
         Returns:
             ClassificationInstance: An instance of ClassificationInstance.
         """
-        return ClassificationInstance(self)
+        return ClassificationInstance(self, use_range=use_range)
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
