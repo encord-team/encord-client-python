@@ -13,6 +13,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata as importlib_metadata
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -46,6 +47,8 @@ _CORD_API_KEY = "CORD_API_KEY"
 _ENCORD_API_KEY = "ENCORD_API_KEY"
 _ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
 _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
+
+pydantic_version_str = importlib_metadata.version("pydantic")
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +202,7 @@ class Config(BaseConfig):
 
     @staticmethod
     def _user_agent() -> str:
-        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
+        return f"encord-sdk-python/{encord_version} python/{platform.python_version()} pydantic/{pydantic_version_str}"
 
     def _tracing_id(self) -> str:
         if self.requests_settings.trace_id_provider:
