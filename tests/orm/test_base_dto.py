@@ -98,7 +98,8 @@ class TestModelWithValidator(TestModel):
 
     @dto_validator(mode="after")
     def validate_after(cls, instance: "TestModelWithValidator"):
-        assert instance.number_value > 0
+        assert instance.text_value == "abc"
+        instance.text_value += "-postfix"
         return instance
 
 
@@ -111,6 +112,7 @@ def test_dto_validator():
     }
     valid_case = TestModelWithValidator.from_dict(data_dict)
     assert valid_case.number_value == 22
+    assert valid_case.text_value == f"{data_dict['text_value']}-postfix"
 
     invalid_data = data_dict
     invalid_data["number_value"] = -10
