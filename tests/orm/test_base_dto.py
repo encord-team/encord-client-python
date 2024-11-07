@@ -96,6 +96,11 @@ class TestModelWithValidator(TestModel):
         assert number > 0
         return values
 
+    @dto_validator(mode="after")
+    def validate_after(cls, instance: "TestModelWithValidator"):
+        assert instance.number_value > 0
+        return instance
+
 
 def test_dto_validator():
     time_value = datetime.now()
