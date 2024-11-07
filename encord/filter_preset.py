@@ -162,7 +162,6 @@ class FilterPreset:
         elif isinstance(filter_preset_json, FilterPresetDefinition):
             filters_definition = filter_preset_json
         payload = UpdatePresetPayload(name=name, description=description, filter_preset=filters_definition)
-        __import__("pdb").set_trace()
         self._client.patch(
             f"index/presets/{self.uuid}",
             params=None,
