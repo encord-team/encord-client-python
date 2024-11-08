@@ -375,16 +375,6 @@ class Dataset:
         """
         return self._client.link_items(item_uuids, duplicates_behavior)
 
-    def delete_image_group(self, data_hash: str):
-        """
-        Delete an image group in Encord storage.
-
-        Args:
-            data_hash: The hash of the image group to delete.
-
-        """
-        return self._client.delete_image_group(data_hash)
-
     def delete_data(self, data_hashes: Union[List[str], str]):
         """
         Delete a video/image group from a dataset.

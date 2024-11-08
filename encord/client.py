@@ -782,12 +782,6 @@ class EncordClientDataset(EncordClient):
         )
         return DataRow.from_dict_list(data_row_dicts)
 
-    def delete_image_group(self, data_hash: str):
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.delete_image_group`.
-        """
-        self._querier.basic_delete(ImageGroup, uid=data_hash)
-
     def delete_data(self, data_hashes: Union[List[str], str]):
         """
         This function is documented in :meth:`encord.dataset.Dataset.delete_data`.
