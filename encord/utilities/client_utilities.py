@@ -119,7 +119,6 @@ class CvatImporterSuccess:
 
 @dataclass
 class CvatImporterError:
-    dataset_hash: str
     issues: Issues
 
 
