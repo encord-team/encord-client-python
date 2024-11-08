@@ -11,10 +11,11 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import datetime
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClientProject
+from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
 from encord.http.bundle import Bundle
@@ -27,6 +28,7 @@ from encord.orm.analytics import (
     CollaboratorTimersGroupBy,
 )
 from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
@@ -1152,3 +1154,67 @@ class Project:
             image_id_to_frame_index,
             branch_name=branch_name,
         )
+
+    def list_collections(
+        self,
+        collection_uuids: List[str | UUID] | None = None,
+        page_size: Optional[int] = None,
+    ) -> Iterator[ProjectCollection]:
+        """
+        List all collections associated to the project.
+        Args:
+            collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of collections which match the given criteria.
+        Raises:
+            ValueError: If any of the collection uuids is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        collections = (
+            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuids]
+            if collection_uuids is not None
+            else None
+        )
+        return ProjectCollection._list_collections(
+            client=self._client._get_api_client(),
+            ontology=self._ontology,
+            project_uuid=self._project_instance.project_hash,
+            collection_uuids=collections,
+            page_size=page_size,
+        )
+
+    def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:
+        """
+        Delete a project collection by its UUID if it exists.
+        Args:
+            collection_uuid: The unique identifier (UUID) of the collection to delete.
+        Returns:
+            None
+        Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(collection_uuid, str):
+            collection_uuid = UUID(collection_uuid)
+        ProjectCollection._delete_collection(self._client._get_api_client(), self._project_instance.project_hash, collection_uuid)
+
+
+    def create_collection(
+            self, name: str, description: str = "", collection_type: ProjectCollectionType = ProjectCollectionType.FRAME
+    ) -> ProjectCollection:
+        """
+        Create a prooject collection.
+        Args:
+            name: The name of the collection.
+            description: The description of the collection.
+            collection_type: The type of the collection, could be either frame or label.
+        Returns:
+            ProjectCollection: Newly created collection.
+        Raises:
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+        """
+        new_uuid = ProjectCollection._create_collection(self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type)
+        print(new_uuid)
+        # return ProjectCollection(self._project_instance.project_hash, self._client, new_uuid)
+        # return self.get_collection(new_uuid)

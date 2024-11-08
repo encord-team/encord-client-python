@@ -3,13 +3,15 @@ from datetime import datetime
 from typing import Iterator, List, Optional, Sequence, Union
 from uuid import UUID
 
+from encord.objects.ontology_labels_impl import LabelRowV2
 import encord.orm.storage as orm_storage
 from encord.exceptions import (
     AuthorisationError,
 )
 from encord.filter_preset import FilterPreset
 from encord.http.v2.api_client import ApiClient
-from encord.orm.collection import Collection as OrmCollection
+from encord.orm.collection import Collection as OrmCollection, CreateProjectCollectionParams, CreateProjectCollectionPayload, GetProjectCollectionParams, ProjectCollectionType, ProjectDataCollectionInstance,  ProjectDataCollectionItemResponse, ProjectLabelCollectionInstance, ProjectLabelCollectionItemResponse
+from encord.orm.collection import ProjectCollection as OrmProjectCollection
 from encord.orm.collection import (
     CollectionBulkItemRequest,
     CollectionBulkItemResponse,
@@ -22,6 +24,7 @@ from encord.orm.collection import (
     UpdateCollectionPayload,
 )
 from encord.storage import StorageItem, StorageItemInaccessible
+from encord.ontology import Ontology
 
 log = logging.getLogger(__name__)
 
@@ -176,7 +179,7 @@ class Collection:
             Iterator[StorageItem]: An iterator containing storage items in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
-        paged_items = self._client.get_paged_iterator(
+        paged_items = self._client._get_api_client().get_paged_iterator(
             f"index/collections/{self.uuid}/accessible-items",
             params=params,
             result_type=orm_storage.StorageItem,
@@ -294,3 +297,218 @@ class Collection:
             f"Submitted request to remove items matching filter_preset:{preset_uuid} from collection:{self.uuid}."
             f"It is an async operation and can take some time to complete."
         )
+
+
+class ProjectCollection():
+    """
+    Represents collections inside a Project.
+    Project collections are a logical grouping of frames or annotations that can
+    be used to perform various data curation flows.
+    """
+
+    def __init__(self, project_uuid: UUID, client: ApiClient,
+                 ontology: Ontology,
+                 orm_collection: OrmProjectCollection):
+        self._project_uuid = project_uuid
+        self._client = client
+        self._ontology = ontology
+        self._collection_instance = orm_collection
+
+    @property
+    def uuid(self) -> UUID:
+        """
+        Get the collection unique identifier (UUID).
+
+        Returns:
+            UUID: The collection UUID.
+        """
+        return self._collection_instance.uuid
+
+    @property
+    def name(self) -> str:
+        """
+        Get the collection name.
+
+        Returns:
+            str: The collection name.
+        """
+        return self._collection_instance.name
+
+    @property
+    def description(self) -> Optional[str]:
+        """
+        Get the collection description.
+
+        Returns:
+            Optional[str]: The collection description, or None if not available.
+        """
+        return self._collection_instance.description
+
+    @property
+    def created_at(self) -> Optional[datetime]:
+        """
+        Get the collection creation timestamp.
+
+        Returns:
+            Optional[datetime]: The timestamp when the collection was created, or None if not available.
+        """
+        return self._collection_instance.created_at
+
+    @property
+    def last_edited_at(self) -> Optional[datetime]:
+        """
+        Get the collection last edit timestamp.
+
+        Returns:
+            Optional[datetime]: The timestamp when the collection was last edited, or None if not available.
+        """
+        return self._collection_instance.last_edited_at
+
+    @property
+    def type(self) -> ProjectCollectionType:
+        """
+        Get the type of the collection.
+        Returns:
+            ProjectCollectionType: The type of the collection.
+        """
+        return self._collection_instance.collection_type
+    
+    @property
+    def project_hash(self) -> UUID:
+        """
+        Get the project hash of the collection.
+        Returns:
+            UUID: The project hash of the collection.
+        """
+        return self._collection_instance.project_hash
+    
+
+
+    # @staticmethod
+    # def _get_collection(project: Project, collection_uuid: UUID) -> "ProjectCollection":
+    #     params = GetProjectCollectionParams(uuids=[collection_uuid])
+    #     orm_item = api_client.get(
+    #         "active/collections",
+    #         params=params,
+    #         result_type=GetCollectionsResponse,
+    #     )
+    #     if len(orm_item.results) > 0:
+    #         return ProjectCollection(orm_item.results[0], project)
+    #     raise AuthorisationError("No collection found")
+
+    @staticmethod
+    def _list_collections(
+        client: ApiClient,
+        ontology: Ontology,
+        project_uuid: UUID,
+        collection_uuids: Union[List[UUID], None],
+        page_size: Optional[int] = None,
+    ) -> Iterator["ProjectCollection"]:
+        params = GetProjectCollectionParams(
+            projectHash=project_uuid, uuids=collection_uuids, pageSize=page_size
+        )
+        paged_collections = client.get_paged_iterator(
+            f"active/{project_uuid}/collections",
+            params=params,
+            result_type=OrmProjectCollection,
+        )
+        for collection in paged_collections:
+            yield ProjectCollection(project_uuid, client, ontology, collection)
+
+    @staticmethod
+    def _delete_collection(client: ApiClient, project_uuid: UUID, collection_uuid: UUID) -> None:
+        client.delete(
+            f"active/{project_uuid}/collections/{collection_uuid}",
+            params=None,
+            result_type=None,
+        )
+
+    @staticmethod
+    def _create_collection(
+        client: ApiClient,
+        project_uuid: UUID,
+        name: str,
+        description: str = "",
+        collection_type: ProjectCollectionType = ProjectCollectionType.FRAME,
+    ) -> UUID:
+        params = CreateProjectCollectionParams(projectHash=project_uuid)
+        payload = CreateProjectCollectionPayload(name=name, description=description, collection_type=collection_type)
+        return client.post(
+            f"active/{project_uuid}/collections",
+            params=params,
+            payload=payload,
+            result_type=UUID,
+        )
+
+    # def update_collection(self, name: Optional[str] = None, description: Optional[str] = None) -> None:
+    #     """
+    #     Update the collection's name and/or description.
+    #     Args:
+    #        name (Optional[str]): The new name for the collection.
+    #        description (Optional[str]): The new description for the collection.
+    #     """
+    #     payload = UpdateCollectionPayload(name=name, description=description)
+    #     self._client.patch(
+    #         f"active/collections/{self.uuid}",
+    #         params=None,
+    #         payload=payload,
+    #         result_type=None,
+    #     )
+
+    def list_frames(
+        self,
+        page_size: Optional[int] = None,
+    ) -> Iterator[tuple[LabelRowV2, list[ProjectDataCollectionInstance]]]:
+        """
+        List frames in the collection.
+        Args:
+            page_size (Optional[int]): The number of items to fetch per page.
+        Returns:
+            Iterator[tuple[LabelRowV2, list[ProjectDataCollectionInstance]]]: An list of tuples containing label
+            row and corresponsing frame instances in the collection.
+        """
+        params = GetCollectionItemsParams(pageSize=page_size)
+        paged_items = self._client.get_paged_iterator(
+            f"active/{self._project_uuid}/collections/{self.uuid}/items",
+            params=params,
+            result_type=ProjectDataCollectionItemResponse,
+        )
+
+        for item in paged_items:
+            yield (
+                LabelRowV2(
+                    item.label_row_metadata,
+                    self._client,
+                    self._ontology,
+                ),
+                item.instances,
+            )
+
+    def list_labels(
+        self,
+        page_size: Optional[int] = None,
+    ) -> Iterator[tuple[LabelRowV2, list[ProjectLabelCollectionInstance]]]:
+        """
+        List labels in the collection.
+        Args:
+            page_size (Optional[int]): The number of items to fetch per page.
+        Returns:
+            Iterator[tuple[LabelRowV2, list[ProjectLabelCollectionInstance]]]: An list of tuples containing label
+            row and corresponsing label instances in the collection.
+        """
+        params = GetCollectionItemsParams(pageSize=page_size)
+        paged_items = self._client.get_paged_iterator(
+            f"active/{self._project_uuid}/collections/{self.uuid}/items?getLabels=true",
+            params=params,
+            result_type=ProjectLabelCollectionItemResponse,
+        )
+
+        for item in paged_items:
+            yield (
+                LabelRowV2(
+                    item.label_row_metadata,
+                    self._client,
+                    self._ontology,
+                ),
+                item.instances,
+            )
