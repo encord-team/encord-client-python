@@ -440,20 +440,20 @@ class ProjectCollection():
             result_type=UUID,
         )
 
-    # def update_collection(self, name: Optional[str] = None, description: Optional[str] = None) -> None:
-    #     """
-    #     Update the collection's name and/or description.
-    #     Args:
-    #        name (Optional[str]): The new name for the collection.
-    #        description (Optional[str]): The new description for the collection.
-    #     """
-    #     payload = UpdateCollectionPayload(name=name, description=description)
-    #     self._client.patch(
-    #         f"active/collections/{self.uuid}",
-    #         params=None,
-    #         payload=payload,
-    #         result_type=None,
-    #     )
+    def update_collection(self, name: Optional[str] = None, description: Optional[str] = None) -> None:
+        """
+        Update the collection's name and/or description.
+        Args:
+           name (Optional[str]): The new name for the collection.
+           description (Optional[str]): The new description for the collection.
+        """
+        payload = UpdateCollectionPayload(name=name, description=description)
+        self._client.patch(
+            f"active/{self._project_uuid}/collections/{self.uuid}",
+            params=None,
+            payload=payload,
+            result_type=None,
+        )
 
     def list_frames(
         self,
