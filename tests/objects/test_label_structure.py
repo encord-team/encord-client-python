@@ -643,6 +643,7 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
     overlapping_classification_instance.set_for_frames(3)
 
 
+# TODO ED-302: Refactor to make more readable
 def test_add_and_get_classification_instances_to_audio_label_row(ontology):
 
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
