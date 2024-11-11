@@ -56,7 +56,7 @@ class AnnotationStage(WorkflowStageBase):
         data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
-        status: Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]] = None,
+        status: Optional[AnnotationTaskStatus, List[AnnotationTaskStatus]] = None,
     ) -> Iterable[AnnotationTask]:
         """
         Retrieves tasks for the AnnotationStage.
@@ -90,7 +90,7 @@ class AnnotationStage(WorkflowStageBase):
 class _ActionSubmit(WorkflowAction):
     action: Literal["SUBMIT"] = "SUBMIT"
     resolve_label_reviews: bool = True
-    assignee: str | None = None
+    assignee: Optional[str] = None
     retain_assignee: bool = False
 
 
@@ -131,7 +131,7 @@ class AnnotationTask(WorkflowTask):
     def submit(
         self,
         *,
-        assignee: str | None = None,
+        assignee: Optional[str] = None,
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
