@@ -1045,12 +1045,6 @@ def test_classification_can_be_added_edited_and_removed(ontology):
 
     assert len(label_row.get_classification_instances()) == 0
 
-@pytest.fixture
-def ontology():
-    ontology_structure = PropertyMock(return_value=all_types_structure)
-    ontology = Mock(structure=ontology_structure)
-    yield ontology
-
 
 @pytest.fixture
 def empty_audio_label_row() -> LabelRowV2:
@@ -1110,6 +1104,32 @@ def test_audio_classification_exceed_max_frames(ontology, empty_audio_label_row:
 
     with pytest.raises(LabelRowError):
         classification_instance.set_for_frames(Range(start=200, end=5000))
+
+
+def test_get_annotations_from_audio_classification(ontology) -> None:
+    now = datetime.datetime.now()
+
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
+    classification_instance.set_for_frames(
+        frames=Range(start=0, end=1500),
+        created_at=now,
+        created_by="user1",
+        last_edited_at=now,
+        last_edited_by="user2",
+    )
+
+    annotations = classification_instance.get_annotations()
+
+    assert len(annotations) == 1
+
+    annotation = annotations[0]
+    assert annotation.manual_annotation == DEFAULT_MANUAL_ANNOTATION
+    assert annotation.confidence == DEFAULT_CONFIDENCE
+    assert annotation.created_at == now
+    assert annotation.created_by == "user1"
+    assert annotation.last_edited_at == now
+    assert annotation.last_edited_by == "user2"
+    assert annotation.reviews is None
 
 
 def test_audio_classification_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
