@@ -114,6 +114,11 @@ class ClassificationInstance:
             # TODO: Think about this
             raise LabelRowError("No ranges available for this classification instance.")
 
+    @property
+    def use_ranges(self) -> bool:
+        return self._use_range
+
+
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
 
@@ -138,23 +143,18 @@ class ClassificationInstance:
                 f"Set 'overwrite' parameter to True to override."
             )
 
-        new_range_manager.remove_ranges(conflicting_ranges)
-
         ranges_to_add = new_range_manager.get_ranges()
         for range_to_add in ranges_to_add:
             self._check_within_range(range_to_add.end)
 
         """
         At this point, this classification instance operates on ranges, NOT on frames.
-        We therefore empty the `frames_to_data_map`, and leave only FRAME 0 in the map.
-        The frame_data for FRAME 0 will be treated as the data for all "frames" in this 
-        classification instance.
+        We therefore leave only FRAME 0 in the map.The frame_data for FRAME 0 will be 
+        treated as the data for all "frames" in this classification instance.
         """
-
-        self._frames_to_data = {}
         self._set_frame_and_frame_data(
             frame=0,
-            overwrite=overwrite,
+            overwrite=True,  # We always overwrite the frame data here because it represents the entire instance
             created_at=created_at,
             created_by=created_by,
             confidence=confidence,

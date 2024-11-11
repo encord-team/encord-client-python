@@ -793,6 +793,14 @@ class LabelRowV2:
 
         classification_instance.is_valid()
 
+        # TODO: Need to update the docstring for this method, talk to Laverne.
+        if not classification_instance.use_ranges and self.data_type == DataType.AUDIO:
+            raise LabelRowError("To add a ClassificationInstance object to an Audio LabelRow,"
+                                "the ClassificationInstance object needs to be created with the "
+                                "use_range property set to False."
+                                "You can do ClassificationInstance(use_range=True) or "
+                                "Classification.create_instance(use_range=True) to achieve this.")
+
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
                 "Provided ClassificationInstance object is already attached to a different LabelRowV2 object. "
@@ -840,6 +848,7 @@ class LabelRowV2:
             self._classifications_to_frames[classification_instance.ontology_item].update(frames)
             self._add_to_frame_to_hashes_map(classification_instance, frames)
 
+    # This should only be used for Audio classification instances
     def _add_classification_instance_for_range(
             self,
             classification_instance: ClassificationInstance,

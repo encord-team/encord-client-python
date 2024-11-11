@@ -72,7 +72,7 @@ radio_classification = all_types_structure.get_child_by_hash("NzIxNTU1")
 radio_classification_option_1 = all_types_structure.get_child_by_hash("MTcwMjM5")
 radio_classification_option_2 = all_types_structure.get_child_by_hash("MjUzMTg1")
 radio_classification_option_2_text = all_types_structure.get_child_by_hash("MTg0MjIw")
-checklist_classification = all_types_structure.get_child_by_hash("3DuQbFxo")
+checklist_classification: Classification = all_types_structure.get_child_by_hash("3DuQbFxo")
 checklist_classification_option_1 = all_types_structure.get_child_by_hash("fvLjF0qZ")
 checklist_classification_option_2 = all_types_structure.get_child_by_hash("a4r7nK9i")
 
@@ -1044,3 +1044,4 @@ def test_classification_can_be_added_edited_and_removed(ontology):
     label_row.remove_classification(classification_instance)
 
     assert len(label_row.get_classification_instances()) == 0
+
