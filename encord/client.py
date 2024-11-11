@@ -250,7 +250,7 @@ class EncordClient:
         return self._querier.get_multiple(CloudIntegration)
 
     def get_bearer_token(self) -> BearerTokenResponse:
-        return self._get_api_client().get("user/bearer_token", None, result_type=BearerTokenResponse)
+        return self._get_api_client().get("user/bearer-token", None, result_type=BearerTokenResponse)
 
 
 class EncordClientDataset(EncordClient):
