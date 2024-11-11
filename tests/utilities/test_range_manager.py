@@ -1,7 +1,7 @@
 import pytest
 
-from encord.objects.frames import Range
 from encord.common.range_manager import RangeManager
+from encord.objects.frames import Range
 
 
 @pytest.fixture
@@ -19,10 +19,7 @@ def test_initialize_ranges(range_manager: RangeManager) -> None:
 
 
 def test_add_ranges(range_manager: RangeManager) -> None:
-    range_manager.add_ranges([
-        Range(start=5, end=7),
-        Range(start=21, end=22)
-    ])
+    range_manager.add_ranges([Range(start=5, end=7), Range(start=21, end=22)])
 
     actual_ranges = range_manager.get_ranges()
     assert actual_ranges[0].start == 2
@@ -34,10 +31,7 @@ def test_add_ranges(range_manager: RangeManager) -> None:
 
 
 def test_remove_ranges(range_manager: RangeManager) -> None:
-    range_manager.remove_ranges([
-        Range(start=4, end=5),
-        Range(start=16, end=19)
-    ])
+    range_manager.remove_ranges([Range(start=4, end=5), Range(start=16, end=19)])
 
     actual_ranges = range_manager.get_ranges()
     assert actual_ranges[0].start == 2
@@ -67,4 +61,3 @@ def test_get_intersection_with_other_frames(range_manager: RangeManager) -> None
     assert intersecting_ranges[0].end == 3
     assert intersecting_ranges[1].start == 19
     assert intersecting_ranges[1].end == 20
-

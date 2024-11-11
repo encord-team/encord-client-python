@@ -29,6 +29,7 @@ from typing import (
     Union,
 )
 
+from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
@@ -42,14 +43,13 @@ from encord.objects.attributes import (
 )
 from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges
+from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
 )
 from encord.objects.options import Option, _get_option_by_hash
 from encord.objects.utils import check_email, short_uuid_str
-from encord.common.range_manager import RangeManager
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2
@@ -57,11 +57,11 @@ if TYPE_CHECKING:
 
 class ClassificationInstance:
     def __init__(
-            self,
-            ontology_classification: Classification,
-            *,
-            classification_hash: Optional[str] = None,
-            range_only: bool = False,
+        self,
+        ontology_classification: Classification,
+        *,
+        classification_hash: Optional[str] = None,
+        range_only: bool = False,
     ):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowV2] = None
@@ -121,16 +121,16 @@ class ClassificationInstance:
         return self._parent is not None
 
     def _set_for_ranges(
-            self,
-            frames: Frames,
-            overwrite: bool,
-            created_at: Optional[datetime],
-            created_by: Optional[str],
-            confidence: float,
-            manual_annotation: bool,
-            last_edited_at: Optional[datetime],
-            last_edited_by: Optional[str],
-            reviews: Optional[List[dict]],
+        self,
+        frames: Frames,
+        overwrite: bool,
+        created_at: Optional[datetime],
+        created_by: Optional[str],
+        confidence: float,
+        manual_annotation: bool,
+        last_edited_at: Optional[datetime],
+        last_edited_by: Optional[str],
+        reviews: Optional[List[dict]],
     ):
         new_range_manager = RangeManager(frame_class=frames)
         conflicting_ranges = self._is_classification_already_present_on_range(new_range_manager.get_ranges())
@@ -147,7 +147,7 @@ class ClassificationInstance:
 
         """
         At this point, this classification instance operates on ranges, NOT on frames.
-        We therefore leave only FRAME 0 in the map.The frame_data for FRAME 0 will be 
+        We therefore leave only FRAME 0 in the map.The frame_data for FRAME 0 will be
         treated as the data for all "frames" in this classification instance.
         """
         self._set_frame_and_frame_data(
@@ -271,7 +271,7 @@ class ClassificationInstance:
         frames_list = frames_class_to_frames_list(frames)
 
         for frame in frames_list:
-                self._frames_to_data[frame] = frame_data
+            self._frames_to_data[frame] = frame_data
 
         if self.is_assigned_to_label_row():
             assert self._parent is not None
@@ -596,7 +596,7 @@ class ClassificationInstance:
             else:
                 last_edited_at = datetime.now()
 
-            if "createdAt" in d and d['createdAt'] is not None:
+            if "createdAt" in d and d["createdAt"] is not None:
                 created_at = parse_datetime(d["createdAt"])
             else:
                 created_at = datetime.now()

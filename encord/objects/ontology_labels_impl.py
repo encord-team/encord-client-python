@@ -20,6 +20,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Uni
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
+from encord.common.range_manager import RangeManager
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
@@ -53,7 +54,7 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
 )
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges, Range
+from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -67,7 +68,6 @@ from encord.orm.label_row import (
     WorkflowGraphNode,
 )
 from encord.utilities.type_utilities import exhaustive_guard
-from encord.common.range_manager import RangeManager
 
 log = logging.getLogger(__name__)
 
@@ -777,7 +777,9 @@ class LabelRowV2:
         frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
         self._add_to_frame_to_hashes_map(object_instance, frames)
 
-    def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False, use_range: bool = False) -> None:
+    def add_classification_instance(
+        self, classification_instance: ClassificationInstance, force: bool = False, use_range: bool = False
+    ) -> None:
         """
         Add a classification instance to the label row.
 
@@ -794,11 +796,13 @@ class LabelRowV2:
 
         # TODO: Need to update the docstring for this method, talk to Laverne.
         if not classification_instance.is_range_only() and self.data_type == DataType.AUDIO:
-            raise LabelRowError("To add a ClassificationInstance object to an Audio LabelRow,"
-                                "the ClassificationInstance object needs to be created with the "
-                                "range_only property set to False."
-                                "You can do ClassificationInstance(range_only=True) or "
-                                "Classification.create_instance(range_only=True) to achieve this.")
+            raise LabelRowError(
+                "To add a ClassificationInstance object to an Audio LabelRow,"
+                "the ClassificationInstance object needs to be created with the "
+                "range_only property set to False."
+                "You can do ClassificationInstance(range_only=True) or "
+                "Classification.create_instance(range_only=True) to achieve this."
+            )
 
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -849,13 +853,15 @@ class LabelRowV2:
 
     # This should only be used for Audio classification instances
     def _add_classification_instance_for_range(
-            self,
-            classification_instance: ClassificationInstance,
-            force: bool,
+        self,
+        classification_instance: ClassificationInstance,
+        force: bool,
     ):
         classification_hash = classification_instance.classification_hash
         ranges_to_add = classification_instance.range_list
-        already_present_ranges = self._is_classification_already_present_on_ranges(classification_instance.ontology_item, ranges_to_add)
+        already_present_ranges = self._is_classification_already_present_on_ranges(
+            classification_instance.ontology_item, ranges_to_add
+        )
 
         if already_present_ranges and not force:
             raise LabelRowError(
@@ -884,7 +890,7 @@ class LabelRowV2:
 
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
-        
+
         if self.data_type == DataType.AUDIO:
             range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
             ranges_to_remove = classification_instance.range_list
@@ -1545,12 +1551,17 @@ class LabelRowV2:
             # At some point, we also want to add these to the other modalities
             if self.data_type == DataType.AUDIO:
                 annotation = classification.get_annotations()[0]
-                ret[classification.classification_hash]["range"] = [[range.start, range.end] for range in classification.range_list]
+                ret[classification.classification_hash]["range"] = [
+                    [range.start, range.end] for range in classification.range_list
+                ]
                 ret[classification.classification_hash]["createdBy"] = annotation.created_by
                 ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
-                    DATETIME_LONG_STRING_FORMAT)
+                    DATETIME_LONG_STRING_FORMAT
+                )
                 ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
-                ret[classification.classification_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                ret[classification.classification_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(
+                    DATETIME_LONG_STRING_FORMAT
+                )
                 ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
 
         return ret
@@ -1612,7 +1623,6 @@ class LabelRowV2:
             ret["data_link"] = frame_level_data.data_link
 
         ret["data_type"] = frame_level_data.file_type
-
 
         ret["data_sequence"] = data_sequence
 
@@ -1771,18 +1781,16 @@ class LabelRowV2:
         return ret
 
     def _is_classification_already_present_on_frames(
-            self,
-            classification: Classification,
-            frames: Iterable[int]
+        self, classification: Classification, frames: Iterable[int]
     ) -> Set[int]:
         present_frames = self._classifications_to_frames.get(classification, set())
 
         return present_frames.intersection(frames)
 
     def _is_classification_already_present_on_ranges(
-            self,
-            classification: Classification,
-            ranges: Ranges,
+        self,
+        classification: Classification,
+        ranges: Ranges,
     ) -> Ranges:
         range_manager = self._classifications_to_ranges.get(classification, RangeManager())
         return range_manager.intersection(ranges)
@@ -2085,14 +2093,17 @@ class LabelRowV2:
                 self.add_classification_instance(classification_instance)
 
     def _add_classification_instances_from_classifications_without_frames(
-        self, classification_answers: dict,
+        self,
+        classification_answers: dict,
     ):
         for classification_answer in classification_answers.values():
             ranges: Ranges = []
             for range in classification_answer["range"]:
                 ranges.append(Range(range[0], range[1]))
 
-            classification_instance = self._create_new_classification_instance_with_ranges(classification_answer, ranges)
+            classification_instance = self._create_new_classification_instance_with_ranges(
+                classification_answer, ranges
+            )
             self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
@@ -2116,7 +2127,7 @@ class LabelRowV2:
 
     def _create_new_classification_instance(
         self,
-        frame_classification_label: dict, 
+        frame_classification_label: dict,
         frame: int,
         classification_answers: dict,
     ) -> Optional[ClassificationInstance]:
@@ -2159,7 +2170,9 @@ class LabelRowV2:
 
         range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
 
-        classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash, range_only=True)
+        classification_instance = ClassificationInstance(
+            label_class, classification_hash=classification_hash, range_only=True
+        )
         classification_instance.set_for_frames(
             ranges,
             created_at=range_view.created_at,
@@ -2186,7 +2199,6 @@ class LabelRowV2:
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
         classification_instance.set_frame_data(frame_view, frame)
-
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:

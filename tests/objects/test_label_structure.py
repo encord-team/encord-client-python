@@ -645,7 +645,6 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
 
 # TODO ED-302: Refactor to make more readable
 def test_add_and_get_classification_instances_to_audio_label_row(ontology):
-
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"

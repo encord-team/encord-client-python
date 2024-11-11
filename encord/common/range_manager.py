@@ -1,6 +1,6 @@
-from typing import Union, Optional, Iterable, Set, List, cast
+from typing import Iterable, List, Optional, Set, Union, cast
 
-from encord.objects.frames import Ranges, Range, Frames
+from encord.objects.frames import Frames, Range, Ranges
 
 
 class RangeManager:
