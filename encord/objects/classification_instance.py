@@ -211,8 +211,6 @@ class ClassificationInstance:
                 Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
             reviews:
                 Should only be set by internal functions.
-            use_range:
-                Should only be set by internal functions.
         """
         if created_at is None:
             created_at = datetime.now()
