@@ -799,7 +799,7 @@ class LabelRowV2:
             raise LabelRowError(
                 "To add a ClassificationInstance object to an Audio LabelRow,"
                 "the ClassificationInstance object needs to be created with the "
-                "range_only property set to False."
+                "range_only property set to True."
                 "You can do ClassificationInstance(range_only=True) or "
                 "Classification.create_instance(range_only=True) to achieve this."
             )

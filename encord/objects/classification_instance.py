@@ -109,10 +109,14 @@ class ClassificationInstance:
 
     @property
     def range_list(self) -> Ranges:
-        if self._range_only or (self._parent is not None and self._parent.data_type == DataType.AUDIO):
+        if self._range_only:
             return self._range_manager.get_ranges()
         else:
-            raise LabelRowError("No ranges available for this classification instance.")
+            raise LabelRowError("No ranges available for this classification instance."
+                                "Please ensure the classification instance was created with "
+                                "the range_only property to True. "
+                                "You can do ClassificationInstance(range_only=True) or "
+                                "Classification.create_instance(range_only=True) to achieve this.")
 
     def is_range_only(self) -> bool:
         return self._range_only
