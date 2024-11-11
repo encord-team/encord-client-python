@@ -61,7 +61,7 @@ class ClassificationInstance:
             ontology_classification: Classification,
             *,
             classification_hash: Optional[str] = None,
-            use_range: bool = False,
+            range_only: bool = False,
     ):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowV2] = None
@@ -71,9 +71,10 @@ class ClassificationInstance:
         # feature_node_hash of attribute to the answer.
 
         # Only used for non-frame entities
-        self._use_range = use_range
+        self._range_only = range_only
         self._range_manager: RangeManager = RangeManager()
 
+        # Only used for frame entities
         self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
 
     @property
@@ -108,21 +109,18 @@ class ClassificationInstance:
 
     @property
     def range_list(self) -> Ranges:
-        if self._use_range or (self._parent is not None and self._parent.data_type == DataType.AUDIO):
+        if self._range_only or (self._parent is not None and self._parent.data_type == DataType.AUDIO):
             return self._range_manager.get_ranges()
         else:
-            # TODO: Think about this
             raise LabelRowError("No ranges available for this classification instance.")
 
-    @property
-    def use_ranges(self) -> bool:
-        return self._use_range
-
+    def is_range_only(self) -> bool:
+        return self._range_only
 
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
 
-    def set_for_ranges(
+    def _set_for_ranges(
             self,
             frames: Frames,
             overwrite: bool,
@@ -218,15 +216,8 @@ class ClassificationInstance:
         if last_edited_at is None:
             last_edited_at = datetime.now()
 
-        """
-        Classification Instance might be created before label row with `use_range = False`
-        If this instance is attached to a LabelRowV2 which has `data_type = AUDIO`,
-        then we need to convert the classification_instance to operate on ranges, not on frames.
-        """
-        self._use_range = self._use_range or (self._parent is not None and self._parent.data_type == DataType.AUDIO)
-
-        if self._use_range:
-            self.set_for_ranges(
+        if self._range_only:
+            self._set_for_ranges(
                 frames=frames,
                 overwrite=overwrite,
                 created_at=created_at,
@@ -295,7 +286,7 @@ class ClassificationInstance:
         """
 
         # TODO: Think about this:
-        if self._use_range and frame != 0:
+        if self._range_only and frame != 0:
             raise LabelRowError(
                 "This Classification Instance only works on ranges, technically only has one 'frame'"
                 "Use `get_annotation(0)` to get the frame data of the first frame."
@@ -605,7 +596,7 @@ class ClassificationInstance:
             return ClassificationInstance.FrameData(
                 created_at=created_at,
                 created_by=d["createdBy"],
-                confidence=d.get("confidence", DEFAULT_CONFIDENCE), # TODO QUESTION: Is setting a default alright here?
+                confidence=d.get("confidence", DEFAULT_CONFIDENCE),
                 manual_annotation=d["manualAnnotation"],
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),

@@ -794,12 +794,12 @@ class LabelRowV2:
         classification_instance.is_valid()
 
         # TODO: Need to update the docstring for this method, talk to Laverne.
-        if not classification_instance.use_ranges and self.data_type == DataType.AUDIO:
+        if not classification_instance.is_range_only() and self.data_type == DataType.AUDIO:
             raise LabelRowError("To add a ClassificationInstance object to an Audio LabelRow,"
                                 "the ClassificationInstance object needs to be created with the "
-                                "use_range property set to False."
-                                "You can do ClassificationInstance(use_range=True) or "
-                                "Classification.create_instance(use_range=True) to achieve this.")
+                                "range_only property set to False."
+                                "You can do ClassificationInstance(range_only=True) or "
+                                "Classification.create_instance(range_only=True) to achieve this.")
 
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -2161,8 +2161,7 @@ class LabelRowV2:
 
         range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
 
-        # Need to set `use_range` to True here, so the classification_instance operates on ranges, and not on frames
-        classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash, use_range=True)
+        classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash, range_only=True)
         classification_instance.set_for_frames(
             ranges,
             created_at=range_view.created_at,

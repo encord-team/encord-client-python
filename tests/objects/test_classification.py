@@ -56,7 +56,7 @@ def test_non_range_classification_cannot_be_added_to_audio_label_row(ontology):
 
 
 def test_audio_classification_overwrite(ontology, empty_audio_label_row: LabelRowV2):
-    classification_instance = ClassificationInstance(checklist_classification, use_range=True)
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
     classification_instance.set_for_frames(Range(start=0, end=100))
     empty_audio_label_row.add_classification_instance(classification_instance)
 
@@ -75,7 +75,7 @@ def test_audio_classification_overwrite(ontology, empty_audio_label_row: LabelRo
 
 
 def test_audio_classification_exceed_max_frames(ontology, empty_audio_label_row: LabelRowV2):
-    classification_instance = ClassificationInstance(checklist_classification, use_range=True)
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
     classification_instance.set_for_frames(Range(start=0, end=100))
     empty_audio_label_row.add_classification_instance(classification_instance)
 
@@ -85,7 +85,7 @@ def test_audio_classification_exceed_max_frames(ontology, empty_audio_label_row:
 
 def test_audio_classification_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
     label_row = empty_audio_label_row
-    classification_instance = ClassificationInstance(checklist_classification, use_range=True)
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
     classification_instance.set_for_frames(Range(start=0, end=1500))
     range_list = classification_instance.range_list
     assert len(range_list) == 1
