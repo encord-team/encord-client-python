@@ -53,8 +53,7 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
 )
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges, Range, \
-    ranges_list_to_ranges
+from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges, Range
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -68,7 +67,7 @@ from encord.orm.label_row import (
     WorkflowGraphNode,
 )
 from encord.utilities.type_utilities import exhaustive_guard
-from encord.utilities.range_utilities import RangeManager
+from encord.common.range_manager import RangeManager
 
 log = logging.getLogger(__name__)
 

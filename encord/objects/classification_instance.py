@@ -42,14 +42,14 @@ from encord.objects.attributes import (
 )
 from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges, Range, ranges_to_list
+from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
 )
 from encord.objects.options import Option, _get_option_by_hash
 from encord.objects.utils import check_email, short_uuid_str
-from encord.utilities.range_utilities import RangeManager
+from encord.common.range_manager import RangeManager
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2

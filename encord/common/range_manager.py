@@ -53,7 +53,7 @@ class RangeManager:
         new_ranges = []
 
         for r in self.ranges:
-            if r.end < range_to_remove.start or r.start > range_to_remove.end:
+            if not r.overlaps(range_to_remove):
                 # No overlap
                 new_ranges.append(r)
             else:

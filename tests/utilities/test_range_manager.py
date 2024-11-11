@@ -1,7 +1,7 @@
 import pytest
 
 from encord.objects.frames import Range
-from encord.utilities.range_utilities import RangeManager
+from encord.common.range_manager import RangeManager
 
 
 @pytest.fixture
