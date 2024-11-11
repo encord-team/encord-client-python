@@ -285,7 +285,6 @@ class ClassificationInstance:
                 Defaults to the first frame.
         """
 
-        # TODO: Think about this:
         if self._range_only and frame != 0:
             raise LabelRowError(
                 "This Classification Instance only works on ranges, technically only has one 'frame'"
@@ -308,17 +307,26 @@ class ClassificationInstance:
 
         return self.Annotation(self, frame_num)
 
-    def remove_from_frames(self, frames: Frames) -> None:
-        frame_list = frames_class_to_frames_list(frames)
-        for frame in frame_list:
-            self._frames_to_data.pop(frame)
+    def _remove_from_ranges(self, frames: Frames) -> None:
+        new_range_manager = RangeManager(frame_class=frames)
+        ranges_to_remove = new_range_manager.get_ranges()
 
+        self._range_manager.remove_ranges(ranges_to_remove)
         if self.is_assigned_to_label_row():
             assert self._parent is not None
+            self._parent._remove_ranges_from_classification(self.ontology_item, ranges_to_remove)
 
-            if self._parent.data_type == DataType.AUDIO:
-                self._parent._remove_ranges_from_classification(self.ontology_item, frame_list)
-            else:
+    def remove_from_frames(self, frames: Frames) -> None:
+        if self._range_only:
+            self._remove_from_ranges(frames)
+
+        else:
+            frame_list = frames_class_to_frames_list(frames)
+            for frame in frame_list:
+                self._frames_to_data.pop(frame)
+
+            if self.is_assigned_to_label_row():
+                assert self._parent is not None
                 self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
                 self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
