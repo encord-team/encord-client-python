@@ -140,7 +140,7 @@ class AnnotationTask(WorkflowTask):
 
         **Parameters**
         - `assignee` (Optional[str]): User email to be assigned to the task whilst submitting the task.
-        - `retain_assignee` (bool): Retains the current assignee of the task. This is ignored if `assignee` is provided. This cannot be set to True when the annotation task does not
+        - `retain_assignee` (bool): Retains the current assignee of the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the submission.
         """
         workflow_client, stage_uuid = self._get_client_data()
