@@ -7,7 +7,7 @@ from uuid import UUID
 
 import encord.orm.storage
 from encord import EncordUserClient
-from encord.http.bundle import BundlablePayload, Bundle, bundled_operation
+from encord.http.bundle import Bundle, bundled_operation
 from encord.http.v2.api_client import ApiClient
 from encord.orm.base_dto import BaseDTO
 from encord.orm.cloud_integration import CloudIntegration

@@ -1,12 +1,9 @@
-import json
 import uuid
-from datetime import datetime
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from requests import Session
 
 from encord.client import EncordClientProject, _device_to_string
 from encord.constants.model import Device
@@ -15,11 +12,6 @@ from encord.exceptions import EncordException
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.label_row import LabelRow
-from encord.orm.model import (
-    PublicModelTrainGetResultLongPollingStatus,
-    PublicModelTrainGetResultResponse,
-    PublicModelTrainGetResultResponseDoneResult,
-)
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectDataset
 from encord.project import Project

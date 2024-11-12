@@ -6,7 +6,6 @@ from enum import auto
 from typing import Dict, List, Optional, Union
 from uuid import UUID
 
-from encord.http.v2.api_client import ApiClient
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, Field
 from encord.orm.dataset import DataUnitError, LongPollingStatus

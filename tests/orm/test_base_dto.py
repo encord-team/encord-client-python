@@ -3,9 +3,8 @@ from datetime import datetime, timezone
 from typing import List
 
 import pytest
-from pydantic import ValidationError
 
-from encord.common.constants import DATETIME_LONG_STRING_FORMAT, DATETIME_STRING_FORMAT
+from encord.common.constants import DATETIME_LONG_STRING_FORMAT
 from encord.exceptions import EncordException
 from encord.orm.base_dto import BaseDTO, dto_validator
 from encord.orm.dataset import DatasetDataLongPolling, LongPollingStatus
