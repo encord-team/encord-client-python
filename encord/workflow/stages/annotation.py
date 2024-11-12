@@ -56,7 +56,7 @@ class AnnotationStage(WorkflowStageBase):
         data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
-        status: Optional[AnnotationTaskStatus, List[AnnotationTaskStatus]] = None,
+        status: Union[AnnotationTaskStatus, List[AnnotationTaskStatus], None] = None,
     ) -> Iterable[AnnotationTask]:
         """
         Retrieves tasks for the AnnotationStage.
