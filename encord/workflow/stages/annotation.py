@@ -17,6 +17,7 @@ from typing import Iterable, List, Literal, Optional, TypeVar, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
+from encord.exceptions import InvalidArgumentsError
 from encord.http.bundle import Bundle
 from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import WorkflowStageType
@@ -139,9 +140,13 @@ class AnnotationTask(WorkflowTask):
         Submits the task for review.
 
         **Parameters**
-
+        - `assignee` (Optional[str]): User email to be assigned to the task whilst submitting the task.
+        - `retain_assignee` (bool): Retains the current assignee of the task. This is ignored if `assignee` is provided. This cannot be set to True when the annotation task does not
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the submission.
         """
+        if retain_assignee and self.assignee is None:
+            raise InvalidArgumentsError('Attempted to retain assignee when there is no assignee.')
+
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
             stage_uuid,
