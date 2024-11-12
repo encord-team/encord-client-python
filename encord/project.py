@@ -1198,11 +1198,12 @@ class Project:
         """
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
-        ProjectCollection._delete_collection(self._client._get_api_client(), self._project_instance.project_hash, collection_uuid)
-
+        ProjectCollection._delete_collection(
+            self._client._get_api_client(), self._project_instance.project_hash, collection_uuid
+        )
 
     def create_collection(
-            self, name: str, description: str = "", collection_type: ProjectCollectionType = ProjectCollectionType.FRAME
+        self, name: str, description: str = "", collection_type: ProjectCollectionType = ProjectCollectionType.FRAME
     ) -> ProjectCollection:
         """
         Create a prooject collection.
@@ -1215,7 +1216,9 @@ class Project:
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
         """
-        new_uuid = ProjectCollection._create_collection(self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type)
+        new_uuid = ProjectCollection._create_collection(
+            self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type
+        )
         print(new_uuid)
         # return ProjectCollection(self._project_instance.project_hash, self._client, new_uuid)
         # return self.get_collection(new_uuid)

@@ -3,29 +3,41 @@ from datetime import datetime
 from typing import Iterator, List, Optional, Sequence, Union
 from uuid import UUID
 
-from encord.objects.ontology_labels_impl import LabelRowV2
 import encord.orm.storage as orm_storage
+from encord.client import EncordClientProject
 from encord.exceptions import (
     AuthorisationError,
 )
-from encord.client import EncordClientProject
 from encord.filter_preset import FilterPreset
 from encord.http.v2.api_client import ApiClient
-from encord.orm.collection import Collection as OrmCollection, CreateProjectCollectionParams, CreateProjectCollectionPayload, GetProjectCollectionParams, ProjectCollectionBulkItemRequest, ProjectCollectionBulkItemResponse, ProjectCollectionType, ProjectDataCollectionInstance, ProjectDataCollectionItemRequest,  ProjectDataCollectionItemResponse, ProjectLabelCollectionInstance, ProjectLabelCollectionItemRequest, ProjectLabelCollectionItemResponse
-from encord.orm.collection import ProjectCollection as OrmProjectCollection
+from encord.objects.ontology_labels_impl import LabelRowV2
+from encord.ontology import Ontology
+from encord.orm.collection import Collection as OrmCollection
 from encord.orm.collection import (
     CollectionBulkItemRequest,
     CollectionBulkItemResponse,
     CollectionBulkPresetRequest,
     CreateCollectionParams,
     CreateCollectionPayload,
+    CreateProjectCollectionParams,
+    CreateProjectCollectionPayload,
     GetCollectionItemsParams,
     GetCollectionParams,
     GetCollectionsResponse,
+    GetProjectCollectionParams,
+    ProjectCollectionBulkItemRequest,
+    ProjectCollectionBulkItemResponse,
+    ProjectCollectionType,
+    ProjectDataCollectionInstance,
+    ProjectDataCollectionItemRequest,
+    ProjectDataCollectionItemResponse,
+    ProjectLabelCollectionInstance,
+    ProjectLabelCollectionItemRequest,
+    ProjectLabelCollectionItemResponse,
     UpdateCollectionPayload,
 )
+from encord.orm.collection import ProjectCollection as OrmProjectCollection
 from encord.storage import StorageItem, StorageItemInaccessible
-from encord.ontology import Ontology
 
 log = logging.getLogger(__name__)
 
@@ -300,7 +312,7 @@ class Collection:
         )
 
 
-class ProjectCollection():
+class ProjectCollection:
     """
     Represents collections inside a Project.
     Project collections are a logical grouping of frames or annotations that can
@@ -313,7 +325,7 @@ class ProjectCollection():
         client: ApiClient,
         project_client: EncordClientProject,
         ontology: Ontology,
-        orm_collection: OrmProjectCollection
+        orm_collection: OrmProjectCollection,
     ):
         self._project_uuid = project_uuid
         self._client = client
@@ -379,7 +391,7 @@ class ProjectCollection():
             ProjectCollectionType: The type of the collection.
         """
         return self._collection_instance.collection_type
-    
+
     @property
     def project_hash(self) -> UUID:
         """
@@ -388,8 +400,6 @@ class ProjectCollection():
             UUID: The project hash of the collection.
         """
         return self._collection_instance.project_hash
-    
-
 
     # @staticmethod
     # def _get_collection(project: Project, collection_uuid: UUID) -> "ProjectCollection":
@@ -412,9 +422,7 @@ class ProjectCollection():
         collection_uuids: Union[List[UUID], None],
         page_size: Optional[int] = None,
     ) -> Iterator["ProjectCollection"]:
-        params = GetProjectCollectionParams(
-            projectHash=project_uuid, uuids=collection_uuids, pageSize=page_size
-        )
+        params = GetProjectCollectionParams(projectHash=project_uuid, uuids=collection_uuids, pageSize=page_size)
         paged_collections = client.get_paged_iterator(
             f"active/{project_uuid}/collections",
             params=params,
@@ -426,7 +434,7 @@ class ProjectCollection():
                 client=client,
                 project_client=project_client,
                 ontology=ontology,
-                orm_collection=collection
+                orm_collection=collection,
             )
 
     @staticmethod
@@ -527,7 +535,9 @@ class ProjectCollection():
                 item.instances,
             )
 
-    def add_items(self, items: Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]) -> ProjectCollectionBulkItemResponse:
+    def add_items(
+        self, items: Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
+    ) -> ProjectCollectionBulkItemResponse:
         """
         Add data items to the collection.
 
@@ -544,7 +554,9 @@ class ProjectCollection():
         )
         return res
 
-    def remove_items(self, items: Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]) -> ProjectCollectionBulkItemResponse:
+    def remove_items(
+        self, items: Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
+    ) -> ProjectCollectionBulkItemResponse:
         """
         Remove data items from the collection.
 
