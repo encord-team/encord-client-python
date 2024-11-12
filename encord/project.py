@@ -1155,6 +1155,14 @@ class Project:
             branch_name=branch_name,
         )
 
+    def get_collection(self, collection_uuid: Union[str, UUID]) -> ProjectCollection:
+        return ProjectCollection._get_collection(
+            project_client=self._client,
+            ontology=self._ontology,
+            project_uuid=self._project_instance.project_hash,
+            collection_uuid=collection_uuid,
+        )
+
     def list_collections(
         self,
         collection_uuids: List[str | UUID] | None = None,
@@ -1177,7 +1185,6 @@ class Project:
             else None
         )
         return ProjectCollection._list_collections(
-            client=self._client._get_api_client(),
             project_client=self._client,
             ontology=self._ontology,
             project_uuid=self._project_instance.project_hash,
@@ -1219,6 +1226,4 @@ class Project:
         new_uuid = ProjectCollection._create_collection(
             self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type
         )
-        print(new_uuid)
-        # return ProjectCollection(self._project_instance.project_hash, self._client, new_uuid)
-        # return self.get_collection(new_uuid)
+        return ProjectCollection(self._project_instance.project_hash, self._client, new_uuid)

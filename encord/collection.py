@@ -322,13 +322,12 @@ class ProjectCollection:
     def __init__(
         self,
         project_uuid: UUID,
-        client: ApiClient,
         project_client: EncordClientProject,
         ontology: Ontology,
         orm_collection: OrmProjectCollection,
     ):
         self._project_uuid = project_uuid
-        self._client = client
+        self._client = project_client._get_api_client()
         self._project_client = project_client
         self._ontology = ontology
         self._collection_instance = orm_collection
@@ -401,21 +400,32 @@ class ProjectCollection:
         """
         return self._collection_instance.project_hash
 
-    # @staticmethod
-    # def _get_collection(project: Project, collection_uuid: UUID) -> "ProjectCollection":
-    #     params = GetProjectCollectionParams(uuids=[collection_uuid])
-    #     orm_item = api_client.get(
-    #         "active/collections",
-    #         params=params,
-    #         result_type=GetCollectionsResponse,
-    #     )
-    #     if len(orm_item.results) > 0:
-    #         return ProjectCollection(orm_item.results[0], project)
-    #     raise AuthorisationError("No collection found")
+    @staticmethod
+    def _get_collection(
+        project_client: EncordClientProject,
+        ontology: Ontology,
+        project_uuid: UUID,
+        collection_uuid: UUID,
+    ) -> "ProjectCollection":
+        params = GetProjectCollectionParams(uuids=[collection_uuid])
+        orm_items = list(
+            project_client._get_api_client().get_paged_iterator(
+                f"active/{project_uuid}/collections",
+                params=params,
+                result_type=OrmProjectCollection,
+            )
+        )
+        if len(orm_items) > 0:
+            return ProjectCollection(
+                project_uuid=project_uuid,
+                project_client=project_client,
+                ontology=ontology,
+                orm_collection=orm_items[0],
+            )
+        raise AuthorisationError("No collection found")
 
     @staticmethod
     def _list_collections(
-        client: ApiClient,
         project_client: EncordClientProject,
         ontology: Ontology,
         project_uuid: UUID,
@@ -423,7 +433,7 @@ class ProjectCollection:
         page_size: Optional[int] = None,
     ) -> Iterator["ProjectCollection"]:
         params = GetProjectCollectionParams(projectHash=project_uuid, uuids=collection_uuids, pageSize=page_size)
-        paged_collections = client.get_paged_iterator(
+        paged_collections = project_client._get_api_client().get_paged_iterator(
             f"active/{project_uuid}/collections",
             params=params,
             result_type=OrmProjectCollection,
@@ -431,7 +441,6 @@ class ProjectCollection:
         for collection in paged_collections:
             yield ProjectCollection(
                 project_uuid=project_uuid,
-                client=client,
                 project_client=project_client,
                 ontology=ontology,
                 orm_collection=collection,
