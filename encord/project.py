@@ -1178,6 +1178,7 @@ class Project:
         )
         return ProjectCollection._list_collections(
             client=self._client._get_api_client(),
+            project_client=self._client,
             ontology=self._ontology,
             project_uuid=self._project_instance.project_hash,
             collection_uuids=collections,

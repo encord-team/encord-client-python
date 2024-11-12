@@ -8,9 +8,10 @@ import encord.orm.storage as orm_storage
 from encord.exceptions import (
     AuthorisationError,
 )
+from encord.client import EncordClientProject
 from encord.filter_preset import FilterPreset
 from encord.http.v2.api_client import ApiClient
-from encord.orm.collection import Collection as OrmCollection, CreateProjectCollectionParams, CreateProjectCollectionPayload, GetProjectCollectionParams, ProjectCollectionType, ProjectDataCollectionInstance,  ProjectDataCollectionItemResponse, ProjectLabelCollectionInstance, ProjectLabelCollectionItemResponse
+from encord.orm.collection import Collection as OrmCollection, CreateProjectCollectionParams, CreateProjectCollectionPayload, GetProjectCollectionParams, ProjectCollectionBulkItemRequest, ProjectCollectionBulkItemResponse, ProjectCollectionType, ProjectDataCollectionInstance, ProjectDataCollectionItemRequest,  ProjectDataCollectionItemResponse, ProjectLabelCollectionInstance, ProjectLabelCollectionItemRequest, ProjectLabelCollectionItemResponse
 from encord.orm.collection import ProjectCollection as OrmProjectCollection
 from encord.orm.collection import (
     CollectionBulkItemRequest,
@@ -306,11 +307,17 @@ class ProjectCollection():
     be used to perform various data curation flows.
     """
 
-    def __init__(self, project_uuid: UUID, client: ApiClient,
-                 ontology: Ontology,
-                 orm_collection: OrmProjectCollection):
+    def __init__(
+        self,
+        project_uuid: UUID,
+        client: ApiClient,
+        project_client: EncordClientProject,
+        ontology: Ontology,
+        orm_collection: OrmProjectCollection
+    ):
         self._project_uuid = project_uuid
         self._client = client
+        self._project_client = project_client
         self._ontology = ontology
         self._collection_instance = orm_collection
 
@@ -399,6 +406,7 @@ class ProjectCollection():
     @staticmethod
     def _list_collections(
         client: ApiClient,
+        project_client: EncordClientProject,
         ontology: Ontology,
         project_uuid: UUID,
         collection_uuids: Union[List[UUID], None],
@@ -413,7 +421,13 @@ class ProjectCollection():
             result_type=OrmProjectCollection,
         )
         for collection in paged_collections:
-            yield ProjectCollection(project_uuid, client, ontology, collection)
+            yield ProjectCollection(
+                project_uuid=project_uuid,
+                client=client,
+                project_client=project_client,
+                ontology=ontology,
+                orm_collection=collection
+            )
 
     @staticmethod
     def _delete_collection(client: ApiClient, project_uuid: UUID, collection_uuid: UUID) -> None:
@@ -478,7 +492,7 @@ class ProjectCollection():
             yield (
                 LabelRowV2(
                     item.label_row_metadata,
-                    self._client,
+                    self._project_client,
                     self._ontology,
                 ),
                 item.instances,
@@ -507,8 +521,90 @@ class ProjectCollection():
             yield (
                 LabelRowV2(
                     item.label_row_metadata,
-                    self._client,
+                    self._project_client,
                     self._ontology,
                 ),
                 item.instances,
             )
+
+    def add_items(self, items: Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]) -> ProjectCollectionBulkItemResponse:
+        """
+        Add data items to the collection.
+
+        Args:
+            items (Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]): The list of data items to be added.
+        Returns:
+            ProjectCollectionBulkItemResponse: The response after adding items to the collection.
+        """
+        res = self._client.post(
+            f"active/{self._project_uuid}/collections/{self.uuid}/add-items",
+            params=None,
+            payload=ProjectCollectionBulkItemRequest(items=items),
+            result_type=ProjectCollectionBulkItemResponse,
+        )
+        return res
+
+    def remove_items(self, items: Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]) -> ProjectCollectionBulkItemResponse:
+        """
+        Remove data items from the collection.
+
+        Args:
+            items (Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]): The list of data items to be removed.
+        Returns:
+            ProjectCollectionBulkItemResponse: The response after removing items from the collection.
+        """
+        res = self._client.post(
+            f"active/{self._project_uuid}/collections/{self.uuid}/remove-items",
+            params=None,
+            payload=ProjectCollectionBulkItemRequest(items=items),
+            result_type=ProjectCollectionBulkItemResponse,
+        )
+        return res
+
+    def add_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
+        """
+         Async operation to add storage items matching a filter preset to the collection.
+
+        Args:
+             filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
+        """
+        if isinstance(filter_preset, FilterPreset):
+            preset_uuid = filter_preset.uuid
+        elif isinstance(filter_preset, str):
+            preset_uuid = UUID(filter_preset)
+        else:
+            preset_uuid = filter_preset
+        self._client.post(
+            f"active/{self._project_uuid}/collections/{self.uuid}/add-preset-items",
+            params=None,
+            payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
+            result_type=None,
+        )
+        log.info(
+            f"Submitted request to add items matching filter_preset:{preset_uuid} to collection:{self.uuid}."
+            f"It is an async operation and can take some time to complete."
+        )
+
+    def remove_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
+        """
+        Async operation to remove storage items matching a filter preset from the collection.
+
+        Args:
+            filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
+        """
+        if isinstance(filter_preset, FilterPreset):
+            preset_uuid = filter_preset.uuid
+        elif isinstance(filter_preset, str):
+            preset_uuid = UUID(filter_preset)
+        else:
+            preset_uuid = filter_preset
+        self._client.post(
+            f"active/{self._project_uuid}/collections/{self.uuid}/remove-preset-items",
+            params=None,
+            payload=CollectionBulkPresetRequest(preset_uuid=preset_uuid),
+            result_type=None,
+        )
+        log.info(
+            f"Submitted request to remove items matching filter_preset:{preset_uuid} from collection:{self.uuid}."
+            f"It is an async operation and can take some time to complete."
+        )

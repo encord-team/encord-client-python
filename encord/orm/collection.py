@@ -103,9 +103,25 @@ class ProjectLabelCollectionInstance(BaseDTO):
 class ProjectDataCollectionItemResponse(BaseDTO):
     label_row_metadata: LabelRowMetadataDTO
     instances: list[ProjectDataCollectionInstance]
+
 class ProjectLabelCollectionItemResponse(BaseDTO):
     label_row_metadata: LabelRowMetadataDTO
     instances: list[ProjectLabelCollectionInstance]
+
+class ProjectDataCollectionItemRequest(BaseDTO):
+    data_hash: str | UUID
+    frame: int
+
+class ProjectLabelCollectionItemRequest(BaseDTO):
+    data_hash: str | UUID
+    frame: int
+    annotation_hash: str | UUID
+
+class ProjectCollectionBulkItemRequest(BaseDTO):
+    items: list[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
+
+class ProjectCollectionBulkItemResponse(BaseDTO):
+    failed_items: list[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
 
 # class ProjectDataCollectionItem(BaseDTO):
 #     label_row_v2: LabelRowV2
