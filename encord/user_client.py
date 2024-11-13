@@ -690,8 +690,8 @@ class EncordUserClient:
 
     def create_project_from_cvat_get_result(
         self,
-        *,
         cvat_import_uuid: UUID,
+        *,
         timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
     ) -> Union[CvatImporterSuccess, CvatImporterError]:
         failed_requests_count = 0
@@ -763,7 +763,6 @@ class EncordUserClient:
         import_method: ImportMethod,
         dataset_name: str,
         review_mode: ReviewMode = ReviewMode.LABELLED,
-        max_workers: Optional[int] = None,
         *,
         transform_bounding_boxes_to_polygons=False,
         timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
