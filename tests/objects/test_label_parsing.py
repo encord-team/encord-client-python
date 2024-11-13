@@ -9,6 +9,7 @@ from encord.objects.frames import Range
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.ontology import Ontology
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from tests.objects.data.audio_labels import AUDIO_LABELS, EMPTY_AUDIO_LABELS
 from tests.objects.data.dicom_labels_with_metadata import (
     DICOM_LABELS_WITH_METADATA_TEST_BLURB,
 )
@@ -47,6 +48,10 @@ def label_row_metadata() -> LabelRowMetadata:
         number_of_frames=55,
         height=512,
         width=512,
+        audio_codec=None,
+        audio_sample_rate=None,
+        audio_num_channels=None,
+        audio_bit_depth=None
     )
 
 
@@ -62,6 +67,16 @@ def test_label_row_metadata_accessor(ontology, label_row_metadata):
         frame_metadata = frame_view.metadata
         assert frame_metadata is not None
         assert isinstance(frame_metadata, DICOMSliceMetadata)
+
+
+def test_label_row_audio_metadata_accessor(ontology, label_row_metadata):
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
+    label_row.from_labels_dict(EMPTY_AUDIO_LABELS)
+
+    assert label_row.audio_codec == "mp3"
+    assert label_row.audio_num_channels == 2
+    assert label_row.audio_sample_rate == 44100
+    assert label_row.audio_bit_depth == 8
 
 
 def test_checklist_parsing_merging_single_frame_events(ontology, label_row_metadata):
