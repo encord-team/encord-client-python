@@ -1,6 +1,7 @@
 """
 All tests regarding converting from and to Encord dict to the label row.
 """
+
 import os
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
