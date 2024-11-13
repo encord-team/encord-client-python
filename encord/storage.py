@@ -703,7 +703,9 @@ class StorageFolder:
 
         Args:
             integration_id (str): The integration ID for the folder.
-            private_files (Union[str, Dict, Path, TextIO]): The private files to be added.
+            private_files (Union[str, Dict, Path, TextIO, DataUploadItems]):
+                The specification of private files to be added. Can be either a JSON in Encord upload format
+                (see the relevant documentation), or an :class:`encord.orm.storage.DataUploadItems` object.
             ignore_errors (bool): If True, errors will be ignored during the upload process.
 
         Returns:
