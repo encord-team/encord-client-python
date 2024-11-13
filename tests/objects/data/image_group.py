@@ -347,7 +347,7 @@ image_group_labels = {
                     "manualAnnotation": True,
                 }
             ],
-            "featureHash": 'R0SMUli5',
+            "featureHash": "R0SMUli5",
         },
     },
     "object_actions": {},
