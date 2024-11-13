@@ -321,6 +321,7 @@ image_group_labels = {
                     "manualAnnotation": True,
                 }
             ],
+            "featureHash": "6nyvIs5W",
         },
         "mBR5wa0v": {
             "classificationHash": "mBR5wa0v",
@@ -333,6 +334,7 @@ image_group_labels = {
                     "manualAnnotation": True,
                 }
             ],
+            "featureHash": "6nyvIs5W",
         },
         "TyZQ6kOO": {
             "classificationHash": "TyZQ6kOO",
@@ -345,6 +347,7 @@ image_group_labels = {
                     "manualAnnotation": True,
                 }
             ],
+            "featureHash": "R0SMUli5",
         },
     },
     "object_actions": {},
