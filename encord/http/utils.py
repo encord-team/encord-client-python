@@ -16,7 +16,6 @@ import os.path
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Optional, Type, Union
-from uuid import UUID
 
 from tqdm import tqdm
 

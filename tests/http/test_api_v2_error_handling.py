@@ -5,18 +5,16 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from requests import Response, Session
 
 from encord.configs import SshConfig
-from encord.http.v2.api_client import ApiClient
-from encord.orm.analytics import CollaboratorTimer
-
-PRIVATE_KEY = Ed25519PrivateKey.generate()
-
-
 from encord.exceptions import (
     AuthenticationError,
     AuthorisationError,
     ResourceNotFoundError,
     UnknownException,
 )
+from encord.http.v2.api_client import ApiClient
+from encord.orm.analytics import CollaboratorTimer
+
+PRIVATE_KEY = Ed25519PrivateKey.generate()
 
 
 @pytest.fixture

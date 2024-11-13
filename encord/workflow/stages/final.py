@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
-from encord.common.utils import ensure_list, ensure_uuid_list
+from encord.common.utils import ensure_uuid_list
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowStageBase, WorkflowTask
 
