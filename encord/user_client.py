@@ -606,28 +606,28 @@ class EncordUserClient:
         transform_bounding_boxes_to_polygons: bool,
     ) -> UUID:
         """
-        Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
-            your images and annotations into encord. Ensure that during you have the "Save images"
-            checkbox enabled when exporting from CVAT.
+        Start importing a CVAT project into Encord. This is the first part of a two-step import process.
+        Export your CVAT project with the "CVAT for images 1.1" option and use this function to begin
+        importing your images and annotations. Ensure that the "Save images" checkbox is enabled when
+        exporting from CVAT.
 
         Args:
             import_method:
-                The chosen import method. See the `ImportMethod` class for details.
+                The chosen import method. Currently, only LocalImport is supported.
             dataset_name:
                 The name of the dataset that will be created.
             review_mode:
-                Set how much interaction is needed from the labeler and from the reviewer for the CVAT labels.
-                    See the `ReviewMode` documentation for more details.
+                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
+                See the `ReviewMode` documentation for more details.
             transform_bounding_boxes_to_polygons:
-                All instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
+                If True, all instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
 
         Returns:
-            CvatImporterSuccess: If the project was successfully imported.
-            CvatImporterError: If the project could not be imported.
+            UUID: A unique identifier for tracking the import process.
 
         Raises:
             ValueError:
-                If the CVAT directory has an invalid format.
+                If the CVAT directory has an invalid format or if a non-LocalImport method is used.
         """
 
         if not isinstance(import_method, LocalImport):
@@ -694,6 +694,27 @@ class EncordUserClient:
         *,
         timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
     ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        """
+        Check the status and get the result of a CVAT import process. This is the second part of the
+        two-step import process.
+
+        Args:
+            cvat_import_uuid:
+                The UUID returned by create_project_from_cvat_start.
+            timeout_seconds:
+                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
+                The method will poll the server periodically during this time.
+
+        Returns:
+            Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
+            - CvatImporterSuccess: Contains project_hash, dataset_hash, and any issues if the import succeeded.
+            - CvatImporterError: Contains any issues if the import failed.
+
+        Raises:
+            ValueError:
+                If the server returns an unexpected status or invalid response structure.
+        """
+
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
 
@@ -767,6 +788,39 @@ class EncordUserClient:
         transform_bounding_boxes_to_polygons=False,
         timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
     ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        """
+        Create a new Encord project from a CVAT export. This method combines the two-step import process
+        (create_project_from_cvat_start and create_project_from_cvat_get_result) into a single call.
+        Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
+        your images and annotations. Ensure that the "Save images" checkbox is enabled when exporting
+        from CVAT.
+
+        Args:
+            import_method:
+                The chosen import method. Currently, only LocalImport is supported.
+            dataset_name:
+                The name of the dataset that will be created.
+            review_mode:
+                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
+                See the `ReviewMode` documentation for more details. Defaults to ReviewMode.LABELLED.
+            transform_bounding_boxes_to_polygons:
+                If True, all instances of CVAT bounding boxes will be converted to polygons in the final
+                Encord project. Defaults to False.
+            timeout_seconds:
+                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
+                The method will poll the server periodically during this time.
+
+        Returns:
+            Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
+            - CvatImporterSuccess: Contains project_hash, dataset_hash, and any issues if the import succeeded.
+            - CvatImporterError: Contains any issues if the import failed.
+
+        Raises:
+            ValueError:
+                If the CVAT directory has an invalid format, if a non-LocalImport method is used,
+                or if the server returns an unexpected status.
+        """
+
         return self.create_project_from_cvat_get_result(
             cvat_import_uuid=self.create_project_from_cvat_start(
                 import_method=import_method,
