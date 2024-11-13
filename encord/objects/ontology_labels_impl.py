@@ -785,9 +785,7 @@ class LabelRowV2:
         frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
         self._add_to_frame_to_hashes_map(object_instance, frames)
 
-    def add_classification_instance(
-        self, classification_instance: ClassificationInstance, force: bool = False
-    ) -> None:
+    def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
         """
         Add a classification instance to the label row.
 
