@@ -29,6 +29,7 @@ from typing import (
     Union,
 )
 
+from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
@@ -42,7 +43,7 @@ from encord.objects.attributes import (
 )
 from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
@@ -55,7 +56,13 @@ if TYPE_CHECKING:
 
 
 class ClassificationInstance:
-    def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None):
+    def __init__(
+        self,
+        ontology_classification: Classification,
+        *,
+        classification_hash: Optional[str] = None,
+        range_only: bool = False,
+    ):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowV2] = None
         self._classification_hash = classification_hash or short_uuid_str()
@@ -63,6 +70,11 @@ class ClassificationInstance:
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
 
+        # Only used for non-frame entities
+        self._range_only = range_only
+        self._range_manager: RangeManager = RangeManager()
+
+        # Only used for frame entities
         self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
 
     @property
@@ -95,8 +107,70 @@ class ClassificationInstance:
         else:
             return self._parent.number_of_frames
 
+    @property
+    def range_list(self) -> Ranges:
+        if self._range_only:
+            return self._range_manager.get_ranges()
+        else:
+            raise LabelRowError("No ranges available for this classification instance."
+                                "Please ensure the classification instance was created with "
+                                "the range_only property to True. "
+                                "You can do ClassificationInstance(range_only=True) or "
+                                "Classification.create_instance(range_only=True) to achieve this.")
+
+    def is_range_only(self) -> bool:
+        return self._range_only
+
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
+
+    def _set_for_ranges(
+        self,
+        frames: Frames,
+        overwrite: bool,
+        created_at: Optional[datetime],
+        created_by: Optional[str],
+        confidence: float,
+        manual_annotation: bool,
+        last_edited_at: Optional[datetime],
+        last_edited_by: Optional[str],
+        reviews: Optional[List[dict]],
+    ):
+        new_range_manager = RangeManager(frame_class=frames)
+        conflicting_ranges = self._is_classification_already_present_on_range(new_range_manager.get_ranges())
+        if conflicting_ranges and not overwrite:
+            raise LabelRowError(
+                f"The classification '{self.classification_hash}' already exists "
+                f"on the ranges {conflicting_ranges}. "
+                f"Set 'overwrite' parameter to True to override."
+            )
+
+        ranges_to_add = new_range_manager.get_ranges()
+        for range_to_add in ranges_to_add:
+            self._check_within_range(range_to_add.end)
+
+        """
+        At this point, this classification instance operates on ranges, NOT on frames.
+        We therefore leave only FRAME 0 in the map.The frame_data for FRAME 0 will be
+        treated as the data for all "frames" in this classification instance.
+        """
+        self._set_frame_and_frame_data(
+            frame=0,
+            overwrite=True,  # We always overwrite the frame data here because it represents the entire instance
+            created_at=created_at,
+            created_by=created_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            reviews=reviews,
+        )
+
+        self._range_manager.add_ranges(ranges_to_add)
+
+        if self.is_assigned_to_label_row():
+            assert self._parent is not None
+            self._parent._add_ranges_to_classification(self.ontology_item, ranges_to_add)
 
     def set_for_frames(
         self,
@@ -144,25 +218,9 @@ class ClassificationInstance:
         if last_edited_at is None:
             last_edited_at = datetime.now()
 
-        frames_list = frames_class_to_frames_list(frames)
-
-        conflicting_frames_list = self._is_classification_already_present(frames_list)
-        if conflicting_frames_list and not overwrite:
-            raise LabelRowError(
-                f"The classification '{self.classification_hash}' already exists "
-                f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
-                f"Set 'overwrite' parameter to True to override."
-            )
-
-        frames_to_add = set(frames_list) - conflicting_frames_list if conflicting_frames_list else frames_list
-        if not frames_to_add:
-            # Nothing to do
-            return
-
-        for frame in frames_list:
-            self._check_within_range(frame)
-            self._set_frame_and_frame_data(
-                frame,
+        if self._range_only:
+            self._set_for_ranges(
+                frames=frames,
                 overwrite=overwrite,
                 created_at=created_at,
                 created_by=created_by,
@@ -173,10 +231,43 @@ class ClassificationInstance:
                 reviews=reviews,
             )
 
-        if self.is_assigned_to_label_row():
-            assert self._parent is not None
-            self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-            self._parent._add_to_frame_to_hashes_map(self, frames_list)
+        else:
+            frames_list = frames_class_to_frames_list(frames)
+
+            conflicting_frames_list = self._is_classification_already_present(frames_list)
+            if conflicting_frames_list and not overwrite:
+                raise LabelRowError(
+                    f"The classification '{self.classification_hash}' already exists "
+                    f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
+                    f"Set 'overwrite' parameter to True to override."
+                )
+
+            frames_to_add = set(frames_list) - conflicting_frames_list if conflicting_frames_list else frames_list
+            if not frames_to_add:
+                # Nothing to do
+                return
+
+            for frame in frames_list:
+                self._check_within_range(frame)
+                self._set_frame_and_frame_data(
+                    frame,
+                    overwrite=overwrite,
+                    created_at=created_at,
+                    created_by=created_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    reviews=reviews,
+                )
+
+            if self.is_assigned_to_label_row():
+                assert self._parent is not None
+                if self._parent is not DataType.AUDIO:
+                    self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+                    self._parent._add_to_frame_to_hashes_map(self, frames_list)
+                else:
+                    self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
 
     def set_frame_data(self, frame_data: FrameData, frames: Frames) -> None:
         frames_list = frames_class_to_frames_list(frames)
@@ -195,6 +286,13 @@ class ClassificationInstance:
             frame: Either the frame number or the image hash if the data type is an image or image group.
                 Defaults to the first frame.
         """
+
+        if self._range_only and frame != 0:
+            raise LabelRowError(
+                "This Classification Instance only works on ranges, technically only has one 'frame'"
+                "Use `get_annotation(0)` to get the frame data of the first frame."
+            )
+
         if isinstance(frame, str):
             # TODO: this check should be consistent for both string and integer frames,
             #       but currently it is not possible due to the parsing logic
@@ -211,15 +309,28 @@ class ClassificationInstance:
 
         return self.Annotation(self, frame_num)
 
-    def remove_from_frames(self, frames: Frames) -> None:
-        frame_list = frames_class_to_frames_list(frames)
-        for frame in frame_list:
-            self._frames_to_data.pop(frame)
+    def _remove_from_ranges(self, frames: Frames) -> None:
+        new_range_manager = RangeManager(frame_class=frames)
+        ranges_to_remove = new_range_manager.get_ranges()
 
+        self._range_manager.remove_ranges(ranges_to_remove)
         if self.is_assigned_to_label_row():
             assert self._parent is not None
-            self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
-            self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
+            self._parent._remove_ranges_from_classification(self.ontology_item, ranges_to_remove)
+
+    def remove_from_frames(self, frames: Frames) -> None:
+        if self._range_only:
+            self._remove_from_ranges(frames)
+
+        else:
+            frame_list = frames_class_to_frames_list(frames)
+            for frame in frame_list:
+                self._frames_to_data.pop(frame)
+
+            if self.is_assigned_to_label_row():
+                assert self._parent is not None
+                self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
+                self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
     def get_annotations(self) -> List[Annotation]:
         """
@@ -464,7 +575,7 @@ class ClassificationInstance:
         def _check_if_frame_view_valid(self) -> None:
             if self._frame not in self._classification_instance._frames_to_data:
                 raise LabelRowError(
-                    "Trying to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frame."
+                    "Trying to use a ClassificationInstance.Annotation for a ClassificationInstance that is not on the frame."
                 )
 
         def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
@@ -482,15 +593,20 @@ class ClassificationInstance:
 
         @staticmethod
         def from_dict(d: dict) -> ClassificationInstance.FrameData:
-            if "lastEditedAt" in d:
+            if "lastEditedAt" in d and d["lastEditedAt"] is not None:
                 last_edited_at = parse_datetime(d["lastEditedAt"])
             else:
                 last_edited_at = datetime.now()
 
+            if "createdAt" in d and d["createdAt"] is not None:
+                created_at = parse_datetime(d["createdAt"])
+            else:
+                created_at = datetime.now()
+
             return ClassificationInstance.FrameData(
-                created_at=parse_datetime(d["createdAt"]),
+                created_at=created_at,
                 created_by=d["createdBy"],
-                confidence=d["confidence"],
+                confidence=d.get("confidence", DEFAULT_CONFIDENCE),
                 manual_annotation=d["manualAnnotation"],
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
@@ -573,7 +689,12 @@ class ClassificationInstance:
     def _is_classification_already_present(self, frames: Iterable[int]) -> Set[int]:
         if self._parent is None:
             return set()
-        return self._parent._is_classification_already_present(self.ontology_item, frames)
+        return self._parent._is_classification_already_present_on_frames(self.ontology_item, frames)
+
+    def _is_classification_already_present_on_range(self, ranges: Ranges) -> Ranges:
+        if self._parent is None:
+            return []
+        return self._parent._is_classification_already_present_on_ranges(self.ontology_item, ranges)
 
     def __repr__(self):
         return (

@@ -56,7 +56,7 @@ class AnnotationStage(WorkflowStageBase):
         data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
-        status: Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]] = None,
+        status: Union[AnnotationTaskStatus, List[AnnotationTaskStatus], None] = None,
     ) -> Iterable[AnnotationTask]:
         """
         Retrieves tasks for the AnnotationStage.
@@ -90,6 +90,8 @@ class AnnotationStage(WorkflowStageBase):
 class _ActionSubmit(WorkflowAction):
     action: Literal["SUBMIT"] = "SUBMIT"
     resolve_label_reviews: bool = True
+    assignee: Optional[str] = None
+    retain_assignee: bool = False
 
 
 class _ActionAssign(WorkflowAction):
@@ -126,16 +128,27 @@ class AnnotationTask(WorkflowTask):
     - `release`: Releases a task from the current user.
     """
 
-    def submit(self, *, bundle: Optional[Bundle] = None) -> None:
+    def submit(
+        self,
+        *,
+        assignee: Optional[str] = None,
+        retain_assignee: bool = False,
+        bundle: Optional[Bundle] = None,
+    ) -> None:
         """
         Submits the task for review.
 
         **Parameters**
-
+        - `assignee` (Optional[str]): User email to be assigned to the task whilst submitting the task.
+        - `retain_assignee` (bool): Retains the current assignee of the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the submission.
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionSubmit(task_uuid=self.uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionSubmit(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
+            bundle=bundle,
+        )
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         """

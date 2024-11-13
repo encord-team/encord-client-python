@@ -34,6 +34,7 @@ class UpdateCollectionPayload(BaseDTO):
 
 class Collection(BaseDTO):
     uuid: uuid.UUID
+    top_level_folder_uuid: UUID = Field(alias="topLevelFolderUuid")
     name: str
     description: Optional[str]
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")

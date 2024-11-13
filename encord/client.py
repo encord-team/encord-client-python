@@ -250,7 +250,7 @@ class EncordClient:
         return self._querier.get_multiple(CloudIntegration)
 
     def get_bearer_token(self) -> BearerTokenResponse:
-        return self._get_api_client().get("user/bearer_token", None, result_type=BearerTokenResponse)
+        return self._get_api_client().get("user/bearer-token", None, result_type=BearerTokenResponse)
 
 
 class EncordClientDataset(EncordClient):
@@ -781,12 +781,6 @@ class EncordClientDataset(EncordClient):
             },
         )
         return DataRow.from_dict_list(data_row_dicts)
-
-    def delete_image_group(self, data_hash: str):
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.delete_image_group`.
-        """
-        self._querier.basic_delete(ImageGroup, uid=data_hash)
 
     def delete_data(self, data_hashes: Union[List[str], str]):
         """
