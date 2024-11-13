@@ -2,14 +2,12 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from requests import Response, Session
 
 from encord.configs import SshConfig
 from encord.exceptions import EncordException
 from encord.http.querier import HEADER_CLOUD_TRACE_CONTEXT, Querier
-
-PRIVATE_KEY = Ed25519PrivateKey.generate()
+from tests.fixtures import PRIVATE_KEY
 
 
 @pytest.fixture

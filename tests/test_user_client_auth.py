@@ -20,7 +20,7 @@ from encord.orm.ontology import OntologyStructure
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectDTO, ProjectType
 from encord.user_client import EncordUserClient
-from tests.fixtures import DUMMY_PRIVATE_KEY
+from tests.fixtures import PRIVATE_KEY_PEM
 
 PROJECT_HASH = str(uuid.uuid4())
 ONTOLOGY_HASH = str(uuid.uuid4())
@@ -118,7 +118,7 @@ def make_side_effects(project_response: Optional[MagicMock] = None, ontology_res
 
 
 def get_encord_auth_header(request: PreparedRequest) -> str:
-    private_key = load_ssh_private_key(DUMMY_PRIVATE_KEY.encode(), None)
+    private_key = load_ssh_private_key(PRIVATE_KEY_PEM.encode(), None)
     public_key = private_key.public_key()
     signature = SshConfig._get_v1_signature(request.body, private_key)
     return SshConfig._get_v1_ssh_authorization_header(
@@ -130,7 +130,7 @@ def get_encord_auth_header(request: PreparedRequest) -> str:
 def test_v1_public_resource_when_initialised_with_ssh_key(mock_send, bearer_token):
     mock_send.side_effect = make_side_effects()
 
-    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=DUMMY_PRIVATE_KEY)
+    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=PRIVATE_KEY_PEM)
     user_client.get_ontology(ONTOLOGY_HASH)
 
     assert mock_send.call_count == 1
@@ -164,7 +164,7 @@ def test_v1_public_resource_when_initialised_with_bearer_auth(mock_send, bearer_
 def test_v1_public_user_resource_when_initialised_with_ssh_key(mock_send, bearer_token):
     mock_send.side_effect = make_side_effects()
 
-    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=DUMMY_PRIVATE_KEY)
+    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=PRIVATE_KEY_PEM)
     user_client.get_datasets()
 
     assert mock_send.call_count == 1
@@ -195,7 +195,7 @@ def test_v1_public_user_resource_when_initialised_with_bearer_auth(mock_send, be
 def test_v2_api_when_initialised_with_ssh_key(mock_send, bearer_token):
     mock_send.side_effect = make_side_effects()
 
-    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=DUMMY_PRIVATE_KEY)
+    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=PRIVATE_KEY_PEM)
     _ = user_client.get_project(project_hash=PROJECT_HASH)
 
     assert mock_send.call_count == 2

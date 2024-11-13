@@ -4,15 +4,13 @@ from typing import Type, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from pydantic import BaseModel
 from requests import Session
 
 from encord.configs import SshConfig
 from encord.http.v2.api_client import ApiClient
 from encord.orm.base_dto import BaseDTO, RootModelDTO
-
-PRIVATE_KEY = Ed25519PrivateKey.generate()
+from tests.fixtures import PRIVATE_KEY
 
 
 class TestPayload(BaseDTO):
