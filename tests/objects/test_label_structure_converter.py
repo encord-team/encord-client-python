@@ -1,7 +1,7 @@
 """
 All tests regarding converting from and to Encord dict to the label row.
 """
-
+import json
 import os
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
@@ -81,6 +81,7 @@ def test_serialise_image_group_with_classifications():
     label_row.from_labels_dict(image_group_labels)
 
     actual = label_row.to_encord_dict()
+
     deep_diff_enhanced(
         image_group_labels,
         actual,
@@ -278,6 +279,7 @@ def test_label_row_with_reviews():
     actual = label_row.to_encord_dict()
 
     expected_no_reviews = _remove_reviews(image_group_with_reviews.labels)
+
     deep_diff_enhanced(
         expected_no_reviews,
         actual,
