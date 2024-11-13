@@ -454,7 +454,7 @@ class EncordUserClient:
             project_description: the optional description of the project
             ontology_hash: the uid of an Ontology to be used. If omitted, a new empty Ontology will be created
             workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
-            workflow_template_hash: Project is created using a Workflow based on the template provided. To use the default Workflow template the workflow_template_hash argument must be omitted.
+            workflow_template_hash: Project is created using a Workflow based on the template provided. This parameter must be included to create a Workflow Project.
         Returns:
             the uid of the Project.
         """
@@ -1414,6 +1414,23 @@ class EncordUserClient:
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
         return FilterPreset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
+
+    def create_preset(self, name: str, filter_preset_json: dict, description: str = "") -> FilterPreset:
+        """
+        Create a preset.
+
+        Args:
+            name: The name of the preset.
+            description: The description of the preset.
+            filter_preset_json: The filters for the preset in their raw json format.
+
+        Returns:
+            FilterPreset: Newly created collection.
+        """
+        new_uuid = FilterPreset._create_preset(
+            self._api_client, name, description, filter_preset_json=filter_preset_json
+        )
+        return self.get_filter_preset(new_uuid)
 
     def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
         """
