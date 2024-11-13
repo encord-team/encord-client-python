@@ -606,6 +606,9 @@ class LabelRowV2:
         Returns:
             FrameView: A view of the specified frame.
         """
+
+        self._method_not_supported_for_audio()
+
         self._check_labelling_is_initalised()
         if isinstance(frame, str):
             frame_num = self.get_frame_number(frame)
@@ -647,6 +650,8 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the specified frame or image hash is not found in the label row.
         """
+        self._method_not_supported_for_audio()
+
         images_data = self._get_frame_metadata_list()
         if isinstance(frame, str):
             data_meta = None
@@ -752,6 +757,9 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the object instance is already part of another LabelRowV2.
         """
+
+        self._method_not_supported_for_audio()
+
         self._check_labelling_is_initalised()
 
         object_instance.is_valid()
@@ -966,6 +974,8 @@ class LabelRowV2:
         Args:
             object_instance: The object instance to remove.
         """
+        self._method_not_supported_for_audio()
+
         self._check_labelling_is_initalised()
 
         self._objects_map.pop(object_instance.object_hash)
@@ -2230,6 +2240,10 @@ class LabelRowV2:
                 "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` "
                 "to do so first."
             )
+
+    def _method_not_supported_for_audio(self):
+        if self.data_type == DataType.AUDIO:
+            raise LabelRowError("This method is not supported for audio.")
 
     def __repr__(self) -> str:
         return f"LabelRowV2(label_hash={self.label_hash}, data_hash={self.data_hash}, data_title={self.data_title})"
