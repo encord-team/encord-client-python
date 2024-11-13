@@ -92,10 +92,14 @@ class ConsensusReviewStage(WorkflowStageBase):
 
 class _ActionApprove(WorkflowAction):
     action: Literal["APPROVE"] = "APPROVE"
+    assignee: Optional[str] = None
+    retain_assignee: bool = False
 
 
 class _ActionReject(WorkflowAction):
     action: Literal["REJECT"] = "REJECT"
+    assignee: Optional[str] = None
+    retain_assignee: bool = False
 
 
 class _ActionAssign(WorkflowAction):
@@ -139,12 +143,20 @@ class ConsensusReviewTask(WorkflowTask):
     - `release`: Releases a task from the current user.
     """
 
-    def approve(self, *, bundle: Optional[Bundle] = None) -> None:
+    def approve(
+        self,
+        *,
+        assignee: Optional[str] = None,
+        retain_assignee: bool = False,
+        bundle: Optional[Bundle] = None,
+    ) -> None:
         """
         Approve the current task.
 
         **Parameters**
 
+        - `assignee` (Optional[str]): User email to be assigned to the review task whilst approving the task.
+        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the approval.
 
         **Returns**
@@ -152,14 +164,26 @@ class ConsensusReviewTask(WorkflowTask):
         None
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionApprove(task_uuid=self.uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionApprove(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
+            bundle=bundle,
+        )
 
-    def reject(self, *, bundle: Optional[Bundle] = None) -> None:
+    def reject(
+        self,
+        *,
+        assignee: Optional[str] = None,
+        retain_assignee: bool = False,
+        bundle: Optional[Bundle] = None,
+    ) -> None:
         """
         Reject the current task.
 
         **Parameters**
 
+        - `assignee` (Optional[str]): User email to be assigned to the review task whilst rejecting the task.
+        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the rejection.
 
         **Returns**
@@ -167,7 +191,11 @@ class ConsensusReviewTask(WorkflowTask):
         None
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionReject(task_uuid=self.uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionReject(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
+            bundle=bundle,
+        )
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         """
