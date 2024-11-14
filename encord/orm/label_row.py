@@ -322,7 +322,7 @@ class LabelRowMetadata(Formatter):
             duration=json_dict.get("duration", None),
             frames_per_second=json_dict.get("frames_per_second", None),
             audio_codec=json_dict.get("audio_codec", None),
-            audio_bit_depth=json_dict.get("audio_bit_rate", None),
+            audio_bit_depth=json_dict.get("audio_bit_depth", None),
             audio_num_channels=json_dict.get("audio_num_channels", None),
             audio_sample_rate=json_dict.get("audio_sample_rate", None),
             height=json_dict.get("height"),

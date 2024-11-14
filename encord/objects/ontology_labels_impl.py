@@ -372,7 +372,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_codec
 
     @property
-    def audio_sample_rate(self) -> Optional[str]:
+    def audio_sample_rate(self) -> Optional[int]:
         """
         Returns the sample rate of the audio data type.
 
@@ -384,7 +384,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_sample_rate
 
     @property
-    def audio_bit_depth(self) -> Optional[str]:
+    def audio_bit_depth(self) -> Optional[int]:
         """
         Returns the bit depth of the audio data type.
 
@@ -396,7 +396,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_bit_depth
 
     @property
-    def audio_num_channels(self) -> Optional[str]:
+    def audio_num_channels(self) -> Optional[int]:
         """
         Returns the number of channels of the audio data type.
 
@@ -1545,6 +1545,10 @@ class LabelRowV2:
             dataset_hash: Hash of the dataset.
             dataset_title: Title of the dataset.
             data_title: Title of the data.
+            audio_codec: Codec for audio data.
+            audio_bit_depth: Bit depth for audio data.
+            audio_sample_rate: Sample Rate for audio data.
+            audio_num_channels: Number of channels for audio data.
             width: Optional width of the data.
             height: Optional height of the data.
             data_link: Optional link to additional data.
