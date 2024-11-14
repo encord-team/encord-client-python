@@ -4,16 +4,14 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from requests import Session
 
 from encord.configs import SshConfig
 from encord.http.constants import RequestsSettings
 from encord.http.v2.api_client import ApiClient
 from encord.user_client import EncordUserClient
-from tests.fixtures import DUMMY_PRIVATE_KEY
+from tests.fixtures import PRIVATE_KEY, PRIVATE_KEY_PEM
 
-PRIVATE_KEY = Ed25519PrivateKey.generate()
 PROJECT_HASH = uuid4().hex
 ONTOLOGY_HASH = uuid4().hex
 DATASET_HASH = uuid4().hex
@@ -100,7 +98,7 @@ def test_request_timeout_settings_correctly_propagated(send: MagicMock, api_clie
     send.side_effect = stub_responses
 
     user_client = EncordUserClient.create_with_ssh_private_key(
-        ssh_private_key=DUMMY_PRIVATE_KEY, requests_settings=requests_settings
+        ssh_private_key=PRIVATE_KEY_PEM, requests_settings=requests_settings
     )
     project = user_client.get_project(PROJECT_HASH)
     verify_timeout_and_reset(send, requests_settings, 2)

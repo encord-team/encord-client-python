@@ -2,8 +2,6 @@ import uuid
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from encord.client import EncordClientProject, _device_to_string
 from encord.constants.model import Device
@@ -19,15 +17,7 @@ from tests.fixtures import ontology, project, user_client
 
 assert user_client and project and ontology
 
-PRIVATE_KEY = (
-    Ed25519PrivateKey.generate()
-    .private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.OpenSSH,
-        encryption_algorithm=serialization.NoEncryption(),
-    )
-    .decode("utf-8")
-)
+
 UID = "d958ddbb-fcd0-477a-adf9-de14431dbbd2"
 
 
