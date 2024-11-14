@@ -51,7 +51,7 @@ def label_row_metadata() -> LabelRowMetadata:
         audio_codec=None,
         audio_sample_rate=None,
         audio_num_channels=None,
-        audio_bit_depth=None
+        audio_bit_depth=None,
     )
 
 
