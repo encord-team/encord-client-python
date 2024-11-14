@@ -60,7 +60,7 @@ runs:
           export CORD_ENV="${{ inputs.environment }}"
           source $(poetry env info --path)/bin/activate
           poetry add git+${{ inputs.sdk-repository-url }}
-          python -m pytest -n 16 ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
+          python -m --timeout=600 pytest -n 4 ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
         shell: bash
 
       - name: Upload report
