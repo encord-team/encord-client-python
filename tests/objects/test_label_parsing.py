@@ -9,8 +9,7 @@ from encord.objects.frames import Range
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.ontology import Ontology
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
-from tests.objects.data.audio_labels import (
-    EMPTY_AUDIO_LABELS)
+from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.dicom_labels_with_metadata import (
     DICOM_LABELS_WITH_METADATA_TEST_BLURB,
 )
