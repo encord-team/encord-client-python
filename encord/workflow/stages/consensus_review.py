@@ -156,7 +156,7 @@ class ConsensusReviewTask(WorkflowTask):
         **Parameters**
 
         - `assignee` (Optional[str]): User email to be assigned to the review task whilst approving the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
+        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the approval.
 
         **Returns**
@@ -183,7 +183,7 @@ class ConsensusReviewTask(WorkflowTask):
         **Parameters**
 
         - `assignee` (Optional[str]): User email to be assigned to the review task whilst rejecting the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
+        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the rejection.
 
         **Returns**

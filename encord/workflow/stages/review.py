@@ -235,7 +235,7 @@ class ReviewTask(WorkflowTask):
         **Parameters**
 
         - `assignee` (Optional[str]): User email to be assigned to the task whilst approving the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
+        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
         """
         workflow_client, stage_uuid = self._get_client_data()
@@ -258,7 +258,7 @@ class ReviewTask(WorkflowTask):
         **Parameters**
 
         - `assignee` (Optional[str]): User email to be assigned to the task whilst rejecting the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
+        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
         """
         workflow_client, stage_uuid = self._get_client_data()
