@@ -360,6 +360,54 @@ class LabelRowV2:
         return self._label_row_read_only_data.height
 
     @property
+    def audio_codec(self) -> Optional[str]:
+        """
+        Returns the codec of the audio data type.
+
+        This only applies to audio data types, and returns None for all other data types.
+
+        Returns:
+            Optional[str]: The codec or None if not applicable.
+        """
+        return self._label_row_read_only_data.audio_codec
+
+    @property
+    def audio_sample_rate(self) -> Optional[int]:
+        """
+        Returns the sample rate of the audio data type.
+
+        This only applies to audio data types, and returns None for all other data types.
+
+        Returns:
+            Optional[int]: The sample rate or None if not applicable.
+        """
+        return self._label_row_read_only_data.audio_sample_rate
+
+    @property
+    def audio_bit_depth(self) -> Optional[int]:
+        """
+        Returns the bit depth of the audio data type.
+
+        This only applies to audio data types, and returns None for all other data types.
+
+        Returns:
+            Optional[int]: The bit depth or None if not applicable.
+        """
+        return self._label_row_read_only_data.audio_bit_depth
+
+    @property
+    def audio_num_channels(self) -> Optional[int]:
+        """
+        Returns the number of channels of the audio data type.
+
+        This only applies to audio data types, and returns None for all other data types.
+
+        Returns:
+            Optional[int]: The number of channels or None if not applicable.
+        """
+        return self._label_row_read_only_data.audio_num_channels
+
+    @property
     def priority(self) -> Optional[float]:
         """
         Returns the workflow priority for the task associated with the data unit.
@@ -1505,6 +1553,10 @@ class LabelRowV2:
             dataset_hash: Hash of the dataset.
             dataset_title: Title of the dataset.
             data_title: Title of the data.
+            audio_codec: Codec for audio data.
+            audio_bit_depth: Bit depth for audio data.
+            audio_sample_rate: Sample Rate for audio data.
+            audio_num_channels: Number of channels for audio data.
             width: Optional width of the data.
             height: Optional height of the data.
             data_link: Optional link to additional data.
@@ -1534,6 +1586,10 @@ class LabelRowV2:
         dataset_hash: str
         dataset_title: str
         data_title: str
+        audio_codec: Optional[str]
+        audio_bit_depth: Optional[int]
+        audio_num_channels: Optional[int]
+        audio_sample_rate: Optional[int]
         width: Optional[int]
         height: Optional[int]
         data_link: Optional[str]
@@ -1661,6 +1717,12 @@ class LabelRowV2:
         if self.data_type != DataType.AUDIO:
             ret["width"] = frame_level_data.width
             ret["height"] = frame_level_data.height
+
+        else:
+            ret["audio_codec"] = self._label_row_read_only_data.audio_codec
+            ret["audio_sample_rate"] = self._label_row_read_only_data.audio_sample_rate
+            ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
+            ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
 
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
@@ -1872,6 +1934,10 @@ class LabelRowV2:
             duration=label_row_metadata.duration,
             fps=label_row_metadata.frames_per_second,
             number_of_frames=label_row_metadata.number_of_frames,
+            audio_codec=label_row_metadata.audio_codec,
+            audio_sample_rate=label_row_metadata.audio_sample_rate,
+            audio_num_channels=label_row_metadata.audio_num_channels,
+            audio_bit_depth=label_row_metadata.audio_bit_depth,
             width=label_row_metadata.width,
             height=label_row_metadata.height,
             priority=label_row_metadata.priority,
@@ -1889,10 +1955,15 @@ class LabelRowV2:
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
         data_type = DataType(label_row_dict["data_type"])
 
-        if data_type == DataType.VIDEO or data_type == DataType.IMAGE or data_type == DataType.AUDIO:
+        audio_codec = None
+        audio_sample_rate = None
+        audio_num_channels = None
+        audio_bit_depth = None
+
+        if data_type == DataType.VIDEO or data_type == DataType.IMAGE:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
-            # Dimensions should be always there (except for Audio which should be 0)
+            # Dimensions should be always there
             # But we have some older entries that don't have them
             # So setting them to None for now until the format is not guaranteed to be enforced
             height = data_dict.get("height")
@@ -1903,6 +1974,16 @@ class LabelRowV2:
             data_link = None
             height = dicom_dict["height"]
             width = dicom_dict["width"]
+
+        elif data_type == DataType.AUDIO:
+            data_dict = list(label_row_dict["data_units"].values())[0]
+            data_link = data_dict["data_link"]
+            height = None
+            width = None
+            audio_codec = data_dict["audio_codec"]
+            audio_sample_rate = data_dict["audio_sample_rate"]
+            audio_num_channels = data_dict["audio_num_channels"]
+            audio_bit_depth = data_dict["audio_bit_depth"]
 
         elif data_type == DataType.IMG_GROUP:
             data_link = None
@@ -1943,6 +2024,10 @@ class LabelRowV2:
             data_link=data_link,
             height=height,
             width=width,
+            audio_codec=audio_codec,
+            audio_sample_rate=audio_sample_rate,
+            audio_num_channels=audio_num_channels,
+            audio_bit_depth=audio_bit_depth,
             priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
             client_metadata=label_row_dict.get("client_metadata", self._label_row_read_only_data.client_metadata),
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),

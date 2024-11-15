@@ -19,6 +19,10 @@ AUDIO_LABELS = {
             "data_sequence": 0,
             "data_link": "audio-link",
             "labels": {},
+            "audio_codec": "mp3",
+            "audio_num_channels": 2,
+            "audio_sample_rate": 44100,
+            "audio_bit_depth": 8,
         }
     },
     "object_answers": {},
@@ -130,6 +134,10 @@ EMPTY_AUDIO_LABELS = {
             "data_sequence": 0,
             "data_link": "audio-link",
             "labels": {},
+            "audio_codec": "mp3",
+            "audio_num_channels": 2,
+            "audio_sample_rate": 44100,
+            "audio_bit_depth": 8,
         }
     },
     "object_answers": {},
