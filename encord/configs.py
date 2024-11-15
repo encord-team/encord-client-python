@@ -40,9 +40,6 @@ from encord.http.v2.request_signer import sign_request
 ENCORD_DOMAIN = "https://api.encord.com"
 ENCORD_PUBLIC_PATH = "/public"
 ENCORD_PUBLIC_USER_PATH = "/public/user"
-WEBSOCKET_PATH = "/websocket"
-WEBSOCKET_DOMAIN = "wss://ws.encord.com"
-WEBSOCKET_ENDPOINT = WEBSOCKET_DOMAIN + WEBSOCKET_PATH
 
 _ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
 _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
@@ -164,11 +161,9 @@ class Config(BaseConfig):
     Args:
         web_file_path (str): The web file path for the endpoint.
         domain (Optional[str]): The domain.
-        websocket_endpoint (str): The WebSocket endpoint.
         requests_settings (RequestsSettings): Settings for HTTP requests.
 
     Attributes:
-        websocket_endpoint (str): The WebSocket endpoint.
         domain (str): The domain.
     """
 
@@ -176,10 +171,8 @@ class Config(BaseConfig):
         self,
         web_file_path: str = ENCORD_PUBLIC_PATH,
         domain: Optional[str] = None,
-        websocket_endpoint: str = WEBSOCKET_ENDPOINT,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
-        self.websocket_endpoint = websocket_endpoint
         if domain is None:
             raise RuntimeError("`domain` must be specified")
 
