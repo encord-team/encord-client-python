@@ -254,7 +254,7 @@ class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
     Missing any of these tags as `tags` dictionary key will raise a validation error.
     """
 
-    tags: dict[str, dict | None]
+    tags: Dict[str, Optional[Dict]]
 
 
 class DataUploadImage(BaseDTO):
