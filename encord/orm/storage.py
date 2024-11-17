@@ -216,6 +216,47 @@ class CustomerProvidedAudioMetadata(BaseDTO):
     """Number of channels"""
 
 
+class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
+    """
+    Metadata for a DICOM file containing required DICOM tags and their values.
+    This metadata is used to validate and process DICOM files without needing to access the actual files.
+
+    The `tags` dictionary must contain all required DICOM tags as keys, though their corresponding values may be None.
+    Tags should be provided in the format returned by pydicom to_json_dict() method.
+
+    Required tags (using standard DICOM tag numbers):
+        - 00080018: SOPInstanceUID
+        - 00100010: PatientName
+        - 00100020: PatientID
+        - 00180050: SliceThickness
+        - 00180088: SpacingBetweenSlices
+        - 00181114: EstimatedRadiographicMagnificationFactor
+        - 00181164: ImagerPixelSpacing
+        - 0020000D: StudyInstanceUID
+        - 0020000E: SeriesInstanceUID
+        - 00200013: InstanceNumber
+        - 00200032: ImagePositionPatient
+        - 00200037: ImageOrientationPatient
+        - 00209113: PlanePositionSequence
+        - 00209116: PlaneOrientationSequence
+        - 00280004: PhotometricInterpretation
+        - 00280008: NumberOfFrames
+        - 00280010: Rows
+        - 00280011: Columns
+        - 00280030: PixelSpacing
+        - 00281050: WindowCenter
+        - 00281051: WindowWidth
+        - 00289110: PixelMeasuresSequence
+        - 00520014: ALinePixelSpacing
+        - 52009229: SharedFunctionalGroupsSequence
+        - 52009230: PerFrameFunctionalGroupsSequence
+
+    Missing any of these tags as `tags` dictionary key will raise a validation error.
+    """
+
+    tags: dict[str, dict | None]
+
+
 class DataUploadImage(BaseDTO):
     """
     Data about a single image item to be registered with Encord service.
@@ -342,6 +383,8 @@ class DataUploadDicomSeriesDicomFile(BaseDTO):
     """URL of the DICOM file to be registered with Encord service."""
     title: Optional[str]
     """Title of the DICOM file (derived from the URL if omitted)."""
+    dicom_metadata: Optional[CustomerProvidedDicomSeriesDicomFileMetadata] = None
+    """Optional media metadata of the DICOM file (if provided). See :class:`CustomerProvidedDicomSeriesDicomFileMetadata` for more details."""
 
     placeholder_item_uuid: Optional[UUID] = None
     """For system use only."""
