@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO
@@ -14,4 +15,4 @@ class CloudIntegrationV2(BaseDTO):
 
 
 class GetCloudIntegrationsResponse(BaseDTO):
-    result: list[CloudIntegrationV2]
+    result: List[CloudIntegrationV2]
