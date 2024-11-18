@@ -16,53 +16,37 @@ import hashlib
 import importlib.metadata as importlib_metadata
 import logging
 import os
+import platform
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
+from uuid import uuid4
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, ssh
+from requests import PreparedRequest
 
-import encord.exceptions
-from encord.constants.string_constants import ALL_RESOURCE_TYPES
+from encord._version import __version__ as encord_version
 from encord.exceptions import ResourceNotFoundError
+from encord.http.common import (
+    HEADER_CLOUD_TRACE_CONTEXT,
+    HEADER_USER_AGENT,
+)
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
+from encord.http.v2.request_signer import sign_request
 
 ENCORD_DOMAIN = "https://api.encord.com"
 ENCORD_PUBLIC_PATH = "/public"
 ENCORD_PUBLIC_USER_PATH = "/public/user"
-ENCORD_ENDPOINT = ENCORD_DOMAIN + ENCORD_PUBLIC_PATH
-ENCORD_USER_ENDPOINT = ENCORD_DOMAIN + ENCORD_PUBLIC_USER_PATH
-WEBSOCKET_PATH = "/websocket"
-WEBSOCKET_DOMAIN = "wss://ws.encord.com"
-WEBSOCKET_ENDPOINT = WEBSOCKET_DOMAIN + WEBSOCKET_PATH
 
-_CORD_PROJECT_ID = "CORD_PROJECT_ID"
-_ENCORD_PROJECT_ID = "ENCORD_PROJECT_ID"
-_CORD_DATASET_ID = "CORD_DATASET_ID"
-_ENCORD_DATASET_ID = "ENCORD_DATASET_ID"
-_CORD_API_KEY = "CORD_API_KEY"
-_ENCORD_API_KEY = "ENCORD_API_KEY"
 _ENCORD_SSH_KEY = "ENCORD_SSH_KEY"
 _ENCORD_SSH_KEY_FILE = "ENCORD_SSH_KEY_FILE"
 
 pydantic_version_str = importlib_metadata.version("pydantic")
 
 logger = logging.getLogger(__name__)
-
-import platform
-from uuid import uuid4
-
-from requests import PreparedRequest
-
-from encord._version import __version__ as encord_version
-from encord.http.common import (
-    HEADER_CLOUD_TRACE_CONTEXT,
-    HEADER_USER_AGENT,
-)
-from encord.http.v2.request_signer import sign_request
 
 
 class BaseConfig(ABC):
@@ -177,11 +161,9 @@ class Config(BaseConfig):
     Args:
         web_file_path (str): The web file path for the endpoint.
         domain (Optional[str]): The domain.
-        websocket_endpoint (str): The WebSocket endpoint.
         requests_settings (RequestsSettings): Settings for HTTP requests.
 
     Attributes:
-        websocket_endpoint (str): The WebSocket endpoint.
         domain (str): The domain.
     """
 
@@ -189,10 +171,8 @@ class Config(BaseConfig):
         self,
         web_file_path: str = ENCORD_PUBLIC_PATH,
         domain: Optional[str] = None,
-        websocket_endpoint: str = WEBSOCKET_ENDPOINT,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
-        self.websocket_endpoint = websocket_endpoint
         if domain is None:
             raise RuntimeError("`domain` must be specified")
 
@@ -208,56 +188,6 @@ class Config(BaseConfig):
         if self.requests_settings.trace_id_provider:
             return self.requests_settings.trace_id_provider()
         return f"{uuid4().hex}/1;o=1"
-
-
-def get_env_resource_id() -> str:
-    """
-    Get the resource ID from environment variables.
-
-    Returns:
-        str: The resource ID.
-
-    Raises:
-        encord.exceptions.InitialisationError: If both project and dataset IDs are found.
-        encord.exceptions.AuthenticationError: If no project or dataset ID is found.
-    """
-    project_id = os.environ.get(_ENCORD_PROJECT_ID) or os.environ.get(_CORD_PROJECT_ID)
-    dataset_id = os.environ.get(_ENCORD_DATASET_ID) or os.environ.get(_CORD_DATASET_ID)
-    if (project_id is not None) and (dataset_id is not None):
-        raise encord.exceptions.InitialisationError(
-            message=(
-                "Found both Project EntityId and Dataset EntityId in os.environ. "
-                "Please initialise EncordClient by passing resource_id."
-            )
-        )
-
-    elif project_id is not None:
-        resource_id = project_id
-
-    elif dataset_id is not None:
-        resource_id = dataset_id
-
-    else:
-        raise encord.exceptions.AuthenticationError(message="Project EntityId or dataset EntityId not provided")
-
-    return resource_id
-
-
-def get_env_api_key() -> str:
-    """
-    Get the API key from environment variables.
-
-    Returns:
-        str: The API key.
-
-    Raises:
-        encord.exceptions.AuthenticationError: If no API key is found.
-    """
-    api_key = os.environ.get(_ENCORD_API_KEY) or os.environ.get(_CORD_API_KEY)
-    if api_key is None:
-        raise encord.exceptions.AuthenticationError(message="API key not provided")
-
-    return api_key
 
 
 def get_env_ssh_key() -> str:
@@ -295,75 +225,6 @@ def get_env_ssh_key() -> str:
         )
 
     return raw_ssh_key
-
-
-class ApiKeyConfig(Config):
-    """
-    Configuration for API key-based authorization.
-
-    Args:
-        resource_id (Optional[str]): The resource ID.
-        api_key (Optional[str]): The API key.
-        domain (Optional[str]): The domain.
-        requests_settings (RequestsSettings): Settings for HTTP requests.
-
-    Attributes:
-        resource_id (Optional[str]): The resource ID.
-        api_key (str): The API key.
-        _headers (Dict[str, str]): Default headers for requests.
-    """
-
-    def __init__(
-        self,
-        resource_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-        domain: Optional[str] = None,
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-    ):
-        web_file_path = ENCORD_PUBLIC_PATH
-        if api_key is None:
-            api_key = get_env_api_key()
-
-        self.resource_id = resource_id
-        self.api_key = api_key
-        self._headers = {
-            "Accept": "application/json",
-            "Accept-Encoding": "gzip",
-            "Content-Type": "application/json",
-            "ResourceID": resource_id,
-            "Authorization": self.api_key,
-        }
-        super().__init__(web_file_path=web_file_path, domain=domain, requests_settings=requests_settings)
-
-    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for an API key-based request.
-
-        Args:
-            resource_id (Optional[str]): The resource ID.
-            resource_type (Optional[str]): The resource type.
-            data (str): The request data.
-
-        Returns:
-            Dict[str, Any]: A dictionary of headers.
-        """
-        return self._headers
-
-    def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for an API key-based request (v2).
-
-        Args:
-            request (PreparedRequest): The prepared request.
-
-        Raises:
-            NotImplementedError: API key authorization is not supported for the Encord API v2.
-        """
-        raise NotImplementedError("API key authorization is not supported for the Encord API v2")
-
-
-EncordConfig = ApiKeyConfig
-CordConfig = EncordConfig
 
 
 class SshConfig(Config):

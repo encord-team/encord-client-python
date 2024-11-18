@@ -1,15 +1,14 @@
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum, auto
-from typing import List, Optional, Union
+from enum import Enum
+from typing import List, Optional
 from uuid import UUID
 
 from encord.common.time_parser import parse_datetime
 from encord.constants.model import AutomationModels
 from encord.exceptions import EncordException
 from encord.orm import base_orm
-from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 from encord.utilities.common import ENCORD_CONTACT_SUPPORT_EMAIL

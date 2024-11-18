@@ -22,4 +22,8 @@ FAKE_LABEL_ROW_METADATA = LabelRowMetadata(
     number_of_frames=100 * 25,
     height=100,
     width=10,
+    audio_codec=None,
+    audio_bit_depth=None,
+    audio_num_channels=None,
+    audio_sample_rate=None,
 )

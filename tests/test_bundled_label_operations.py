@@ -2,9 +2,6 @@ from copy import deepcopy
 from typing import Dict
 from unittest.mock import MagicMock, patch
 
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
 from encord import Project
 from encord.client import EncordClientProject
 from encord.objects import LabelRowV2
@@ -16,16 +13,6 @@ from tests.test_data.label_rows_metadata_blurb import (
 )
 
 assert user_client and project and ontology
-
-DUMMY_PRIVATE_KEY = (
-    Ed25519PrivateKey.generate()
-    .private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.OpenSSH,
-        encryption_algorithm=serialization.NoEncryption(),
-    )
-    .decode("utf-8")
-)
 
 
 def remove_label_hash(obj: Dict) -> Dict:

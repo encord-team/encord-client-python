@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from enum import Enum, auto
-from typing import Iterable, List, Literal, Optional, TypeVar, Union
+from enum import Enum
+from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
-from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
 

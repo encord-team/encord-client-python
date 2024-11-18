@@ -7,7 +7,6 @@ from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
-from encord.common.enum import StringEnum
 from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO

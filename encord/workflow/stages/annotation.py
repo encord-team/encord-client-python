@@ -12,13 +12,12 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from enum import Enum, auto
-from typing import Iterable, List, Literal, Optional, TypeVar, Union
+from enum import Enum
+from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
-from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
 
@@ -139,6 +138,7 @@ class AnnotationTask(WorkflowTask):
         Submits the task for review.
 
         **Parameters**
+
         - `assignee` (Optional[str]): User email to be assigned to the task whilst submitting the task.
         - `retain_assignee` (bool): Retains the current assignee of the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the submission.

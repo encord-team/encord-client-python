@@ -178,11 +178,15 @@ class ReviewStage(WorkflowStageBase):
 class _ActionApprove(WorkflowAction):
     action: Literal["APPROVE"] = "APPROVE"
     approve_label_reviews: bool = True
+    assignee: Optional[str] = None
+    retain_assignee: bool = False
 
 
 class _ActionReject(WorkflowAction):
     action: Literal["REJECT"] = "REJECT"
     reject_label_reviews: bool = True
+    assignee: Optional[str] = None
+    retain_assignee: bool = False
 
 
 class _ActionAssign(WorkflowAction):
@@ -218,27 +222,51 @@ class ReviewTask(WorkflowTask):
     - `release`: Releases a task from the current user.
     """
 
-    def approve(self, *, bundle: Optional[Bundle] = None) -> None:
+    def approve(
+        self,
+        *,
+        assignee: Optional[str] = None,
+        retain_assignee: bool = False,
+        bundle: Optional[Bundle] = None,
+    ) -> None:
         """
         Approves the task.
 
         **Parameters**
 
+        - `assignee` (Optional[str]): User email to be assigned to the task whilst approving the task.
+        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionApprove(task_uuid=self.uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionApprove(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
+            bundle=bundle,
+        )
 
-    def reject(self, *, bundle: Optional[Bundle] = None) -> None:
+    def reject(
+        self,
+        *,
+        assignee: Optional[str] = None,
+        retain_assignee: bool = False,
+        bundle: Optional[Bundle] = None,
+    ) -> None:
         """
         Rejects the task.
 
         **Parameters**
 
+        - `assignee` (Optional[str]): User email to be assigned to the task whilst rejecting the task.
+        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionReject(task_uuid=self.uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionReject(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
+            bundle=bundle,
+        )
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         """

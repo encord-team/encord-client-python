@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import json
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
@@ -660,40 +659,6 @@ class AddPrivateDataResponse(Formatter):
         return AddPrivateDataResponse(dataset_data_info_list)
 
 
-@dataclasses.dataclass(frozen=True)
-class DatasetAPIKey(Formatter):
-    """
-    DEPRECATED: DatasetAPIKey functionality is being deprecated.
-    Use EncordUserClient SSH authentication going forward.
-
-    DEPRECATED -  Obtain dataset_client:
-    dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
-
-    RECOMMENDED - Obtain dataset_client:
-    dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
-    """
-
-    dataset_hash: str
-    api_key: str
-    title: str
-    key_hash: str
-    scopes: List[DatasetScope]
-
-    @classmethod
-    @deprecated("0.1.141", "EncordUserClient.create_with_ssh_private_key(...).get_dataset(...)")
-    def from_dict(cls, json_dict: Dict) -> DatasetAPIKey:
-        if isinstance(json_dict["scopes"], str):
-            json_dict["scopes"] = json.loads(json_dict["scopes"])
-        scopes = [DatasetScope(scope) for scope in json_dict["scopes"]]
-        return DatasetAPIKey(
-            json_dict["resource_hash"],
-            json_dict["api_key"],
-            json_dict["title"],
-            json_dict["key_hash"],
-            scopes,
-        )
-
-
 class CreateDatasetResponse(dict, Formatter):
     def __init__(
         self,
@@ -815,11 +780,6 @@ STORAGE_LOCATION_BY_STR: Dict[str, StorageLocation] = {location.get_str(): locat
 
 DatasetType = StorageLocation
 """For backwards compatibility"""
-
-
-class DatasetScope(Enum):
-    READ = "dataset.read"
-    WRITE = "dataset.write"
 
 
 class DatasetData(base_orm.BaseORM):

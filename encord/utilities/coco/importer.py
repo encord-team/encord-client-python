@@ -1,14 +1,7 @@
 import logging
-from dataclasses import dataclass, field
 from typing import (
-    Any,
     Dict,
-    List,
     Optional,
-    Set,
-    Tuple,
-    Union,
-    ValuesView,
 )
 
 from encord.objects.common import Shape
