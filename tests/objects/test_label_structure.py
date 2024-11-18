@@ -30,7 +30,7 @@ from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import all_types_structure
-from tests.objects.data.audio_labels import AUDIO_LABELS, EMPTY_AUDIO_LABELS
+from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
 from tests.objects.test_label_structure_converter import ontology_from_dict
 

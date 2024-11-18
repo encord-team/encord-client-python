@@ -56,7 +56,7 @@ from encord.orm.analytics import (
     CollaboratorTimerParams,
 )
 from encord.orm.bearer_request import BearerTokenResponse
-from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     AddPrivateDataResponse,
@@ -180,7 +180,19 @@ class EncordClient:
         return self._api_client
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        return self._querier.get_multiple(CloudIntegration)
+        return [
+            CloudIntegration(
+                id=str(x.integration_uuid),
+                title=x.title,
+            )
+            for x in self._get_api_client()
+            .get(
+                "cloud-integrations",
+                params=None,
+                result_type=GetCloudIntegrationsResponse,
+            )
+            .result
+        ]
 
     def get_bearer_token(self) -> BearerTokenResponse:
         return self._get_api_client().get("user/bearer-token", None, result_type=BearerTokenResponse)

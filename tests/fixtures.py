@@ -14,15 +14,13 @@ from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import ProjectDTO, ProjectType
 from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
-DUMMY_PRIVATE_KEY = (
-    Ed25519PrivateKey.generate()
-    .private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.OpenSSH,
-        encryption_algorithm=serialization.NoEncryption(),
-    )
-    .decode("utf-8")
-)
+PRIVATE_KEY = Ed25519PrivateKey.generate()
+
+PRIVATE_KEY_PEM = PRIVATE_KEY.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.OpenSSH,
+    encryption_algorithm=serialization.NoEncryption(),
+).decode("utf-8")
 
 
 @pytest.fixture
@@ -32,7 +30,7 @@ def ontology() -> Ontology:
 
 @pytest.fixture
 def user_client() -> EncordUserClient:
-    return EncordUserClient.create_with_ssh_private_key(DUMMY_PRIVATE_KEY)
+    return EncordUserClient.create_with_ssh_private_key(PRIVATE_KEY_PEM)
 
 
 @pytest.fixture

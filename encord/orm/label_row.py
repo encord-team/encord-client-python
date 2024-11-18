@@ -265,13 +265,21 @@ class LabelRowMetadata(Formatter):
     """Only available for TMS2 project"""
     workflow_graph_node: Optional[WorkflowGraphNode]
     is_shadow_data: bool
+
+    """Only available for the VIDEO and AUDIO data_type"""
+    frames_per_second: Optional[int]
     number_of_frames: int
     duration: Optional[float]
-    """Only available for the VIDEO data_type"""
-    frames_per_second: Optional[int]
+
     """Only available for the VIDEO data_type"""
     height: Optional[int]
     width: Optional[int]
+
+    """Only available for the AUDIO data_type"""
+    audio_sample_rate: Optional[int]
+    audio_codec: Optional[str]
+    audio_bit_depth: Optional[int]
+    audio_num_channels: Optional[int]
 
     priority: Optional[float] = None
     """Only available for not complete tasks"""
@@ -313,6 +321,10 @@ class LabelRowMetadata(Formatter):
             number_of_frames=json_dict["number_of_frames"],
             duration=json_dict.get("duration", None),
             frames_per_second=json_dict.get("frames_per_second", None),
+            audio_codec=json_dict.get("audio_codec", None),
+            audio_bit_depth=json_dict.get("audio_bit_depth", None),
+            audio_num_channels=json_dict.get("audio_num_channels", None),
+            audio_sample_rate=json_dict.get("audio_sample_rate", None),
             height=json_dict.get("height"),
             width=json_dict.get("width"),
             priority=json_dict.get("priority"),

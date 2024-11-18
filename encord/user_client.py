@@ -14,13 +14,18 @@ from __future__ import annotations
 
 import base64
 import logging
+import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from enum import Enum
+from math import ceil
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
+import requests
+
+import encord.exceptions
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.collection import Collection
@@ -46,7 +51,7 @@ from encord.objects.common import (
 )
 from encord.ontology import Ontology
 from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
-from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     CreateDatasetResponse,
@@ -64,6 +69,12 @@ from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
     CvatExportType,
+    CvatImportDataItem,
+    CvatImportGetResultLongPollingStatus,
+    CvatImportGetResultParams,
+    CvatImportGetResultResponse,
+    CvatImportStartPayload,
+    CvatReviewMode,
     ManualReviewWorkflowSettings,
     ProjectImporter,
     ProjectWorkflowSettings,
@@ -84,6 +95,10 @@ from encord.utilities.client_utilities import (
 )
 from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
+
+CVAT_LONG_POLLING_RESPONSE_RETRY_N = 3
+CVAT_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
+CVAT_LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 
 log = logging.getLogger(__name__)
 
@@ -424,41 +439,39 @@ class EncordUserClient:
             api_client=self._api_client,
         )
 
-    def create_project_from_cvat(
+    def create_project_from_cvat_start(
         self,
+        *,
         import_method: ImportMethod,
         dataset_name: str,
-        review_mode: ReviewMode = ReviewMode.LABELLED,
-        max_workers: Optional[int] = None,
-        *,
-        transform_bounding_boxes_to_polygons=False,
-    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        review_mode: ReviewMode,
+        transform_bounding_boxes_to_polygons: bool,
+    ) -> UUID:
         """
-        Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
-            your images and annotations into encord. Ensure that during you have the "Save images"
-            checkbox enabled when exporting from CVAT.
+        Start importing a CVAT project into Encord. This is the first part of a two-step import process.
+        Export your CVAT project with the "CVAT for images 1.1" option and use this function to begin
+        importing your images and annotations. Ensure that the "Save images" checkbox is enabled when
+        exporting from CVAT.
 
         Args:
             import_method:
-                The chosen import method. See the `ImportMethod` class for details.
+                The chosen import method. Currently, only LocalImport is supported.
             dataset_name:
                 The name of the dataset that will be created.
             review_mode:
-                Set how much interaction is needed from the labeler and from the reviewer for the CVAT labels.
-                    See the `ReviewMode` documentation for more details.
-            max_workers:
-                DEPRECATED: This argument will be ignored
+                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
+                See the `ReviewMode` documentation for more details.
             transform_bounding_boxes_to_polygons:
-                All instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
+                If True, all instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
 
         Returns:
-            CvatImporterSuccess: If the project was successfully imported.
-            CvatImporterError: If the project could not be imported.
+            UUID: A unique identifier for tracking the import process.
 
         Raises:
             ValueError:
-                If the CVAT directory has an invalid format.
+                If the CVAT directory has an invalid format or if a non-LocalImport method is used.
         """
+
         if not isinstance(import_method, LocalImport):
             raise ValueError("Only local imports are currently supported ")
 
@@ -493,29 +506,172 @@ class EncordUserClient:
                 import_method.map_filename_to_cvat_name(key): value for key, value in image_title_to_image.items()
             }
 
-        payload = {
-            "cvat": {"annotations_base64": annotations_base64},
-            "dataset_hash": dataset_hash,
-            "image_title_to_image": image_title_to_image,
-            "review_mode": review_mode,
-            "transform_bounding_boxes_to_polygons": transform_bounding_boxes_to_polygons,
-        }
-
         log.info("Starting project import. This may take a few minutes.")
-        server_ret = self._querier.basic_setter(ProjectImporter, uid=None, payload=payload)
 
-        if "success" in server_ret:
-            success = server_ret["success"]
+        cvat_import_uuid = self._api_client.post(
+            "projects/cvat-import",
+            payload=CvatImportStartPayload(
+                annotations_base64=annotations_base64,
+                dataset_uuid=UUID(dataset_hash),
+                review_mode=CvatReviewMode(review_mode),
+                data=[
+                    CvatImportDataItem(
+                        data_path=data_path,
+                        data_link=data["file_link"],
+                        title=data["title"],
+                    )
+                    for data_path, data in image_title_to_image.items()
+                ],
+                transform_bounding_boxes_to_polygons=transform_bounding_boxes_to_polygons,
+            ),
+            params=None,
+            result_type=UUID,
+        )
+
+        return cvat_import_uuid
+
+    def create_project_from_cvat_get_result(
+        self,
+        cvat_import_uuid: UUID,
+        *,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        """
+        Check the status and get the result of a CVAT import process. This is the second part of the
+        two-step import process.
+
+        Args:
+            cvat_import_uuid:
+                The UUID returned by create_project_from_cvat_start.
+            timeout_seconds:
+                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
+                The method will poll the server periodically during this time.
+
+        Returns:
+            Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
+            - CvatImporterSuccess: Contains project_hash, dataset_hash, and any issues if the import succeeded.
+            - CvatImporterError: Contains any issues if the import failed.
+
+        Raises:
+            ValueError:
+                If the server returns an unexpected status or invalid response structure.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                log.info(f"create_project_from_cvat_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._api_client.get(
+                    f"projects/cvat-import/{cvat_import_uuid}",
+                    params=CvatImportGetResultParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            CVAT_LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=CvatImportGetResultResponse,
+                )
+
+                if tmp_res.status == CvatImportGetResultLongPollingStatus.DONE:
+                    log.info(f"cvat import job completed with cvat_import_uuid={cvat_import_uuid}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    CvatImportGetResultLongPollingStatus.DONE,
+                    CvatImportGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= CVAT_LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(CVAT_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == CvatImportGetResultLongPollingStatus.DONE:
+            if res.project_uuid is None:
+                raise ValueError(f"{res.project_uuid=}, res.project_uuid should not be None with DONE status")
+
+            if res.issues is None:
+                raise ValueError(f"{res.issues=}, res.issues should not be None with DONE status")
+
             return CvatImporterSuccess(
-                project_hash=success["project_hash"],
-                dataset_hash=dataset_hash,
-                issues=Issues.from_dict(success["issues"]),
+                project_hash=str(res.project_uuid),
+                dataset_hash=str(list(self.get_project(res.project_uuid).list_datasets())[0]),
+                issues=Issues.from_dict(res.issues),
             )
-        elif "error" in server_ret:
-            error = server_ret["error"]
-            return CvatImporterError(dataset_hash=dataset_hash, issues=Issues.from_dict(error["issues"]))
+        elif res.status == CvatImportGetResultLongPollingStatus.ERROR:
+            if res.issues is None:
+                raise ValueError(f"{res.issues=}, res.issues should not be None with DONE status")
+
+            return CvatImporterError(
+                issues=Issues.from_dict(res.issues),
+            )
         else:
-            raise ValueError("The api server responded with an invalid payload.")
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
+
+    def create_project_from_cvat(
+        self,
+        import_method: ImportMethod,
+        dataset_name: str,
+        review_mode: ReviewMode = ReviewMode.LABELLED,
+        *,
+        transform_bounding_boxes_to_polygons=False,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        """
+        Create a new Encord project from a CVAT export. This method combines the two-step import process
+        (create_project_from_cvat_start and create_project_from_cvat_get_result) into a single call.
+        Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
+        your images and annotations. Ensure that the "Save images" checkbox is enabled when exporting
+        from CVAT.
+
+        Args:
+            import_method:
+                The chosen import method. Currently, only LocalImport is supported.
+            dataset_name:
+                The name of the dataset that will be created.
+            review_mode:
+                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
+                See the `ReviewMode` documentation for more details. Defaults to ReviewMode.LABELLED.
+            transform_bounding_boxes_to_polygons:
+                If True, all instances of CVAT bounding boxes will be converted to polygons in the final
+                Encord project. Defaults to False.
+            timeout_seconds:
+                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
+                The method will poll the server periodically during this time.
+
+        Returns:
+            Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
+            - CvatImporterSuccess: Contains project_hash, dataset_hash, and any issues if the import succeeded.
+            - CvatImporterError: Contains any issues if the import failed.
+
+        Raises:
+            ValueError:
+                If the CVAT directory has an invalid format, if a non-LocalImport method is used,
+                or if the server returns an unexpected status.
+        """
+
+        return self.create_project_from_cvat_get_result(
+            cvat_import_uuid=self.create_project_from_cvat_start(
+                import_method=import_method,
+                dataset_name=dataset_name,
+                review_mode=review_mode,
+                transform_bounding_boxes_to_polygons=transform_bounding_boxes_to_polygons,
+            ),
+            timeout_seconds=timeout_seconds,
+        )
 
     def __get_images_paths(
         self,
@@ -595,7 +751,17 @@ class EncordUserClient:
         return dataset_hash, image_title_to_image
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        return self._querier.get_multiple(CloudIntegration)
+        return [
+            CloudIntegration(
+                id=str(x.integration_uuid),
+                title=x.title,
+            )
+            for x in self._api_client.get(
+                "cloud-integrations",
+                params=None,
+                result_type=GetCloudIntegrationsResponse,
+            ).result
+        ]
 
     def get_ontologies(
         self,

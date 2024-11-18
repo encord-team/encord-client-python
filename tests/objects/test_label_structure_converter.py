@@ -2,7 +2,6 @@
 All tests regarding converting from and to Encord dict to the label row.
 """
 
-import os
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
 from unittest.mock import Mock
@@ -38,9 +37,6 @@ from tests.objects.data.image_group import image_group_labels, image_group_ontol
 from tests.objects.data.ontology_with_many_dynamic_classifications import (
     ontology as ontology_with_many_dynamic_classifications,
 )
-
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(CURRENT_DIR, "data")
 
 
 def ontology_from_dict(ontology_structure_dict: Dict):

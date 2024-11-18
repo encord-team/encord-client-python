@@ -1,8 +1,6 @@
-import json
-from pathlib import Path
+import copy
 
 import numpy as np
-import pytest
 
 from encord.utilities.coco.datastructure import (
     CocoAnnotationModel,
@@ -11,13 +9,7 @@ from encord.utilities.coco.datastructure import (
     CocoRLE,
     CocoRootModel,
 )
-
-DATA_DIR = Path(__file__).parent / "data"
-
-
-@pytest.fixture
-def coco_sample() -> dict:
-    return json.loads((DATA_DIR / "coco_sample.json").read_text())
+from tests.utilities.coco.data_test_datastructure import DATA_TEST_DATASTRUCTURE_COCO
 
 
 def get_bbox_from_polygon(polygon: CocoPolygon) -> CocoBoundingBox:
@@ -35,8 +27,8 @@ def polygon_area(polygon: CocoPolygon) -> float:
     return abs(area / 2)
 
 
-def test_coco_annotation_model_with_missing_segmentation_field(coco_sample: dict) -> None:
-    for ann in coco_sample["annotations"]:
+def test_coco_annotation_model_with_missing_segmentation_field() -> None:
+    for ann in copy.deepcopy(DATA_TEST_DATASTRUCTURE_COCO)["annotations"]:
         ann.pop("segmentation")
         ann_model = CocoAnnotationModel.from_dict(ann)
         # Assert the generated segmentation is a polygon with 4 points
@@ -48,9 +40,9 @@ def test_coco_annotation_model_with_missing_segmentation_field(coco_sample: dict
         assert np.isclose(polygon_area(ann_model.segmentation), ann_model.bbox.w * ann_model.bbox.h)
 
 
-def test_coco_model_label_validation(coco_sample: dict) -> None:
+def test_coco_model_label_validation() -> None:
     # TODO Add annotation samples that correspond to multipolygons
-    coco_model = CocoRootModel.from_dict(coco_sample)
+    coco_model = CocoRootModel.from_dict(copy.deepcopy(DATA_TEST_DATASTRUCTURE_COCO))
     assert sum(isinstance(ann.segmentation, CocoRLE) for ann in coco_model.annotations) == 5
     assert sum(isinstance(ann.segmentation, CocoPolygon) for ann in coco_model.annotations) == 465
     assert sum(isinstance(ann.segmentation, (CocoRLE, CocoPolygon)) for ann in coco_model.annotations) == 5 + 465

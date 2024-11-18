@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "encord"
-version = "0.1.145"
+version = "0.1.147"
 description = "Encord Python SDK Client"
 authors = ["Cord Technologies Limited <hello@encord.com>"]
 license = "Apache Software License"
@@ -56,4 +56,6 @@ line-length = 120
 
 [tool.ruff.lint]
 extend-select = ["W", "Q", "I"]
-ignore = ["F401", "E402"]
+
+[tool.ruff.lint.per-file-ignores]
+"encord/*" = ["F401", "E402"]
