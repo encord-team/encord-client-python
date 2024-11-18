@@ -51,7 +51,7 @@ from encord.objects.common import (
 )
 from encord.ontology import Ontology
 from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
-from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     CreateDatasetResponse,
@@ -751,7 +751,17 @@ class EncordUserClient:
         return dataset_hash, image_title_to_image
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        return self._querier.get_multiple(CloudIntegration)
+        return [
+            CloudIntegration(
+                id=str(x.integration_uuid),
+                title=x.title,
+            )
+            for x in self._api_client.get(
+                "cloud-integrations",
+                params=None,
+                result_type=GetCloudIntegrationsResponse,
+            ).result
+        ]
 
     def get_ontologies(
         self,
