@@ -226,10 +226,8 @@ class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
 
     Required tags (using standard DICOM tag numbers):
         - 00080018: SOPInstanceUID
-        - 00100010: PatientName
         - 00100020: PatientID
         - 00180050: SliceThickness
-        - 00180088: SpacingBetweenSlices
         - 00181114: EstimatedRadiographicMagnificationFactor
         - 00181164: ImagerPixelSpacing
         - 0020000D: StudyInstanceUID
@@ -247,7 +245,6 @@ class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
         - 00281050: WindowCenter
         - 00281051: WindowWidth
         - 00289110: PixelMeasuresSequence
-        - 00520014: ALinePixelSpacing
         - 52009229: SharedFunctionalGroupsSequence
         - 52009230: PerFrameFunctionalGroupsSequence
 
