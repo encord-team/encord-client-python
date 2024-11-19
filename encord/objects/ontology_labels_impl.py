@@ -1831,7 +1831,7 @@ class LabelRowV2:
         for data_unit in label_row_dict["data_units"].values():
             data_type = DataType(label_row_dict["data_type"])
 
-            if data_type == DataType.IMG_GROUP or data_type == DataType.IMAGE or data_type == DataType.PDF:
+            if data_type == DataType.IMG_GROUP or data_type == DataType.IMAGE:
                 frame = int(data_unit["data_sequence"])
                 self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
                 self._add_classification_instances_from_classifications(
@@ -1840,7 +1840,12 @@ class LabelRowV2:
                     frame,
                 )
 
-            elif data_type == DataType.VIDEO or data_type == DataType.DICOM or data_type == DataType.NIFTI:
+            elif (
+                data_type == DataType.VIDEO
+                or data_type == DataType.DICOM
+                or data_type == DataType.NIFTI
+                or data_type == DataType.PDF
+            ):
                 for frame, frame_data in data_unit["labels"].items():
                     frame_num = int(frame)
                     self._add_object_instances_from_objects(frame_data["objects"], frame_num)
