@@ -192,7 +192,7 @@ class Collection:
             Iterator[StorageItem]: An iterator containing storage items in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
-        paged_items = self._client._get_api_client().get_paged_iterator(
+        paged_items = self._client.get_paged_iterator(
             f"index/collections/{self.uuid}/accessible-items",
             params=params,
             result_type=orm_storage.StorageItem,
