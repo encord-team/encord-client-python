@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Iterator, List, Optional, Sequence, Union
+from typing import Iterator, List, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
 import encord.orm.storage as orm_storage
@@ -489,13 +489,13 @@ class ProjectCollection:
     def list_frames(
         self,
         page_size: Optional[int] = None,
-    ) -> Iterator[tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]:
+    ) -> Iterator[Tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]:
         """
         List frames in the collection.
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
         Returns:
-            Iterator[tuple[LabelRowV2, list[ProjectDataCollectionInstance]]]: An list of tuples containing label
+            Iterator[Tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]: An list of tuples containing label
             row and corresponsing frame instances in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
@@ -518,13 +518,13 @@ class ProjectCollection:
     def list_labels(
         self,
         page_size: Optional[int] = None,
-    ) -> Iterator[tuple[LabelRowV2, list[ProjectLabelCollectionInstance]]]:
+    ) -> Iterator[Tuple[LabelRowV2, List[ProjectLabelCollectionInstance]]]:
         """
         List labels in the collection.
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
         Returns:
-            Iterator[tuple[LabelRowV2, list[ProjectLabelCollectionInstance]]]: An list of tuples containing label
+            Iterator[Tuple[LabelRowV2, List[ProjectLabelCollectionInstance]]]: An list of tuples containing label
             row and corresponsing label instances in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
