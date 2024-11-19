@@ -100,7 +100,7 @@ class ProjectDataCollectionInstance(BaseDTO):
 
 class ProjectLabelCollectionInstance(BaseDTO):
     frame: int
-    annotation_hash: str
+    annotation_id: str
 
 
 class ProjectDataCollectionItemResponse(BaseDTO):
@@ -114,14 +114,14 @@ class ProjectLabelCollectionItemResponse(BaseDTO):
 
 
 class ProjectDataCollectionItemRequest(BaseDTO):
-    data_hash: Union[str, UUID]
+    data_uuid: Union[str, UUID]
     frame: int
 
 
 class ProjectLabelCollectionItemRequest(BaseDTO):
-    data_hash: Union[str, UUID]
+    data_uuid: Union[str, UUID]
     frame: int
-    annotation_hash: Union[str, UUID]
+    annotation_id: str
 
 
 class ProjectCollectionBulkItemRequest(BaseDTO):

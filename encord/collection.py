@@ -545,7 +545,7 @@ class ProjectCollection:
             )
 
     def add_items(
-        self, items: Sequence[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
+        self, items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
     ) -> ProjectCollectionBulkItemResponse:
         """
         Add data items to the collection.
@@ -564,7 +564,7 @@ class ProjectCollection:
         return res
 
     def remove_items(
-        self, items: Sequence[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
+        self, items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
     ) -> ProjectCollectionBulkItemResponse:
         """
         Remove data items from the collection.
