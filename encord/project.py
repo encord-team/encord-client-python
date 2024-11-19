@@ -1165,7 +1165,7 @@ class Project:
 
     def list_collections(
         self,
-        collection_uuids: List[str | UUID] | None = None,
+        collection_uuids: List[Union[str, UUID]] | None = None,
         page_size: Optional[int] = None,
     ) -> Iterator[ProjectCollection]:
         """
