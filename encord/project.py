@@ -1160,7 +1160,7 @@ class Project:
             project_client=self._client,
             ontology=self._ontology,
             project_uuid=self._project_instance.project_hash,
-            collection_uuid=collection_uuid,
+            collection_uuid=UUID(collection_uuid) if isinstance(collection_uuid, str) else collection_uuid,
         )
 
     def list_collections(

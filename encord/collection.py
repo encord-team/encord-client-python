@@ -489,7 +489,7 @@ class ProjectCollection:
     def list_frames(
         self,
         page_size: Optional[int] = None,
-    ) -> Iterator[tuple[LabelRowV2, list[ProjectDataCollectionInstance]]]:
+    ) -> Iterator[tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]:
         """
         List frames in the collection.
         Args:
