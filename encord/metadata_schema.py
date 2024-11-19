@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 
 from encord.http.v2.api_client import ApiClient
 
-__all__ = ["MetadataSchema", "MetadataSchemaError"]
+__all__ = ["MetadataSchema", "MetadataSchemaError", "MetadataSchemaScalarType"]
 
 from encord.orm.base_dto import RootModelDTO
 
@@ -76,7 +76,7 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
         elif self.value == "uuid":
             return "uuid"
         else:
-            raise ValueError(f"Unknown simple type: {self}")
+            raise ValueError(f"Unknown simple schema type: {self}")
 
     @classmethod
     def _missing_(cls, value):
@@ -85,7 +85,10 @@ class _ClientMetadataSchemaTypeVariantHint(Enum):
         elif value in ("varchar", "string"):
             return cls.VARCHAR
 
-        raise ValueError("Unknown simple schema type")
+        raise ValueError(f"Unknown simple schema type: {value}")
+
+
+MetadataSchemaScalarType = _ClientMetadataSchemaTypeVariantHint
 
 
 class _ClientMetadataSchemaTypeVariant(BaseModel):
@@ -97,8 +100,31 @@ class _ClientMetadataSchemaTypeUser(BaseModel):
     ty: Literal["user"] = "user"
 
 
+class _ClientMetadataSchemaTypeTombstoneDeletedTy(
+    RootModelDTO[
+        Annotated[
+            Union[
+                _ClientMetadataSchemaTypeNumber,
+                _ClientMetadataSchemaTypeBoolean,
+                _ClientMetadataSchemaTypeVarChar,
+                _ClientMetadataSchemaTypeDateTime,
+                _ClientMetadataSchemaTypeEnum,
+                _ClientMetadataSchemaTypeEmbedding,
+                _ClientMetadataSchemaTypeText,
+                _ClientMetadataSchemaTypeUUID,
+                _ClientMetadataSchemaTypeVariant,
+                _ClientMetadataSchemaTypeUser,
+            ],
+            Field(discriminator="ty"),
+        ]
+    ]
+):
+    pass
+
+
 class _ClientMetadataSchemaTypeTombstone(BaseModel):
     ty: Literal["tombstone"] = "tombstone"
+    deleted_ty: Union[_ClientMetadataSchemaTypeTombstoneDeletedTy, None] = None
 
 
 class _ClientMetadataSchemaOption(
@@ -268,7 +294,10 @@ class MetadataSchema:
         self,
         k: str,
         *,
-        data_type: Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"],
+        data_type: Union[
+            Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"],
+            MetadataSchemaScalarType,
+        ],
     ) -> None:
         """
         Sets a simple metadata type for a given key in the schema.
@@ -276,7 +305,7 @@ class MetadataSchema:
         **Parameters:**
 
         - k : str: The key for which the metadata type is being set.
-        - schema : Literal["boolean", "datetime", "number", "uuid", "text", "varchar", "string", "long_string"]
+        - data_type : Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"]
                    The type of metadata to be associated with the key. Must be a valid identifier.
                    "string" is an alias of "varchar"
                    "long_string" is an alias of "text"
@@ -284,11 +313,20 @@ class MetadataSchema:
         **Raises:**
 
         MetadataSchemaError: If the key `k` is already defined in the schema with a conflicting type.
+        ValueError: If `data_type` is not a valid type of metadata identifier.
         """
+        if isinstance(data_type, MetadataSchemaScalarType):
+            data_type = data_type.to_simple_str()
+
         if k in self._schema:
-            v = self._schema[k]
-            if not isinstance(v.root, _ClientMetadataSchemaTypeVariant):
+            v = self._schema[k].root
+            if not isinstance(v, (_ClientMetadataSchemaTypeVariant, _ClientMetadataSchemaTypeTombstone)):
                 raise MetadataSchemaError(f"{k} is already defined")
+            elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
+                if v.deleted_ty is None:
+                    raise MetadataSchemaError(f"{k} is hard deleted")
+                elif not isinstance(v.deleted_ty.root, _ClientMetadataSchemaTypeVariant):
+                    raise MetadataSchemaError(f"{k} is cannot be restored with this type")
         _assert_valid_metadata_key(k)
         if data_type == "embedding":
             raise MetadataSchemaError("Embedding must be created explicitly")
@@ -299,26 +337,55 @@ class MetadataSchema:
         )
         self._dirty = True
 
-    def delete_key(self, k: str) -> None:
+    def delete_key(self, k: str, *, hard: bool = False) -> None:
         """
-        Delete a metadata key from the schema, this cannot be undone.
+        Delete a metadata key from the schema.
 
         **Parameters:**
 
         k : str: The key for which the metadata type is being deleted.
 
+        hard: bool: If the deletion should prevent indexing of this key unconditionally.
+                Setting this to true prevents restoring the type definition in the future.
+
         **Raises:**
 
         MetadataSchemaError: If the key `k` is already deleted or not present in the schema
         """
-        if k in self._schema:
-            v = self._schema[k]
-            if isinstance(v.root, _ClientMetadataSchemaTypeTombstone):
-                raise MetadataSchemaError(f"{k} is already deleted")
-        else:
+        if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
         _assert_valid_metadata_key(k)
-        self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeTombstone())
+        deleted_ty = self._schema[k].root
+        if isinstance(deleted_ty, _ClientMetadataSchemaTypeTombstone):
+            raise MetadataSchemaError(f"{k} is already deleted")
+        self._schema[k] = _ClientMetadataSchemaOption(
+            root=_ClientMetadataSchemaTypeTombstone(
+                deleted_ty=None if hard else _ClientMetadataSchemaTypeTombstoneDeletedTy(root=deleted_ty)
+            )
+        )
+        self._dirty = True
+
+    def restore_key(self, k: str) -> None:
+        """
+        Restore a deleted metadata key to its original value.
+
+        **Parameters:**
+
+        k : str: The key for which the metadata type is to be restored.
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is not already deleted or not present in the schema
+        """
+        if k not in self._schema:
+            raise MetadataSchemaError(f"{k} is not defined")
+        v = self._schema[k]
+        tombstone_ty = v.root
+        if not isinstance(tombstone_ty, _ClientMetadataSchemaTypeTombstone):
+            raise MetadataSchemaError(f"{k} is not currently deleted")
+        if tombstone_ty.deleted_ty is None:
+            raise MetadataSchemaError(f"{k} was hard deleted, this does not support restore")
+        self._schema[k] = _ClientMetadataSchemaOption(root=tombstone_ty.deleted_ty.root)
         self._dirty = True
 
     def keys(self) -> Sequence[str]:

@@ -662,6 +662,17 @@ class AddPrivateDataResponse(Formatter):
 
 @dataclasses.dataclass(frozen=True)
 class DatasetAPIKey(Formatter):
+    """
+    DEPRECATED: DatasetAPIKey functionality is being deprecated.
+    Use EncordUserClient SSH authentication going forward.
+
+    DEPRECATED -  Obtain dataset_client:
+    dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
+
+    RECOMMENDED - Obtain dataset_client:
+    dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
+    """
+
     dataset_hash: str
     api_key: str
     title: str
@@ -669,6 +680,7 @@ class DatasetAPIKey(Formatter):
     scopes: List[DatasetScope]
 
     @classmethod
+    @deprecated("0.1.141", "EncordUserClient.create_with_ssh_private_key(...).get_dataset(...)")
     def from_dict(cls, json_dict: Dict) -> DatasetAPIKey:
         if isinstance(json_dict["scopes"], str):
             json_dict["scopes"] = json.loads(json_dict["scopes"])

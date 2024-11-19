@@ -212,6 +212,7 @@ class Project:
         include_client_metadata: bool = False,
         include_images_data: bool = False,
         include_all_label_branches: bool = False,
+        branch_name: Optional[str] = None,
     ) -> List[LabelRowV2]:
         """
         List label rows with various filtering options.
@@ -231,6 +232,7 @@ class Project:
             include_client_metadata: Optionally include client metadata into the result of this query.
             include_images_data: Optionally include image group metadata into the result of this query.
             include_all_label_branches: Optionally include all label branches. They will be included as separate label row objects.
+            branch_name: Optionally specify a branch name. A branch name cannot be specified if include_all_label_branches is set to True
 
         Returns:
             A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows.
@@ -251,8 +253,8 @@ class Project:
             include_client_metadata=include_client_metadata,
             include_images_data=include_images_data,
             include_all_label_branches=include_all_label_branches,
+            branch_name=branch_name,
         )
-
         label_rows = [
             LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
         ]
@@ -1129,6 +1131,7 @@ class Project:
         labels_dict: Dict[str, Any],
         category_id_to_feature_hash: Dict[CategoryID, str],
         image_id_to_frame_index: Dict[ImageID, FrameIndex],
+        branch_name: Optional[str] = None,
     ) -> None:
         """Import labels from a COCO format into your Encord project
 
@@ -1136,9 +1139,16 @@ class Project:
             labels_dict (Dict[str, Any]): Raw label dictionary conforming to Encord format
             category_id_to_feature_hash (Dict[CategoryID, str]): Dictionary mapping category_id as used in the COCO data to the feature hash for the corresponding element in this Ontology
             image_id_to_frame_index (Dict[ImageID, FrameIndex]): Dictionary mapping int to FrameIndex(data_hash, frame_offset) which is used to identify the corresponding frame in the Encord setting
+            branch_name (Optional[str]): Optionally specify a branch name. Defaults to the `main` branch.
         """
         from encord.utilities.coco.datastructure import CocoRootModel
         from encord.utilities.coco.importer import import_coco_labels
 
         coco = CocoRootModel.from_dict(labels_dict)
-        import_coco_labels(self, coco, category_id_to_feature_hash, image_id_to_frame_index)
+        import_coco_labels(
+            self,
+            coco,
+            category_id_to_feature_hash,
+            image_id_to_frame_index,
+            branch_name=branch_name,
+        )

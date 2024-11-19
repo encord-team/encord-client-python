@@ -250,7 +250,7 @@ class LabelRowMetadata(Formatter):
     last_edited_at: Optional[datetime.datetime]
     """Only present if the label row is initiated"""
     branch_name: str
-    """Only present if the label row is initiated"""
+    """Only present if the label row is initiated or branch_name is set specifically"""
 
     data_hash: str
     dataset_hash: str

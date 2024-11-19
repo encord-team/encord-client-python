@@ -13,13 +13,12 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 import base64
-import json
 import logging
-import uuid
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
@@ -69,7 +68,6 @@ from encord.orm.project import (
     CvatExportType,
     ManualReviewWorkflowSettings,
     ProjectImporter,
-    ProjectImporterCvatInfo,
     ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,
@@ -219,30 +217,83 @@ class EncordUserClient:
         result = self._querier.basic_setter(OrmDataset, uid=None, payload=dataset)
         return CreateDatasetResponse.from_dict(result)
 
+    @deprecated("0.1.141", ".get_dataset(...)")
     def create_dataset_api_key(
-        self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]
+        self,
+        dataset_hash: str,
+        api_key_title: str,
+        dataset_scopes: List[DatasetScope],
     ) -> DatasetAPIKey:
-        api_key_payload = {
-            "dataset_hash": dataset_hash,
-            "title": api_key_title,
-            "scopes": list(map(lambda scope: scope.value, dataset_scopes)),
-        }
-        response = self._querier.basic_setter(DatasetAPIKey, uid=None, payload=api_key_payload)
-        return DatasetAPIKey.from_dict(response)
+        """
+        DEPRECATED: DatasetAPIKey functionality is being deprecated.
+        Use EncordUserClient SSH authentication going forward.
 
-    def get_dataset_api_keys(self, dataset_hash: str) -> List[DatasetAPIKey]:
-        api_key_payload = {
-            "dataset_hash": dataset_hash,
-        }
-        api_keys: List[DatasetAPIKey] = self._querier.get_multiple(DatasetAPIKey, uid=None, payload=api_key_payload)
-        return api_keys
+        DEPRECATED -  Obtain dataset_client:
+        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
 
-    def get_or_create_dataset_api_key(self, dataset_hash: str) -> DatasetAPIKey:
-        api_key_payload = {
-            "dataset_hash": dataset_hash,
-        }
-        response = self._querier.basic_put(DatasetAPIKey, uid=None, payload=api_key_payload)
-        return DatasetAPIKey.from_dict(response)
+        RECOMMENDED - Obtain dataset_client:
+        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
+        """
+
+        return DatasetAPIKey.from_dict(
+            self._querier.basic_setter(
+                DatasetAPIKey,
+                uid=None,
+                payload={
+                    "dataset_hash": dataset_hash,
+                    "title": api_key_title,
+                    "scopes": [x.value for x in dataset_scopes],
+                },
+            )
+        )
+
+    @deprecated("0.1.141", ".get_dataset(...)")
+    def get_dataset_api_keys(
+        self,
+        dataset_hash: str,
+    ) -> List[DatasetAPIKey]:
+        """
+        DEPRECATED: DatasetAPIKey functionality is being deprecated.
+        Use EncordUserClient SSH authentication going forward.
+
+        DEPRECATED -  Obtain dataset_client:
+        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
+
+        RECOMMENDED - Obtain dataset_client:
+        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
+        """
+
+        return self._querier.get_multiple(
+            DatasetAPIKey,
+            uid=None,
+            payload={"dataset_hash": dataset_hash},
+        )
+
+    @deprecated("0.1.141", ".get_dataset(...)")
+    def get_or_create_dataset_api_key(
+        self,
+        dataset_hash: str,
+    ) -> DatasetAPIKey:
+        """
+        DEPRECATED: DatasetAPIKey functionality is being deprecated.
+        Use EncordUserClient SSH authentication going forward.
+
+        DEPRECATED -  Obtain dataset_client:
+        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
+
+        RECOMMENDED - Obtain dataset_client:
+        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
+        """
+
+        for key in self.get_dataset_api_keys(dataset_hash):
+            if set(key.scopes) == set(DatasetScope):
+                return key
+
+        return self.create_dataset_api_key(
+            dataset_hash=dataset_hash,
+            api_key_title=f"{dataset_hash} - admin key",
+            dataset_scopes=list(DatasetScope),
+        )
 
     def get_datasets(
         self,
@@ -362,7 +413,7 @@ class EncordUserClient:
             edited_after: optional last modification date filter, 'greater'
 
         Returns:
-            list of (role, projects) pairs for project matching filter conditions.
+            list of (role, projects) pairs for Project matching filter conditions.
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
@@ -379,17 +430,17 @@ class EncordUserClient:
         workflow_template_hash: Optional[str] = None,
     ) -> str:
         """
-        Creates a new project and returns its uid ('project_hash')
+        Creates a new Project and returns its uid ('project_hash')
 
         Args:
-            project_title: the title of the project
-            dataset_hashes: a list of the dataset uids that the project will use
+            project_title: the title of the Project
+            dataset_hashes: a list of the Dataset uids that the project will use
             project_description: the optional description of the project
-            ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
-            workflow_settings: selects and configures the type of the quality control workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
-            workflow_template_hash: project will be created using a workflow based on the template provided.
+            ontology_hash: the uid of an Ontology to be used. If omitted, a new empty Ontology will be created
+            workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
+            workflow_template_hash: Project is created using a Workflow based on the template provided. To use the default Workflow template the workflow_template_hash argument must be omitted.
         Returns:
-            the uid of the project.
+            the uid of the Project.
         """
         project = {
             "title": project_title,
@@ -408,20 +459,79 @@ class EncordUserClient:
 
         return self._querier.basic_setter(OrmProject, uid=None, payload=project)
 
-    def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
+    @deprecated("0.1.141", ".get_project(...)")
+    def create_project_api_key(
+        self,
+        project_hash: str,
+        api_key_title: str,
+        scopes: List[APIKeyScopes],
+    ) -> str:
         """
-        Returns:
-            The created project API key.
+        DEPRECATED: ProjectAPIKey functionality is being deprecated.
+        Use EncordUserClient SSH authentication going forward.
+
+        DEPRECATED - Obtain project_client:
+        project_client = EncordClientProject.initialise(project_hash, project_api_key)
+
+        RECOMMENDED - Obtain project_client:
+        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
         """
-        payload = {"title": api_key_title, "scopes": list(map(lambda scope: scope.value, scopes))}
 
-        return self._querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
+        return self._querier.basic_setter(
+            ProjectAPIKey,
+            uid=project_hash,
+            payload={
+                "title": api_key_title,
+                "scopes": [x.value for x in scopes],
+            },
+        )
 
-    def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
-        return self._querier.get_multiple(ProjectAPIKey, uid=project_hash)
+    @deprecated("0.1.141", ".get_project(...)")
+    def get_project_api_keys(
+        self,
+        project_hash: str,
+    ) -> List[ProjectAPIKey]:
+        """
+        DEPRECATED: ProjectAPIKey functionality is being deprecated.
+        Use EncordUserClient SSH authentication going forward.
 
-    def get_or_create_project_api_key(self, project_hash: str) -> str:
-        return self._querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
+        DEPRECATED - Obtain project_client:
+        project_client = EncordClientProject.initialise(project_hash, project_api_key)
+
+        RECOMMENDED - Obtain project_client:
+        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
+        """
+
+        return self._querier.get_multiple(
+            ProjectAPIKey,
+            uid=project_hash,
+        )
+
+    @deprecated("0.1.141", ".get_project(...)")
+    def get_or_create_project_api_key(
+        self,
+        project_hash: str,
+    ) -> str:
+        """
+        DEPRECATED: ProjectAPIKey functionality is being deprecated.
+        Use EncordUserClient SSH authentication going forward.
+
+        DEPRECATED - Obtain project_client:
+        project_client = EncordClientProject.initialise(project_hash, project_api_key)
+
+        RECOMMENDED - Obtain project_client:
+        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
+        """
+
+        for key in self.get_project_api_keys(project_hash):
+            if set(key.scopes) == set(APIKeyScopes):
+                return key.api_key
+
+        return self.create_project_api_key(
+            project_hash=project_hash,
+            api_key_title=f"{project_hash} - admin key",
+            scopes=list(APIKeyScopes),
+        )
 
     @deprecated("0.1.98", ".get_dataset()")
     def get_dataset_client(
@@ -433,22 +543,42 @@ class EncordUserClient:
         """
         DEPRECATED - prefer using :meth:`get_dataset()` instead.
         """
-        dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
-        return EncordClientDataset.initialise(
-            dataset_hash,
-            dataset_api_key.api_key,
-            requests_settings=self._config.requests_settings,
+
+        if isinstance(dataset_hash, UUID):
+            dataset_hash = str(dataset_hash)
+
+        return EncordClientDataset(
+            querier=Querier(
+                self._config.config,
+                resource_type=TYPE_DATASET,
+                resource_id=dataset_hash,
+            ),
+            config=self._config.config,
             dataset_access_settings=dataset_access_settings,
+            api_client=self._api_client,
         )
 
     @deprecated("0.1.98", ".get_project()")
-    def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
+    def get_project_client(
+        self,
+        project_hash: str,
+        **kwargs,
+    ) -> EncordClientProject:
         """
         DEPRECATED - prefer using :meth:`get_project()` instead.
         """
-        project_api_key: str = self.get_or_create_project_api_key(project_hash)
-        return EncordClient.initialise(
-            project_hash, project_api_key, requests_settings=self._config.requests_settings, **kwargs
+
+        if isinstance(project_hash, UUID):
+            project_hash = str(project_hash)
+
+        return EncordClientProject(
+            querier=Querier(
+                self._config.config,
+                resource_type=TYPE_PROJECT,
+                resource_id=project_hash,
+            ),
+            config=self._config.config,
+            api_client=self._api_client,
         )
 
     def create_project_from_cvat(
@@ -501,9 +631,14 @@ class EncordUserClient:
             raise ValueError(f"The file `{annotations_file_path}` does not exist.")
 
         with annotations_file_path.open("rb") as f:
-            annotations_base64 = base64.b64encode(f.read()).decode("utf-8")
+            annotations_bytes = f.read()
+            annotations_str = annotations_bytes.decode("utf-8")
+            annotations_base64 = base64.b64encode(annotations_bytes).decode("utf-8")
 
-        images_paths, used_base_path = self.__get_images_paths(annotations_base64, images_directory_path)
+        images_paths, used_base_path = self.__get_images_paths(
+            annotations_str,
+            images_directory_path,
+        )
 
         log.info("Starting image upload.")
         dataset_hash, image_title_to_image = self.__upload_cvat_images(images_paths, used_base_path, dataset_name)
@@ -539,16 +674,16 @@ class EncordUserClient:
         else:
             raise ValueError("The api server responded with an invalid payload.")
 
-    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> Tuple[List[Path], Path]:
-        payload = {"annotations_base64": annotations_base64}
-        project_info = self._querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
-        if "error" in project_info:
-            message = project_info["error"]["message"]
-            raise ValueError(message)
+    def __get_images_paths(
+        self,
+        annotations_str: str,
+        images_directory_path: Path,
+    ) -> Tuple[List[Path], Path]:
+        meta_tags = [x.tag for x in ET.fromstring(annotations_str).find("meta") or []]
 
-        export_type = project_info["success"]["export_type"]
-        if export_type == CvatExportType.PROJECT:
+        if CvatExportType.PROJECT.value in meta_tags:
             default_path = images_directory_path.joinpath("default")
+
             if default_path not in list(images_directory_path.iterdir()):
                 raise ValueError("The expected directory 'default' was not found.")
 
@@ -556,16 +691,19 @@ class EncordUserClient:
             # NOTE: it is possible that here we also need to use the __get_recursive_image_paths
             images = list(default_path.iterdir())
 
-        elif export_type == CvatExportType.TASK:
+        elif CvatExportType.TASK.value in meta_tags:
             used_base_path = images_directory_path
             images = self.__get_recursive_image_paths(images_directory_path)
+
         else:
             raise ValueError(
-                f"Received an unexpected response `{project_info}` from the server. Project import aborted."
+                "Neither the 'project' nor the 'task' field was found in the CVAT annotations' 'meta' "
+                "field. The annotation file is likely ill-formed."
             )
 
         if not images:
             raise ValueError("No images found in the provided data folder.")
+
         return images, used_base_path
 
     @staticmethod
@@ -810,7 +948,7 @@ class EncordUserClient:
 
         return StorageFolder._create_folder(self._api_client, name, description, client_metadata, parent_folder)
 
-    def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
+    def get_storage_folder(self, folder_uuid: Union[UUID, str]) -> StorageFolder:
         """
         Get a storage folder by its UUID.
 
@@ -821,14 +959,17 @@ class EncordUserClient:
             The storage folder. See :class:`encord.storage.StorageFolder` for details.
 
         Raises:
+            ValueError: If `folder_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the folder with the given UUID does not exist or
                 the user does not have access to it.
         """
+        if isinstance(folder_uuid, str):
+            folder_uuid = UUID(folder_uuid)
         return StorageFolder._get_folder(self._api_client, folder_uuid)
 
-    def get_storage_item(self, item_uuid: UUID, sign_url: bool = False) -> StorageItem:
+    def get_storage_item(self, item_uuid: Union[UUID, str], sign_url: bool = False) -> StorageItem:
         """
-        Get a storage item by its UUID.
+        Get a storage item by its unique identifier.
 
         Args:
             item_uuid: The UUID of the item to retrieve.
@@ -838,28 +979,37 @@ class EncordUserClient:
             The storage item. See :class:`encord.storage.StorageItem` for details.
 
         Raises:
+            ValueError: If `item_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
+        if isinstance(item_uuid, str):
+            item_uuid = UUID(item_uuid)
         return StorageItem._get_item(self._api_client, item_uuid, sign_url)
 
-    def get_storage_items(self, item_uuids: List[UUID], sign_url: bool = False) -> List[StorageItem]:
+    def get_storage_items(
+        self,
+        item_uuids: Sequence[Union[UUID, str]],
+        sign_url: bool = False,
+    ) -> List[StorageItem]:
         """
         Get storage items by their UUIDs, in bulk. Useful for retrieving multiple items at once, e.g. when getting
         items pointed to by :attr:`encord.orm.dataset.DataRow.backing_item_uuid` for all data rows of a dataset.
 
         Args:
-            item_uuids: list of UUIDs of items to retrieve.
+            item_uuids: list of UUIDs of items to retrieve. Can be a list of strings or a list of UUID objects.
             sign_url: If `True`, pre-fetch a signed URLs for the items (otherwise the URLs will be signed on demand).
 
         Returns:
             A list of storage items. See :class:`encord.storage.StorageItem` for details.
 
         Raises:
+            ValueError: If any of the item uuids is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If some of the items with the given UUIDs do not exist or
                 the user does not have access to them.
         """
-        return StorageItem._get_items(self._api_client, item_uuids, sign_url)
+        internal_item_uuids: List[UUID] = [UUID(item) if isinstance(item, str) else item for item in item_uuids]
+        return StorageItem._get_items(self._api_client, internal_item_uuids, sign_url)
 
     def list_storage_folders(
         self,
@@ -1005,7 +1155,7 @@ class EncordUserClient:
 
     def get_collection(self, collection_uuid: Union[str, UUID]) -> Collection:
         """
-        Get collection by unique identifier (UUID).
+        Get a collection by its unique identifier (UUID).
 
         Args:
             collection_uuid: The unique identifier of the collection to retrieve.
@@ -1014,6 +1164,7 @@ class EncordUserClient:
             The collection. See :class:`encord.collection.Collection` for details.
 
         Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
@@ -1027,7 +1178,7 @@ class EncordUserClient:
         top_level_folder_uuid: Union[str, UUID, None] = None,
         collection_uuids: List[str | UUID] | None = None,
         page_size: Optional[int] = None,
-    ) -> Generator[Collection]:
+    ) -> Iterator[Collection]:
         """
         Get collections by top level folder or list of collection IDs.
         If both top_level_folder_uuid and collection_uuid_list are preset
@@ -1041,6 +1192,7 @@ class EncordUserClient:
             The list of collections which match the given criteria.
 
         Raises:
+            ValueError: If `top_level_folder_uuid` or any of the collection uuids is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
@@ -1068,6 +1220,7 @@ class EncordUserClient:
             None
 
         Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
@@ -1089,6 +1242,7 @@ class EncordUserClient:
             Collection: Newly created collection.
 
         Raises:
+            ValueError: If `top_level_folder_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
         """
         if isinstance(top_level_folder_uuid, str):
@@ -1107,6 +1261,7 @@ class EncordUserClient:
             The preset. See :class:`encord.preset.Preset` for details.
 
         Raises:
+            ValueError: If `preset_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
@@ -1116,7 +1271,7 @@ class EncordUserClient:
 
     def get_filter_presets(
         self, preset_uuids: List[Union[str, UUID]] = [], page_size: Optional[int] = None
-    ) -> Generator[FilterPreset]:
+    ) -> Iterator[FilterPreset]:
         """
         Get presets by list of preset unique identifiers (UUIDs).
 
@@ -1127,14 +1282,17 @@ class EncordUserClient:
             The list of presets which match the given criteria.
 
         Raises:
+            ValueError: If any of the preset uuids is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
-        preset_uuids = [UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids]
-        return FilterPreset._get_presets(self._api_client, preset_uuids, page_size=page_size)
+        internal_preset_uuids: List[UUID] = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids
+        ]
+        return FilterPreset._get_presets(self._api_client, internal_preset_uuids, page_size=page_size)
 
     def list_presets(
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
-    ) -> Generator[FilterPreset]:
+    ) -> Iterator[FilterPreset]:
         """
         Get presets by top level folder.
 
@@ -1146,6 +1304,7 @@ class EncordUserClient:
             The list of presets which match the given criteria.
 
         Raises:
+            ValueError: If `top_level_folder_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
@@ -1163,6 +1322,7 @@ class EncordUserClient:
             None
 
         Raises:
+            ValueError: If `preset_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
         """
         if isinstance(preset_uuid, str):
