@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 from uuid import UUID
 
 from encord.objects.ontology_labels_impl import LabelRowV2
@@ -105,37 +105,28 @@ class ProjectLabelCollectionInstance(BaseDTO):
 
 class ProjectDataCollectionItemResponse(BaseDTO):
     label_row_metadata: LabelRowMetadataDTO
-    instances: list[ProjectDataCollectionInstance]
+    instances: List[ProjectDataCollectionInstance]
 
 
 class ProjectLabelCollectionItemResponse(BaseDTO):
     label_row_metadata: LabelRowMetadataDTO
-    instances: list[ProjectLabelCollectionInstance]
+    instances: List[ProjectLabelCollectionInstance]
 
 
 class ProjectDataCollectionItemRequest(BaseDTO):
-    data_hash: str | UUID
+    data_hash: Union[str, UUID]
     frame: int
 
 
 class ProjectLabelCollectionItemRequest(BaseDTO):
-    data_hash: str | UUID
+    data_hash: Union[str, UUID]
     frame: int
-    annotation_hash: str | UUID
+    annotation_hash: Union[str, UUID]
 
 
 class ProjectCollectionBulkItemRequest(BaseDTO):
-    items: list[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
+    items: List[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
 
 
 class ProjectCollectionBulkItemResponse(BaseDTO):
-    failed_items: list[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
-
-
-# class ProjectDataCollectionItem(BaseDTO):
-#     label_row_v2: LabelRowV2
-#     instances: list[ProjectDataCollectionInstance]
-
-# class ProjectLabelCollectionItem(BaseDTO):
-#     label_row_v2: LabelRowV2
-#     instances: list[ProjectLabelCollectionInstance]
+    failed_items: List[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
