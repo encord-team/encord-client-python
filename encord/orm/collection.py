@@ -125,8 +125,8 @@ class ProjectLabelCollectionItemRequest(BaseDTO):
 
 
 class ProjectCollectionBulkItemRequest(BaseDTO):
-    items: List[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
+    items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
 
 
 class ProjectCollectionBulkItemResponse(BaseDTO):
-    failed_items: List[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]
+    failed_items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
