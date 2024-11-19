@@ -1226,4 +1226,4 @@ class Project:
         new_uuid = ProjectCollection._create_collection(
             self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type
         )
-        return ProjectCollection(self._project_instance.project_hash, self._client, new_uuid)
+        return self.get_collection(new_uuid)
