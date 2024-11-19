@@ -1,6 +1,7 @@
 import contextlib
 from datetime import datetime
 from functools import lru_cache
+from typing import Optional, Union
 
 from dateutil import parser
 
@@ -29,3 +30,14 @@ def parse_datetime(time_string: str) -> datetime:
     # As a last resort, employ fuzzy parsing, which is most expensive,
     # but parses the most obscure timestamp formats
     return parser.parse(time_string, fuzzy=True)
+
+
+def parse_datetime_optional(_datetime: Optional[Union[str, datetime]]) -> Optional[datetime]:
+    if _datetime is None:
+        return None
+    elif isinstance(_datetime, datetime):
+        return _datetime
+    elif isinstance(_datetime, str):
+        return parse_datetime(_datetime)
+    else:
+        raise ValueError(f"parse_datetime_optional {type(_datetime)=} not supported")
