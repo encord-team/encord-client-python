@@ -6,42 +6,42 @@ from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
 
-class PublicDicomDeIdRedactTextMode(CamelStrEnum):
+class DicomDeIdRedactTextMode(CamelStrEnum):
     REDACT_ALL_TEXT = auto()
     REDACT_NO_TEXT = auto()
     REDACT_SENSITIVE_TEXT = auto()
 
 
-class PublicDicomDeIdSaveConditionType(CamelStrEnum):
+class DicomDeIdSaveConditionType(CamelStrEnum):
     NOT_SUBSTR = auto()
     IN = auto()
 
 
-class PublicDicomDeIdSaveCondition(BaseDTO):
+class DicomDeIdSaveCondition(BaseDTO):
     value: str | List[str]
-    condition_type: PublicDicomDeIdSaveConditionType
+    condition_type: DicomDeIdSaveConditionType
     dicom_tag: str
 
 
-class PublicDicomDeIdStartPayload(BaseDTO):
+class DicomDeIdStartPayload(BaseDTO):
     integration_uuid: UUID
     dicom_urls: List[str]
     redact_dicom_tags: bool = True
-    redact_pixels_mode: PublicDicomDeIdRedactTextMode = PublicDicomDeIdRedactTextMode.REDACT_NO_TEXT
-    save_conditions: list[PublicDicomDeIdSaveCondition] | None = None
+    redact_pixels_mode: DicomDeIdRedactTextMode = DicomDeIdRedactTextMode.REDACT_NO_TEXT
+    save_conditions: list[DicomDeIdSaveCondition] | None = None
     upload_dir: str | None = None
 
 
-class PublicDicomDeIdGetResultParams(BaseDTO):
+class DicomDeIdGetResultParams(BaseDTO):
     timeout_seconds: int
 
 
-class PublicDicomDeIdGetResultLongPollingStatus(str, Enum):
+class DicomDeIdGetResultLongPollingStatus(str, Enum):
     DONE = "DONE"
     ERROR = "ERROR"
     PENDING = "PENDING"
 
 
-class PublicDicomDeIdGetResultResponse(BaseDTO):
-    status: PublicDicomDeIdGetResultLongPollingStatus
+class DicomDeIdGetResultResponse(BaseDTO):
+    status: DicomDeIdGetResultLongPollingStatus
     urls: List[str] | None = None

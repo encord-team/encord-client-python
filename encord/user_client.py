@@ -66,13 +66,13 @@ from encord.orm.dataset import (
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.deidentification import (
-    PublicDicomDeIdGetResultLongPollingStatus,
-    PublicDicomDeIdGetResultParams,
-    PublicDicomDeIdGetResultResponse,
-    PublicDicomDeIdRedactTextMode,
-    PublicDicomDeIdSaveCondition,
-    PublicDicomDeIdSaveConditionType,
-    PublicDicomDeIdStartPayload,
+    DicomDeIdGetResultLongPollingStatus,
+    DicomDeIdGetResultParams,
+    DicomDeIdGetResultResponse,
+    DicomDeIdRedactTextMode,
+    DicomDeIdSaveCondition,
+    DicomDeIdSaveConditionType,
+    DicomDeIdStartPayload,
 )
 from encord.orm.group import Group as OrmGroup
 from encord.orm.ontology import Ontology as OrmOntology
@@ -915,9 +915,9 @@ class EncordUserClient:
             save_conditions_api = None
         else:
             save_conditions_api = [
-                PublicDicomDeIdSaveCondition(
+                DicomDeIdSaveCondition(
                     value=x.value,
-                    condition_type=PublicDicomDeIdSaveConditionType[x.condition_type.value],
+                    condition_type=DicomDeIdSaveConditionType[x.condition_type.value],
                     dicom_tag=x.dicom_tag,
                 )
                 for x in save_conditions
@@ -925,11 +925,11 @@ class EncordUserClient:
 
         dicom_deid_uuid = self._api_client.post(
             "dicom-deidentification",
-            payload=PublicDicomDeIdStartPayload(
+            payload=DicomDeIdStartPayload(
                 integration_uuid=uuid.UUID(integration_hash),
                 dicom_urls=dicom_urls,
                 redact_dicom_tags=redact_dicom_tags,
-                redact_pixels_mode=PublicDicomDeIdRedactTextMode[redact_pixels_mode.name],
+                redact_pixels_mode=DicomDeIdRedactTextMode[redact_pixels_mode.name],
                 save_conditions=save_conditions_api,
                 upload_dir=upload_dir,
             ),
@@ -973,24 +973,24 @@ class EncordUserClient:
                 log.info(f"deidentify_dicom_files_get_result started polling call {polling_elapsed_seconds=}")
                 tmp_res = self._api_client.get(
                     f"dicom-deidentification/{dicom_deid_uuid}",
-                    params=PublicDicomDeIdGetResultParams(
+                    params=DicomDeIdGetResultParams(
                         timeout_seconds=min(
                             polling_available_seconds,
                             DICOM_DEID_LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
                         ),
                     ),
-                    result_type=PublicDicomDeIdGetResultResponse,
+                    result_type=DicomDeIdGetResultResponse,
                 )
 
-                if tmp_res.status == PublicDicomDeIdGetResultLongPollingStatus.DONE:
+                if tmp_res.status == DicomDeIdGetResultLongPollingStatus.DONE:
                     log.info(f"dicom deidentification job completed with {dicom_deid_uuid=}.")
 
                 polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
                 polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
 
                 if polling_available_seconds == 0 or tmp_res.status in [
-                    PublicDicomDeIdGetResultLongPollingStatus.DONE,
-                    PublicDicomDeIdGetResultLongPollingStatus.ERROR,
+                    DicomDeIdGetResultLongPollingStatus.DONE,
+                    DicomDeIdGetResultLongPollingStatus.ERROR,
                 ]:
                     res = tmp_res
                     break
@@ -1004,12 +1004,12 @@ class EncordUserClient:
 
                 time.sleep(DICOM_DEID_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
 
-        if res.status == PublicDicomDeIdGetResultLongPollingStatus.DONE:
+        if res.status == DicomDeIdGetResultLongPollingStatus.DONE:
             if res.urls is None:
                 raise ValueError(f"{type(res.urls)=}, res.urls should not be None with DONE status")
 
             return res.urls
-        elif res.status == PublicDicomDeIdGetResultLongPollingStatus.ERROR:
+        elif res.status == DicomDeIdGetResultLongPollingStatus.ERROR:
             raise ValueError(f"dicom deidentification job failed, {dicom_deid_uuid=}, please contact support")
         else:
             raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
