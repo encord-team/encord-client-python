@@ -15,6 +15,7 @@ from __future__ import annotations
 import base64
 import logging
 import time
+import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from enum import Enum
@@ -64,6 +65,15 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.deidentification import (
+    PublicDicomDeIdGetResultLongPollingStatus,
+    PublicDicomDeIdGetResultParams,
+    PublicDicomDeIdGetResultResponse,
+    PublicDicomDeIdRedactTextMode,
+    PublicDicomDeIdSaveCondition,
+    PublicDicomDeIdSaveConditionType,
+    PublicDicomDeIdStartPayload,
+)
 from encord.orm.group import Group as OrmGroup
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
@@ -98,6 +108,9 @@ from encord.utilities.project_user import ProjectUserRole
 CVAT_LONG_POLLING_RESPONSE_RETRY_N = 3
 CVAT_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
 CVAT_LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
+DICOM_DEID_LONG_POLLING_RESPONSE_RETRY_N = 3
+DICOM_DEID_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
+DICOM_DEID_LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 
 log = logging.getLogger(__name__)
 
@@ -867,6 +880,140 @@ class EncordUserClient:
         page = self._api_client.get("user/current-organisation/groups", params=None, result_type=Page[OrmGroup])
         yield from page.results
 
+    def deidentify_dicom_files_start(
+        self,
+        dicom_urls: List[str],
+        integration_hash: str,
+        redact_dicom_tags: bool = True,
+        redact_pixels_mode: DeidentifyRedactTextMode = DeidentifyRedactTextMode.REDACT_NO_TEXT,
+        save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,
+        upload_dir: Optional[str] = None,
+    ) -> UUID:
+        """
+        Initiate the DICOM files deidentification process.
+
+        This method starts the deidentification job for the specified DICOM files and returns
+        a UUID that can be used to track and retrieve the deidentification job results.
+
+        Args:
+            dicom_urls: A list of URLs pointing to DICOM files to be deidentified.
+            integration_hash: Integration hash for the external storage integration.
+            redact_dicom_tags: Flag to enable or disable DICOM tags redaction. Defaults to True.
+            redact_pixels_mode: Policy for redacting text in pixel data.
+                Defaults to DeidentifyRedactTextMode.REDACT_NO_TEXT.
+            save_conditions: Optional list of conditions that must be met for
+                a deidentified DICOM file to be saved.
+            upload_dir: Optional directory for uploading deidentified files.
+                If None, files will be uploaded to the same directory as source files.
+
+        Returns:
+            A UUID representing the initiated deidentification job,
+            which can be used to retrieve job results.
+        """
+
+        if save_conditions is None:
+            save_conditions_api = None
+        else:
+            save_conditions_api = [
+                PublicDicomDeIdSaveCondition(
+                    value=x.value,
+                    condition_type=PublicDicomDeIdSaveConditionType[x.condition_type.value],
+                    dicom_tag=x.dicom_tag,
+                )
+                for x in save_conditions
+            ]
+
+        dicom_deid_uuid = self._api_client.post(
+            "dicom-deidentification",
+            payload=PublicDicomDeIdStartPayload(
+                integration_uuid=uuid.UUID(integration_hash),
+                dicom_urls=dicom_urls,
+                redact_dicom_tags=redact_dicom_tags,
+                redact_pixels_mode=PublicDicomDeIdRedactTextMode[redact_pixels_mode.name],
+                save_conditions=save_conditions_api,
+                upload_dir=upload_dir,
+            ),
+            params=None,
+            result_type=UUID,
+        )
+
+        return dicom_deid_uuid
+
+    def deidentify_dicom_files_get_result(
+        self,
+        dicom_deid_uuid: UUID,
+        *,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> List[str]:
+        """
+        Retrieve the results of a DICOM deidentification job.
+
+        This method polls the server to check the status of a previously initiated
+        DICOM deidentification job and returns the URLs of deidentified files
+        when the job is complete.
+
+        Args:
+            dicom_deid_uuid: The UUID of the deidentification job returned
+                by deidentify_dicom_files_start(...).
+            timeout_seconds: Maximum time to wait for job completion.
+                Defaults to 1 day (86400 seconds).
+
+        Returns:
+            A list of URLs pointing to the deidentified DICOM files.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                log.info(f"deidentify_dicom_files_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._api_client.get(
+                    f"dicom-deidentification/{dicom_deid_uuid}",
+                    params=PublicDicomDeIdGetResultParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            DICOM_DEID_LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=PublicDicomDeIdGetResultResponse,
+                )
+
+                if tmp_res.status == PublicDicomDeIdGetResultLongPollingStatus.DONE:
+                    log.info(f"dicom deidentification job completed with {dicom_deid_uuid=}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    PublicDicomDeIdGetResultLongPollingStatus.DONE,
+                    PublicDicomDeIdGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= DICOM_DEID_LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(DICOM_DEID_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == PublicDicomDeIdGetResultLongPollingStatus.DONE:
+            if res.urls is None:
+                raise ValueError(f"{type(res.urls)=}, res.urls should not be None with DONE status")
+
+            return res.urls
+        elif res.status == PublicDicomDeIdGetResultLongPollingStatus.ERROR:
+            raise ValueError(f"dicom deidentification job failed, {dicom_deid_uuid=}, please contact support")
+        else:
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
+
     def deidentify_dicom_files(
         self,
         dicom_urls: List[str],
@@ -921,16 +1068,15 @@ class EncordUserClient:
 
         """
 
-        return self._querier.basic_setter(
-            DicomDeidentifyTask,
-            uid=integration_hash,
-            payload={
-                "dicom_urls": dicom_urls,
-                "redact_dicom_tags": redact_dicom_tags,
-                "redact_pixels_mode": redact_pixels_mode.value,
-                "save_conditions": [x.to_dict() for x in (save_conditions or [])],
-                "upload_dir": upload_dir,
-            },
+        return self.deidentify_dicom_files_get_result(
+            dicom_deid_uuid=self.deidentify_dicom_files_start(
+                dicom_urls=dicom_urls,
+                integration_hash=integration_hash,
+                redact_dicom_tags=redact_dicom_tags,
+                redact_pixels_mode=redact_pixels_mode,
+                save_conditions=save_conditions,
+                upload_dir=upload_dir,
+            )
         )
 
     def create_storage_folder(
