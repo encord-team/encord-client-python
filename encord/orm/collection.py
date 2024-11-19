@@ -81,12 +81,12 @@ class CreateProjectCollectionPayload(CreateCollectionPayload):
 
 
 class ProjectCollection(BaseDTO):
-    uuid: uuid.UUID
+    collection_uuid: UUID
     name: str
     description: Optional[str]
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     last_edited_at: Optional[datetime] = Field(default=None, alias="lastEditedAt")
-    project_hash: UUID
+    project_uuid: UUID
     collection_type: ProjectCollectionType
 
 

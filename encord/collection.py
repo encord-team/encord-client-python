@@ -340,7 +340,7 @@ class ProjectCollection:
         Returns:
             UUID: The collection UUID.
         """
-        return self._collection_instance.uuid
+        return self._collection_instance.collection_uuid
 
     @property
     def name(self) -> str:
@@ -398,7 +398,7 @@ class ProjectCollection:
         Returns:
             UUID: The project hash of the collection.
         """
-        return self._collection_instance.project_hash
+        return self._collection_instance.project_uuid
 
     @staticmethod
     def _get_collection(

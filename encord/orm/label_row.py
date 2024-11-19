@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from pydantic import Field
+
 from encord.common.time_parser import parse_datetime
 from encord.orm import base_orm
 from encord.orm.base_dto import BaseDTO
@@ -376,7 +378,7 @@ class LabelRowMetadataDTO(BaseDTO):
     Contains helpful information about a label row.
     """
 
-    label_hash: Optional[str] = None
+    label_hash: Optional[str] = Field(default=None, alias="label_uuid")
     """Only present if the label row is initiated"""
     created_at: Optional[datetime.datetime] = None
     """Only present if the label row is initiated"""
@@ -385,8 +387,8 @@ class LabelRowMetadataDTO(BaseDTO):
     branch_name: str
     """Only present if the label row is initiated or branch_name is set specifically"""
 
-    data_hash: str
-    dataset_hash: str
+    data_hash: str = Field(alias="data_uuid")
+    dataset_hash: str = Field(alias="dataset_uuid")
     dataset_title: str
     data_title: str
     data_type: str
