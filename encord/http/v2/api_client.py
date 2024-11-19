@@ -193,6 +193,9 @@ class ApiClient:
             ]:
                 self._handle_error(res, context)
 
+            if res.status_code == HTTPStatus.NO_CONTENT:
+                return None
+
             try:
                 res_json = res.json()
             except Exception as e:
