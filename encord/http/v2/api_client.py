@@ -1,6 +1,7 @@
 import inspect
 import json
 import uuid
+from http import HTTPStatus
 from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
 
@@ -186,7 +187,10 @@ class ApiClient:
             except Exception as e:
                 raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
-            if res.status_code != 200:
+            if res.status_code not in [
+                HTTPStatus.OK,
+                HTTPStatus.NO_CONTENT,  # 204 status code will raise error for sdk versions <= 0.1.147
+            ]:
                 self._handle_error(res, context)
 
             try:
