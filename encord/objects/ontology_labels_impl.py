@@ -1555,6 +1555,9 @@ class LabelRowV2:
             ret["data_duration"] = self._label_row_read_only_data.duration
         if self._label_row_read_only_data.fps is not None:
             ret["data_fps"] = self._label_row_read_only_data.fps
+        # HACK: PDF as video structure requires providing fps
+        if data_type == DataType.PDF:
+            ret["data_fps"] = 25.00
 
         return ret
 
@@ -1562,11 +1565,16 @@ class LabelRowV2:
         ret: Dict[str, Any] = {}
         data_type = self._label_row_read_only_data.data_type
 
-        if data_type == DataType.IMAGE or data_type == DataType.IMG_GROUP or data_type == DataType.PDF:
+        if data_type == DataType.IMAGE or data_type == DataType.IMG_GROUP:
             frame = frame_level_data.frame_number
             ret.update(self._to_encord_label(frame))
 
-        elif data_type == DataType.VIDEO or data_type == DataType.DICOM or data_type == DataType.NIFTI:
+        elif (
+            data_type == DataType.VIDEO
+            or data_type == DataType.DICOM
+            or data_type == DataType.NIFTI
+            or data_type == DataType.PDF
+        ):
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
 
