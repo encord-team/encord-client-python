@@ -346,7 +346,11 @@ class EncordClientDataset(EncordClient):
                 polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
                 polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
 
-                if polling_available_seconds == 0 or res.status in [LongPollingStatus.DONE, LongPollingStatus.ERROR]:
+                if polling_available_seconds == 0 or res.status in [
+                    LongPollingStatus.DONE,
+                    LongPollingStatus.ERROR,
+                    LongPollingStatus.CANCELLED,
+                ]:
                     return res
 
                 failed_requests_count = 0
@@ -781,11 +785,20 @@ class EncordClientDataset(EncordClient):
                 polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
                 polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
 
-                if polling_available_seconds == 0 or res.status in [LongPollingStatus.DONE, LongPollingStatus.ERROR]:
+                if (polling_available_seconds == 0) or (
+                    res.status
+                    in [
+                        LongPollingStatus.DONE,
+                        LongPollingStatus.ERROR,
+                        LongPollingStatus.CANCELLED,
+                    ]
+                ):
                     return res
 
-                files_finished_count = res.units_done_count + res.units_error_count
-                files_total_count = res.units_pending_count + res.units_done_count + res.units_error_count
+                files_finished_count = res.units_done_count + res.units_error_count + res.units_cancelled_count
+                files_total_count = (
+                    res.units_pending_count + res.units_done_count + res.units_error_count + res.units_cancelled_count
+                )
 
                 if files_finished_count != files_total_count:
                     logger.info(f"Processed {files_finished_count}/{files_total_count} files")
