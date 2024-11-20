@@ -76,7 +76,6 @@ from encord.orm.project import (
     CvatImportStartPayload,
     CvatReviewMode,
     ManualReviewWorkflowSettings,
-    ProjectImporter,
     ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,

@@ -290,11 +290,6 @@ class CvatExportType(str, Enum):
     TASK = "task"
 
 
-class ProjectImporter(BaseDTO):
-    project_hash: Optional[str]
-    errors: List[str]
-
-
 class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
 
