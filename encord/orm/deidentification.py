@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List
+from typing import List, Union
 from uuid import UUID
 
 from encord.orm.analytics import CamelStrEnum
@@ -18,7 +18,7 @@ class DicomDeIdSaveConditionType(CamelStrEnum):
 
 
 class DicomDeIdSaveCondition(BaseDTO):
-    value: str | List[str]
+    value: Union[str, List[str]]
     condition_type: DicomDeIdSaveConditionType
     dicom_tag: str
 
