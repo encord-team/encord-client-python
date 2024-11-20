@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List, Union
+from typing import List, Optional, Union
 from uuid import UUID
 
 from encord.orm.analytics import CamelStrEnum
@@ -28,8 +28,8 @@ class DicomDeIdStartPayload(BaseDTO):
     dicom_urls: List[str]
     redact_dicom_tags: bool = True
     redact_pixels_mode: DicomDeIdRedactTextMode = DicomDeIdRedactTextMode.REDACT_NO_TEXT
-    save_conditions: list[DicomDeIdSaveCondition] | None = None
-    upload_dir: str | None = None
+    save_conditions: Optional[List[DicomDeIdSaveCondition]] = None
+    upload_dir: Optional[str] = None
 
 
 class DicomDeIdGetResultParams(BaseDTO):
@@ -44,4 +44,4 @@ class DicomDeIdGetResultLongPollingStatus(str, Enum):
 
 class DicomDeIdGetResultResponse(BaseDTO):
     status: DicomDeIdGetResultLongPollingStatus
-    urls: List[str] | None = None
+    urls: Optional[List[str]] = None
