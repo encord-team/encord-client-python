@@ -904,6 +904,9 @@ class StorageFolder:
         if name is None and description is None and client_metadata is None:
             return
 
+        if client_metadata is not None:
+            self._parsed_metadata = None
+
         if bundle is not None:
             bundled_operation(
                 bundle,
@@ -1619,6 +1622,8 @@ class StorageItem:
         if name is None and description is None and client_metadata is None:
             return
 
+        if client_metadata is not None:
+            self._parsed_metadata = None
         if bundle is not None:
             bundled_operation(
                 bundle,
