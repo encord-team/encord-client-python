@@ -15,6 +15,9 @@ inputs:
   private-key-non-org:
     description: 'Private key of the second (non-org) user for integration tests'
     required: true
+  private-key-service-account:
+    description: 'Private key for service account user for integration tests'
+    required: true
   poetry-version:
     description: 'Poetry version to use'
     default: 1.5.0
