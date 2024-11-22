@@ -402,11 +402,20 @@ class LabelRowMetadataDTO(BaseDTO):
     is_shadow_data: bool = False
     number_of_frames: int
     duration: Optional[float] = None
+    """Only available for the VIDEO and AUDIO data_type"""
+    frames_per_second: Optional[int]
+    number_of_frames: int
+    duration: Optional[float]
+
     """Only available for the VIDEO data_type"""
-    frames_per_second: Optional[int] = None
-    """Only available for the VIDEO data_type"""
-    height: Optional[int] = None
-    width: Optional[int] = None
+    height: Optional[int]
+    width: Optional[int]
+
+    """Only available for the AUDIO data_type"""
+    audio_sample_rate: Optional[int]
+    audio_codec: Optional[str]
+    audio_bit_depth: Optional[int]
+    audio_num_channels: Optional[int]
 
     priority: Optional[float] = None
     """Only available for not complete tasks"""
@@ -434,6 +443,10 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         is_shadow_data=label_row_metadata_dto.is_shadow_data,
         number_of_frames=label_row_metadata_dto.number_of_frames,
         duration=label_row_metadata_dto.duration,
+        audio_sample_rate=label_row_metadata_dto.audio_sample_rate,
+        audio_codec=label_row_metadata_dto.audio_codec,
+        audio_bit_depth=label_row_metadata_dto.audio_bit_depth,
+        audio_num_channels=label_row_metadata_dto.audio_num_channels,
         frames_per_second=label_row_metadata_dto.frames_per_second,
         height=label_row_metadata_dto.height,
         width=label_row_metadata_dto.width,
@@ -442,5 +455,5 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         images_data=label_row_metadata_dto.images_data,
         file_type=label_row_metadata_dto.file_type,
         is_valid=label_row_metadata_dto.is_valid,
-        branch_name=label_row_metadata_dto.branch_name
+        branch_name=label_row_metadata_dto.branch_name,
     )
