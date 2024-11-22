@@ -400,8 +400,7 @@ class LabelRowMetadataDTO(BaseDTO):
     """Only available for TMS2 project"""
     workflow_graph_node: Optional[WorkflowGraphNode] = None
     is_shadow_data: bool = False
-    number_of_frames: int
-    duration: Optional[float] = None
+    
     """Only available for the VIDEO and AUDIO data_type"""
     frames_per_second: Optional[int]
     number_of_frames: int
