@@ -384,7 +384,7 @@ class ProjectCollection:
         return self._collection_instance.last_edited_at
 
     @property
-    def type(self) -> ProjectCollectionType:
+    def collection_type(self) -> ProjectCollectionType:
         """
         Get the type of the collection.
         Returns:
