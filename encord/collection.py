@@ -516,12 +516,12 @@ class ProjectCollection:
                 item.instances,
             )
 
-    def list_labels(
+    def list_annotations(
         self,
         page_size: Optional[int] = None,
     ) -> Iterator[Tuple[LabelRowV2, List[ProjectLabelCollectionInstance]]]:
         """
-        List labels in the collection.
+        List annotations in the collection.
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
         Returns:
