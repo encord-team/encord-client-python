@@ -442,5 +442,5 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         images_data=label_row_metadata_dto.images_data,
         file_type=label_row_metadata_dto.file_type,
         is_valid=label_row_metadata_dto.is_valid,
-        branch_name=label_row_metadata_dto.branch_name,
+        branch_name=label_row_metadata_dto.branch_name
     )
