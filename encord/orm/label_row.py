@@ -269,7 +269,7 @@ class LabelRowMetadata(Formatter):
     is_shadow_data: bool
 
     """Only available for the VIDEO and AUDIO data_type"""
-    frames_per_second: Optional[int]
+    frames_per_second: Optional[float]
     number_of_frames: int
     duration: Optional[float]
 
