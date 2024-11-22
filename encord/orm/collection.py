@@ -6,7 +6,7 @@ from uuid import UUID
 
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.orm.base_dto import BaseDTO, Field
-from encord.orm.label_row import LabelRowMetadata, LabelRowMetadataDTO
+from encord.orm.label_row import LabelRowMetadataDTO
 
 
 class GetCollectionParams(BaseDTO):

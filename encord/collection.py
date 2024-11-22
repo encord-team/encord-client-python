@@ -37,6 +37,7 @@ from encord.orm.collection import (
     UpdateCollectionPayload,
 )
 from encord.orm.collection import ProjectCollection as OrmProjectCollection
+from encord.orm.label_row import LabelRowMetadata
 from encord.storage import StorageItem, StorageItemInaccessible
 
 log = logging.getLogger(__name__)
@@ -508,7 +509,7 @@ class ProjectCollection:
         for item in paged_items:
             yield (
                 LabelRowV2(
-                    item.label_row_metadata,
+                    LabelRowMetadata.from_dict(item.label_row_metadata.model_dump(mode="json")),
                     self._project_client,
                     self._ontology,
                 ),
@@ -537,7 +538,7 @@ class ProjectCollection:
         for item in paged_items:
             yield (
                 LabelRowV2(
-                    item.label_row_metadata,
+                    LabelRowMetadata.from_dict(item.label_row_metadata.model_dump(mode="json")),
                     self._project_client,
                     self._ontology,
                 ),
