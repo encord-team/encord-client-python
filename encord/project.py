@@ -1213,7 +1213,7 @@ class Project:
         self, name: str, description: str = "", collection_type: ProjectCollectionType = ProjectCollectionType.FRAME
     ) -> ProjectCollection:
         """
-        Create a prooject collection.
+        Create a project collection.
         Args:
             name: The name of the collection.
             description: The description of the collection.

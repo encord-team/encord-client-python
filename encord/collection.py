@@ -315,9 +315,9 @@ class Collection:
 
 class ProjectCollection:
     """
-    Represents collections inside a Project.
-    Project collections are a logical grouping of frames or annotations that can
-    be used to perform various data curation flows.
+    Represents Active collections inside a Project.
+    Active Project Collections are a logical grouping of frames (images or video frames) or
+    annotations (objects and classifications) that can be used to perform various data curation flows.
     """
 
     def __init__(
