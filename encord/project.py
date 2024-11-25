@@ -18,6 +18,7 @@ from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
+from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
@@ -1242,3 +1243,41 @@ class Project:
             None
         """
         self._client.active_import(project_mode, video_sampling_rate)
+
+    def list_filter_presets(
+        self,
+        filter_preset_uuids: Optional[List[Union[str, UUID]]] = None,
+        page_size: Optional[int] = None,
+    ) -> Iterator[ProjectFilterPreset]:
+        """
+        List all filter presets associated to the project.
+        Args:
+            filter_preset_uuids: The unique identifiers (UUIDs) of the filter presets to retrieve.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of filter presets which match the given criteria.
+        Raises:
+            ValueError: If any of the filter preset uuids is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        filter_presets = (
+            [
+                UUID(filter_preset) if isinstance(filter_preset, str) else filter_preset
+                for filter_preset in filter_preset_uuids
+            ]
+            if filter_preset_uuids is not None
+            else None
+        )
+        return ProjectFilterPreset._list_filter_presets(
+            client=self._client._get_api_client(),
+            project_uuid=self._project_instance.project_hash,
+            filter_preset_uuids=filter_presets,
+            page_size=page_size,
+        )
+
+    def get_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> ProjectFilterPreset:
+        return ProjectFilterPreset._get_filter_preset(
+            client=self._client._get_api_client(),
+            project_uuid=self._project_instance.project_hash,
+            filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
+        )
