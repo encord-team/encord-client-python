@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Iterator, List, Optional, Union
 from uuid import UUID
 
+from encord.client import EncordClientProject
 from encord.exceptions import (
     AuthorisationError,
 )
@@ -12,9 +13,11 @@ from encord.orm.filter_preset import (
     FilterPresetDefinition,
     GetPresetParams,
     GetPresetsResponse,
+    GetProjectFilterPresetParams,
     UpdatePresetPayload,
 )
 from encord.orm.filter_preset import FilterPreset as OrmFilterPreset
+from encord.orm.filter_preset import ProjectFilterPreset as OrmProjectFilterPreset
 
 
 class FilterPreset:
@@ -167,4 +170,126 @@ class FilterPreset:
             params=None,
             payload=payload,
             result_type=None,
+        )
+
+
+class ProjectFilterPreset:
+    """
+    Represents Active filter presets.
+    """
+
+    def __init__(
+        self,
+        project_uuid: UUID,
+        client: ApiClient,
+        orm_filter_preset: OrmProjectFilterPreset,
+    ):
+        self._project_uuid = project_uuid
+        self._client = client
+        self._filter_preset_instance = orm_filter_preset
+
+    @property
+    def uuid(self) -> UUID:
+        """
+        Get the filter preset unique identifier (UUID).
+
+        Returns:
+            UUID: The filter preset UUID.
+        """
+        return self._filter_preset_instance.preset_uuid
+
+    @property
+    def name(self) -> str:
+        """
+        Get the filter preset name.
+
+        Returns:
+            str: The collection name.
+        """
+        return self._filter_preset_instance.name
+
+    @property
+    def created_at(self) -> Optional[datetime]:
+        """
+        Get the filter preset creation timestamp.
+
+        Returns:
+            Optional[datetime]: The timestamp when the filter preset was created, or None if not available.
+        """
+        return self._filter_preset_instance.created_at
+
+    @property
+    def updated_at(self) -> Optional[datetime]:
+        """
+        Get the filter preset last edit timestamp.
+
+        Returns:
+            Optional[datetime]: The timestamp when the filter preset was last edited, or None if not available.
+        """
+        return self._filter_preset_instance.updated_at
+
+    @property
+    def project_hash(self) -> UUID:
+        """
+        Get the project hash of the filter preset.
+        Returns:
+            UUID: The project hash of the filter preset.
+        """
+        return self._project_uuid
+
+    @staticmethod
+    def _get_filter_preset(
+        client: ApiClient,
+        project_uuid: UUID,
+        filter_preset_uuid: UUID,
+    ) -> "ProjectFilterPreset":
+        params = GetProjectFilterPresetParams(preset_uuids=[filter_preset_uuid])
+        orm_items = list(
+            client.get_paged_iterator(
+                f"active/{project_uuid}/presets",
+                params=params,
+                result_type=OrmProjectFilterPreset,
+            )
+        )
+        if len(orm_items) > 0:
+            return ProjectFilterPreset(
+                project_uuid=project_uuid,
+                client=client,
+                orm_filter_preset=orm_items[0],
+            )
+        raise AuthorisationError("No collection found")
+
+    @staticmethod
+    def _list_filter_presets(
+        client: ApiClient,
+        project_uuid: UUID,
+        filter_preset_uuids: Union[List[UUID], None],
+        page_size: Optional[int] = None,
+    ) -> Iterator["ProjectFilterPreset"]:
+        params = GetProjectFilterPresetParams(preset_uuids=filter_preset_uuids, pageSize=page_size)
+        paged_filter_presets = client.get_paged_iterator(
+            f"active/{project_uuid}/presets",
+            params=params,
+            result_type=OrmProjectFilterPreset,
+        )
+        for filter_preset in paged_filter_presets:
+            yield ProjectFilterPreset(
+                project_uuid=project_uuid,
+                client=client,
+                orm_filter_preset=filter_preset,
+            )
+
+    @staticmethod
+    def _delete_filter_preset(client: ApiClient, project_uuid: UUID, filter_preset_uuid: UUID) -> None:
+        client.delete(
+            f"active/{project_uuid}/presets/{filter_preset_uuid}",
+            params=None,
+            result_type=None,
+        )
+
+    def get_filter_preset_json(self) -> FilterPresetDefinition:
+        return self._client.get(
+            f"active/{self._project_uuid}/presets/{self._filter_preset_instance.preset_uuid}/raw",
+            params=None,
+            result_type=FilterPresetDefinition,
         )
