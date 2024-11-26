@@ -1227,3 +1227,7 @@ class Project:
             self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type
         )
         return self.get_collection(new_uuid)
+
+    def active_sync(self) -> None:
+        """Sync the associated Active project"""
+        self._client.active_sync()
