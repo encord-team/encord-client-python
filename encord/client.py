@@ -1606,6 +1606,14 @@ class EncordClientProject(EncordClient):
 
         return errors.errors or []
 
+    def active_sync(self) -> None:
+        self._get_api_client().post(
+            f"active/{self.project_hash}/sync",
+            params=None,
+            payload=None,
+            result_type=None,
+        )
+
 
 def _device_to_string(device: Device) -> str:
     if not isinstance(device, Device):
