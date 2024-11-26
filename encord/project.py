@@ -28,7 +28,7 @@ from encord.orm.analytics import (
     CollaboratorTimersGroupBy,
 )
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.collection import ProjectCollectionType
+from encord.orm.collection import ActiveProjectMode, ProjectCollectionType
 from encord.orm.dataset import Image, Video
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
@@ -1231,3 +1231,7 @@ class Project:
     def active_sync(self) -> None:
         """Sync the associated Active project"""
         self._client.active_sync()
+
+    def active_import(self, project_mode: ActiveProjectMode) -> None:
+        """Sync the associated Active project"""
+        self._client.active_import(project_mode)

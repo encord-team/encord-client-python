@@ -57,6 +57,7 @@ from encord.orm.analytics import (
 )
 from encord.orm.bearer_request import BearerTokenResponse
 from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
+from encord.orm.collection import ActiveProjectImportPayload, ActiveProjectMode
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     AddPrivateDataResponse,
@@ -1605,6 +1606,14 @@ class EncordClientProject(EncordClient):
             return []
 
         return errors.errors or []
+
+    def active_import(self, project_mode: ActiveProjectMode) -> None:
+        self._get_api_client().post(
+            f"active/{self.project_hash}/import",
+            params=None,
+            payload=ActiveProjectImportPayload(project_mode=project_mode),
+            result_type=None,
+        )
 
     def active_sync(self) -> None:
         self._get_api_client().post(

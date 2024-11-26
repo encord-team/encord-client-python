@@ -64,6 +64,13 @@ class ProjectCollectionType(Enum):
     LABEL = "LABEL"
 
 
+class ActiveProjectMode(Enum):
+    DATA = "data"
+    LABEL = "label"
+    METRIC = "metric"
+    ADVANCED = "advanced"
+
+
 class GetProjectCollectionParams(BaseDTO):
     project_hash: Optional[uuid.UUID] = Field(default=None, alias="projectHash")
     collection_uuids: Optional[List[uuid.UUID]] = Field(default=[], alias="uuids")
@@ -129,3 +136,8 @@ class ProjectCollectionBulkItemRequest(BaseDTO):
 
 class ProjectCollectionBulkItemResponse(BaseDTO):
     failed_items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
+
+
+class ActiveProjectImportPayload(BaseDTO):
+    project_mode: ActiveProjectMode
+    video_sampling_rate: Optional[float] = None
