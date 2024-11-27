@@ -1281,3 +1281,10 @@ class Project:
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
         )
+
+    def delete_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> None:
+        ProjectFilterPreset._delete_filter_preset(
+            client=self._client._get_api_client(),
+            project_uuid=self._project_instance.project_hash,
+            filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
+        )
