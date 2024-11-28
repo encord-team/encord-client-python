@@ -810,6 +810,7 @@ class EncordUserClient:
             True, some of the ontologies may have a `None` value for the `"user_role"` key.
         """
         properties_filter = OntologiesFilterParams.from_dict(self.__validate_filter(locals()))
+        properties_filter.include_org_access = include_org_access
         page = self._api_client.get("ontologies", params=properties_filter, result_type=Page[OntologyWithUserRole])
 
         # a hack to be able to share validation code without too much c&p
