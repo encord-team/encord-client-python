@@ -10,18 +10,19 @@ category: "64e481b57b6027003f20aaa0"
 ---
 """
 
+import dataclasses
 import datetime
-from typing import Iterable, List, Union
+from typing import Iterable, List, Optional, Union
 from uuid import UUID
 
-from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.objects.ontology_structure import OntologyStructure
 from encord.orm.group import AddOntologyGroupsPayload, OntologyGroup, RemoveGroupsParams
+from encord.orm.ontology import CreateOrUpdateOntologyPayload
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.utilities.hash_utilities import convert_to_uuid
-from encord.utilities.ontology_user import OntologyUserRole
+from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 
 
 class Ontology:
@@ -30,8 +31,7 @@ class Ontology:
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
-    def __init__(self, querier: Querier, instance: OrmOntology, api_client: ApiClient):
-        self._querier = querier
+    def __init__(self, instance: Union[OrmOntology], api_client: ApiClient):
         self._ontology_instance = instance
         self.api_client = api_client
 
@@ -85,6 +85,10 @@ class Ontology:
         """
         return self._ontology_instance.structure
 
+    @property
+    def user_role(self) -> Optional[OntologyUserRole]:
+        return self._ontology_instance.user_role
+
     def refetch_data(self) -> None:
         """
         The Ontology class will only fetch its properties once. Use this function if you suspect the state of those
@@ -97,13 +101,31 @@ class Ontology:
         Sync local state to the server, if updates are made to structure, title or description fields
         """
         if self._ontology_instance:
-            payload = dict(**self._ontology_instance)
-            payload["editor"] = self._ontology_instance.structure.to_dict()  # we're using internal/legacy name here
-            payload.pop("structure", None)
-            self._querier.basic_put(OrmOntology, self._ontology_instance.ontology_hash, payload)
+            try:
+                structure_dict = self._ontology_instance.structure.to_dict()
+            except ValueError as e:
+                raise ValueError("Can't save an Ontology containing a Classification without any attributes. " + str(e))
 
-    def _get_ontology(self):
-        return self._querier.basic_getter(OrmOntology, self._ontology_instance.ontology_hash)
+            payload = CreateOrUpdateOntologyPayload(
+                title=self.title,
+                description=self.description,
+                editor=structure_dict,
+            )
+
+            self.api_client.put(
+                f"ontologies/{self._ontology_instance.ontology_hash}",
+                params=None,
+                payload=payload,
+            )
+
+    def _get_ontology(self) -> OrmOntology:
+        ontology_model = self.api_client.get(
+            f"/ontologies/{self._ontology_instance.ontology_hash}",
+            params=None,
+            result_type=OntologyWithUserRole,
+        )
+
+        return self._legacy_orm_from_api_payload(ontology_model)
 
     def list_groups(self) -> Iterable[OntologyGroup]:
         """
@@ -151,3 +173,20 @@ class Ontology:
             group_hash = [group_hash]
         params = RemoveGroupsParams(group_hash_list=group_hash)
         self.api_client.delete(f"ontologies/{ontology_hash}/groups", params=params, result_type=None)
+
+    @staticmethod
+    def _legacy_orm_from_api_payload(
+        ontology_with_user_role: OntologyWithUserRole,
+    ) -> OrmOntology:
+        flattened = ontology_with_user_role.to_dict(
+            by_alias=False,  # we need 'python' names for the legacy ORM
+        )
+        flattened["ontology_hash"] = flattened.pop("ontology_uuid")  # backwards compat
+        return OrmOntology.from_dict(flattened)
+
+    @staticmethod
+    def _from_api_payload(
+        ontology_with_user_role: OntologyWithUserRole,
+        api_client: ApiClient,
+    ) -> "Ontology":
+        return Ontology(Ontology._legacy_orm_from_api_payload(ontology_with_user_role), api_client)
