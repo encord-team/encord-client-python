@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List, NamedTuple, Optional, Union
 
-from encord.objects.bitmask_operations import (
+from encord.common.bitmask_operations import (
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,

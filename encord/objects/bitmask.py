@@ -12,10 +12,10 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Protocol, Sequence, Tuple, Union, runtime_checkable
+from typing import Any, Dict, Optional, Protocol, Union, runtime_checkable
 
+from encord.common.bitmask_operations import deserialise_bitmask, serialise_bitmask
 from encord.exceptions import EncordException
-from encord.objects.bitmask_operations import deserialise_bitmask, serialise_bitmask, transpose_bytearray
 from encord.orm.base_dto import BaseDTO
 
 
