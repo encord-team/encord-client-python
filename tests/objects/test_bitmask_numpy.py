@@ -3,7 +3,7 @@ import numpy as np
 from encord.objects.bitmask import (
     BitmaskCoordinates,
 )
-from encord.objects.bitmask_operations.bitmask_operations import (
+from encord.objects.bitmask_operations.bitmask_operations_numpy import (
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,
