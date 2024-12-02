@@ -1,6 +1,6 @@
 import numpy as np
 
-from encord.common.bitmask_operations import (
+from encord.common.bitmask_operations.bitmask_operations_numpy import (
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,
