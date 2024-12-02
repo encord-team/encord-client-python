@@ -80,15 +80,7 @@ def test_mask_rle_mask_roundtrip():
     assert np.allclose(orig_mask, new_mask)
 
 
-def test_transpose_bytearray_python():
-    mask = b"\00\00\00\00\00\01\01\00\00\00\00\00"
-    shape = (3, 4)
-    expected = b"\x00\x00\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00"
-    ans = transpose_bytearray(mask, shape)
-    assert ans == expected
-
-
-def test_transpose_bytearray_numpy():
+def test_transpose_bytearray():
     mask = b"\00\00\00\00\00\01\01\00\00\00\00\00"
     shape = (3, 4)
     expected = b"\x00\x00\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00"
