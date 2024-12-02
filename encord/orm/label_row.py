@@ -260,7 +260,6 @@ class LabelRowMetadata(Formatter):
     data_title: str
     data_type: str
     data_link: Optional[str]
-    backing_item_uuid: str
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
     """Can be `None` for TMS2 projects"""
@@ -291,6 +290,8 @@ class LabelRowMetadata(Formatter):
     file_type: Optional[str] = None
     """Only available for certain read requests"""
     is_valid: bool = True
+
+    backing_item_uuid: Optional[str] = None
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
