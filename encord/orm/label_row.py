@@ -396,7 +396,7 @@ class LabelRowMetadataDTO(BaseDTO):
     data_title: str
     data_type: str
     data_link: Optional[str] = None
-    backing_item_uuid: str
+
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
     """Can be `None` for TMS2 projects"""
@@ -427,6 +427,8 @@ class LabelRowMetadataDTO(BaseDTO):
     file_type: Optional[str] = None
     """Only available for certain read requests"""
     is_valid: bool = True
+
+    backing_item_uuid: Optional[str] = None
 
 
 def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRowMetadataDTO) -> LabelRowMetadata:
