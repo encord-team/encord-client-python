@@ -43,6 +43,7 @@ from encord.objects.attributes import Attribute, _get_attribute_by_hash
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    AudioCoordinates,
     Coordinates,
 )
 from encord.objects.frames import (
@@ -424,13 +425,9 @@ class ObjectInstance:
             self.check_within_range(range_to_add.end)
         self._range_manager.add_ranges(ranges_to_add)
 
-        if self.is_assigned_to_label_row():
-            assert self._parent is not None
-            self._parent._add_ranges_to_classification(self.ontology_item, ranges_to_add)
-
     def set_for_frames(
         self,
-        coordinates: Coordinates | None,
+        coordinates: Coordinates,
         frames: Frames = 0,
         *,
         overwrite: bool = False,
@@ -470,8 +467,8 @@ class ObjectInstance:
             is_deleted: Should only be set by internal functions.
         """
         if self._range_only:
-            if coordinates is not None:
-                raise RuntimeError("Expecting no coordinates")
+            if not isinstance(coordinates, AudioCoordinates):
+                raise LabelRowError("Expecting range only coordinate type")
             self._set_for_ranges(
                 frames=frames,
             )
@@ -484,7 +481,7 @@ class ObjectInstance:
 
             if existing_frame_data is None:
                 existing_frame_data = ObjectInstance.FrameData(
-                    coordinates=None, object_frame_instance_info=ObjectInstance.FrameInfo()
+                    coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
                 )
                 self._frames_to_instance_data[0] = existing_frame_data
 
@@ -500,8 +497,8 @@ class ObjectInstance:
                 )
 
         else:
-            if coordinates is None:
-                raise RuntimeError("Expecting coordinates")
+            if isinstance(coordinates, AudioCoordinates):
+                raise LabelRowError("Cannot add audio coordinates to object with frames")
             frames_list = frames_class_to_frames_list(frames)
 
             for frame in frames_list:
@@ -605,7 +602,6 @@ class ObjectInstance:
             return self._range_manager.get_ranges_as_frames()
         else:
             return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
-
 
     def remove_from_frames(self, frames: Frames) -> None:
         """
