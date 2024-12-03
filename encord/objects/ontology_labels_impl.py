@@ -2039,7 +2039,7 @@ class LabelRowV2:
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
             file_type=label_row_dict.get("file_type", None),
             is_valid=bool(label_row_dict.get("is_valid", True)),
-            backing_item_uuid=label_row_dict.get("backing_item_uuid"),
+            backing_item_uuid=label_row_dict.get("backing_item_uuid", self.backing_item_uuid),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
