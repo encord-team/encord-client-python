@@ -50,7 +50,7 @@ from encord.http.utils import (
     upload_to_signed_url_list,
 )
 from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
+from encord.http.v2.payloads import BulkResponse
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
@@ -305,9 +305,9 @@ class EncordClientDataset(EncordClient):
 
         return [DatasetUser.from_dict(user) for user in users]
 
-    def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
+    def list_groups(self, dataset_hash: uuid.UUID) -> BulkResponse[DatasetGroup]:
         return self._get_api_client().get(
-            f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup]
+            f"datasets/{dataset_hash}/groups", params=None, result_type=BulkResponse[DatasetGroup]
         )
 
     def add_groups(self, dataset_hash: str, group_hash: List[uuid.UUID], user_role: DatasetUserRole) -> None:
@@ -954,9 +954,9 @@ class EncordClientProject(EncordClient):
 
         return [ProjectUser.from_dict(user) for user in users]
 
-    def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
+    def list_groups(self, project_hash: uuid.UUID) -> BulkResponse[ProjectGroup]:
         return self._get_api_client().get(
-            f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup]
+            f"projects/{project_hash}/groups", params=None, result_type=BulkResponse[ProjectGroup]
         )
 
     def add_groups(self, project_hash: uuid.UUID, group_hash: List[uuid.UUID], user_role: ProjectUserRole) -> None:
@@ -1134,7 +1134,7 @@ class EncordClientProject(EncordClient):
     def list_project_datasets(self, project_hash: UUID) -> Iterable[ProjectDataset]:
         return (
             self._get_api_client()
-            .get(f"projects/{project_hash}/datasets", params=None, result_type=Page[ProjectDataset])
+            .get(f"projects/{project_hash}/datasets", params=None, result_type=BulkResponse[ProjectDataset])
             .results
         )
 

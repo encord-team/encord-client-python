@@ -31,7 +31,7 @@ from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, 
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
 from encord.http.utils import CloudUploadSettings, _upload_single_file
 from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
+from encord.http.v2.payloads import BulkResponse
 from encord.orm.dataset import LongPollingStatus
 from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, StorageFolderGroup
 from encord.orm.storage import (
@@ -1020,7 +1020,7 @@ class StorageFolder:
         List all groups that have access to this folder.
         """
         page = self._api_client.get(
-            f"/storage/folders/{self.uuid}/groups", params=None, result_type=Page[StorageFolderGroup]
+            f"/storage/folders/{self.uuid}/groups", params=None, result_type=BulkResponse[StorageFolderGroup]
         )
 
         yield from page.results
@@ -1086,7 +1086,7 @@ class StorageFolder:
                 count=count,
                 frames_subfolder_name=frames_subfolder_name,
             ),
-            result_type=Page[orm_storage.UploadSignedUrl],
+            result_type=BulkResponse[orm_storage.UploadSignedUrl],
         )
 
         return urls.results
@@ -1334,7 +1334,7 @@ class StorageFolder:
             "storage/folders/patch-bulk",
             params=None,
             payload=orm_storage.PatchFoldersBulkPayload(folder_patches=folder_patches),
-            result_type=Page[orm_storage.StorageFolder],
+            result_type=BulkResponse[orm_storage.StorageFolder],
         ).results
 
     @staticmethod
@@ -1589,7 +1589,7 @@ class StorageItem:
         child_items = self._api_client.get(
             f"/storage/folders/{self.parent_folder_uuid}/items/{self.uuid}/child-items",
             params=orm_storage.GetChildItemsParams(sign_urls=get_signed_urls),
-            result_type=Page[orm_storage.StorageItem],
+            result_type=BulkResponse[orm_storage.StorageItem],
         ).results
 
         return [StorageItem(self._api_client, item) for item in child_items]
@@ -1737,7 +1737,7 @@ class StorageItem:
             "storage/items/get-bulk",
             params=None,
             payload=GetItemsBulkPayload(item_uuids=item_uuids, sign_urls=get_signed_url),
-            result_type=Page[orm_storage.StorageItem],
+            result_type=BulkResponse[orm_storage.StorageItem],
         )
         return [StorageItem(api_client, orm_item) for orm_item in orm_items.results]
 
@@ -1750,7 +1750,7 @@ class StorageItem:
             "storage/items/patch-bulk",
             params=None,
             payload=orm_storage.PatchItemsBulkPayload(item_patches=item_patches),
-            result_type=Page[orm_storage.StorageItem],
+            result_type=BulkResponse[orm_storage.StorageItem],
         ).results
 
     def _set_orm_item(self, orm_item: orm_storage.StorageItem) -> None:

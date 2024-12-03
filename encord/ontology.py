@@ -16,7 +16,7 @@ from typing import Iterable, List, Optional, Union
 from uuid import UUID
 
 from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
+from encord.http.v2.payloads import BulkResponse
 from encord.objects.ontology_structure import OntologyStructure
 from encord.orm.group import AddOntologyGroupsPayload, OntologyGroup, RemoveGroupsParams
 from encord.orm.ontology import CreateOrUpdateOntologyPayload
@@ -132,7 +132,9 @@ class Ontology:
         List all groups that have access to a particular ontology.
         """
         ontology_hash = convert_to_uuid(self.ontology_hash)
-        page = self.api_client.get(f"ontologies/{ontology_hash}/groups", params=None, result_type=Page[OntologyGroup])
+        page = self.api_client.get(
+            f"ontologies/{ontology_hash}/groups", params=None, result_type=BulkResponse[OntologyGroup]
+        )
 
         yield from page.results
 

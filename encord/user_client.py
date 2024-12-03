@@ -44,7 +44,7 @@ from encord.http.utils import (
     upload_to_signed_url_list,
 )
 from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
+from encord.http.v2.payloads import BulkResponse
 from encord.metadata_schema import MetadataSchema
 from encord.objects import OntologyStructure
 from encord.objects.common import (
@@ -811,7 +811,9 @@ class EncordUserClient:
         """
         properties_filter = OntologiesFilterParams.from_dict(self.__validate_filter(locals()))
         properties_filter.include_org_access = include_org_access
-        page = self._api_client.get("ontologies", params=properties_filter, result_type=Page[OntologyWithUserRole])
+        page = self._api_client.get(
+            "ontologies", params=properties_filter, result_type=BulkResponse[OntologyWithUserRole]
+        )
 
         # a hack to be able to share validation code without too much c&p
         retval: List[Dict] = []
@@ -882,7 +884,7 @@ class EncordUserClient:
         """
         List all groups belonging to the user's current organization.
         """
-        page = self._api_client.get("user/current-organisation/groups", params=None, result_type=Page[OrmGroup])
+        page = self._api_client.get("user/current-organisation/groups", params=None, result_type=BulkResponse[OrmGroup])
         yield from page.results
 
     def deidentify_dicom_files_start(
