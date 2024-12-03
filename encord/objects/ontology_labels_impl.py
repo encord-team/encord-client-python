@@ -46,6 +46,7 @@ from encord.objects.constants import (  # pylint: disable=unused-import # for ba
     DEFAULT_MANUAL_ANNOTATION,
 )
 from encord.objects.coordinates import (
+    AudioCoordinates,
     BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
@@ -1631,17 +1632,11 @@ class LabelRowV2:
             # At some point, we also want to add these to the other modalities
             if self.data_type == DataType.AUDIO:
                 annotation = obj.get_annotations()[0]
-                ret[obj.object_hash]["range"] = [
-                    [range.start, range.end] for range in obj.range_list
-                ]
+                ret[obj.object_hash]["range"] = [[range.start, range.end] for range in obj.range_list]
                 ret[obj.object_hash]["createdBy"] = annotation.created_by
-                ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(
-                    DATETIME_LONG_STRING_FORMAT
-                )
+                ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
                 ret[obj.object_hash]["lastEditedBy"] = annotation.last_edited_by
-                ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(
-                    DATETIME_LONG_STRING_FORMAT
-                )
+                ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
                 ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
 
         return ret
@@ -2147,11 +2142,8 @@ class LabelRowV2:
             for range_elem in object_answer["range"]:
                 ranges.append(Range(range_elem[0], range_elem[1]))
 
-            object_instance = self._create_new_object_instance_with_ranges(
-                object_answer, ranges
-            )
+            object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges)
             self.add_object_instance(object_instance)
-
 
     def _add_object_instances_from_objects(
         self,
@@ -2211,26 +2203,22 @@ class LabelRowV2:
 
     # This is only to be used by non-frame modalities (e.g. Audio)
     def _create_new_object_instance_with_ranges(
-        self, object_answer: dict, ranges: Ranges,
+        self,
+        object_answer: dict,
+        ranges: Ranges,
     ) -> ObjectInstance:
         feature_hash = object_answer["featureHash"]
         object_hash = object_answer["objectHash"]
 
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Object)
 
-        print(object_answer)
-        frame_info_dict = {
-            k: v for k, v in object_answer.items()
-            if v is not None
-        }
+        frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
         frame_info_dict.setdefault("confidence", 1.0)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
 
-        object_instance = ObjectInstance(
-            label_class, object_hash=object_hash, range_only=True
-        )
+        object_instance = ObjectInstance(label_class, object_hash=object_hash, range_only=True)
         object_instance.set_for_frames(
-            None,
+            AudioCoordinates(),
             ranges,
             created_at=object_frame_instance_info.created_at,
             created_by=object_frame_instance_info.created_by,
