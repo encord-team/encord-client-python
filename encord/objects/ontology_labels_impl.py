@@ -410,9 +410,9 @@ class LabelRowV2:
     @property
     def backing_item_uuid(self) -> Optional[str]:
         """
-        Returns the unique id for the backing storage item for the row
-
-        Will always be present in response from server but marked optional for backwards compatibility.
+        Returns the unique identifier (UUID) for the backing storage item associated with this label row.
+        The backing item UUID represents the storage reference for the data linked to the row.
+        While it is always included in server responses, it is marked as optional for backward compatibility with earlier versions.
 
         Returns:
             Optional[str]: The backing storage item id or None if not found.
