@@ -1627,6 +1627,23 @@ class LabelRowV2:
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
             }
+
+            # At some point, we also want to add these to the other modalities
+            if self.data_type == DataType.AUDIO:
+                annotation = obj.get_annotations()[0]
+                ret[obj.object_hash]["range"] = [
+                    [range.start, range.end] for range in obj.range_list
+                ]
+                ret[obj.object_hash]["createdBy"] = annotation.created_by
+                ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(
+                    DATETIME_LONG_STRING_FORMAT
+                )
+                ret[obj.object_hash]["lastEditedBy"] = annotation.last_edited_by
+                ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(
+                    DATETIME_LONG_STRING_FORMAT
+                )
+                ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
+
         return ret
 
     def _to_object_actions(self) -> Dict[str, Any]:

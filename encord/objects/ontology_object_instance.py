@@ -475,16 +475,29 @@ class ObjectInstance:
             self._set_for_ranges(
                 frames=frames,
             )
-            """
-            overwrite=overwrite,
-            created_at=created_at,
-            created_by=created_by,
-            confidence=confidence,
-            manual_annotation=manual_annotation,
-            last_edited_at=last_edited_at,
-            last_edited_by=last_edited_by,
-            reviews=reviews,
-            """
+            existing_frame_data = self._frames_to_instance_data.get(0)
+
+            if overwrite is False and existing_frame_data is not None:
+                raise LabelRowError(
+                    "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
+                )
+
+            if existing_frame_data is None:
+                existing_frame_data = ObjectInstance.FrameData(
+                    coordinates=None, object_frame_instance_info=ObjectInstance.FrameInfo()
+                )
+                self._frames_to_instance_data[0] = existing_frame_data
+
+                existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                    created_at=created_at,
+                    created_by=created_by,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    reviews=reviews,
+                    is_deleted=is_deleted,
+                )
 
         else:
             if coordinates is None:
@@ -537,6 +550,11 @@ class ObjectInstance:
         Raises:
             LabelRowError: If the frame is not present in the label row.
         """
+        if self._range_only and frame != 0:
+            raise LabelRowError(
+                "This Object Instance only works on ranges, technically only has one 'frame'"
+                "Use `get_annotation(0)` to get the frame data of the first frame."
+            )
         if isinstance(frame, str):
             # TODO: this check should be consistent for both string and integer frames,
             #       but currently it is not possible due to the parsing logic
@@ -567,10 +585,6 @@ class ObjectInstance:
         ret._dynamic_answer_manager = self._dynamic_answer_manager.copy()
         return ret
 
-    def _assert_frame_only(self) -> None:
-        if self._range_only:
-            raise RuntimeError("Not supported")
-
     def get_annotations(self) -> List[Annotation]:
         """
         Get all annotations for the object instance on all frames it has been placed on.
@@ -578,7 +592,6 @@ class ObjectInstance:
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
-        self._assert_frame_only()
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def get_annotation_frames(self) -> set[int]:
