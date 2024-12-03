@@ -305,7 +305,7 @@ class LabelRowMetadata(Formatter):
 
         annotation_task_status = (
             AnnotationTaskStatus(json_dict["annotation_task_status"])
-            if json_dict["annotation_task_status"] is not None
+            if json_dict.get("annotation_task_status", None) is not None
             else None
         )
 
@@ -339,7 +339,7 @@ class LabelRowMetadata(Formatter):
             is_valid=bool(json_dict.get("is_valid", True)),
             branch_name=json_dict["branch_name"],
             backing_item_uuid=UUID(json_dict["backing_item_uuid"])
-            if json_dict["backing_item_uuid"] is not None
+            if json_dict.get("backing_item_uuid", None) is not None
             else None,
         )
 
