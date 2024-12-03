@@ -35,6 +35,7 @@ class Shape(StringEnum):
     POLYLINE = "polyline"
     ROTATABLE_BOUNDING_BOX = "rotatable_bounding_box"
     BITMASK = "bitmask"
+    AUDIO = "audio"
 
 
 class DeidentifyRedactTextMode(Enum):

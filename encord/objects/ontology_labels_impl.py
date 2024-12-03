@@ -820,7 +820,7 @@ class LabelRowV2:
             LabelRowError: If the object instance is already part of another LabelRowV2.
         """
 
-        self._method_not_supported_for_audio()
+        self._method_not_supported_for_audio(range_only=object_instance.is_range_only())
 
         self._check_labelling_is_initalised()
 
@@ -844,8 +844,9 @@ class LabelRowV2:
         self._objects_map[object_hash] = object_instance
         object_instance._parent = self
 
-        frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
-        self._add_to_frame_to_hashes_map(object_instance, frames)
+        if not object_instance.is_range_only():
+            frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
+            self._add_to_frame_to_hashes_map(object_instance, frames)
 
     def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
         """
@@ -2060,6 +2061,7 @@ class LabelRowV2:
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
         classification_answers = label_row_dict["classification_answers"]
+        object_answers = label_row_dict["object_answers"]
 
         for data_unit in label_row_dict["data_units"].values():
             data_type = DataType(label_row_dict["data_type"])
@@ -2072,6 +2074,7 @@ class LabelRowV2:
                     classification_answers,
                     frame,
                 )
+                self._add_objects_answers(object_answers)
 
             elif data_type == DataType.VIDEO or data_type == DataType.DICOM or data_type == DataType.NIFTI:
                 for frame, frame_data in data_unit["labels"].items():
@@ -2081,14 +2084,16 @@ class LabelRowV2:
                         frame_data["classifications"], classification_answers, frame_num
                     )
                     self._add_frame_metadata(frame_num, frame_data.get("metadata"))
+                self._add_objects_answers(object_answers)
 
             elif data_type == DataType.DICOM_STUDY:
-                pass
+                pass  # TODO: _add_object_answers a NO-OP here as well?
 
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
             elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
+                self._add_objects_instances_from_objects_without_frames(object_answers)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
 
             else:
@@ -2096,7 +2101,6 @@ class LabelRowV2:
 
             self._add_data_unit_metadata(data_type, data_unit.get("metadata"))
 
-        self._add_objects_answers(label_row_dict)
         self._add_action_answers(label_row_dict)
 
     def _add_frame_metadata(self, frame: int, metadata: Optional[Dict[str, str]]):
@@ -2117,6 +2121,21 @@ class LabelRowV2:
                 f"Unexpected metadata for the data type: {data_type}. Please update the Encord SDK to the latest version."
             )
 
+    def _add_objects_instances_from_objects_without_frames(
+        self,
+        object_answers: dict,
+    ):
+        for object_answer in object_answers.values():
+            ranges: Ranges = []
+            for range_elem in object_answer["range"]:
+                ranges.append(Range(range_elem[0], range_elem[1]))
+
+            object_instance = self._create_new_object_instance_with_ranges(
+                object_answer, ranges
+            )
+            self.add_object_instance(object_instance)
+
+
     def _add_object_instances_from_objects(
         self,
         objects_list: List[dict],
@@ -2130,8 +2149,8 @@ class LabelRowV2:
             else:
                 self._add_coordinates_to_object_instance(frame_object_label, frame)
 
-    def _add_objects_answers(self, label_row_dict: dict):
-        for answer in label_row_dict["object_answers"].values():
+    def _add_objects_answers(self, object_answers: dict):
+        for answer in object_answers.values():
             object_hash = answer["objectHash"]
             # In cases when we had an object, added some attributes for this object, and then removed the object,
             # in some label rows we still have such "orphaned" answers.
@@ -2171,6 +2190,44 @@ class LabelRowV2:
             reviews=object_frame_instance_info.reviews,
             is_deleted=object_frame_instance_info.is_deleted,
         )
+        return object_instance
+
+    # This is only to be used by non-frame modalities (e.g. Audio)
+    def _create_new_object_instance_with_ranges(
+        self, object_answer: dict, ranges: Ranges,
+    ) -> ObjectInstance:
+        feature_hash = object_answer["featureHash"]
+        object_hash = object_answer["objectHash"]
+
+        label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Object)
+
+        print(object_answer)
+        frame_info_dict = {
+            k: v for k, v in object_answer.items()
+            if v is not None
+        }
+        frame_info_dict.setdefault("confidence", 1.0)
+        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
+
+        object_instance = ObjectInstance(
+            label_class, object_hash=object_hash, range_only=True
+        )
+        object_instance.set_for_frames(
+            None,
+            ranges,
+            created_at=object_frame_instance_info.created_at,
+            created_by=object_frame_instance_info.created_by,
+            confidence=object_frame_instance_info.confidence,
+            manual_annotation=object_frame_instance_info.manual_annotation,
+            last_edited_at=object_frame_instance_info.last_edited_at,
+            last_edited_by=object_frame_instance_info.last_edited_by,
+            reviews=object_frame_instance_info.reviews,
+            overwrite=True,
+            # Always overwrite during label row dict parsing, as older dicts known to have duplicates
+        )
+        answer_list = object_answer["classifications"]
+        object_instance.set_answer_from_list(answer_list)
+
         return object_instance
 
     def _add_coordinates_to_object_instance(
@@ -2237,8 +2294,8 @@ class LabelRowV2:
     ):
         for classification_answer in classification_answers.values():
             ranges: Ranges = []
-            for range in classification_answer["range"]:
-                ranges.append(Range(range[0], range[1]))
+            for range_elem in classification_answer["range"]:
+                ranges.append(Range(range_elem[0], range_elem[1]))
 
             classification_instance = self._create_new_classification_instance_with_ranges(
                 classification_answer, ranges
@@ -2346,8 +2403,8 @@ class LabelRowV2:
                 "to do so first."
             )
 
-    def _method_not_supported_for_audio(self):
-        if self.data_type == DataType.AUDIO:
+    def _method_not_supported_for_audio(self, range_only: bool = False):
+        if self.data_type == DataType.AUDIO and not range_only:
             raise LabelRowError("This method is not supported for audio.")
 
     def __repr__(self) -> str:
