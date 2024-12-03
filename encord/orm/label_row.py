@@ -338,7 +338,9 @@ class LabelRowMetadata(Formatter):
             file_type=json_dict.get("file_type"),
             is_valid=bool(json_dict.get("is_valid", True)),
             branch_name=json_dict["branch_name"],
-            backing_item_uuid=json_dict.get("backing_item_uuid", None),
+            backing_item_uuid=UUID(json_dict["backing_item_uuid"])
+            if json_dict["backing_item_uuid"] is not None
+            else None,
         )
 
     @classmethod
