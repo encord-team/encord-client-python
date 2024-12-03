@@ -107,7 +107,7 @@ def test_label_rows_property_queries_metadata(project_client_mock: MagicMock, pr
 def test_project_datasets(api_get: MagicMock, project: Project) -> None:
     dataset_hash = uuid.uuid4()
     expected_dataset = ProjectDataset(dataset_hash=dataset_hash, title="test dataset", description="my test dataset")
-    api_get.return_value = Page(results=[expected_dataset])
+    api_get.return_value = Page(results=[expected_dataset], next_page_token=None)
 
     assert len(list(project.list_datasets())) == 1
     assert list(project.list_datasets()) == [expected_dataset]
