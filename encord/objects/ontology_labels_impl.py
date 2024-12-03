@@ -408,6 +408,19 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_num_channels
 
     @property
+    def backing_item_uuid(self) -> Optional[str]:
+        """
+        Returns the unique identifier (UUID) for the backing storage item associated with this label row.
+        The backing item UUID represents the storage reference for the data linked to the row.
+        While it is always included in server responses, it is marked as optional for backward compatibility with earlier versions.
+
+        Returns:
+            Optional[str]: The backing storage item id or None if not found.
+        """
+        # TODO: Mark required in 0.2 release
+        return self._label_row_read_only_data.backing_item_uuid
+
+    @property
     def priority(self) -> Optional[float]:
         """
         Returns the workflow priority for the task associated with the data unit.
@@ -1576,6 +1589,7 @@ class LabelRowV2:
         last_edited_at: Optional[datetime]
         data_hash: str
         data_type: DataType
+        backing_item_uuid: Optional[str]
         label_status: LabelStatus
         annotation_task_status: Optional[AnnotationTaskStatus]
         workflow_graph_node: Optional[WorkflowGraphNode]
@@ -1595,7 +1609,7 @@ class LabelRowV2:
         data_link: Optional[str]
         priority: Optional[float]
         file_type: Optional[str]
-        client_metadata: Optional[dict]
+        client_metadata: Optional[Dict[str, Any]]
         images_data: Optional[List[LabelRowV2.LabelRowReadOnlyDataImagesDataEntry]]
         branch_name: str
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
@@ -1947,6 +1961,7 @@ class LabelRowV2:
             client_metadata=label_row_metadata.client_metadata,
             file_type=label_row_metadata.file_type,
             is_valid=label_row_metadata.is_valid,
+            backing_item_uuid=label_row_metadata.backing_item_uuid,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -2033,6 +2048,7 @@ class LabelRowV2:
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
             file_type=label_row_dict.get("file_type", None),
             is_valid=bool(label_row_dict.get("is_valid", True)),
+            backing_item_uuid=label_row_dict.get("backing_item_uuid", self.backing_item_uuid),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
