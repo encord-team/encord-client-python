@@ -5,6 +5,7 @@ from collections import OrderedDict
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from pydantic import Field
 
@@ -291,7 +292,7 @@ class LabelRowMetadata(Formatter):
     """Only available for certain read requests"""
     is_valid: bool = True
 
-    backing_item_uuid: Optional[str] = None
+    backing_item_uuid: Optional[UUID] = None
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -428,7 +429,7 @@ class LabelRowMetadataDTO(BaseDTO):
     """Only available for certain read requests"""
     is_valid: bool = True
 
-    backing_item_uuid: Optional[str] = None
+    backing_item_uuid: Optional[UUID] = None
 
 
 def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRowMetadataDTO) -> LabelRowMetadata:
