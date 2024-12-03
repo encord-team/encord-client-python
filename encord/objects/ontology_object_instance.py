@@ -29,6 +29,7 @@ from typing import (
     Union,
 )
 
+from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
@@ -69,9 +70,8 @@ class ObjectInstance:
     An object instance is an object that has coordinates and can be placed on one or multiple frames in a label row.
     """
 
-    def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
+    def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None, range_only: bool = False):
         self._ontology_object = ontology_object
-        self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
         self._object_hash = object_hash or short_uuid_str()
         self._parent: Optional[LabelRowV2] = None
 
@@ -79,6 +79,13 @@ class ObjectInstance:
         # feature_node_hash of attribute to the answer.
 
         self._dynamic_answer_manager = DynamicAnswerManager(self)
+
+        # Only used for non-frame entities
+        self._range_only = range_only
+        self._range_manager: RangeManager = RangeManager()
+
+        # Only used for frame entities
+        self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
 
     def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
         """
@@ -135,6 +142,22 @@ class ObjectInstance:
             return float("inf")
         else:
             return self._parent.number_of_frames
+
+    @property
+    def range_list(self) -> Ranges:
+        if self._range_only:
+            return self._range_manager.get_ranges()
+        else:
+            raise LabelRowError(
+                "No ranges available for this classification instance."
+                "Please ensure the classification instance was created with "
+                "the range_only property to True. "
+                "You can do ClassificationInstance(range_only=True) or "
+                "Classification.create_instance(range_only=True) to achieve this."
+            )
+
+    def is_range_only(self) -> bool:
+        return self._range_only
 
     def get_answer(
         self,
@@ -391,9 +414,23 @@ class ObjectInstance:
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
+    def _set_for_ranges(
+        self,
+        frames: Frames,
+    ):
+        new_range_manager = RangeManager(frame_class=frames)
+        ranges_to_add = new_range_manager.get_ranges()
+        for range_to_add in ranges_to_add:
+            self.check_within_range(range_to_add.end)
+        self._range_manager.add_ranges(ranges_to_add)
+
+        if self.is_assigned_to_label_row():
+            assert self._parent is not None
+            self._parent._add_ranges_to_classification(self.ontology_item, ranges_to_add)
+
     def set_for_frames(
         self,
-        coordinates: Coordinates,
+        coordinates: Coordinates | None,
         frames: Frames = 0,
         *,
         overwrite: bool = False,
@@ -432,39 +469,59 @@ class ObjectInstance:
             reviews: Should only be set by internal functions.
             is_deleted: Should only be set by internal functions.
         """
-        frames_list = frames_class_to_frames_list(frames)
-
-        for frame in frames_list:
-            existing_frame_data = self._frames_to_instance_data.get(frame)
-
-            if overwrite is False and existing_frame_data is not None:
-                raise LabelRowError(
-                    "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
-                )
-
-            check_coordinate_type(coordinates, self._ontology_object)
-            self.check_within_range(frame)
-
-            if existing_frame_data is None:
-                existing_frame_data = ObjectInstance.FrameData(
-                    coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
-                )
-                self._frames_to_instance_data[frame] = existing_frame_data
-
-            existing_frame_data.object_frame_instance_info.update_from_optional_fields(
-                created_at=created_at,
-                created_by=created_by,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-                reviews=reviews,
-                is_deleted=is_deleted,
+        if self._range_only:
+            if coordinates is not None:
+                raise RuntimeError("Expecting no coordinates")
+            self._set_for_ranges(
+                frames=frames,
             )
-            existing_frame_data.coordinates = coordinates
+            """
+            overwrite=overwrite,
+            created_at=created_at,
+            created_by=created_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            reviews=reviews,
+            """
 
-            if self._parent:
-                self._parent.add_to_single_frame_to_hashes_map(self, frame)
+        else:
+            if coordinates is None:
+                raise RuntimeError("Expecting coordinates")
+            frames_list = frames_class_to_frames_list(frames)
+
+            for frame in frames_list:
+                existing_frame_data = self._frames_to_instance_data.get(frame)
+
+                if overwrite is False and existing_frame_data is not None:
+                    raise LabelRowError(
+                        "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
+                    )
+
+                check_coordinate_type(coordinates, self._ontology_object)
+                self.check_within_range(frame)
+
+                if existing_frame_data is None:
+                    existing_frame_data = ObjectInstance.FrameData(
+                        coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+                    )
+                    self._frames_to_instance_data[frame] = existing_frame_data
+
+                existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                    created_at=created_at,
+                    created_by=created_by,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    reviews=reviews,
+                    is_deleted=is_deleted,
+                )
+                existing_frame_data.coordinates = coordinates
+
+                if self._parent:
+                    self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
@@ -510,6 +567,10 @@ class ObjectInstance:
         ret._dynamic_answer_manager = self._dynamic_answer_manager.copy()
         return ret
 
+    def _assert_frame_only(self) -> None:
+        if self._range_only:
+            raise RuntimeError("Not supported")
+
     def get_annotations(self) -> List[Annotation]:
         """
         Get all annotations for the object instance on all frames it has been placed on.
@@ -517,7 +578,21 @@ class ObjectInstance:
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
+        self._assert_frame_only()
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
+
+    def get_annotation_frames(self) -> set[int]:
+        """
+        Get all annotations for the object instance on all frames it has been placed on.
+
+        Returns:
+            List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
+        """
+        if self._range_only:
+            return self._range_manager.get_ranges_as_frames()
+        else:
+            return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
+
 
     def remove_from_frames(self, frames: Frames) -> None:
         """
@@ -526,12 +601,15 @@ class ObjectInstance:
         Args:
             frames: The frames from which to remove the object instance.
         """
-        frames_list = frames_class_to_frames_list(frames)
-        for frame in frames_list:
-            self._frames_to_instance_data.pop(frame)
+        if self._range_only:
+            raise RuntimeError("NYI")
+        else:
+            frames_list = frames_class_to_frames_list(frames)
+            for frame in frames_list:
+                self._frames_to_instance_data.pop(frame)
 
-        if self._parent:
-            self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
+            if self._parent:
+                self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
 
     def is_valid(self) -> None:
         """
@@ -540,8 +618,12 @@ class ObjectInstance:
         Raises:
             LabelRowError: If the ObjectInstance is not on any frames.
         """
-        if len(self._frames_to_instance_data) == 0:
-            raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+        if self._range_only:
+            if len(self._range_manager.get_ranges()) == 0:
+                raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+        else:
+            if len(self._frames_to_instance_data) == 0:
+                raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
 
         self.are_dynamic_answers_valid()
 
@@ -553,7 +635,7 @@ class ObjectInstance:
             LabelRowError: If there are dynamic answers on frames without coordinates.
         """
         dynamic_frames = set(self._dynamic_answer_manager.frames())
-        local_frames = {annotation.frame for annotation in self.get_annotations()}
+        local_frames = self.get_annotation_frames()
 
         if not len(dynamic_frames - local_frames) == 0:
             raise LabelRowError(
