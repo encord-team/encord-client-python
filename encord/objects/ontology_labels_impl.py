@@ -17,6 +17,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
+from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
@@ -408,14 +409,14 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_num_channels
 
     @property
-    def backing_item_uuid(self) -> Optional[str]:
+    def backing_item_uuid(self) -> Optional[UUID]:
         """
         Returns the unique identifier (UUID) for the backing storage item associated with this label row.
-        The backing item UUID represents the storage reference for the data linked to the row.
+
         While it is always included in server responses, it is marked as optional for backward compatibility with earlier versions.
 
         Returns:
-            Optional[str]: The backing storage item id or None if not found.
+            Optional[UUID]: The backing storage item id or None if not found.
         """
         # TODO: Mark required in 0.2 release
         return self._label_row_read_only_data.backing_item_uuid
@@ -1589,7 +1590,7 @@ class LabelRowV2:
         last_edited_at: Optional[datetime]
         data_hash: str
         data_type: DataType
-        backing_item_uuid: Optional[str]
+        backing_item_uuid: Optional[UUID]
         label_status: LabelStatus
         annotation_task_status: Optional[AnnotationTaskStatus]
         workflow_graph_node: Optional[WorkflowGraphNode]
