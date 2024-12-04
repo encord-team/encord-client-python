@@ -11,6 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import datetime
+import logging
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
@@ -49,6 +50,8 @@ from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
+
+logger = logging.getLogger(__name__)
 
 
 class Project:
@@ -1231,7 +1234,9 @@ class Project:
     def active_sync(self) -> None:
         """Sync the associated Active project"""
         self._client.active_sync()
+        logger.info("Sync initiated in Active, please check the app to see progress")
 
     def active_import(self, project_mode: ActiveProjectMode) -> None:
         """Sync the associated Active project"""
         self._client.active_import(project_mode)
+        logger.info("Import initiated in Active, please check the app to see progress")
