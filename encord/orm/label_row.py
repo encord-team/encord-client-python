@@ -5,6 +5,7 @@ from collections import OrderedDict
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from pydantic import Field
 
@@ -291,6 +292,8 @@ class LabelRowMetadata(Formatter):
     """Only available for certain read requests"""
     is_valid: bool = True
 
+    backing_item_uuid: Optional[UUID] = None
+
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
         created_at = json_dict.get("created_at", None)
@@ -302,7 +305,7 @@ class LabelRowMetadata(Formatter):
 
         annotation_task_status = (
             AnnotationTaskStatus(json_dict["annotation_task_status"])
-            if json_dict["annotation_task_status"] is not None
+            if json_dict.get("annotation_task_status", None) is not None
             else None
         )
 
@@ -335,6 +338,9 @@ class LabelRowMetadata(Formatter):
             file_type=json_dict.get("file_type"),
             is_valid=bool(json_dict.get("is_valid", True)),
             branch_name=json_dict["branch_name"],
+            backing_item_uuid=UUID(json_dict["backing_item_uuid"])
+            if json_dict.get("backing_item_uuid", None) is not None
+            else None,
         )
 
     @classmethod
@@ -393,6 +399,7 @@ class LabelRowMetadataDTO(BaseDTO):
     data_title: str
     data_type: str
     data_link: Optional[str] = None
+
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
     """Can be `None` for TMS2 projects"""
@@ -418,11 +425,13 @@ class LabelRowMetadataDTO(BaseDTO):
 
     priority: Optional[float] = None
     """Only available for not complete tasks"""
-    client_metadata: Optional[dict] = None
-    images_data: Optional[list] = None
+    client_metadata: Optional[Dict[str, Any]] = None
+    images_data: Optional[List[Any]] = None
     file_type: Optional[str] = None
     """Only available for certain read requests"""
     is_valid: bool = True
+
+    backing_item_uuid: Optional[UUID] = None
 
 
 def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRowMetadataDTO) -> LabelRowMetadata:
@@ -455,4 +464,5 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         file_type=label_row_metadata_dto.file_type,
         is_valid=label_row_metadata_dto.is_valid,
         branch_name=label_row_metadata_dto.branch_name,
+        backing_item_uuid=label_row_metadata_dto.backing_item_uuid,
     )

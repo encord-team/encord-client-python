@@ -497,7 +497,7 @@ class ProjectCollection:
             page_size (Optional[int]): The number of items to fetch per page.
         Returns:
             Iterator[Tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]: An list of tuples containing label
-            row and corresponsing frame instances in the collection.
+            row and corresponding frame instances in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
         paged_items = self._client.get_paged_iterator(
@@ -526,7 +526,7 @@ class ProjectCollection:
             page_size (Optional[int]): The number of items to fetch per page.
         Returns:
             Iterator[Tuple[LabelRowV2, List[ProjectLabelCollectionInstance]]]: An list of tuples containing label
-            row and corresponsing label instances in the collection.
+            row and corresponding label instances in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
         paged_items = self._client.get_paged_iterator(
