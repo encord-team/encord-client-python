@@ -1640,7 +1640,10 @@ class LabelRowV2:
                 ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
                 ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
                 ret[obj.object_hash]["featureHash"] = obj.feature_hash
-                ret[obj.object_hash]["shape"] = str(obj.ontology_item.shape).lower()
+                ret[obj.object_hash]["name"] = obj.ontology_item.name
+                ret[obj.object_hash]["color"] = obj.ontology_item.color
+                ret[obj.object_hash]["shape"] = obj.ontology_item.shape.value
+                ret[obj.object_hash]["value"] = _lower_snake_case(obj.ontology_item.name)
 
         return ret
 
