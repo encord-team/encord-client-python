@@ -29,6 +29,7 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_CREATE_LIMIT,
     LABEL_ROW_BUNDLE_GET_LIMIT,
 )
+from encord.objects import Shape
 from encord.objects.attributes import Attribute
 from encord.objects.bundled_operations import (
     BundledCreateRowsPayload,
@@ -1639,6 +1640,7 @@ class LabelRowV2:
                 ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
                 ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
                 ret[obj.object_hash]["featureHash"] = obj.feature_hash
+                ret[obj.object_hash]["shape"] = str(obj.ontology_item.shape).lower()
 
         return ret
 
@@ -2217,7 +2219,14 @@ class LabelRowV2:
         frame_info_dict.setdefault("confidence", 1.0)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
 
-        object_instance = ObjectInstance(label_class, object_hash=object_hash, range_only=True)
+        expected_shape: Shape
+        if self._label_row_read_only_data.data_type == DataType.AUDIO:
+            expected_shape = Shape.AUDIO
+        else:
+            raise RuntimeError("Unexpected data type for range based objects")
+        if label_class.shape != expected_shape:
+            raise LabelRowError("Unsupported object shape for data type")
+        object_instance = ObjectInstance(label_class, object_hash=object_hash)
         object_instance.set_for_frames(
             AudioCoordinates(),
             ranges,
