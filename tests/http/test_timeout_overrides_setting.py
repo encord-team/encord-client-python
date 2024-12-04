@@ -40,18 +40,7 @@ def stub_responses(*args, **kwargs) -> MagicMock:
         }
         mock_response.status_code = 200
         mock_response.json.return_value = response
-    elif args[0].path_url.startswith("/v2/public/ontologies"):
-        response = {
-            "ontologyUuid": ONTOLOGY_HASH,
-            "title": "Test ontology",
-            "description": "",
-            "created_at": "2024-01-01 11:11:11",
-            "last_edited_at": "2024-01-01 11:11:11",
-            "editor": {"objects": [], "classifications": []},
-            "user_role": 1,
-        }
-        mock_response.status_code = 200
-        mock_response.json.return_value = response
+
     else:
         # Legacy api
         body_json = json.loads(args[0].body)

@@ -6,9 +6,12 @@ from typing import Dict, Optional
 
 # pylint: disable=unused-import
 from encord.objects.ontology_structure import OntologyStructure
-from encord.orm.base_dto import BaseDTO, dto_validator
 from encord.orm.formatter import Formatter
-from encord.utilities.ontology_user import OntologyUserRole
+
+
+class OntologyUserRole(IntEnum):
+    ADMIN = 0
+    USER = 1
 
 
 class Ontology(dict, Formatter):
@@ -20,7 +23,6 @@ class Ontology(dict, Formatter):
         created_at: datetime,
         last_edited_at: datetime,
         description: Optional[str] = None,
-        user_role: Optional[OntologyUserRole] = None,
     ):
         """
         DEPRECATED - prefer using the :class:`encord.ontology.Ontology` class instead.
@@ -41,7 +43,6 @@ class Ontology(dict, Formatter):
                 "structure": structure,
                 "created_at": created_at,
                 "last_edited_at": last_edited_at,
-                "user_role": user_role,
             }
         )
 
@@ -81,10 +82,6 @@ class Ontology(dict, Formatter):
     def last_edited_at(self) -> datetime:
         return self["last_edited_at"]
 
-    @property
-    def user_role(self) -> OntologyUserRole:
-        return self["user_role"]
-
     @classmethod
     def from_dict(cls, json_dict: Dict) -> Ontology:
         return Ontology(
@@ -94,11 +91,4 @@ class Ontology(dict, Formatter):
             structure=OntologyStructure.from_dict(json_dict["editor"]),
             created_at=json_dict["created_at"],
             last_edited_at=json_dict["last_edited_at"],
-            user_role=json_dict.get("user_role"),  #  has to be like this to support the legacy endpoints for tests
         )
-
-
-class CreateOrUpdateOntologyPayload(BaseDTO):
-    title: str
-    description: str
-    editor: dict

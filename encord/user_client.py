@@ -13,7 +13,6 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 import base64
-import dataclasses
 import logging
 import time
 import uuid
@@ -76,7 +75,6 @@ from encord.orm.deidentification import (
     DicomDeIdStartPayload,
 )
 from encord.orm.group import Group as OrmGroup
-from encord.orm.ontology import CreateOrUpdateOntologyPayload
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
@@ -104,7 +102,7 @@ from encord.utilities.client_utilities import (
     Issues,
     LocalImport,
 )
-from encord.utilities.ontology_user import OntologiesFilterParams, OntologyUserRole, OntologyWithUserRole
+from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
 
 CVAT_LONG_POLLING_RESPONSE_RETRY_N = 3
@@ -189,15 +187,15 @@ class EncordUserClient:
         client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
         project_orm = client.get_project_v2()
 
-        project_ontology = self.get_ontology(project_orm.ontology_hash)
+        orm_ontology = querier.basic_getter(OrmOntology, project_orm.ontology_hash)
+        project_ontology = Ontology(querier, orm_ontology, self._api_client)
 
         return Project(client, project_orm, project_ontology, self._api_client)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
-        ontology_with_user_role = self._api_client.get(
-            f"ontologies/{ontology_hash}", params=None, result_type=OntologyWithUserRole
-        )
-        return Ontology._from_api_payload(ontology_with_user_role, self._api_client)
+        querier = Querier(self._config.config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
+        orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
+        return Ontology(querier, orm_ontology, self._api_client)
 
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
@@ -787,7 +785,6 @@ class EncordUserClient:
         created_after: Optional[Union[str, datetime]] = None,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
-        include_org_access: bool = False,
     ) -> List[Dict]:
         """
         List either all (if called with no arguments) or matching ontologies the user has access to.
@@ -801,25 +798,21 @@ class EncordUserClient:
             created_after: optional creation date filter, 'greater'
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
-            include_org_access: if set to true and the calling user is the organization admin, the
-              method will return all ontologies in the organization.
 
         Returns:
-            list of ontologies matching filter conditions, with the roles that the current user has on them. Each item
-            is a dictionary with `"ontology"` and `"user_role"` keys. If include_org_access is set to
-            True, some of the ontologies may have a `None` value for the `"user_role"` key.
+            list of (role, projects) pairs for ontologies matching filter conditions.
         """
-        properties_filter = OntologiesFilterParams.from_dict(self.__validate_filter(locals()))
-        properties_filter.include_org_access = include_org_access
-        page = self._api_client.get("ontologies", params=properties_filter, result_type=Page[OntologyWithUserRole])
-
+        properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
+        data = self._querier.get_multiple(OntologyWithUserRole, payload={"filter": properties_filter})
         retval: List[Dict] = []
-        for row in page.results:
+        for row in data:
+            ontology = OrmOntology.from_dict(row.ontology)
+            querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
             retval.append(
                 {
-                    "ontology": Ontology._from_api_payload(row, self._api_client),
-                    "user_role": row.user_role,
+                    "ontology": Ontology(querier, ontology, api_client=self._api_client),
+                    "user_role": OntologyUserRole(row.user_role),
                 }
             )
         return retval
@@ -835,15 +828,17 @@ class EncordUserClient:
         except ValueError as e:
             raise ValueError("Can't create an Ontology containing a Classification without any attributes. " + str(e))
 
-        payload = CreateOrUpdateOntologyPayload(
-            title=title,
-            description=description,
-            editor=structure_dict,
-        )
+        ontology = {
+            "title": title,
+            "description": description,
+            "editor": structure_dict,
+        }
 
-        ontology = self._api_client.post("ontologies", payload=payload, params=None, result_type=OntologyWithUserRole)
+        retval = self._querier.basic_setter(OrmOntology, uid=None, payload=ontology)
+        ontology = OrmOntology.from_dict(retval)
+        querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
 
-        return Ontology._from_api_payload(ontology, self._api_client)
+        return Ontology(querier, ontology, self._api_client)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):
