@@ -1644,6 +1644,8 @@ class LabelRowV2:
                 ret[obj.object_hash]["color"] = obj.ontology_item.color
                 ret[obj.object_hash]["shape"] = obj.ontology_item.shape.value
                 ret[obj.object_hash]["value"] = _lower_snake_case(obj.ontology_item.name)
+                # FIXME: objectID? (should handle on BE?)
+                ret[obj.object_hash]["object_id"] = len(ret)
 
         return ret
 
