@@ -40,9 +40,9 @@ class FilterDefinition(BaseDTO):
 
 class FilterPresetDefinition(BaseDTO):
     local_filters: Dict[str, FilterDefinition] = Field(
-        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()}, alias="local_filters"
+        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()}, alias="localFilters"
     )
-    global_filters: FilterDefinition = Field(default_factory=FilterDefinition, alias="global_filters")
+    global_filters: FilterDefinition = Field(default_factory=FilterDefinition, alias="globalFilters")
 
     @dto_validator(mode="after")
     def check_not_empty(cls, self):
