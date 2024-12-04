@@ -26,7 +26,7 @@ class StorageItemType(CamelStrEnum):
     DICOM_SERIES = auto()
     AUDIO = auto()
     NIFTI = auto()
-    PLAIN_TEXT = auto()
+    TEXT = "plainText"
     PDF = auto()
 
 

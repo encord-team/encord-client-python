@@ -1527,7 +1527,7 @@ class LabelRowV2:
         ):
             data_sequence = frame_level_data.frame_number
 
-        elif data_type == DataType.AUDIO:
+        elif data_type == DataType.AUDIO or data_type == DataType.TEXT:
             data_sequence = 0
 
         elif data_type == DataType.DICOM_STUDY:
@@ -1574,6 +1574,7 @@ class LabelRowV2:
             or data_type == DataType.DICOM
             or data_type == DataType.NIFTI
             or data_type == DataType.PDF
+            or data_type == DataType.TEXT
         ):
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
@@ -1772,10 +1773,11 @@ class LabelRowV2:
             or data_type == DataType.IMAGE
             or data_type == DataType.PDF
             or data_type == DataType.AUDIO
+            or data_type == DataType.TEXT
         ):
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
-            # Dimensions should be always there (except for Audio which should be 0)
+            # Dimensions should be always there (except for AUDIO/TEXT which should be 0)
             # But we have some older entries that don't have them
             # So setting them to None for now until the format is not guaranteed to be enforced
             height = data_dict.get("height")
@@ -1853,6 +1855,7 @@ class LabelRowV2:
                 or data_type == DataType.DICOM
                 or data_type == DataType.NIFTI
                 or data_type == DataType.PDF
+                or data_type == DataType.TEXT
             ):
                 for frame, frame_data in data_unit["labels"].items():
                     frame_num = int(frame)
