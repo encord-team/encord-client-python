@@ -6,7 +6,6 @@ from enum import auto
 from typing import Dict, List, Optional, Union
 from uuid import UUID
 
-from encord.http.v2.api_client import ApiClient
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, Field
 from encord.orm.dataset import DataUnitError, LongPollingStatus
@@ -156,6 +155,9 @@ class UploadLongPollingState(BaseDTO):
     units_error_count: int
     """Number of upload job units that have error status."""
 
+    units_cancelled_count: int
+    """Number of upload job units that have been cancelled."""
+
     unit_errors: List[DataUnitError]
     """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
@@ -217,6 +219,44 @@ class CustomerProvidedAudioMetadata(BaseDTO):
     """Codec (for example: mp3, pcm)."""
     num_channels: int
     """Number of channels"""
+
+
+class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
+    """
+    Metadata for a DICOM file containing required DICOM tags and their values.
+    This metadata is used to validate and process DICOM files without needing to access the actual files.
+
+    The `tags` dictionary must contain all required DICOM tags as keys, though their corresponding values may be None.
+    Tags should be provided in the format returned by pydicom to_json_dict() method.
+
+    Required tags (using standard DICOM tag numbers):
+        - 00080018: SOPInstanceUID
+        - 00100020: PatientID
+        - 00180050: SliceThickness
+        - 00181114: EstimatedRadiographicMagnificationFactor
+        - 00181164: ImagerPixelSpacing
+        - 0020000D: StudyInstanceUID
+        - 0020000E: SeriesInstanceUID
+        - 00200013: InstanceNumber
+        - 00200032: ImagePositionPatient
+        - 00200037: ImageOrientationPatient
+        - 00209113: PlanePositionSequence
+        - 00209116: PlaneOrientationSequence
+        - 00280004: PhotometricInterpretation
+        - 00280008: NumberOfFrames
+        - 00280010: Rows
+        - 00280011: Columns
+        - 00280030: PixelSpacing
+        - 00281050: WindowCenter
+        - 00281051: WindowWidth
+        - 00289110: PixelMeasuresSequence
+        - 52009229: SharedFunctionalGroupsSequence
+        - 52009230: PerFrameFunctionalGroupsSequence
+
+    Missing any of these tags as `tags` dictionary key will raise a validation error.
+    """
+
+    tags: Dict[str, Optional[Dict]]
 
 
 class DataUploadImage(BaseDTO):
@@ -345,6 +385,8 @@ class DataUploadDicomSeriesDicomFile(BaseDTO):
     """URL of the DICOM file to be registered with Encord service."""
     title: Optional[str]
     """Title of the DICOM file (derived from the URL if omitted)."""
+    dicom_metadata: Optional[CustomerProvidedDicomSeriesDicomFileMetadata] = None
+    """Optional media metadata of the DICOM file (if provided). See :class:`CustomerProvidedDicomSeriesDicomFileMetadata` for more details."""
 
     placeholder_item_uuid: Optional[UUID] = None
     """For system use only."""
@@ -626,3 +668,7 @@ class StorageItemsMigratePayload(BaseDTO):
     to_integration_hash: Optional[UUID] = None
     validate_access: bool = False
     skip_missing: bool = False
+
+
+class AddDataToFolderJobCancelResponse(BaseDTO):
+    units_cancelled_count: int

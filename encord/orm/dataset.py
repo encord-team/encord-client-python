@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import json
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum, IntEnum
@@ -660,40 +659,6 @@ class AddPrivateDataResponse(Formatter):
         return AddPrivateDataResponse(dataset_data_info_list)
 
 
-@dataclasses.dataclass(frozen=True)
-class DatasetAPIKey(Formatter):
-    """
-    DEPRECATED: DatasetAPIKey functionality is being deprecated.
-    Use EncordUserClient SSH authentication going forward.
-
-    DEPRECATED -  Obtain dataset_client:
-    dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
-
-    RECOMMENDED - Obtain dataset_client:
-    dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
-    """
-
-    dataset_hash: str
-    api_key: str
-    title: str
-    key_hash: str
-    scopes: List[DatasetScope]
-
-    @classmethod
-    @deprecated("0.1.141", "EncordUserClient.create_with_ssh_private_key(...).get_dataset(...)")
-    def from_dict(cls, json_dict: Dict) -> DatasetAPIKey:
-        if isinstance(json_dict["scopes"], str):
-            json_dict["scopes"] = json.loads(json_dict["scopes"])
-        scopes = [DatasetScope(scope) for scope in json_dict["scopes"]]
-        return DatasetAPIKey(
-            json_dict["resource_hash"],
-            json_dict["api_key"],
-            json_dict["title"],
-            json_dict["key_hash"],
-            scopes,
-        )
-
-
 class CreateDatasetResponse(dict, Formatter):
     def __init__(
         self,
@@ -815,11 +780,6 @@ STORAGE_LOCATION_BY_STR: Dict[str, StorageLocation] = {location.get_str(): locat
 
 DatasetType = StorageLocation
 """For backwards compatibility"""
-
-
-class DatasetScope(Enum):
-    READ = "dataset.read"
-    WRITE = "dataset.write"
 
 
 class DatasetData(base_orm.BaseORM):
@@ -1018,6 +978,24 @@ class LongPollingStatus(str, Enum):
     Information about errors is available in the `units_error_count: int` and `errors: List[str]` attributes.
     """
 
+    CANCELLED = "CANCELLED"
+    """
+    Job was cancelled explicitly by the user through the Encord UI or via the Encord SDK using the
+    `add_data_to_folder_job_cancel` method.
+
+    In the context of this status:
+    - The job may have been partially processed, but it was explicitly interrupted before completion
+      by a user action.
+    - Cancellation can occur either manually through the Encord UI or programmatically using the SDK
+      method `add_data_to_folder_job_cancel`.
+    - Once a job is cancelled, no further processing will occur, and any processed data before the
+      cancellation will be available.
+    - The presence of cancelled data units (`units_cancelled_count`) indicates that some data upload
+      units were interrupted and cancelled before completion.
+    - If `ignore_errors` was set to `True`, the job may continue despite errors, and cancellation will
+      only apply to the unprocessed units.
+    """
+
 
 class DataUnitError(BaseDTO):
     """
@@ -1065,6 +1043,9 @@ class DatasetDataLongPolling(BaseDTO):
 
     units_error_count: int
     """Number of upload job units that have error status."""
+
+    units_cancelled_count: int
+    """Number of upload job units that have been cancelled."""
 
 
 @dataclasses.dataclass(frozen=True)

@@ -13,7 +13,6 @@ category: "64e481b57b6027003f20aaa0"
 import pprint
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 from typing import Callable, List, Optional, Set, TypeVar, Union
 
 from encord.common.time_parser import parse_datetime
@@ -21,35 +20,6 @@ from encord.common.time_parser import parse_datetime
 
 def pretty_print(data):
     return pprint.pformat(data, indent=4, width=10)
-
-
-class APIKeyScopes(Enum):
-    """
-    The APIKeyScope is used to provide specific access rights to a project through
-    :meth:`.EncordUserClient.create_project_api_key`. The options are a follows:
-
-        * ``LABEL_READ``: access to
-          :ref:`tutorials/projects:Getting label rows`
-        * ``LABEL_WRITE``: access to
-          :ref:`tutorials/projects:Saving label rows`
-        * ``MODEL_INFERENCE``: access to
-          :ref:`tutorials/projects:Inference`
-        * ``MODEL_TRAIN``: access to
-          :ref:`tutorials/projects:Creating a model row` and
-          :ref:`tutorials/projects:Training`
-        * ``LABEL_LOGS_READ``: access to
-          :ref:`tutorials/projects:Reviewing label logs`
-        * ``ALGO_LIBRARY``: access to algorithms like
-          :ref:`tutorials/projects:Object interpolation`
-
-    """
-
-    LABEL_READ = "label.read"
-    LABEL_WRITE = "label.write"
-    MODEL_INFERENCE = "model.inference"
-    MODEL_TRAIN = "model.train"
-    LABEL_LOGS_READ = "label_logs.read"
-    ALGO_LIBRARY = "algo.library"
 
 
 @dataclass
@@ -119,7 +89,6 @@ class CvatImporterSuccess:
 
 @dataclass
 class CvatImporterError:
-    dataset_hash: str
     issues: Issues
 
 

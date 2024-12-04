@@ -3,12 +3,12 @@ from __future__ import annotations
 import datetime
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
-from encord.common.enum import StringEnum
 from encord.orm import base_orm
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import Workflow
 
@@ -290,11 +290,6 @@ class CvatExportType(str, Enum):
     TASK = "task"
 
 
-class ProjectImporter(BaseDTO):
-    project_hash: Optional[str]
-    errors: List[str]
-
-
 class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
 
@@ -308,3 +303,60 @@ class ProjectDTO(BaseDTO):
     last_edited_at: datetime.datetime
     ontology_hash: str
     workflow: Optional[Workflow] = None
+
+
+class CvatReviewMode(CamelStrEnum):
+    """
+    UNLABELLED:
+        The labels are added to the images. However, the one person must still go over
+            all the labels before submitting them for review.
+    LABELLED:
+        The labels are added to the images and are marked as labelled. A reviewer will
+            still need to approve those.
+    REVIEWED:
+        The labels are added to the images and considered reviewed. No more action is
+            required from the labeler or reviewer.
+    """
+
+    UNLABELLED = auto()
+    LABELLED = auto()
+    REVIEWED = auto()
+
+
+class CvatImportDataItem(BaseDTO):
+    data_path: str
+    data_link: str
+    title: str
+
+
+class CvatImportStartPayload(BaseDTO):
+    annotations_base64: str
+    dataset_uuid: UUID
+    review_mode: CvatReviewMode
+    data: List[CvatImportDataItem]
+    transform_bounding_boxes_to_polygons: bool
+
+
+class CvatImportGetResultParams(BaseDTO):
+    timeout_seconds: int
+
+
+class CvatImportGetResultLongPollingStatus(str, Enum):
+    DONE = "DONE"
+    ERROR = "ERROR"
+    PENDING = "PENDING"
+
+
+class CvatImportGetResultResponse(BaseDTO):
+    """
+    Response model for CVAT import operation status.
+
+    Attributes:
+        status (CvatImportGetResultLongPollingStatus): Import status ("DONE", "ERROR", "PENDING")
+        project_uuid (Optional[UUID]): Created project ID. Only present when status="DONE"
+        issues (Optional[Dict]): Import issues. Present for "DONE" (warnings) or "ERROR" (failures)
+    """
+
+    status: CvatImportGetResultLongPollingStatus
+    project_uuid: Optional[UUID] = None
+    issues: Optional[Dict] = None

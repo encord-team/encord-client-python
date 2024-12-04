@@ -2,7 +2,6 @@
 All tests regarding converting from and to Encord dict to the label row.
 """
 
-import os
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
 from unittest.mock import Mock
@@ -25,6 +24,7 @@ from tests.objects.data import (
     video_with_dynamic_classifications_ui_constructed,
 )
 from tests.objects.data.all_ontology_types import all_ontology_types
+from tests.objects.data.audio_labels import AUDIO_LABELS
 from tests.objects.data.dicom_labels import dicom_labels
 from tests.objects.data.dynamic_classifications_ontology import (
     dynamic_classifications_ontology,
@@ -37,9 +37,6 @@ from tests.objects.data.image_group import image_group_labels, image_group_ontol
 from tests.objects.data.ontology_with_many_dynamic_classifications import (
     ontology as ontology_with_many_dynamic_classifications,
 )
-
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(CURRENT_DIR, "data")
 
 
 def ontology_from_dict(ontology_structure_dict: Dict):
@@ -124,6 +121,23 @@ def test_serialise_image_with_object_answers():
         actual,
         native_image_data.labels,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+    )
+
+
+def test_serialise_audio():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "AUDIO"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(AUDIO_LABELS)
+
+    actual = label_row.to_encord_dict()
+    deep_diff_enhanced(
+        AUDIO_LABELS,
+        actual,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
 
 

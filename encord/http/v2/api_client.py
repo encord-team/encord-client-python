@@ -1,6 +1,7 @@
 import inspect
 import json
 import uuid
+from http import HTTPStatus
 from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
 
@@ -114,6 +115,14 @@ class ApiClient:
     ) -> T:
         return self._request_with_payload("POST", path, params, payload, result_type)
 
+    def put(
+        self,
+        path: str,
+        params: Optional[BaseDTO],
+        payload: Union[BaseDTO, Sequence[BaseDTO], None],
+    ) -> None:
+        self._request_with_payload("PUT", path, params, payload, None, allow_none=True)
+
     def patch(
         self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
     ) -> T:
@@ -142,6 +151,7 @@ class ApiClient:
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
         result_type: Optional[Type[T]],
+        allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
         payload_serialised = self._serialise_payload(payload)
@@ -153,7 +163,7 @@ class ApiClient:
             json=payload_serialised,
         ).prepare()
 
-        return self._request(req, result_type=result_type)  # type: ignore
+        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
     def _request_without_payload(
         self,
@@ -186,8 +196,14 @@ class ApiClient:
             except Exception as e:
                 raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
-            if res.status_code != 200:
+            if res.status_code not in [
+                HTTPStatus.OK,
+                HTTPStatus.NO_CONTENT,  # 204 status code will raise error for sdk versions <= 0.1.147
+            ]:
                 self._handle_error(res, context)
+
+            if res.status_code == HTTPStatus.NO_CONTENT:
+                return None
 
             try:
                 res_json = res.json()

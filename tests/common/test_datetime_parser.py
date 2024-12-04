@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from encord.common.constants import DATETIME_LONG_STRING_FORMAT, DATETIME_STRING_FORMAT
+from encord.common.constants import DATETIME_LONG_STRING_FORMAT
 from encord.common.time_parser import parse_datetime
 
 

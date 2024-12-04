@@ -67,7 +67,19 @@ class GenericBaseDTO(BaseDTOInterface, GenericModel):
 
 def dto_validator(mode: Literal["before", "after"] = "before") -> Callable:
     def decorator(func: Callable) -> Callable:
-        return root_validator(pre=(mode == "before"))(func)  # type: ignore
+        if mode == "before":
+            return root_validator(pre=(mode == "before"))(func)  # type: ignore
+
+        # NOTE: the interface of "after" validations has changed in pydantic v2
+        # to make it such that users of BaseDTO could use "after" validation we
+        # have to align the interfaces. This wrapper will instanciated and parse
+        # back to a dict after the validation function is executed.
+        @wraps(func)
+        def wrapped(cls, values):
+            instance = cls.construct(**values)
+            return func(cls, instance).dict()
+
+        return root_validator(pre=(mode == "before"))(wrapped)  # type: ignore
 
     return decorator
 

@@ -28,8 +28,11 @@ from encord.objects.frames import Range
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import all_types_structure
+from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
+from tests.objects.test_label_structure_converter import ontology_from_dict
 
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 polygon_ontology_item = all_types_structure.get_child_by_hash("ODkxMzAx", Object)
@@ -69,7 +72,7 @@ radio_classification = all_types_structure.get_child_by_hash("NzIxNTU1")
 radio_classification_option_1 = all_types_structure.get_child_by_hash("MTcwMjM5")
 radio_classification_option_2 = all_types_structure.get_child_by_hash("MjUzMTg1")
 radio_classification_option_2_text = all_types_structure.get_child_by_hash("MTg0MjIw")
-checklist_classification = all_types_structure.get_child_by_hash("3DuQbFxo")
+checklist_classification: Classification = all_types_structure.get_child_by_hash("3DuQbFxo")
 checklist_classification_option_1 = all_types_structure.get_child_by_hash("fvLjF0qZ")
 checklist_classification_option_2 = all_types_structure.get_child_by_hash("a4r7nK9i")
 
@@ -640,6 +643,63 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
     overlapping_classification_instance.set_for_frames(3)
 
 
+# TODO ED-302: Refactor to make more readable
+def test_add_and_get_classification_instances_to_audio_label_row(ontology):
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "AUDIO"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
+    label_row.from_labels_dict(EMPTY_AUDIO_LABELS)
+
+    classification_instance_1 = ClassificationInstance(text_classification, range_only=True)
+    classification_instance_2 = ClassificationInstance(text_classification, range_only=True)
+    classification_instance_3 = ClassificationInstance(checklist_classification, range_only=True)
+
+    classification_instance_1.set_for_frames(Range(1, 2))
+    classification_instance_2.set_for_frames(Range(3, 4))
+    classification_instance_3.set_for_frames(Range(1, 4))
+
+    label_row.add_classification_instance(classification_instance_1)
+    label_row.add_classification_instance(classification_instance_2)
+    label_row.add_classification_instance(classification_instance_3)
+
+    classification_instances = label_row.get_classification_instances()
+    assert set(classification_instances) == {
+        classification_instance_1,
+        classification_instance_2,
+        classification_instance_3,
+    }
+
+    filtered_classification_instances = label_row.get_classification_instances(text_classification)
+    assert set(filtered_classification_instances) == {classification_instance_1, classification_instance_2}
+
+    overlapping_classification_instance = ClassificationInstance(text_classification, range_only=True)
+    overlapping_classification_instance.set_for_frames(1)
+
+    with pytest.raises(LabelRowError):
+        label_row.add_classification_instance(overlapping_classification_instance)
+
+    overlapping_classification_instance.remove_from_frames(1)
+    overlapping_classification_instance.set_for_frames(5)
+    label_row.add_classification_instance(overlapping_classification_instance)
+    with pytest.raises(LabelRowError):
+        overlapping_classification_instance.set_for_frames(1)
+
+    # Do not raise if overwrite flag is passed
+    overlapping_classification_instance.set_for_frames(1, overwrite=True)
+
+    label_row.remove_classification(classification_instance_1)
+    overlapping_classification_instance.set_for_frames(1)
+
+    with pytest.raises(LabelRowError):
+        overlapping_classification_instance.set_for_frames(3)
+
+    classification_instance_2.remove_from_frames(3)
+    overlapping_classification_instance.set_for_frames(3)
+
+
 def test_object_instance_answer_for_static_attributes():
     object_instance = ObjectInstance(deeply_nested_polygon_item)
 
@@ -983,4 +1043,113 @@ def test_classification_can_be_added_edited_and_removed(ontology):
 
     label_row.remove_classification(classification_instance)
 
+    assert len(label_row.get_classification_instances()) == 0
+
+
+@pytest.fixture
+def empty_audio_label_row() -> LabelRowV2:
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "AUDIO"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(EMPTY_AUDIO_LABELS)
+
+    return label_row
+
+
+def test_non_range_classification_cannot_be_added_to_audio_label_row(ontology):
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "AUDIO"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(EMPTY_AUDIO_LABELS)
+
+    with pytest.raises(LabelRowError):
+        classification_instance = ClassificationInstance(checklist_classification)
+        classification_instance.set_for_frames(Range(start=0, end=1500))
+        label_row.add_classification_instance(classification_instance)
+
+    with pytest.raises(LabelRowError):
+        classification_instance = checklist_classification.create_instance()
+        label_row.add_classification_instance(classification_instance)
+
+
+def test_audio_classification_overwrite(ontology, empty_audio_label_row: LabelRowV2):
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
+    classification_instance.set_for_frames(Range(start=0, end=100))
+    empty_audio_label_row.add_classification_instance(classification_instance)
+
+    with pytest.raises(LabelRowError):
+        classification_instance.set_for_frames(Range(start=5, end=20))
+
+    with pytest.raises(LabelRowError):
+        classification_instance.set_for_frames(Range(start=100, end=101))
+
+    # No error when set overwrite to True
+    classification_instance.set_for_frames(Range(start=100, end=101), overwrite=True)
+    range_list = classification_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 101
+
+
+def test_audio_classification_exceed_max_frames(ontology, empty_audio_label_row: LabelRowV2):
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
+    classification_instance.set_for_frames(Range(start=0, end=100))
+    empty_audio_label_row.add_classification_instance(classification_instance)
+
+    with pytest.raises(LabelRowError):
+        classification_instance.set_for_frames(Range(start=200, end=5000))
+
+
+def test_get_annotations_from_audio_classification(ontology) -> None:
+    now = datetime.datetime.now()
+
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
+    classification_instance.set_for_frames(
+        frames=Range(start=0, end=1500),
+        created_at=now,
+        created_by="user1",
+        last_edited_at=now,
+        last_edited_by="user2",
+    )
+
+    annotations = classification_instance.get_annotations()
+
+    assert len(annotations) == 1
+
+    annotation = annotations[0]
+    assert annotation.manual_annotation == DEFAULT_MANUAL_ANNOTATION
+    assert annotation.confidence == DEFAULT_CONFIDENCE
+    assert annotation.created_at == now
+    assert annotation.created_by == "user1"
+    assert annotation.last_edited_at == now
+    assert annotation.last_edited_by == "user2"
+    assert annotation.reviews is None
+
+
+def test_audio_classification_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
+    label_row = empty_audio_label_row
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
+    classification_instance.set_for_frames(Range(start=0, end=1500))
+    range_list = classification_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+
+    label_row.add_classification_instance(classification_instance)
+    assert len(label_row.get_classification_instances()) == 1
+    classification_instance.set_for_frames(Range(start=2000, end=2499))
+    range_list = classification_instance.range_list
+    assert len(range_list) == 2
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+    assert range_list[1].start == 2000
+    assert range_list[1].end == 2499
+
+    label_row.remove_classification(classification_instance)
     assert len(label_row.get_classification_instances()) == 0

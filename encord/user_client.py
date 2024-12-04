@@ -13,14 +13,21 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 import base64
+import dataclasses
 import logging
+import time
+import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from enum import Enum
+from math import ceil
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
+import requests
+
+import encord.exceptions
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.collection import Collection
@@ -46,14 +53,12 @@ from encord.objects.common import (
 )
 from encord.ontology import Ontology
 from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
-from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     CreateDatasetResponse,
     DatasetAccessSettings,
-    DatasetAPIKey,
     DatasetInfo,
-    DatasetScope,
     DatasetUserRole,
     DicomDeidentifyTask,
     Images,
@@ -61,34 +66,53 @@ from encord.orm.dataset import (
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.deidentification import (
+    DicomDeIdGetResultLongPollingStatus,
+    DicomDeIdGetResultParams,
+    DicomDeIdGetResultResponse,
+    DicomDeIdRedactTextMode,
+    DicomDeIdSaveCondition,
+    DicomDeIdSaveConditionType,
+    DicomDeIdStartPayload,
+)
 from encord.orm.group import Group as OrmGroup
+from encord.orm.ontology import CreateOrUpdateOntologyPayload
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
     CvatExportType,
+    CvatImportDataItem,
+    CvatImportGetResultLongPollingStatus,
+    CvatImportGetResultParams,
+    CvatImportGetResultResponse,
+    CvatImportStartPayload,
+    CvatReviewMode,
     ManualReviewWorkflowSettings,
-    ProjectImporter,
     ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,
 )
 from encord.orm.project import Project as OrmProject
-from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
-from encord.orm.storage import CreateStorageFolderPayload, ListFoldersParams, ListItemsParams, StorageItemType
-from encord.orm.storage import StorageFolder as OrmStorageFolder
+from encord.orm.storage import ListFoldersParams, ListItemsParams, StorageItemType
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
-    APIKeyScopes,
     CvatImporterError,
     CvatImporterSuccess,
     ImportMethod,
     Issues,
     LocalImport,
 )
-from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
+from encord.utilities.ontology_user import OntologiesFilterParams, OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
+
+CVAT_LONG_POLLING_RESPONSE_RETRY_N = 3
+CVAT_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
+CVAT_LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
+DICOM_DEID_LONG_POLLING_RESPONSE_RETRY_N = 3
+DICOM_DEID_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
+DICOM_DEID_LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 
 log = logging.getLogger(__name__)
 
@@ -165,15 +189,15 @@ class EncordUserClient:
         client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
         project_orm = client.get_project_v2()
 
-        orm_ontology = querier.basic_getter(OrmOntology, project_orm.ontology_hash)
-        project_ontology = Ontology(querier, orm_ontology, self._api_client)
+        project_ontology = self.get_ontology(project_orm.ontology_hash)
 
         return Project(client, project_orm, project_ontology, self._api_client)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
-        querier = Querier(self._config.config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
-        orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        return Ontology(querier, orm_ontology, self._api_client)
+        ontology_with_user_role = self._api_client.get(
+            f"ontologies/{ontology_hash}", params=None, result_type=OntologyWithUserRole
+        )
+        return Ontology._from_api_payload(ontology_with_user_role, self._api_client)
 
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
@@ -216,84 +240,6 @@ class EncordUserClient:
 
         result = self._querier.basic_setter(OrmDataset, uid=None, payload=dataset)
         return CreateDatasetResponse.from_dict(result)
-
-    @deprecated("0.1.141", ".get_dataset(...)")
-    def create_dataset_api_key(
-        self,
-        dataset_hash: str,
-        api_key_title: str,
-        dataset_scopes: List[DatasetScope],
-    ) -> DatasetAPIKey:
-        """
-        DEPRECATED: DatasetAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED -  Obtain dataset_client:
-        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
-
-        RECOMMENDED - Obtain dataset_client:
-        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
-        """
-
-        return DatasetAPIKey.from_dict(
-            self._querier.basic_setter(
-                DatasetAPIKey,
-                uid=None,
-                payload={
-                    "dataset_hash": dataset_hash,
-                    "title": api_key_title,
-                    "scopes": [x.value for x in dataset_scopes],
-                },
-            )
-        )
-
-    @deprecated("0.1.141", ".get_dataset(...)")
-    def get_dataset_api_keys(
-        self,
-        dataset_hash: str,
-    ) -> List[DatasetAPIKey]:
-        """
-        DEPRECATED: DatasetAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED -  Obtain dataset_client:
-        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
-
-        RECOMMENDED - Obtain dataset_client:
-        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
-        """
-
-        return self._querier.get_multiple(
-            DatasetAPIKey,
-            uid=None,
-            payload={"dataset_hash": dataset_hash},
-        )
-
-    @deprecated("0.1.141", ".get_dataset(...)")
-    def get_or_create_dataset_api_key(
-        self,
-        dataset_hash: str,
-    ) -> DatasetAPIKey:
-        """
-        DEPRECATED: DatasetAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED -  Obtain dataset_client:
-        dataset_client = EncordClientDataset.initialise(dataset_hash, dataset_api_key)
-
-        RECOMMENDED - Obtain dataset_client:
-        dataset_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_dataset(dataset_hash)
-        """
-
-        for key in self.get_dataset_api_keys(dataset_hash):
-            if set(key.scopes) == set(DatasetScope):
-                return key
-
-        return self.create_dataset_api_key(
-            dataset_hash=dataset_hash,
-            api_key_title=f"{dataset_hash} - admin key",
-            dataset_scopes=list(DatasetScope),
-        )
 
     def get_datasets(
         self,
@@ -438,7 +384,7 @@ class EncordUserClient:
             project_description: the optional description of the project
             ontology_hash: the uid of an Ontology to be used. If omitted, a new empty Ontology will be created
             workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
-            workflow_template_hash: Project is created using a Workflow based on the template provided. To use the default Workflow template the workflow_template_hash argument must be omitted.
+            workflow_template_hash: Project is created using a Workflow based on the template provided. This parameter must be included to create a Workflow Project.
         Returns:
             the uid of the Project.
         """
@@ -458,80 +404,6 @@ class EncordUserClient:
             project["workflow_template_id"] = workflow_template_hash
 
         return self._querier.basic_setter(OrmProject, uid=None, payload=project)
-
-    @deprecated("0.1.141", ".get_project(...)")
-    def create_project_api_key(
-        self,
-        project_hash: str,
-        api_key_title: str,
-        scopes: List[APIKeyScopes],
-    ) -> str:
-        """
-        DEPRECATED: ProjectAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED - Obtain project_client:
-        project_client = EncordClientProject.initialise(project_hash, project_api_key)
-
-        RECOMMENDED - Obtain project_client:
-        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
-        """
-
-        return self._querier.basic_setter(
-            ProjectAPIKey,
-            uid=project_hash,
-            payload={
-                "title": api_key_title,
-                "scopes": [x.value for x in scopes],
-            },
-        )
-
-    @deprecated("0.1.141", ".get_project(...)")
-    def get_project_api_keys(
-        self,
-        project_hash: str,
-    ) -> List[ProjectAPIKey]:
-        """
-        DEPRECATED: ProjectAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED - Obtain project_client:
-        project_client = EncordClientProject.initialise(project_hash, project_api_key)
-
-        RECOMMENDED - Obtain project_client:
-        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
-        """
-
-        return self._querier.get_multiple(
-            ProjectAPIKey,
-            uid=project_hash,
-        )
-
-    @deprecated("0.1.141", ".get_project(...)")
-    def get_or_create_project_api_key(
-        self,
-        project_hash: str,
-    ) -> str:
-        """
-        DEPRECATED: ProjectAPIKey functionality is being deprecated.
-        Use EncordUserClient SSH authentication going forward.
-
-        DEPRECATED - Obtain project_client:
-        project_client = EncordClientProject.initialise(project_hash, project_api_key)
-
-        RECOMMENDED - Obtain project_client:
-        project_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key).get_project(project_hash)
-        """
-
-        for key in self.get_project_api_keys(project_hash):
-            if set(key.scopes) == set(APIKeyScopes):
-                return key.api_key
-
-        return self.create_project_api_key(
-            project_hash=project_hash,
-            api_key_title=f"{project_hash} - admin key",
-            scopes=list(APIKeyScopes),
-        )
 
     @deprecated("0.1.98", ".get_dataset()")
     def get_dataset_client(
@@ -581,41 +453,39 @@ class EncordUserClient:
             api_client=self._api_client,
         )
 
-    def create_project_from_cvat(
+    def create_project_from_cvat_start(
         self,
+        *,
         import_method: ImportMethod,
         dataset_name: str,
-        review_mode: ReviewMode = ReviewMode.LABELLED,
-        max_workers: Optional[int] = None,
-        *,
-        transform_bounding_boxes_to_polygons=False,
-    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        review_mode: ReviewMode,
+        transform_bounding_boxes_to_polygons: bool,
+    ) -> UUID:
         """
-        Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
-            your images and annotations into encord. Ensure that during you have the "Save images"
-            checkbox enabled when exporting from CVAT.
+        Start importing a CVAT project into Encord. This is the first part of a two-step import process.
+        Export your CVAT project with the "CVAT for images 1.1" option and use this function to begin
+        importing your images and annotations. Ensure that the "Save images" checkbox is enabled when
+        exporting from CVAT.
 
         Args:
             import_method:
-                The chosen import method. See the `ImportMethod` class for details.
+                The chosen import method. Currently, only LocalImport is supported.
             dataset_name:
                 The name of the dataset that will be created.
             review_mode:
-                Set how much interaction is needed from the labeler and from the reviewer for the CVAT labels.
-                    See the `ReviewMode` documentation for more details.
-            max_workers:
-                DEPRECATED: This argument will be ignored
+                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
+                See the `ReviewMode` documentation for more details.
             transform_bounding_boxes_to_polygons:
-                All instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
+                If True, all instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
 
         Returns:
-            CvatImporterSuccess: If the project was successfully imported.
-            CvatImporterError: If the project could not be imported.
+            UUID: A unique identifier for tracking the import process.
 
         Raises:
             ValueError:
-                If the CVAT directory has an invalid format.
+                If the CVAT directory has an invalid format or if a non-LocalImport method is used.
         """
+
         if not isinstance(import_method, LocalImport):
             raise ValueError("Only local imports are currently supported ")
 
@@ -650,29 +520,172 @@ class EncordUserClient:
                 import_method.map_filename_to_cvat_name(key): value for key, value in image_title_to_image.items()
             }
 
-        payload = {
-            "cvat": {"annotations_base64": annotations_base64},
-            "dataset_hash": dataset_hash,
-            "image_title_to_image": image_title_to_image,
-            "review_mode": review_mode,
-            "transform_bounding_boxes_to_polygons": transform_bounding_boxes_to_polygons,
-        }
-
         log.info("Starting project import. This may take a few minutes.")
-        server_ret = self._querier.basic_setter(ProjectImporter, uid=None, payload=payload)
 
-        if "success" in server_ret:
-            success = server_ret["success"]
+        cvat_import_uuid = self._api_client.post(
+            "projects/cvat-import",
+            payload=CvatImportStartPayload(
+                annotations_base64=annotations_base64,
+                dataset_uuid=UUID(dataset_hash),
+                review_mode=CvatReviewMode(review_mode),
+                data=[
+                    CvatImportDataItem(
+                        data_path=data_path,
+                        data_link=data["file_link"],
+                        title=data["title"],
+                    )
+                    for data_path, data in image_title_to_image.items()
+                ],
+                transform_bounding_boxes_to_polygons=transform_bounding_boxes_to_polygons,
+            ),
+            params=None,
+            result_type=UUID,
+        )
+
+        return cvat_import_uuid
+
+    def create_project_from_cvat_get_result(
+        self,
+        cvat_import_uuid: UUID,
+        *,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        """
+        Check the status and get the result of a CVAT import process. This is the second part of the
+        two-step import process.
+
+        Args:
+            cvat_import_uuid:
+                The UUID returned by create_project_from_cvat_start.
+            timeout_seconds:
+                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
+                The method will poll the server periodically during this time.
+
+        Returns:
+            Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
+            - CvatImporterSuccess: Contains project_hash, dataset_hash, and any issues if the import succeeded.
+            - CvatImporterError: Contains any issues if the import failed.
+
+        Raises:
+            ValueError:
+                If the server returns an unexpected status or invalid response structure.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                log.info(f"create_project_from_cvat_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._api_client.get(
+                    f"projects/cvat-import/{cvat_import_uuid}",
+                    params=CvatImportGetResultParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            CVAT_LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=CvatImportGetResultResponse,
+                )
+
+                if tmp_res.status == CvatImportGetResultLongPollingStatus.DONE:
+                    log.info(f"cvat import job completed with cvat_import_uuid={cvat_import_uuid}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    CvatImportGetResultLongPollingStatus.DONE,
+                    CvatImportGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= CVAT_LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(CVAT_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == CvatImportGetResultLongPollingStatus.DONE:
+            if res.project_uuid is None:
+                raise ValueError(f"{res.project_uuid=}, res.project_uuid should not be None with DONE status")
+
+            if res.issues is None:
+                raise ValueError(f"{res.issues=}, res.issues should not be None with DONE status")
+
             return CvatImporterSuccess(
-                project_hash=success["project_hash"],
-                dataset_hash=dataset_hash,
-                issues=Issues.from_dict(success["issues"]),
+                project_hash=str(res.project_uuid),
+                dataset_hash=str(list(self.get_project(res.project_uuid).list_datasets())[0]),
+                issues=Issues.from_dict(res.issues),
             )
-        elif "error" in server_ret:
-            error = server_ret["error"]
-            return CvatImporterError(dataset_hash=dataset_hash, issues=Issues.from_dict(error["issues"]))
+        elif res.status == CvatImportGetResultLongPollingStatus.ERROR:
+            if res.issues is None:
+                raise ValueError(f"{res.issues=}, res.issues should not be None with DONE status")
+
+            return CvatImporterError(
+                issues=Issues.from_dict(res.issues),
+            )
         else:
-            raise ValueError("The api server responded with an invalid payload.")
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
+
+    def create_project_from_cvat(
+        self,
+        import_method: ImportMethod,
+        dataset_name: str,
+        review_mode: ReviewMode = ReviewMode.LABELLED,
+        *,
+        transform_bounding_boxes_to_polygons=False,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        """
+        Create a new Encord project from a CVAT export. This method combines the two-step import process
+        (create_project_from_cvat_start and create_project_from_cvat_get_result) into a single call.
+        Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
+        your images and annotations. Ensure that the "Save images" checkbox is enabled when exporting
+        from CVAT.
+
+        Args:
+            import_method:
+                The chosen import method. Currently, only LocalImport is supported.
+            dataset_name:
+                The name of the dataset that will be created.
+            review_mode:
+                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
+                See the `ReviewMode` documentation for more details. Defaults to ReviewMode.LABELLED.
+            transform_bounding_boxes_to_polygons:
+                If True, all instances of CVAT bounding boxes will be converted to polygons in the final
+                Encord project. Defaults to False.
+            timeout_seconds:
+                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
+                The method will poll the server periodically during this time.
+
+        Returns:
+            Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
+            - CvatImporterSuccess: Contains project_hash, dataset_hash, and any issues if the import succeeded.
+            - CvatImporterError: Contains any issues if the import failed.
+
+        Raises:
+            ValueError:
+                If the CVAT directory has an invalid format, if a non-LocalImport method is used,
+                or if the server returns an unexpected status.
+        """
+
+        return self.create_project_from_cvat_get_result(
+            cvat_import_uuid=self.create_project_from_cvat_start(
+                import_method=import_method,
+                dataset_name=dataset_name,
+                review_mode=review_mode,
+                transform_bounding_boxes_to_polygons=transform_bounding_boxes_to_polygons,
+            ),
+            timeout_seconds=timeout_seconds,
+        )
 
     def __get_images_paths(
         self,
@@ -752,7 +765,17 @@ class EncordUserClient:
         return dataset_hash, image_title_to_image
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        return self._querier.get_multiple(CloudIntegration)
+        return [
+            CloudIntegration(
+                id=str(x.integration_uuid),
+                title=x.title,
+            )
+            for x in self._api_client.get(
+                "cloud-integrations",
+                params=None,
+                result_type=GetCloudIntegrationsResponse,
+            ).result
+        ]
 
     def get_ontologies(
         self,
@@ -764,6 +787,7 @@ class EncordUserClient:
         created_after: Optional[Union[str, datetime]] = None,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
+        include_org_access: bool = False,
     ) -> List[Dict]:
         """
         List either all (if called with no arguments) or matching ontologies the user has access to.
@@ -777,21 +801,25 @@ class EncordUserClient:
             created_after: optional creation date filter, 'greater'
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
+            include_org_access: if set to true and the calling user is the organization admin, the
+              method will return all ontologies in the organization.
 
         Returns:
-            list of (role, projects) pairs for ontologies matching filter conditions.
+            list of ontologies matching filter conditions, with the roles that the current user has on them. Each item
+            is a dictionary with `"ontology"` and `"user_role"` keys. If include_org_access is set to
+            True, some of the ontologies may have a `None` value for the `"user_role"` key.
         """
-        properties_filter = self.__validate_filter(locals())
+        properties_filter = OntologiesFilterParams.from_dict(self.__validate_filter(locals()))
+        properties_filter.include_org_access = include_org_access
+        page = self._api_client.get("ontologies", params=properties_filter, result_type=Page[OntologyWithUserRole])
+
         # a hack to be able to share validation code without too much c&p
-        data = self._querier.get_multiple(OntologyWithUserRole, payload={"filter": properties_filter})
         retval: List[Dict] = []
-        for row in data:
-            ontology = OrmOntology.from_dict(row.ontology)
-            querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
+        for row in page.results:
             retval.append(
                 {
-                    "ontology": Ontology(querier, ontology, api_client=self._api_client),
-                    "user_role": OntologyUserRole(row.user_role),
+                    "ontology": Ontology._from_api_payload(row, self._api_client),
+                    "user_role": row.user_role,
                 }
             )
         return retval
@@ -807,17 +835,15 @@ class EncordUserClient:
         except ValueError as e:
             raise ValueError("Can't create an Ontology containing a Classification without any attributes. " + str(e))
 
-        ontology = {
-            "title": title,
-            "description": description,
-            "editor": structure_dict,
-        }
+        payload = CreateOrUpdateOntologyPayload(
+            title=title,
+            description=description,
+            editor=structure_dict,
+        )
 
-        retval = self._querier.basic_setter(OrmOntology, uid=None, payload=ontology)
-        ontology = OrmOntology.from_dict(retval)
-        querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
+        ontology = self._api_client.post("ontologies", payload=payload, params=None, result_type=OntologyWithUserRole)
 
-        return Ontology(querier, ontology, self._api_client)
+        return Ontology._from_api_payload(ontology, self._api_client)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):
@@ -858,6 +884,140 @@ class EncordUserClient:
         """
         page = self._api_client.get("user/current-organisation/groups", params=None, result_type=Page[OrmGroup])
         yield from page.results
+
+    def deidentify_dicom_files_start(
+        self,
+        dicom_urls: List[str],
+        integration_hash: str,
+        redact_dicom_tags: bool = True,
+        redact_pixels_mode: DeidentifyRedactTextMode = DeidentifyRedactTextMode.REDACT_NO_TEXT,
+        save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,
+        upload_dir: Optional[str] = None,
+    ) -> UUID:
+        """
+        Initiate the DICOM files deidentification process.
+
+        This method starts the deidentification job for the specified DICOM files and returns
+        a UUID that can be used to track and retrieve the deidentification job results.
+
+        Args:
+            dicom_urls: A list of URLs pointing to DICOM files to be deidentified.
+            integration_hash: Integration hash for the external storage integration.
+            redact_dicom_tags: Flag to enable or disable DICOM tags redaction. Defaults to True.
+            redact_pixels_mode: Policy for redacting text in pixel data.
+                Defaults to DeidentifyRedactTextMode.REDACT_NO_TEXT.
+            save_conditions: Optional list of conditions that must be met for
+                a deidentified DICOM file to be saved.
+            upload_dir: Optional directory for uploading deidentified files.
+                If None, files will be uploaded to the same directory as source files.
+
+        Returns:
+            A UUID representing the initiated deidentification job,
+            which can be used to retrieve job results.
+        """
+
+        if save_conditions is None:
+            save_conditions_api = None
+        else:
+            save_conditions_api = [
+                DicomDeIdSaveCondition(
+                    value=x.value,
+                    condition_type=DicomDeIdSaveConditionType[x.condition_type.value],
+                    dicom_tag=x.dicom_tag,
+                )
+                for x in save_conditions
+            ]
+
+        dicom_deid_uuid = self._api_client.post(
+            "dicom-deidentification",
+            payload=DicomDeIdStartPayload(
+                integration_uuid=uuid.UUID(integration_hash),
+                dicom_urls=dicom_urls,
+                redact_dicom_tags=redact_dicom_tags,
+                redact_pixels_mode=DicomDeIdRedactTextMode[redact_pixels_mode.name],
+                save_conditions=save_conditions_api,
+                upload_dir=upload_dir,
+            ),
+            params=None,
+            result_type=UUID,
+        )
+
+        return dicom_deid_uuid
+
+    def deidentify_dicom_files_get_result(
+        self,
+        dicom_deid_uuid: UUID,
+        *,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> List[str]:
+        """
+        Retrieve the results of a DICOM deidentification job.
+
+        This method polls the server to check the status of a previously initiated
+        DICOM deidentification job and returns the URLs of deidentified files
+        when the job is complete.
+
+        Args:
+            dicom_deid_uuid: The UUID of the deidentification job returned
+                by deidentify_dicom_files_start(...).
+            timeout_seconds: Maximum time to wait for job completion.
+                Defaults to 1 day (86400 seconds).
+
+        Returns:
+            A list of URLs pointing to the deidentified DICOM files.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                log.info(f"deidentify_dicom_files_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._api_client.get(
+                    f"dicom-deidentification/{dicom_deid_uuid}",
+                    params=DicomDeIdGetResultParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            DICOM_DEID_LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=DicomDeIdGetResultResponse,
+                )
+
+                if tmp_res.status == DicomDeIdGetResultLongPollingStatus.DONE:
+                    log.info(f"dicom deidentification job completed with {dicom_deid_uuid=}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    DicomDeIdGetResultLongPollingStatus.DONE,
+                    DicomDeIdGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= DICOM_DEID_LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(DICOM_DEID_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == DicomDeIdGetResultLongPollingStatus.DONE:
+            if res.urls is None:
+                raise ValueError(f"{type(res.urls)=}, res.urls should not be None with DONE status")
+
+            return res.urls
+        elif res.status == DicomDeIdGetResultLongPollingStatus.ERROR:
+            raise ValueError(f"dicom deidentification job failed, {dicom_deid_uuid=}, please contact support")
+        else:
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
 
     def deidentify_dicom_files(
         self,
@@ -913,16 +1073,15 @@ class EncordUserClient:
 
         """
 
-        return self._querier.basic_setter(
-            DicomDeidentifyTask,
-            uid=integration_hash,
-            payload={
-                "dicom_urls": dicom_urls,
-                "redact_dicom_tags": redact_dicom_tags,
-                "redact_pixels_mode": redact_pixels_mode.value,
-                "save_conditions": [x.to_dict() for x in (save_conditions or [])],
-                "upload_dir": upload_dir,
-            },
+        return self.deidentify_dicom_files_get_result(
+            dicom_deid_uuid=self.deidentify_dicom_files_start(
+                dicom_urls=dicom_urls,
+                integration_hash=integration_hash,
+                redact_dicom_tags=redact_dicom_tags,
+                redact_pixels_mode=redact_pixels_mode,
+                save_conditions=save_conditions,
+                upload_dir=upload_dir,
+            )
         )
 
     def create_storage_folder(
@@ -1310,6 +1469,23 @@ class EncordUserClient:
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
         return FilterPreset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
+
+    def create_preset(self, name: str, filter_preset_json: dict, description: str = "") -> FilterPreset:
+        """
+        Create a preset.
+
+        Args:
+            name: The name of the preset.
+            description: The description of the preset.
+            filter_preset_json: The filters for the preset in their raw json format.
+
+        Returns:
+            FilterPreset: Newly created collection.
+        """
+        new_uuid = FilterPreset._create_preset(
+            self._api_client, name, description, filter_preset_json=filter_preset_json
+        )
+        return self.get_filter_preset(new_uuid)
 
     def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
         """

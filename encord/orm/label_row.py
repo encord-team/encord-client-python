@@ -5,6 +5,9 @@ from collections import OrderedDict
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
+from uuid import UUID
+
+from pydantic import Field
 
 from encord.common.time_parser import parse_datetime
 from encord.orm import base_orm
@@ -265,13 +268,21 @@ class LabelRowMetadata(Formatter):
     """Only available for TMS2 project"""
     workflow_graph_node: Optional[WorkflowGraphNode]
     is_shadow_data: bool
+
+    """Only available for the VIDEO and AUDIO data_type"""
+    frames_per_second: Optional[float]
     number_of_frames: int
     duration: Optional[float]
-    """Only available for the VIDEO data_type"""
-    frames_per_second: Optional[int]
+
     """Only available for the VIDEO data_type"""
     height: Optional[int]
     width: Optional[int]
+
+    """Only available for the AUDIO data_type"""
+    audio_sample_rate: Optional[int]
+    audio_codec: Optional[str]
+    audio_bit_depth: Optional[int]
+    audio_num_channels: Optional[int]
 
     priority: Optional[float] = None
     """Only available for not complete tasks"""
@@ -280,6 +291,8 @@ class LabelRowMetadata(Formatter):
     file_type: Optional[str] = None
     """Only available for certain read requests"""
     is_valid: bool = True
+
+    backing_item_uuid: Optional[UUID] = None
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -292,7 +305,7 @@ class LabelRowMetadata(Formatter):
 
         annotation_task_status = (
             AnnotationTaskStatus(json_dict["annotation_task_status"])
-            if json_dict["annotation_task_status"] is not None
+            if json_dict.get("annotation_task_status", None) is not None
             else None
         )
 
@@ -313,6 +326,10 @@ class LabelRowMetadata(Formatter):
             number_of_frames=json_dict["number_of_frames"],
             duration=json_dict.get("duration", None),
             frames_per_second=json_dict.get("frames_per_second", None),
+            audio_codec=json_dict.get("audio_codec", None),
+            audio_bit_depth=json_dict.get("audio_bit_depth", None),
+            audio_num_channels=json_dict.get("audio_num_channels", None),
+            audio_sample_rate=json_dict.get("audio_sample_rate", None),
             height=json_dict.get("height"),
             width=json_dict.get("width"),
             priority=json_dict.get("priority"),
@@ -321,6 +338,9 @@ class LabelRowMetadata(Formatter):
             file_type=json_dict.get("file_type"),
             is_valid=bool(json_dict.get("is_valid", True)),
             branch_name=json_dict["branch_name"],
+            backing_item_uuid=UUID(json_dict["backing_item_uuid"])
+            if json_dict.get("backing_item_uuid", None) is not None
+            else None,
         )
 
     @classmethod
@@ -352,3 +372,97 @@ class LabelValidationState(BaseDTO):
     version: int
     is_valid: bool
     errors: List[str]
+
+
+class WorkflowGraphNodeDTO(BaseDTO):
+    uuid: str
+    title: str
+
+
+class LabelRowMetadataDTO(BaseDTO):
+    """
+    Contains helpful information about a label row.
+    """
+
+    label_hash: Optional[str] = Field(default=None, alias="label_uuid")
+    """Only present if the label row is initiated"""
+    created_at: Optional[datetime.datetime] = None
+    """Only present if the label row is initiated"""
+    last_edited_at: Optional[datetime.datetime] = None
+    """Only present if the label row is initiated"""
+    branch_name: str
+    """Only present if the label row is initiated or branch_name is set specifically"""
+
+    data_hash: str = Field(alias="data_uuid")
+    dataset_hash: str = Field(alias="dataset_uuid")
+    dataset_title: str
+    data_title: str
+    data_type: str
+    data_link: Optional[str] = None
+
+    """Can be `None` for label rows of image groups or DICOM series."""
+    label_status: LabelStatus
+    """Can be `None` for TMS2 projects"""
+    annotation_task_status: Optional[AnnotationTaskStatus] = None
+    """Only available for TMS2 project"""
+    workflow_graph_node: Optional[WorkflowGraphNode] = None
+    is_shadow_data: bool = False
+
+    """Only available for the VIDEO and AUDIO data_type"""
+    frames_per_second: Optional[float]
+    number_of_frames: int
+    duration: Optional[float]
+
+    """Only available for the VIDEO data_type"""
+    height: Optional[int]
+    width: Optional[int]
+
+    """Only available for the AUDIO data_type"""
+    audio_sample_rate: Optional[int]
+    audio_codec: Optional[str]
+    audio_bit_depth: Optional[int]
+    audio_num_channels: Optional[int]
+
+    priority: Optional[float] = None
+    """Only available for not complete tasks"""
+    client_metadata: Optional[Dict[str, Any]] = None
+    images_data: Optional[List[Any]] = None
+    file_type: Optional[str] = None
+    """Only available for certain read requests"""
+    is_valid: bool = True
+
+    backing_item_uuid: Optional[UUID] = None
+
+
+def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRowMetadataDTO) -> LabelRowMetadata:
+    return LabelRowMetadata(
+        label_hash=label_row_metadata_dto.label_hash,
+        created_at=label_row_metadata_dto.created_at,
+        last_edited_at=label_row_metadata_dto.last_edited_at,
+        data_hash=label_row_metadata_dto.data_hash,
+        dataset_hash=label_row_metadata_dto.dataset_hash,
+        dataset_title=label_row_metadata_dto.dataset_title,
+        data_title=label_row_metadata_dto.data_title,
+        data_type=label_row_metadata_dto.data_type,
+        data_link=label_row_metadata_dto.data_link,
+        label_status=label_row_metadata_dto.label_status,
+        annotation_task_status=label_row_metadata_dto.annotation_task_status,
+        workflow_graph_node=label_row_metadata_dto.workflow_graph_node,
+        is_shadow_data=label_row_metadata_dto.is_shadow_data,
+        number_of_frames=label_row_metadata_dto.number_of_frames,
+        duration=label_row_metadata_dto.duration,
+        audio_sample_rate=label_row_metadata_dto.audio_sample_rate,
+        audio_codec=label_row_metadata_dto.audio_codec,
+        audio_bit_depth=label_row_metadata_dto.audio_bit_depth,
+        audio_num_channels=label_row_metadata_dto.audio_num_channels,
+        frames_per_second=label_row_metadata_dto.frames_per_second,
+        height=label_row_metadata_dto.height,
+        width=label_row_metadata_dto.width,
+        priority=label_row_metadata_dto.priority,
+        client_metadata=label_row_metadata_dto.client_metadata,
+        images_data=label_row_metadata_dto.images_data,
+        file_type=label_row_metadata_dto.file_type,
+        is_valid=label_row_metadata_dto.is_valid,
+        branch_name=label_row_metadata_dto.branch_name,
+        backing_item_uuid=label_row_metadata_dto.backing_item_uuid,
+    )

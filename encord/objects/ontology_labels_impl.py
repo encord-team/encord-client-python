@@ -17,9 +17,11 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
+from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
+from encord.common.range_manager import RangeManager
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
@@ -53,7 +55,7 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
 )
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -105,6 +107,7 @@ class LabelRowV2:
         self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
+        self._classifications_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
 
         self._objects_map: Dict[str, ObjectInstance] = dict()
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
@@ -358,6 +361,67 @@ class LabelRowV2:
         return self._label_row_read_only_data.height
 
     @property
+    def audio_codec(self) -> Optional[str]:
+        """
+        Returns the codec of the audio data type.
+
+        This only applies to audio data types, and returns None for all other data types.
+
+        Returns:
+            Optional[str]: The codec or None if not applicable.
+        """
+        return self._label_row_read_only_data.audio_codec
+
+    @property
+    def audio_sample_rate(self) -> Optional[int]:
+        """
+        Returns the sample rate of the audio data type.
+
+        This only applies to audio data types, and returns None for all other data types.
+
+        Returns:
+            Optional[int]: The sample rate or None if not applicable.
+        """
+        return self._label_row_read_only_data.audio_sample_rate
+
+    @property
+    def audio_bit_depth(self) -> Optional[int]:
+        """
+        Returns the bit depth of the audio data type.
+
+        This only applies to audio data types, and returns None for all other data types.
+
+        Returns:
+            Optional[int]: The bit depth or None if not applicable.
+        """
+        return self._label_row_read_only_data.audio_bit_depth
+
+    @property
+    def audio_num_channels(self) -> Optional[int]:
+        """
+        Returns the number of channels of the audio data type.
+
+        This only applies to audio data types, and returns None for all other data types.
+
+        Returns:
+            Optional[int]: The number of channels or None if not applicable.
+        """
+        return self._label_row_read_only_data.audio_num_channels
+
+    @property
+    def backing_item_uuid(self) -> Optional[UUID]:
+        """
+        Returns the unique identifier (UUID) for the backing storage item associated with this label row.
+
+        While it is always included in server responses, it is marked as optional for backward compatibility with earlier versions.
+
+        Returns:
+            Optional[UUID]: The backing storage item id or None if not found.
+        """
+        # TODO: Mark required in 0.2 release
+        return self._label_row_read_only_data.backing_item_uuid
+
+    @property
     def priority(self) -> Optional[float]:
         """
         Returns the workflow priority for the task associated with the data unit.
@@ -508,6 +572,7 @@ class LabelRowV2:
         self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
         self._frame_to_hashes = defaultdict(set)
         self._classifications_to_frames = defaultdict(set)
+        self._classifications_to_ranges = defaultdict(RangeManager)
 
         self._metadata = None
         self._frame_metadata = defaultdict(lambda: None)
@@ -603,6 +668,9 @@ class LabelRowV2:
         Returns:
             FrameView: A view of the specified frame.
         """
+
+        self._method_not_supported_for_audio()
+
         self._check_labelling_is_initalised()
         if isinstance(frame, str):
             frame_num = self.get_frame_number(frame)
@@ -644,6 +712,8 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the specified frame or image hash is not found in the label row.
         """
+        self._method_not_supported_for_audio()
+
         images_data = self._get_frame_metadata_list()
         if isinstance(frame, str):
             data_meta = None
@@ -749,6 +819,9 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the object instance is already part of another LabelRowV2.
         """
+
+        self._method_not_supported_for_audio()
+
         self._check_labelling_is_initalised()
 
         object_instance.is_valid()
@@ -789,6 +862,16 @@ class LabelRowV2:
 
         classification_instance.is_valid()
 
+        # TODO: Need to update the docstring for this method, talk to Laverne.
+        if not classification_instance.is_range_only() and self.data_type == DataType.AUDIO:
+            raise LabelRowError(
+                "To add a ClassificationInstance object to an Audio LabelRow,"
+                "the ClassificationInstance object needs to be created with the "
+                "range_only property set to True."
+                "You can do ClassificationInstance(range_only=True) or "
+                "Classification.create_instance(range_only=True) to achieve this."
+            )
+
         if classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
                 "Provided ClassificationInstance object is already attached to a different LabelRowV2 object. "
@@ -797,21 +880,61 @@ class LabelRowV2:
             )
 
         classification_hash = classification_instance.classification_hash
-        frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
-        already_present_frames = self._is_classification_already_present(
-            classification_instance.ontology_item,
-            frames,
-        )
         if classification_hash in self._classifications_map and not force:
             raise LabelRowError(
                 f"A ClassificationInstance for classification hash '{classification_hash}' already exists on the label row object. "
                 f"Pass 'force=True' to override it."
             )
 
-        if already_present_frames and not force:
+        """
+        Implementation here diverges because audio data will operate on ranges, whereas
+        everything else will operate on frames.
+        """
+        if self.data_type == DataType.AUDIO:
+            self._add_classification_instance_for_range(
+                classification_instance=classification_instance,
+                force=force,
+            )
+        else:
+            frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
+            already_present_frames = self._is_classification_already_present_on_frames(
+                classification_instance.ontology_item,
+                frames,
+            )
+
+            if already_present_frames and not force:
+                raise LabelRowError(
+                    f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
+                    f"Overlapping frames that were found are `{frames_to_ranges(already_present_frames)}`. "
+                    f"Make sure that you only add classifications which are on frames where the same type of "
+                    f"classification does not yet exist."
+                )
+
+            if classification_hash in self._classifications_map and force:
+                self._classifications_map.pop(classification_hash)
+
+            self._classifications_map[classification_hash] = classification_instance
+            classification_instance._parent = self
+
+            self._classifications_to_frames[classification_instance.ontology_item].update(frames)
+            self._add_to_frame_to_hashes_map(classification_instance, frames)
+
+    # This should only be used for Audio classification instances
+    def _add_classification_instance_for_range(
+        self,
+        classification_instance: ClassificationInstance,
+        force: bool,
+    ):
+        classification_hash = classification_instance.classification_hash
+        ranges_to_add = classification_instance.range_list
+        already_present_ranges = self._is_classification_already_present_on_ranges(
+            classification_instance.ontology_item, ranges_to_add
+        )
+
+        if already_present_ranges and not force:
             raise LabelRowError(
                 f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
-                f"Overlapping frames that were found are `{frames_to_ranges(already_present_frames)}`. "
+                f"Overlapping frames that were found are `{already_present_ranges}`. "
                 f"Make sure that you only add classifications which are on frames where the same type of "
                 f"classification does not yet exist."
             )
@@ -822,8 +945,7 @@ class LabelRowV2:
         self._classifications_map[classification_hash] = classification_instance
         classification_instance._parent = self
 
-        self._classifications_to_frames[classification_instance.ontology_item].update(frames)
-        self._add_to_frame_to_hashes_map(classification_instance, frames)
+        self._classifications_to_ranges[classification_instance.ontology_item].add_ranges(ranges_to_add)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
         """
@@ -836,10 +958,16 @@ class LabelRowV2:
 
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
-        all_frames = self._classifications_to_frames[classification_instance.ontology_item]
-        actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
-        for actual_frame in actual_frames:
-            all_frames.remove(actual_frame)
+
+        if self.data_type == DataType.AUDIO:
+            range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
+            ranges_to_remove = classification_instance.range_list
+            range_manager.remove_ranges(ranges_to_remove)
+        else:
+            all_frames = self._classifications_to_frames[classification_instance.ontology_item]
+            actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
+            for actual_frame in actual_frames:
+                all_frames.remove(actual_frame)
 
     def add_to_single_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
@@ -906,6 +1034,8 @@ class LabelRowV2:
         Args:
             object_instance: The object instance to remove.
         """
+        self._method_not_supported_for_audio()
+
         self._check_labelling_is_initalised()
 
         self._objects_map.pop(object_instance.object_hash)
@@ -1040,18 +1170,42 @@ class LabelRowV2:
         @property
         def title(self) -> str:
             return self._image_data.title
+            """
+            Get the title of the image.
+
+            Returns:
+                str: The image title.
+            """
 
         @property
         def file_type(self) -> str:
             return self._image_data.file_type
+            """
+            Get the file type of the image.
+
+            Returns:
+                str: The image file type.
+            """
 
         @property
         def width(self) -> int:
             return self._image_data.width
+            """
+            Get the width of the image.
+
+            Returns:
+                int: The image width.
+            """
 
         @property
         def height(self) -> int:
             return self._image_data.height
+            """
+            Get the height of the image.
+
+            Returns:
+                int: The image height.
+            """
 
         @property
         def image_hash(self) -> str:
@@ -1413,6 +1567,10 @@ class LabelRowV2:
             dataset_hash: Hash of the dataset.
             dataset_title: Title of the dataset.
             data_title: Title of the data.
+            audio_codec: Codec for audio data.
+            audio_bit_depth: Bit depth for audio data.
+            audio_sample_rate: Sample Rate for audio data.
+            audio_num_channels: Number of channels for audio data.
             width: Optional width of the data.
             height: Optional height of the data.
             data_link: Optional link to additional data.
@@ -1432,6 +1590,7 @@ class LabelRowV2:
         last_edited_at: Optional[datetime]
         data_hash: str
         data_type: DataType
+        backing_item_uuid: Optional[UUID]
         label_status: LabelStatus
         annotation_task_status: Optional[AnnotationTaskStatus]
         workflow_graph_node: Optional[WorkflowGraphNode]
@@ -1442,12 +1601,16 @@ class LabelRowV2:
         dataset_hash: str
         dataset_title: str
         data_title: str
+        audio_codec: Optional[str]
+        audio_bit_depth: Optional[int]
+        audio_num_channels: Optional[int]
+        audio_sample_rate: Optional[int]
         width: Optional[int]
         height: Optional[int]
         data_link: Optional[str]
         priority: Optional[float]
         file_type: Optional[str]
-        client_metadata: Optional[dict]
+        client_metadata: Optional[Dict[str, Any]]
         images_data: Optional[List[LabelRowV2.LabelRowReadOnlyDataImagesDataEntry]]
         branch_name: str
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
@@ -1485,7 +1648,25 @@ class LabelRowV2:
             ret[classification.classification_hash] = {
                 "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
+                "featureHash": classification.feature_hash,
             }
+
+            # At some point, we also want to add these to the other modalities
+            if self.data_type == DataType.AUDIO:
+                annotation = classification.get_annotations()[0]
+                ret[classification.classification_hash]["range"] = [
+                    [range.start, range.end] for range in classification.range_list
+                ]
+                ret[classification.classification_hash]["createdBy"] = annotation.created_by
+                ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
+                    DATETIME_LONG_STRING_FORMAT
+                )
+                ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
+                ret[classification.classification_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(
+                    DATETIME_LONG_STRING_FORMAT
+                )
+                ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
+
         return ret
 
     @staticmethod
@@ -1546,14 +1727,24 @@ class LabelRowV2:
             ret["data_link"] = frame_level_data.data_link
 
         ret["data_type"] = frame_level_data.file_type
+
         ret["data_sequence"] = data_sequence
-        ret["width"] = frame_level_data.width
-        ret["height"] = frame_level_data.height
+
+        if self.data_type != DataType.AUDIO:
+            ret["width"] = frame_level_data.width
+            ret["height"] = frame_level_data.height
+
+        else:
+            ret["audio_codec"] = self._label_row_read_only_data.audio_codec
+            ret["audio_sample_rate"] = self._label_row_read_only_data.audio_sample_rate
+            ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
+            ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
+
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
         if self._label_row_read_only_data.duration is not None:
             ret["data_duration"] = self._label_row_read_only_data.duration
-        if self._label_row_read_only_data.fps is not None:
+        if self._label_row_read_only_data.fps is not None and self.data_type != DataType.AUDIO:
             ret["data_fps"] = self._label_row_read_only_data.fps
         # HACK: PDF as video structure requires providing fps
         if data_type == DataType.PDF:
@@ -1708,17 +1899,34 @@ class LabelRowV2:
 
         return ret
 
-    def _is_classification_already_present(self, classification: Classification, frames: Iterable[int]) -> Set[int]:
+    def _is_classification_already_present_on_frames(
+        self, classification: Classification, frames: Iterable[int]
+    ) -> Set[int]:
         present_frames = self._classifications_to_frames.get(classification, set())
+
         return present_frames.intersection(frames)
+
+    def _is_classification_already_present_on_ranges(
+        self,
+        classification: Classification,
+        ranges: Ranges,
+    ) -> Ranges:
+        range_manager = self._classifications_to_ranges.get(classification, RangeManager())
+        return range_manager.intersection(ranges)
 
     def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         self._classifications_to_frames[classification].update(frames)
+
+    def _add_ranges_to_classification(self, classification: Classification, ranges_to_add: Ranges) -> None:
+        self._classifications_to_ranges[classification].add_ranges(ranges_to_add)
 
     def _remove_frames_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
         present_frames = self._classifications_to_frames.get(classification, set())
         for frame in frames:
             present_frames.remove(frame)
+
+    def _remove_ranges_from_classification(self, classification: Classification, ranges_to_remove: Ranges) -> None:
+        self._classifications_to_ranges[classification].remove_ranges(ranges_to_remove)
 
     def _add_to_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frames: Iterable[int]
@@ -1751,6 +1959,10 @@ class LabelRowV2:
             duration=label_row_metadata.duration,
             fps=label_row_metadata.frames_per_second,
             number_of_frames=label_row_metadata.number_of_frames,
+            audio_codec=label_row_metadata.audio_codec,
+            audio_sample_rate=label_row_metadata.audio_sample_rate,
+            audio_num_channels=label_row_metadata.audio_num_channels,
+            audio_bit_depth=label_row_metadata.audio_bit_depth,
             width=label_row_metadata.width,
             height=label_row_metadata.height,
             priority=label_row_metadata.priority,
@@ -1760,6 +1972,7 @@ class LabelRowV2:
             client_metadata=label_row_metadata.client_metadata,
             file_type=label_row_metadata.file_type,
             is_valid=label_row_metadata.is_valid,
+            backing_item_uuid=label_row_metadata.backing_item_uuid,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -1768,11 +1981,15 @@ class LabelRowV2:
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
         data_type = DataType(label_row_dict["data_type"])
 
+        audio_codec = None
+        audio_sample_rate = None
+        audio_num_channels = None
+        audio_bit_depth = None
+
         if (
             data_type == DataType.VIDEO
             or data_type == DataType.IMAGE
             or data_type == DataType.PDF
-            or data_type == DataType.AUDIO
             or data_type == DataType.TEXT
         ):
             data_dict = list(label_row_dict["data_units"].values())[0]
@@ -1788,6 +2005,16 @@ class LabelRowV2:
             data_link = None
             height = dicom_dict["height"]
             width = dicom_dict["width"]
+
+        elif data_type == DataType.AUDIO:
+            data_dict = list(label_row_dict["data_units"].values())[0]
+            data_link = data_dict["data_link"]
+            height = None
+            width = None
+            audio_codec = data_dict["audio_codec"]
+            audio_sample_rate = data_dict["audio_sample_rate"]
+            audio_num_channels = data_dict["audio_num_channels"]
+            audio_bit_depth = data_dict["audio_bit_depth"]
 
         elif data_type == DataType.IMG_GROUP:
             data_link = None
@@ -1828,11 +2055,16 @@ class LabelRowV2:
             data_link=data_link,
             height=height,
             width=width,
+            audio_codec=audio_codec,
+            audio_sample_rate=audio_sample_rate,
+            audio_num_channels=audio_num_channels,
+            audio_bit_depth=audio_bit_depth,
             priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
             client_metadata=label_row_dict.get("client_metadata", self._label_row_read_only_data.client_metadata),
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
             file_type=label_row_dict.get("file_type", None),
             is_valid=bool(label_row_dict.get("is_valid", True)),
+            backing_item_uuid=self.backing_item_uuid,
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
@@ -1871,9 +2103,9 @@ class LabelRowV2:
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
+            # In the future, PDF and Text should come here
             elif data_type == DataType.AUDIO:
-                # TODO: run _add_classification_instances_from_classifications here
-                pass
+                self._add_classification_instances_from_classifications_without_frames(classification_answers)
 
             else:
                 exhaustive_guard(data_type)
@@ -2015,6 +2247,20 @@ class LabelRowV2:
             ):
                 self.add_classification_instance(classification_instance)
 
+    def _add_classification_instances_from_classifications_without_frames(
+        self,
+        classification_answers: dict,
+    ):
+        for classification_answer in classification_answers.values():
+            ranges: Ranges = []
+            for range in classification_answer["range"]:
+                ranges.append(Range(range[0], range[1]))
+
+            classification_instance = self._create_new_classification_instance_with_ranges(
+                classification_answer, ranges
+            )
+            self.add_classification_instance(classification_instance)
+
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
         for payload in label_row_data_units.values():
@@ -2035,7 +2281,10 @@ class LabelRowV2:
         return frame_level_data
 
     def _create_new_classification_instance(
-        self, frame_classification_label: dict, frame: int, classification_answers: dict
+        self,
+        frame_classification_label: dict,
+        frame: int,
+        classification_answers: dict,
     ) -> Optional[ClassificationInstance]:
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
@@ -2065,6 +2314,36 @@ class LabelRowV2:
 
         return None
 
+    # This is only to be used by non-frame modalities (e.g. Audio)
+    def _create_new_classification_instance_with_ranges(
+        self, classification_answer: dict, ranges: Ranges
+    ) -> ClassificationInstance:
+        feature_hash = classification_answer["featureHash"]
+        classification_hash = classification_answer["classificationHash"]
+
+        label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
+
+        range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
+
+        classification_instance = ClassificationInstance(
+            label_class, classification_hash=classification_hash, range_only=True
+        )
+        classification_instance.set_for_frames(
+            ranges,
+            created_at=range_view.created_at,
+            created_by=range_view.created_by,
+            confidence=range_view.confidence,
+            manual_annotation=range_view.manual_annotation,
+            last_edited_at=range_view.last_edited_at,
+            last_edited_by=range_view.last_edited_by,
+            reviews=range_view.reviews,
+            overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
+        )
+        answers_dict = classification_answer["classifications"]
+        self._add_static_answers_from_dict(classification_instance, answers_dict)
+
+        return classification_instance
+
     def _add_static_answers_from_dict(
         self, classification_instance: ClassificationInstance, answers_list: List[dict]
     ) -> None:
@@ -2082,6 +2361,10 @@ class LabelRowV2:
                 "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` "
                 "to do so first."
             )
+
+    def _method_not_supported_for_audio(self):
+        if self.data_type == DataType.AUDIO:
+            raise LabelRowError("This method is not supported for audio.")
 
     def __repr__(self) -> str:
         return f"LabelRowV2(label_hash={self.label_hash}, data_hash={self.data_hash}, data_title={self.data_title})"

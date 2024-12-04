@@ -3,9 +3,8 @@ from datetime import datetime, timezone
 from typing import List
 
 import pytest
-from pydantic import ValidationError
 
-from encord.common.constants import DATETIME_LONG_STRING_FORMAT, DATETIME_STRING_FORMAT
+from encord.common.constants import DATETIME_LONG_STRING_FORMAT
 from encord.exceptions import EncordException
 from encord.orm.base_dto import BaseDTO, dto_validator
 from encord.orm.dataset import DatasetDataLongPolling, LongPollingStatus
@@ -75,6 +74,7 @@ def test_complex_model_deserialization():
         "units_pending_count": 5,
         "units_done_count": 5,
         "units_error_count": 2,
+        "units_cancelled_count": 0,
         "data_hashes_with_titles": [
             {"data_hash": "abc", "title": "dummy title", "backing_item_uuid": str(backing_item_uuid)}
         ],
@@ -96,6 +96,12 @@ class TestModelWithValidator(TestModel):
         assert number > 0
         return values
 
+    @dto_validator(mode="after")
+    def validate_after(cls, instance: "TestModelWithValidator"):
+        assert instance.text_value == "abc"
+        instance.text_value += "-postfix"
+        return instance
+
 
 def test_dto_validator():
     time_value = datetime.now()
@@ -106,6 +112,7 @@ def test_dto_validator():
     }
     valid_case = TestModelWithValidator.from_dict(data_dict)
     assert valid_case.number_value == 22
+    assert valid_case.text_value == f"{data_dict['text_value']}-postfix"
 
     invalid_data = data_dict
     invalid_data["number_value"] = -10
