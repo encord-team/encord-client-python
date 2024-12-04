@@ -33,7 +33,7 @@ from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
-from encord.objects import ChecklistAttribute, RadioAttribute, TextAttribute
+from encord.objects import ChecklistAttribute, RadioAttribute, Shape, TextAttribute
 from encord.objects.answers import (
     Answer,
     _get_static_answer_map,
@@ -71,7 +71,7 @@ class ObjectInstance:
     An object instance is an object that has coordinates and can be placed on one or multiple frames in a label row.
     """
 
-    def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None, range_only: bool = False):
+    def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
         self._object_hash = object_hash or short_uuid_str()
         self._parent: Optional[LabelRowV2] = None
@@ -82,7 +82,7 @@ class ObjectInstance:
         self._dynamic_answer_manager = DynamicAnswerManager(self)
 
         # Only used for non-frame entities
-        self._range_only = range_only
+        self._range_only = ontology_object.shape in (Shape.AUDIO,)
         self._range_manager: RangeManager = RangeManager()
 
         # Only used for frame entities
@@ -807,7 +807,7 @@ class ObjectInstance:
             Returns:
                 ObjectInstance.FrameInfo: An instance of FrameInfo.
             """
-            if "lastEditedAt" in d:
+            if "lastEditedAt" in d and d["lastEditedAt"] is not None:
                 last_edited_at = parse_datetime(d["lastEditedAt"])
             else:
                 last_edited_at = datetime.now()
