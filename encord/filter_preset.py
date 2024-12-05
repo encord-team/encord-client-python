@@ -5,6 +5,7 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.exceptions import (
     AuthorisationError,
+    EncordException,
 )
 from encord.http.v2.api_client import ApiClient
 from encord.orm.filter_preset import (
@@ -130,9 +131,12 @@ class FilterPreset:
 
     @staticmethod
     def _create_preset(api_client: ApiClient, name: str, *, filter_preset_json: dict) -> UUID:
+        filter_preset = FilterPresetDefinition.from_dict(filter_preset_json)
+        if not filter_preset.local_filters and not filter_preset.global_filters:
+            raise EncordException("We require there to be a non-zero number of filters in a preset")
         payload = CreatePresetPayload(
             name=name,
-            filter_preset_json=FilterPresetDefinition.from_dict(filter_preset_json).to_dict(),
+            filter_preset_json=filter_preset.to_dict(),
         )
         return api_client.post(
             "index/presets",
@@ -161,6 +165,9 @@ class FilterPreset:
             filters_definition = FilterPresetDefinition.from_dict(filter_preset_json)
         elif isinstance(filter_preset_json, FilterPresetDefinition):
             filters_definition = filter_preset_json
+        if filters_definition:
+            if not filters_definition.local_filters and not filters_definition.global_filters:
+                raise EncordException("We require there to be a non-zero number of filters in a preset")
         payload = UpdatePresetPayload(name=name, filter_preset=filters_definition)
         self._client.patch(
             f"index/presets/{self.uuid}",
@@ -303,6 +310,8 @@ class ProjectFilterPreset:
     def _create_filter_preset(
         client: ApiClient, project_uuid: UUID, name: str, filter_preset: FilterPresetDefinition
     ) -> UUID:
+        if not filter_preset.local_filters and not filter_preset.global_filters:
+            raise EncordException("We require there to be a non-zero number of filters in a preset for creation")
         payload = CreatePresetPayload(name=name, filter_preset_json=filter_preset.to_dict())
         orm_resp = client.post(f"active/{project_uuid}/presets", params=None, payload=payload, result_type=UUID)
         return orm_resp
