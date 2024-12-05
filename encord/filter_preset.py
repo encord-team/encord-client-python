@@ -129,10 +129,9 @@ class FilterPreset:
         )
 
     @staticmethod
-    def _create_preset(api_client: ApiClient, name: str, description: str = "", *, filter_preset_json: dict) -> UUID:
+    def _create_preset(api_client: ApiClient, name: str, *, filter_preset_json: dict) -> UUID:
         payload = CreatePresetPayload(
             name=name,
-            description=description,
             filter_preset_json=FilterPresetDefinition.from_dict(filter_preset_json).to_dict(),
         )
         return api_client.post(
@@ -149,9 +148,7 @@ class FilterPreset:
             result_type=FilterPresetDefinition,
         )
 
-    def update_preset(
-        self, name: Optional[str] = None, description: Optional[str] = None, filter_preset_json: Optional[dict] = None
-    ) -> None:
+    def update_preset(self, name: Optional[str] = None, filter_preset_json: Optional[dict] = None) -> None:
         """
         Update the preset's definition.
         Args:
@@ -164,7 +161,7 @@ class FilterPreset:
             filters_definition = FilterPresetDefinition.from_dict(filter_preset_json)
         elif isinstance(filter_preset_json, FilterPresetDefinition):
             filters_definition = filter_preset_json
-        payload = UpdatePresetPayload(name=name, description=description, filter_preset=filters_definition)
+        payload = UpdatePresetPayload(name=name, filter_preset=filters_definition)
         self._client.patch(
             f"index/presets/{self.uuid}",
             params=None,
@@ -292,6 +289,14 @@ class ProjectFilterPreset:
             f"active/{self._project_uuid}/presets/{self._filter_preset_instance.preset_uuid}/raw",
             params=None,
             result_type=FilterPresetDefinition,
+        )
+
+    def update_preset(self, name: Optional[str] = None, filter_preset: Optional[FilterPresetDefinition] = None) -> None:
+        if name is None and filter_preset is None:
+            return
+        payload = UpdatePresetPayload(name=name, filter_preset=filter_preset)
+        self._client.patch(
+            f"active/{self.project_hash}/presets/{self.uuid}", params=None, payload=payload, result_type=None
         )
 
     @staticmethod
