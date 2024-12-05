@@ -293,3 +293,11 @@ class ProjectFilterPreset:
             params=None,
             result_type=FilterPresetDefinition,
         )
+
+    @staticmethod
+    def _create_filter_preset(
+        client: ApiClient, project_uuid: UUID, name: str, filter_preset: FilterPresetDefinition
+    ) -> UUID:
+        payload = CreatePresetPayload(name=name, filter_preset_json=filter_preset.to_dict())
+        orm_resp = client.post(f"active/{project_uuid}/presets", params=None, payload=payload, result_type=UUID)
+        return orm_resp
