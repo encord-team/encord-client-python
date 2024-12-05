@@ -1135,6 +1135,33 @@ def test_get_annotations_from_audio_classification(ontology) -> None:
     assert annotation.reviews is None
 
 
+def test_get_annotations_from_audio_object(ontology) -> None:
+    now = datetime.datetime.now()
+
+    object_instance = ObjectInstance(audio_obj_ontology_item)
+    object_instance.set_for_frames(
+        AudioCoordinates(),
+        Range(start=0, end=1500),
+        created_at=now,
+        created_by="user1",
+        last_edited_at=now,
+        last_edited_by="user2",
+    )
+
+    annotations = object_instance.get_annotations()
+
+    assert len(annotations) == 1
+
+    annotation = annotations[0]
+    assert annotation.manual_annotation == DEFAULT_MANUAL_ANNOTATION
+    assert annotation.confidence == DEFAULT_CONFIDENCE
+    assert annotation.created_at == now
+    assert annotation.created_by == "user1"
+    assert annotation.last_edited_at == now
+    assert annotation.last_edited_by == "user2"
+    assert annotation.reviews is None
+
+
 def test_audio_classification_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
     label_row = empty_audio_label_row
     classification_instance = ClassificationInstance(checklist_classification, range_only=True)
