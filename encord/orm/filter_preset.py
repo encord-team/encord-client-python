@@ -44,15 +44,6 @@ class FilterPresetDefinition(BaseDTO):
     )
     global_filters: FilterDefinition = Field(default_factory=FilterDefinition, alias="globalFilters")
 
-    @dto_validator(mode="after")
-    def check_not_empty(cls, self):
-        if len(self.global_filters.filters) == 0 and all(
-            [len(value.filters) == 0 for value in self.local_filters.values()]
-        ):
-            raise ValueError("FilterPresetDefinition definition must contain at least one global or local filter.")
-
-        return self
-
 
 class GetPresetsResponse(BaseDTO):
     results: List[FilterPreset]
