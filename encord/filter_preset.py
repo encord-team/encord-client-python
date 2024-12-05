@@ -270,7 +270,7 @@ class ProjectFilterPreset:
         filter_preset_uuids: Union[List[UUID], None],
         page_size: Optional[int] = None,
     ) -> Iterator["ProjectFilterPreset"]:
-        params = GetProjectFilterPresetParams(uuids=filter_preset_uuids, pageSize=page_size)
+        params = GetProjectFilterPresetParams(uuids=filter_preset_uuids, page_size=page_size)
         paged_filter_presets = client.get_paged_iterator(
             f"active/{project_uuid}/presets",
             params=params,
