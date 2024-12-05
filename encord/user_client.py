@@ -32,7 +32,7 @@ from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.collection import Collection
 from encord.common.deprecated import deprecated
-from encord.common.time_parser import parse_datetime
+from encord.common.time_parser import parse_datetime, parse_datetime_optional
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
@@ -61,13 +61,14 @@ from encord.orm.dataset import (
     CreateDatasetResponseV2,
     DatasetAccessSettings,
     DatasetInfo,
-    DatasetUserRole,
+    DatasetsWithUserRolesListParams,
+    DatasetsWithUserRolesListResponse,
     DicomDeidentifyTask,
     Images,
     StorageLocation,
+    dataset_user_role_str_enum_to_int_enum,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.deidentification import (
     DicomDeIdGetResultLongPollingStatus,
     DicomDeIdGetResultParams,
@@ -96,8 +97,7 @@ from encord.orm.project import (
 )
 from encord.orm.project import Project as OrmProject
 from encord.orm.project_with_user_role import ProjectWithUserRole
-from encord.orm.storage import CreateStorageFolderPayload, ListFoldersParams, ListItemsParams, StorageItemType
-from encord.orm.storage import StorageFolder as OrmStorageFolder
+from encord.orm.storage import ListFoldersParams, ListItemsParams, StorageItemType
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
@@ -303,24 +303,37 @@ class EncordUserClient:
         Returns:
             list of (role, dataset) pairs for datasets  matching filter conditions.
         """
-        properties_filter = self.__validate_filter(locals())
-        # a hack to be able to share validation code without too much c&p
-        data = self._querier.get_multiple(
-            DatasetWithUserRole,
-            payload={
-                "filter": properties_filter,
-                "enable_storage_api": True,
-            },
+
+        res = self._api_client.get(
+            "/datasets/list",
+            params=DatasetsWithUserRolesListParams(
+                title_eq=title_eq,
+                title_like=title_like,
+                description_eq=desc_eq,
+                description_like=desc_like,
+                created_before=parse_datetime_optional(created_before),
+                created_after=parse_datetime_optional(created_after),
+                edited_before=parse_datetime_optional(edited_before),
+                edited_after=parse_datetime_optional(edited_after),
+            ),
+            result_type=DatasetsWithUserRolesListResponse,
         )
 
-        def convert_dates(dataset):
-            dataset["created_at"] = parse_datetime(dataset["created_at"])
-            dataset["last_edited_at"] = parse_datetime(dataset["last_edited_at"])
-            return dataset
-
         return [
-            {"dataset": DatasetInfo(**convert_dates(d.dataset)), "user_role": DatasetUserRole(d.user_role)}
-            for d in data
+            {
+                "dataset": DatasetInfo(
+                    dataset_hash=str(x.dataset_uuid),
+                    user_hash="field withdrawn for compliance reasons",
+                    title=x.title,
+                    description=x.description,
+                    type=int(x.storage_location or 0),
+                    created_at=x.created_at,
+                    last_edited_at=x.last_edited_at,
+                    backing_folder_uuid=x.backing_folder_uuid,
+                ),
+                "user_role": dataset_user_role_str_enum_to_int_enum(x.user_role),
+            }
+            for x in res.result
         ]
 
     @staticmethod
