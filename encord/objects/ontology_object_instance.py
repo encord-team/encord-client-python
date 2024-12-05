@@ -150,11 +150,10 @@ class ObjectInstance:
             return self._range_manager.get_ranges()
         else:
             raise LabelRowError(
-                "No ranges available for this classification instance."
-                "Please ensure the classification instance was created with "
-                "the range_only property to True. "
-                "You can do ClassificationInstance(range_only=True) or "
-                "Classification.create_instance(range_only=True) to achieve this."
+                "No ranges available for this object instance."
+                "Please ensure the object instance was created with "
+                "the range_only property to True (via a range aware shape)"
+                "You can do ObjectInstance(audio_ontology_object) to achieve this."
             )
 
     def is_range_only(self) -> bool:
@@ -549,7 +548,7 @@ class ObjectInstance:
         """
         if self._range_only and frame != 0:
             raise LabelRowError(
-                "This Object Instance only works on ranges, technically only has one 'frame'"
+                'This annotation data for this object instance is stored on only one "frame". '
                 "Use `get_annotation(0)` to get the frame data of the first frame."
             )
         if isinstance(frame, str):
