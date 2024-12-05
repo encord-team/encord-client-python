@@ -2219,14 +2219,15 @@ class LabelRowV2:
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Object)
 
         frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
-        frame_info_dict.setdefault("confidence", 1.0)
+        frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
 
         expected_shape: Shape
         if self._label_row_read_only_data.data_type == DataType.AUDIO:
             expected_shape = Shape.AUDIO
         else:
-            raise RuntimeError("Unexpected data type for range based objects")
+            unknown_data_type = self._label_row_read_only_data.data_type
+            raise RuntimeError(f"Unexpected data type[{unknown_data_type}] for range based objects")
         if label_class.shape != expected_shape:
             raise LabelRowError("Unsupported object shape for data type")
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
