@@ -23,15 +23,15 @@ class FilterPreset(BaseDTO):
 
 class GetProjectFilterPresetParams(BaseDTO):
     preset_uuids: Optional[List[uuid.UUID]] = Field(default=[], alias="uuids")
-    page_token: Optional[str] = Field(default=None, alias="pageToken")
-    page_size: Optional[int] = Field(default=None, alias="pageSize")
+    page_token: Optional[str] = Field(default=None)
+    page_size: Optional[int] = Field(default=None)
 
 
 class ProjectFilterPreset(BaseDTO):
     preset_uuid: uuid.UUID = Field(alias="presetUuid")
     name: str
-    created_at: Optional[datetime] = Field(default=None, alias="createdAt")
-    updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
 
 
 class FilterDefinition(BaseDTO):
@@ -40,9 +40,9 @@ class FilterDefinition(BaseDTO):
 
 class FilterPresetDefinition(BaseDTO):
     local_filters: Dict[str, FilterDefinition] = Field(
-        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()}, alias="localFilters"
+        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()},
     )
-    global_filters: FilterDefinition = Field(default_factory=FilterDefinition, alias="globalFilters")
+    global_filters: FilterDefinition = Field(default_factory=FilterDefinition)
 
 
 class GetPresetsResponse(BaseDTO):
