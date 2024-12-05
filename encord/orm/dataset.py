@@ -1051,3 +1051,20 @@ class DatasetDataLongPolling(BaseDTO):
 @dataclasses.dataclass(frozen=True)
 class DatasetLinkItems:
     pass
+
+
+class CreateDatasetPayload(BaseDTO):
+    title: str
+    description: Optional[str]
+
+    create_backing_folder: bool  # this creates a legacy "mirror" dataset and it's backing folder in one go
+
+    # only for analytics, to know if customers are
+    # using depreciated EncordUserClient.create_private_dataset
+    # this is only place which should pass legacy_call=True
+    legacy_call: bool  # this field will be removed soon
+
+
+class CreateDatasetResponseV2(BaseDTO):
+    dataset_uuid: UUID
+    backing_folder_uuid: Optional[UUID] = None  # a 'not None' indicates a legacy "mirror" dataset was created
