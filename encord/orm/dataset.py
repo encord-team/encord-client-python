@@ -1107,4 +1107,4 @@ class DatasetWithUserRole(BaseDTO):
 
 
 class DatasetsWithUserRolesListResponse(BaseDTO):
-    result: list[DatasetWithUserRole]
+    result: List[DatasetWithUserRole]

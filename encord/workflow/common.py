@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterable, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
 from uuid import UUID
 
 from encord.http.bundle import Bundle, bundled_operation
@@ -49,7 +49,7 @@ ReviewT = TypeVar("ReviewT", bound=BaseDTO)
 @dataclass
 class BundledWorkflowActionPayload:
     stage_uuid: UUID
-    actions: list[WorkflowAction]
+    actions: List[WorkflowAction]
 
     def add(self, other: BundledWorkflowActionPayload) -> BundledWorkflowActionPayload:
         assert self.stage_uuid == other.stage_uuid, "It's only possible to bundle actions for one stage at a time"
@@ -65,7 +65,7 @@ class WorkflowReviewAction(BaseDTO):
 class BundledReviewActionPayload:
     stage_uuid: UUID
     task_uuid: UUID
-    actions: list[WorkflowReviewAction]
+    actions: List[WorkflowReviewAction]
 
     def add(self, other: BundledReviewActionPayload) -> BundledReviewActionPayload:
         assert self.stage_uuid == other.stage_uuid, "It's only possible to bundle actions for one stage at a time"
