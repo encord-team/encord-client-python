@@ -610,7 +610,11 @@ class ObjectInstance:
             frames: The frames from which to remove the object instance.
         """
         if self._range_only:
-            raise RuntimeError("NYI")
+            new_range_manager = RangeManager(frame_class=frames)
+            ranges_to_add = new_range_manager.get_ranges()
+            for range_to_add in ranges_to_add:
+                self.check_within_range(range_to_add.end)
+            self._range_manager.remove_ranges(ranges_to_add)
         else:
             frames_list = frames_class_to_frames_list(frames)
             for frame in frames_list:
