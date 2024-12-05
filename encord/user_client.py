@@ -98,7 +98,6 @@ from encord.orm.project import Project as OrmProject
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import CreateStorageFolderPayload, ListFoldersParams, ListItemsParams, StorageItemType
 from encord.orm.storage import StorageFolder as OrmStorageFolder
-from encord.orm.user import GetCurrentUserResponse
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
@@ -223,17 +222,11 @@ class EncordUserClient:
             result_type=CreateDatasetResponseV2,
         )
 
-        res_user = self._api_client.get(
-            "user/current",
-            params=None,
-            result_type=GetCurrentUserResponse,
-        )
-
         return CreateDatasetResponse(
             title=title,
             storage_location=storage_location,
-            dataset_hash=str(res_dataset.dataset_hash),
-            user_hash=res_user.user_hash,
+            dataset_hash=str(res_dataset.dataset_uuid),
+            user_hash="fields withdrawn for compliance reasons",
             backing_folder_uuid=res_dataset.backing_folder_uuid,
         )
 

@@ -1066,5 +1066,5 @@ class CreateDatasetPayload(BaseDTO):
 
 
 class CreateDatasetResponseV2(BaseDTO):
-    dataset_hash: UUID
+    dataset_uuid: UUID
     backing_folder_uuid: Optional[UUID] = None  # this field will be removed soon
