@@ -1095,7 +1095,7 @@ class DatasetsWithUserRolesListParams(BaseDTO):
 
 
 class DatasetsWithUserRolesListResponseItem(BaseDTO):
-    dataset_hash: UUID
+    dataset_uuid: UUID
     title: str
     description: str
     created_at: datetime

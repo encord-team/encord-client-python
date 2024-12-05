@@ -98,7 +98,6 @@ from encord.orm.project import (
 from encord.orm.project import Project as OrmProject
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import ListFoldersParams, ListItemsParams, StorageItemType
-from encord.orm.user import GetCurrentUserResponse
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
@@ -320,17 +319,11 @@ class EncordUserClient:
             result_type=DatasetsWithUserRolesListResponse,
         )
 
-        res_user = self._api_client.get(
-            "user/current",
-            params=None,
-            result_type=GetCurrentUserResponse,
-        )
-
         return [
             {
                 "dataset": DatasetInfo(
-                    dataset_hash=str(x.dataset_hash),
-                    user_hash=res_user.user_hash,
+                    dataset_hash=str(x.dataset_uuid),
+                    user_hash="field withdrawn for compliance reasons",
                     title=x.title,
                     description=x.description,
                     type=int(x.storage_location or 0),
