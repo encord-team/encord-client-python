@@ -1057,7 +1057,7 @@ class CreateDatasetPayload(BaseDTO):
     title: str
     description: Optional[str]
 
-    create_backing_folder: bool  # this field will be removed soon
+    create_backing_folder: bool  # this creates a legacy "mirror" dataset and it's backing folder in one go
 
     # only for analytics, to know if customers are
     # using depreciated EncordUserClient.create_private_dataset
@@ -1067,4 +1067,4 @@ class CreateDatasetPayload(BaseDTO):
 
 class CreateDatasetResponseV2(BaseDTO):
     dataset_uuid: UUID
-    backing_folder_uuid: Optional[UUID] = None  # this field will be removed soon
+    backing_folder_uuid: Optional[UUID] = None  # a 'not None' indicates a legacy "mirror" dataset was created
