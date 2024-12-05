@@ -20,6 +20,7 @@ from encord.objects import (
 from encord.objects.attributes import Attribute
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
+    AudioCoordinates,
     BoundingBoxCoordinates,
     PointCoordinate,
     PolygonCoordinates,
@@ -37,6 +38,8 @@ from tests.objects.test_label_structure_converter import ontology_from_dict
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 polygon_ontology_item = all_types_structure.get_child_by_hash("ODkxMzAx", Object)
 polyline_ontology_item = all_types_structure.get_child_by_hash("OTcxMzIy", Object)
+
+audio_obj_ontology_item = all_types_structure.get_child_by_hash("KVfzNkFy", Object)
 
 nested_box_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx")
 text_attribute_1 = all_types_structure.get_child_by_hash("OTkxMjU1")
@@ -1153,3 +1156,27 @@ def test_audio_classification_can_be_added_edited_and_removed(ontology, empty_au
 
     label_row.remove_classification(classification_instance)
     assert len(label_row.get_classification_instances()) == 0
+
+
+def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
+    label_row = empty_audio_label_row
+    obj_instance = ObjectInstance(audio_obj_ontology_item)
+    obj_instance.set_for_frames(AudioCoordinates(), Range(start=0, end=1500))
+    range_list = obj_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+
+    label_row.add_object_instance(obj_instance)
+    assert len(label_row.get_classification_instances()) == 0
+    assert len(label_row.get_object_instances()) == 1
+    obj_instance.set_for_frames(AudioCoordinates(), Range(start=2000, end=2499))
+    range_list = obj_instance.range_list
+    assert len(range_list) == 2
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+    assert range_list[1].start == 2000
+    assert range_list[1].end == 2499
+
+    label_row.remove_object(obj_instance)
+    assert len(label_row.get_object_instances()) == 0

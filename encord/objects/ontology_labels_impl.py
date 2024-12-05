@@ -1037,14 +1037,13 @@ class LabelRowV2:
         Args:
             object_instance: The object instance to remove.
         """
-        self._method_not_supported_for_audio()
-
         self._check_labelling_is_initalised()
 
         self._objects_map.pop(object_instance.object_hash)
-        self._remove_from_frame_to_hashes_map(
-            _frame_views_to_frame_numbers(object_instance.get_annotations()), object_instance.object_hash
-        )
+        if not object_instance.is_range_only():
+            self._remove_from_frame_to_hashes_map(
+                _frame_views_to_frame_numbers(object_instance.get_annotations()), object_instance.object_hash
+            )
         object_instance._parent = None
 
     def to_encord_dict(self) -> Dict[str, Any]:
