@@ -1094,7 +1094,7 @@ class DatasetsWithUserRolesListParams(BaseDTO):
     edited_after: Optional[datetime]
 
 
-class DatasetsWithUserRolesListResponseItem(BaseDTO):
+class DatasetWithUserRole(BaseDTO):
     dataset_uuid: UUID
     title: str
     description: str
@@ -1102,9 +1102,9 @@ class DatasetsWithUserRolesListResponseItem(BaseDTO):
     last_edited_at: datetime
     user_role: DatasetUserRoleV2
 
-    storage_location: StorageLocation | None = None  # this field will be removed soon
-    backing_folder_uuid: UUID | None = None  # this field will be removed soon
+    storage_location: Optional[StorageLocation] = None  # legacy field: you can have data from mixed locations now
+    backing_folder_uuid: Optional[UUID] = None  # if set, this indicates a legacy 'mirror' dataset
 
 
 class DatasetsWithUserRolesListResponse(BaseDTO):
-    result: list[DatasetsWithUserRolesListResponseItem]
+    result: list[DatasetWithUserRole]
