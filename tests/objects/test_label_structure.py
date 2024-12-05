@@ -1108,6 +1108,25 @@ def test_audio_classification_exceed_max_frames(ontology, empty_audio_label_row:
     with pytest.raises(LabelRowError):
         classification_instance.set_for_frames(Range(start=200, end=5000))
 
+    range_list = classification_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 100
+
+
+def test_audio_object_exceed_max_frames(ontology, empty_audio_label_row: LabelRowV2):
+    object_instance = ObjectInstance(audio_obj_ontology_item)
+    object_instance.set_for_frames(AudioCoordinates(), Range(start=0, end=100))
+    empty_audio_label_row.add_object_instance(object_instance)
+
+    with pytest.raises(LabelRowError):
+        object_instance.set_for_frames(AudioCoordinates(), Range(start=200, end=5000))
+
+    range_list = object_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 100
+
 
 def test_get_annotations_from_audio_classification(ontology) -> None:
     now = datetime.datetime.now()
