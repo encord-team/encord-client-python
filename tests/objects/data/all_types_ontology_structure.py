@@ -200,6 +200,14 @@ all_types_structure = OntologyStructure(
             feature_node_hash="MTczNjQx",
             attributes=[],
         ),
+        Object(
+            uid=8,
+            name="audio object",
+            color="#A4FF00",
+            shape=Shape.AUDIO,
+            feature_node_hash="KVfzNkFy",
+            attributes=[],
+        ),
     ],
     classifications=[
         Classification(

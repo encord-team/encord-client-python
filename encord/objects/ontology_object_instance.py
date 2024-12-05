@@ -417,7 +417,7 @@ class ObjectInstance:
     def _set_for_ranges(
         self,
         frames: Frames,
-    ):
+    ) -> None:
         new_range_manager = RangeManager(frame_class=frames)
         ranges_to_add = new_range_manager.get_ranges()
         for range_to_add in ranges_to_add:
@@ -468,15 +468,16 @@ class ObjectInstance:
         if self._range_only:
             if not isinstance(coordinates, AudioCoordinates):
                 raise LabelRowError("Expecting range only coordinate type")
-            self._set_for_ranges(
-                frames=frames,
-            )
             existing_frame_data = self._frames_to_instance_data.get(0)
 
-            if overwrite is False and existing_frame_data is not None:
+            if overwrite is False and existing_frame_data is not None and self._range_manager.intersection(frames):
                 raise LabelRowError(
                     "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
                 )
+
+            self._set_for_ranges(
+                frames=frames,
+            )
 
             if existing_frame_data is None:
                 existing_frame_data = ObjectInstance.FrameData(
