@@ -1178,5 +1178,11 @@ def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_labe
     assert range_list[1].start == 2000
     assert range_list[1].end == 2499
 
+    obj_instance.remove_from_frames(Range(start=0, end=1500))
+    range_list = obj_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 2000
+    assert range_list[0].end == 2499
+
     label_row.remove_object(obj_instance)
     assert len(label_row.get_object_instances()) == 0
