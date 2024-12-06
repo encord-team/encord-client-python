@@ -1092,6 +1092,7 @@ class DatasetsWithUserRolesListParams(BaseDTO):
     created_after: Optional[datetime]
     edited_before: Optional[datetime]
     edited_after: Optional[datetime]
+    include_org_access: Optional[bool] = False
 
 
 class DatasetWithUserRole(BaseDTO):
@@ -1100,7 +1101,7 @@ class DatasetWithUserRole(BaseDTO):
     description: str
     created_at: datetime
     last_edited_at: datetime
-    user_role: DatasetUserRoleV2
+    user_role: Optional[DatasetUserRoleV2]
 
     storage_location: Optional[StorageLocation] = None  # legacy field: you can have data from mixed locations now
     backing_folder_uuid: Optional[UUID] = None  # if set, this indicates a legacy 'mirror' dataset
