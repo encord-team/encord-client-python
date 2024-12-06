@@ -286,6 +286,7 @@ class EncordUserClient:
         created_after: Optional[Union[str, datetime]] = None,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
+        include_org_access: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         List either all (if called with no arguments) or matching datasets the user has access to.
@@ -299,9 +300,13 @@ class EncordUserClient:
             created_after: optional creation date filter, 'greater'
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
+            include_org_access: if set to true and the calling user is the organization admin, the
+              method will return all datasets in the organization.
 
         Returns:
-            list of (role, dataset) pairs for datasets  matching filter conditions.
+            list of datasets matching filter conditions, with the roles that the current user has on them. Each item
+            is a dictionary with `"dataset"` and `"user_role"` keys. If include_org_access is set to
+            True, some of the datasets may have a `None` value for the `"user_role"` key.
         """
 
         res = self._api_client.get(
@@ -315,6 +320,7 @@ class EncordUserClient:
                 created_after=parse_datetime_optional(created_after),
                 edited_before=parse_datetime_optional(edited_before),
                 edited_after=parse_datetime_optional(edited_after),
+                include_org_access=include_org_access,
             ),
             result_type=DatasetsWithUserRolesListResponse,
         )
@@ -331,7 +337,7 @@ class EncordUserClient:
                     last_edited_at=x.last_edited_at,
                     backing_folder_uuid=x.backing_folder_uuid,
                 ),
-                "user_role": dataset_user_role_str_enum_to_int_enum(x.user_role),
+                "user_role": dataset_user_role_str_enum_to_int_enum(x.user_role) if x.user_role is not None else None,
             }
             for x in res.result
         ]
