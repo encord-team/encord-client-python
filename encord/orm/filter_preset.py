@@ -22,7 +22,7 @@ class FilterPreset(BaseDTO):
 
 
 class GetProjectFilterPresetParams(BaseDTO):
-    preset_uuids: Optional[List[uuid.UUID]] = Field(default=[], alias="uuids")
+    preset_uuids: Optional[List[uuid.UUID]] = Field(default=[])
     page_token: Optional[str] = Field(default=None)
     page_size: Optional[int] = Field(default=None)
 
