@@ -45,3 +45,13 @@ class DataType(StringEnum):
 
     def to_upper_case_string(self) -> str:
         return self.value.upper()
+
+
+GEOMETRIC_TYPES = {
+    DataType.VIDEO,
+    DataType.IMAGE,
+    DataType.IMG_GROUP,
+    DataType.DICOM,
+    DataType.DICOM_STUDY,
+    DataType.NIFTI,
+}
