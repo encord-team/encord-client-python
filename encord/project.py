@@ -18,6 +18,7 @@ from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
+from encord.exceptions import EncordException
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
@@ -40,7 +41,14 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectDataset, ProjectDTO, ProjectType
+from encord.orm.project import (
+    ActivePredictionPayload,
+    CopyDatasetOptions,
+    CopyLabelsOptions,
+    ProjectDataset,
+    ProjectDTO,
+    ProjectType,
+)
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -1227,3 +1235,11 @@ class Project:
             self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type
         )
         return self.get_collection(new_uuid)
+
+    def import_prediction(self, label_branch_name: str) -> None:
+        self._client._get_api_client().post(
+            path=f"active/{self.project_hash}/predictions",
+            params=None,
+            payload=ActivePredictionPayload(label_branch_name=label_branch_name),
+            result_type=None,
+        )

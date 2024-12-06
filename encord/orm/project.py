@@ -360,3 +360,7 @@ class CvatImportGetResultResponse(BaseDTO):
     status: CvatImportGetResultLongPollingStatus
     project_uuid: Optional[UUID] = None
     issues: Optional[Dict] = None
+
+
+class ActivePredictionPayload(BaseDTO):
+    label_branch_name: str
