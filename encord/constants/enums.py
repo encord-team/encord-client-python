@@ -25,6 +25,7 @@ class DataType(StringEnum):
     DICOM_STUDY = "dicom_study"
     NIFTI = "nifti"
     AUDIO = "audio"
+    PLAIN_TEXT = "plain_text"
 
     # will be displayed if the Encord platform has a new data type that is not present in this SDK version. Please upgrade your SDK version
     MISSING_DATA_TYPE = "_MISSING_DATA_TYPE_"
@@ -43,3 +44,13 @@ class DataType(StringEnum):
 
     def to_upper_case_string(self) -> str:
         return self.value.upper()
+
+
+GEOMETRIC_TYPES = {
+    DataType.VIDEO,
+    DataType.IMAGE,
+    DataType.IMG_GROUP,
+    DataType.DICOM,
+    DataType.DICOM_STUDY,
+    DataType.NIFTI,
+}

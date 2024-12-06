@@ -56,8 +56,10 @@ from encord.objects.coordinates import (
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
+    TextCoordinates,
 )
 from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.html_node import HtmlRange
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -827,6 +829,13 @@ class LabelRowV2:
         self._check_labelling_is_initalised()
 
         object_instance.is_valid()
+
+        # We want to ensure that we are only adding the object_instance to a label_row
+        # IF AND ONLY IF the file type is text/html and the object_instance has range_html set
+        if self.file_type == "text/html" and object_instance.range_html is None:
+            raise LabelRowError("Unable to assign Object Instance without a html range to a html file")
+        elif self.file_type != "text/html" and object_instance.range_html is not None:
+            raise LabelRowError("Unable to assign Object instance with a html range to a non-html file")
 
         if object_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -1630,9 +1639,25 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if self.data_type == DataType.AUDIO:
+            if self.data_type == DataType.AUDIO or (self.data_type == DataType.PLAIN_TEXT and obj.range_html is None):
                 annotation = obj.get_annotations()[0]
                 ret[obj.object_hash]["range"] = [[range.start, range.end] for range in obj.range_list]
+                ret[obj.object_hash]["createdBy"] = annotation.created_by
+                ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                ret[obj.object_hash]["lastEditedBy"] = annotation.last_edited_by
+                ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
+                ret[obj.object_hash]["featureHash"] = obj.feature_hash
+                ret[obj.object_hash]["name"] = obj.ontology_item.name
+                ret[obj.object_hash]["color"] = obj.ontology_item.color
+                ret[obj.object_hash]["shape"] = obj.ontology_item.shape.value
+                ret[obj.object_hash]["value"] = _lower_snake_case(obj.ontology_item.name)
+
+            if self.data_type == DataType.PLAIN_TEXT and obj.range_html is not None:
+                annotation = obj.get_annotations()[0]
+                # ret[obj.object_hash]["range_html"] = [x.to_dict() for x in obj.range_html]
+                ret[obj.object_hash]["range_html"] = obj.range_html[0].to_dict()
+                ret[obj.object_hash]["range"] = []
                 ret[obj.object_hash]["createdBy"] = annotation.created_by
                 ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
                 ret[obj.object_hash]["lastEditedBy"] = annotation.last_edited_by
@@ -1725,7 +1750,7 @@ class LabelRowV2:
         ):
             data_sequence = frame_level_data.frame_number
 
-        elif data_type == DataType.AUDIO:
+        elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
             data_sequence = 0
 
         elif data_type == DataType.DICOM_STUDY:
@@ -1744,24 +1769,36 @@ class LabelRowV2:
             ret["data_link"] = frame_level_data.data_link
 
         ret["data_type"] = frame_level_data.file_type
-
         ret["data_sequence"] = data_sequence
 
-        if self.data_type != DataType.AUDIO:
-            ret["width"] = frame_level_data.width
-            ret["height"] = frame_level_data.height
-
-        else:
+        if self.data_type == DataType.AUDIO:
             ret["audio_codec"] = self._label_row_read_only_data.audio_codec
             ret["audio_sample_rate"] = self._label_row_read_only_data.audio_sample_rate
             ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
             ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
+        elif self.data_type == DataType.PLAIN_TEXT:
+            pass
+        elif (
+            self.data_type == DataType.IMAGE
+            or self.data_type == DataType.NIFTI
+            or self.data_type == DataType.VIDEO
+            or self.data_type == DataType.IMG_GROUP
+            or self.data_type == DataType.DICOM
+            or self.data_type == DataType.DICOM_STUDY
+        ):
+            ret["width"] = frame_level_data.width
+            ret["height"] = frame_level_data.height
+        elif self.data_type == DataType.MISSING_DATA_TYPE:
+            raise LabelRowError("Label row is missing data type.")
+        else:
+            exhaustive_guard(self.data_type)
 
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
-        if self._label_row_read_only_data.duration is not None:
+        if self._label_row_read_only_data.duration is not None and self.data_type != DataType.PLAIN_TEXT:
             ret["data_duration"] = self._label_row_read_only_data.duration
-        if self._label_row_read_only_data.fps is not None and self.data_type != DataType.AUDIO:
+
+        if self._label_row_read_only_data.fps is not None and self.data_type != DataType.AUDIO and self.data_type != DataType.PLAIN_TEXT:
             ret["data_fps"] = self._label_row_read_only_data.fps
 
         return ret
@@ -1778,7 +1815,7 @@ class LabelRowV2:
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
 
-        elif data_type == DataType.AUDIO:
+        elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
             return {}
 
         elif data_type == DataType.DICOM_STUDY:
@@ -2019,6 +2056,12 @@ class LabelRowV2:
             audio_num_channels = data_dict["audio_num_channels"]
             audio_bit_depth = data_dict["audio_bit_depth"]
 
+        elif data_type == DataType.PLAIN_TEXT:
+            data_dict = list(label_row_dict["data_units"].values())[0]
+            data_link = data_dict["data_link"]
+            height = None
+            width = None
+
         elif data_type == DataType.IMG_GROUP:
             data_link = None
             height = None
@@ -2108,6 +2151,11 @@ class LabelRowV2:
                 self._add_objects_instances_from_objects_without_frames(object_answers)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
 
+            elif data_type == DataType.PLAIN_TEXT:
+                is_html = data_unit["data_type"] == "text/html"
+                self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
+                self._add_classification_instances_from_classifications_without_frames(classification_answers)
+
             else:
                 exhaustive_guard(data_type)
 
@@ -2136,14 +2184,21 @@ class LabelRowV2:
     def _add_objects_instances_from_objects_without_frames(
         self,
         object_answers: dict,
+        html: bool = False,
     ):
-        for object_answer in object_answers.values():
-            ranges: Ranges = []
-            for range_elem in object_answer["range"]:
-                ranges.append(Range(range_elem[0], range_elem[1]))
+        if html:
+            for object_answer in object_answers.values():
+                object_instance = self._create_new_html_object_instance(object_answer, object_answer["range_html"])
+                self.add_object_instance(object_instance)
 
-            object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges)
-            self.add_object_instance(object_instance)
+        else:
+            for object_answer in object_answers.values():
+                ranges: Ranges = []
+                for range_elem in object_answer["range"]:
+                    ranges.append(Range(range_elem[0], range_elem[1]))
+
+                object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges)
+                self.add_object_instance(object_instance)
 
     def _add_object_instances_from_objects(
         self,
@@ -2228,6 +2283,40 @@ class LabelRowV2:
         object_instance.set_for_frames(
             AudioCoordinates(),
             ranges,
+            created_at=object_frame_instance_info.created_at,
+            created_by=object_frame_instance_info.created_by,
+            confidence=object_frame_instance_info.confidence,
+            manual_annotation=object_frame_instance_info.manual_annotation,
+            last_edited_at=object_frame_instance_info.last_edited_at,
+            last_edited_by=object_frame_instance_info.last_edited_by,
+            reviews=object_frame_instance_info.reviews,
+            overwrite=True,
+            # Always overwrite during label row dict parsing, as older dicts known to have duplicates
+        )
+        answer_list = object_answer["classifications"]
+        object_instance.set_answer_from_list(answer_list)
+
+        return object_instance
+
+    def _create_new_html_object_instance(
+        self,
+        object_answer: dict,
+        range_html: dict,
+    ) -> ObjectInstance:
+        feature_hash = object_answer["featureHash"]
+        object_hash = object_answer["objectHash"]
+
+        label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Object)
+
+        frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
+        frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
+
+        object_instance = ObjectInstance(label_class, object_hash=object_hash)
+        object_instance.set_for_frames(
+            TextCoordinates(),
+            frames=0,
+            range_html=[HtmlRange.from_dict(x) for x in range_html],
             created_at=object_frame_instance_info.created_at,
             created_by=object_frame_instance_info.created_by,
             confidence=object_frame_instance_info.confidence,

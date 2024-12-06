@@ -45,6 +45,7 @@ from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
     AudioCoordinates,
     Coordinates,
+    TextCoordinates,
 )
 from encord.objects.frames import (
     Frames,
@@ -54,6 +55,7 @@ from encord.objects.frames import (
     frames_to_ranges,
     ranges_list_to_ranges,
 )
+from encord.objects.html_node import HtmlRange, HtmlRanges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
@@ -82,8 +84,11 @@ class ObjectInstance:
         self._dynamic_answer_manager = DynamicAnswerManager(self)
 
         # Only used for non-frame entities
-        self._range_only = ontology_object.shape in (Shape.AUDIO,)
+        self._range_only = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
         self._range_manager: RangeManager = RangeManager()
+
+        # Only used for html text labels
+        self._range_html: Optional[HtmlRanges] = None
 
         # Only used for frame entities
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
@@ -155,6 +160,10 @@ class ObjectInstance:
                 "the range_only property to True (via a range aware shape)"
                 "You can do ObjectInstance(audio_ontology_object) to achieve this."
             )
+
+    @property
+    def range_html(self) -> Optional[HtmlRanges]:
+        return self._range_html
 
     def is_range_only(self) -> bool:
         return self._range_only
@@ -430,6 +439,7 @@ class ObjectInstance:
         frames: Frames = 0,
         *,
         overwrite: bool = False,
+        range_html: Optional[HtmlRanges] = None,
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -452,6 +462,9 @@ class ObjectInstance:
             overwrite: If `True`, overwrite existing data for the given frames.
                 This will not reset all the non-specified values.
                 If `False` and data already exists for the given frames, raises an error.
+            range_html: This is only used for annotating html files. If the object instance is attached
+                        to a label row, and the label row does not have a file type of 'text/html', raises
+                        an error.
             created_at: Optionally specify the creation time of the object instance on this frame.
                 Defaults to `datetime.now()`.
             created_by: Optionally specify the creator of the object instance on this frame.
@@ -465,8 +478,45 @@ class ObjectInstance:
             reviews: Should only be set by internal functions.
             is_deleted: Should only be set by internal functions.
         """
-        if self._range_only:
-            if not isinstance(coordinates, AudioCoordinates):
+        if range_html is not None:
+            if self._ontology_object.shape != Shape.TEXT:
+                raise LabelRowError("Setting range_html of the object instance is only allowed for objects with the 'text' shape")
+            elif self._parent is not None and self._parent.file_type != "text/html":
+                raise LabelRowError("Cannot add range_html to a non-html text file")
+            elif len(self.range_list) > 0:
+                raise LabelRowError("Cannot add range_html to an object instance that has a non-html range")
+
+            existing_frame_data = self._frames_to_instance_data.get(0)
+
+            if overwrite is False and existing_frame_data is not None and self._range_manager.intersection(frames):
+                raise LabelRowError(
+                    "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
+                )
+
+            if len(range_html) > 0:
+                self._range_html = range_html
+            else:
+                self._range_html = None
+
+            if existing_frame_data is None:
+                existing_frame_data = ObjectInstance.FrameData(
+                    coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+                )
+                self._frames_to_instance_data[0] = existing_frame_data
+
+                existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                    created_at=created_at,
+                    created_by=created_by,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    reviews=reviews,
+                    is_deleted=is_deleted,
+                )
+
+        elif self._range_only:
+            if not isinstance(coordinates, AudioCoordinates) and not isinstance(coordinates, TextCoordinates):
                 raise LabelRowError("Expecting range only coordinate type")
             existing_frame_data = self._frames_to_instance_data.get(0)
 
@@ -499,6 +549,11 @@ class ObjectInstance:
         else:
             if isinstance(coordinates, AudioCoordinates):
                 raise LabelRowError("Cannot add audio coordinates to object with frames")
+            elif isinstance(coordinates, TextCoordinates):
+                raise LabelRowError("Cannot add text coordinates to object with frames")
+            elif range_html is not None:
+                raise LabelRowError("Cannot add html range to object with frames")
+
             frames_list = frames_class_to_frames_list(frames)
 
             for frame in frames_list:
@@ -632,8 +687,9 @@ class ObjectInstance:
             LabelRowError: If the ObjectInstance is not on any frames.
         """
         if self._range_only:
-            if len(self._range_manager.get_ranges()) == 0:
+            if len(self._range_manager.get_ranges()) == 0 and self.range_html is None:
                 raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+
         else:
             if len(self._frames_to_instance_data) == 0:
                 raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
@@ -816,13 +872,18 @@ class ObjectInstance:
             else:
                 last_edited_at = datetime.now()
 
+            if "createdAt" in d and d["createdAt"] is not None:
+                created_at = parse_datetime(d["createdAt"])
+            else:
+                created_at = datetime.now()
+
             return ObjectInstance.FrameInfo(
-                created_at=parse_datetime(d["createdAt"]),
-                created_by=d["createdBy"],
+                created_at=created_at,
+                created_by=d.get("createdBy", "Anonymous"),
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
                 confidence=d["confidence"],
-                manual_annotation=d["manualAnnotation"],
+                manual_annotation=d.get("manualAnnotation", True),
                 reviews=d.get("reviews"),
                 is_deleted=d.get("isDeleted"),
             )

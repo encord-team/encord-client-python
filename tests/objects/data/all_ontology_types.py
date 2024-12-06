@@ -99,6 +99,13 @@ all_ontology_types = {
             ],
         },
         {"id": "7", "name": "cone object", "color": "#A4DD00", "shape": "skeleton", "featureNodeHash": "MTczNjQx"},
+        {
+            "id": "8",
+            "name": "text object",
+            "color": "#A4DD00",
+            "shape": "text",
+            "featureNodeHash": "textObjectFeatureNodeHash",
+        },
     ],
     "classifications": [
         {
