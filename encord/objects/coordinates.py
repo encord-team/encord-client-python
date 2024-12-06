@@ -20,6 +20,8 @@ from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
 from encord.orm.analytics import CamelStrEnum
+from encord.objects.frames import Ranges
+from encord.objects.html_node import HtmlRange
 from encord.orm.base_dto import BaseDTO
 
 
@@ -339,11 +341,49 @@ class SkeletonCoordinates(BaseDTO):
 
 
 class AudioCoordinates(BaseDTO):
-    pass
+    """
+    Represents coordinates for an audio file
+
+    Attributes:
+        range (Ranges): Ranges in milliseconds for audio files
+    """
+
+    range: Ranges
+
+    def __post_init__(self):
+        if len(self.range) == 0:
+            raise ValueError("Range list must contain at least one range.")
+
+
+class TextCoordinates(BaseDTO):
+    """
+    Represents coordinates for a text file
+
+    Attributes:
+        range_html (List[HtmlRange]): A list of HtmlRange objects
+        range (Ranges): Ranges of chars for simple text files
+    """
+
+    range_html: Optional[List[HtmlRange]] = None
+    range: Optional[Ranges] = None
+
+    def __post_init__(self):
+        if self.range_html is None and self.range is None:
+            raise ValueError("At least one of either `range` or `range_html` must be set.")
+
+        if self.range_html is not None and self.range is not None:
+            raise ValueError("Only one of either `range` or `range_html` must be set.")
+
+        if self.range_html is not None and len(self.range_html) == 0:
+            raise ValueError("Range HTML list must contain at least one html range.")
+
+        if self.range is not None and len(self.range) == 0:
+            raise ValueError("Range list must contain at least one range.")
 
 
 Coordinates = Union[
     AudioCoordinates,
+    TextCoordinates,
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
     PointCoordinate,
@@ -352,6 +392,7 @@ Coordinates = Union[
     SkeletonCoordinates,
     BitmaskCoordinates,
 ]
+
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.BOUNDING_BOX: BoundingBoxCoordinates,
     Shape.ROTATABLE_BOUNDING_BOX: RotatableBoundingBoxCoordinates,
@@ -361,4 +402,5 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.SKELETON: SkeletonCoordinates,
     Shape.BITMASK: BitmaskCoordinates,
     Shape.AUDIO: AudioCoordinates,
+    Shape.TEXT: TextCoordinates,
 }

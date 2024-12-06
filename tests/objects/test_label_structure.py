@@ -1,4 +1,5 @@
 import datetime
+import json
 import math
 from dataclasses import asdict
 from unittest.mock import Mock, PropertyMock
@@ -24,8 +25,10 @@ from encord.objects.coordinates import (
     BoundingBoxCoordinates,
     PointCoordinate,
     PolygonCoordinates,
+    TextCoordinates,
 )
 from encord.objects.frames import Range
+from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
@@ -33,6 +36,8 @@ from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
+from tests.objects.data.html_text_labels import EMPTY_HTML_TEXT_LABELS
+from tests.objects.data.plain_text import EMPTY_PLAIN_TEXT_LABELS
 from tests.objects.test_label_structure_converter import ontology_from_dict
 
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
@@ -41,43 +46,45 @@ polyline_ontology_item = all_types_structure.get_child_by_hash("OTcxMzIy", Objec
 
 audio_obj_ontology_item = all_types_structure.get_child_by_hash("KVfzNkFy", Object)
 
-nested_box_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx")
-text_attribute_1 = all_types_structure.get_child_by_hash("OTkxMjU1")
-checklist_attribute_1 = all_types_structure.get_child_by_hash("ODcxMDAy")
-checklist_attribute_1_option_1 = all_types_structure.get_child_by_hash("MTE5MjQ3")
-checklist_attribute_1_option_2 = all_types_structure.get_child_by_hash("Nzg3MDE3")
+text_obj_ontology_item = all_types_structure.get_child_by_hash("textFeatureNodeHash", Object)
 
-deeply_nested_polygon_item = all_types_structure.get_child_by_hash("MTM1MTQy")
-nested_polygon_text = all_types_structure.get_child_by_hash("OTk555U1")
-nested_polygon_checklist = all_types_structure.get_child_by_hash("ODc555Ay")
-nested_polygon_checklist_option_1 = all_types_structure.get_child_by_hash("MT5555Q3")
-nested_polygon_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg5555E3")
-radio_attribute_level_1 = all_types_structure.get_child_by_hash("MTExMjI3")
-radio_nested_option_1 = all_types_structure.get_child_by_hash("MTExNDQ5")
-radio_nested_option_1_text = all_types_structure.get_child_by_hash("MjE2OTE0")
-radio_nested_option_2 = all_types_structure.get_child_by_hash("MTcxMjAy")
-radio_nested_option_2_checklist = all_types_structure.get_child_by_hash("ODc666Ay")
-radio_nested_option_2_checklist_option_1 = all_types_structure.get_child_by_hash("MT66665Q3")
-radio_nested_option_2_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg66665E3")
+nested_box_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx", Object)
+text_attribute_1 = all_types_structure.get_child_by_hash("OTkxMjU1", TextAttribute)
+checklist_attribute_1 = all_types_structure.get_child_by_hash("ODcxMDAy", ChecklistAttribute)
+checklist_attribute_1_option_1 = all_types_structure.get_child_by_hash("MTE5MjQ3", Option)
+checklist_attribute_1_option_2 = all_types_structure.get_child_by_hash("Nzg3MDE3", Option)
 
-keypoint_dynamic = all_types_structure.get_child_by_hash("MTY2MTQx")
-dynamic_text: TextAttribute = all_types_structure.get_child_by_hash("OTkxMjU1")
-dynamic_checklist = all_types_structure.get_child_by_hash("ODcxMDAy")
-dynamic_checklist_option_1 = all_types_structure.get_child_by_hash("MTE5MjQ3")
-dynamic_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg3MDE3")
-dynamic_radio = all_types_structure.get_child_by_hash("MTExM9I3", type_=RadioAttribute)
-dynamic_radio_option_1 = all_types_structure.get_child_by_hash("MT9xNDQ5", type_=Option)  # Dynamic and deeply nested.
-dynamic_radio_option_2 = all_types_structure.get_child_by_hash("9TcxMjAy", type_=Option)  # Dynamic and deeply nested.
+deeply_nested_polygon_item = all_types_structure.get_child_by_hash("MTM1MTQy", Object)
+nested_polygon_text = all_types_structure.get_child_by_hash("OTk555U1", TextAttribute)
+nested_polygon_checklist = all_types_structure.get_child_by_hash("ODc555Ay", ChecklistAttribute)
+nested_polygon_checklist_option_1 = all_types_structure.get_child_by_hash("MT5555Q3", Option)
+nested_polygon_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg5555E3", Option)
+radio_attribute_level_1 = all_types_structure.get_child_by_hash("MTExMjI3", RadioAttribute)
+radio_nested_option_1 = all_types_structure.get_child_by_hash("MTExNDQ5", Option)
+radio_nested_option_1_text = all_types_structure.get_child_by_hash("MjE2OTE0", TextAttribute)
+radio_nested_option_2 = all_types_structure.get_child_by_hash("MTcxMjAy", Option)
+radio_nested_option_2_checklist = all_types_structure.get_child_by_hash("ODc666Ay", ChecklistAttribute)
+radio_nested_option_2_checklist_option_1 = all_types_structure.get_child_by_hash("MT66665Q3", Option)
+radio_nested_option_2_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg66665E3", Option)
+
+keypoint_dynamic = all_types_structure.get_child_by_hash("MTY2MTQx", Object)
+dynamic_text = all_types_structure.get_child_by_hash("OTkxMjU1", TextAttribute)
+dynamic_checklist = all_types_structure.get_child_by_hash("ODcxMDAy", ChecklistAttribute)
+dynamic_checklist_option_1 = all_types_structure.get_child_by_hash("MTE5MjQ3", Option)
+dynamic_checklist_option_2 = all_types_structure.get_child_by_hash("Nzg3MDE3", Option)
+dynamic_radio = all_types_structure.get_child_by_hash("MTExM9I3", RadioAttribute)
+dynamic_radio_option_1 = all_types_structure.get_child_by_hash("MT9xNDQ5", Option)  # Dynamic and deeply nested.
+dynamic_radio_option_2 = all_types_structure.get_child_by_hash("9TcxMjAy", Option)  # Dynamic and deeply nested.
 
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
-text_classification_attribute: TextAttribute = all_types_structure.get_child_by_hash("OxrtEM+v", TextAttribute)
-radio_classification = all_types_structure.get_child_by_hash("NzIxNTU1")
-radio_classification_option_1 = all_types_structure.get_child_by_hash("MTcwMjM5")
-radio_classification_option_2 = all_types_structure.get_child_by_hash("MjUzMTg1")
-radio_classification_option_2_text = all_types_structure.get_child_by_hash("MTg0MjIw")
-checklist_classification: Classification = all_types_structure.get_child_by_hash("3DuQbFxo")
-checklist_classification_option_1 = all_types_structure.get_child_by_hash("fvLjF0qZ")
-checklist_classification_option_2 = all_types_structure.get_child_by_hash("a4r7nK9i")
+text_classification_attribute = all_types_structure.get_child_by_hash("OxrtEM+v", TextAttribute)
+radio_classification = all_types_structure.get_child_by_hash("NzIxNTU1", Classification)
+radio_classification_option_1 = all_types_structure.get_child_by_hash("MTcwMjM5", Option)
+radio_classification_option_2 = all_types_structure.get_child_by_hash("MjUzMTg1", Option)
+radio_classification_option_2_text = all_types_structure.get_child_by_hash("MTg0MjIw", TextAttribute)
+checklist_classification = all_types_structure.get_child_by_hash("3DuQbFxo", Classification)
+checklist_classification_option_1 = all_types_structure.get_child_by_hash("fvLjF0qZ", Option)
+checklist_classification_option_2 = all_types_structure.get_child_by_hash("a4r7nK9i", Option)
 
 BOX_COORDINATES = BoundingBoxCoordinates(
     height=0.1,
@@ -460,7 +467,7 @@ def test_classification_answering_with_ontology_access() -> None:
     radio_classification_ = all_types_structure.get_child_by_title("Radio classification 1", Classification)
     radio_instance = radio_classification_.create_instance()
 
-    radio_classification_attribute_1: ChecklistAttribute = radio_classification_.get_child_by_title(
+    radio_classification_attribute_1 = radio_classification_.get_child_by_title(
         "Radio classification 1", type_=RadioAttribute
     )
     # Different `type_` with generic `Attribute`
@@ -1005,6 +1012,8 @@ def test_frame_view(ontology) -> None:
     frame_view.add_classification_instance(classification_instance)
 
     frames = label_row.get_frame_views()
+    assert label_row_metadata.duration is not None
+    assert label_row_metadata.frames_per_second is not None
     assert len(frames) == label_row_metadata.duration * label_row_metadata.frames_per_second
 
     frame_num = 0
@@ -1062,6 +1071,52 @@ def empty_audio_label_row() -> LabelRowV2:
     return label_row
 
 
+@pytest.fixture
+def empty_html_text_label_row() -> LabelRowV2:
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["data_type"] = "plain_text"
+    label_row_metadata_dict["file_type"] = "text/html"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(EMPTY_HTML_TEXT_LABELS)
+
+    return label_row
+
+
+@pytest.fixture
+def empty_plain_text_label_row() -> LabelRowV2:
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["data_type"] = "plain_text"
+    label_row_metadata_dict["file_type"] = "text/plain"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(EMPTY_PLAIN_TEXT_LABELS)
+
+    return label_row
+
+
+def test_non_geometric_label_rows_must_use_classification_instance_with_range_only(
+    ontology,
+    empty_audio_label_row: LabelRowV2,
+    empty_plain_text_label_row: LabelRowV2,
+    empty_html_text_label_row: LabelRowV2,
+):
+    classification_instance = ClassificationInstance(checklist_classification)
+    classification_instance.set_for_frames(Range(start=0, end=0))
+    for label_row in [empty_plain_text_label_row, empty_html_text_label_row, empty_html_text_label_row]:
+        with pytest.raises(LabelRowError) as e:
+            label_row.add_classification_instance(classification_instance)
+        assert str(e.value.message) == (
+            f"To add a ClassificationInstance object to a label row where data_type = {label_row.data_type},"
+            "the ClassificationInstance object needs to be created with the "
+            "range_only property set to True."
+            "You can do ClassificationInstance(range_only=True) or "
+            "Classification.create_instance(range_only=True) to achieve this."
+        )
+
+
 def test_non_range_classification_cannot_be_added_to_audio_label_row(ontology):
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
@@ -1116,19 +1171,20 @@ def test_audio_classification_exceed_max_frames(ontology, empty_audio_label_row:
 
 def test_audio_object_exceed_max_frames(ontology, empty_audio_label_row: LabelRowV2):
     object_instance = ObjectInstance(audio_obj_ontology_item)
-    object_instance.set_for_frames(AudioCoordinates(), Range(start=0, end=100))
+    object_instance.set_for_frames(AudioCoordinates(range=[Range(start=0, end=100)]))
     empty_audio_label_row.add_object_instance(object_instance)
 
     with pytest.raises(LabelRowError):
-        object_instance.set_for_frames(AudioCoordinates(), Range(start=200, end=5000))
+        object_instance.set_for_frames(AudioCoordinates(range=[Range(start=200, end=5000)]))
 
     range_list = object_instance.range_list
+    assert range_list is not None
     assert len(range_list) == 1
     assert range_list[0].start == 0
     assert range_list[0].end == 100
 
 
-def test_get_annotations_from_audio_classification(ontology) -> None:
+def test_get_annotations_from_non_geometric_classification(ontology) -> None:
     now = datetime.datetime.now()
 
     classification_instance = ClassificationInstance(checklist_classification, range_only=True)
@@ -1159,8 +1215,7 @@ def test_get_annotations_from_audio_object(ontology) -> None:
 
     object_instance = ObjectInstance(audio_obj_ontology_item)
     object_instance.set_for_frames(
-        AudioCoordinates(),
-        Range(start=0, end=1500),
+        AudioCoordinates(range=[Range(start=0, end=1500)]),
         created_at=now,
         created_by="user1",
         last_edited_at=now,
@@ -1207,8 +1262,9 @@ def test_audio_classification_can_be_added_edited_and_removed(ontology, empty_au
 def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
     label_row = empty_audio_label_row
     obj_instance = ObjectInstance(audio_obj_ontology_item)
-    obj_instance.set_for_frames(AudioCoordinates(), Range(start=0, end=1500))
+    obj_instance.set_for_frames(AudioCoordinates(range=[Range(start=0, end=1500)]))
     range_list = obj_instance.range_list
+    assert range_list is not None
     assert len(range_list) == 1
     assert range_list[0].start == 0
     assert range_list[0].end == 1500
@@ -1216,19 +1272,290 @@ def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_labe
     label_row.add_object_instance(obj_instance)
     assert len(label_row.get_classification_instances()) == 0
     assert len(label_row.get_object_instances()) == 1
-    obj_instance.set_for_frames(AudioCoordinates(), Range(start=2000, end=2499))
+    obj_instance.set_for_frames(AudioCoordinates(range=[Range(start=2000, end=2499)]), overwrite=True)
     range_list = obj_instance.range_list
+    assert range_list is not None
+    assert len(range_list) == 1
+    assert range_list[0].start == 2000
+    assert range_list[0].end == 2499
+
+    obj_instance.remove_from_frames(frames=0)
+    range_list = obj_instance.range_list
+    assert range_list is None
+
+    label_row.remove_object(obj_instance)
+    assert len(label_row.get_object_instances()) == 0
+
+
+def test_get_annotations_from_html_text_object(ontology) -> None:
+    now = datetime.datetime.now()
+
+    range_html=HtmlRange(
+        start=HtmlNode(
+            node="/html[1]/body[1]/div[1]/text()[1]",
+            offset=50
+        ),
+        end=HtmlNode(
+            node="/html[1]/body[1]/div[1]/text()[1]",
+            offset=60
+        )
+    )
+
+    object_instance = ObjectInstance(text_obj_ontology_item)
+    object_instance.set_for_frames(
+        TextCoordinates(range_html=[range_html]),
+        created_at=now,
+        created_by="user1",
+        last_edited_at=now,
+        last_edited_by="user2",
+    )
+
+    annotations = object_instance.get_annotations()
+
+    assert len(annotations) == 1
+
+    annotation = annotations[0]
+    assert annotation.manual_annotation == DEFAULT_MANUAL_ANNOTATION
+    assert annotation.confidence == DEFAULT_CONFIDENCE
+    assert annotation.created_at == now
+    assert annotation.created_by == "user1"
+    assert annotation.last_edited_at == now
+    assert annotation.last_edited_by == "user2"
+    assert annotation.reviews is None
+
+
+def test_html_text_classification_can_be_added_edited_and_removed(ontology, empty_html_text_label_row: LabelRowV2):
+    label_row = empty_html_text_label_row
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
+    classification_instance.set_for_frames(Range(start=0, end=1500))
+    range_list = classification_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+
+    label_row.add_classification_instance(classification_instance)
+    assert len(label_row.get_classification_instances()) == 1
+    classification_instance.set_for_frames(Range(start=2000, end=2499))
+    range_list = classification_instance.range_list
     assert len(range_list) == 2
     assert range_list[0].start == 0
     assert range_list[0].end == 1500
     assert range_list[1].start == 2000
     assert range_list[1].end == 2499
 
-    obj_instance.remove_from_frames(Range(start=0, end=1500))
-    range_list = obj_instance.range_list
-    assert len(range_list) == 1
-    assert range_list[0].start == 2000
-    assert range_list[0].end == 2499
+    label_row.remove_classification(classification_instance)
+    assert len(label_row.get_classification_instances()) == 0
 
-    label_row.remove_object(obj_instance)
-    assert len(label_row.get_object_instances()) == 0
+
+def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_text_label_row: LabelRowV2):
+    label_row = empty_html_text_label_row
+    obj_instance = ObjectInstance(text_obj_ontology_item)
+
+    initial_range_html = [
+        HtmlRange(
+            start=HtmlNode(node="start_node", offset=50),
+            end=HtmlNode(node="end_node", offset=100),
+        )
+    ]
+
+    obj_instance.set_for_frames(TextCoordinates(range_html=initial_range_html))
+    range_html = obj_instance.range_html
+
+    assert range_html is not None
+    assert len(range_html) == 1
+    assert range_html[0].start.node == "start_node"
+    assert range_html[0].start.offset == 50
+    assert range_html[0].end.node == "end_node"
+    assert range_html[0].end.offset == 100
+
+    label_row.add_object_instance(obj_instance)
+    assert len(label_row.get_classification_instances()) == 0
+    assert len(label_row.get_object_instances()) == 1
+
+    edited_range_html = [
+        HtmlRange(
+            start=HtmlNode(node="start_node_edited", offset=70),
+            end=HtmlNode(node="end_node_edited", offset=90),
+        ),
+        HtmlRange(
+            start=HtmlNode(node="start_node_new", offset=5),
+            end=HtmlNode(node="end_node_new", offset=7),
+        ),
+    ]
+
+    obj_instance.set_for_frames(TextCoordinates(range_html=edited_range_html), overwrite=True)
+    range_html = obj_instance.range_html
+    assert range_html is not None
+    assert len(range_html) == 2
+    assert range_html[0].start.node == "start_node_edited"
+    assert range_html[0].start.offset == 70
+    assert range_html[0].end.node == "end_node_edited"
+    assert range_html[0].end.offset == 90
+
+    assert range_html[1].start.node == "start_node_new"
+    assert range_html[1].start.offset == 5
+    assert range_html[1].end.node == "end_node_new"
+    assert range_html[1].end.offset == 7
+
+    obj_instance.remove_from_frames(frames=0)
+    range_html = obj_instance.range_html
+    assert range_html is None
+
+
+def test_html_text_object_cannot_be_added_to_non_html_label_row(
+    ontology, empty_audio_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
+) -> None:
+    obj_instance = ObjectInstance(text_obj_ontology_item)
+
+    initial_range_html = [
+        HtmlRange(
+            start=HtmlNode(node="start_node", offset=50),
+            end=HtmlNode(node="end_node", offset=100),
+        )
+    ]
+
+    obj_instance.set_for_frames(TextCoordinates(range_html=initial_range_html))
+    range_html = obj_instance.range_html
+
+    assert range_html is not None
+    assert len(range_html) == 1
+    assert range_html[0].start.node == "start_node"
+    assert range_html[0].start.offset == 50
+    assert range_html[0].end.node == "end_node"
+    assert range_html[0].end.offset == 100
+
+    with pytest.raises(LabelRowError) as e:
+        empty_audio_label_row.add_object_instance(obj_instance)
+
+    assert str(e.value.message) == "Unable to assign object instance with a html range to a non-html file"
+
+    with pytest.raises(LabelRowError) as e:
+        empty_plain_text_label_row.add_object_instance(obj_instance)
+
+    assert str(e.value.message) == "Unable to assign object instance with a html range to a non-html file"
+
+
+def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
+    ontology, empty_html_text_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
+):
+    range_html = [
+        HtmlRange(
+            start=HtmlNode(node="start_node", offset=50),
+            end=HtmlNode(node="end_node", offset=100),
+        )
+    ]
+
+    # Adding range_html to an object instance where the object's shape is NOT text
+    audio_obj_instance = ObjectInstance(audio_obj_ontology_item)
+    with pytest.raises(LabelRowError) as e:
+        audio_obj_instance.set_for_frames(coordinates=TextCoordinates(range_html=range_html))
+
+    assert (
+        str(e.value.message) == f"Expected a coordinate of type `{AudioCoordinates}`, but got type `{TextCoordinates}`."
+    )
+
+    # Adding range_html to an object instance which is attached to a label row where the
+    # file type is NOT 'text/html'
+    html_text_obj_instance = ObjectInstance(text_obj_ontology_item)
+    html_text_obj_instance.set_for_frames(coordinates=TextCoordinates(), frames=0)
+    empty_plain_text_label_row.add_object_instance(html_text_obj_instance)
+
+    with pytest.raises(LabelRowError) as e:
+        html_text_obj_instance.set_for_frames(coordinates=TextCoordinates(range_html=range_html), overwrite=True)
+
+    assert (
+        str(e.value.message)
+        == "For non-html labels, ensure the `range` property is set when instantiating the TextCoordinates."
+    )
+
+
+def test_get_annotations_from_plain_text_object(ontology) -> None:
+    now = datetime.datetime.now()
+
+    object_instance = ObjectInstance(text_obj_ontology_item)
+    object_instance.set_for_frames(
+        TextCoordinates(range=[Range(start=0, end=1500)]),
+        created_at=now,
+        created_by="user1",
+        last_edited_at=now,
+        last_edited_by="user2",
+    )
+
+    annotations = object_instance.get_annotations()
+
+    assert len(annotations) == 1
+
+    annotation = annotations[0]
+    assert annotation.manual_annotation == DEFAULT_MANUAL_ANNOTATION
+    assert annotation.confidence == DEFAULT_CONFIDENCE
+    assert annotation.created_at == now
+    assert annotation.created_by == "user1"
+    assert annotation.last_edited_at == now
+    assert annotation.last_edited_by == "user2"
+    assert annotation.reviews is None
+
+
+def test_plain_text_classification_can_be_added_edited_and_removed(ontology, empty_plain_text_label_row: LabelRowV2):
+    label_row = empty_plain_text_label_row
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
+    classification_instance.set_for_frames(Range(start=0, end=1500))
+    range_list = classification_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+
+    label_row.add_classification_instance(classification_instance)
+    assert len(label_row.get_classification_instances()) == 1
+    classification_instance.set_for_frames(Range(start=2000, end=2499))
+    range_list = classification_instance.range_list
+    assert len(range_list) == 2
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+    assert range_list[1].start == 2000
+    assert range_list[1].end == 2499
+
+    label_row.remove_classification(classification_instance)
+    assert len(label_row.get_classification_instances()) == 0
+
+
+def test_plain_text_object_can_be_added_edited_and_removed(ontology, empty_plain_text_label_row: LabelRowV2):
+    label_row = empty_plain_text_label_row
+    obj_instance = ObjectInstance(text_obj_ontology_item)
+
+    initial_range = [Range(start=0, end=50)]
+    obj_instance.set_for_frames(TextCoordinates(range=initial_range))
+    range_list = obj_instance.range_list
+
+    assert range_list is not None
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 50
+
+    label_row.add_object_instance(obj_instance)
+    assert len(label_row.get_classification_instances()) == 0
+    assert len(label_row.get_object_instances()) == 1
+
+    edited_range = [Range(start=5, end=10)]
+
+    obj_instance.set_for_frames(TextCoordinates(range=edited_range), overwrite=True)
+    range_list = obj_instance.range_list
+    assert range_list is not None
+    assert len(range_list) == 1
+    assert range_list[0].start == 5
+    assert range_list[0].end == 10
+
+    obj_instance.remove_from_frames(frames=0)
+    range_html = obj_instance.range_html
+    assert range_html is None
+
+
+def test_plain_text_object_cannot_be_added_to_html_label_row(ontology, empty_html_text_label_row: LabelRowV2) -> None:
+    label_row = empty_html_text_label_row
+    obj_instance = ObjectInstance(text_obj_ontology_item)
+
+    obj_instance.set_for_frames(TextCoordinates(range=[Range(start=0, end=50)]))
+
+    with pytest.raises(LabelRowError) as e:
+        label_row.add_object_instance(obj_instance)
+
+    assert str(e.value.message) == "Unable to assign object instance without a html range to a html file"
