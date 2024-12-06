@@ -29,10 +29,11 @@ from typing import (
     Union,
 )
 
+from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
-from encord.objects import ChecklistAttribute, RadioAttribute, TextAttribute
+from encord.objects import ChecklistAttribute, RadioAttribute, Shape, TextAttribute
 from encord.objects.answers import (
     Answer,
     _get_static_answer_map,
@@ -42,6 +43,7 @@ from encord.objects.attributes import Attribute, _get_attribute_by_hash
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    AudioCoordinates,
     Coordinates,
 )
 from encord.objects.frames import (
@@ -71,7 +73,6 @@ class ObjectInstance:
 
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
-        self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
         self._object_hash = object_hash or short_uuid_str()
         self._parent: Optional[LabelRowV2] = None
 
@@ -79,6 +80,13 @@ class ObjectInstance:
         # feature_node_hash of attribute to the answer.
 
         self._dynamic_answer_manager = DynamicAnswerManager(self)
+
+        # Only used for non-frame entities
+        self._range_only = ontology_object.shape in (Shape.AUDIO,)
+        self._range_manager: RangeManager = RangeManager()
+
+        # Only used for frame entities
+        self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
 
     def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
         """
@@ -135,6 +143,21 @@ class ObjectInstance:
             return float("inf")
         else:
             return self._parent.number_of_frames
+
+    @property
+    def range_list(self) -> Ranges:
+        if self._range_only:
+            return self._range_manager.get_ranges()
+        else:
+            raise LabelRowError(
+                "No ranges available for this object instance."
+                "Please ensure the object instance was created with "
+                "the range_only property to True (via a range aware shape)"
+                "You can do ObjectInstance(audio_ontology_object) to achieve this."
+            )
+
+    def is_range_only(self) -> bool:
+        return self._range_only
 
     def get_answer(
         self,
@@ -391,6 +414,16 @@ class ObjectInstance:
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
+    def _set_for_ranges(
+        self,
+        frames: Frames,
+    ) -> None:
+        new_range_manager = RangeManager(frame_class=frames)
+        ranges_to_add = new_range_manager.get_ranges()
+        for range_to_add in ranges_to_add:
+            self.check_within_range(range_to_add.end)
+        self._range_manager.add_ranges(ranges_to_add)
+
     def set_for_frames(
         self,
         coordinates: Coordinates,
@@ -432,39 +465,73 @@ class ObjectInstance:
             reviews: Should only be set by internal functions.
             is_deleted: Should only be set by internal functions.
         """
-        frames_list = frames_class_to_frames_list(frames)
+        if self._range_only:
+            if not isinstance(coordinates, AudioCoordinates):
+                raise LabelRowError("Expecting range only coordinate type")
+            existing_frame_data = self._frames_to_instance_data.get(0)
 
-        for frame in frames_list:
-            existing_frame_data = self._frames_to_instance_data.get(frame)
-
-            if overwrite is False and existing_frame_data is not None:
+            if overwrite is False and existing_frame_data is not None and self._range_manager.intersection(frames):
                 raise LabelRowError(
                     "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
                 )
 
-            check_coordinate_type(coordinates, self._ontology_object)
-            self.check_within_range(frame)
+            self._set_for_ranges(
+                frames=frames,
+            )
 
             if existing_frame_data is None:
                 existing_frame_data = ObjectInstance.FrameData(
                     coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
                 )
-                self._frames_to_instance_data[frame] = existing_frame_data
+                self._frames_to_instance_data[0] = existing_frame_data
 
-            existing_frame_data.object_frame_instance_info.update_from_optional_fields(
-                created_at=created_at,
-                created_by=created_by,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-                reviews=reviews,
-                is_deleted=is_deleted,
-            )
-            existing_frame_data.coordinates = coordinates
+                existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                    created_at=created_at,
+                    created_by=created_by,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    reviews=reviews,
+                    is_deleted=is_deleted,
+                )
 
-            if self._parent:
-                self._parent.add_to_single_frame_to_hashes_map(self, frame)
+        else:
+            if isinstance(coordinates, AudioCoordinates):
+                raise LabelRowError("Cannot add audio coordinates to object with frames")
+            frames_list = frames_class_to_frames_list(frames)
+
+            for frame in frames_list:
+                existing_frame_data = self._frames_to_instance_data.get(frame)
+
+                if overwrite is False and existing_frame_data is not None:
+                    raise LabelRowError(
+                        "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
+                    )
+
+                check_coordinate_type(coordinates, self._ontology_object)
+                self.check_within_range(frame)
+
+                if existing_frame_data is None:
+                    existing_frame_data = ObjectInstance.FrameData(
+                        coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+                    )
+                    self._frames_to_instance_data[frame] = existing_frame_data
+
+                existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                    created_at=created_at,
+                    created_by=created_by,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    reviews=reviews,
+                    is_deleted=is_deleted,
+                )
+                existing_frame_data.coordinates = coordinates
+
+                if self._parent:
+                    self._parent.add_to_single_frame_to_hashes_map(self, frame)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
@@ -480,6 +547,11 @@ class ObjectInstance:
         Raises:
             LabelRowError: If the frame is not present in the label row.
         """
+        if self._range_only and frame != 0:
+            raise LabelRowError(
+                'This annotation data for this object instance is stored on only one "frame". '
+                "Use `get_annotation(0)` to get the frame data of the first frame."
+            )
         if isinstance(frame, str):
             # TODO: this check should be consistent for both string and integer frames,
             #       but currently it is not possible due to the parsing logic
@@ -519,6 +591,18 @@ class ObjectInstance:
         """
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
+    def get_annotation_frames(self) -> set[int]:
+        """
+        Get all annotations for the object instance on all frames it has been placed on.
+
+        Returns:
+            List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
+        """
+        if self._range_only:
+            return self._range_manager.get_ranges_as_frames()
+        else:
+            return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
+
     def remove_from_frames(self, frames: Frames) -> None:
         """
         Remove the object instance from the specified frames.
@@ -526,12 +610,19 @@ class ObjectInstance:
         Args:
             frames: The frames from which to remove the object instance.
         """
-        frames_list = frames_class_to_frames_list(frames)
-        for frame in frames_list:
-            self._frames_to_instance_data.pop(frame)
+        if self._range_only:
+            new_range_manager = RangeManager(frame_class=frames)
+            ranges_to_add = new_range_manager.get_ranges()
+            for range_to_add in ranges_to_add:
+                self.check_within_range(range_to_add.end)
+            self._range_manager.remove_ranges(ranges_to_add)
+        else:
+            frames_list = frames_class_to_frames_list(frames)
+            for frame in frames_list:
+                self._frames_to_instance_data.pop(frame)
 
-        if self._parent:
-            self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
+            if self._parent:
+                self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
 
     def is_valid(self) -> None:
         """
@@ -540,8 +631,12 @@ class ObjectInstance:
         Raises:
             LabelRowError: If the ObjectInstance is not on any frames.
         """
-        if len(self._frames_to_instance_data) == 0:
-            raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+        if self._range_only:
+            if len(self._range_manager.get_ranges()) == 0:
+                raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+        else:
+            if len(self._frames_to_instance_data) == 0:
+                raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
 
         self.are_dynamic_answers_valid()
 
@@ -553,7 +648,7 @@ class ObjectInstance:
             LabelRowError: If there are dynamic answers on frames without coordinates.
         """
         dynamic_frames = set(self._dynamic_answer_manager.frames())
-        local_frames = {annotation.frame for annotation in self.get_annotations()}
+        local_frames = self.get_annotation_frames()
 
         if not len(dynamic_frames - local_frames) == 0:
             raise LabelRowError(
@@ -716,7 +811,7 @@ class ObjectInstance:
             Returns:
                 ObjectInstance.FrameInfo: An instance of FrameInfo.
             """
-            if "lastEditedAt" in d:
+            if "lastEditedAt" in d and d["lastEditedAt"] is not None:
                 last_edited_at = parse_datetime(d["lastEditedAt"])
             else:
                 last_edited_at = datetime.now()

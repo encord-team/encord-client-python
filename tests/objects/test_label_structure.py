@@ -20,6 +20,7 @@ from encord.objects import (
 from encord.objects.attributes import Attribute
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
+    AudioCoordinates,
     BoundingBoxCoordinates,
     PointCoordinate,
     PolygonCoordinates,
@@ -37,6 +38,8 @@ from tests.objects.test_label_structure_converter import ontology_from_dict
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 polygon_ontology_item = all_types_structure.get_child_by_hash("ODkxMzAx", Object)
 polyline_ontology_item = all_types_structure.get_child_by_hash("OTcxMzIy", Object)
+
+audio_obj_ontology_item = all_types_structure.get_child_by_hash("KVfzNkFy", Object)
 
 nested_box_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx")
 text_attribute_1 = all_types_structure.get_child_by_hash("OTkxMjU1")
@@ -1105,6 +1108,25 @@ def test_audio_classification_exceed_max_frames(ontology, empty_audio_label_row:
     with pytest.raises(LabelRowError):
         classification_instance.set_for_frames(Range(start=200, end=5000))
 
+    range_list = classification_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 100
+
+
+def test_audio_object_exceed_max_frames(ontology, empty_audio_label_row: LabelRowV2):
+    object_instance = ObjectInstance(audio_obj_ontology_item)
+    object_instance.set_for_frames(AudioCoordinates(), Range(start=0, end=100))
+    empty_audio_label_row.add_object_instance(object_instance)
+
+    with pytest.raises(LabelRowError):
+        object_instance.set_for_frames(AudioCoordinates(), Range(start=200, end=5000))
+
+    range_list = object_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 100
+
 
 def test_get_annotations_from_audio_classification(ontology) -> None:
     now = datetime.datetime.now()
@@ -1119,6 +1141,33 @@ def test_get_annotations_from_audio_classification(ontology) -> None:
     )
 
     annotations = classification_instance.get_annotations()
+
+    assert len(annotations) == 1
+
+    annotation = annotations[0]
+    assert annotation.manual_annotation == DEFAULT_MANUAL_ANNOTATION
+    assert annotation.confidence == DEFAULT_CONFIDENCE
+    assert annotation.created_at == now
+    assert annotation.created_by == "user1"
+    assert annotation.last_edited_at == now
+    assert annotation.last_edited_by == "user2"
+    assert annotation.reviews is None
+
+
+def test_get_annotations_from_audio_object(ontology) -> None:
+    now = datetime.datetime.now()
+
+    object_instance = ObjectInstance(audio_obj_ontology_item)
+    object_instance.set_for_frames(
+        AudioCoordinates(),
+        Range(start=0, end=1500),
+        created_at=now,
+        created_by="user1",
+        last_edited_at=now,
+        last_edited_by="user2",
+    )
+
+    annotations = object_instance.get_annotations()
 
     assert len(annotations) == 1
 
@@ -1153,3 +1202,33 @@ def test_audio_classification_can_be_added_edited_and_removed(ontology, empty_au
 
     label_row.remove_classification(classification_instance)
     assert len(label_row.get_classification_instances()) == 0
+
+
+def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
+    label_row = empty_audio_label_row
+    obj_instance = ObjectInstance(audio_obj_ontology_item)
+    obj_instance.set_for_frames(AudioCoordinates(), Range(start=0, end=1500))
+    range_list = obj_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+
+    label_row.add_object_instance(obj_instance)
+    assert len(label_row.get_classification_instances()) == 0
+    assert len(label_row.get_object_instances()) == 1
+    obj_instance.set_for_frames(AudioCoordinates(), Range(start=2000, end=2499))
+    range_list = obj_instance.range_list
+    assert len(range_list) == 2
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+    assert range_list[1].start == 2000
+    assert range_list[1].end == 2499
+
+    obj_instance.remove_from_frames(Range(start=0, end=1500))
+    range_list = obj_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 2000
+    assert range_list[0].end == 2499
+
+    label_row.remove_object(obj_instance)
+    assert len(label_row.get_object_instances()) == 0
