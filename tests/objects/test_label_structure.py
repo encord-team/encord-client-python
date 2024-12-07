@@ -23,10 +23,11 @@ from encord.objects.coordinates import (
     AudioCoordinates,
     BoundingBoxCoordinates,
     PointCoordinate,
-    PolygonCoordinates, TextCoordinates,
+    PolygonCoordinates,
+    TextCoordinates,
 )
 from encord.objects.frames import Range
-from encord.objects.html_node import HtmlRange, HtmlNode
+from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
@@ -1298,7 +1299,7 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
         HtmlRange(
             start=HtmlNode(node="start_node_new", offset=5),
             end=HtmlNode(node="end_node_new", offset=7),
-        )
+        ),
     ]
 
     obj_instance.set_for_frames(TextCoordinates(), range_html=edited_range_html)
@@ -1349,11 +1350,8 @@ def test_html_text_object_cannot_be_added_to_non_html_label_row(ontology, empty_
 
 
 def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
-        ontology,
-        empty_html_text_label_row: LabelRowV2,
-        empty_plain_text_label_row: LabelRowV2
+    ontology, empty_html_text_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
 ):
-
     range_html = [
         HtmlRange(
             start=HtmlNode(node="start_node", offset=50),
@@ -1366,7 +1364,10 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
     with pytest.raises(LabelRowError) as e:
         audio_obj_instance.set_for_frames(coordinates=TextCoordinates(), range_html=range_html)
 
-    assert str(e.value.message) == "Setting range_html of the object instance is only allowed for objects with the 'text' shape"
+    assert (
+        str(e.value.message)
+        == "Setting range_html of the object instance is only allowed for objects with the 'text' shape"
+    )
 
     # Adding range_html to an object instance which is attached to a label row where the
     # file type is NOT 'text/html'
