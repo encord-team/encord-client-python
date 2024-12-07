@@ -1797,7 +1797,11 @@ class LabelRowV2:
         if self._label_row_read_only_data.duration is not None and self.data_type != DataType.PLAIN_TEXT:
             ret["data_duration"] = self._label_row_read_only_data.duration
 
-        if self._label_row_read_only_data.fps is not None and self.data_type != DataType.AUDIO and self.data_type != DataType.PLAIN_TEXT:
+        if (
+            self._label_row_read_only_data.fps is not None
+            and self.data_type != DataType.AUDIO
+            and self.data_type != DataType.PLAIN_TEXT
+        ):
             ret["data_fps"] = self._label_row_read_only_data.fps
 
         return ret

@@ -480,7 +480,9 @@ class ObjectInstance:
         """
         if range_html is not None:
             if self._ontology_object.shape != Shape.TEXT:
-                raise LabelRowError("Setting range_html of the object instance is only allowed for objects with the 'text' shape")
+                raise LabelRowError(
+                    "Setting range_html of the object instance is only allowed for objects with the 'text' shape"
+                )
             elif self._parent is not None and self._parent.file_type != "text/html":
                 raise LabelRowError("Cannot add range_html to a non-html text file")
             elif len(self.range_list) > 0:
