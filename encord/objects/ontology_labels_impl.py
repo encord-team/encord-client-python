@@ -1655,8 +1655,7 @@ class LabelRowV2:
 
             if self.data_type == DataType.PLAIN_TEXT and obj.range_html is not None:
                 annotation = obj.get_annotations()[0]
-                # ret[obj.object_hash]["range_html"] = [x.to_dict() for x in obj.range_html]
-                ret[obj.object_hash]["range_html"] = obj.range_html[0].to_dict()
+                ret[obj.object_hash]["range_html"] = [x.to_dict() for x in obj.range_html]
                 ret[obj.object_hash]["range"] = []
                 ret[obj.object_hash]["createdBy"] = annotation.created_by
                 ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
@@ -1695,7 +1694,7 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if self.data_type == DataType.AUDIO:
+            if self.data_type == DataType.AUDIO or self.data_type == DataType.PLAIN_TEXT:
                 annotation = classification.get_annotations()[0]
                 ret[classification.classification_hash]["range"] = [
                     [range.start, range.end] for range in classification.range_list
