@@ -132,8 +132,8 @@ def test_request_timeout_settings_correctly_propagated(send: MagicMock, api_clie
     # Re-mocking for V2 API
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {"results": []}
-    mock_response.content = json.dumps({"results": []})
+    mock_response.json.return_value = {"results": [], "next_page_token": None}
+    mock_response.content = json.dumps({"results": [], "next_page_token": None})
     send.side_effect = None
     send.return_value = mock_response
 

@@ -32,7 +32,7 @@ def construct_timer(
 def test_project_collaborator_timers_empty_page(api_client_get: MagicMock, project: Project):
     after_time = parse_datetime("2023-01-01T21:00:00")
 
-    api_client_get.return_value = Page[CollaboratorTimer](results=[])
+    api_client_get.return_value = Page[CollaboratorTimer](results=[], next_page_token=None)
 
     timers = list(project.list_collaborator_timers(after=after_time))
 
@@ -48,7 +48,8 @@ def test_project_collaborator_timers_single_page(api_client_get: MagicMock, proj
         results=[
             construct_timer(data_title="data title 1"),
             construct_timer(data_title="data title 2"),
-        ]
+        ],
+        next_page_token=None,
     )
 
     api_client_get.return_value = return_value
@@ -86,7 +87,8 @@ def test_project_collaborator_timers_multi_page(api_client_get: MagicMock, proje
         results=[
             construct_timer(data_title="data title 3"),
             construct_timer(data_title="data title 4"),
-        ]
+        ],
+        next_page_token=None,
     )
 
     api_client_get.side_effect = [return_value_page_1, return_value_page_2]

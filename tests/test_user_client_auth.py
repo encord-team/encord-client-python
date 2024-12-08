@@ -13,8 +13,6 @@ from cryptography.hazmat.primitives.serialization import (
 from requests import PreparedRequest, Session
 
 from encord.configs import SshConfig
-from encord.http.v2.payloads import Page
-from encord.orm.analytics import CollaboratorTimer
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectDTO, ProjectType
 from encord.user_client import EncordUserClient
@@ -108,8 +106,8 @@ def make_side_effects(project_response: Optional[MagicMock] = None):
         elif args[0].path_url.startswith("/v2/public/analytics/collaborators/timers"):
             mock_response = MagicMock()
             mock_response.status_code = 200
-            mock_response.json.return_value = Page[CollaboratorTimer](results=[]).to_dict()
-            mock_response.json.content = json.dumps(Page[CollaboratorTimer](results=[]).to_dict())
+            mock_response.json.return_value = {"results": [], "next_page_token": None}
+            mock_response.json.content = json.dumps({"results": [], "next_page_token": None})
             return mock_response
         elif args[0].method == "GET" and args[0].path_url.startswith("/v2/public/ontologies/"):
             mock_response = MagicMock()
