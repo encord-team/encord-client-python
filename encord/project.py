@@ -1236,7 +1236,13 @@ class Project:
         self._client.active_sync()
         logger.info("Sync initiated in Active, please check the app to see progress")
 
-    def active_import(self, project_mode: ActiveProjectMode) -> None:
-        """Import the associated Active project"""
-        self._client.active_import(project_mode)
+    def active_import(self, project_mode: ActiveProjectMode, *, video_sampling_rate: Optional[float] = None) -> None:
+        """Import the associated Active project. Progress in the app
+        Args:
+            project_mode: Active projects can be imported up to a certain stage. Use the ActiveProjectModeEnum to select the stage
+            video_sampling_rate: Optional[float]: For videos, what's the sampling rate of frames for analysis
+        Returns:
+            None
+        """
+        self._client.active_import(project_mode, video_sampling_rate)
         logger.info("Import initiated in Active, please check the app to see progress")

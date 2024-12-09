@@ -1607,11 +1607,11 @@ class EncordClientProject(EncordClient):
 
         return errors.errors or []
 
-    def active_import(self, project_mode: ActiveProjectMode) -> None:
+    def active_import(self, project_mode: ActiveProjectMode, video_sampling_rate: Optional[float] = None) -> None:
         self._get_api_client().post(
             f"active/{self.project_hash}/import",
             params=None,
-            payload=ActiveProjectImportPayload(project_mode=project_mode),
+            payload=ActiveProjectImportPayload(project_mode=project_mode, video_sampling_rate=video_sampling_rate),
             result_type=None,
         )
 
