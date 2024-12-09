@@ -1237,6 +1237,6 @@ class Project:
         logger.info("Sync initiated in Active, please check the app to see progress")
 
     def active_import(self, project_mode: ActiveProjectMode) -> None:
-        """Sync the associated Active project"""
+        """Import the associated Active project"""
         self._client.active_import(project_mode)
         logger.info("Import initiated in Active, please check the app to see progress")
