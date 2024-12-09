@@ -508,7 +508,7 @@ class EncordClientDataset(EncordClient):
 
     def create_dicom_series(
         self,
-        file_paths: typing.Collection[Union[Path, str]],
+        file_paths: Union[typing.Collection[str], typing.Collection[Path], typing.Collection[Union[str, Path]]],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder_uuid: Optional[uuid.UUID] = None,
@@ -1087,7 +1087,7 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
-    def create_label_row(self, uid, *, get_signed_url=False) -> typing.Any:
+    def create_label_row(self, uid, *, get_signed_url=False) -> LabelRow:
         """
         This function is documented in :meth:`encord.project.Project.create_label_row`.
         """
