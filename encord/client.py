@@ -51,6 +51,7 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.orm.active import ActiveProjectImportPayload, ActiveProjectMode
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
@@ -1605,6 +1606,24 @@ class EncordClientProject(EncordClient):
             return []
 
         return errors.errors or []
+
+    def active_import(self, project_mode: ActiveProjectMode, video_sampling_rate: Optional[float] = None) -> None:
+        self._get_api_client().post(
+            f"active/{self.project_hash}/import",
+            params=None,
+            payload=ActiveProjectImportPayload(project_mode=project_mode, video_sampling_rate=video_sampling_rate),
+            result_type=None,
+        )
+        logger.info("Import initiated in Active, please check the app to see progress")
+
+    def active_sync(self) -> None:
+        self._get_api_client().post(
+            f"active/{self.project_hash}/sync",
+            params=None,
+            payload=None,
+            result_type=None,
+        )
+        logger.info("Sync initiated in Active, please check the app to see progress")
 
 
 def _device_to_string(device: Device) -> str:

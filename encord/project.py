@@ -22,6 +22,7 @@ from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
+from encord.orm.active import ActiveProjectMode
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
@@ -1227,3 +1228,17 @@ class Project:
             self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type
         )
         return self.get_collection(new_uuid)
+
+    def active_sync(self) -> None:
+        """Sync the associated Active project"""
+        self._client.active_sync()
+
+    def active_import(self, project_mode: ActiveProjectMode, *, video_sampling_rate: Optional[float] = None) -> None:
+        """Import the associated Active project. Progress in the app
+        Args:
+            project_mode: Active projects can be imported up to a certain stage. Use the ActiveProjectModeEnum to select the stage
+            video_sampling_rate: Optional[float]: For videos, what's the sampling rate of frames for analysis
+        Returns:
+            None
+        """
+        self._client.active_import(project_mode, video_sampling_rate)
