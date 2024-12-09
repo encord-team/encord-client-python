@@ -51,13 +51,13 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.orm.active import ActiveProjectImportPayload, ActiveProjectMode
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
 )
 from encord.orm.bearer_request import BearerTokenResponse
 from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
-from encord.orm.collection import ActiveProjectImportPayload, ActiveProjectMode
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     AddPrivateDataResponse,

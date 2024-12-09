@@ -23,13 +23,14 @@ from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
+from encord.orm.active import ActiveProjectMode
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
     CollaboratorTimersGroupBy,
 )
 from encord.orm.cloud_integration import CloudIntegration
-from encord.orm.collection import ActiveProjectMode, ProjectCollectionType
+from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
