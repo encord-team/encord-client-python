@@ -62,8 +62,7 @@ class CloudUploadSettings:
 
 
 def _get_content_type(
-    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], file_path: Union[str
-, Path]
+    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], file_path: Union[str, Path]
 ) -> Optional[str]:
     if orm_class == Images:
         return mimetypes.guess_type(str(file_path))[0]
