@@ -1536,9 +1536,7 @@ class EncordUserClient:
         Returns:
             FilterPreset: Newly created collection.
         """
-        new_uuid = FilterPreset._create_preset(
-            self._api_client, name, description, filter_preset_json=filter_preset_json
-        )
+        new_uuid = FilterPreset._create_preset(self._api_client, name, filter_preset_json=filter_preset_json)
         return self.get_filter_preset(new_uuid)
 
     def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:

@@ -18,6 +18,7 @@ from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
 from encord.constants.model import AutomationModels, Device
+from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.objects import LabelRowV2, OntologyStructure
@@ -31,6 +32,7 @@ from encord.orm.analytics import (
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
+from encord.orm.filter_preset import FilterPresetDefinition
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
@@ -1242,3 +1244,61 @@ class Project:
             None
         """
         self._client.active_import(project_mode, video_sampling_rate)
+
+    def list_filter_presets(
+        self,
+        filter_preset_uuids: Optional[List[Union[str, UUID]]] = None,
+        page_size: Optional[int] = None,
+    ) -> Iterator[ProjectFilterPreset]:
+        """
+        List all filter presets associated to the project.
+        Args:
+            filter_preset_uuids: The unique identifiers (UUIDs) of the filter presets to retrieve.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of filter presets which match the given criteria.
+        Raises:
+            ValueError: If any of the filter preset uuids is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        filter_presets = (
+            [
+                UUID(filter_preset) if isinstance(filter_preset, str) else filter_preset
+                for filter_preset in filter_preset_uuids
+            ]
+            if filter_preset_uuids is not None
+            else None
+        )
+        return ProjectFilterPreset._list_filter_presets(
+            client=self._client._get_api_client(),
+            project_uuid=self._project_instance.project_hash,
+            filter_preset_uuids=filter_presets,
+            page_size=page_size,
+        )
+
+    def get_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> ProjectFilterPreset:
+        return ProjectFilterPreset._get_filter_preset(
+            client=self._client._get_api_client(),
+            project_uuid=self._project_instance.project_hash,
+            filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
+        )
+
+    def delete_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> None:
+        ProjectFilterPreset._delete_filter_preset(
+            client=self._client._get_api_client(),
+            project_uuid=self._project_instance.project_hash,
+            filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
+        )
+
+    def create_filter_preset(self, name: str, filter_preset: FilterPresetDefinition) -> ProjectFilterPreset:
+        uuid = ProjectFilterPreset._create_filter_preset(
+            client=self._client._get_api_client(),
+            project_uuid=self._project_instance.project_hash,
+            name=name,
+            filter_preset=filter_preset,
+        )
+        return ProjectFilterPreset._get_filter_preset(
+            client=self._client._get_api_client(),
+            project_uuid=self._project_instance.project_hash,
+            filter_preset_uuid=uuid,
+        )
