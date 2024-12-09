@@ -1614,6 +1614,7 @@ class EncordClientProject(EncordClient):
             payload=ActiveProjectImportPayload(project_mode=project_mode, video_sampling_rate=video_sampling_rate),
             result_type=None,
         )
+        logger.info("Import initiated in Active, please check the app to see progress")
 
     def active_sync(self) -> None:
         self._get_api_client().post(
@@ -1622,6 +1623,7 @@ class EncordClientProject(EncordClient):
             payload=None,
             result_type=None,
         )
+        logger.info("Sync initiated in Active, please check the app to see progress")
 
 
 def _device_to_string(device: Device) -> str:
