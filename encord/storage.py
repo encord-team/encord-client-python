@@ -1676,7 +1676,7 @@ class StorageItem:
         self,
         target_folder: Union[StorageFolder, UUID],
         allow_mirror_dataset_changes: bool = False,
-    ):
+    ) -> None:
         """
         Move the item to another folder.
 
