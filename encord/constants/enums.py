@@ -25,6 +25,8 @@ class DataType(StringEnum):
     DICOM_STUDY = "dicom_study"
     NIFTI = "nifti"
     AUDIO = "audio"
+    PLAIN_TEXT = "plain_text"
+    PDF = "pdf"
 
     # will be displayed if the Encord platform has a new data type that is not present in this SDK version. Please upgrade your SDK version
     MISSING_DATA_TYPE = "_MISSING_DATA_TYPE_"

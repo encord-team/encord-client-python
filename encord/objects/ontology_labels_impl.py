@@ -1707,7 +1707,7 @@ class LabelRowV2:
         ):
             data_sequence = frame_level_data.frame_number
 
-        elif data_type == DataType.AUDIO:
+        elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT or data_type == DataType.PDF:
             data_sequence = 0
 
         elif data_type == DataType.DICOM_STUDY:
@@ -1760,7 +1760,7 @@ class LabelRowV2:
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
 
-        elif data_type == DataType.AUDIO:
+        elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
             return {}
 
         elif data_type == DataType.DICOM_STUDY:
@@ -2009,6 +2009,12 @@ class LabelRowV2:
         elif data_type == DataType.DICOM_STUDY:
             pass
 
+        elif data_type == DataType.PLAIN_TEXT or data_type == DataType.PDF:
+            data_dict = list(label_row_dict["data_units"].values())[0]
+            data_link = data_dict["data_link"]
+            height = None
+            width = None
+
         elif data_type == DataType.MISSING_DATA_TYPE:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
@@ -2082,8 +2088,7 @@ class LabelRowV2:
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
-            # In the future, PDF and Text should come here
-            elif data_type == DataType.AUDIO:
+            elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
 
             else:
