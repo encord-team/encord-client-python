@@ -1266,6 +1266,29 @@ def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_labe
     assert len(label_row.get_object_instances()) == 0
 
 
+def test_html_text_classification_can_be_added_edited_and_removed(ontology, empty_html_text_label_row: LabelRowV2):
+    label_row = empty_html_text_label_row
+    classification_instance = ClassificationInstance(checklist_classification, range_only=True)
+    classification_instance.set_for_frames(Range(start=0, end=1500))
+    range_list = classification_instance.range_list
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+
+    label_row.add_classification_instance(classification_instance)
+    assert len(label_row.get_classification_instances()) == 1
+    classification_instance.set_for_frames(Range(start=2000, end=2499))
+    range_list = classification_instance.range_list
+    assert len(range_list) == 2
+    assert range_list[0].start == 0
+    assert range_list[0].end == 1500
+    assert range_list[1].start == 2000
+    assert range_list[1].end == 2499
+
+    label_row.remove_classification(classification_instance)
+    assert len(label_row.get_classification_instances()) == 0
+
+
 def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_text_label_row: LabelRowV2):
     label_row = empty_html_text_label_row
     obj_instance = ObjectInstance(text_obj_ontology_item)
