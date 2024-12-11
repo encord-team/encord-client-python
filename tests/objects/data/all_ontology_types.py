@@ -99,6 +99,10 @@ all_ontology_types = {
             ],
         },
         {"id": "7", "name": "cone object", "color": "#A4DD00", "shape": "skeleton", "featureNodeHash": "MTczNjQx"},
+        {"id": "8", "name": "audio 1", "color": "#A4DD00", "shape": "audio", "featureNodeHash": "9dt+r+op"},
+        {"id": "9", "name": "audio 2", "color": "#A4DD00", "shape": "audio", "featureNodeHash": "VDeQk05m"},
+        {"id": "10", "name": "audio 3", "color": "#A4DD00", "shape": "audio", "featureNodeHash": "bjvtzFgi"},
+        {"id": "11", "name": "audio 4", "color": "#A4DD00", "shape": "audio", "featureNodeHash": "3X3+Ydcy"},
     ],
     "classifications": [
         {
