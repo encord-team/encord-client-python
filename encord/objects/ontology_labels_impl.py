@@ -1775,7 +1775,7 @@ class LabelRowV2:
             ret["audio_sample_rate"] = self._label_row_read_only_data.audio_sample_rate
             ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
             ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
-        elif self.data_type == DataType.PLAIN_TEXT:
+        elif self.data_type == DataType.PLAIN_TEXT or self.data_type == DataType.PDF:
             pass
         elif (
             self.data_type == DataType.IMAGE
@@ -2037,6 +2037,7 @@ class LabelRowV2:
         if data_type == DataType.VIDEO or data_type == DataType.IMAGE:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict["data_type"]
             # Dimensions should be always there
             # But we have some older entries that don't have them
             # So setting them to None for now until the format is not guaranteed to be enforced
@@ -2046,12 +2047,16 @@ class LabelRowV2:
         elif data_type == DataType.DICOM or data_type == DataType.NIFTI:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
             data_link = None
+            file_type = dicom_dict["data_type"]
+
             height = dicom_dict["height"]
             width = dicom_dict["width"]
+
 
         elif data_type == DataType.AUDIO:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict["data_type"]
             height = None
             width = None
             audio_codec = data_dict["audio_codec"]
@@ -2062,11 +2067,13 @@ class LabelRowV2:
         elif data_type == DataType.PLAIN_TEXT:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict["data_type"]
             height = None
             width = None
 
         elif data_type == DataType.IMG_GROUP:
             data_link = None
+            file_type = None
             height = None
             width = None
 
@@ -2076,6 +2083,7 @@ class LabelRowV2:
         elif data_type == DataType.PLAIN_TEXT or data_type == DataType.PDF:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict["data_type"]
             height = None
             width = None
 
@@ -2117,7 +2125,7 @@ class LabelRowV2:
             priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
             client_metadata=label_row_dict.get("client_metadata", self._label_row_read_only_data.client_metadata),
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
-            file_type=label_row_dict.get("file_type", None),
+            file_type=file_type,
             is_valid=bool(label_row_dict.get("is_valid", True)),
             backing_item_uuid=self.backing_item_uuid,
         )
@@ -2155,11 +2163,9 @@ class LabelRowV2:
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
-            elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
-                self._add_objects_instances_from_objects_without_frames(object_answers)
-                self._add_classification_instances_from_classifications_without_frames(classification_answers)
-
-            elif data_type == DataType.PLAIN_TEXT:
+            elif (data_type == DataType.AUDIO or
+                  data_type == DataType.PDF or
+                  data_type == DataType.PLAIN_TEXT):
                 is_html = data_unit["data_type"] == "text/html"
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
@@ -2282,6 +2288,8 @@ class LabelRowV2:
         expected_shape: Shape
         if self._label_row_read_only_data.data_type == DataType.AUDIO:
             expected_shape = Shape.AUDIO
+        elif self._label_row_read_only_data.data_type == DataType.PLAIN_TEXT:
+            expected_shape = Shape.TEXT
         else:
             unknown_data_type = self._label_row_read_only_data.data_type
             raise RuntimeError(f"Unexpected data type[{unknown_data_type}] for range based objects")
