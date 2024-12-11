@@ -25,6 +25,7 @@ from tests.objects.data import (
 )
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.audio_labels import AUDIO_LABELS
+from tests.objects.data.audio_objects import AUDIO_OBJECTS
 from tests.objects.data.dicom_labels import dicom_labels
 from tests.objects.data.dynamic_classifications_ontology import (
     dynamic_classifications_ontology,
@@ -124,7 +125,7 @@ def test_serialise_image_with_object_answers():
     )
 
 
-def test_serialise_audio():
+def test_serialise_audio() -> None:
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
@@ -136,6 +137,23 @@ def test_serialise_audio():
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         AUDIO_LABELS,
+        actual,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
+    )
+
+
+def test_serialise_audio_objects() -> None:
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "AUDIO"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(AUDIO_OBJECTS)
+
+    actual = label_row.to_encord_dict()
+    deep_diff_enhanced(
+        AUDIO_OBJECTS,
         actual,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
