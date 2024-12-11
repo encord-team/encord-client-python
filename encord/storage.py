@@ -782,7 +782,7 @@ class StorageFolder:
 
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
+            EncordException: If the document could not be uploaded. For example, due to being in an unsupported format.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.PDF, count=1, frames_subfolder_name=None
