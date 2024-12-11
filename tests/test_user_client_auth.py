@@ -71,7 +71,7 @@ def make_side_effects(project_response: Optional[MagicMock] = None):
     def side_effects(*args, **kwargs):
         if args[0].path_url.startswith("/public/user"):
             request_type = json.loads(args[0].body)["query_type"]
-            if request_type == "datasetwithuserrole":
+            if request_type == "projectwithuserrole":
                 mock_response = MagicMock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {"status": 200, "response": {}}
@@ -172,7 +172,7 @@ def test_v1_public_user_resource_when_initialised_with_ssh_key(mock_send, bearer
     mock_send.side_effect = make_side_effects()
 
     user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=PRIVATE_KEY_PEM)
-    user_client.get_datasets()
+    user_client.get_projects()
 
     assert mock_send.call_count == 1
     for mock_call in mock_send.call_args_list:
@@ -188,7 +188,7 @@ def test_v1_public_user_resource_when_initialised_with_bearer_auth(mock_send, be
     mock_send.side_effect = make_side_effects()
 
     user_client = EncordUserClient.create_with_bearer_token(bearer_token)
-    user_client.get_datasets()
+    user_client.get_projects()
 
     assert mock_send.call_count == 1
     for mock_call in mock_send.call_args_list:

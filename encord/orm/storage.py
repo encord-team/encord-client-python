@@ -25,6 +25,8 @@ class StorageItemType(CamelStrEnum):
     DICOM_SERIES = auto()
     AUDIO = auto()
     NIFTI = auto()
+    PLAIN_TEXT = auto()
+    PDF = auto()
 
 
 class StorageUserRole(CamelStrEnum):
@@ -406,6 +408,36 @@ class DataUploadDicomSeries(BaseDTO):
     """Type of the external file."""
 
 
+class DataUploadText(BaseDTO):
+    object_url: str
+    """URL of the text (TXT, HTML, etc) file to be registered with Encord service."""
+    title: Optional[str] = None
+    """Title of the file (derived from the URL if omitted)."""
+    client_metadata: dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the file."""
+
+    external_file_type: Literal["PLAIN_TEXT"] = "PLAIN_TEXT"
+    """Type of the external file."""
+
+    placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
+
+
+class DataUploadPDF(BaseDTO):
+    object_url: str
+    """URL of the PDF file to be registered with Encord service."""
+    title: Optional[str] = None
+    """Title of the file (derived from the URL if omitted)."""
+    client_metadata: dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the file."""
+
+    external_file_type: Literal["PDF"] = "PDF"
+    """Type of the external file."""
+
+    placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
+
+
 class DataUploadAudio(BaseDTO):
     """
     Data about an audio item to be registered with Encord service.
@@ -455,6 +487,12 @@ class DataUploadItems(BaseDTO):
 
     nifti: List[DataUploadNifti] = Field(default_factory=list)
     """List of NIFTI items to be registered. See :class:`DataUploadNifti` for more details."""
+
+    text: List[DataUploadText] = Field(default_factory=list)
+    """List of text items to be registered. See :class:`DataUploadText` for more details."""
+
+    pdf: List[DataUploadPDF] = Field(default_factory=list)
+    """List of PDF items to be registered. See :class:`DataUploadPDF` for more details."""
 
     skip_duplicate_urls: bool = False
     """If set to `True`, Encord service will skip items with URLs that already exist in the same folder.

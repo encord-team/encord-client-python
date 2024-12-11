@@ -449,7 +449,7 @@ def test_classification_index_answer_overwrite():
     assert classification_instance.get_answer() == "Aphrodite"
 
 
-def test_classification_answering_with_ontology_access():
+def test_classification_answering_with_ontology_access() -> None:
     """A demonstrative test to show how easy it would be for clients to use the ontology to answer classifications"""
 
     # NOTE: it is important to add the `Classification` here, to distinguish between the attribute and classification,
@@ -975,7 +975,7 @@ def test_label_status_forwards_compatibility():
     assert LabelStatus("new-unknown-status").value == "_MISSING_LABEL_STATUS_"
 
 
-def test_frame_view(ontology):
+def test_frame_view(ontology) -> None:
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 25
     label_row_metadata_dict["duration"] = 0.2

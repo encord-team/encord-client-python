@@ -692,6 +692,136 @@ class StorageFolder:
         else:
             return upload_result.items_with_names[0].item_uuid
 
+    def upload_text(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ) -> UUID:  # TODO this should return an item?
+        """
+        Upload a text file to a Folder in Encord storage.
+
+        Args:
+            file_path: File path of the text file. For example: '/home/user/data/report.txt'
+            title:
+                The item title. If unspecified, the file name is used as the title.
+            client_metadata:
+                Optional custom metadata to be associated with the audio. Should be a dictionary
+                that is JSON-serializable.
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        Returns:
+            UUID of the newly created text item.
+
+        Raises:
+            AuthorizationError: If the user is not authorized to access the folder.
+            EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
+        """
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.PLAIN_TEXT, count=1, frames_subfolder_name=None
+        )
+        if len(upload_url_info) != 1:
+            raise EncordException("Can't access upload location")
+
+        title = self._guess_title(title, file_path)
+
+        self._upload_local_file(
+            file_path,
+            title,
+            StorageItemType.PLAIN_TEXT,
+            upload_url_info[0].signed_url,
+            cloud_upload_settings,
+        )
+
+        upload_result = self._add_data(
+            integration_id=None,
+            private_files=DataUploadItems(
+                text=[
+                    orm_storage.DataUploadText(
+                        object_url=upload_url_info[
+                            0
+                        ].object_key,  # this is actually ignored when placeholder_item_uuid is set
+                        placeholder_item_uuid=upload_url_info[0].item_uuid,
+                        title=title,
+                        client_metadata=client_metadata or {},
+                    )
+                ],
+            ),
+            ignore_errors=False,
+        )
+
+        if upload_result.status == LongPollingStatus.ERROR:
+            raise EncordException(f"Could not register text file, errors occurred {upload_result.errors}")
+        else:
+            return upload_result.items_with_names[0].item_uuid
+
+    def upload_pdf(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ) -> UUID:  # TODO this should return an item?
+        """
+        Upload a PDF file to a Folder in Encord storage.
+
+        Args:
+            file_path: File path of the PDF file. For example: '/home/user/data/report.pdf'
+            title:
+                The item title. If unspecified, the file name is used as the title.
+            client_metadata:
+                Optional custom metadata to be associated with the audio. Should be a dictionary
+                that is JSON-serializable.
+            cloud_upload_settings:
+                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+
+        Returns:
+            UUID of the newly created PDF item.
+
+        Raises:
+            AuthorizationError: If the user is not authorized to access the folder.
+            EncordException: If the document could not be uploaded. For example, due to being in an unsupported format.
+        """
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.PDF, count=1, frames_subfolder_name=None
+        )
+        if len(upload_url_info) != 1:
+            raise EncordException("Can't access upload location")
+
+        title = self._guess_title(title, file_path)
+
+        self._upload_local_file(
+            file_path,
+            title,
+            StorageItemType.PDF,
+            upload_url_info[0].signed_url,
+            cloud_upload_settings,
+        )
+
+        upload_result = self._add_data(
+            integration_id=None,
+            private_files=DataUploadItems(
+                pdf=[
+                    orm_storage.DataUploadPDF(
+                        object_url=upload_url_info[
+                            0
+                        ].object_key,  # this is actually ignored when placeholder_item_uuid is set
+                        placeholder_item_uuid=upload_url_info[0].item_uuid,
+                        title=title,
+                        client_metadata=client_metadata or {},
+                    )
+                ],
+            ),
+            ignore_errors=False,
+        )
+
+        if upload_result.status == LongPollingStatus.ERROR:
+            raise EncordException(f"Could not register text file, errors occurred {upload_result.errors}")
+        else:
+            return upload_result.items_with_names[0].item_uuid
+
     def add_private_data_to_folder_start(
         self,
         integration_id: str,
@@ -1108,6 +1238,20 @@ class StorageFolder:
             return "application/nifti"
         elif item_type == StorageItemType.DICOM_FILE:
             return "application/dicom"
+        elif item_type == StorageItemType.PLAIN_TEXT:
+            text_mime = mimetypes.guess_type(str(file_path))[0]
+            if text_mime and (
+                text_mime.startswith("text/")
+                or text_mime.startswith("application/json")
+                or text_mime.startswith("application/xml")
+            ):
+                return text_mime
+            else:
+                raise ValueError(
+                    f"Type of {file_path} is detected to be '{text_mime}', which is not supported for text annotations"
+                )
+        elif item_type == StorageItemType.PDF:
+            return "application/pdf"
         else:
             raise ValueError(f"Unsupported upload item type `{item_type}`")
 
@@ -1676,7 +1820,7 @@ class StorageItem:
         self,
         target_folder: Union[StorageFolder, UUID],
         allow_mirror_dataset_changes: bool = False,
-    ):
+    ) -> None:
         """
         Move the item to another folder.
 

@@ -303,7 +303,7 @@ class Dataset:
 
     def create_dicom_series(
         self,
-        file_paths: Collection[Union[Path, str]],
+        file_paths: Union[Collection[str], Collection[Path], Collection[Union[Path, str]]],
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
         folder: Optional[Union[UUID, StorageFolder]] = None,

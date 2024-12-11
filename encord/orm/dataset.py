@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 from collections import OrderedDict
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from types import MappingProxyType
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -14,6 +14,7 @@ from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 from encord.utilities.common import _get_dict_without_none_keys
@@ -22,6 +23,18 @@ from encord.utilities.common import _get_dict_without_none_keys
 class DatasetUserRole(IntEnum):
     ADMIN = 0
     USER = 1
+
+
+class DatasetUserRoleV2(CamelStrEnum):
+    ADMIN = auto()
+    USER = auto()
+
+
+def dataset_user_role_str_enum_to_int_enum(str_enum: DatasetUserRoleV2) -> DatasetUserRole:
+    return {
+        DatasetUserRoleV2.ADMIN: DatasetUserRole.ADMIN,
+        DatasetUserRoleV2.USER: DatasetUserRole.USER,
+    }[str_enum]
 
 
 class DatasetUser(BaseDTO):
@@ -1051,3 +1064,48 @@ class DatasetDataLongPolling(BaseDTO):
 @dataclasses.dataclass(frozen=True)
 class DatasetLinkItems:
     pass
+
+
+class CreateDatasetPayload(BaseDTO):
+    title: str
+    description: Optional[str]
+
+    create_backing_folder: bool  # this creates a legacy "mirror" dataset and it's backing folder in one go
+
+    # only for analytics, to know if customers are
+    # using depreciated EncordUserClient.create_private_dataset
+    # this is only place which should pass legacy_call=True
+    legacy_call: bool  # this field will be removed soon
+
+
+class CreateDatasetResponseV2(BaseDTO):
+    dataset_uuid: UUID
+    backing_folder_uuid: Optional[UUID] = None  # a 'not None' indicates a legacy "mirror" dataset was created
+
+
+class DatasetsWithUserRolesListParams(BaseDTO):
+    title_eq: Optional[str]
+    title_like: Optional[str]
+    description_eq: Optional[str]
+    description_like: Optional[str]
+    created_before: Optional[datetime]
+    created_after: Optional[datetime]
+    edited_before: Optional[datetime]
+    edited_after: Optional[datetime]
+    include_org_access: Optional[bool] = False
+
+
+class DatasetWithUserRole(BaseDTO):
+    dataset_uuid: UUID
+    title: str
+    description: str
+    created_at: datetime
+    last_edited_at: datetime
+    user_role: Optional[DatasetUserRoleV2]
+
+    storage_location: Optional[StorageLocation] = None  # legacy field: you can have data from mixed locations now
+    backing_folder_uuid: Optional[UUID] = None  # if set, this indicates a legacy 'mirror' dataset
+
+
+class DatasetsWithUserRolesListResponse(BaseDTO):
+    result: List[DatasetWithUserRole]

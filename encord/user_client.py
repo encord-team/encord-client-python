@@ -32,7 +32,7 @@ from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.collection import Collection
 from encord.common.deprecated import deprecated
-from encord.common.time_parser import parse_datetime
+from encord.common.time_parser import parse_datetime, parse_datetime_optional
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
@@ -56,16 +56,19 @@ from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
 from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
+    CreateDatasetPayload,
     CreateDatasetResponse,
+    CreateDatasetResponseV2,
     DatasetAccessSettings,
     DatasetInfo,
-    DatasetUserRole,
+    DatasetsWithUserRolesListParams,
+    DatasetsWithUserRolesListResponse,
     DicomDeidentifyTask,
     Images,
     StorageLocation,
+    dataset_user_role_str_enum_to_int_enum,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset_with_user_role import DatasetWithUserRole
 from encord.orm.deidentification import (
     DicomDeIdGetResultLongPollingStatus,
     DicomDeIdGetResultParams,
@@ -199,6 +202,34 @@ class EncordUserClient:
         )
         return Ontology._from_api_payload(ontology_with_user_role, self._api_client)
 
+    def __create_dataset(
+        self,
+        title: str,
+        description: Optional[str],
+        storage_location: StorageLocation,
+        create_backing_folder: bool,
+        legacy_call: bool,
+    ) -> CreateDatasetResponse:
+        res_dataset = self._api_client.post(
+            "datasets",
+            params=None,
+            payload=CreateDatasetPayload(
+                title=title,
+                description=description,
+                create_backing_folder=create_backing_folder,
+                legacy_call=legacy_call,
+            ),
+            result_type=CreateDatasetResponseV2,
+        )
+
+        return CreateDatasetResponse(
+            title=title,
+            storage_location=storage_location,
+            dataset_hash=str(res_dataset.dataset_uuid),
+            user_hash="fields withdrawn for compliance reasons",
+            backing_folder_uuid=res_dataset.backing_folder_uuid,
+        )
+
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
         self,
@@ -209,7 +240,14 @@ class EncordUserClient:
         """
         DEPRECATED - please use `create_dataset` instead.
         """
-        return self.create_dataset(dataset_title, dataset_type, dataset_description)
+
+        return self.__create_dataset(
+            title=dataset_title,
+            description=dataset_description,
+            storage_location=dataset_type,
+            create_backing_folder=True,
+            legacy_call=True,
+        )
 
     def create_dataset(
         self,
@@ -229,17 +267,14 @@ class EncordUserClient:
         Returns:
             CreateDatasetResponse
         """
-        dataset = {
-            "title": dataset_title,
-            "type": dataset_type,
-            "create_backing_folder": create_backing_folder,
-        }
 
-        if dataset_description:
-            dataset["description"] = dataset_description
-
-        result = self._querier.basic_setter(OrmDataset, uid=None, payload=dataset)
-        return CreateDatasetResponse.from_dict(result)
+        return self.__create_dataset(
+            title=dataset_title,
+            description=dataset_description,
+            storage_location=dataset_type,
+            create_backing_folder=create_backing_folder,
+            legacy_call=False,
+        )
 
     def get_datasets(
         self,
@@ -251,6 +286,7 @@ class EncordUserClient:
         created_after: Optional[Union[str, datetime]] = None,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
+        include_org_access: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         List either all (if called with no arguments) or matching datasets the user has access to.
@@ -264,28 +300,46 @@ class EncordUserClient:
             created_after: optional creation date filter, 'greater'
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
+            include_org_access: if set to true and the calling user is the organization admin, the
+              method will return all datasets in the organization.
 
         Returns:
-            list of (role, dataset) pairs for datasets  matching filter conditions.
+            list of datasets matching filter conditions, with the roles that the current user has on them. Each item
+            is a dictionary with `"dataset"` and `"user_role"` keys. If include_org_access is set to
+            True, some of the datasets may have a `None` value for the `"user_role"` key.
         """
-        properties_filter = self.__validate_filter(locals())
-        # a hack to be able to share validation code without too much c&p
-        data = self._querier.get_multiple(
-            DatasetWithUserRole,
-            payload={
-                "filter": properties_filter,
-                "enable_storage_api": True,
-            },
+
+        res = self._api_client.get(
+            "/datasets/list",
+            params=DatasetsWithUserRolesListParams(
+                title_eq=title_eq,
+                title_like=title_like,
+                description_eq=desc_eq,
+                description_like=desc_like,
+                created_before=parse_datetime_optional(created_before),
+                created_after=parse_datetime_optional(created_after),
+                edited_before=parse_datetime_optional(edited_before),
+                edited_after=parse_datetime_optional(edited_after),
+                include_org_access=include_org_access,
+            ),
+            result_type=DatasetsWithUserRolesListResponse,
         )
 
-        def convert_dates(dataset):
-            dataset["created_at"] = parse_datetime(dataset["created_at"])
-            dataset["last_edited_at"] = parse_datetime(dataset["last_edited_at"])
-            return dataset
-
         return [
-            {"dataset": DatasetInfo(**convert_dates(d.dataset)), "user_role": DatasetUserRole(d.user_role)}
-            for d in data
+            {
+                "dataset": DatasetInfo(
+                    dataset_hash=str(x.dataset_uuid),
+                    user_hash="field withdrawn for compliance reasons",
+                    title=x.title,
+                    description=x.description,
+                    type=int(x.storage_location or 0),
+                    created_at=x.created_at,
+                    last_edited_at=x.last_edited_at,
+                    backing_folder_uuid=x.backing_folder_uuid,
+                ),
+                "user_role": dataset_user_role_str_enum_to_int_enum(x.user_role) if x.user_role is not None else None,
+            }
+            for x in res.result
         ]
 
     @staticmethod

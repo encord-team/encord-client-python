@@ -51,6 +51,7 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.orm.active import ActiveProjectImportPayload, ActiveProjectMode
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
@@ -507,7 +508,7 @@ class EncordClientDataset(EncordClient):
 
     def create_dicom_series(
         self,
-        file_paths: typing.Collection[Union[Path, str]],
+        file_paths: Union[typing.Collection[str], typing.Collection[Path], typing.Collection[Union[str, Path]]],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder_uuid: Optional[uuid.UUID] = None,
@@ -1086,7 +1087,7 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
-    def create_label_row(self, uid, *, get_signed_url=False) -> typing.Any:
+    def create_label_row(self, uid, *, get_signed_url=False) -> LabelRow:
         """
         This function is documented in :meth:`encord.project.Project.create_label_row`.
         """
@@ -1605,6 +1606,24 @@ class EncordClientProject(EncordClient):
             return []
 
         return errors.errors or []
+
+    def active_import(self, project_mode: ActiveProjectMode, video_sampling_rate: Optional[float] = None) -> None:
+        self._get_api_client().post(
+            f"active/{self.project_hash}/import",
+            params=None,
+            payload=ActiveProjectImportPayload(project_mode=project_mode, video_sampling_rate=video_sampling_rate),
+            result_type=None,
+        )
+        logger.info("Import initiated in Active, please check the app to see progress")
+
+    def active_sync(self) -> None:
+        self._get_api_client().post(
+            f"active/{self.project_hash}/sync",
+            params=None,
+            payload=None,
+            result_type=None,
+        )
+        logger.info("Sync initiated in Active, please check the app to see progress")
 
 
 def _device_to_string(device: Device) -> str:
