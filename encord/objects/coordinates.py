@@ -311,7 +311,8 @@ class SkeletonCoordinate(BaseDTO):
     visibility: Optional[Visibility] = None
 
 
-class SkeletonCoordinates(BaseDTO):
+@dataclass(frozen=True)
+class SkeletonCoordinates:
     """
     Represents a collection of skeleton coordinates.
 
@@ -322,6 +323,49 @@ class SkeletonCoordinates(BaseDTO):
 
     values: List[SkeletonCoordinate]
     name: str
+
+    @staticmethod
+    def from_dict(d: dict) -> SkeletonCoordinates:
+        """
+        Create a  SkeletonCoordinates instance from a dictionary.
+
+        Args:
+
+            d (dict): A dictionary containing skeleton coordinates information.
+        Returns:
+            SkeletonCoordinates: An instance of SkeletonCoordinates.
+
+        """
+        skeleton_dict = d["skeleton"]
+        values: List[SkeletonCoordinate] = []
+        visible = None
+
+        if isinstance(skeleton_dict, dict):
+            sorted_dict_value_tuples = sorted((int(key), value) for key, value in skeleton_dict.items())
+            sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
+        elif isinstance(skeleton_dict, list):
+            sorted_dict_values = list(skeleton_dict)
+        else:
+            raise LabelRowError(f"Invalid format for skeleton coordinates: {skeleton_dict}")
+        for value in sorted_dict_values:
+            if value.get("invisible") and value["invisible"]:
+                visible = Visibility.INVISIBLE
+            elif value.get("occluded") and value["occluded"]:
+                visible = Visibility.OCCLUDED
+            else:
+                visible = Visibility.VISIBLE
+            skeleton_coordinates = SkeletonCoordinate(
+                name=value["name"],
+                x=value["x"],
+                y=value["y"],
+                color=value["color"],
+                feature_hash=value["featureHash"],
+                value=value["value"],
+                visibility=visible,
+            )
+            values.append(skeleton_coordinates)
+
+        return SkeletonCoordinates(name=d["name"], values=values)
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
         """
