@@ -345,61 +345,6 @@ class TextCoordinates(BaseDTO):
     pass
 
 
-# @dataclass(frozen=True)
-# class HtmlCoordinates:
-#     """
-#     Represents bounding box coordinates, where all values are percentages relative to the total image size.
-#
-#     Attributes:
-#         height (float): The height of the bounding box.
-#         width (float): The width of the bounding box.
-#         top_left_x (float): The x-coordinate of the top-left corner.
-#         top_left_y (float): The y-coordinate of the top-left corner.
-#     """
-#
-#     start_node: str
-#     start_offset: int
-#     end_node: str
-#     end_offset: int
-#
-#     @staticmethod
-#     def from_dict(d: dict) -> HtmlCoordinates:
-#         """
-#         Create a BoundingBoxCoordinates instance from a dictionary.
-#
-#         Args:
-#             d (dict): A dictionary containing bounding box information.
-#
-#         Returns:
-#             BoundingBoxCoordinates: An instance of BoundingBoxCoordinates.
-#         """
-#         html_dict = d["rangeHtml"]
-#         return HtmlCoordinates(
-#             start_node=html_dict["start"]["node"],
-#             start_offset=html_dict["start"]["offset"],
-#             end_node=html_dict["end"]["node"],
-#             end_offset=html_dict["end"]["offset"],
-#         )
-#
-#     def to_dict(self) -> dict:
-#         """
-#         Convert the BoundingBoxCoordinates instance to a dictionary.
-#
-#         Returns:
-#             dict: A dictionary representation of the bounding box coordinates.
-#         """
-#         return {
-#             "start": {
-#                 "node": self.start_node,
-#                 "offset": self.start_offset,
-#             },
-#             "end": {
-#                 "node": self.end_node,
-#                 "offset": self.end_offset,
-#             }
-#         }
-
-
 Coordinates = Union[
     AudioCoordinates,
     TextCoordinates,
