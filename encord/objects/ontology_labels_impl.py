@@ -2284,11 +2284,7 @@ class LabelRowV2:
         elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
-            skeleton_frame_object_label = {
-                "name": frame_object_label["name"],
-                "values": list(frame_object_label["skeleton"].values()),
-            }
-            return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
+            return SkeletonCoordinates.from_dict(frame_object_label)
         elif "bitmask" in frame_object_label:
             return BitmaskCoordinates.from_dict(frame_object_label)
         else:
