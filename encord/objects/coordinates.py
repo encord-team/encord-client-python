@@ -13,12 +13,13 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Flag, auto
+from enum import auto
 from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
 
@@ -272,7 +273,7 @@ class PolylineCoordinates:
         return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
 
 
-class Visibility(Flag):
+class Visibility(CamelStrEnum):
     """
     An enumeration to represent the visibility state of an item.
 
@@ -333,7 +334,7 @@ class SkeletonCoordinates:
 
             d (dict): A dictionary containing skeleton coordinates information.
         Returns:
-            SkeletonCoordinates: An instance of SkeletonCoordinates.
+            SkeletonCoordinate: An instance of SkeletonCoordinates.
 
         """
         skeleton_dict = d["skeleton"]
