@@ -1101,3 +1101,11 @@ class Project:
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=uuid,
         )
+
+    def analyze_prediction(self, label_branch_name: str) -> None:
+        self._client._api_client.post(
+            path=f"active/{self.project_hash}/predictions",
+            params=None,
+            payload=ActivePredictionPayload(label_branch_name=label_branch_name),
+            result_type=None,
+        )
