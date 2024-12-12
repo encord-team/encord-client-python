@@ -32,7 +32,6 @@ class LabelRow(base_orm.BaseORM):
       or image group
     * ``data_title`` is the title of the video or image group
     * ``data_type`` either ``video`` or ``img_group`` depending on data type
-    * ``file_type`` is the mime_type of the file, e.g. ``audio/mp3``
     * ``data_units`` a dictionary with (key: data hash, value: data unit) pairs.
     * ``object_answers`` is a dictionary with (key: object hash, value: object answer)
       pairs.
@@ -172,7 +171,6 @@ class LabelRow(base_orm.BaseORM):
             ("data_title", str),
             ("data_hash", str),
             ("data_type", str),
-            ("file_type", str),
             ("data_units", dict),
             ("object_answers", dict),
             ("classification_answers", dict),
