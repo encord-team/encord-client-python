@@ -21,24 +21,28 @@ class FilterPreset(BaseDTO):
     last_updated_at: Optional[datetime] = Field(default=None, alias="lastUpdatedAt")
 
 
+class GetProjectFilterPresetParams(BaseDTO):
+    preset_uuids: Optional[List[uuid.UUID]] = Field(default=[])
+    page_token: Optional[str] = Field(default=None)
+    page_size: Optional[int] = Field(default=None)
+
+
+class ProjectFilterPreset(BaseDTO):
+    preset_uuid: uuid.UUID = Field(alias="presetUuid")
+    name: str
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
+
+
 class FilterDefinition(BaseDTO):
     filters: List[Dict] = Field(default_factory=list)
 
 
 class FilterPresetDefinition(BaseDTO):
     local_filters: Dict[str, FilterDefinition] = Field(
-        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()}, alias="local_filters"
+        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()},
     )
-    global_filters: FilterDefinition = Field(default_factory=FilterDefinition, alias="global_filters")
-
-    @dto_validator(mode="after")
-    def check_not_empty(cls, self):
-        if len(self.global_filters.filters) == 0 and all(
-            [len(value.filters) == 0 for value in self.local_filters.values()]
-        ):
-            raise ValueError("FilterPresetDefinition definition must contain at least one global or local filter.")
-
-        return self
+    global_filters: FilterDefinition = Field(default_factory=FilterDefinition)
 
 
 class GetPresetsResponse(BaseDTO):
@@ -51,11 +55,9 @@ class CreatePresetParams(BaseDTO):
 
 class CreatePresetPayload(BaseDTO):
     name: str
-    description: Optional[str] = ""
     filter_preset_json: Dict
 
 
 class UpdatePresetPayload(BaseDTO):
     name: Optional[str] = None
-    description: Optional[str] = None
     filter_preset: Optional[FilterPresetDefinition] = None
