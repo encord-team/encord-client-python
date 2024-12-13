@@ -1139,6 +1139,7 @@ class EncordClientProject(EncordClient):
             .results
         )
 
+    @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def get_project_ontology(self) -> LegacyOntology:
         project = self.get_project()
         ontology = project["editor_ontology"]

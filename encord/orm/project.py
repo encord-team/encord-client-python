@@ -11,6 +11,7 @@ from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import Workflow
+from encord.utilities.project_user import ProjectUserRole
 
 
 class Project(base_orm.BaseORM):
@@ -91,7 +92,7 @@ class Project(base_orm.BaseORM):
 
                 label_rows = project.get_label_rows(created_labels_list, get_signed_url=False)
         """
-        labels = self.to_dic().get("label_rows", [])
+        labels = self.label_rows() or []
         return [label.get("label_hash") for label in labels]
 
     @property
@@ -135,8 +136,11 @@ class Project(base_orm.BaseORM):
         return self["last_edited_at"]
 
     @property
-    def workflow_manager_uuid(self) -> UUID:
-        return self["workflow_manager_uuid"]
+    def workflow_manager_uuid(self) -> Optional[UUID]:
+        if workflow_manager_uuid := self.get("workflow_manager_uuid"):
+            return UUID(workflow_manager_uuid)
+        else:
+            return None
 
 
 class ProjectCopy:
@@ -302,6 +306,10 @@ class ProjectDTO(BaseDTO):
     created_at: datetime.datetime
     last_edited_at: datetime.datetime
     ontology_hash: str
+    editor_ontology: Dict[str, Any]
+    user_role: Optional[ProjectUserRole] = None
+    source_projects: Optional[List[str]] = None
+    workflow_manager_uuid: Optional[UUID] = None
     workflow: Optional[Workflow] = None
 
 
@@ -360,3 +368,19 @@ class CvatImportGetResultResponse(BaseDTO):
     status: CvatImportGetResultLongPollingStatus
     project_uuid: Optional[UUID] = None
     issues: Optional[Dict] = None
+
+
+class ProjectFilterParams(BaseDTO):
+    """
+    Filter parameters for the /v2/public/projects endpoint
+    """
+
+    title_eq: Optional[str] = None
+    title_like: Optional[str] = None
+    desc_eq: Optional[str] = None
+    desc_like: Optional[str] = None
+    created_before: Optional[Union[str, datetime.datetime]] = None
+    created_after: Optional[Union[str, datetime.datetime]] = None
+    edited_before: Optional[Union[str, datetime.datetime]] = None
+    edited_after: Optional[Union[str, datetime.datetime]] = None
+    include_org_access: bool = False

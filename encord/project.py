@@ -61,12 +61,13 @@ class Project:
         self,
         client: EncordClientProject,
         project_instance: ProjectDTO,
-        ontology: Ontology,
+        ontology: Optional[Ontology],
         api_client: ApiClient,
     ):
         self._client = client
         self._project_instance = project_instance
         self._ontology = ontology
+        self._api_client = api_client
 
         if project_instance.workflow:
             self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
@@ -117,21 +118,38 @@ class Project:
         This method returns the same structure as :meth:`encord.Project.ontology_structure`, just in
         raw python dictionary format.
         """
-        return self._ontology.structure.to_dict()
+        return self._ontology_instance.structure.to_dict()
 
     @property
     def ontology_hash(self) -> str:
         """
         Get the ontology hash of the project's ontology.
         """
-        return self._ontology.ontology_hash
+        return self._project_instance.ontology_hash
 
     @property
     def ontology_structure(self) -> OntologyStructure:
         """
         Get the ontology structure of the project's ontology.
         """
-        return self._ontology.structure
+        return self._ontology_instance.structure
+
+    @property
+    def user_role(self) -> Optional[ProjectUserRole]:
+        """
+        Get the current user's role in the project.
+
+        This may return `None` if the user is an organisational admin and has accessed the project e.g. using
+        `include_org_access=True` of :meth:`encord.user_client.UserClient.list_projects`.
+        """
+        return self._project_instance.user_role
+
+    @property
+    def source_projects(self) -> Optional[List[str]]:
+        """
+        Get the source projects for a Training project. Returns None for non-Training projects.
+        """
+        return self._project_instance.source_projects
 
     @property
     @deprecated(version="0.1.117", alternative=".list_datasets")
@@ -179,7 +197,7 @@ class Project:
         """
         Update the ontology for the project to reflect changes on the backend.
         """
-        self._ontology.refetch_data()
+        self._ontology_instance.refetch_data()
 
     def get_project(self) -> OrmProject:
         """
@@ -198,6 +216,14 @@ class Project:
             self.project_type == ProjectType.WORKFLOW
         ), "project.workflow property only available for workflow projects"
         return self._workflow
+
+    @property
+    def _ontology_instance(self) -> Ontology:
+        if self._ontology is None:
+            self._ontology = Ontology(
+                Ontology._fetch_ontology(self._api_client, self.ontology_hash), self._api_client
+            )  # lazy loading
+        return self._ontology
 
     def list_label_rows_v2(
         self,
@@ -259,7 +285,8 @@ class Project:
             branch_name=branch_name,
         )
         label_rows = [
-            LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
+            LabelRowV2(label_row_metadata, self._client, self._ontology_instance)
+            for label_row_metadata in label_row_metadatas
         ]
         return label_rows
 
@@ -1159,7 +1186,7 @@ class Project:
     def get_collection(self, collection_uuid: Union[str, UUID]) -> ProjectCollection:
         return ProjectCollection._get_collection(
             project_client=self._client,
-            ontology=self._ontology,
+            ontology=self._ontology_instance,
             project_uuid=self._project_instance.project_hash,
             collection_uuid=UUID(collection_uuid) if isinstance(collection_uuid, str) else collection_uuid,
         )
@@ -1187,7 +1214,7 @@ class Project:
         )
         return ProjectCollection._list_collections(
             project_client=self._client,
-            ontology=self._ontology,
+            ontology=self._ontology_instance,
             project_uuid=self._project_instance.project_hash,
             collection_uuids=collections,
             page_size=page_size,
