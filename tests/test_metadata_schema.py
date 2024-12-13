@@ -44,6 +44,8 @@ def test_metadata_schema() -> None:
     meta.add_scalar("g", data_type="number")
     meta.add_scalar("g", data_type="text")
     meta.add_scalar("g", data_type="number")
+    meta.set_scalar("g", data_type="text")
+    meta.set_scalar("g", data_type="number")
 
     assert meta.has_key("g")
     assert not meta.has_key("g2")
