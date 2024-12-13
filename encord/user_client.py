@@ -264,6 +264,8 @@ class EncordUserClient:
                 StorageLocation type where data will be stored.
             dataset_description:
                 Optional description of the dataset.
+            create_backing_folder:
+                Specifies whether the backed Folder is mirrored to the Dataset. Mirrored Datasets have data sync'd between the Folder and Dataset.
         Returns:
             CreateDatasetResponse
         """
