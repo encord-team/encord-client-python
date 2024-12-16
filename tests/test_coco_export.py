@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from encord.objects.ontology_structure import OntologyStructure
 from tests.objects.data import data_1
