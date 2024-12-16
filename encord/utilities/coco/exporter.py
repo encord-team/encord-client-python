@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from shapely.geometry import Polygon
 
 from encord.exceptions import EncordException
-from encord.objects.attributes import Attribute, AttributeType
+from encord.objects.attributes import Attribute
 from encord.objects.common import PropertyType, Shape
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
@@ -173,7 +173,7 @@ class CocoExporter:
 
     def add_to_object_map_and_get_next_id(self, object_: Object) -> int:
         id_ = len(self._coco_categories_id_to_ontology_object_map) + 1
-        # Let the category id start at 1, not 0. Segmentation masks that use COCO annotations often create a bit mask
+        # Let the category id start at 1, not 0. Segmentation masks that use COCO annotations often create a bitmask
         # with this category id. The bitmask must be above 0. See this link:
         # https://cocodataset.org/#stuff-eval
         self._coco_categories_id_to_ontology_object_map[id_] = object_
