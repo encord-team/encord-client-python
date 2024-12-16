@@ -49,7 +49,7 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
-from encord.utilities.coco.exporter import CocoEncoder
+from encord.utilities.coco.exporter import CocoExporter
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
@@ -1147,7 +1147,7 @@ class Project:
                     bundle=bundle,
                 )
         labels = [row.to_encord_dict() for row in label_rows]
-        coco_labels = CocoEncoder(labels, ontology=self.ontology_structure).encode()
+        coco_labels = CocoExporter(labels, ontology=self.ontology_structure).export()
         return coco_labels
 
     def import_coco_labels(

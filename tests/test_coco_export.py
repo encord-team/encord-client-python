@@ -1,5 +1,5 @@
 from encord.objects.ontology_structure import OntologyStructure
-from encord.utilities.coco.exporter import CocoEncoder
+from encord.utilities.coco.exporter import CocoExporter
 from tests.objects.data import data_1
 
 ontology_structure = OntologyStructure.from_dict(data_1.ontology)
@@ -233,6 +233,6 @@ EXPECTED_COCO_RESULT = {
 }
 
 
-def test_coco_encoder_unit_test():
-    output = CocoEncoder([labels], ontology_structure).encode()
+def test_coco_exporter_unit_test():
+    output = CocoExporter([labels], ontology_structure).export()
     assert output == EXPECTED_COCO_RESULT

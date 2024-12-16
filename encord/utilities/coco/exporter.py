@@ -88,11 +88,11 @@ def get_polygon_from_dict(
     ]
 
 
-class CocoEncoder:
+class CocoExporter:
     """
-    This class is intentionally designed in a modular fashion to facilitate extensibility. You are encouraged to subclass
-    this encoder and modify any of the custom functions. While return types are provided for convenience, they can also be
-    subclassed to suit your specific requirements.
+    This class is intentionally designed in a modular fashion to facilitate extensibility.
+    You are encouraged to subclass this exporter and modify any of the custom functions.
+    While return types are provided for convenience, they can also be subclassed to suit your specific requirements.
 
     All functions that could be static are intentionally not made static, allowing you the option to access the `self`
     object at any time.
@@ -118,7 +118,7 @@ class CocoEncoder:
         self._id_and_object_hash_to_answers_map: Optional[Dict[Tuple[int, str], Dict]] = None
         self._include_videos = include_videos
 
-    def encode(self) -> Dict:
+    def export(self) -> Dict:
         self._coco_json["info"] = self.get_info()
         self._coco_json["categories"] = self.get_categories()
         self._coco_json["images"] = self.get_images()
