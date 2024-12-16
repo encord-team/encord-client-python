@@ -83,43 +83,6 @@ class BaseORM(dict):
         else:
             super().__delattr__(name)
 
-    @staticmethod
-    def from_db_row(row, db_field):
-        """
-        Static method for conveniently converting db row to client object.
-        :param row:
-        :param db_field:
-        :return:
-        """
-        return {attribute: row[i] for i, attribute in enumerate(db_field)}
-
-    def to_dic(self, time_str: bool = True):
-        """
-        Conveniently set client object as dict.
-        Only considers the dict items, no other object attr will be counted
-
-        Args:
-            time_str: if set to True, will convert datetime field
-                      to str with format %Y-%m-%d %H:%M:%S.
-                      If False, will keep the original datetime type.
-                      Default will be True.
-
-        """
-        res = {}
-        for k, v in self.items():
-            if isinstance(v, datetime.datetime) and time_str:
-                v = v.strftime("%Y-%m-%d %H:%M:%S")
-            elif isinstance(v, dict):
-                v = json.dumps(v)
-            res[k] = v
-
-        return res
-
-    def updatable_fields(self):
-        for k, v in self.items():
-            if k not in self.NON_UPDATABLE_FIELDS and v is not None:
-                yield k, v
-
 
 class BaseListORM(list):
     """A wrapper for a list of objects of a specific ORM."""

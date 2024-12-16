@@ -13,7 +13,6 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 import base64
-import dataclasses
 import logging
 import time
 import uuid
@@ -91,6 +90,8 @@ from encord.orm.project import (
     CvatImportStartPayload,
     CvatReviewMode,
     ManualReviewWorkflowSettings,
+    ProjectDTO,
+    ProjectFilterParams,
     ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,
@@ -169,7 +170,7 @@ class EncordUserClient:
         orm_dataset = client.get_dataset()
         return Dataset(client, orm_dataset)
 
-    def get_project(self, project_hash: str | UUID) -> Project:
+    def get_project(self, project_hash: Union[str, UUID]) -> Project:
         """
         Get the Project class to access project fields and manipulate a project.
 
@@ -347,7 +348,7 @@ class EncordUserClient:
         ssh_private_key: Optional[str] = None,
         password: Optional[str] = None,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-        ssh_private_key_path: Optional[str | Path] = None,
+        ssh_private_key_path: Optional[Union[str, Path]] = None,
         **kwargs,
     ) -> EncordUserClient:
         """
@@ -413,12 +414,58 @@ class EncordUserClient:
             edited_after: optional last modification date filter, 'greater'
 
         Returns:
-            list of (role, projects) pairs for Project matching filter conditions.
+            list of Projects matching filter conditions, with the roles that the current user has on them. Each item
+            is a dictionary with `"project"` and `"user_role"` keys.
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
         data = self._querier.get_multiple(ProjectWithUserRole, payload={"filter": properties_filter})
         return [{"project": OrmProject(p.project), "user_role": ProjectUserRole(p.user_role)} for p in data]
+
+    def list_projects(
+        self,
+        title_eq: Optional[str] = None,
+        title_like: Optional[str] = None,
+        desc_eq: Optional[str] = None,
+        desc_like: Optional[str] = None,
+        created_before: Optional[Union[str, datetime]] = None,
+        created_after: Optional[Union[str, datetime]] = None,
+        edited_before: Optional[Union[str, datetime]] = None,
+        edited_after: Optional[Union[str, datetime]] = None,
+        include_org_access: bool = False,
+    ) -> Iterable[Project]:
+        """
+        List either all (if called with no arguments) or matching projects the user has access to.
+
+        Args:
+            title_eq: optional exact title filter
+            title_like: optional fuzzy title filter; SQL syntax
+            desc_eq: optional exact description filter
+            desc_like: optional fuzzy description filter; SQL syntax
+            created_before: optional creation date filter, 'less'
+            created_after: optional creation date filter, 'greater'
+            edited_before: optional last modification date filter, 'less'
+            edited_after: optional last modification date filter, 'greater'
+            include_org_access: if set to true and the calling user is the organization admin, the
+              method will return all ontologies in the organization.
+
+        Returns:
+            list of Projects matching filter conditions, as :class:`~encord.project.Project` instances.
+        """
+        properties_filter = ProjectFilterParams.from_dict(self.__validate_filter(locals()))
+        properties_filter.include_org_access = include_org_access
+        page = self._api_client.get("projects", params=properties_filter, result_type=Page[ProjectDTO])
+
+        for row in page.results:
+            querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=str(row.project_hash))
+            client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
+
+            yield Project(
+                client=client,
+                project_instance=row,
+                ontology=None,  # lazy-load
+                api_client=self._api_client,
+            )
 
     def create_project(
         self,
@@ -1389,7 +1436,7 @@ class EncordUserClient:
     def list_collections(
         self,
         top_level_folder_uuid: Union[str, UUID, None] = None,
-        collection_uuids: List[str | UUID] | None = None,
+        collection_uuids: Optional[List[Union[str, UUID]]] = None,
         page_size: Optional[int] = None,
     ) -> Iterator[Collection]:
         """
