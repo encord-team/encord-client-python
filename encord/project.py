@@ -1132,7 +1132,7 @@ class Project:
         """
         return self._client.list_project_datasets(self._project_instance.project_hash)
 
-    def export_label_rows_to_COCO(
+    def export_coco_labels(
         self,
         label_hashes: Optional[List[str]] = None,
         include_object_feature_hashes: Optional[Set[str]] = None,
