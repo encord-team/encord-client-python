@@ -1,8 +1,7 @@
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Dict, Optional
 
 from pydantic import Field
 
-from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
 from encord.orm.base_dto import BaseDTO
 
 

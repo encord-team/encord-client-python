@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Bundled Operations"
+slug: "sdk-ref-objects-bundled-op"
+hidden: false
+metadata:
+  title: "Objects - Bundled Operations"
+  description: "Encord SDK Objects - Bundled Operations."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,6 +38,7 @@ class BundledGetRowsPayload:
 class BundledCreateRowsPayload:
     uids: List[str]
     get_signed_url: bool
+    branch_name: Optional[str]
 
     def add(self, other: BundledCreateRowsPayload) -> BundledCreateRowsPayload:
         self.uids.extend(other.uids)

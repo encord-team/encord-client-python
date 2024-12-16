@@ -1,11 +1,14 @@
 import numpy as np
 
-from encord.objects.bitmask import (
-    BitmaskCoordinates,
+from encord.common.bitmask_operations import (
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,
     _string_to_rle,
+    transpose_bytearray,
+)
+from encord.objects.bitmask import (
+    BitmaskCoordinates,
 )
 
 
@@ -75,3 +78,11 @@ def test_mask_rle_mask_roundtrip():
 
     new_mask = BitmaskCoordinates.from_dict(mask_dict).to_numpy_array()
     assert np.allclose(orig_mask, new_mask)
+
+
+def test_transpose_bytearray():
+    mask = b"\00\00\00\00\00\01\01\00\00\00\00\00"
+    shape = (3, 4)
+    expected = b"\x00\x00\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00"
+    ans = transpose_bytearray(mask, shape)
+    assert ans == expected

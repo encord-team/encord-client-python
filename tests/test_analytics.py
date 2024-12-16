@@ -1,5 +1,3 @@
-from datetime import datetime
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from encord import Project

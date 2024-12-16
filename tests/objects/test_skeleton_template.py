@@ -1,8 +1,5 @@
-import pytest
 from deepdiff import DeepDiff
 
-import encord.objects
-import encord.objects.skeleton_template
 from encord.objects.skeleton_template import SkeletonTemplate, SkeletonTemplateCoordinate
 
 SKELETON_TEMPLATE_COORDINATES = [

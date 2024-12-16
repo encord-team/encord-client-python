@@ -1,6 +1,5 @@
-import json
+import copy
 import logging
-import os
 
 import pytest
 
@@ -12,9 +11,8 @@ import encord.objects.options
 from encord.objects.common import Shape
 from encord.objects.skeleton_template import SkeletonTemplate, SkeletonTemplateCoordinate
 from encord.objects.utils import short_uuid_str
+from tests.objects.data.data_editor_blob import EDITOR_BLOB
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(CURRENT_DIR, "data")
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
@@ -151,28 +149,13 @@ def test_ontology_structure_round_trip():
 
 
 def test_json_to_ontology():
-    # GIVEN
-    file_path = os.path.join(DATA_DIR, "editor_blob.json")
-    with open(file_path, "r", encoding="utf8") as f:
-        editor_dict = json.load(f)
-
-    # WHEN
-    actual = encord.objects.OntologyStructure.from_dict(editor_dict)
-    # THEN
+    actual = encord.objects.OntologyStructure.from_dict(copy.deepcopy(EDITOR_BLOB))
     assert EXPECTED_ONTOLOGY == actual
 
 
 def test_ontology_to_json():
-    # GIVEN
-    file_path = os.path.join(DATA_DIR, "editor_blob.json")
-    with open(file_path, "r", encoding="utf8") as f:
-        editor_dict = json.load(f)
-
-    # WHEN
     actual = EXPECTED_ONTOLOGY.to_dict()
-
-    # THEN
-    assert editor_dict == actual
+    assert copy.deepcopy(EDITOR_BLOB) == actual
 
 
 def test_add_classification():

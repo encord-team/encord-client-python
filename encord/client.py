@@ -1,18 +1,3 @@
-#
-# Copyright (c) 2023 Cord Technologies Limited
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-
 """``encord.client`` provides a simple Python client that allows you
 to query project resources through the Encord API.
 
@@ -51,36 +36,32 @@ import requests
 
 import encord.exceptions
 from encord.common.deprecated import deprecated
-from encord.configs import ENCORD_DOMAIN, ApiKeyConfig, BearerConfig, Config, EncordConfig, SshConfig
+from encord.configs import BearerConfig, Config, SshConfig
 from encord.constants.enums import DataType
 from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import (
     FITTED_BOUNDING_BOX,
     INTERPOLATION,
-    TYPE_DATASET,
-    TYPE_PROJECT,
 )
 from encord.exceptions import EncordException
-from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
-    upload_images_to_encord,
     upload_to_signed_url_list,
-    upload_video_to_encord,
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.orm.active import ActiveProjectImportPayload, ActiveProjectMode
 from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
 )
-from encord.orm.api_key import ApiKeyMeta
 from encord.orm.bearer_request import BearerTokenResponse
-from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     AddPrivateDataResponse,
+    DataLinkDuplicatesBehavior,
     DataRow,
     DataRows,
     DatasetAccessSettings,
@@ -97,7 +78,6 @@ from encord.orm.dataset import (
     Images,
     LongPollingStatus,
     ReEncodeVideoTask,
-    SingleImage,
     Video,
 )
 from encord.orm.dataset import Dataset as OrmDataset
@@ -129,8 +109,11 @@ from encord.orm.model import (
     ModelInferenceParams,
     ModelOperations,
     ModelRow,
-    ModelTrainingParams,
     ModelTrainingWeights,
+    PublicModelTrainGetResultLongPollingStatus,
+    PublicModelTrainGetResultParams,
+    PublicModelTrainGetResultResponse,
+    PublicModelTrainStartPayload,
     TrainingMetadata,
 )
 from encord.orm.project import (
@@ -146,6 +129,16 @@ from encord.orm.project import (
 )
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectDTO as ProjectOrmV2
+from encord.orm.storage import (
+    DatasetDataLongPollingParams,
+    DataUploadDicomSeries,
+    DataUploadDicomSeriesDicomFile,
+    DataUploadImage,
+    DataUploadImageGroup,
+    DataUploadImageGroupImage,
+    DataUploadItems,
+    DataUploadVideo,
+)
 from encord.orm.workflow import (
     LabelWorkflowGraphNode,
     LabelWorkflowGraphNodePayload,
@@ -160,6 +153,7 @@ from encord.utilities.project_user import ProjectUser, ProjectUserRole
 LONG_POLLING_RESPONSE_RETRY_N = 3
 LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
 LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
+LONG_POLLING_MAX_REQUEST_SINGLE_ITEM_TIME_SECONDS = 10
 
 logger = logging.getLogger(__name__)
 
@@ -186,72 +180,23 @@ class EncordClient:
 
         return self._api_client
 
-    @staticmethod
-    def initialise(
-        resource_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-        domain: str = ENCORD_DOMAIN,
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-    ) -> Union[EncordClientProject, EncordClientDataset]:
-        """
-        Create and initialize a Encord client from a resource EntityId and API key.
-
-        Args:
-            resource_id: either of the following
-
-                * A <project_hash>.
-                  If ``None``, uses the ``ENCORD_PROJECT_ID`` environment variable.
-                  The ``CORD_PROJECT_ID`` environment variable is supported for backwards compatibility.
-
-                * A <dataset_hash>.
-                  If ``None``, uses the ``ENCORD_DATASET_ID`` environment variable.
-                  The ``CORD_DATASET_ID`` environment variable is supported for backwards compatibility.
-
-            api_key: An API key.
-                     If None, uses the ``ENCORD_API_KEY`` environment variable.
-                     The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
-            domain: The encord api-server domain.
-                If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
-            requests_settings: The RequestsSettings from this config
-
-        Returns:
-            EncordClient: A Encord client instance.
-        """
-        config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
-        return EncordClient.initialise_with_config(config)
-
-    @staticmethod
-    def initialise_with_config(config: ApiKeyConfig) -> Union[EncordClientProject, EncordClientDataset]:
-        """
-        Create and initialize a Encord client from a Encord config instance.
-
-        Args:
-            config: A Encord config instance.
-
-        Returns:
-            EncordClient: A Encord client instance.
-        """
-        querier = Querier(config, resource_id=config.resource_id)
-        key_type = querier.basic_getter(ApiKeyMeta)
-
-        if key_type.resource_type == TYPE_PROJECT:
-            logger.info("Initialising Encord client for project using key: %s", key_type.title)
-            return EncordClientProject(querier, config)
-
-        elif key_type.resource_type == TYPE_DATASET:
-            logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
-            return EncordClientDataset(querier, config)
-
-        else:
-            raise encord.exceptions.InitialisationError(
-                message=f"API key [{config.api_key}] is not associated with a project or dataset"
-            )
-
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        return self._querier.get_multiple(CloudIntegration)
+        return [
+            CloudIntegration(
+                id=str(x.integration_uuid),
+                title=x.title,
+            )
+            for x in self._get_api_client()
+            .get(
+                "cloud-integrations",
+                params=None,
+                result_type=GetCloudIntegrationsResponse,
+            )
+            .result
+        ]
 
     def get_bearer_token(self) -> BearerTokenResponse:
-        return self._get_api_client().get("user/bearer_token", None, result_type=BearerTokenResponse)
+        return self._get_api_client().get("user/bearer-token", None, result_type=BearerTokenResponse)
 
 
 class EncordClientDataset(EncordClient):
@@ -268,71 +213,6 @@ class EncordClientDataset(EncordClient):
     ):
         super().__init__(querier, config, api_client)
         self._dataset_access_settings = dataset_access_settings
-
-    @staticmethod
-    def initialise(
-        resource_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-        domain: str = ENCORD_DOMAIN,
-        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
-        dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
-    ) -> EncordClientDataset:
-        """
-        Create and initialize a Encord client from a resource EntityId and API key.
-
-        Args:
-            resource_id: either of the following
-
-                * A <project_hash>.
-                  If ``None``, uses the ``ENCORD_PROJECT_ID`` environment variable.
-                  The ``CORD_PROJECT_ID`` environment variable is supported for backwards compatibility.
-
-                * A <dataset_hash>.
-                  If ``None``, uses the ``ENCORD_DATASET_ID`` environment variable.
-                  The ``CORD_DATASET_ID`` environment variable is supported for backwards compatibility.
-
-            api_key: An API key.
-                     If None, uses the ``ENCORD_API_KEY`` environment variable.
-                     The ``CORD_API_KEY`` environment variable is supported for backwards compatibility.
-            domain: The encord api-server domain.
-                If None, the :obj:`encord.configs.ENCORD_DOMAIN` is used
-            requests_settings: The RequestsSettings from this config
-            dataset_access_settings: Change the default :class:`encord.orm.dataset.DatasetAccessSettings`.
-
-        Returns:
-            EncordClientDataset: A Encord client dataset instance.
-        """
-        config = EncordConfig(resource_id, api_key, domain=domain, requests_settings=requests_settings)
-        return EncordClientDataset.initialise_with_config(config, dataset_access_settings=dataset_access_settings)
-
-    @staticmethod
-    def initialise_with_config(
-        config: ApiKeyConfig, dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS
-    ) -> EncordClientDataset:
-        """
-        Create and initialize a Encord client from a Encord config instance.
-
-        Args:
-            config: A Encord config instance.
-            dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
-
-        Returns:
-            EncordClientDataset: An Encord client dataset instance.
-        """
-        querier = Querier(config, resource_id=config.resource_id)
-        key_type = querier.basic_getter(ApiKeyMeta)
-
-        if key_type.resource_type == TYPE_PROJECT:
-            raise RuntimeError("Trying to initialise an EncordClientDataset using a project key.")
-
-        elif key_type.resource_type == TYPE_DATASET:
-            logger.info("Initialising Encord client for dataset using key: %s", key_type.title)
-            return EncordClientDataset(querier, config, dataset_access_settings=dataset_access_settings)
-
-        else:
-            raise encord.exceptions.InitialisationError(
-                message=f"API key [{config.api_key}] is not associated with a project or dataset"
-            )
 
     def get_dataset(self) -> OrmDataset:
         """
@@ -439,9 +319,53 @@ class EncordClientDataset(EncordClient):
         params = RemoveGroupsParams(group_hash_list=group_hash)
         self._get_api_client().delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
 
+    def __add_data_to_dataset_get_result(
+        self,
+        upload_job_id: str,
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> DatasetDataLongPolling:
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                res = self._querier.basic_getter(
+                    DatasetDataLongPolling,
+                    self._querier.resource_id,
+                    payload={
+                        "process_hash": upload_job_id,
+                        "timeout_seconds": min(
+                            polling_available_seconds,
+                            LONG_POLLING_MAX_REQUEST_SINGLE_ITEM_TIME_SECONDS,
+                        ),
+                    },
+                )
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or res.status in [
+                    LongPollingStatus.DONE,
+                    LongPollingStatus.ERROR,
+                    LongPollingStatus.CANCELLED,
+                ]:
+                    return res
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
     def upload_video(
         self,
-        file_path: str,
+        file_path: Union[str, Path],
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
         folder_uuid: Optional[uuid.UUID] = None,
@@ -449,22 +373,62 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
         """
-        if os.path.exists(file_path):
-            signed_urls = upload_to_signed_url_list(
-                [file_path], self._config, self._querier, Video, cloud_upload_settings=cloud_upload_settings
+
+        signed_url = upload_to_signed_url_list(
+            file_paths=[file_path],
+            config=self._config,
+            querier=self._querier,
+            orm_class=Video,
+            cloud_upload_settings=cloud_upload_settings,
+        )[0]
+
+        upload_job_id = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=DataUploadItems(
+                    videos=[
+                        DataUploadVideo(
+                            object_url=signed_url["file_link"],
+                            title=title or signed_url["title"],
+                        )
+                    ],
+                ),
+                files=None,
+                integration_id=None,
+                ignore_errors=False,
+                folder_uuid=folder_uuid,
+                file_name=None,
+            ),
+        )["process_hash"]
+
+        res = self.__add_data_to_dataset_get_result(upload_job_id)
+
+        if res.status == LongPollingStatus.DONE:
+            if len(res.data_hashes_with_titles) != 1:
+                raise encord.exceptions.EncordException(
+                    f"An error has occurred during video upload. len({res.data_hashes_with_titles=}) != 1, {upload_job_id=}"
+                )
+
+            res_item = res.data_hashes_with_titles[0]
+            logger.info(f"Upload complete. {upload_job_id=}")
+
+            return Video(  # Video model types annotations are not correct
+                {
+                    "data_hash": res_item.data_hash,
+                    "title": res_item.title,
+                }
             )
-            res = upload_video_to_encord(signed_urls[0], title, folder_uuid, self._querier)
-            if res:
-                logger.info("Upload complete.")
-                return Video(res)
-            else:
-                raise encord.exceptions.EncordException(message="An error has occurred during video upload.")
+        elif res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(
+                f"An error has occurred during video upload. {res.errors=}, {upload_job_id=}"
+            )
         else:
-            raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def create_image_group(
         self,
-        file_paths: Iterable[str],
+        file_paths: Iterable[Union[str, Path]],
         max_workers: Optional[int] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
@@ -475,41 +439,76 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
         """
-        for file_path in file_paths:
-            if not os.path.exists(file_path):
-                raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
-        successful_uploads = upload_to_signed_url_list(
-            file_paths, self._config, self._querier, Images, cloud_upload_settings=cloud_upload_settings
+        signed_urls = upload_to_signed_url_list(
+            file_paths=file_paths,
+            config=self._config,
+            querier=self._querier,
+            orm_class=Images,
+            cloud_upload_settings=cloud_upload_settings,
         )
-        if not successful_uploads:
+
+        if not signed_urls:
             raise encord.exceptions.EncordException("All image uploads failed. Image group was not created.")
-        upload_images_to_encord(successful_uploads, self._querier)
 
-        image_hash_list = [successful_upload.get("data_hash") for successful_upload in successful_uploads]
-        payload = {
-            "image_group_title": title,
-            "create_video": create_video,
-        }
-        if folder_uuid is not None:
-            payload["folder_uuid"] = str(folder_uuid)
+        upload_job_id = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=DataUploadItems(
+                    image_groups=[
+                        DataUploadImageGroup(
+                            images=[
+                                DataUploadImageGroupImage(
+                                    url=x["file_link"],
+                                    title=x["title"],
+                                )
+                                for x in signed_urls
+                            ],
+                            title=title,
+                            create_video=create_video,
+                            cluster_by_resolution=create_video,  # cluster_by_resolution only if videos are created
+                        )
+                    ],
+                ),
+                files=None,
+                integration_id=None,
+                ignore_errors=False,
+                folder_uuid=folder_uuid,
+                file_name=None,
+            ),
+        )["process_hash"]
 
-        res = self._querier.basic_setter(
-            ImageGroup,
-            uid=image_hash_list,  # type: ignore
-            payload=payload,
-        )
+        res = self.__add_data_to_dataset_get_result(upload_job_id)
 
-        if res:
-            titles = [video_data.get("title") for video_data in res]
-            logger.info(f"Upload successful! {titles} created.")
-            return [ImageGroup(obj) for obj in res]
+        if res.status == LongPollingStatus.DONE:
+            if not res.data_hashes_with_titles:
+                raise encord.exceptions.EncordException(
+                    f"An error has occurred during image group creation. {res.data_hashes_with_titles=} is empty, {upload_job_id=}"
+                )
+
+            titles = [x.title for x in res.data_hashes_with_titles]
+            logger.info(f"Upload successful! {titles} created, {upload_job_id=}")
+
+            return [
+                ImageGroup(
+                    {
+                        "data_hash": x.data_hash,
+                        "title": x.title,
+                    }
+                )
+                for x in res.data_hashes_with_titles
+            ]
+        elif res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(
+                f"An error has occurred during image group creation. {res.errors=}, {upload_job_id=}"
+            )
         else:
-            raise encord.exceptions.EncordException(message="An error has occurred during image group creation.")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def create_dicom_series(
         self,
-        file_paths: List[str],
+        file_paths: Union[typing.Collection[str], typing.Collection[Path], typing.Collection[Union[str, Path]]],
         title: Optional[str] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder_uuid: Optional[uuid.UUID] = None,
@@ -517,41 +516,64 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.create_dicom_series`.
         """
-        for file_path in file_paths:
-            if not os.path.exists(file_path):
-                raise encord.exceptions.EncordException(message=f"{file_path} does not point to a file.")
 
-        successful_uploads = upload_to_signed_url_list(
+        signed_urls = upload_to_signed_url_list(
             file_paths=file_paths,
             config=self._config,
             querier=self._querier,
             orm_class=DicomSeries,
             cloud_upload_settings=cloud_upload_settings,
         )
-        if not successful_uploads:
+
+        if not signed_urls:
             raise encord.exceptions.EncordException("DICOM files upload failed. The DICOM series was not created.")
 
-        dicom_files = [
-            {
-                "id": file["data_hash"],
-                "uri": file["file_link"],
-                "title": file["title"],
+        upload_job_id = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=DataUploadItems(
+                    dicom_series=[
+                        DataUploadDicomSeries(
+                            dicom_files=[
+                                DataUploadDicomSeriesDicomFile(
+                                    url=x["file_link"],
+                                    title=x["title"],
+                                )
+                                for x in signed_urls
+                            ],
+                            title=title,
+                        )
+                    ],
+                ),
+                files=None,
+                integration_id=None,
+                ignore_errors=False,
+                folder_uuid=folder_uuid,
+                file_name=None,
+            ),
+        )["process_hash"]
+
+        res = self.__add_data_to_dataset_get_result(upload_job_id)
+
+        if res.status == LongPollingStatus.DONE:
+            if len(res.data_hashes_with_titles) != 1:
+                raise encord.exceptions.EncordException(
+                    f"An error has occurred during the DICOM series creation. len({res.data_hashes_with_titles=}) != 1, {upload_job_id=}"
+                )
+
+            res_item = res.data_hashes_with_titles[0]
+
+            return {
+                "data_hash": res_item.data_hash,
+                "title": res_item.title,
             }
-            for file in successful_uploads
-        ]
-
-        payload = {
-            "title": title,
-        }
-
-        if folder_uuid is not None:
-            payload["folder_uuid"] = str(folder_uuid)
-
-        res = self._querier.basic_setter(DicomSeries, uid=dicom_files, payload=payload)
-        if not res:
-            raise encord.exceptions.EncordException(message="An error has occurred during the DICOM series creation.")
-
-        return res
+        elif res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(
+                f"An error has occurred during the DICOM series creation. {res.errors=}, {upload_job_id=}"
+            )
+        else:
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def upload_image(
         self,
@@ -563,42 +585,87 @@ class EncordClientDataset(EncordClient):
         """
         This function is documented in :meth:`encord.dataset.Dataset.upload_image`.
         """
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
-        if not file_path.is_file():
-            raise encord.exceptions.EncordException(message=f"{str(file_path)} does not point to a file.")
 
-        successful_uploads = upload_to_signed_url_list(
-            [str(file_path)], self._config, self._querier, Images, cloud_upload_settings=cloud_upload_settings
+        signed_urls = upload_to_signed_url_list(
+            file_paths=[file_path],
+            config=self._config,
+            querier=self._querier,
+            orm_class=Images,
+            cloud_upload_settings=cloud_upload_settings,
         )
-        if not successful_uploads:
+
+        if not signed_urls:
             raise encord.exceptions.EncordException("Image upload failed.")
 
-        upload = successful_uploads[0]
-        if folder_uuid is not None:
-            upload["folder_uuid"] = str(folder_uuid)
-        if title is not None:
-            upload["title"] = title
+        signed_url = signed_urls[0]
 
-        res = self._querier.basic_setter(SingleImage, uid=None, payload=upload)
+        upload_job_id = self._querier.basic_setter(
+            DatasetDataLongPolling,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=DataUploadItems(
+                    images=[
+                        DataUploadImage(
+                            object_url=signed_url["file_link"],
+                            title=title or signed_url["title"],
+                        )
+                    ],
+                ),
+                files=None,
+                integration_id=None,
+                ignore_errors=False,
+                folder_uuid=folder_uuid,
+                file_name=None,
+            ),
+        )["process_hash"]
 
-        if res["success"]:
-            return Image({"data_hash": upload["data_hash"], "title": upload["title"], "file_link": upload["file_link"]})
+        res = self.__add_data_to_dataset_get_result(upload_job_id)
+
+        if res.status == LongPollingStatus.DONE:
+            if len(res.data_hashes_with_titles) != 1:
+                raise encord.exceptions.EncordException(
+                    f"An error has occurred during the image upload. len({res.data_hashes_with_titles=}) != 1, {upload_job_id=}"
+                )
+
+            res_item = res.data_hashes_with_titles[0]
+
+            return Image(
+                {
+                    "data_hash": res_item.data_hash,
+                    "title": res_item.title,
+                    "file_link": signed_url["file_link"],
+                }
+            )
+        elif res.status == LongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(
+                f"An error has occurred during the image upload. {res.errors=}, {upload_job_id=}"
+            )
         else:
-            raise encord.exceptions.EncordException("Image upload failed.")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
-    def link_items(self, item_uuids: List[uuid.UUID]) -> List[DataRow]:
-        return self._querier.basic_setter(
+    def link_items(
+        self,
+        item_uuids: List[uuid.UUID],
+        duplicates_behavior: DataLinkDuplicatesBehavior = DataLinkDuplicatesBehavior.SKIP,
+    ) -> List[DataRow]:
+        """
+        Link storage items to the dataset, creating new data rows.
+
+        Args:
+            item_uuids: List of item UUIDs to link to the dataset
+            duplicates_behaviour: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also
+                :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`
+        """
+
+        data_row_dicts = self._querier.basic_setter(
             DatasetLinkItems,
             uid=self._querier.resource_id,
-            payload={"item_uuids": [str(item_uuid) for item_uuid in item_uuids]},
+            payload={
+                "item_uuids": [str(item_uuid) for item_uuid in item_uuids],
+                "duplicates_behavior": duplicates_behavior.value,
+            },
         )
-
-    def delete_image_group(self, data_hash: str):
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.delete_image_group`.
-        """
-        self._querier.basic_delete(ImageGroup, uid=data_hash)
+        return DataRow.from_dict_list(data_row_dicts)
 
     def delete_data(self, data_hashes: Union[List[str], str]):
         """
@@ -628,9 +695,11 @@ class EncordClientDataset(EncordClient):
         if res.status == LongPollingStatus.DONE:
             return AddPrivateDataResponse(dataset_data_list=res.data_hashes_with_titles)
         elif res.status == LongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"add_private_data_to_dataset errors occured {res.errors}")
+            raise encord.exceptions.EncordException(
+                f"add_private_data_to_dataset errors occurred {res.errors=}, {upload_job_id=}"
+            )
         else:
-            raise ValueError(f"res.status={res.status}, this should never happen")
+            raise ValueError(f"{res.status=}, this should never happen, {upload_job_id=}")
 
     def add_private_data_to_dataset_start(
         self,
@@ -644,39 +713,42 @@ class EncordClientDataset(EncordClient):
         """
         if isinstance(private_files, dict):
             files = private_files
-        elif isinstance(private_files, str):
-            if os.path.exists(private_files):
-                text_contents = Path(private_files).read_text(encoding="utf-8")
-            else:
-                text_contents = private_files
-
+            file_name: Optional[str] = None
+        elif isinstance(private_files, str) and os.path.exists(private_files):
+            text_contents = Path(private_files).read_text(encoding="utf-8")
             files = json.loads(text_contents)
+            file_name = Path(private_files).name
+        elif isinstance(private_files, str) and (not os.path.exists(private_files)):
+            text_contents = private_files
+            files = json.loads(text_contents)
+            file_name = None
         elif isinstance(private_files, Path):
             text_contents = private_files.read_text(encoding="utf-8")
             files = json.loads(text_contents)
+            file_name = private_files.name
         elif isinstance(private_files, typing.TextIO):
             text_contents = private_files.read()
             files = json.loads(text_contents)
+            file_name = None
         else:
             raise ValueError(f"Type [{type(private_files)}] of argument private_files is not supported")
 
-        payload = {
-            "files": files,
-            "integration_id": integration_id,
-            "ignore_errors": ignore_errors,
-        }
-        if folder_uuid is not None:
-            payload["folder_uuid"] = str(folder_uuid)
-
         process_hash = self._querier.basic_setter(
             DatasetDataLongPolling,
-            self._querier.resource_id,
-            payload=payload,
+            uid=self._querier.resource_id,
+            payload=DatasetDataLongPollingParams(
+                data_items=None,
+                files=files,
+                integration_id=UUID(integration_id),
+                ignore_errors=ignore_errors,
+                folder_uuid=folder_uuid,
+                file_name=file_name,
+            ),
         )["process_hash"]
 
-        print(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
-        print("SDK process can be terminated, this will not affect successful job execution.")
-        print("You can follow the progress in the web app via notifications.")
+        logger.info(f"add_private_data_to_dataset job started with upload_job_id={process_hash}.")
+        logger.info("SDK process can be terminated, this will not affect successful job execution.")
+        logger.info("You can follow the progress in the web app via notifications.")
 
         return process_hash
 
@@ -709,21 +781,30 @@ class EncordClientDataset(EncordClient):
                 )
 
                 if res.status == LongPollingStatus.DONE:
-                    print(f"add_private_data_to_dataset job completed with upload_job_id={upload_job_id}.")
+                    logger.info(f"add_private_data_to_dataset job completed with upload_job_id={upload_job_id}.")
 
                 polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
                 polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
 
-                if polling_available_seconds == 0 or res.status in [LongPollingStatus.DONE, LongPollingStatus.ERROR]:
+                if (polling_available_seconds == 0) or (
+                    res.status
+                    in [
+                        LongPollingStatus.DONE,
+                        LongPollingStatus.ERROR,
+                        LongPollingStatus.CANCELLED,
+                    ]
+                ):
                     return res
 
-                files_finished_count = res.units_done_count + res.units_error_count
-                files_total_count = res.units_pending_count + res.units_done_count + res.units_error_count
+                files_finished_count = res.units_done_count + res.units_error_count + res.units_cancelled_count
+                files_total_count = (
+                    res.units_pending_count + res.units_done_count + res.units_error_count + res.units_cancelled_count
+                )
 
                 if files_finished_count != files_total_count:
-                    print(f"Processed {files_finished_count}/{files_total_count} files")
+                    logger.info(f"Processed {files_finished_count}/{files_total_count} files")
                 else:
-                    print("Processed all files, dataset data linking and task creation is performed, please wait")
+                    logger.info("Processed all files, dataset data linking and task creation is performed, please wait")
 
                 failed_requests_count = 0
             except (requests.exceptions.RequestException, encord.exceptions.RequestException):
@@ -820,6 +901,7 @@ class EncordClientProject(EncordClient):
         workflow_graph_node_title_eq: Optional[str] = None,
         workflow_graph_node_title_like: Optional[str] = None,
         include_all_label_branches: bool = False,
+        branch_name: Optional[str] = None,
     ) -> List[LabelRowMetadata]:
         """
         This function is documented in :meth:`encord.project.Project.list_label_rows`.
@@ -850,6 +932,7 @@ class EncordClientProject(EncordClient):
             "include_images_data": include_images_data,
             "include_workflow_graph_node": include_workflow_graph_node,
             "include_all_label_branches": include_all_label_branches,
+            "branch_name": branch_name,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
 
@@ -1004,13 +1087,15 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
-    def create_label_row(self, uid, *, get_signed_url=False):
+    def create_label_row(self, uid, *, get_signed_url=False) -> LabelRow:
         """
         This function is documented in :meth:`encord.project.Project.create_label_row`.
         """
         return self._querier.basic_put(LabelRow, uid=uid, payload={"get_signed_url": get_signed_url})
 
-    def create_label_rows(self, uids: List[str], *, get_signed_url=False) -> List[LabelRow]:
+    def create_label_rows(
+        self, uids: List[str], *, get_signed_url=False, branch_name: Optional[str] = None
+    ) -> List[LabelRow]:
         """
         This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
@@ -1023,7 +1108,9 @@ class EncordClientProject(EncordClient):
             List[LabelRow]: A list of created label rows
         """
         return self._querier.put_multiple(
-            LabelRow, uid=uids, payload={"multi_request": True, "get_signed_url": get_signed_url}
+            LabelRow,
+            uid=uids,
+            payload={"multi_request": True, "get_signed_url": get_signed_url, "branch_name": branch_name},
         )
 
     def submit_label_row_for_review(self, uid):
@@ -1237,27 +1324,28 @@ class EncordClientProject(EncordClient):
 
         return self._querier.basic_setter(Model, uid, payload=model)
 
-    def model_train(
+    def model_train_start(
         self,
-        uid: str,
-        label_rows: Optional[List[str]] = None,
-        epochs: Optional[int] = None,
+        model_hash: Union[str, UUID],
+        label_rows: List[Union[str, UUID]],
+        epochs: int,
+        weights: ModelTrainingWeights,
         batch_size: int = 24,
-        weights: Optional[ModelTrainingWeights] = None,
         device: Device = Device.CUDA,
-    ):
+    ) -> UUID:
         """
-        This function is documented in :meth:`encord.project.Project.model_train`.
+        This function is documented in :meth:`encord.project.Project.model_train_start`.
         """
-        if label_rows is None:
+
+        if not label_rows:
             raise encord.exceptions.EncordException(
                 message="You must pass a list of label row uid's (hashes) to train a model."
             )
 
-        if epochs is None:
+        if not epochs:
             raise encord.exceptions.EncordException(message="You must set number of epochs to train a model.")
 
-        if batch_size is None:
+        if not batch_size:
             raise encord.exceptions.EncordException(message="You must set a batch size to train a model.")
 
         if weights is None or not isinstance(weights, ModelTrainingWeights):
@@ -1265,24 +1353,88 @@ class EncordClientProject(EncordClient):
                 message="You must pass weights from the `encord.constants.model_weights` module to train a model."
             )
 
-        training_params = ModelTrainingParams(
-            {
-                "label_rows": label_rows,
-                "epochs": epochs,
-                "batch_size": batch_size,
-                "weights": weights,
-                "device": _device_to_string(device),
-            }
+        training_hash = self._get_api_client().post(
+            f"ml-models/{model_hash}/training",
+            params=None,
+            payload=PublicModelTrainStartPayload(
+                label_rows=[x if isinstance(x, UUID) else UUID(x) for x in label_rows],
+                epochs=epochs,
+                batch_size=batch_size,
+                model=weights.model,
+                training_weights_link=weights.training_weights_link,
+                device=_device_to_string(device),
+            ),
+            result_type=UUID,
         )
 
-        model = Model(
-            {
-                "model_operation": ModelOperations.TRAIN.value,
-                "model_parameters": training_params,
-            }
-        )
+        logger.info(f"model_train job started with training_hash={training_hash}.")
+        logger.info("SDK process can be terminated, this will not affect successful job execution.")
+        logger.info("You can follow the progress in the SDK using model_train_get_result method.")
+        logger.info("You can also follow the progress in the web app via notifications.")
 
-        return self._querier.basic_setter(Model, uid, payload=model)
+        return training_hash
+
+    def model_train_get_result(
+        self,
+        model_hash: Union[str, UUID],
+        training_hash: Union[str, UUID],
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> dict:
+        """
+        This function is documented in :meth:`encord.project.Project.model_train_get_result`.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                logger.info(f"__model_train_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._get_api_client().get(
+                    f"ml-models/{model_hash}/{training_hash}/training",
+                    params=PublicModelTrainGetResultParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=PublicModelTrainGetResultResponse,
+                )
+
+                if tmp_res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
+                    logger.info(f"model_train job completed with training_hash={training_hash}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    PublicModelTrainGetResultLongPollingStatus.DONE,
+                    PublicModelTrainGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
+            if res.result is None:
+                raise ValueError(f"{res.status=}, res.result should not be None with DONE status")
+
+            return res.result.dict()
+        elif res.status == PublicModelTrainGetResultLongPollingStatus.ERROR:
+            raise encord.exceptions.EncordException(f"model_train error occurred, {model_hash=}, {training_hash=}")
+        else:
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
 
     def object_interpolation(
         self,
@@ -1454,6 +1606,24 @@ class EncordClientProject(EncordClient):
             return []
 
         return errors.errors or []
+
+    def active_import(self, project_mode: ActiveProjectMode, video_sampling_rate: Optional[float] = None) -> None:
+        self._get_api_client().post(
+            f"active/{self.project_hash}/import",
+            params=None,
+            payload=ActiveProjectImportPayload(project_mode=project_mode, video_sampling_rate=video_sampling_rate),
+            result_type=None,
+        )
+        logger.info("Import initiated in Active, please check the app to see progress")
+
+    def active_sync(self) -> None:
+        self._get_api_client().post(
+            f"active/{self.project_hash}/sync",
+            params=None,
+            payload=None,
+            result_type=None,
+        )
+        logger.info("Sync initiated in Active, please check the app to see progress")
 
 
 def _device_to_string(device: Device) -> str:

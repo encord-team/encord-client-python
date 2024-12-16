@@ -184,6 +184,7 @@ labels = {
     "classification_answers": {
         "3AqiIPrF": {
             "classificationHash": "3AqiIPrF",
+            "featureHash": "NzIxNTU1",
             "classifications": [
                 {
                     "name": "cl 1 2 text",
@@ -203,6 +204,7 @@ labels = {
         },
         "HVwOV4hB": {
             "classificationHash": "HVwOV4hB",
+            "featureHash": "jPOcEsbw",
             "classifications": [
                 {
                     "name": "Text classification",
@@ -215,6 +217,7 @@ labels = {
         },
         "37vDK5u0": {
             "classificationHash": "37vDK5u0",
+            "featureHash": "3DuQbFxo",
             "classifications": [
                 {
                     "name": "Checklist classification",

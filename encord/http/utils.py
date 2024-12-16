@@ -1,18 +1,32 @@
+"""
+---
+title: "CloudUpload"
+slug: "sdk-ref-cloudupload"
+hidden: false
+metadata:
+  title: "CloudUpload"
+  description: "Encord SDK CloudUpload class."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 import logging
 import mimetypes
 import os.path
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable, List, Optional, Type, Union
-from uuid import UUID
 
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
-from encord.exceptions import CloudUploadError
+from encord.exceptions import CloudUploadError, EncordException
 from encord.http.querier import Querier, create_new_session
 from encord.orm.dataset import (
+    Audio,
     DicomSeries,
     Images,
+    SignedAudioURL,
     SignedDicomsURL,
     SignedDicomURL,
     SignedImagesURL,
@@ -47,10 +61,12 @@ class CloudUploadSettings:
     """
 
 
-def _get_content_type(orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]], file_path: str) -> Optional[str]:
+def _get_content_type(
+    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], file_path: Union[str, Path]
+) -> Optional[str]:
     if orm_class == Images:
-        return mimetypes.guess_type(file_path)[0]
-    elif orm_class == Video:
+        return mimetypes.guess_type(str(file_path))[0]
+    elif orm_class == Video or orm_class == Audio:
         return "application/octet-stream"
     elif orm_class == DicomSeries:
         return "application/dicom"
@@ -59,16 +75,22 @@ def _get_content_type(orm_class: Union[Type[Images], Type[Video], Type[DicomSeri
 
 
 def upload_to_signed_url_list(
-    file_paths: Iterable[str],
+    file_paths: Iterable[Union[str, Path]],
     config: BaseConfig,
     querier: Querier,
-    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]],
+    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]],
     cloud_upload_settings: CloudUploadSettings,
-) -> List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL]]:
+) -> List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]]:
     """Upload files and return the upload returns in the same order as the file paths supplied."""
     failed_uploads = []
     successful_uploads = []
+
+    for file_path in file_paths:
+        if not os.path.exists(file_path):
+            raise EncordException(message=f"{file_path} does not point to a file.")
+
     for file_path in tqdm(file_paths):
+        file_path = str(file_path)
         content_type = _get_content_type(orm_class, file_path)
         file_name = os.path.basename(file_path)
         signed_url = _get_signed_url(file_name, orm_class, querier)
@@ -101,50 +123,22 @@ def upload_to_signed_url_list(
     return successful_uploads
 
 
-def upload_video_to_encord(
-    signed_url: Union[SignedVideoURL, SignedImageURL, SignedDicomURL],
-    video_title: Optional[str],
-    folder_uuid: Optional[UUID],
-    querier: Querier,
-) -> Video:
-    payload = {
-        "signed_url": signed_url["signed_url"],
-        "data_hash": signed_url["data_hash"],
-        "title": signed_url["title"],
-        "file_link": signed_url["file_link"],
-        "video_title": video_title,
-    }
-    if folder_uuid is not None:
-        payload["folder_uuid"] = str(folder_uuid)
-
-    return querier.basic_put(
-        Video,
-        uid=signed_url.get("data_hash"),
-        payload=payload,
-        enable_logging=False,
-    )
-
-
-def upload_images_to_encord(
-    signed_urls: List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL]], querier: Querier
-) -> Images:
-    return querier.basic_put(Images, uid=None, payload=signed_urls, enable_logging=False)
-
-
 def _get_signed_url(
-    file_name: str, orm_class: Union[Type[Images], Type[Video], Type[DicomSeries]], querier: Querier
-) -> Union[SignedVideoURL, SignedImageURL, SignedDicomURL]:
+    file_name: str, orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], querier: Querier
+) -> Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]:
     if orm_class == Video:
         return querier.basic_getter(SignedVideoURL, uid=file_name)
     elif orm_class == Images:
         return querier.basic_getter(SignedImagesURL, uid=[file_name])[0]
+    elif orm_class == Audio:
+        return querier.basic_getter(SignedAudioURL, uid=file_name)
     elif orm_class == DicomSeries:
         return querier.basic_getter(SignedDicomsURL, uid=[file_name])[0]
     raise ValueError(f"Unsupported type `{orm_class}`")
 
 
 def _upload_single_file(
-    file_path: str,
+    file_path: Union[str, Path],
     signed_url: dict,
     content_type: Optional[str],
     *,

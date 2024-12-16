@@ -2,9 +2,6 @@ from copy import deepcopy
 from typing import Dict
 from unittest.mock import MagicMock, patch
 
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
 from encord import Project
 from encord.client import EncordClientProject
 from encord.objects import LabelRowV2
@@ -16,16 +13,6 @@ from tests.test_data.label_rows_metadata_blurb import (
 )
 
 assert user_client and project and ontology
-
-DUMMY_PRIVATE_KEY = (
-    Ed25519PrivateKey.generate()
-    .private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.OpenSSH,
-        encryption_algorithm=serialization.NoEncryption(),
-    )
-    .decode("utf-8")
-)
 
 
 def remove_label_hash(obj: Dict) -> Dict:
@@ -169,3 +156,29 @@ def test_bundled_label_save(save_label_rows_mock: MagicMock, project: Project):
     assert args is not None
     assert len(args["uids"]) == 3, "Expected 3 updates bundled"
     assert len(args["payload"]) == 3, "Expected 3 updates bundled"
+
+
+@patch.object(EncordClientProject, "save_label_rows")
+def test_bundled_label_save_with_explicit_bundle_size(save_label_rows_mock: MagicMock, project: Project):
+    label_rows = get_valid_label_rows(project)
+    assert len(label_rows) == 3
+
+    bundle = project.create_bundle(bundle_size=2)
+    for row in label_rows:
+        row.save(bundle=bundle)
+
+    save_label_rows_mock.assert_not_called()
+
+    bundle.execute()
+
+    assert save_label_rows_mock.call_count == 2
+
+    args_0 = save_label_rows_mock.call_args_list[0][1]
+    assert args_0 is not None
+    assert len(args_0["uids"]) == 2, "Expected 2 updates bundled in the first bundle"
+    assert len(args_0["payload"]) == 2, "Expected 2 updates bundled in the fist bundle"
+
+    args_1 = save_label_rows_mock.call_args_list[1][1]
+    assert args_1 is not None
+    assert len(args_1["uids"]) == 1, "Expected 1 updates bundled in the first bundle"
+    assert len(args_1["payload"]) == 1, "Expected 1 updates bundled in the fist bundle"

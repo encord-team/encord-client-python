@@ -1,21 +1,5 @@
-#
-# Copyright (c) 2023 Cord Technologies Limited
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
 import dataclasses
 import logging
-import platform
-import uuid
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Type, TypeVar, Union
 
@@ -25,12 +9,10 @@ import requests.exceptions
 from requests import Session
 from requests.adapters import HTTPAdapter, Retry
 
-from encord._version import __version__ as encord_version
-from encord.configs import ApiKeyConfig, BaseConfig
+from encord.configs import BaseConfig
 from encord.exceptions import RequestException, ResourceNotFoundError
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
-    HEADER_USER_AGENT,
     RequestContext,
 )
 from encord.http.error_utils import check_error_response
@@ -52,8 +34,6 @@ class Querier:
         self._config = config
         self.resource_type = resource_type
         self.resource_id = resource_id
-        if resource_id is None and isinstance(config, ApiKeyConfig):
-            self.resource_id = config.resource_id
 
     def basic_getter(
         self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
@@ -161,14 +141,6 @@ class Querier:
             raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
 
     @staticmethod
-    def _user_agent():
-        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
-
-    @staticmethod
-    def _tracing_id() -> str:
-        return f"{uuid.uuid4().hex}/1;o=1"
-
-    @staticmethod
     def _exception_context(request: requests.PreparedRequest) -> RequestContext:
         try:
             x_cloud_trace_context = request.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
@@ -191,8 +163,6 @@ class Querier:
         request.headers = self._config.define_headers(
             resource_id=self.resource_id, resource_type=self.resource_type, data=request.data
         )
-        request.headers[HEADER_USER_AGENT] = self._user_agent()
-        request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
         return request
 
     def _execute(self, request: Request, retryable=False, enable_logging: bool = True) -> Tuple[Any, RequestContext]:
@@ -217,7 +187,10 @@ class Querier:
             backoff_factor=req_settings.backoff_factor,
             connect_retries=req_settings.connection_retries,
         ) as session:
-            res = session.send(req, timeout=timeouts)
+            try:
+                res = session.send(req, timeout=timeouts)
+            except Exception as e:
+                raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
             try:
                 res_json = orjson.loads(res.content)
@@ -235,7 +208,7 @@ class Querier:
 
 @contextmanager
 def create_new_session(
-    max_retries: Optional[int], backoff_factor: float, connect_retries
+    max_retries: Optional[int], backoff_factor: float, connect_retries: int
 ) -> Generator[Session, None, None]:
     retry_policy = Retry(
         connect=connect_retries,
@@ -243,7 +216,7 @@ def create_new_session(
         status=max_retries,  # type: ignore
         other=max_retries,  # type: ignore
         allowed_methods=["POST", "PUT", "GET"],  # type: ignore  # post is there since we use it for idempotent ops too.
-        status_forcelist=[413, 429, 500, 503],
+        status_forcelist=[413, 429, 500, 502, 503],
         backoff_factor=backoff_factor,
     )
 

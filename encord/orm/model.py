@@ -1,27 +1,15 @@
-#
-# Copyright (c) 2023 Cord Technologies Limited
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
+from uuid import UUID
 
 from encord.common.time_parser import parse_datetime
 from encord.constants.model import AutomationModels
 from encord.exceptions import EncordException
 from encord.orm import base_orm
+from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 from encord.utilities.common import ENCORD_CONTACT_SUPPORT_EMAIL
 
@@ -208,7 +196,6 @@ class ModelTrainingWeights(base_orm.BaseORM):
 
     ORM:
 
-    training_config_link,
     training_weights_link,
 
     """
@@ -216,7 +203,6 @@ class ModelTrainingWeights(base_orm.BaseORM):
     DB_FIELDS = OrderedDict(
         [
             ("model", str),
-            ("training_config_link", str),
             ("training_weights_link", str),
         ]
     )
@@ -247,3 +233,42 @@ class ModelTrainingParams(base_orm.BaseORM):
             ("device", str),
         ]
     )
+
+
+class PublicModelTrainStartPayload(BaseDTO):
+    label_rows: List[UUID]
+    epochs: int
+    batch_size: int
+    model: str
+    training_weights_link: Optional[str] = None
+    device: str
+
+
+class PublicModelTrainGetResultParams(BaseDTO):
+    timeout_seconds: int
+
+
+class PublicModelTrainGetResultLongPollingStatus(str, Enum):
+    DONE = "DONE"
+    ERROR = "ERROR"
+    PENDING = "PENDING"
+
+
+class PublicModelTrainGetResultResponseDoneResult(BaseDTO):
+    model_hash: UUID
+    training_hash: UUID
+    title: str
+    type: str
+    model: str
+    framework: str
+    epochs: int
+    batch_size: int
+    final_loss: float
+    weights_link: str
+    created_at: datetime
+    duration: int
+
+
+class PublicModelTrainGetResultResponse(BaseDTO):
+    status: PublicModelTrainGetResultLongPollingStatus
+    result: Optional[PublicModelTrainGetResultResponseDoneResult] = None

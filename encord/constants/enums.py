@@ -1,3 +1,15 @@
+"""
+---
+title: "Enums"
+slug: "sdk-ref-enums"
+hidden: false
+metadata:
+  title: "Enums"
+  description: "Encord SDK Enums."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,6 +23,10 @@ class DataType(StringEnum):
     DICOM = "dicom"
     IMAGE = "image"
     DICOM_STUDY = "dicom_study"
+    NIFTI = "nifti"
+    AUDIO = "audio"
+    PLAIN_TEXT = "plain_text"
+    PDF = "pdf"
 
     # will be displayed if the Encord platform has a new data type that is not present in this SDK version. Please upgrade your SDK version
     MISSING_DATA_TYPE = "_MISSING_DATA_TYPE_"

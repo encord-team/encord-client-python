@@ -1,3 +1,15 @@
+"""
+---
+title: "Objects - Options"
+slug: "sdk-ref-objects-options"
+hidden: false
+metadata:
+  title: "Objects - Options"
+  description: "Encord SDK Objects - Options."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 import re

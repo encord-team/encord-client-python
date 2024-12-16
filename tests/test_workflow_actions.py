@@ -1,9 +1,6 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
 from encord import Project
 from encord.client import EncordClientProject
 from encord.http.querier import Querier, RequestContext
@@ -12,16 +9,6 @@ from tests.fixtures import ontology, project, user_client
 from tests.test_data.label_rows_metadata_blurb import LABEL_ROW_METADATA_BLURB
 
 assert user_client and project and ontology
-
-DUMMY_PRIVATE_KEY = (
-    Ed25519PrivateKey.generate()
-    .private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.OpenSSH,
-        encryption_algorithm=serialization.NoEncryption(),
-    )
-    .decode("utf-8")
-)
 
 
 @patch.object(Querier, "_execute")

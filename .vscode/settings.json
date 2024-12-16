@@ -5,7 +5,6 @@
   "search.exclude": {
     "*.md": true,
     "**/*.rst": true,
-    "docs/*": true,
     "poetry.lock": true,
     "test.py": true
   }

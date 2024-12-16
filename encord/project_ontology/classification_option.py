@@ -1,3 +1,15 @@
+"""
+---
+title: "ClassificationOption DEPRECATED"
+slug: "sdk-ref-classification-option-deprecated"
+hidden: false
+metadata:
+  title: "ClassificationOption DEPRECATED"
+  description: "Encord SDK ClassificationOption DEPRECATED."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from dataclasses import dataclass
 
 

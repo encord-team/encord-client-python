@@ -12,6 +12,12 @@ inputs:
   private-key:
     description: 'Private key for integration tests'
     required: true
+  private-key-non-org:
+    description: 'Private key of the second (non-org) user for integration tests'
+    required: true
+  private-key-service-account:
+    description: 'Private key for service account user for integration tests'
+    required: true
   poetry-version:
     description: 'Poetry version to use'
     default: 1.5.0
@@ -52,10 +58,12 @@ runs:
         run: |
           cd ${{ inputs.integration-tests-location }}
           export PRIVATE_KEY="${{ inputs.private-key }}"
+          export PRIVATE_KEY_SERVICE_ACCOUNT="${{ inputs.private-key-service-account }}"
+          export PRIVATE_KEY_NON_ORG='${{ inputs.private-key-non-org }}'
           export CORD_ENV="${{ inputs.environment }}"
           source $(poetry env info --path)/bin/activate
           poetry add git+${{ inputs.sdk-repository-url }}
-          python -m pytest -n 16 ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
+          python -m pytest --timeout=600 -n 4 ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
         shell: bash
 
       - name: Upload report

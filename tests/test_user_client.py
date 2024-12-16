@@ -1,32 +1,13 @@
 import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 import encord.exceptions
 from encord.configs import _ENCORD_SSH_KEY, _ENCORD_SSH_KEY_FILE
 from encord.user_client import EncordUserClient
-
-PRIVATE_KEY = (
-    Ed25519PrivateKey.generate()
-    .private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.OpenSSH,
-        encryption_algorithm=serialization.NoEncryption(),
-    )
-    .decode("utf-8")
-)
-
-
-@pytest.fixture
-def ssh_key_file_path():
-    return os.path.join(os.path.dirname(__file__), "resources/test_key")
-
-
-@pytest.fixture
-def ssh_key_content():
-    return PRIVATE_KEY
+from tests.fixtures import PRIVATE_KEY_PEM
 
 
 def teardown_function():
@@ -49,20 +30,27 @@ def test_initialise_with_wrong_ssh_file_path():
         EncordUserClient.create_with_ssh_private_key()
 
 
-def test_initialise_with_correct_ssh_file_path_from_env(ssh_key_file_path):
-    os.environ[_ENCORD_SSH_KEY_FILE] = ssh_key_file_path
-    user_client = EncordUserClient.create_with_ssh_private_key()
+def test_initialise_with_correct_ssh_file_path_from_env():
+    with TemporaryDirectory() as tmpdir_name:
+        tmp_dir_path = Path(tmpdir_name)
+        tmp_key_path = tmp_dir_path / "key"
+
+        with open(tmp_key_path, "w") as f:
+            f.write(PRIVATE_KEY_PEM)
+
+        os.environ[_ENCORD_SSH_KEY_FILE] = str(tmp_key_path.resolve())
+        user_client = EncordUserClient.create_with_ssh_private_key()
+        assert isinstance(user_client, EncordUserClient)
+
+
+def test_initialise_with_correct_ssh_file_content():
+    user_client = EncordUserClient.create_with_ssh_private_key(PRIVATE_KEY_PEM)
     assert isinstance(user_client, EncordUserClient)
 
 
-def test_initialise_with_correct_ssh_file_content(ssh_key_content):
-    user_client = EncordUserClient.create_with_ssh_private_key(ssh_key_content)
-    assert isinstance(user_client, EncordUserClient)
-
-
-def test_initialise_with_correct_ssh_file_content_from_env(ssh_key_content):
+def test_initialise_with_correct_ssh_file_content_from_env():
     assert _ENCORD_SSH_KEY_FILE not in os.environ
-    os.environ[_ENCORD_SSH_KEY] = ssh_key_content
+    os.environ[_ENCORD_SSH_KEY] = PRIVATE_KEY_PEM
     user_client = EncordUserClient.create_with_ssh_private_key()
     assert isinstance(user_client, EncordUserClient)
 

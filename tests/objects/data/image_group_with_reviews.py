@@ -1227,6 +1227,7 @@ labels = {
     "classification_answers": {
         "hLs1sDAr": {
             "classificationHash": "hLs1sDAr",
+            "featureHash": "NzIxNTU1",
             "classifications": [
                 {
                     "name": "cl 1 2 text",

@@ -1,17 +1,18 @@
-import platform
+import inspect
+import json
 import uuid
-from typing import Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
+from http import HTTPStatus
+from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
+from pydantic import BaseModel
 from requests import PreparedRequest, Response
 
-from encord._version import __version__ as encord_version
 from encord.configs import Config
 from encord.exceptions import EncordException, RequestException
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
-    HEADER_USER_AGENT,
     RequestContext,
 )
 from encord.http.utils import create_new_session
@@ -19,7 +20,7 @@ from encord.http.v2.error_utils import handle_error_response
 from encord.http.v2.payloads import Page
 from encord.orm.base_dto import BaseDTO, BaseDTOInterface
 
-T = TypeVar("T", bound=Union[BaseDTOInterface, uuid.UUID, int, str])
+T = TypeVar("T", bound=Union[Sequence[BaseDTOInterface], BaseDTOInterface, uuid.UUID, int, str])
 
 
 class ApiClient:
@@ -27,19 +28,7 @@ class ApiClient:
         self._config = config
         self._domain = self._config.domain
         self._base_path = "v2/public/"
-
-    @staticmethod
-    def _exception_context_from_response(response: Response) -> RequestContext:
-        try:
-            x_cloud_trace_context = response.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
-            if x_cloud_trace_context is None:
-                return RequestContext()
-
-            x_cloud_trace_context = x_cloud_trace_context.split(";")[0]
-            trace_id, span_id = (x_cloud_trace_context.split("/") + [None, None])[:2]
-            return RequestContext(trace_id=trace_id, span_id=span_id)
-        except Exception:
-            return RequestContext()
+        self._bound_callbacks: Dict[Callable, Callable] = {}
 
     @staticmethod
     def _exception_context(request: requests.PreparedRequest) -> RequestContext:
@@ -54,14 +43,6 @@ class ApiClient:
         except Exception:
             return RequestContext()
 
-    @staticmethod
-    def _user_agent() -> str:
-        return f"encord-sdk-python/{encord_version} python/{platform.python_version()}"
-
-    @staticmethod
-    def _tracing_id() -> str:
-        return f"{uuid.uuid4().hex}/1;o=1"
-
     def _build_url(self, path: str) -> str:
         if path.startswith("/"):
             path = path[1:]
@@ -70,17 +51,27 @@ class ApiClient:
             url = url[:-1]
         return url
 
-    def _headers(self):
-        return {
-            "Accept": "application/json",
-            "Accept-Encoding": "gzip",
-            "Content-Type": "application/json",
-            HEADER_USER_AGENT: self._user_agent(),
-            HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
-        }
+    def get_bound_operation(self, operation: Callable) -> Callable:
+        """
+        Wrap a function to bind it to the current API client instance (via a named parameter). This is useful for
+        bundling, as the 'Bundle' groups operations based on the 'operation' function, which means that if
+        you use an entity object method as the operation, then it will not be grouped with other similar operations.
+        """
+        if "api_client" in inspect.signature(operation).parameters:
+            if wrapped := self._bound_callbacks.get(operation):
+                return wrapped
+
+            def wrapped_callback(*args, **kwargs):
+                return operation(*args, api_client=self, **kwargs)
+
+            self._bound_callbacks[operation] = wrapped_callback
+
+            return wrapped_callback
+        else:
+            raise RuntimeError(f"Operation {operation} does not have an 'api_client' parameter")
 
     def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
-        return self._request_without_payload("GET", path, params, result_type)
+        return self._request_without_payload("GET", path, params, result_type, allow_none=allow_none)
 
     def get_paged_iterator(
         self,
@@ -110,8 +101,10 @@ class ApiClient:
             else:
                 break
 
-    def delete(self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None) -> T:
-        return self._request_without_payload("DELETE", path, params, result_type)
+    def delete(
+        self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None, allow_none: bool = False
+    ) -> T:
+        return self._request_without_payload("DELETE", path, params, result_type, allow_none=allow_none)
 
     def post(
         self,
@@ -121,6 +114,14 @@ class ApiClient:
         result_type: Optional[Type[T]],
     ) -> T:
         return self._request_with_payload("POST", path, params, payload, result_type)
+
+    def put(
+        self,
+        path: str,
+        params: Optional[BaseDTO],
+        payload: Union[BaseDTO, Sequence[BaseDTO], None],
+    ) -> None:
+        self._request_with_payload("PUT", path, params, payload, None, allow_none=True)
 
     def patch(
         self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
@@ -132,6 +133,12 @@ class ApiClient:
             return [p.to_dict() for p in payload]
         elif isinstance(payload, BaseDTO):
             return payload.to_dict()
+        elif isinstance(payload, BaseModel):
+            # use new pydantic v2 function if it exists, otherwise use fallback
+            if hasattr(payload, "model_dump"):
+                return payload.model_dump(mode="json")
+            else:
+                return json.loads(payload.json())
         elif payload is None:
             return None
         else:
@@ -144,6 +151,7 @@ class ApiClient:
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
         result_type: Optional[Type[T]],
+        allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
         payload_serialised = self._serialise_payload(payload)
@@ -151,23 +159,25 @@ class ApiClient:
         req = requests.Request(
             method=method,
             url=self._build_url(path),
-            headers=self._headers(),
             params=params_dict,
             json=payload_serialised,
         ).prepare()
 
-        return self._request(req, result_type=result_type)  # type: ignore
+        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
     def _request_without_payload(
-        self, method: str, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]]
+        self,
+        method: str,
+        path: str,
+        params: Optional[BaseDTO],
+        result_type: Optional[Type[T]],
+        allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
 
-        req = requests.Request(
-            method=method, url=self._build_url(path), headers=self._headers(), params=params_dict
-        ).prepare()
+        req = requests.Request(method=method, url=self._build_url(path), params=params_dict).prepare()
 
-        return self._request(req, result_type=result_type)  # type: ignore
+        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
     def _request(self, req: PreparedRequest, result_type: Optional[Type[T]], allow_none: bool = False):
         req = self._config.define_headers_v2(req)
@@ -181,10 +191,19 @@ class ApiClient:
         ) as session:
             context = self._exception_context(req)
 
-            res = session.send(req, timeout=timeouts)
+            try:
+                res = session.send(req, timeout=timeouts)
+            except Exception as e:
+                raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
-            if res.status_code != 200:
+            if res.status_code not in [
+                HTTPStatus.OK,
+                HTTPStatus.NO_CONTENT,  # 204 status code will raise error for sdk versions <= 0.1.147
+            ]:
                 self._handle_error(res, context)
+
+            if res.status_code == HTTPStatus.NO_CONTENT:
+                return None
 
             try:
                 res_json = res.json()
@@ -193,14 +212,20 @@ class ApiClient:
 
             if result_type is None or (res_json is None and allow_none):
                 return None
-            if result_type == int:
+            if result_type is int:
                 return int(res_json)
-            elif result_type == str:
+            elif result_type is str:
                 return str(res_json)
-            elif result_type == uuid.UUID:
+            elif result_type is uuid.UUID:
                 return uuid.UUID(res_json)
             elif issubclass(result_type, BaseDTOInterface):
                 return result_type.from_dict(res_json)
+            elif issubclass(result_type, BaseModel):
+                # use new pydantic v2 function if it exists, otherwise use fallback
+                if hasattr(result_type, "model_validate"):
+                    return result_type.model_validate(res_json)
+                else:
+                    return result_type.validate(res_json)
             else:
                 raise ValueError(f"Unsupported result type {result_type}")
 

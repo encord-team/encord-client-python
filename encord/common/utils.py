@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import List, Optional, TypeVar, Union, overload
+from typing import List, Optional, TypeVar, Union
 from uuid import UUID
 
 

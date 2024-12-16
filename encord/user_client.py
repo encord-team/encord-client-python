@@ -1,30 +1,51 @@
+"""
+---
+title: "User Client"
+slug: "sdk-ref-user-client"
+hidden: false
+metadata:
+  title: "User Client"
+  description: "Encord SDK EncordUserClient classe."
+category: "64e481b57b6027003f20aaa0"
+---
+"""
+
 from __future__ import annotations
 
 import base64
-import json
+import dataclasses
 import logging
+import time
+import uuid
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from enum import Enum
+from math import ceil
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
+import requests
+
+import encord.exceptions
 from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
+from encord.collection import Collection
 from encord.common.deprecated import deprecated
-from encord.common.time_parser import parse_datetime
+from encord.common.time_parser import parse_datetime, parse_datetime_optional
 from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
+from encord.filter_preset import FilterPreset
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
-    upload_images_to_encord,
     upload_to_signed_url_list,
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.metadata_schema import MetadataSchema
 from encord.objects import OntologyStructure
 from encord.objects.common import (
     DeidentifyRedactTextMode,
@@ -32,50 +53,69 @@ from encord.objects.common import (
 )
 from encord.ontology import Ontology
 from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
-from encord.orm.cloud_integration import CloudIntegration
+from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
+    CreateDatasetPayload,
     CreateDatasetResponse,
+    CreateDatasetResponseV2,
     DatasetAccessSettings,
-    DatasetAPIKey,
     DatasetInfo,
-    DatasetScope,
-    DatasetUserRole,
+    DatasetsWithUserRolesListParams,
+    DatasetsWithUserRolesListResponse,
     DicomDeidentifyTask,
     Images,
     StorageLocation,
+    dataset_user_role_str_enum_to_int_enum,
 )
 from encord.orm.dataset import Dataset as OrmDataset
-from encord.orm.dataset_with_user_role import DatasetWithUserRole
+from encord.orm.deidentification import (
+    DicomDeIdGetResultLongPollingStatus,
+    DicomDeIdGetResultParams,
+    DicomDeIdGetResultResponse,
+    DicomDeIdRedactTextMode,
+    DicomDeIdSaveCondition,
+    DicomDeIdSaveConditionType,
+    DicomDeIdStartPayload,
+)
 from encord.orm.group import Group as OrmGroup
+from encord.orm.ontology import CreateOrUpdateOntologyPayload
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
     CvatExportType,
+    CvatImportDataItem,
+    CvatImportGetResultLongPollingStatus,
+    CvatImportGetResultParams,
+    CvatImportGetResultResponse,
+    CvatImportStartPayload,
+    CvatReviewMode,
     ManualReviewWorkflowSettings,
-    ProjectImporter,
-    ProjectImporterCvatInfo,
     ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,
 )
 from encord.orm.project import Project as OrmProject
-from encord.orm.project_api_key import ProjectAPIKey
 from encord.orm.project_with_user_role import ProjectWithUserRole
-from encord.orm.storage import CreateStorageFolderPayload, ListFoldersParams, ListItemsParams, StorageItemType
-from encord.orm.storage import StorageFolder as OrmStorageFolder
+from encord.orm.storage import ListFoldersParams, ListItemsParams, StorageItemType
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
-    APIKeyScopes,
     CvatImporterError,
     CvatImporterSuccess,
     ImportMethod,
     Issues,
     LocalImport,
 )
-from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
+from encord.utilities.ontology_user import OntologiesFilterParams, OntologyUserRole, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
+
+CVAT_LONG_POLLING_RESPONSE_RETRY_N = 3
+CVAT_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
+CVAT_LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
+DICOM_DEID_LONG_POLLING_RESPONSE_RETRY_N = 3
+DICOM_DEID_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
+DICOM_DEID_LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 
 log = logging.getLogger(__name__)
 
@@ -129,7 +169,7 @@ class EncordUserClient:
         orm_dataset = client.get_dataset()
         return Dataset(client, orm_dataset)
 
-    def get_project(self, project_hash: str) -> Project:
+    def get_project(self, project_hash: str | UUID) -> Project:
         """
         Get the Project class to access project fields and manipulate a project.
 
@@ -148,19 +188,47 @@ class EncordUserClient:
         # Querying ontology using project querier to avoid permission error,
         # as there might be only read-only ontology structure access in scope of the project,
         # not full access, that is implied by get_ontology method
-        querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=project_hash)
+        querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=str(project_hash))
         client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
         project_orm = client.get_project_v2()
 
-        orm_ontology = querier.basic_getter(OrmOntology, project_orm.ontology_hash)
-        project_ontology = Ontology(querier, orm_ontology, self._api_client)
+        project_ontology = self.get_ontology(project_orm.ontology_hash)
 
         return Project(client, project_orm, project_ontology, self._api_client)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
-        querier = Querier(self._config.config, resource_type=TYPE_ONTOLOGY, resource_id=ontology_hash)
-        orm_ontology = querier.basic_getter(OrmOntology, ontology_hash)
-        return Ontology(querier, orm_ontology, self._api_client)
+        ontology_with_user_role = self._api_client.get(
+            f"ontologies/{ontology_hash}", params=None, result_type=OntologyWithUserRole
+        )
+        return Ontology._from_api_payload(ontology_with_user_role, self._api_client)
+
+    def __create_dataset(
+        self,
+        title: str,
+        description: Optional[str],
+        storage_location: StorageLocation,
+        create_backing_folder: bool,
+        legacy_call: bool,
+    ) -> CreateDatasetResponse:
+        res_dataset = self._api_client.post(
+            "datasets",
+            params=None,
+            payload=CreateDatasetPayload(
+                title=title,
+                description=description,
+                create_backing_folder=create_backing_folder,
+                legacy_call=legacy_call,
+            ),
+            result_type=CreateDatasetResponseV2,
+        )
+
+        return CreateDatasetResponse(
+            title=title,
+            storage_location=storage_location,
+            dataset_hash=str(res_dataset.dataset_uuid),
+            user_hash="fields withdrawn for compliance reasons",
+            backing_folder_uuid=res_dataset.backing_folder_uuid,
+        )
 
     @deprecated("0.1.104", alternative=".create_dataset")
     def create_private_dataset(
@@ -172,7 +240,14 @@ class EncordUserClient:
         """
         DEPRECATED - please use `create_dataset` instead.
         """
-        return self.create_dataset(dataset_title, dataset_type, dataset_description)
+
+        return self.__create_dataset(
+            title=dataset_title,
+            description=dataset_description,
+            storage_location=dataset_type,
+            create_backing_folder=True,
+            legacy_call=True,
+        )
 
     def create_dataset(
         self,
@@ -192,42 +267,14 @@ class EncordUserClient:
         Returns:
             CreateDatasetResponse
         """
-        dataset = {
-            "title": dataset_title,
-            "type": dataset_type,
-            "create_backing_folder": create_backing_folder,
-        }
 
-        if dataset_description:
-            dataset["description"] = dataset_description
-
-        result = self._querier.basic_setter(OrmDataset, uid=None, payload=dataset)
-        return CreateDatasetResponse.from_dict(result)
-
-    def create_dataset_api_key(
-        self, dataset_hash: str, api_key_title: str, dataset_scopes: List[DatasetScope]
-    ) -> DatasetAPIKey:
-        api_key_payload = {
-            "dataset_hash": dataset_hash,
-            "title": api_key_title,
-            "scopes": list(map(lambda scope: scope.value, dataset_scopes)),
-        }
-        response = self._querier.basic_setter(DatasetAPIKey, uid=None, payload=api_key_payload)
-        return DatasetAPIKey.from_dict(response)
-
-    def get_dataset_api_keys(self, dataset_hash: str) -> List[DatasetAPIKey]:
-        api_key_payload = {
-            "dataset_hash": dataset_hash,
-        }
-        api_keys: List[DatasetAPIKey] = self._querier.get_multiple(DatasetAPIKey, uid=None, payload=api_key_payload)
-        return api_keys
-
-    def get_or_create_dataset_api_key(self, dataset_hash: str) -> DatasetAPIKey:
-        api_key_payload = {
-            "dataset_hash": dataset_hash,
-        }
-        response = self._querier.basic_put(DatasetAPIKey, uid=None, payload=api_key_payload)
-        return DatasetAPIKey.from_dict(response)
+        return self.__create_dataset(
+            title=dataset_title,
+            description=dataset_description,
+            storage_location=dataset_type,
+            create_backing_folder=create_backing_folder,
+            legacy_call=False,
+        )
 
     def get_datasets(
         self,
@@ -239,6 +286,7 @@ class EncordUserClient:
         created_after: Optional[Union[str, datetime]] = None,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
+        include_org_access: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         List either all (if called with no arguments) or matching datasets the user has access to.
@@ -252,28 +300,46 @@ class EncordUserClient:
             created_after: optional creation date filter, 'greater'
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
+            include_org_access: if set to true and the calling user is the organization admin, the
+              method will return all datasets in the organization.
 
         Returns:
-            list of (role, dataset) pairs for datasets  matching filter conditions.
+            list of datasets matching filter conditions, with the roles that the current user has on them. Each item
+            is a dictionary with `"dataset"` and `"user_role"` keys. If include_org_access is set to
+            True, some of the datasets may have a `None` value for the `"user_role"` key.
         """
-        properties_filter = self.__validate_filter(locals())
-        # a hack to be able to share validation code without too much c&p
-        data = self._querier.get_multiple(
-            DatasetWithUserRole,
-            payload={
-                "filter": properties_filter,
-                "enable_storage_api": True,
-            },
+
+        res = self._api_client.get(
+            "/datasets/list",
+            params=DatasetsWithUserRolesListParams(
+                title_eq=title_eq,
+                title_like=title_like,
+                description_eq=desc_eq,
+                description_like=desc_like,
+                created_before=parse_datetime_optional(created_before),
+                created_after=parse_datetime_optional(created_after),
+                edited_before=parse_datetime_optional(edited_before),
+                edited_after=parse_datetime_optional(edited_after),
+                include_org_access=include_org_access,
+            ),
+            result_type=DatasetsWithUserRolesListResponse,
         )
 
-        def convert_dates(dataset):
-            dataset["created_at"] = parse_datetime(dataset["created_at"])
-            dataset["last_edited_at"] = parse_datetime(dataset["last_edited_at"])
-            return dataset
-
         return [
-            {"dataset": DatasetInfo(**convert_dates(d.dataset)), "user_role": DatasetUserRole(d.user_role)}
-            for d in data
+            {
+                "dataset": DatasetInfo(
+                    dataset_hash=str(x.dataset_uuid),
+                    user_hash="field withdrawn for compliance reasons",
+                    title=x.title,
+                    description=x.description,
+                    type=int(x.storage_location or 0),
+                    created_at=x.created_at,
+                    last_edited_at=x.last_edited_at,
+                    backing_folder_uuid=x.backing_folder_uuid,
+                ),
+                "user_role": dataset_user_role_str_enum_to_int_enum(x.user_role) if x.user_role is not None else None,
+            }
+            for x in res.result
         ]
 
     @staticmethod
@@ -347,7 +413,7 @@ class EncordUserClient:
             edited_after: optional last modification date filter, 'greater'
 
         Returns:
-            list of (role, projects) pairs for project matching filter conditions.
+            list of (role, projects) pairs for Project matching filter conditions.
         """
         properties_filter = self.__validate_filter(locals())
         # a hack to be able to share validation code without too much c&p
@@ -364,17 +430,17 @@ class EncordUserClient:
         workflow_template_hash: Optional[str] = None,
     ) -> str:
         """
-        Creates a new project and returns its uid ('project_hash')
+        Creates a new Project and returns its uid ('project_hash')
 
         Args:
-            project_title: the title of the project
-            dataset_hashes: a list of the dataset uids that the project will use
+            project_title: the title of the Project
+            dataset_hashes: a list of the Dataset uids that the project will use
             project_description: the optional description of the project
-            ontology_hash: the uid of an ontology to be used. If omitted, a new empty ontology will be created
-            workflow_settings: selects and configures the type of the quality control workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
-            workflow_template_hash: project will be created using a workflow based on the template provided.
+            ontology_hash: the uid of an Ontology to be used. If omitted, a new empty Ontology will be created
+            workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
+            workflow_template_hash: Project is created using a Workflow based on the template provided. This parameter must be included to create a Workflow Project.
         Returns:
-            the uid of the project.
+            the uid of the Project.
         """
         project = {
             "title": project_title,
@@ -393,21 +459,6 @@ class EncordUserClient:
 
         return self._querier.basic_setter(OrmProject, uid=None, payload=project)
 
-    def create_project_api_key(self, project_hash: str, api_key_title: str, scopes: List[APIKeyScopes]) -> str:
-        """
-        Returns:
-            The created project API key.
-        """
-        payload = {"title": api_key_title, "scopes": list(map(lambda scope: scope.value, scopes))}
-
-        return self._querier.basic_setter(ProjectAPIKey, uid=project_hash, payload=payload)
-
-    def get_project_api_keys(self, project_hash: str) -> List[ProjectAPIKey]:
-        return self._querier.get_multiple(ProjectAPIKey, uid=project_hash)
-
-    def get_or_create_project_api_key(self, project_hash: str) -> str:
-        return self._querier.basic_put(ProjectAPIKey, uid=project_hash, payload={})
-
     @deprecated("0.1.98", ".get_dataset()")
     def get_dataset_client(
         self,
@@ -418,59 +469,77 @@ class EncordUserClient:
         """
         DEPRECATED - prefer using :meth:`get_dataset()` instead.
         """
-        dataset_api_key: DatasetAPIKey = self.get_or_create_dataset_api_key(dataset_hash)
-        return EncordClientDataset.initialise(
-            dataset_hash,
-            dataset_api_key.api_key,
-            requests_settings=self._config.requests_settings,
+
+        if isinstance(dataset_hash, UUID):
+            dataset_hash = str(dataset_hash)
+
+        return EncordClientDataset(
+            querier=Querier(
+                self._config.config,
+                resource_type=TYPE_DATASET,
+                resource_id=dataset_hash,
+            ),
+            config=self._config.config,
             dataset_access_settings=dataset_access_settings,
+            api_client=self._api_client,
         )
 
     @deprecated("0.1.98", ".get_project()")
-    def get_project_client(self, project_hash: str, **kwargs) -> Union[EncordClientProject, EncordClientDataset]:
+    def get_project_client(
+        self,
+        project_hash: str,
+        **kwargs,
+    ) -> EncordClientProject:
         """
         DEPRECATED - prefer using :meth:`get_project()` instead.
         """
-        project_api_key: str = self.get_or_create_project_api_key(project_hash)
-        return EncordClient.initialise(
-            project_hash, project_api_key, requests_settings=self._config.requests_settings, **kwargs
+
+        if isinstance(project_hash, UUID):
+            project_hash = str(project_hash)
+
+        return EncordClientProject(
+            querier=Querier(
+                self._config.config,
+                resource_type=TYPE_PROJECT,
+                resource_id=project_hash,
+            ),
+            config=self._config.config,
+            api_client=self._api_client,
         )
 
-    def create_project_from_cvat(
+    def create_project_from_cvat_start(
         self,
+        *,
         import_method: ImportMethod,
         dataset_name: str,
-        review_mode: ReviewMode = ReviewMode.LABELLED,
-        max_workers: Optional[int] = None,
-        *,
-        transform_bounding_boxes_to_polygons=False,
-    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        review_mode: ReviewMode,
+        transform_bounding_boxes_to_polygons: bool,
+    ) -> UUID:
         """
-        Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
-            your images and annotations into encord. Ensure that during you have the "Save images"
-            checkbox enabled when exporting from CVAT.
+        Start importing a CVAT project into Encord. This is the first part of a two-step import process.
+        Export your CVAT project with the "CVAT for images 1.1" option and use this function to begin
+        importing your images and annotations. Ensure that the "Save images" checkbox is enabled when
+        exporting from CVAT.
 
         Args:
             import_method:
-                The chosen import method. See the `ImportMethod` class for details.
+                The chosen import method. Currently, only LocalImport is supported.
             dataset_name:
                 The name of the dataset that will be created.
             review_mode:
-                Set how much interaction is needed from the labeler and from the reviewer for the CVAT labels.
-                    See the `ReviewMode` documentation for more details.
-            max_workers:
-                DEPRECATED: This argument will be ignored
+                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
+                See the `ReviewMode` documentation for more details.
             transform_bounding_boxes_to_polygons:
-                All instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
+                If True, all instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
 
         Returns:
-            CvatImporterSuccess: If the project was successfully imported.
-            CvatImporterError: If the project could not be imported.
+            UUID: A unique identifier for tracking the import process.
 
         Raises:
             ValueError:
-                If the CVAT directory has an invalid format.
+                If the CVAT directory has an invalid format or if a non-LocalImport method is used.
         """
+
         if not isinstance(import_method, LocalImport):
             raise ValueError("Only local imports are currently supported ")
 
@@ -486,59 +555,202 @@ class EncordUserClient:
             raise ValueError(f"The file `{annotations_file_path}` does not exist.")
 
         with annotations_file_path.open("rb") as f:
-            annotations_base64 = base64.b64encode(f.read()).decode("utf-8")
+            annotations_bytes = f.read()
+            annotations_str = annotations_bytes.decode("utf-8")
+            annotations_base64 = base64.b64encode(annotations_bytes).decode("utf-8")
 
-        images_paths, used_base_path = self.__get_images_paths(annotations_base64, images_directory_path)
+        images_paths, used_base_path = self.__get_images_paths(
+            annotations_str,
+            images_directory_path,
+        )
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image_hash_map = self.__upload_cvat_images(
-            images_paths, used_base_path, dataset_name
-        )
+        dataset_hash, image_title_to_image = self.__upload_cvat_images(images_paths, used_base_path, dataset_name)
         log.info("Image upload completed.")
 
         # This is a bit hacky, but allows more flexibility for CVAT project imports
         if import_method.map_filename_to_cvat_name:
-            image_title_to_image_hash_map = {
-                import_method.map_filename_to_cvat_name(key): value
-                for key, value in image_title_to_image_hash_map.items()
+            image_title_to_image = {
+                import_method.map_filename_to_cvat_name(key): value for key, value in image_title_to_image.items()
             }
 
-        payload = {
-            "cvat": {
-                "annotations_base64": annotations_base64,
-            },
-            "dataset_hash": dataset_hash,
-            "image_title_to_image_hash_map": image_title_to_image_hash_map,
-            "review_mode": review_mode,
-            "transform_bounding_boxes_to_polygons": transform_bounding_boxes_to_polygons,
-        }
-
         log.info("Starting project import. This may take a few minutes.")
-        server_ret = self._querier.basic_setter(ProjectImporter, uid=None, payload=payload)
 
-        if "success" in server_ret:
-            success = server_ret["success"]
+        cvat_import_uuid = self._api_client.post(
+            "projects/cvat-import",
+            payload=CvatImportStartPayload(
+                annotations_base64=annotations_base64,
+                dataset_uuid=UUID(dataset_hash),
+                review_mode=CvatReviewMode(review_mode),
+                data=[
+                    CvatImportDataItem(
+                        data_path=data_path,
+                        data_link=data["file_link"],
+                        title=data["title"],
+                    )
+                    for data_path, data in image_title_to_image.items()
+                ],
+                transform_bounding_boxes_to_polygons=transform_bounding_boxes_to_polygons,
+            ),
+            params=None,
+            result_type=UUID,
+        )
+
+        return cvat_import_uuid
+
+    def create_project_from_cvat_get_result(
+        self,
+        cvat_import_uuid: UUID,
+        *,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        """
+        Check the status and get the result of a CVAT import process. This is the second part of the
+        two-step import process.
+
+        Args:
+            cvat_import_uuid:
+                The UUID returned by create_project_from_cvat_start.
+            timeout_seconds:
+                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
+                The method will poll the server periodically during this time.
+
+        Returns:
+            Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
+            - CvatImporterSuccess: Contains project_hash, dataset_hash, and any issues if the import succeeded.
+            - CvatImporterError: Contains any issues if the import failed.
+
+        Raises:
+            ValueError:
+                If the server returns an unexpected status or invalid response structure.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                log.info(f"create_project_from_cvat_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._api_client.get(
+                    f"projects/cvat-import/{cvat_import_uuid}",
+                    params=CvatImportGetResultParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            CVAT_LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=CvatImportGetResultResponse,
+                )
+
+                if tmp_res.status == CvatImportGetResultLongPollingStatus.DONE:
+                    log.info(f"cvat import job completed with cvat_import_uuid={cvat_import_uuid}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    CvatImportGetResultLongPollingStatus.DONE,
+                    CvatImportGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= CVAT_LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(CVAT_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == CvatImportGetResultLongPollingStatus.DONE:
+            if res.project_uuid is None:
+                raise ValueError(f"{res.project_uuid=}, res.project_uuid should not be None with DONE status")
+
+            if res.issues is None:
+                raise ValueError(f"{res.issues=}, res.issues should not be None with DONE status")
+
             return CvatImporterSuccess(
-                project_hash=success["project_hash"],
-                dataset_hash=dataset_hash,
-                issues=Issues.from_dict(success["issues"]),
+                project_hash=str(res.project_uuid),
+                dataset_hash=str(list(self.get_project(res.project_uuid).list_datasets())[0]),
+                issues=Issues.from_dict(res.issues),
             )
-        elif "error" in server_ret:
-            error = server_ret["error"]
-            return CvatImporterError(dataset_hash=dataset_hash, issues=Issues.from_dict(error["issues"]))
+        elif res.status == CvatImportGetResultLongPollingStatus.ERROR:
+            if res.issues is None:
+                raise ValueError(f"{res.issues=}, res.issues should not be None with DONE status")
+
+            return CvatImporterError(
+                issues=Issues.from_dict(res.issues),
+            )
         else:
-            raise ValueError("The api server responded with an invalid payload.")
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
 
-    def __get_images_paths(self, annotations_base64: str, images_directory_path: Path) -> Tuple[List[Path], Path]:
-        payload = {"annotations_base64": annotations_base64}
-        project_info = self._querier.basic_setter(ProjectImporterCvatInfo, uid=None, payload=payload)
-        if "error" in project_info:
-            message = project_info["error"]["message"]
-            raise ValueError(message)
+    def create_project_from_cvat(
+        self,
+        import_method: ImportMethod,
+        dataset_name: str,
+        review_mode: ReviewMode = ReviewMode.LABELLED,
+        *,
+        transform_bounding_boxes_to_polygons=False,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> Union[CvatImporterSuccess, CvatImporterError]:
+        """
+        Create a new Encord project from a CVAT export. This method combines the two-step import process
+        (create_project_from_cvat_start and create_project_from_cvat_get_result) into a single call.
+        Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
+        your images and annotations. Ensure that the "Save images" checkbox is enabled when exporting
+        from CVAT.
 
-        export_type = project_info["success"]["export_type"]
-        if export_type == CvatExportType.PROJECT:
+        Args:
+            import_method:
+                The chosen import method. Currently, only LocalImport is supported.
+            dataset_name:
+                The name of the dataset that will be created.
+            review_mode:
+                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
+                See the `ReviewMode` documentation for more details. Defaults to ReviewMode.LABELLED.
+            transform_bounding_boxes_to_polygons:
+                If True, all instances of CVAT bounding boxes will be converted to polygons in the final
+                Encord project. Defaults to False.
+            timeout_seconds:
+                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
+                The method will poll the server periodically during this time.
+
+        Returns:
+            Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
+            - CvatImporterSuccess: Contains project_hash, dataset_hash, and any issues if the import succeeded.
+            - CvatImporterError: Contains any issues if the import failed.
+
+        Raises:
+            ValueError:
+                If the CVAT directory has an invalid format, if a non-LocalImport method is used,
+                or if the server returns an unexpected status.
+        """
+
+        return self.create_project_from_cvat_get_result(
+            cvat_import_uuid=self.create_project_from_cvat_start(
+                import_method=import_method,
+                dataset_name=dataset_name,
+                review_mode=review_mode,
+                transform_bounding_boxes_to_polygons=transform_bounding_boxes_to_polygons,
+            ),
+            timeout_seconds=timeout_seconds,
+        )
+
+    def __get_images_paths(
+        self,
+        annotations_str: str,
+        images_directory_path: Path,
+    ) -> Tuple[List[Path], Path]:
+        meta_tags = [x.tag for x in ET.fromstring(annotations_str).find("meta") or []]
+
+        if CvatExportType.PROJECT.value in meta_tags:
             default_path = images_directory_path.joinpath("default")
+
             if default_path not in list(images_directory_path.iterdir()):
                 raise ValueError("The expected directory 'default' was not found.")
 
@@ -546,16 +758,19 @@ class EncordUserClient:
             # NOTE: it is possible that here we also need to use the __get_recursive_image_paths
             images = list(default_path.iterdir())
 
-        elif export_type == CvatExportType.TASK:
+        elif CvatExportType.TASK.value in meta_tags:
             used_base_path = images_directory_path
             images = self.__get_recursive_image_paths(images_directory_path)
+
         else:
             raise ValueError(
-                f"Received an unexpected response `{project_info}` from the server. Project import aborted."
+                "Neither the 'project' nor the 'task' field was found in the CVAT annotations' 'meta' "
+                "field. The annotation file is likely ill-formed."
             )
 
         if not images:
             raise ValueError("No images found in the provided data folder.")
+
         return images, used_base_path
 
     @staticmethod
@@ -565,7 +780,7 @@ class EncordUserClient:
 
     def __upload_cvat_images(
         self, images_paths: List[Path], used_base_path: Path, dataset_name: str
-    ) -> Tuple[str, Dict[str, str]]:
+    ) -> Tuple[str, Dict[str, Dict[str, str]]]:
         """
         This function does not create any image groups yet.
         Returns:
@@ -573,7 +788,6 @@ class EncordUserClient:
             * A map from an image title to the image hash which is stored in the DB.
         """
 
-        file_path_strings = list(map(lambda x: str(x), images_paths))
         dataset_info = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
         dataset_hash = dataset_info.dataset_hash
@@ -584,22 +798,38 @@ class EncordUserClient:
         querier = dataset._client._querier
 
         successful_uploads = upload_to_signed_url_list(
-            file_path_strings, self._config, querier, Images, CloudUploadSettings()
+            file_paths=images_paths,
+            config=self._config,
+            querier=querier,
+            orm_class=Images,
+            cloud_upload_settings=CloudUploadSettings(),
         )
         if len(images_paths) != len(successful_uploads):
             raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
 
-        upload_images_to_encord(successful_uploads, querier)
-
-        image_title_to_image_hash_map = {}
+        image_title_to_image = {}
         for image_path, successful_upload in zip(images_paths, successful_uploads):
             trimmed_image_path_str = str(image_path.relative_to(used_base_path))
-            image_title_to_image_hash_map[trimmed_image_path_str] = successful_upload.data_hash
+            image_title_to_image[trimmed_image_path_str] = {
+                "data_hash": successful_upload.data_hash,
+                "file_link": successful_upload.file_link,
+                "title": successful_upload.title,
+            }
 
-        return dataset_hash, image_title_to_image_hash_map
+        return dataset_hash, image_title_to_image
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        return self._querier.get_multiple(CloudIntegration)
+        return [
+            CloudIntegration(
+                id=str(x.integration_uuid),
+                title=x.title,
+            )
+            for x in self._api_client.get(
+                "cloud-integrations",
+                params=None,
+                result_type=GetCloudIntegrationsResponse,
+            ).result
+        ]
 
     def get_ontologies(
         self,
@@ -611,6 +841,7 @@ class EncordUserClient:
         created_after: Optional[Union[str, datetime]] = None,
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
+        include_org_access: bool = False,
     ) -> List[Dict]:
         """
         List either all (if called with no arguments) or matching ontologies the user has access to.
@@ -624,21 +855,25 @@ class EncordUserClient:
             created_after: optional creation date filter, 'greater'
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
+            include_org_access: if set to true and the calling user is the organization admin, the
+              method will return all ontologies in the organization.
 
         Returns:
-            list of (role, projects) pairs for ontologies matching filter conditions.
+            list of ontologies matching filter conditions, with the roles that the current user has on them. Each item
+            is a dictionary with `"ontology"` and `"user_role"` keys. If include_org_access is set to
+            True, some of the ontologies may have a `None` value for the `"user_role"` key.
         """
-        properties_filter = self.__validate_filter(locals())
+        properties_filter = OntologiesFilterParams.from_dict(self.__validate_filter(locals()))
+        properties_filter.include_org_access = include_org_access
+        page = self._api_client.get("ontologies", params=properties_filter, result_type=Page[OntologyWithUserRole])
+
         # a hack to be able to share validation code without too much c&p
-        data = self._querier.get_multiple(OntologyWithUserRole, payload={"filter": properties_filter})
         retval: List[Dict] = []
-        for row in data:
-            ontology = OrmOntology.from_dict(row.ontology)
-            querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
+        for row in page.results:
             retval.append(
                 {
-                    "ontology": Ontology(querier, ontology, api_client=self._api_client),
-                    "user_role": OntologyUserRole(row.user_role),
+                    "ontology": Ontology._from_api_payload(row, self._api_client),
+                    "user_role": row.user_role,
                 }
             )
         return retval
@@ -654,17 +889,15 @@ class EncordUserClient:
         except ValueError as e:
             raise ValueError("Can't create an Ontology containing a Classification without any attributes. " + str(e))
 
-        ontology = {
-            "title": title,
-            "description": description,
-            "editor": structure_dict,
-        }
+        payload = CreateOrUpdateOntologyPayload(
+            title=title,
+            description=description,
+            editor=structure_dict,
+        )
 
-        retval = self._querier.basic_setter(OrmOntology, uid=None, payload=ontology)
-        ontology = OrmOntology.from_dict(retval)
-        querier = Querier(self._config, resource_type=TYPE_ONTOLOGY, resource_id=ontology.ontology_hash)
+        ontology = self._api_client.post("ontologies", payload=payload, params=None, result_type=OntologyWithUserRole)
 
-        return Ontology(querier, ontology, self._api_client)
+        return Ontology._from_api_payload(ontology, self._api_client)
 
     def __validate_filter(self, properties_filter: Dict) -> Dict:
         if not isinstance(properties_filter, dict):
@@ -705,6 +938,140 @@ class EncordUserClient:
         """
         page = self._api_client.get("user/current-organisation/groups", params=None, result_type=Page[OrmGroup])
         yield from page.results
+
+    def deidentify_dicom_files_start(
+        self,
+        dicom_urls: List[str],
+        integration_hash: str,
+        redact_dicom_tags: bool = True,
+        redact_pixels_mode: DeidentifyRedactTextMode = DeidentifyRedactTextMode.REDACT_NO_TEXT,
+        save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,
+        upload_dir: Optional[str] = None,
+    ) -> UUID:
+        """
+        Initiate the DICOM files deidentification process.
+
+        This method starts the deidentification job for the specified DICOM files and returns
+        a UUID that can be used to track and retrieve the deidentification job results.
+
+        Args:
+            dicom_urls: A list of URLs pointing to DICOM files to be deidentified.
+            integration_hash: Integration hash for the external storage integration.
+            redact_dicom_tags: Flag to enable or disable DICOM tags redaction. Defaults to True.
+            redact_pixels_mode: Policy for redacting text in pixel data.
+                Defaults to DeidentifyRedactTextMode.REDACT_NO_TEXT.
+            save_conditions: Optional list of conditions that must be met for
+                a deidentified DICOM file to be saved.
+            upload_dir: Optional directory for uploading deidentified files.
+                If None, files will be uploaded to the same directory as source files.
+
+        Returns:
+            A UUID representing the initiated deidentification job,
+            which can be used to retrieve job results.
+        """
+
+        if save_conditions is None:
+            save_conditions_api = None
+        else:
+            save_conditions_api = [
+                DicomDeIdSaveCondition(
+                    value=x.value,
+                    condition_type=DicomDeIdSaveConditionType[x.condition_type.value],
+                    dicom_tag=x.dicom_tag,
+                )
+                for x in save_conditions
+            ]
+
+        dicom_deid_uuid = self._api_client.post(
+            "dicom-deidentification",
+            payload=DicomDeIdStartPayload(
+                integration_uuid=uuid.UUID(integration_hash),
+                dicom_urls=dicom_urls,
+                redact_dicom_tags=redact_dicom_tags,
+                redact_pixels_mode=DicomDeIdRedactTextMode[redact_pixels_mode.name],
+                save_conditions=save_conditions_api,
+                upload_dir=upload_dir,
+            ),
+            params=None,
+            result_type=UUID,
+        )
+
+        return dicom_deid_uuid
+
+    def deidentify_dicom_files_get_result(
+        self,
+        dicom_deid_uuid: UUID,
+        *,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> List[str]:
+        """
+        Retrieve the results of a DICOM deidentification job.
+
+        This method polls the server to check the status of a previously initiated
+        DICOM deidentification job and returns the URLs of deidentified files
+        when the job is complete.
+
+        Args:
+            dicom_deid_uuid: The UUID of the deidentification job returned
+                by deidentify_dicom_files_start(...).
+            timeout_seconds: Maximum time to wait for job completion.
+                Defaults to 1 day (86400 seconds).
+
+        Returns:
+            A list of URLs pointing to the deidentified DICOM files.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                log.info(f"deidentify_dicom_files_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._api_client.get(
+                    f"dicom-deidentification/{dicom_deid_uuid}",
+                    params=DicomDeIdGetResultParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            DICOM_DEID_LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=DicomDeIdGetResultResponse,
+                )
+
+                if tmp_res.status == DicomDeIdGetResultLongPollingStatus.DONE:
+                    log.info(f"dicom deidentification job completed with {dicom_deid_uuid=}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    DicomDeIdGetResultLongPollingStatus.DONE,
+                    DicomDeIdGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= DICOM_DEID_LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(DICOM_DEID_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == DicomDeIdGetResultLongPollingStatus.DONE:
+            if res.urls is None:
+                raise ValueError(f"{type(res.urls)=}, res.urls should not be None with DONE status")
+
+            return res.urls
+        elif res.status == DicomDeIdGetResultLongPollingStatus.ERROR:
+            raise ValueError(f"dicom deidentification job failed, {dicom_deid_uuid=}, please contact support")
+        else:
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
 
     def deidentify_dicom_files(
         self,
@@ -760,22 +1127,21 @@ class EncordUserClient:
 
         """
 
-        return self._querier.basic_setter(
-            DicomDeidentifyTask,
-            uid=integration_hash,
-            payload={
-                "dicom_urls": dicom_urls,
-                "redact_dicom_tags": redact_dicom_tags,
-                "redact_pixels_mode": redact_pixels_mode.value,
-                "save_conditions": [x.to_dict() for x in (save_conditions or [])],
-                "upload_dir": upload_dir,
-            },
+        return self.deidentify_dicom_files_get_result(
+            dicom_deid_uuid=self.deidentify_dicom_files_start(
+                dicom_urls=dicom_urls,
+                integration_hash=integration_hash,
+                redact_dicom_tags=redact_dicom_tags,
+                redact_pixels_mode=redact_pixels_mode,
+                save_conditions=save_conditions,
+                upload_dir=upload_dir,
+            )
         )
 
     def create_storage_folder(
         self,
         name: str,
-        description: Optional[str],
+        description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         parent_folder: Optional[Union[StorageFolder, UUID]] = None,
     ) -> StorageFolder:
@@ -792,21 +1158,10 @@ class EncordUserClient:
         Returns:
             The created storage folder. See :class:`encord.storage.StorageFolder` for details.
         """
-        if isinstance(parent_folder, StorageFolder):
-            parent_folder = parent_folder.uuid
 
-        payload = CreateStorageFolderPayload(
-            name=name,
-            description=description,
-            parent=parent_folder,
-            client_metadata=json.dumps(client_metadata) if client_metadata is not None else None,
-        )
-        folder_orm = self._api_client.post(
-            "storage/folders", params=None, payload=payload, result_type=OrmStorageFolder
-        )
-        return StorageFolder(self._api_client, folder_orm)
+        return StorageFolder._create_folder(self._api_client, name, description, client_metadata, parent_folder)
 
-    def get_storage_folder(self, folder_uuid: UUID) -> StorageFolder:
+    def get_storage_folder(self, folder_uuid: Union[UUID, str]) -> StorageFolder:
         """
         Get a storage folder by its UUID.
 
@@ -817,32 +1172,64 @@ class EncordUserClient:
             The storage folder. See :class:`encord.storage.StorageFolder` for details.
 
         Raises:
+            ValueError: If `folder_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the folder with the given UUID does not exist or
                 the user does not have access to it.
         """
+        if isinstance(folder_uuid, str):
+            folder_uuid = UUID(folder_uuid)
         return StorageFolder._get_folder(self._api_client, folder_uuid)
 
-    def get_storage_item(self, item_uuid: UUID, sign_url: bool = False) -> StorageItem:
+    def get_storage_item(self, item_uuid: Union[UUID, str], sign_url: bool = False) -> StorageItem:
         """
-        Get a storage item by its UUID.
+        Get a storage item by its unique identifier.
 
         Args:
             item_uuid: The UUID of the item to retrieve.
+            sign_url: If `True`, pre-fetch a signed URL for the item (otherwise the URL will be signed on demand).
 
         Returns:
             The storage item. See :class:`encord.storage.StorageItem` for details.
 
         Raises:
+            ValueError: If `item_uuid` is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
+        if isinstance(item_uuid, str):
+            item_uuid = UUID(item_uuid)
         return StorageItem._get_item(self._api_client, item_uuid, sign_url)
+
+    def get_storage_items(
+        self,
+        item_uuids: Sequence[Union[UUID, str]],
+        sign_url: bool = False,
+    ) -> List[StorageItem]:
+        """
+        Get storage items by their UUIDs, in bulk. Useful for retrieving multiple items at once, e.g. when getting
+        items pointed to by :attr:`encord.orm.dataset.DataRow.backing_item_uuid` for all data rows of a dataset.
+
+        Args:
+            item_uuids: list of UUIDs of items to retrieve. Can be a list of strings or a list of UUID objects.
+            sign_url: If `True`, pre-fetch a signed URLs for the items (otherwise the URLs will be signed on demand).
+
+        Returns:
+            A list of storage items. See :class:`encord.storage.StorageItem` for details.
+
+        Raises:
+            ValueError: If any of the item uuids is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If some of the items with the given UUIDs do not exist or
+                the user does not have access to them.
+        """
+        internal_item_uuids: List[UUID] = [UUID(item) if isinstance(item, str) else item for item in item_uuids]
+        return StorageItem._get_items(self._api_client, internal_item_uuids, sign_url)
 
     def list_storage_folders(
         self,
         *,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
+        org_access: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
@@ -854,9 +1241,12 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
+            org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
+                folders belonging to the organization, instead of those accessible to the user. If enabled
+                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
-            page_size: Number of folders to return per page.
+            page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable of :class:`encord.StorageFolder` objects.
@@ -868,6 +1258,7 @@ class EncordUserClient:
             ListFoldersParams(
                 search=search,
                 dataset_synced=dataset_synced,
+                include_org_access=org_access,
                 order=order,
                 desc=desc,
                 page_size=page_size,
@@ -879,6 +1270,7 @@ class EncordUserClient:
         *,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
+        org_access: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
@@ -890,9 +1282,12 @@ class EncordUserClient:
             search: Search string to filter folders by name (optional)
             dataset_synced: Include or exclude folders that are mirrored by a dataset. Optional; if `None`,
                 no filtering is applied.
+            org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
+                folders belonging to the organization, instead of those accessible to the user. If enabled
+               but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
-            page_size: Number of folders to return per page.
+            page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable of :class:`encord.StorageFolder` objects.
@@ -904,6 +1299,7 @@ class EncordUserClient:
             ListFoldersParams(
                 search=search,
                 dataset_synced=dataset_synced,
+                include_org_access=org_access,
                 order=order,
                 desc=desc,
                 page_size=page_size,
@@ -916,6 +1312,7 @@ class EncordUserClient:
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
         item_types: Optional[List[StorageItemType]] = None,
+        org_access: Optional[bool] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         get_signed_urls: bool = False,
@@ -930,10 +1327,13 @@ class EncordUserClient:
                 only linked and only unlinked items, respectively. `None` includes all items regardless of their
                 dataset links.
             item_types: Filter items by type.
+            org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
+               items belonging to the organization, instead of those accessible to the user. If enabled
+                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
             order: Sort order.
             desc: Sort in descending order.
             get_signed_urls: If True, return signed URLs for the items.
-            page_size: Number of items to return per page.
+            page_size: Number of items to return per page. Default if not specified is 100. Maximum value is 1000.
 
         At least one of `search` or `item_types` must be provided.
 
@@ -945,6 +1345,7 @@ class EncordUserClient:
             search=search,
             is_in_dataset=is_in_dataset,
             item_types=item_types or [],
+            include_org_access=org_access,
             order=order,
             desc=desc,
             page_token=None,
@@ -954,11 +1355,207 @@ class EncordUserClient:
 
         return StorageFolder._list_items(self._api_client, "storage/search/items", params)
 
+    @deprecated("0.1.132", ".metadata_schema()")
     def get_client_metadata_schema(self) -> Optional[Dict[str, ClientMetadataSchemaTypes]]:
         return get_client_metadata_schema(self._api_client)
 
+    @deprecated("0.1.132", ".metadata_schema()")
     def set_client_metadata_schema_from_dict(self, json_dict: Dict[str, ClientMetadataSchemaTypes]):
         set_client_metadata_schema_from_dict(self._api_client, json_dict)
+
+    def metadata_schema(self) -> MetadataSchema:
+        return MetadataSchema(self._api_client)
+
+    def get_collection(self, collection_uuid: Union[str, UUID]) -> Collection:
+        """
+        Get a collection by its unique identifier (UUID).
+
+        Args:
+            collection_uuid: The unique identifier of the collection to retrieve.
+
+        Returns:
+            The collection. See :class:`encord.collection.Collection` for details.
+
+        Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+                the user does not have access to it.
+        """
+        if isinstance(collection_uuid, str):
+            collection_uuid = UUID(collection_uuid)
+
+        return Collection._get_collection(self._api_client, collection_uuid=collection_uuid)
+
+    def list_collections(
+        self,
+        top_level_folder_uuid: Union[str, UUID, None] = None,
+        collection_uuids: List[str | UUID] | None = None,
+        page_size: Optional[int] = None,
+    ) -> Iterator[Collection]:
+        """
+        Get collections by top level folder or list of collection IDs.
+        If both top_level_folder_uuid and collection_uuid_list are preset
+        then the intersection of the two conditions is returned.
+
+        Args:
+            top_level_folder_uuid: The unique identifier of the top level folder.
+            collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of collections which match the given criteria.
+
+        Raises:
+            ValueError: If `top_level_folder_uuid` or any of the collection uuids is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(top_level_folder_uuid, str):
+            top_level_folder_uuid = UUID(top_level_folder_uuid)
+        collections = (
+            [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuids]
+            if collection_uuids is not None
+            else None
+        )
+        return Collection._list_collections(
+            self._api_client,
+            top_level_folder_uuid=top_level_folder_uuid,
+            collection_uuids=collections,
+            page_size=page_size,
+        )
+
+    def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:
+        """
+        Delete a collection by its UUID if it exists.
+
+        Args:
+            collection_uuid: The unique identifier (UUID) of the collection to delete.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If `collection_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(collection_uuid, str):
+            collection_uuid = UUID(collection_uuid)
+        Collection._delete_collection(self._api_client, collection_uuid)
+
+    def create_collection(
+        self, top_level_folder_uuid: Union[str, UUID], name: str, description: str = ""
+    ) -> Collection:
+        """
+        Create a collection.
+
+        Args:
+            top_level_folder_uuid: The unique identifier (UUID) of the folder that the collection is created in.
+            name: The name of the collection.
+            description: The description of the collection.
+
+        Returns:
+            Collection: Newly created collection.
+
+        Raises:
+            ValueError: If `top_level_folder_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+        """
+        if isinstance(top_level_folder_uuid, str):
+            top_level_folder_uuid = UUID(top_level_folder_uuid)
+        new_uuid = Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
+        return self.get_collection(new_uuid)
+
+    def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
+        """
+        Get a preset by its unique identifier (UUID).
+
+        Args:
+            preset_uuid: The unique identifier of the preset to retrieve.
+
+        Returns:
+            The preset. See :class:`encord.preset.Preset` for details.
+
+        Raises:
+            ValueError: If `preset_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+                the user does not have access to it.
+        """
+        if isinstance(preset_uuid, str):
+            preset_uuid = UUID(preset_uuid)
+        return FilterPreset._get_preset(self._api_client, preset_uuid=preset_uuid)
+
+    def get_filter_presets(
+        self, preset_uuids: List[Union[str, UUID]] = [], page_size: Optional[int] = None
+    ) -> Iterator[FilterPreset]:
+        """
+        Get presets by list of preset unique identifiers (UUIDs).
+
+        Args:
+            preset_uuids: The list of unique identifiers (UUIDs) to be retrieved.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+        Returns:
+            The list of presets which match the given criteria.
+
+        Raises:
+            ValueError: If any of the preset uuids is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        internal_preset_uuids: List[UUID] = [
+            UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids
+        ]
+        return FilterPreset._get_presets(self._api_client, internal_preset_uuids, page_size=page_size)
+
+    def list_presets(
+        self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
+    ) -> Iterator[FilterPreset]:
+        """
+        Get presets by top level folder.
+
+        Args:
+            top_level_folder_uuid: The unique identifier of the top level folder.
+            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+
+        Returns:
+            The list of presets which match the given criteria.
+
+        Raises:
+            ValueError: If `top_level_folder_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(top_level_folder_uuid, str):
+            top_level_folder_uuid = UUID(top_level_folder_uuid)
+        return FilterPreset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
+
+    def create_preset(self, name: str, filter_preset_json: dict, description: str = "") -> FilterPreset:
+        """
+        Create a preset.
+
+        Args:
+            name: The name of the preset.
+            description: The description of the preset.
+            filter_preset_json: The filters for the preset in their raw json format.
+
+        Returns:
+            FilterPreset: Newly created collection.
+        """
+        new_uuid = FilterPreset._create_preset(self._api_client, name, filter_preset_json=filter_preset_json)
+        return self.get_filter_preset(new_uuid)
+
+    def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
+        """
+        Delete a preset by its unique identifier (UUID) if it exists.
+
+        Args:
+            preset_uuid: The uuid/id of the preset to delete.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If `preset_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+        """
+        if isinstance(preset_uuid, str):
+            preset_uuid = UUID(preset_uuid)
+        FilterPreset._delete_preset(self._api_client, preset_uuid)
 
 
 class ListingFilter(Enum):

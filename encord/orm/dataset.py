@@ -1,24 +1,9 @@
-#
-# Copyright (c) 2023 Cord Technologies Limited
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
 from __future__ import annotations
 
 import dataclasses
-import json
 from collections import OrderedDict
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from types import MappingProxyType
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -29,6 +14,7 @@ from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import EncordException
 from encord.orm import base_orm
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 from encord.utilities.common import _get_dict_without_none_keys
@@ -39,6 +25,18 @@ class DatasetUserRole(IntEnum):
     USER = 1
 
 
+class DatasetUserRoleV2(CamelStrEnum):
+    ADMIN = auto()
+    USER = auto()
+
+
+def dataset_user_role_str_enum_to_int_enum(str_enum: DatasetUserRoleV2) -> DatasetUserRole:
+    return {
+        DatasetUserRoleV2.ADMIN: DatasetUserRole.ADMIN,
+        DatasetUserRoleV2.USER: DatasetUserRole.USER,
+    }[str_enum]
+
+
 class DatasetUser(BaseDTO):
     user_email: str
     user_role: DatasetUserRole
@@ -47,6 +45,12 @@ class DatasetUser(BaseDTO):
 
 class DatasetUsers:
     pass
+
+
+class DataLinkDuplicatesBehavior(Enum):
+    DUPLICATE = "DUPLICATE"
+    FAIL = "FAIL"
+    SKIP = "SKIP"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -402,6 +406,10 @@ class DataRow(dict, Formatter):
 
     @property
     def backing_item_uuid(self) -> UUID:
+        """
+        The id of the :class:`encord.storage.StorageItem` that underlies this data row.
+        See also :meth:`encord.user_client.EncordUserClient.get_storage_item`.
+        """
         backing_item_uuid: Optional[UUID] = self.get("backing_item_uuid")
         if not backing_item_uuid:
             raise NotImplementedError("Storage API is not yet implemented by the service")
@@ -664,28 +672,6 @@ class AddPrivateDataResponse(Formatter):
         return AddPrivateDataResponse(dataset_data_info_list)
 
 
-@dataclasses.dataclass(frozen=True)
-class DatasetAPIKey(Formatter):
-    dataset_hash: str
-    api_key: str
-    title: str
-    key_hash: str
-    scopes: List[DatasetScope]
-
-    @classmethod
-    def from_dict(cls, json_dict: Dict) -> DatasetAPIKey:
-        if isinstance(json_dict["scopes"], str):
-            json_dict["scopes"] = json.loads(json_dict["scopes"])
-        scopes = [DatasetScope(scope) for scope in json_dict["scopes"]]
-        return DatasetAPIKey(
-            json_dict["resource_hash"],
-            json_dict["api_key"],
-            json_dict["title"],
-            json_dict["key_hash"],
-            scopes,
-        )
-
-
 class CreateDatasetResponse(dict, Formatter):
     def __init__(
         self,
@@ -772,7 +758,7 @@ class StorageLocation(IntEnum):
     AWS = (1,)
     GCP = (2,)
     AZURE = 3
-    OTC = 4
+    S3_COMPATIBLE = 4
 
     NEW_STORAGE = -99
     """
@@ -793,8 +779,8 @@ class StorageLocation(IntEnum):
             return "GCP_STR"
         elif self == StorageLocation.AZURE:
             return "AZURE_STR"
-        elif self == StorageLocation.OTC:
-            return "OTC_STR"
+        elif self == StorageLocation.S3_COMPATIBLE:
+            return "S3_COMPATIBLE_STR"
         else:
             return "NEW_STORAGE"
 
@@ -807,11 +793,6 @@ STORAGE_LOCATION_BY_STR: Dict[str, StorageLocation] = {location.get_str(): locat
 
 DatasetType = StorageLocation
 """For backwards compatibility"""
-
-
-class DatasetScope(Enum):
-    READ = "dataset.read"
-    WRITE = "dataset.write"
 
 
 class DatasetData(base_orm.BaseORM):
@@ -844,6 +825,12 @@ class SignedImagesURL(base_orm.BaseListORM):
     """A signed URL object with supporting information."""
 
     BASE_ORM_TYPE = SignedImageURL
+
+
+class SignedAudioURL(base_orm.BaseORM):
+    """A signed URL object with supporting information."""
+
+    DB_FIELDS = OrderedDict([("signed_url", str), ("data_hash", str), ("title", str), ("file_link", str)])
 
 
 class SignedDicomURL(base_orm.BaseORM):
@@ -906,6 +893,17 @@ class SingleImage(Image):
     """For native single image upload."""
 
     success: bool
+
+
+class Audio(base_orm.BaseORM):
+    """An audio object with supporting information."""
+
+    DB_FIELDS = OrderedDict([("data_hash", str), ("title", str), ("file_link", str), ("backing_item_uuid", UUID)])
+
+    NON_UPDATABLE_FIELDS = {
+        "data_hash",
+        "backing_item_uuid",
+    }
 
 
 @dataclasses.dataclass(frozen=True)
@@ -993,6 +991,24 @@ class LongPollingStatus(str, Enum):
     Information about errors is available in the `units_error_count: int` and `errors: List[str]` attributes.
     """
 
+    CANCELLED = "CANCELLED"
+    """
+    Job was cancelled explicitly by the user through the Encord UI or via the Encord SDK using the
+    `add_data_to_folder_job_cancel` method.
+
+    In the context of this status:
+    - The job may have been partially processed, but it was explicitly interrupted before completion
+      by a user action.
+    - Cancellation can occur either manually through the Encord UI or programmatically using the SDK
+      method `add_data_to_folder_job_cancel`.
+    - Once a job is cancelled, no further processing will occur, and any processed data before the
+      cancellation will be available.
+    - The presence of cancelled data units (`units_cancelled_count`) indicates that some data upload
+      units were interrupted and cancelled before completion.
+    - If `ignore_errors` was set to `True`, the job may continue despite errors, and cancellation will
+      only apply to the unprocessed units.
+    """
+
 
 class DataUnitError(BaseDTO):
     """
@@ -1009,7 +1025,7 @@ class DataUnitError(BaseDTO):
     """Opaque ID of the process. Please quote this when contacting Encord support."""
 
     action_description: str
-    """Human-readable description of the action that failed (e.g. 'Uploading DICOM series'."""
+    """Human-readable description of the action that failed (e.g. 'Uploading DICOM series')."""
 
 
 class DatasetDataLongPolling(BaseDTO):
@@ -1041,7 +1057,55 @@ class DatasetDataLongPolling(BaseDTO):
     units_error_count: int
     """Number of upload job units that have error status."""
 
+    units_cancelled_count: int
+    """Number of upload job units that have been cancelled."""
+
 
 @dataclasses.dataclass(frozen=True)
 class DatasetLinkItems:
     pass
+
+
+class CreateDatasetPayload(BaseDTO):
+    title: str
+    description: Optional[str]
+
+    create_backing_folder: bool  # this creates a legacy "mirror" dataset and it's backing folder in one go
+
+    # only for analytics, to know if customers are
+    # using depreciated EncordUserClient.create_private_dataset
+    # this is only place which should pass legacy_call=True
+    legacy_call: bool  # this field will be removed soon
+
+
+class CreateDatasetResponseV2(BaseDTO):
+    dataset_uuid: UUID
+    backing_folder_uuid: Optional[UUID] = None  # a 'not None' indicates a legacy "mirror" dataset was created
+
+
+class DatasetsWithUserRolesListParams(BaseDTO):
+    title_eq: Optional[str]
+    title_like: Optional[str]
+    description_eq: Optional[str]
+    description_like: Optional[str]
+    created_before: Optional[datetime]
+    created_after: Optional[datetime]
+    edited_before: Optional[datetime]
+    edited_after: Optional[datetime]
+    include_org_access: Optional[bool] = False
+
+
+class DatasetWithUserRole(BaseDTO):
+    dataset_uuid: UUID
+    title: str
+    description: str
+    created_at: datetime
+    last_edited_at: datetime
+    user_role: Optional[DatasetUserRoleV2]
+
+    storage_location: Optional[StorageLocation] = None  # legacy field: you can have data from mixed locations now
+    backing_folder_uuid: Optional[UUID] = None  # if set, this indicates a legacy 'mirror' dataset
+
+
+class DatasetsWithUserRolesListResponse(BaseDTO):
+    result: List[DatasetWithUserRole]
