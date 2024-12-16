@@ -7,6 +7,7 @@ from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
+from encord.exceptions import WrongProjectTypeError
 from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
@@ -136,11 +137,16 @@ class Project(base_orm.BaseORM):
         return self["last_edited_at"]
 
     @property
-    def workflow_manager_uuid(self) -> Optional[UUID]:
-        if workflow_manager_uuid := self.get("workflow_manager_uuid"):
-            return UUID(workflow_manager_uuid)
-        else:
-            return None
+    def workflow_manager_uuid(self) -> UUID:
+        """
+        Accessing this property will raise a `WrongProjectTypeError` if the project is not a workflow project.
+        """
+        try:
+            return self["workflow_manager_uuid"]
+        except KeyError as e:
+            raise WrongProjectTypeError(
+                "This project is not a workflow project, workflow_manager_uuid is not available."
+            ) from e
 
 
 class ProjectCopy:
