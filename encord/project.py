@@ -1139,6 +1139,22 @@ class Project:
         include_classification_feature_hashes: Optional[Set[str]] = None,
         branch_name: Optional[str] = None,
     ) -> Dict[str, Any]:
+        """Export labels from the project to the COCO format.
+
+        Args:
+            label_hashes: List of label hashes to include. If not provided, all label rows will be included.
+            include_object_feature_hashes: If `None`, all objects will be included.
+                 Otherwise, only objects with the specified feature hashes will be included.
+            include_classification_feature_hashes: If `None`, all classifications will be included.
+                Otherwise, only classifications with the specified feature hashes will be included.
+            branch_name: Optionally specify a branch name. Defaults to the `main` branch.
+
+        Returns:
+            Dict[str, Any]: A dictionary in the COCO format containing the exported labels,
+                including annotations and metadata conforming to COCO standards.
+                The dictionary also includes additional fields specific to Encord,
+                providing supplementary information not defined in the COCO standard.
+        """
         label_rows = self.list_label_rows_v2(label_hashes=label_hashes, branch_name=branch_name)
         with self.create_bundle() as bundle:
             for row in label_rows:
