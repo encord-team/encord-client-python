@@ -1,8 +1,5 @@
-import json
-import os
-
 from encord.objects.ontology_structure import OntologyStructure
-from encord.utilities.coco_encoder import CocoEncoder
+from encord.utilities.coco.exporter import CocoEncoder
 from tests.objects.data import data_1
 
 ontology_structure = OntologyStructure.from_dict(data_1.ontology)

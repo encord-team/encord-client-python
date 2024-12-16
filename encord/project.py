@@ -49,7 +49,7 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
-from encord.utilities.coco_encoder import CocoEncoder
+from encord.utilities.coco.exporter import CocoEncoder
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
