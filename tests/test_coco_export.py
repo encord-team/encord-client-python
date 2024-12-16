@@ -1,5 +1,7 @@
+import pytest
+from unittest.mock import patch
+
 from encord.objects.ontology_structure import OntologyStructure
-from encord.utilities.coco.exporter import CocoExporter
 from tests.objects.data import data_1
 
 ontology_structure = OntologyStructure.from_dict(data_1.ontology)
@@ -233,6 +235,21 @@ EXPECTED_COCO_RESULT = {
 }
 
 
-def test_coco_exporter_unit_test():
+def test_coco_exporter_without_coco_extra():
+    # Simulate the absence of `pycocotools` and `shapely` packages
+    with patch.dict("sys.modules", {"pycocotools": None, "shapely": None}):
+        with pytest.raises(ImportError, match="The 'pycocotools' and 'shapely' packages are required"):
+            from encord.utilities.coco.exporter import CocoExporter
+
+            output = CocoExporter([labels], ontology_structure).export()
+            assert output == EXPECTED_COCO_RESULT
+
+
+def test_coco_exporter_with_coco_extra():
+    try:
+        from encord.utilities.coco.exporter import CocoExporter
+    except ImportError:
+        return
+
     output = CocoExporter([labels], ontology_structure).export()
     assert output == EXPECTED_COCO_RESULT

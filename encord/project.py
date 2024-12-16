@@ -49,7 +49,6 @@ from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
-from encord.utilities.coco.exporter import CocoExporter
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
@@ -1141,6 +1140,9 @@ class Project:
     ) -> Dict[str, Any]:
         """Export labels from the project to the COCO format.
 
+        This method requires the 'coco' extra to be installed. Install it using:
+        `pip install encord[coco]`.
+
         Args:
             label_hashes: List of label hashes to include. If not provided, all label rows will be included.
             include_object_feature_hashes: If `None`, all objects will be included.
@@ -1154,7 +1156,12 @@ class Project:
                 including annotations and metadata conforming to COCO standards.
                 The dictionary also includes additional fields specific to Encord,
                 providing supplementary information not defined in the COCO standard.
+
+        Raises:
+            ImportError: If the 'coco' extra dependencies are not installed.
         """
+        from encord.utilities.coco.exporter import CocoExporter
+
         label_rows = self.list_label_rows_v2(label_hashes=label_hashes, branch_name=branch_name)
         with self.create_bundle() as bundle:
             for row in label_rows:

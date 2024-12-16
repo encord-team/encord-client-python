@@ -1,3 +1,12 @@
+try:
+    import pycocotools
+    import shapely
+except ImportError as e:
+    raise ImportError(
+        "The 'pycocotools' and 'shapely' packages are required for the COCO export. "
+        "Install them with: `pip install encord[coco]`"
+    ) from e
+
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
