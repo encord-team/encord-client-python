@@ -456,7 +456,6 @@ class EncordUserClient:
         properties_filter.include_org_access = include_org_access
         page = self._api_client.get("projects", params=properties_filter, result_type=Page[ProjectDTO])
 
-        retval: List[Dict] = []
         for row in page.results:
             querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=str(row.project_hash))
             client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)

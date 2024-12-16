@@ -66,7 +66,7 @@ class Project:
     ):
         self._client = client
         self._project_instance = project_instance
-        self._ontology = ontology
+        self._ontology_internal = ontology
         self._api_client = api_client
 
         if project_instance.workflow:
@@ -118,7 +118,7 @@ class Project:
         This method returns the same structure as :meth:`encord.Project.ontology_structure`, just in
         raw python dictionary format.
         """
-        return self._ontology_instance.structure.to_dict()
+        return self._ontology.structure.to_dict()
 
     @property
     def ontology_hash(self) -> str:
@@ -132,7 +132,7 @@ class Project:
         """
         Get the ontology structure of the project's ontology.
         """
-        return self._ontology_instance.structure
+        return self._ontology.structure
 
     @property
     def user_role(self) -> Optional[ProjectUserRole]:
@@ -197,7 +197,7 @@ class Project:
         """
         Update the ontology for the project to reflect changes on the backend.
         """
-        self._ontology_instance.refetch_data()
+        self._ontology.refetch_data()
 
     def get_project(self) -> OrmProject:
         """
@@ -218,12 +218,12 @@ class Project:
         return self._workflow
 
     @property
-    def _ontology_instance(self) -> Ontology:
-        if self._ontology is None:
-            self._ontology = Ontology(
+    def _ontology(self) -> Ontology:
+        if self._ontology_internal is None:
+            self._ontology_internal = Ontology(
                 Ontology._fetch_ontology(self._api_client, self.ontology_hash), self._api_client
             )  # lazy loading
-        return self._ontology
+        return self._ontology_internal
 
     def list_label_rows_v2(
         self,
@@ -285,8 +285,7 @@ class Project:
             branch_name=branch_name,
         )
         label_rows = [
-            LabelRowV2(label_row_metadata, self._client, self._ontology_instance)
-            for label_row_metadata in label_row_metadatas
+            LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
         ]
         return label_rows
 
@@ -1186,7 +1185,7 @@ class Project:
     def get_collection(self, collection_uuid: Union[str, UUID]) -> ProjectCollection:
         return ProjectCollection._get_collection(
             project_client=self._client,
-            ontology=self._ontology_instance,
+            ontology=self._ontology,
             project_uuid=self._project_instance.project_hash,
             collection_uuid=UUID(collection_uuid) if isinstance(collection_uuid, str) else collection_uuid,
         )
@@ -1214,7 +1213,7 @@ class Project:
         )
         return ProjectCollection._list_collections(
             project_client=self._client,
-            ontology=self._ontology_instance,
+            ontology=self._ontology,
             project_uuid=self._project_instance.project_hash,
             collection_uuids=collections,
             page_size=page_size,
