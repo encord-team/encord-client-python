@@ -337,11 +337,11 @@ class SkeletonCoordinates(BaseDTO):
         return {str(i): x.to_dict() for i, x in enumerate(self.values)}
 
 
-class AudioCoordinates(BaseDTO):
+class AudioCoordinates:
     pass
 
 
-class TextCoordinates(BaseDTO):
+class TextCoordinates:
     pass
 
 

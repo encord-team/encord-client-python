@@ -883,7 +883,7 @@ class ObjectInstance:
                 created_at=created_at,
                 created_by=d["createdBy"],
                 last_edited_at=last_edited_at,
-                last_edited_by=d.get('lastEditedBy'),
+                last_edited_by=d.get("lastEditedBy"),
                 confidence=d["confidence"],
                 manual_annotation=d.get("manualAnnotation", True),
                 reviews=d.get("reviews"),

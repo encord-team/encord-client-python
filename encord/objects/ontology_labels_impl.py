@@ -2052,7 +2052,6 @@ class LabelRowV2:
             height = dicom_dict["height"]
             width = dicom_dict["width"]
 
-
         elif data_type == DataType.AUDIO:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
@@ -2163,9 +2162,7 @@ class LabelRowV2:
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
-            elif (data_type == DataType.AUDIO or
-                  data_type == DataType.PDF or
-                  data_type == DataType.PLAIN_TEXT):
+            elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
                 is_html = data_unit["data_type"] == "text/html"
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
