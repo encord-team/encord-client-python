@@ -53,10 +53,15 @@ class CreatePresetParams(BaseDTO):
     top_level_folder_uuid: UUID = Field(default=UUID(int=0), alias="topLevelFolderUuid")
 
 
-class CreatePresetPayload(BaseDTO):
+class IndexCreatePresetPayload(BaseDTO):
     name: str
     filter_preset_json: Dict
     description: Optional[str] = ""
+
+
+class ActiveCreatePresetPayload(BaseDTO):
+    name: str
+    filter_preset_json: Dict
 
 
 class UpdatePresetPayload(BaseDTO):

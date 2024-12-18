@@ -9,12 +9,13 @@ from encord.exceptions import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.orm.filter_preset import (
+    ActiveCreatePresetPayload,
     CreatePresetParams,
-    CreatePresetPayload,
     FilterPresetDefinition,
     GetPresetParams,
     GetPresetsResponse,
     GetProjectFilterPresetParams,
+    IndexCreatePresetPayload,
     UpdatePresetPayload,
 )
 from encord.orm.filter_preset import FilterPreset as OrmFilterPreset
@@ -134,7 +135,7 @@ class FilterPreset:
         filter_preset = FilterPresetDefinition.from_dict(filter_preset_json)
         if not filter_preset.local_filters and not filter_preset.global_filters:
             raise EncordException("We require there to be a non-zero number of filters in a preset")
-        payload = CreatePresetPayload(
+        payload = IndexCreatePresetPayload(
             name=name,
             filter_preset_json=filter_preset.to_dict(),
             description=description,
@@ -313,6 +314,6 @@ class ProjectFilterPreset:
     ) -> UUID:
         if not filter_preset.local_filters and not filter_preset.global_filters:
             raise EncordException("We require there to be a non-zero number of filters in a preset for creation")
-        payload = CreatePresetPayload(name=name, filter_preset_json=filter_preset.to_dict())
+        payload = ActiveCreatePresetPayload(name=name, filter_preset_json=filter_preset.to_dict())
         orm_resp = client.post(f"active/{project_uuid}/presets", params=None, payload=payload, result_type=UUID)
         return orm_resp
