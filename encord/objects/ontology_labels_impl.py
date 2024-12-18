@@ -22,7 +22,7 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.common.range_manager import RangeManager
-from encord.constants.enums import DataType
+from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.limits import (
@@ -1639,34 +1639,25 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if self.data_type == DataType.AUDIO or (self.data_type == DataType.PLAIN_TEXT and obj.range_html is None):
+            if not is_geometric(self.data_type):
                 annotation = obj.get_annotations()[0]
-                ret[obj.object_hash]["range"] = [[range.start, range.end] for range in obj.range_list]
-                ret[obj.object_hash]["createdBy"] = annotation.created_by
-                ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                ret[obj.object_hash]["lastEditedBy"] = annotation.last_edited_by
-                ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
-                ret[obj.object_hash]["featureHash"] = obj.feature_hash
-                ret[obj.object_hash]["name"] = obj.ontology_item.name
-                ret[obj.object_hash]["color"] = obj.ontology_item.color
-                ret[obj.object_hash]["shape"] = obj.ontology_item.shape.value
-                ret[obj.object_hash]["value"] = _lower_snake_case(obj.ontology_item.name)
+                object_answer_dict = ret[obj.object_hash]
+                object_answer_dict["createdBy"] = annotation.created_by
+                object_answer_dict["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                object_answer_dict["lastEditedBy"] = annotation.last_edited_by
+                object_answer_dict["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                object_answer_dict["manualAnnotation"] = annotation.manual_annotation
+                object_answer_dict["featureHash"] = obj.feature_hash
+                object_answer_dict["name"] = obj.ontology_item.name
+                object_answer_dict["color"] = obj.ontology_item.color
+                object_answer_dict["shape"] = obj.ontology_item.shape.value
+                object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
 
-            if self.data_type == DataType.PLAIN_TEXT and obj.range_html is not None:
-                annotation = obj.get_annotations()[0]
-                ret[obj.object_hash]["range_html"] = [x.to_dict() for x in obj.range_html]
-                ret[obj.object_hash]["range"] = []
-                ret[obj.object_hash]["createdBy"] = annotation.created_by
-                ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                ret[obj.object_hash]["lastEditedBy"] = annotation.last_edited_by
-                ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
-                ret[obj.object_hash]["featureHash"] = obj.feature_hash
-                ret[obj.object_hash]["name"] = obj.ontology_item.name
-                ret[obj.object_hash]["color"] = obj.ontology_item.color
-                ret[obj.object_hash]["shape"] = obj.ontology_item.shape.value
-                ret[obj.object_hash]["value"] = _lower_snake_case(obj.ontology_item.name)
+                if self.data_type == DataType.PLAIN_TEXT and obj.range_html is not None:
+                    object_answer_dict["range_html"] = [x.to_dict() for x in obj.range_html]
+                    object_answer_dict["range"] = []
+                else:
+                    object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
 
         return ret
 
@@ -2037,7 +2028,7 @@ class LabelRowV2:
         if data_type == DataType.VIDEO or data_type == DataType.IMAGE:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
-            file_type = data_dict["data_type"]
+            file_type = data_dict.get("data_type")
             # Dimensions should be always there
             # But we have some older entries that don't have them
             # So setting them to None for now until the format is not guaranteed to be enforced
@@ -2055,7 +2046,7 @@ class LabelRowV2:
         elif data_type == DataType.AUDIO:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
-            file_type = data_dict["data_type"]
+            file_type = data_dict.get("data_type")
             height = None
             width = None
             audio_codec = data_dict["audio_codec"]
@@ -2066,7 +2057,7 @@ class LabelRowV2:
         elif data_type == DataType.PLAIN_TEXT:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
-            file_type = data_dict["data_type"]
+            file_type = data_dict.get("data_type")
             height = None
             width = None
 
@@ -2082,7 +2073,7 @@ class LabelRowV2:
         elif data_type == DataType.PLAIN_TEXT or data_type == DataType.PDF:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
-            file_type = data_dict["data_type"]
+            file_type = data_dict.get("data_type")
             height = None
             width = None
 

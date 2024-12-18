@@ -55,3 +55,9 @@ GEOMETRIC_TYPES = {
     DataType.DICOM_STUDY,
     DataType.NIFTI,
 }
+
+
+def is_geometric(data_type: DataType) -> bool:
+    return data_type in GEOMETRIC_TYPES
+
+
