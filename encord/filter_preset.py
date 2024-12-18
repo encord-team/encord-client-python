@@ -136,7 +136,7 @@ class FilterPreset:
             raise EncordException("We require there to be a non-zero number of filters in a preset")
         payload = CreatePresetPayload(
             name=name,
-            filter_preset_json=filter_preset.to_dict(),
+            filter_preset_json=filter_preset.to_dict(by_alias=False),
         )
         return api_client.post(
             "index/presets",
