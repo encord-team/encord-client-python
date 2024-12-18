@@ -32,7 +32,7 @@ from encord.orm.analytics import (
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
-from encord.orm.filter_preset import FilterPresetDefinition
+from encord.orm.filter_preset import ActiveFilterPresetDefinition
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
@@ -1316,7 +1316,7 @@ class Project:
             filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
         )
 
-    def create_filter_preset(self, name: str, filter_preset: FilterPresetDefinition) -> ProjectFilterPreset:
+    def create_filter_preset(self, name: str, filter_preset: ActiveFilterPresetDefinition) -> ProjectFilterPreset:
         uuid = ProjectFilterPreset._create_filter_preset(
             client=self._client._get_api_client(),
             project_uuid=self._project_instance.project_hash,

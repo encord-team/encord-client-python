@@ -38,7 +38,17 @@ class FilterDefinition(BaseDTO):
     filters: List[Dict] = Field(default_factory=list)
 
 
-class FilterPresetDefinition(BaseDTO):
+# Note alias is strictly required as these are stored in the Annotate DB as unstructured objects
+# Stored not in camelCase like most Models
+class IndexFilterPresetDefinition(BaseDTO):
+    local_filters: Dict[str, FilterDefinition] = Field(
+        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()},
+        alias="local_filters",
+    )
+    global_filters: FilterDefinition = Field(default_factory=FilterDefinition, alias="global_filters")
+
+
+class ActiveFilterPresetDefinition(BaseDTO):
     local_filters: Dict[str, FilterDefinition] = Field(
         default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()},
     )
@@ -64,6 +74,11 @@ class ActiveCreatePresetPayload(BaseDTO):
     filter_preset_json: Dict
 
 
-class UpdatePresetPayload(BaseDTO):
+class IndexUpdatePresetPayload(BaseDTO):
     name: Optional[str] = None
-    filter_preset: Optional[FilterPresetDefinition] = None
+    filter_preset: Optional[IndexFilterPresetDefinition] = None
+
+
+class ActiveUpdatePresetPayload(BaseDTO):
+    name: Optional[str] = None
+    filter_preset: Optional[ActiveFilterPresetDefinition] = None

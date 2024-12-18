@@ -10,13 +10,15 @@ from encord.exceptions import (
 from encord.http.v2.api_client import ApiClient
 from encord.orm.filter_preset import (
     ActiveCreatePresetPayload,
+    ActiveFilterPresetDefinition,
+    ActiveUpdatePresetPayload,
     CreatePresetParams,
-    FilterPresetDefinition,
     GetPresetParams,
     GetPresetsResponse,
     GetProjectFilterPresetParams,
     IndexCreatePresetPayload,
-    UpdatePresetPayload,
+    IndexFilterPresetDefinition,
+    IndexUpdatePresetPayload,
 )
 from encord.orm.filter_preset import FilterPreset as OrmFilterPreset
 from encord.orm.filter_preset import ProjectFilterPreset as OrmProjectFilterPreset
@@ -132,7 +134,7 @@ class FilterPreset:
 
     @staticmethod
     def _create_preset(api_client: ApiClient, name: str, description: str = "", *, filter_preset_json: dict) -> UUID:
-        filter_preset = FilterPresetDefinition.from_dict(filter_preset_json)
+        filter_preset = IndexFilterPresetDefinition.from_dict(filter_preset_json)
         if not filter_preset.local_filters and not filter_preset.global_filters:
             raise EncordException("We require there to be a non-zero number of filters in a preset")
         payload = IndexCreatePresetPayload(
@@ -147,11 +149,11 @@ class FilterPreset:
             result_type=UUID,
         )
 
-    def get_filter_preset_json(self) -> FilterPresetDefinition:
+    def get_filter_preset_json(self) -> IndexFilterPresetDefinition:
         return self._client.get(
             f"index/presets/{self._preset_instance.uuid}",
             params=None,
-            result_type=FilterPresetDefinition,
+            result_type=IndexFilterPresetDefinition,
         )
 
     def update_preset(self, name: Optional[str] = None, filter_preset_json: Optional[dict] = None) -> None:
@@ -164,13 +166,13 @@ class FilterPreset:
         """
         filters_definition = None
         if isinstance(filter_preset_json, dict):
-            filters_definition = FilterPresetDefinition.from_dict(filter_preset_json)
-        elif isinstance(filter_preset_json, FilterPresetDefinition):
+            filters_definition = IndexFilterPresetDefinition.from_dict(filter_preset_json)
+        elif isinstance(filter_preset_json, IndexFilterPresetDefinition):
             filters_definition = filter_preset_json
         if filters_definition:
             if not filters_definition.local_filters and not filters_definition.global_filters:
                 raise EncordException("We require there to be a non-zero number of filters in a preset")
-        payload = UpdatePresetPayload(name=name, filter_preset=filters_definition)
+        payload = IndexUpdatePresetPayload(name=name, filter_preset=filters_definition)
         self._client.patch(
             f"index/presets/{self.uuid}",
             params=None,
@@ -293,24 +295,26 @@ class ProjectFilterPreset:
             result_type=None,
         )
 
-    def get_filter_preset_json(self) -> FilterPresetDefinition:
+    def get_filter_preset_json(self) -> ActiveFilterPresetDefinition:
         return self._client.get(
             f"active/{self._project_uuid}/presets/{self._filter_preset_instance.preset_uuid}/raw",
             params=None,
-            result_type=FilterPresetDefinition,
+            result_type=ActiveFilterPresetDefinition,
         )
 
-    def update_preset(self, name: Optional[str] = None, filter_preset: Optional[FilterPresetDefinition] = None) -> None:
+    def update_preset(
+        self, name: Optional[str] = None, filter_preset: Optional[ActiveFilterPresetDefinition] = None
+    ) -> None:
         if name is None and filter_preset is None:
             return
-        payload = UpdatePresetPayload(name=name, filter_preset=filter_preset)
+        payload = ActiveUpdatePresetPayload(name=name, filter_preset=filter_preset)
         self._client.patch(
             f"active/{self.project_hash}/presets/{self.uuid}", params=None, payload=payload, result_type=None
         )
 
     @staticmethod
     def _create_filter_preset(
-        client: ApiClient, project_uuid: UUID, name: str, filter_preset: FilterPresetDefinition
+        client: ApiClient, project_uuid: UUID, name: str, filter_preset: ActiveFilterPresetDefinition
     ) -> UUID:
         if not filter_preset.local_filters and not filter_preset.global_filters:
             raise EncordException("We require there to be a non-zero number of filters in a preset for creation")
