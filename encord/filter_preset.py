@@ -92,7 +92,7 @@ class FilterPreset:
         )
         if len(orm_item.results) > 0:
             return FilterPreset(api_client, orm_item.results[0])
-        raise AuthorisationError("Collection not found")
+        raise AuthorisationError("Preset not found")
 
     @staticmethod
     def _get_presets(
@@ -263,7 +263,7 @@ class ProjectFilterPreset:
                 client=client,
                 orm_filter_preset=orm_items[0],
             )
-        raise AuthorisationError("No collection found")
+        raise AuthorisationError("No Project preset found")
 
     @staticmethod
     def _list_filter_presets(
