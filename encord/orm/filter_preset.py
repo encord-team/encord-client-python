@@ -76,6 +76,7 @@ class ActiveCreatePresetPayload(BaseDTO):
 
 class IndexUpdatePresetPayload(BaseDTO):
     name: Optional[str] = None
+    description: Optional[str] = ""
     filter_preset: Optional[IndexFilterPresetDefinition] = None
 
 

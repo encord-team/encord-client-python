@@ -156,7 +156,9 @@ class FilterPreset:
             result_type=IndexFilterPresetDefinition,
         )
 
-    def update_preset(self, name: Optional[str] = None, filter_preset_json: Optional[dict] = None) -> None:
+    def update_preset(
+        self, name: Optional[str] = None, description: Optional[str] = None, filter_preset_json: Optional[dict] = None
+    ) -> None:
         """
         Update the preset's definition.
         Args:
@@ -172,13 +174,15 @@ class FilterPreset:
         if filters_definition:
             if not filters_definition.local_filters and not filters_definition.global_filters:
                 raise EncordException("We require there to be a non-zero number of filters in a preset")
-        payload = IndexUpdatePresetPayload(name=name, filter_preset=filters_definition)
+        payload = IndexUpdatePresetPayload(name=name, description=description, filter_preset=filters_definition)
         self._client.patch(
             f"index/presets/{self.uuid}",
             params=None,
             payload=payload,
             result_type=None,
         )
+        self._preset_instance.name = name or self.name
+        self._preset_instance.description = description or self.description
 
 
 class ProjectFilterPreset:
