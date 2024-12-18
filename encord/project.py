@@ -1303,6 +1303,9 @@ class Project:
         )
 
     def get_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> ProjectFilterPreset:
+        """
+        Gets the UUID for the Active preset.
+        """
         return ProjectFilterPreset._get_filter_preset(
             client=self._client._get_api_client(),
             project_uuid=self._project_instance.project_hash,
@@ -1310,6 +1313,9 @@ class Project:
         )
 
     def delete_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> None:
+        """
+        Deletes the specified Active presets. 
+        """
         ProjectFilterPreset._delete_filter_preset(
             client=self._client._get_api_client(),
             project_uuid=self._project_instance.project_hash,
@@ -1317,6 +1323,11 @@ class Project:
         )
 
     def create_filter_preset(self, name: str, filter_preset: FilterPresetDefinition) -> ProjectFilterPreset:
+        """
+        Creates Active presets.
+
+        For more information on creating your own filter presets using the SDK, contact us at support@encord.com.
+        """
         uuid = ProjectFilterPreset._create_filter_preset(
             client=self._client._get_api_client(),
             project_uuid=self._project_instance.project_hash,
