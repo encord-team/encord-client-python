@@ -874,13 +874,8 @@ class ObjectInstance:
             else:
                 last_edited_at = datetime.now()
 
-            if "createdAt" in d and d["createdAt"] is not None:
-                created_at = parse_datetime(d["createdAt"])
-            else:
-                created_at = datetime.now()
-
             return ObjectInstance.FrameInfo(
-                created_at=created_at,
+                created_at=parse_datetime(d["createdAt"]),
                 created_by=d["createdBy"],
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),

@@ -59,5 +59,3 @@ GEOMETRIC_TYPES = {
 
 def is_geometric(data_type: DataType) -> bool:
     return data_type in GEOMETRIC_TYPES
-
-
