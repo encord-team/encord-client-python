@@ -56,6 +56,7 @@ class CreatePresetParams(BaseDTO):
 class CreatePresetPayload(BaseDTO):
     name: str
     filter_preset_json: Dict
+    description: Optional[str] = ""
 
 
 class UpdatePresetPayload(BaseDTO):

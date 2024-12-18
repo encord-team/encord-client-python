@@ -130,13 +130,14 @@ class FilterPreset:
         )
 
     @staticmethod
-    def _create_preset(api_client: ApiClient, name: str, *, filter_preset_json: dict) -> UUID:
+    def _create_preset(api_client: ApiClient, name: str, description: str = "", *, filter_preset_json: dict) -> UUID:
         filter_preset = FilterPresetDefinition.from_dict(filter_preset_json)
         if not filter_preset.local_filters and not filter_preset.global_filters:
             raise EncordException("We require there to be a non-zero number of filters in a preset")
         payload = CreatePresetPayload(
             name=name,
             filter_preset_json=filter_preset.to_dict(),
+            description=description,
         )
         return api_client.post(
             "index/presets",
