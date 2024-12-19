@@ -1024,8 +1024,8 @@ def test_frame_view(ontology) -> None:
     assert frames[0].width == 952
     assert frames[0].height == 678
     assert (
-        frames[0].data_link
-        == "https://storage.googleapis.com/cord-ai-platform.appspot.com/cord-images-prod/yiA5JxmLEGSoEcJAuxr3AJdDDXE2/f850dfb4-7146-49e0-9afc-2b9434a64a9f?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-64w1p%40cord-ai-platform.iam.gserviceaccount.com%2F20221201%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20221201T133838Z&X-Goog-Expires=604800&X-Goog-SignedHeaders=host&X-Goog-Signature=94c66d85014ff52a99fec1cf671ccc1b859ebead4308ca82c4d810e13ac285d2afa8cfa4bfcbd09f615b243b95d9b1d5d1d779e7a4ba5832a2207b4f3b99dbe405ded373f03f06abe4e24098e70568c269899f2f397c7a4392a1c3090bff2b8c98f2177f5db36f0884a83033f404354bdfda0506bf162e25ff6186fc54104e8273e86959b0296958a03359514660528a54ba94e25c59e59534ce5102f9c87ff7cb03a591606b3a191123af4a30fa4296a788a9433f0c8c1dc7d3f80a022cc42f8716ba44d09ecd04118dc6e4ee5977ffbadcc8d635cc4e906f024dba26e520cfc304fc0f3458a3e3b2422c196956fd3024a6eba0512d557683487b10a1a381b4"
+            frames[0].data_link
+            == "https://storage.googleapis.com/cord-ai-platform.appspot.com/cord-images-prod/yiA5JxmLEGSoEcJAuxr3AJdDDXE2/f850dfb4-7146-49e0-9afc-2b9434a64a9f?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-64w1p%40cord-ai-platform.iam.gserviceaccount.com%2F20221201%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20221201T133838Z&X-Goog-Expires=604800&X-Goog-SignedHeaders=host&X-Goog-Signature=94c66d85014ff52a99fec1cf671ccc1b859ebead4308ca82c4d810e13ac285d2afa8cfa4bfcbd09f615b243b95d9b1d5d1d779e7a4ba5832a2207b4f3b99dbe405ded373f03f06abe4e24098e70568c269899f2f397c7a4392a1c3090bff2b8c98f2177f5db36f0884a83033f404354bdfda0506bf162e25ff6186fc54104e8273e86959b0296958a03359514660528a54ba94e25c59e59534ce5102f9c87ff7cb03a591606b3a191123af4a30fa4296a788a9433f0c8c1dc7d3f80a022cc42f8716ba44d09ecd04118dc6e4ee5977ffbadcc8d635cc4e906f024dba26e520cfc304fc0f3458a3e3b2422c196956fd3024a6eba0512d557683487b10a1a381b4"
     )
 
     assert frame_view.get_object_instances() == [object_instance]
@@ -1236,6 +1236,25 @@ def test_audio_classification_can_be_added_edited_and_removed(ontology, empty_au
     assert len(label_row.get_classification_instances()) == 0
 
 
+def test_non_geometric_label_rows_must_use_classification_instance_with_range_only(
+        ontology,
+        empty_audio_label_row: LabelRowV2,
+        empty_plain_text_label_row: LabelRowV2,
+        empty_html_text_label_row: LabelRowV2
+):
+    classification_instance = ClassificationInstance(checklist_classification)
+    classification_instance.set_for_frames(Range(start=0, end=0))
+    for label_row in [empty_plain_text_label_row, empty_html_text_label_row, empty_html_text_label_row]:
+        with pytest.raises(LabelRowError) as e:
+            label_row.add_classification_instance(classification_instance)
+        assert str(e.value.message) == (
+            f"To add a ClassificationInstance object to a label row where data_type = {label_row.data_type},"
+            "the ClassificationInstance object needs to be created with the "
+            "range_only property set to True."
+            "You can do ClassificationInstance(range_only=True) or "
+            "Classification.create_instance(range_only=True) to achieve this.")
+
+
 def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
     label_row = empty_audio_label_row
     obj_instance = ObjectInstance(audio_obj_ontology_item)
@@ -1373,7 +1392,7 @@ def test_html_text_object_cannot_be_added_to_non_html_label_row(ontology, empty_
 
 
 def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
-    ontology, empty_html_text_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
+        ontology, empty_html_text_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
 ):
     range_html = [
         HtmlRange(
@@ -1388,8 +1407,8 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
         audio_obj_instance.set_for_frames(coordinates=TextCoordinates(), range_html=range_html)
 
     assert (
-        str(e.value.message)
-        == f"Setting range_html of the object instance is only allowed for objects with the {Shape.TEXT} shape"
+            str(e.value.message)
+            == f"Setting range_html of the object instance is only allowed for objects with the {Shape.TEXT} shape"
     )
 
     # Adding range_html to an object instance which is attached to a label row where the
