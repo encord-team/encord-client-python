@@ -553,8 +553,6 @@ class ObjectInstance:
                 raise LabelRowError("Cannot add audio coordinates to object with frames")
             elif isinstance(coordinates, TextCoordinates):
                 raise LabelRowError("Cannot add text coordinates to object with frames")
-            elif range_html is not None:
-                raise LabelRowError("Cannot add html range to object with frames")
 
             frames_list = frames_class_to_frames_list(frames)
 
