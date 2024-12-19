@@ -337,12 +337,17 @@ class SkeletonCoordinates(BaseDTO):
         return {str(i): x.to_dict() for i, x in enumerate(self.values)}
 
 
-class AudioCoordinates(BaseDTO):
+class AudioCoordinates:
+    pass
+
+
+class TextCoordinates:
     pass
 
 
 Coordinates = Union[
     AudioCoordinates,
+    TextCoordinates,
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
     PointCoordinate,
@@ -351,6 +356,7 @@ Coordinates = Union[
     SkeletonCoordinates,
     BitmaskCoordinates,
 ]
+
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.BOUNDING_BOX: BoundingBoxCoordinates,
     Shape.ROTATABLE_BOUNDING_BOX: RotatableBoundingBoxCoordinates,
@@ -360,4 +366,5 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
     Shape.SKELETON: SkeletonCoordinates,
     Shape.BITMASK: BitmaskCoordinates,
     Shape.AUDIO: AudioCoordinates,
+    Shape.TEXT: TextCoordinates,
 }

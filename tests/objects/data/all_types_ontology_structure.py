@@ -208,6 +208,14 @@ all_types_structure = OntologyStructure(
             feature_node_hash="KVfzNkFy",
             attributes=[],
         ),
+        Object(
+            uid=9,
+            name="text object",
+            color="#A4FF00",
+            shape=Shape.TEXT,
+            feature_node_hash="textFeatureNodeHash",
+            attributes=[],
+        ),
     ],
     classifications=[
         Classification(
