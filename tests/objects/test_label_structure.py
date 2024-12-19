@@ -15,7 +15,7 @@ from encord.objects import (
     Object,
     ObjectInstance,
     RadioAttribute,
-    TextAttribute,
+    TextAttribute, Shape,
 )
 from encord.objects.attributes import Attribute
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
@@ -1389,7 +1389,7 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
 
     assert (
         str(e.value.message)
-        == "Setting range_html of the object instance is only allowed for objects with the 'text' shape"
+        == f"Setting range_html of the object instance is only allowed for objects with the {Shape.TEXT} shape"
     )
 
     # Adding range_html to an object instance which is attached to a label row where the

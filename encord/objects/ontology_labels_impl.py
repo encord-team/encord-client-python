@@ -875,9 +875,9 @@ class LabelRowV2:
         classification_instance.is_valid()
 
         # TODO: Need to update the docstring for this method, talk to Laverne.
-        if not classification_instance.is_range_only() and self.data_type == DataType.AUDIO:
+        if not classification_instance.is_range_only() and not is_geometric(self.data_type):
             raise LabelRowError(
-                "To add a ClassificationInstance object to an Audio LabelRow,"
+                f"To add a ClassificationInstance object to a label row where data_type = {self.data_type},"
                 "the ClassificationInstance object needs to be created with the "
                 "range_only property set to True."
                 "You can do ClassificationInstance(range_only=True) or "
