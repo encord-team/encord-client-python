@@ -1,4 +1,5 @@
 import datetime
+import json
 import math
 from dataclasses import asdict
 from unittest.mock import Mock, PropertyMock
@@ -1365,8 +1366,11 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
     assert range_html is None
 
 
-def test_html_text_object_cannot_be_added_to_non_html_label_row(ontology, empty_audio_label_row: LabelRowV2):
-    label_row = empty_audio_label_row
+def test_html_text_object_cannot_be_added_to_non_html_label_row(
+        ontology,
+        empty_audio_label_row: LabelRowV2,
+        empty_plain_text_label_row: LabelRowV2
+) -> None:
     obj_instance = ObjectInstance(text_obj_ontology_item)
 
     initial_range_html = [
@@ -1387,9 +1391,14 @@ def test_html_text_object_cannot_be_added_to_non_html_label_row(ontology, empty_
     assert range_html[0].end.offset == 100
 
     with pytest.raises(LabelRowError) as e:
-        label_row.add_object_instance(obj_instance)
+        empty_audio_label_row.add_object_instance(obj_instance)
 
-    assert str(e.value.message) == "Unable to assign Object instance with a html range to a non-html file"
+    assert str(e.value.message) == "Unable to assign object instance with a html range to a non-html file"
+
+    with pytest.raises(LabelRowError) as e:
+        empty_plain_text_label_row.add_object_instance(obj_instance)
+
+    assert str(e.value.message) == "Unable to assign object instance with a html range to a non-html file"
 
 
 def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
@@ -1422,3 +1431,49 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
         html_text_obj_instance.set_for_frames(coordinates=TextCoordinates(range_html=range_html), overwrite=True)
 
     assert str(e.value.message) == "For non-html labels, ensure the `range` property is set when instantiating the TextCoordinates."
+
+
+def test_plain_text_object_can_be_added_edited_and_removed(ontology, empty_plain_text_label_row: LabelRowV2):
+    label_row = empty_plain_text_label_row
+    obj_instance = ObjectInstance(text_obj_ontology_item)
+
+    initial_range = [Range(start=0, end=50)]
+    obj_instance.set_for_frames(TextCoordinates(range=initial_range))
+    range_list = obj_instance.range_list
+
+    assert range_list is not None
+    assert len(range_list) == 1
+    assert range_list[0].start == 0
+    assert range_list[0].end == 50
+
+    label_row.add_object_instance(obj_instance)
+    assert len(label_row.get_classification_instances()) == 0
+    assert len(label_row.get_object_instances()) == 1
+
+    edited_range = [Range(start=5, end=10)]
+
+    obj_instance.set_for_frames(TextCoordinates(range=edited_range), overwrite=True)
+    range_list = obj_instance.range_list
+    assert range_list is not None
+    assert len(range_list) == 1
+    assert range_list[0].start == 5
+    assert range_list[0].end == 10
+
+    obj_instance.remove_from_frames(frames=0)
+    range_html = obj_instance.range_html
+    assert range_html is None
+
+
+def test_plain_text_object_cannot_be_added_to_html_label_row(
+        ontology,
+        empty_html_text_label_row: LabelRowV2
+) -> None:
+    label_row = empty_html_text_label_row
+    obj_instance = ObjectInstance(text_obj_ontology_item)
+
+    obj_instance.set_for_frames(TextCoordinates(range=[Range(start=0, end=50)]))
+
+    with pytest.raises(LabelRowError) as e:
+        label_row.add_object_instance(obj_instance)
+
+    assert str(e.value.message) == "Unable to assign object instance without a html range to a html file"

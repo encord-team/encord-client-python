@@ -833,9 +833,9 @@ class LabelRowV2:
         # We want to ensure that we are only adding the object_instance to a label_row
         # IF AND ONLY IF the file type is text/html and the object_instance has range_html set
         if self.file_type == "text/html" and object_instance.range_html is None:
-            raise LabelRowError("Unable to assign Object Instance without a html range to a html file")
+            raise LabelRowError("Unable to assign object instance without a html range to a html file")
         elif self.file_type != "text/html" and object_instance.range_html is not None:
-            raise LabelRowError("Unable to assign Object instance with a html range to a non-html file")
+            raise LabelRowError("Unable to assign object instance with a html range to a non-html file")
 
         if object_instance.is_assigned_to_label_row():
             raise LabelRowError(
