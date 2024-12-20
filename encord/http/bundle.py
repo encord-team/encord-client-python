@@ -15,7 +15,8 @@ from __future__ import annotations
 import logging
 from dataclasses import asdict, dataclass, is_dataclass
 from functools import reduce
-from typing import Callable, ClassVar, Dict, Generic, Iterator, List, Optional, Protocol, Type, TypeVar
+from typing import Callable, ClassVar, Dict, Generic, List, Optional, Protocol, Type, TypeVar
+from collections.abc import Iterator
 
 from encord.http.limits import LABEL_ROW_BUNDLE_DEFAULT_LIMIT
 
@@ -31,7 +32,7 @@ class BundlablePayload(Protocol[BundlablePayloadT]):
     """
 
     # This line ensures we're only allowing dataclasses for now
-    __dataclass_fields__: ClassVar[Dict]
+    __dataclass_fields__: ClassVar[dict]
 
     def add(self, other: BundlablePayloadT) -> BundlablePayloadT: ...
 
@@ -55,17 +56,17 @@ class BundleResultMapper(Generic[T]):
 class BundledOperation(Generic[BundlablePayloadT, R]):
     def __init__(
         self,
-        operation: Callable[..., List[R]],
-        result_mapper: Optional[Callable[[R], str]],
+        operation: Callable[..., list[R]],
+        result_mapper: Callable[[R], str] | None,
         limit: int,
     ) -> None:
         self.operation = operation
         self.result_mapper = result_mapper
         self.limit = limit
-        self.payloads: List[BundlablePayloadT] = []
-        self.result_handlers: Dict[str, Callable[[BundlablePayloadT], None]] = {}
+        self.payloads: list[BundlablePayloadT] = []
+        self.result_handlers: dict[str, Callable[[BundlablePayloadT], None]] = {}
 
-    def append(self, payload: BundlablePayloadT, result_handler: Optional[BundleResultHandler]):
+    def append(self, payload: BundlablePayloadT, result_handler: BundleResultHandler | None):
         self.payloads.append(payload)
         if result_handler is not None:
             self.result_handlers[result_handler.predicate] = result_handler.handler
@@ -85,15 +86,15 @@ class Bundle:
     To execute batch you can either call  :meth:`.execute()` directly, or use a Context Manager.
     """
 
-    def __init__(self, bundle_size: Optional[int] = None) -> None:
+    def __init__(self, bundle_size: int | None = None) -> None:
         self._bundle_size = bundle_size
-        self._operations: Dict[Callable, BundledOperation] = {}
+        self._operations: dict[Callable, BundledOperation] = {}
 
     def __register_operation(
         self,
-        payload_type: Type[BundlablePayloadT],
-        operation: Callable[..., List[R]],
-        result_mapping_predicate: Optional[Callable[[R], str]],
+        payload_type: type[BundlablePayloadT],
+        operation: Callable[..., list[R]],
+        result_mapping_predicate: Callable[[R], str] | None,
         limit: int,
     ) -> BundledOperation[BundlablePayloadT, R]:
         if operation not in self._operations:
@@ -105,8 +106,8 @@ class Bundle:
 
     def add(
         self,
-        operation: Callable[..., List[R]],
-        result_mapper: Optional[BundleResultMapper[R]],
+        operation: Callable[..., list[R]],
+        result_mapper: BundleResultMapper[R] | None,
         payload: BundlablePayloadT,
         limit: int,
     ) -> None:
@@ -151,7 +152,7 @@ def bundled_operation(
     bundle,
     operation,
     payload: BundlablePayloadT,
-    result_mapper: Optional[BundleResultMapper] = None,
+    result_mapper: BundleResultMapper | None = None,
     limit: int = LABEL_ROW_BUNDLE_DEFAULT_LIMIT,
 ) -> None:
     assert is_dataclass(payload), "Bundling only works with dataclasses"

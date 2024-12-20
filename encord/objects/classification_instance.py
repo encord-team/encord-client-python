@@ -20,14 +20,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
-    Iterable,
     List,
     NoReturn,
     Optional,
-    Sequence,
     Set,
     Union,
 )
+from collections.abc import Iterable, Sequence
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
@@ -60,14 +59,14 @@ class ClassificationInstance:
         self,
         ontology_classification: Classification,
         *,
-        classification_hash: Optional[str] = None,
+        classification_hash: str | None = None,
         range_only: bool = False,
     ):
         self._ontology_classification = ontology_classification
-        self._parent: Optional[LabelRowV2] = None
+        self._parent: LabelRowV2 | None = None
         self._classification_hash = classification_hash or short_uuid_str()
 
-        self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
+        self._static_answer_map: dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
 
         # Only used for non-frame entities
@@ -75,7 +74,7 @@ class ClassificationInstance:
         self._range_manager: RangeManager = RangeManager()
 
         # Only used for frame entities
-        self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
+        self._frames_to_data: dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
 
     @property
     def classification_hash(self) -> str:
@@ -101,7 +100,7 @@ class ClassificationInstance:
         return self._ontology_classification.feature_node_hash
 
     @property
-    def _last_frame(self) -> Union[int, float]:
+    def _last_frame(self) -> int | float:
         if self._parent is None or self._parent.data_type is DataType.DICOM:
             return float("inf")
         else:
@@ -130,13 +129,13 @@ class ClassificationInstance:
         self,
         frames: Frames,
         overwrite: bool,
-        created_at: Optional[datetime],
-        created_by: Optional[str],
+        created_at: datetime | None,
+        created_by: str | None,
         confidence: float,
         manual_annotation: bool,
-        last_edited_at: Optional[datetime],
-        last_edited_by: Optional[str],
-        reviews: Optional[List[dict]],
+        last_edited_at: datetime | None,
+        last_edited_by: str | None,
+        reviews: list[dict] | None,
     ):
         new_range_manager = RangeManager(frame_class=frames)
         conflicting_ranges = self._is_classification_already_present_on_range(new_range_manager.get_ranges())
@@ -179,13 +178,13 @@ class ClassificationInstance:
         frames: Frames = 0,
         *,
         overwrite: bool = False,
-        created_at: Optional[datetime] = None,
-        created_by: Optional[str] = None,
+        created_at: datetime | None = None,
+        created_by: str | None = None,
         confidence: float = DEFAULT_CONFIDENCE,
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
-        last_edited_at: Optional[datetime] = None,
-        last_edited_by: Optional[str] = None,
-        reviews: Optional[List[dict]] = None,
+        last_edited_at: datetime | None = None,
+        last_edited_by: str | None = None,
+        reviews: list[dict] | None = None,
     ) -> None:
         """
         Places the classification onto the specified frame. If the classification already exists on the frame and
@@ -282,7 +281,7 @@ class ClassificationInstance:
             self._parent._add_frames_to_classification(self.ontology_item, frames_list)
             self._parent._add_to_frame_to_hashes_map(self, frames_list)
 
-    def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
+    def get_annotation(self, frame: int | str = 0) -> Annotation:
         """
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
@@ -334,7 +333,7 @@ class ClassificationInstance:
                 self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
                 self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
-    def get_annotations(self) -> List[Annotation]:
+    def get_annotations(self) -> list[Annotation]:
         """
         Returns:
             A list of `ClassificationInstance.Annotation` in order of available frames.
@@ -347,8 +346,8 @@ class ClassificationInstance:
 
     def set_answer(
         self,
-        answer: Union[str, Option, Sequence[Option]],
-        attribute: Optional[Attribute] = None,
+        answer: str | Option | Sequence[Option],
+        attribute: Attribute | None = None,
         overwrite: bool = False,
     ) -> None:
         """
@@ -384,7 +383,7 @@ class ClassificationInstance:
 
         static_answer.set(answer)
 
-    def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
+    def set_answer_from_list(self, answers_list: list[dict[str, Any]]) -> None:
         """
         This is a low level helper function and should not be used directly.
 
@@ -427,7 +426,7 @@ class ClassificationInstance:
             else:
                 raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
-    def get_answer(self, attribute: Optional[Attribute] = None) -> Union[str, Option, Iterable[Option], None]:
+    def get_answer(self, attribute: Attribute | None = None) -> str | Option | Iterable[Option] | None:
         """
         Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
 
@@ -451,7 +450,7 @@ class ClassificationInstance:
 
         return static_answer.get()
 
-    def delete_answer(self, attribute: Optional[Attribute] = None) -> None:
+    def delete_answer(self, attribute: Attribute | None = None) -> None:
         """
         This resets the answer of an attribute as if it was never set.
 
@@ -478,7 +477,7 @@ class ClassificationInstance:
         ret._frames_to_data = deepcopy(self._frames_to_data)
         return ret
 
-    def get_all_static_answers(self) -> List[Answer]:
+    def get_all_static_answers(self) -> list[Answer]:
         """A low level helper function."""
         return list(self._static_answer_map.values())
 
@@ -507,12 +506,12 @@ class ClassificationInstance:
             self._get_object_frame_instance_data().created_at = created_at
 
         @property
-        def created_by(self) -> Optional[str]:
+        def created_by(self) -> str | None:
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().created_by
 
         @created_by.setter
-        def created_by(self, created_by: Optional[str]) -> None:
+        def created_by(self, created_by: str | None) -> None:
             """
             Set the created_by field with a user email or None if it should default to the current user of the SDK.
             """
@@ -532,12 +531,12 @@ class ClassificationInstance:
             self._get_object_frame_instance_data().last_edited_at = last_edited_at
 
         @property
-        def last_edited_by(self) -> Optional[str]:
+        def last_edited_by(self) -> str | None:
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().last_edited_by
 
         @last_edited_by.setter
-        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
+        def last_edited_by(self, last_edited_by: str | None) -> None:
             """
             Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
             """
@@ -567,7 +566,7 @@ class ClassificationInstance:
             self._get_object_frame_instance_data().manual_annotation = manual_annotation
 
         @property
-        def reviews(self) -> Optional[List[dict]]:
+        def reviews(self) -> list[dict] | None:
             """
             A read only property about the reviews that happened for this object on this frame.
             """
@@ -586,12 +585,12 @@ class ClassificationInstance:
     @dataclass
     class FrameData:
         created_at: datetime = field(default_factory=datetime.now)
-        created_by: Optional[str] = None
+        created_by: str | None = None
         confidence: float = DEFAULT_CONFIDENCE
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
         last_edited_at: datetime = field(default_factory=datetime.now)
-        last_edited_by: Optional[str] = None
-        reviews: Optional[List[dict]] = None
+        last_edited_by: str | None = None
+        reviews: list[dict] | None = None
 
         @staticmethod
         def from_dict(d: dict) -> ClassificationInstance.FrameData:
@@ -617,13 +616,13 @@ class ClassificationInstance:
 
         def update_from_optional_fields(
             self,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
-            confidence: Optional[float] = None,
-            manual_annotation: Optional[bool] = None,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
-            reviews: Optional[List[dict]] = None,
+            created_at: datetime | None = None,
+            created_by: str | None = None,
+            confidence: float | None = None,
+            manual_annotation: bool | None = None,
+            last_edited_at: datetime | None = None,
+            last_edited_by: str | None = None,
+            reviews: list[dict] | None = None,
         ) -> None:
             self.created_at = created_at or self.created_at
             self.last_edited_at = last_edited_at or self.last_edited_at
@@ -644,13 +643,13 @@ class ClassificationInstance:
         frame,
         *,
         overwrite: bool = False,
-        created_at: Optional[datetime] = None,
-        created_by: Optional[str] = None,
-        confidence: Optional[float] = None,
-        manual_annotation: Optional[bool] = None,
-        last_edited_at: Optional[datetime] = None,
-        last_edited_by: Optional[str] = None,
-        reviews: Optional[List[dict]] = None,
+        created_at: datetime | None = None,
+        created_by: str | None = None,
+        confidence: float | None = None,
+        manual_annotation: bool | None = None,
+        last_edited_at: datetime | None = None,
+        last_edited_by: str | None = None,
+        reviews: list[dict] | None = None,
     ):
         existing_frame_data = self._frames_to_data.get(frame)
         if overwrite is False and existing_frame_data is not None:
@@ -688,7 +687,7 @@ class ClassificationInstance:
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
-    def _is_classification_already_present(self, frames: Iterable[int]) -> Set[int]:
+    def _is_classification_already_present(self, frames: Iterable[int]) -> set[int]:
         if self._parent is None:
             return set()
         return self._parent._is_classification_already_present_on_frames(self.ontology_item, frames)

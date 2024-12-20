@@ -36,4 +36,4 @@ class WorkflowNode(BaseDTO):
 
 
 class Workflow(BaseDTO):
-    stages: List[WorkflowNode]
+    stages: list[WorkflowNode]

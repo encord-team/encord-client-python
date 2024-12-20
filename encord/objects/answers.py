@@ -14,7 +14,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar
+from typing import Any, Dict, Generic, List, NoReturn, Optional, Set, TypeVar
+from collections.abc import Iterable
 
 from encord.common.deprecated import deprecated
 from encord.objects.attributes import (
@@ -37,9 +38,9 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
     """An internal helper class for the LabelRowV2 class. This class is not meant to be used directly by users."""
 
     _ontology_attribute: AttributeType
-    _value: Optional[ValueType]
+    _value: ValueType | None
 
-    def __init__(self, ontology_attribute: AttributeType, track_hash: Optional[str] = None):
+    def __init__(self, ontology_attribute: AttributeType, track_hash: str | None = None):
         self._answered = False
         self._ontology_attribute = ontology_attribute
         self._track_hash = track_hash or short_uuid_str()
@@ -89,7 +90,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         assert self._value is not None, "Value can't be none for the answered Answer object"
         return self._value
 
-    def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict[str, Any]]:
+    def to_encord_dict(self, ranges: Ranges | None = None) -> dict[str, Any] | None:
         """
         A low level helper to convert to the Encord JSON format.
         For most use cases the `get_answer` function should be used instead.
@@ -107,14 +108,14 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         return ret
 
     @abstractmethod
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> dict[str, Any]:
         pass
 
     @abstractmethod
-    def from_dict(self, d: Dict[str, Any]) -> None:
+    def from_dict(self, d: dict[str, Any]) -> None:
         pass
 
-    def _get_encord_dynamic_fields(self, ranges: Ranges) -> Dict[str, Any]:
+    def _get_encord_dynamic_fields(self, ranges: Ranges) -> dict[str, Any]:
         return {
             "dynamic": True,
             "range": ranges_to_list(ranges),
@@ -126,7 +127,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
 class TextAnswer(Answer[str, TextAttribute]):
     def __init__(self, ontology_attribute: TextAttribute):
         super().__init__(ontology_attribute)
-        self._value: Optional[str] = None
+        self._value: str | None = None
 
     def set(self, value: str, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
         """Returns the object itself"""
@@ -136,7 +137,7 @@ class TextAnswer(Answer[str, TextAttribute]):
         self._answered = True
         self.is_manual_annotation = manual_annotation
 
-    def get_value(self) -> Optional[str]:
+    def get_value(self) -> str | None:
         return self._value if self.is_answered() else None
 
     def copy_from(self, text_answer: TextAnswer):
@@ -151,7 +152,7 @@ class TextAnswer(Answer[str, TextAttribute]):
             other_answer = text_answer.get()
             self.set(other_answer)
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> dict[str, Any]:
         return {
             "name": self.ontology_attribute.name,
             "value": _lower_snake_case(self.ontology_attribute.name),
@@ -160,7 +161,7 @@ class TextAnswer(Answer[str, TextAttribute]):
             "manualAnnotation": self.is_manual_annotation,
         }
 
-    def from_dict(self, d: Dict[str, Any]) -> None:
+    def from_dict(self, d: dict[str, Any]) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a TextAnswer based on a different ontology attribute.")
 
@@ -187,7 +188,7 @@ class TextAnswer(Answer[str, TextAttribute]):
 class RadioAnswer(Answer[NestableOption, RadioAttribute]):
     def __init__(self, ontology_attribute: RadioAttribute):
         super().__init__(ontology_attribute)
-        self._value: Optional[NestableOption] = None
+        self._value: NestableOption | None = None
 
     def set(self, value: NestableOption, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
         if not isinstance(value, NestableOption):
@@ -203,7 +204,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
         self._value = value
         self.is_manual_annotation = manual_annotation
 
-    def get_value(self) -> Optional[NestableOption]:
+    def get_value(self) -> NestableOption | None:
         return self._value if self.is_answered() else None
 
     def copy_from(self, radio_answer: RadioAnswer):
@@ -218,7 +219,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
             other_answer = radio_answer.get()
             self.set(other_answer)
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> dict[str, Any]:
         nestable_option = self._value
         assert nestable_option is not None  # Check is performed earlier, so just to silence mypy
 
@@ -236,7 +237,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
             "manualAnnotation": self.is_manual_annotation,
         }
 
-    def from_dict(self, d: Dict) -> None:
+    def from_dict(self, d: dict) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a TextAnswer based on a different ontology attribute.")
 
@@ -271,7 +272,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
 
 
 @dataclass
-class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
+class ChecklistAnswer(Answer[list[FlatOption], ChecklistAttribute]):
     """
     Checkboxes behave slightly different from the other answer types. When the checkbox is unanswered, it will be
     the equivalent of not having selected any checkbox answer in the Encord platform.
@@ -280,8 +281,8 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
 
     def __init__(self, ontology_attribute: ChecklistAttribute):
         super().__init__(ontology_attribute)
-        self._ontology_options_feature_hashes: Set[str] = self._initialise_ontology_options_feature_hashes()
-        self._feature_hash_to_answer_map: Dict[str, bool] = self._initialise_feature_hash_to_answer_map()
+        self._ontology_options_feature_hashes: set[str] = self._initialise_ontology_options_feature_hashes()
+        self._feature_hash_to_answer_map: dict[str, bool] = self._initialise_feature_hash_to_answer_map()
 
     def check_options(self, values: Iterable[FlatOption]):
         self._answered = True
@@ -295,7 +296,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             self._verify_flat_option(value)
             self._feature_hash_to_answer_map[value.feature_node_hash] = False
 
-    def get(self) -> List[FlatOption]:
+    def get(self) -> list[FlatOption]:
         if not self.is_answered():
             raise ValueError("Can't read a value of unanswered Answer object")
 
@@ -331,7 +332,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
         return self.set(values)
 
     @deprecated("0.1.91", alternative=".get()")
-    def get_options(self) -> List[FlatOption]:
+    def get_options(self) -> list[FlatOption]:
         # Deprecated: please use :meth:`get()` instead
 
         if not self.is_answered():
@@ -368,10 +369,10 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
                 other_answer = checklist_answer.get_option_value(option)
                 self._feature_hash_to_answer_map[feature_node_hash] = other_answer
 
-    def _initialise_feature_hash_to_answer_map(self) -> Dict[str, bool]:
+    def _initialise_feature_hash_to_answer_map(self) -> dict[str, bool]:
         return {child.feature_node_hash: False for child in self._ontology_attribute.options}
 
-    def _initialise_ontology_options_feature_hashes(self) -> Set[str]:
+    def _initialise_ontology_options_feature_hashes(self) -> set[str]:
         return {child.feature_node_hash for child in self._ontology_attribute.options}
 
     def _verify_flat_option(self, value: FlatOption) -> None:
@@ -381,7 +382,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> dict[str, Any]:
         ontology_attribute: ChecklistAttribute = self._ontology_attribute
         checked_options = [option for option in ontology_attribute.options if self.get_option_value(option)]
         answers = [
@@ -400,7 +401,7 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
             "manualAnnotation": self.is_manual_annotation,
         }
 
-    def from_dict(self, d: Dict[str, Any]) -> None:
+    def from_dict(self, d: dict[str, Any]) -> None:
         if d["featureHash"] != self.ontology_attribute.feature_node_hash:
             raise ValueError("Cannot set the value of a ChecklistAnswer based on a different ontology attribute.")
 
@@ -446,8 +447,8 @@ def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
         raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
 
 
-def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> List[Answer]:
-    ret: List[Answer] = []
+def _get_default_static_answers_from_attributes(attributes: list[Attribute]) -> list[Answer]:
+    ret: list[Answer] = []
     for attribute in attributes:
         if not attribute.dynamic:
             answer = get_default_answer_from_attribute(attribute)
@@ -460,6 +461,6 @@ def _get_default_static_answers_from_attributes(attributes: List[Attribute]) -> 
     return ret
 
 
-def _get_static_answer_map(attributes: List[Attribute]) -> Dict[str, Answer]:
+def _get_static_answer_map(attributes: list[Attribute]) -> dict[str, Answer]:
     answers = _get_default_static_answers_from_attributes(attributes)
     return {answer.ontology_attribute.feature_node_hash: answer for answer in answers}

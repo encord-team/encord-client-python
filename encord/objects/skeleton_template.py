@@ -22,7 +22,7 @@ from encord.orm.skeleton_template import SkeletonTemplateCoordinate
 
 class SkeletonTemplate(SkeletonTemplateORM):
     @property
-    def required_vertices(self) -> Set[str]:
+    def required_vertices(self) -> set[str]:
         """
         Get the set of required vertex names for the skeleton.
 
@@ -31,7 +31,7 @@ class SkeletonTemplate(SkeletonTemplateORM):
         """
         return {coordinate.name for coordinate in self.skeleton.values()}
 
-    def create_instance(self, provided_coordinates: List[SkeletonCoordinate]) -> SkeletonCoordinates:
+    def create_instance(self, provided_coordinates: list[SkeletonCoordinate]) -> SkeletonCoordinates:
         """
         Create an instance of SkeletonCoordinates with the provided coordinates.
 

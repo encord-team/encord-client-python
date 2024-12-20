@@ -11,7 +11,8 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Optional
+from collections.abc import Iterable
 
 from encord.project_ontology.classification_option import ClassificationOption
 from encord.project_ontology.classification_type import ClassificationType

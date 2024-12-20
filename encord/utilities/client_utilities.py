@@ -51,7 +51,7 @@ class Issue:
     """
 
     issue_type: str
-    instances: List[str]
+    instances: list[str]
 
 
 @dataclass
@@ -61,9 +61,9 @@ class Issues:
     on different platforms.
     """
 
-    errors: List[Issue]
-    warnings: List[Issue]
-    infos: List[Issue]
+    errors: list[Issue]
+    warnings: list[Issue]
+    infos: list[Issue]
 
     @staticmethod
     def from_dict(d: dict) -> "Issues":
@@ -106,7 +106,7 @@ def optional_datetime_to_iso_str(key: str, val: Optional[Union[str, datetime]]) 
 T = TypeVar("T")
 
 
-def optional_set_to_list(s: Optional[Set[T]]) -> Optional[List[T]]:
+def optional_set_to_list(s: Optional[set[T]]) -> Optional[list[T]]:
     if s is None:
         return s
     else:

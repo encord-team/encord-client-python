@@ -207,7 +207,7 @@ def test_add_object():
     assert obj3.feature_node_hash == feature_node_hash
 
     assert obj1.feature_node_hash != obj2.feature_node_hash
-    assert len(set([obj.color for obj in [obj1, obj2, obj3]])) == 3  # all the colors are different: auto-assigned
+    assert len({obj.color for obj in [obj1, obj2, obj3]}) == 3  # all the colors are different: auto-assigned
 
     assert len(ontology.objects) == 3
 

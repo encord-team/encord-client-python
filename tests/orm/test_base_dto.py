@@ -17,9 +17,9 @@ class TestModel(BaseDTO):
 
 
 class TestModelWithLists(BaseDTO):
-    text_values: List[str]
-    number_values: List[int]
-    datetime_values: List[datetime]
+    text_values: list[str]
+    number_values: list[int]
+    datetime_values: list[datetime]
 
 
 def test_basic_model_with_deserialization():

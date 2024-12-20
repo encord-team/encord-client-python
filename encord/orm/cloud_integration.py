@@ -15,4 +15,4 @@ class CloudIntegrationV2(BaseDTO):
 
 
 class GetCloudIntegrationsResponse(BaseDTO):
-    result: List[CloudIntegrationV2]
+    result: list[CloudIntegrationV2]

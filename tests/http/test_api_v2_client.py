@@ -46,7 +46,7 @@ def api_client():
 @pytest.mark.parametrize("allow_none", [False, True])
 @patch.object(Session, "send")
 def test_constructed_url_is_correct(
-    send: MagicMock, api_client: ApiClient, payload_type: Type[TestPayload], allow_none: bool
+    send: MagicMock, api_client: ApiClient, payload_type: type[TestPayload], allow_none: bool
 ) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -81,7 +81,7 @@ def test_constructed_url_is_correct(
 @pytest.mark.parametrize("allow_none", [False, True])
 @patch.object(Session, "send")
 def test_payload_url_serialisation(
-    send: MagicMock, api_client: ApiClient, payload_type: Type[TestPayload], allow_none: bool
+    send: MagicMock, api_client: ApiClient, payload_type: type[TestPayload], allow_none: bool
 ) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -114,8 +114,8 @@ def test_payload_url_serialisation(
 def test_payload_body_serialisation(
     send: MagicMock,
     api_client: ApiClient,
-    payload_type: Type[TestPayload],
-    param_type: Type[TestComplexPayload],
+    payload_type: type[TestPayload],
+    param_type: type[TestComplexPayload],
 ) -> None:
     mock_response = MagicMock()
     mock_response.status_code = 200

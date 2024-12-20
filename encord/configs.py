@@ -74,7 +74,7 @@ class BaseConfig(ABC):
         self.requests_settings = requests_settings
 
     @abstractmethod
-    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: str | None, resource_type: str | None, data: str) -> dict[str, Any]:
         """
         Define headers for a request.
 
@@ -127,7 +127,7 @@ class UserConfig(BaseConfig):
         """
         return self.config.domain
 
-    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: str | None, resource_type: str | None, data: str) -> dict[str, Any]:
         """
         Define headers for a user-specific request.
 
@@ -170,7 +170,7 @@ class Config(BaseConfig):
     def __init__(
         self,
         web_file_path: str = ENCORD_PUBLIC_PATH,
-        domain: Optional[str] = None,
+        domain: str | None = None,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
     ):
         if domain is None:
@@ -266,7 +266,7 @@ class SshConfig(Config):
     def _get_v1_ssh_authorization_header(public_key_hex: str, signature: bytes) -> str:
         return f"{public_key_hex}:{signature.hex()}"
 
-    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: str | None, resource_type: str | None, data: str) -> dict[str, Any]:
         """
         Define headers for an SSH key-based request.
 
@@ -308,7 +308,7 @@ class SshConfig(Config):
     @staticmethod
     def from_ssh_private_key(
         ssh_private_key: str,
-        password: Optional[str] = "",
+        password: str | None = "",
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
     ) -> SshConfig:
@@ -358,7 +358,7 @@ class BearerConfig(Config):
         self.token = token
         super().__init__(domain=domain, requests_settings=requests_settings)
 
-    def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
+    def define_headers(self, resource_id: str | None, resource_type: str | None, data: str) -> dict[str, Any]:
         """
         Define headers for a bearer token-based request.
 

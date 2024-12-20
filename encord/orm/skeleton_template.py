@@ -18,7 +18,7 @@ class SkeletonTemplate(BaseDTO):
     name: str
     width: float
     height: float
-    skeleton: Dict[str, SkeletonTemplateCoordinate]
-    skeleton_edges: Dict[str, Dict[str, Dict[str, str]]]  # start-end-color-hex
+    skeleton: dict[str, SkeletonTemplateCoordinate]
+    skeleton_edges: dict[str, dict[str, dict[str, str]]]  # start-end-color-hex
     feature_node_hash: Optional[str] = Field(default=None, alias="feature_node_hash")
     shape: Optional[str] = "skeleton"

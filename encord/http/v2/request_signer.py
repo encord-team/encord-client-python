@@ -42,7 +42,7 @@ def sign_request(request: PreparedRequest, key_id: str, private_key: Ed25519Priv
     # Moving 'created' time to be a bit in the past, since sometimes requests are failing
     # due to the clock skew.
     # This is to be fixed on server side and removed from here.
-    signature_params: Dict[str, Union[str, int]] = {
+    signature_params: dict[str, Union[str, int]] = {
         "created": int(datetime.now().timestamp()) - 30,
         "keyid": key_id,
         "alg": "ed25519",

@@ -39,10 +39,10 @@ class ModelConfiguration(Formatter):
     model_uid: str
     title: str
     description: str
-    feature_node_hashes: List[str]
+    feature_node_hashes: list[str]
     """The corresponding feature node hashes of the ontology object"""
     model: AutomationModels
-    model_iteration_uids: List[str]
+    model_iteration_uids: list[str]
     """All the UIDs of individual model training instances"""
 
     @classmethod
@@ -57,7 +57,7 @@ class ModelConfiguration(Formatter):
         )
 
     @staticmethod
-    def _get_feature_node_hashes(features: dict) -> List[str]:
+    def _get_feature_node_hashes(features: dict) -> list[str]:
         return list(features.keys())
 
     @staticmethod
@@ -86,14 +86,14 @@ class ModelTrainingLabelMetadata:
         )
 
     @classmethod
-    def from_list(cls, json_list: list) -> List["ModelTrainingLabelMetadata"]:
+    def from_list(cls, json_list: list) -> list["ModelTrainingLabelMetadata"]:
         return [cls.from_dict(item) for item in json_list]
 
 
 @dataclass
 class ModelTrainingLabel:
-    label_metadata_list: List[ModelTrainingLabelMetadata]
-    feature_uids: List[str]
+    label_metadata_list: list[ModelTrainingLabelMetadata]
+    feature_uids: list[str]
 
     @staticmethod
     def from_dict(json_dict: dict) -> "ModelTrainingLabel":
@@ -236,7 +236,7 @@ class ModelTrainingParams(base_orm.BaseORM):
 
 
 class PublicModelTrainStartPayload(BaseDTO):
-    label_rows: List[UUID]
+    label_rows: list[UUID]
     epochs: int
     batch_size: int
     model: str

@@ -51,11 +51,11 @@ class SaveDeidentifiedDicomConditionType(Enum):
 
 @dataclass
 class SaveDeidentifiedDicomConditionIn:
-    value: List[str]
+    value: list[str]
     dicom_tag: str
     condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.IN
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "value": self.value,
             "dicom_tag": self.dicom_tag,
@@ -69,7 +69,7 @@ class SaveDeidentifiedDicomConditionNotSubstr:
     dicom_tag: str
     condition_type: SaveDeidentifiedDicomConditionType = SaveDeidentifiedDicomConditionType.NOT_SUBSTR
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "value": self.value,
             "dicom_tag": self.dicom_tag,

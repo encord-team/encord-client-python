@@ -13,7 +13,8 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Sequence, Type, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from collections.abc import Sequence
 
 from encord.objects.ontology_element import (
     NestedID,
@@ -62,10 +63,10 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
         pass
 
     @abstractmethod
-    def _encode_options(self) -> Optional[List[dict]]:
+    def _encode_options(self) -> list[dict] | None:
         pass
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         ret = self._encode_base()
 
         options = self._encode_options()
@@ -75,7 +76,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
         return ret
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> Attribute:
+    def from_dict(cls, d: dict[str, Any]) -> Attribute:
         property_type = d["type"]
         common_attribute_fields = cls._decode_common_attribute_fields(d)
         if property_type == RadioAttribute.get_property_type():
@@ -100,8 +101,8 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
             f"attribute specific fields or option specific fields. Got both or none of them."
         )
 
-    def _encode_base(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = dict()
+    def _encode_base(self) -> dict[str, Any]:
+        ret: dict[str, Any] = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["name"] = self.name
         ret["type"] = self.get_property_type().value
@@ -112,7 +113,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
         return ret
 
     @staticmethod
-    def _decode_common_attribute_fields(attribute_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def _decode_common_attribute_fields(attribute_dict: dict[str, Any]) -> dict[str, Any]:
         return {
             "uid": _nested_id_from_json_str(attribute_dict["id"]),
             "feature_node_hash": attribute_dict["featureNodeHash"],
@@ -128,7 +129,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
 
 
 class RadioAttribute(Attribute["NestableOption"]):
-    _options: List[NestableOption]
+    _options: list[NestableOption]
 
     def __init__(
         self,
@@ -137,7 +138,7 @@ class RadioAttribute(Attribute["NestableOption"]):
         name: str,
         required: bool,
         dynamic: bool,
-        options: Optional[List[NestableOption]] = None,
+        options: list[NestableOption] | None = None,
     ):
         super().__init__(uid, feature_node_hash, name, required, dynamic)
         self._options = options if options is not None else []
@@ -154,7 +155,7 @@ class RadioAttribute(Attribute["NestableOption"]):
     def get_property_type() -> PropertyType:
         return PropertyType.RADIO
 
-    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+    def _encode_options(self) -> list[dict[str, Any]] | None:
         if len(self._options) == 0:
             return None
         return [option.to_dict() for option in self._options]
@@ -162,9 +163,9 @@ class RadioAttribute(Attribute["NestableOption"]):
     def add_option(
         self,
         label: str,
-        value: Optional[str] = None,
-        local_uid: Optional[int] = None,
-        feature_node_hash: Optional[str] = None,
+        value: str | None = None,
+        local_uid: int | None = None,
+        feature_node_hash: str | None = None,
     ) -> NestableOption:
         """
         Args:
@@ -182,7 +183,7 @@ class RadioAttribute(Attribute["NestableOption"]):
 
 
 class ChecklistAttribute(Attribute["FlatOption"]):
-    _options: List[FlatOption]
+    _options: list[FlatOption]
 
     def __init__(
         self,
@@ -191,7 +192,7 @@ class ChecklistAttribute(Attribute["FlatOption"]):
         name: str,
         required: bool,
         dynamic: bool,
-        options: Optional[List[FlatOption]] = None,
+        options: list[FlatOption] | None = None,
     ):
         super().__init__(uid, feature_node_hash, name, required, dynamic)
         self._options = options if options is not None else []
@@ -200,7 +201,7 @@ class ChecklistAttribute(Attribute["FlatOption"]):
     def get_property_type() -> PropertyType:
         return PropertyType.CHECKLIST
 
-    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+    def _encode_options(self) -> list[dict[str, Any]] | None:
         if len(self._options) == 0:
             return None
         return [option.to_dict() for option in self._options]
@@ -216,9 +217,9 @@ class ChecklistAttribute(Attribute["FlatOption"]):
     def add_option(
         self,
         label: str,
-        value: Optional[str] = None,
-        local_uid: Optional[int] = None,
-        feature_node_hash: Optional[str] = None,
+        value: str | None = None,
+        local_uid: int | None = None,
+        feature_node_hash: str | None = None,
     ) -> FlatOption:
         """
         Args:
@@ -242,22 +243,22 @@ class TextAttribute(Attribute["FlatOption"]):
     def get_property_type() -> PropertyType:
         return PropertyType.TEXT
 
-    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+    def _encode_options(self) -> list[dict[str, Any]] | None:
         return None
 
 
-def attribute_from_dict(d: Dict[str, Any]) -> Attribute:
+def attribute_from_dict(d: dict[str, Any]) -> Attribute:
     """Convenience functions as you cannot call static member on union types."""
     return Attribute.from_dict(d)
 
 
 def _add_attribute(
-    attributes: List[Attribute],
-    cls: Type[AttributeType],
+    attributes: list[Attribute],
+    cls: type[AttributeType],
     name: str,
-    parent_uid: List[int],
-    local_uid: Optional[int] = None,
-    feature_node_hash: Optional[str] = None,
+    parent_uid: list[int],
+    local_uid: int | None = None,
+    feature_node_hash: str | None = None,
     required: bool = False,
     dynamic: bool = False,
 ) -> AttributeType:
@@ -270,11 +271,11 @@ def _add_attribute(
     return attr
 
 
-def _get_attribute_by_hash(feature_node_hash: str, attributes: List[Attribute]) -> Optional[Attribute]:
+def _get_attribute_by_hash(feature_node_hash: str, attributes: list[Attribute]) -> Attribute | None:
     return _get_element_by_hash(feature_node_hash, attributes, type_=Attribute)
 
 
-def attributes_to_list_dict(attributes: List[Attribute]) -> List[Dict[str, Any]]:
+def attributes_to_list_dict(attributes: list[Attribute]) -> list[dict[str, Any]]:
     return [attribute.to_dict() for attribute in attributes]
 
 

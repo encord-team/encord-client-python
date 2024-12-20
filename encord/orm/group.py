@@ -37,7 +37,7 @@ class StorageFolderGroup(EntityGroup):
 
 
 class AddGroupsPayload(BaseDTO):
-    group_hash_list: List[UUID]
+    group_hash_list: list[UUID]
 
 
 class AddProjectGroupsPayload(AddGroupsPayload):
@@ -57,4 +57,4 @@ class AddStorageFolderGroupsPayload(AddGroupsPayload):
 
 
 class RemoveGroupsParams(BaseDTO):
-    group_hash_list: List[UUID]
+    group_hash_list: list[UUID]

@@ -13,7 +13,8 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar
+from collections.abc import Sequence
 
 from encord.objects.attributes import (
     Attribute,
@@ -39,7 +40,7 @@ class Classification(OntologyElement):
 
     uid: int
     feature_node_hash: str
-    attributes: List[Attribute]
+    attributes: list[Attribute]
 
     @property
     def title(self) -> str:
@@ -81,14 +82,14 @@ class Classification(OntologyElement):
         Returns:
             Classification: An instance of Classification.
         """
-        attributes_ret: List[Attribute] = [attribute_from_dict(attribute_dict) for attribute_dict in d["attributes"]]
+        attributes_ret: list[Attribute] = [attribute_from_dict(attribute_dict) for attribute_dict in d["attributes"]]
         return Classification(
             uid=int(d["id"]),
             feature_node_hash=d["featureNodeHash"],
             attributes=attributes_ret,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the Classification instance to a dictionary.
 
@@ -98,7 +99,7 @@ class Classification(OntologyElement):
         Raises:
             ValueError: If the classification does not have any attributes.
         """
-        ret: Dict[str, Any] = {
+        ret: dict[str, Any] = {
             "id": str(self.uid),
             "featureNodeHash": self.feature_node_hash,
         }
@@ -111,10 +112,10 @@ class Classification(OntologyElement):
 
     def add_attribute(
         self,
-        cls: Type[AttributeType],
+        cls: type[AttributeType],
         name: str,
-        local_uid: Optional[int] = None,
-        feature_node_hash: Optional[str] = None,
+        local_uid: int | None = None,
+        feature_node_hash: str | None = None,
         required: bool = False,
     ) -> AttributeType:
         """

@@ -23,10 +23,10 @@ These are internal helpers and not supposed to be used by external users.
 
 @dataclass
 class BundledGetRowsPayload:
-    uids: List[str]
+    uids: list[str]
     get_signed_url: bool
-    include_object_feature_hashes: Optional[Set[str]]
-    include_classification_feature_hashes: Optional[Set[str]]
+    include_object_feature_hashes: set[str] | None
+    include_classification_feature_hashes: set[str] | None
     include_reviews: bool
 
     def add(self, other: BundledGetRowsPayload) -> BundledGetRowsPayload:
@@ -36,9 +36,9 @@ class BundledGetRowsPayload:
 
 @dataclass
 class BundledCreateRowsPayload:
-    uids: List[str]
+    uids: list[str]
     get_signed_url: bool
-    branch_name: Optional[str]
+    branch_name: str | None
 
     def add(self, other: BundledCreateRowsPayload) -> BundledCreateRowsPayload:
         self.uids.extend(other.uids)
@@ -47,9 +47,9 @@ class BundledCreateRowsPayload:
 
 @dataclass
 class BundledSaveRowsPayload:
-    uids: List[str]
-    payload: List[Dict]
-    validate_before_saving: Optional[bool]
+    uids: list[str]
+    payload: list[dict]
+    validate_before_saving: bool | None
 
     def add(self, other: BundledSaveRowsPayload) -> BundledSaveRowsPayload:
         self.uids.extend(other.uids)
@@ -60,7 +60,7 @@ class BundledSaveRowsPayload:
 
 @dataclass
 class BundledSetPriorityPayload:
-    priorities: List[Tuple[str, float]]
+    priorities: list[tuple[str, float]]
 
     def add(self, other: BundledSetPriorityPayload) -> BundledSetPriorityPayload:
         self.priorities.extend(other.priorities)
@@ -69,7 +69,7 @@ class BundledSetPriorityPayload:
 
 @dataclass
 class BundledWorkflowCompletePayload:
-    label_hashes: List[str]
+    label_hashes: list[str]
 
     def add(self, other: BundledWorkflowCompletePayload) -> BundledWorkflowCompletePayload:
         self.label_hashes.extend(other.label_hashes)
@@ -78,7 +78,7 @@ class BundledWorkflowCompletePayload:
 
 @dataclass
 class BundledWorkflowReopenPayload:
-    label_hashes: List[str]
+    label_hashes: list[str]
 
     def add(self, other: BundledWorkflowReopenPayload) -> BundledWorkflowReopenPayload:
         self.label_hashes.extend(other.label_hashes)

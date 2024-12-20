@@ -19,8 +19,8 @@ class Ontology(dict, Formatter):
         ontology_hash: str,
         created_at: datetime,
         last_edited_at: datetime,
-        description: Optional[str] = None,
-        user_role: Optional[OntologyUserRole] = None,
+        description: str | None = None,
+        user_role: OntologyUserRole | None = None,
     ):
         """
         DEPRECATED - prefer using the :class:`encord.ontology.Ontology` class instead.
@@ -86,7 +86,7 @@ class Ontology(dict, Formatter):
         return self["user_role"]
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> Ontology:
+    def from_dict(cls, json_dict: dict) -> Ontology:
         return Ontology(
             title=json_dict["title"],
             description=json_dict["description"],

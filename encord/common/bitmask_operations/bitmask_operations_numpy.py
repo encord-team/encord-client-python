@@ -1,4 +1,5 @@
-from typing import List, Sequence, Tuple
+from typing import List, Tuple
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -6,7 +7,7 @@ import numpy as np
 from .bitmask_operations import _rle_to_mask, _rle_to_string, _string_to_rle
 
 
-def _mask_to_rle(mask: bytes) -> List[int]:
+def _mask_to_rle(mask: bytes) -> list[int]:
     """
     COCO-compatible raw bitmask to COCO-compatible RLE
     """
@@ -27,6 +28,6 @@ def deserialise_bitmask(serialised_bitmask: str, length: int) -> bytes:
     return _rle_to_mask(rle, length)
 
 
-def transpose_bytearray(byte_data: bytes, shape: Tuple[int, int]) -> bytes:
+def transpose_bytearray(byte_data: bytes, shape: tuple[int, int]) -> bytes:
     np_byte_data = np.frombuffer(byte_data, dtype=np.int8).reshape(shape)
     return bytearray(np_byte_data.T.tobytes())

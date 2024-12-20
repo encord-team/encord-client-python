@@ -12,7 +12,8 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from typing import Iterable, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
+from collections.abc import Iterable
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
@@ -23,10 +24,10 @@ from encord.workflow.stages.annotation import AnnotationTask
 
 
 class _AnnotationTasksQueryParams(TasksQueryParams):
-    user_emails: Optional[List[str]] = None
-    data_hashes: Optional[List[UUID]] = None
-    dataset_hashes: Optional[List[UUID]] = None
-    data_title_contains: Optional[str] = None
+    user_emails: list[str] | None = None
+    data_hashes: list[UUID] | None = None
+    dataset_hashes: list[UUID] | None = None
+    data_title_contains: str | None = None
 
 
 class ConsensusAnnotationStage(WorkflowStageBase):
@@ -39,10 +40,10 @@ class ConsensusAnnotationStage(WorkflowStageBase):
     def get_tasks(
         self,
         *,
-        assignee: Union[List[str], str, None] = None,
-        data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        data_title: Optional[str] = None,
+        assignee: list[str] | str | None = None,
+        data_hash: list[UUID] | UUID | list[str] | str | None = None,
+        dataset_hash: list[UUID] | UUID | list[str] | str | None = None,
+        data_title: str | None = None,
     ) -> Iterable[ConsensusAnnotationTask]:
         """
         Retrieves tasks for the ConsensusAnnotationStage.
@@ -91,4 +92,4 @@ class ConsensusAnnotationTask(WorkflowTask):
 
     data_hash: UUID
     data_title: str
-    subtasks: List[AnnotationTask] = Field(default_factory=list)
+    subtasks: list[AnnotationTask] = Field(default_factory=list)

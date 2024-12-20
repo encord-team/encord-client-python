@@ -13,7 +13,8 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from enum import Enum
-from typing import Iterable, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
+from collections.abc import Iterable
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
@@ -31,11 +32,11 @@ class ConsensusReviewTaskStatus(str, Enum):
 
 
 class _ReviewTasksQueryParams(TasksQueryParams):
-    user_emails: Optional[List[str]] = None
-    data_hashes: Optional[List[UUID]] = None
-    dataset_hashes: Optional[List[UUID]] = None
-    data_title_contains: Optional[str] = None
-    statuses: Optional[List[ConsensusReviewTaskStatus]] = None
+    user_emails: list[str] | None = None
+    data_hashes: list[UUID] | None = None
+    dataset_hashes: list[UUID] | None = None
+    data_title_contains: str | None = None
+    statuses: list[ConsensusReviewTaskStatus] | None = None
 
 
 class ConsensusReviewStage(WorkflowStageBase):
@@ -48,11 +49,11 @@ class ConsensusReviewStage(WorkflowStageBase):
     def get_tasks(
         self,
         *,
-        assignee: Union[List[str], str, None] = None,
-        data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        data_title: Optional[str] = None,
-        status: Union[ConsensusReviewTaskStatus, List[ConsensusReviewTaskStatus], None] = None,
+        assignee: list[str] | str | None = None,
+        data_hash: list[UUID] | UUID | list[str] | str | None = None,
+        dataset_hash: list[UUID] | UUID | list[str] | str | None = None,
+        data_title: str | None = None,
+        status: ConsensusReviewTaskStatus | list[ConsensusReviewTaskStatus] | None = None,
     ) -> Iterable[ConsensusReviewTask]:
         """
         Retrieves tasks for the ConsensusReviewStage.
@@ -92,13 +93,13 @@ class ConsensusReviewStage(WorkflowStageBase):
 
 class _ActionApprove(WorkflowAction):
     action: Literal["APPROVE"] = "APPROVE"
-    assignee: Optional[str] = None
+    assignee: str | None = None
     retain_assignee: bool = False
 
 
 class _ActionReject(WorkflowAction):
     action: Literal["REJECT"] = "REJECT"
-    assignee: Optional[str] = None
+    assignee: str | None = None
     retain_assignee: bool = False
 
 
@@ -114,15 +115,15 @@ class _ActionRelease(WorkflowAction):
 class ConsensusReviewOption(BaseDTO):
     annotator: str
     label_branch_name: str
-    label_hash: Optional[UUID]
+    label_hash: UUID | None
 
 
 class ConsensusReviewTask(WorkflowTask):
     status: ConsensusReviewTaskStatus
     data_hash: UUID
     data_title: str
-    assignee: Optional[str]
-    options: List[ConsensusReviewOption]
+    assignee: str | None
+    options: list[ConsensusReviewOption]
 
     """
     Represents tasks in the Review stage of a Consensus Project.
@@ -146,9 +147,9 @@ class ConsensusReviewTask(WorkflowTask):
     def approve(
         self,
         *,
-        assignee: Optional[str] = None,
+        assignee: str | None = None,
         retain_assignee: bool = False,
-        bundle: Optional[Bundle] = None,
+        bundle: Bundle | None = None,
     ) -> None:
         """
         Approve the current task.
@@ -173,9 +174,9 @@ class ConsensusReviewTask(WorkflowTask):
     def reject(
         self,
         *,
-        assignee: Optional[str] = None,
+        assignee: str | None = None,
         retain_assignee: bool = False,
-        bundle: Optional[Bundle] = None,
+        bundle: Bundle | None = None,
     ) -> None:
         """
         Reject the current task.
@@ -197,7 +198,7 @@ class ConsensusReviewTask(WorkflowTask):
             bundle=bundle,
         )
 
-    def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
+    def assign(self, assignee: str, *, bundle: Bundle | None = None) -> None:
         """
         Assign the current task to a user.
 
@@ -213,7 +214,7 @@ class ConsensusReviewTask(WorkflowTask):
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
-    def release(self, *, bundle: Optional[Bundle] = None) -> None:
+    def release(self, *, bundle: Bundle | None = None) -> None:
         """
         Release the current task from the current user.
 

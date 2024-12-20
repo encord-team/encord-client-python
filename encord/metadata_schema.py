@@ -1,9 +1,10 @@
 import json
 from enum import Enum
-from typing import Dict, Literal, Sequence, Union
+from typing import Dict, Literal, Union
+from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
-from typing_extensions import Annotated
+from typing import Annotated
 
 from encord.http.v2.api_client import ApiClient
 
@@ -150,7 +151,7 @@ class _ClientMetadataSchemaOption(
     pass
 
 
-class _ClientMetadataSchema(RootModelDTO[Dict[str, _ClientMetadataSchemaOption]]):
+class _ClientMetadataSchema(RootModelDTO[dict[str, _ClientMetadataSchemaOption]]):
     """
     Internal type for a metadata schema.
     """
@@ -194,7 +195,7 @@ class MetadataSchema:
     """
 
     _dirty: bool
-    _schema: Dict[str, _ClientMetadataSchemaOption]
+    _schema: dict[str, _ClientMetadataSchemaOption]
     _api_client: ApiClient
 
     def __init__(self, api_client: ApiClient) -> None:

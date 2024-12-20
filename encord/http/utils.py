@@ -15,7 +15,8 @@ import mimetypes
 import os.path
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional, Type, Union
+from typing import List, Optional, Type, Union
+from collections.abc import Iterable
 
 from tqdm import tqdm
 
@@ -62,7 +63,7 @@ class CloudUploadSettings:
 
 
 def _get_content_type(
-    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], file_path: Union[str, Path]
+    orm_class: Union[type[Images], type[Video], type[DicomSeries], type[Audio]], file_path: Union[str, Path]
 ) -> Optional[str]:
     if orm_class == Images:
         return mimetypes.guess_type(str(file_path))[0]
@@ -78,9 +79,9 @@ def upload_to_signed_url_list(
     file_paths: Iterable[Union[str, Path]],
     config: BaseConfig,
     querier: Querier,
-    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]],
+    orm_class: Union[type[Images], type[Video], type[DicomSeries], type[Audio]],
     cloud_upload_settings: CloudUploadSettings,
-) -> List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]]:
+) -> list[Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]]:
     """Upload files and return the upload returns in the same order as the file paths supplied."""
     failed_uploads = []
     successful_uploads = []
@@ -124,7 +125,7 @@ def upload_to_signed_url_list(
 
 
 def _get_signed_url(
-    file_name: str, orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], querier: Querier
+    file_name: str, orm_class: Union[type[Images], type[Video], type[DicomSeries], type[Audio]], querier: Querier
 ) -> Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]:
     if orm_class == Video:
         return querier.basic_getter(SignedVideoURL, uid=file_name)

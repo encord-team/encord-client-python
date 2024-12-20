@@ -39,7 +39,7 @@ class AutomationModels(Enum):
     MASK_RCNN = "mask_rcnn"
 
     @staticmethod
-    def classification_options() -> Set[AutomationModels]:
+    def classification_options() -> set[AutomationModels]:
         """
         Returns:
             Model types that can be used for frame-level classifications.
@@ -58,7 +58,7 @@ class AutomationModels(Enum):
         }
 
     @staticmethod
-    def object_detection_options() -> Set[AutomationModels]:
+    def object_detection_options() -> set[AutomationModels]:
         """
         Returns:
             Model types that can be used with bounding_box type
@@ -67,7 +67,7 @@ class AutomationModels(Enum):
         return {AutomationModels.FASTER_RCNN}
 
     @staticmethod
-    def instance_segmentation_options() -> Set[AutomationModels]:
+    def instance_segmentation_options() -> set[AutomationModels]:
         """
         Returns:
             Model types that can be used with polygon type ``<feature_node_hashes>``

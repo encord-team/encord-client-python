@@ -12,7 +12,8 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from typing import Iterable, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
+from collections.abc import Iterable
 from uuid import UUID
 
 from encord.common.utils import ensure_uuid_list
@@ -21,9 +22,9 @@ from encord.workflow.common import TasksQueryParams, WorkflowStageBase, Workflow
 
 
 class _FinalTasksQueryParams(TasksQueryParams):
-    data_hashes: Optional[List[UUID]] = None
-    dataset_hashes: Optional[List[UUID]] = None
-    data_title_contains: Optional[str] = None
+    data_hashes: list[UUID] | None = None
+    dataset_hashes: list[UUID] | None = None
+    data_title_contains: str | None = None
 
 
 class FinalStage(WorkflowStageBase):
@@ -35,9 +36,9 @@ class FinalStage(WorkflowStageBase):
 
     def get_tasks(
         self,
-        data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        data_title: Optional[str] = None,
+        data_hash: list[UUID] | UUID | list[str] | str | None = None,
+        dataset_hash: list[UUID] | UUID | list[str] | str | None = None,
+        data_title: str | None = None,
     ) -> Iterable[FinalStageTask]:
         """
         Retrieves tasks for the FinalStage.

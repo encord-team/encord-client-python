@@ -27,7 +27,7 @@ class ArrayProtocol(Protocol):
     """
 
     @property
-    def __array_interface__(self) -> Dict[str, Any]: ...
+    def __array_interface__(self) -> dict[str, Any]: ...
 
     def tobytes(self) -> bytes: ...
 
@@ -41,13 +41,13 @@ class BitmaskCoordinates:
         rle_string: str
 
         @staticmethod
-        def try_from_dict(d: Dict[str, Any]) -> Optional[BitmaskCoordinates.EncodedBitmask]:
+        def try_from_dict(d: dict[str, Any]) -> BitmaskCoordinates.EncodedBitmask | None:
             try:
                 return BitmaskCoordinates.EncodedBitmask.from_dict(d)
             except EncordException:
                 return None
 
-    def __init__(self, source: Union[ArrayProtocol, BitmaskCoordinates.EncodedBitmask, Dict[str, Any]]):
+    def __init__(self, source: ArrayProtocol | BitmaskCoordinates.EncodedBitmask | dict[str, Any]):
         """
         Creates a BitmaskCoordinates object from a NumPy array, or other objects that implement
         :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`,
@@ -66,7 +66,7 @@ class BitmaskCoordinates:
             raise ValueError(f"Failed to create BitmaskCoordinates from an object of type {type(source)}")
 
     @staticmethod
-    def from_dict(d: Dict[str, Any]) -> BitmaskCoordinates:
+    def from_dict(d: dict[str, Any]) -> BitmaskCoordinates:
         """
         This method is used to construct object from Encord bitmask dictionary format.
         In most cases external users don't need it. Please consider just passing bitmask numpy array compatible object
@@ -100,7 +100,7 @@ class BitmaskCoordinates:
 
         return BitmaskCoordinates.EncodedBitmask(top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         This method is used to serialise the object to Encord bitmask dictionary format.
         In most cases external users don't need it. Please consider using .to_numpy_array method, or just pass this

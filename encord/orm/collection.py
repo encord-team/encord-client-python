@@ -10,7 +10,7 @@ from encord.orm.label_row import LabelRowMetadataDTO
 
 class GetCollectionParams(BaseDTO):
     top_level_folder_uuid: Optional[UUID] = Field(default=None, alias="topLevelFolderUuid")
-    collection_uuids: Optional[List[UUID]] = Field(default=[], alias="uuids")
+    collection_uuids: Optional[list[UUID]] = Field(default=[], alias="uuids")
     page_token: Optional[str] = Field(default=None, alias="pageToken")
     page_size: Optional[int] = Field(default=None, alias="pageSize")
 
@@ -44,15 +44,15 @@ class Collection(BaseDTO):
 
 
 class GetCollectionsResponse(BaseDTO):
-    results: List[Collection]
+    results: list[Collection]
 
 
 class CollectionBulkItemRequest(BaseDTO):
-    item_uuids: List[uuid.UUID]
+    item_uuids: list[uuid.UUID]
 
 
 class CollectionBulkItemResponse(BaseDTO):
-    failed_items: List[uuid.UUID]
+    failed_items: list[uuid.UUID]
 
 
 class CollectionBulkPresetRequest(BaseDTO):
@@ -66,7 +66,7 @@ class ProjectCollectionType(Enum):
 
 class GetProjectCollectionParams(BaseDTO):
     project_hash: Optional[uuid.UUID] = Field(default=None, alias="projectHash")
-    collection_uuids: Optional[List[uuid.UUID]] = Field(default=[], alias="uuids")
+    collection_uuids: Optional[list[uuid.UUID]] = Field(default=[], alias="uuids")
     page_token: Optional[str] = Field(default=None, alias="pageToken")
     page_size: Optional[int] = Field(default=None, alias="pageSize")
 
@@ -90,7 +90,7 @@ class ProjectCollection(BaseDTO):
 
 
 class GetProjectCollectionsResponse(BaseDTO):
-    results: List[ProjectCollection]
+    results: list[ProjectCollection]
 
 
 class ProjectDataCollectionInstance(BaseDTO):
@@ -104,12 +104,12 @@ class ProjectLabelCollectionInstance(BaseDTO):
 
 class ProjectDataCollectionItemResponse(BaseDTO):
     label_row_metadata: LabelRowMetadataDTO
-    instances: List[ProjectDataCollectionInstance]
+    instances: list[ProjectDataCollectionInstance]
 
 
 class ProjectLabelCollectionItemResponse(BaseDTO):
     label_row_metadata: LabelRowMetadataDTO
-    instances: List[ProjectLabelCollectionInstance]
+    instances: list[ProjectLabelCollectionInstance]
 
 
 class ProjectDataCollectionItemRequest(BaseDTO):
@@ -124,8 +124,8 @@ class ProjectLabelCollectionItemRequest(BaseDTO):
 
 
 class ProjectCollectionBulkItemRequest(BaseDTO):
-    items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
+    items: list[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
 
 
 class ProjectCollectionBulkItemResponse(BaseDTO):
-    failed_items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
+    failed_items: list[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]

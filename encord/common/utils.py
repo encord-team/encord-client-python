@@ -13,18 +13,18 @@ def snake_to_camel(snake_case_str: str) -> str:
 T = TypeVar("T")
 
 
-def ensure_list(v: Union[List[T], T, None]) -> Optional[List[T]]:
+def ensure_list(v: list[T] | T | None) -> list[T] | None:
     if v is None or isinstance(v, list):
         return v
     return [v]
 
 
-def ensure_uuid_list(value: Union[List[UUID], List[str], UUID, str, None]) -> Optional[List[UUID]]:
+def ensure_uuid_list(value: list[UUID] | list[str] | UUID | str | None) -> list[UUID] | None:
     vs = ensure_list(value)
     if vs is None:
         return None
 
-    results: List[UUID] = []
+    results: list[UUID] = []
     for v in vs:
         if isinstance(v, UUID):
             results.append(v)

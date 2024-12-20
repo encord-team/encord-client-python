@@ -44,7 +44,7 @@ with private_key_path.open() as f:
 user_client = EncordUserClient.create_with_ssh_private_key(private_key)
 
 # Find project to work with based on title.
-project_orm: OrmProject = next((p["project"] for p in user_client.get_projects(title_eq="Your project name")))
+project_orm: OrmProject = next(p["project"] for p in user_client.get_projects(title_eq="Your project name"))
 project: Project = user_client.get_project(project_orm.project_hash)
 
 
@@ -55,7 +55,7 @@ project: Project = user_client.get_project(project_orm.project_hash)
 # Sometimes you might want to inspect some metadata around the label rows, such as the label hash,
 # when the label was created, the corresponding data hash, or the creation date of the label.
 
-label_rows: List[LabelRowV2] = project.list_label_rows_v2()
+label_rows: list[LabelRowV2] = project.list_label_rows_v2()
 
 
 for label_row in label_rows:
@@ -153,7 +153,7 @@ first_label_row.save()  # Upload the label to the server
 # You can now get all the object instances that are part of the label row.
 
 # Check the get_object_instances optional filters for when you have many different object/classification instances.
-all_object_instances: List[ObjectInstance] = first_label_row.get_object_instances()
+all_object_instances: list[ObjectInstance] = first_label_row.get_object_instances()
 
 assert all_object_instances[0] == box_object_instance
 assert all_object_instances[0].get_annotation(frame=0).manual_annotation is True
@@ -220,7 +220,7 @@ for frame_view in first_label_row.get_frame_views():
 for label_row_frame_view in first_label_row.get_frame_views():
     frame_number = label_row_frame_view.frame
     print(f"Frame number: {frame_number}")
-    object_instances_in_frame: List[ObjectInstance] = label_row_frame_view.get_object_instances()
+    object_instances_in_frame: list[ObjectInstance] = label_row_frame_view.get_object_instances()
     for object_instance in object_instances_in_frame:
         print(f"Object instance: {object_instance}")
         annotation = object_instance.get_annotation(frame=frame_number)

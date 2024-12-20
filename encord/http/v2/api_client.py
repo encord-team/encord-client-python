@@ -2,7 +2,8 @@ import inspect
 import json
 import uuid
 from http import HTTPStatus
-from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
+from typing import Callable, Dict, List, Optional, Type, TypeVar, Union
+from collections.abc import Iterator, Sequence
 from urllib.parse import urljoin
 
 import requests
@@ -28,7 +29,7 @@ class ApiClient:
         self._config = config
         self._domain = self._config.domain
         self._base_path = "v2/public/"
-        self._bound_callbacks: Dict[Callable, Callable] = {}
+        self._bound_callbacks: dict[Callable, Callable] = {}
 
     @staticmethod
     def _exception_context(request: requests.PreparedRequest) -> RequestContext:
@@ -70,14 +71,14 @@ class ApiClient:
         else:
             raise RuntimeError(f"Operation {operation} does not have an 'api_client' parameter")
 
-    def get(self, path: str, params: Optional[BaseDTO], result_type: Type[T], allow_none: bool = False) -> T:
+    def get(self, path: str, params: Optional[BaseDTO], result_type: type[T], allow_none: bool = False) -> T:
         return self._request_without_payload("GET", path, params, result_type, allow_none=allow_none)
 
     def get_paged_iterator(
         self,
         path: str,
         params: BaseDTO,
-        result_type: Type[T],
+        result_type: type[T],
         allow_none: bool = False,
     ) -> Iterator[T]:
         if not hasattr(params, "page_token"):
@@ -102,7 +103,7 @@ class ApiClient:
                 break
 
     def delete(
-        self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None, allow_none: bool = False
+        self, path: str, params: Optional[BaseDTO], result_type: Optional[type[T]] = None, allow_none: bool = False
     ) -> T:
         return self._request_without_payload("DELETE", path, params, result_type, allow_none=allow_none)
 
@@ -111,7 +112,7 @@ class ApiClient:
         path: str,
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
-        result_type: Optional[Type[T]],
+        result_type: Optional[type[T]],
     ) -> T:
         return self._request_with_payload("POST", path, params, payload, result_type)
 
@@ -124,11 +125,11 @@ class ApiClient:
         self._request_with_payload("PUT", path, params, payload, None, allow_none=True)
 
     def patch(
-        self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
+        self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[type[T]]
     ) -> T:
         return self._request_with_payload("PATCH", path, params, payload, result_type)
 
-    def _serialise_payload(self, payload: Union[BaseDTO, Sequence[BaseDTO], None]) -> Union[List[Dict], Dict, None]:
+    def _serialise_payload(self, payload: Union[BaseDTO, Sequence[BaseDTO], None]) -> Union[list[dict], dict, None]:
         if isinstance(payload, list):
             return [p.to_dict() for p in payload]
         elif isinstance(payload, BaseDTO):
@@ -150,7 +151,7 @@ class ApiClient:
         path: str,
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
-        result_type: Optional[Type[T]],
+        result_type: Optional[type[T]],
         allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
@@ -170,7 +171,7 @@ class ApiClient:
         method: str,
         path: str,
         params: Optional[BaseDTO],
-        result_type: Optional[Type[T]],
+        result_type: Optional[type[T]],
         allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
@@ -179,7 +180,7 @@ class ApiClient:
 
         return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
 
-    def _request(self, req: PreparedRequest, result_type: Optional[Type[T]], allow_none: bool = False):
+    def _request(self, req: PreparedRequest, result_type: Optional[type[T]], allow_none: bool = False):
         req = self._config.define_headers_v2(req)
 
         timeouts = (self._config.connect_timeout, self._config.read_timeout)

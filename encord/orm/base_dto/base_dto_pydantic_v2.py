@@ -40,13 +40,13 @@ class BaseDTO(BaseDTOInterface, BaseModel):
         return value
 
     @classmethod
-    def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], d: dict[str, Any]) -> T:
         try:
             return cls.model_validate(d)  # type: ignore[attr-defined]
         except ValidationError as e:
             raise EncordException(message=str(e)) from e
 
-    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+    def to_dict(self, by_alias=True, exclude_none=True) -> dict[str, Any]:
         return self.model_dump(by_alias=by_alias, exclude_none=exclude_none, mode="json")  # type: ignore[attr-defined]
 
 
@@ -72,13 +72,13 @@ class GenericBaseDTO(BaseDTOInterface, BaseModel):
         return value
 
     @classmethod
-    def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], d: dict[str, Any]) -> T:
         try:
             return cls.model_validate(d)  # type: ignore[attr-defined]
         except ValidationError as e:
             raise EncordException(message=str(e)) from e
 
-    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+    def to_dict(self, by_alias=True, exclude_none=True) -> dict[str, Any]:
         return self.model_dump(by_alias=by_alias, exclude_none=exclude_none, mode="json")  # type: ignore[attr-defined]
 
 

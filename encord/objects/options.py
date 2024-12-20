@@ -15,7 +15,8 @@ from __future__ import annotations
 import re
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar
+from collections.abc import Iterable, Sequence
 
 from encord.common.deprecated import deprecated
 from encord.objects.ontology_element import (
@@ -47,11 +48,11 @@ class Option(OntologyNestedElement):
 
     @property
     @abstractmethod
-    def attributes(self) -> List[Attribute]:
+    def attributes(self) -> list[Attribute]:
         raise NotImplementedError("This method is not implemented for this class")
 
-    def to_dict(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = dict()
+    def to_dict(self) -> dict[str, Any]:
+        ret: dict[str, Any] = dict()
         ret["id"] = _decode_nested_uid(self.uid)
         ret["label"] = self.label
         ret["value"] = self.value
@@ -67,7 +68,7 @@ class Option(OntologyNestedElement):
         pass
 
     @staticmethod
-    def _decode_common_option_fields(option_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def _decode_common_option_fields(option_dict: dict[str, Any]) -> dict[str, Any]:
         return {
             "uid": _nested_id_from_json_str(option_dict["id"]),
             "label": option_dict["label"],
@@ -82,7 +83,7 @@ class FlatOption(Option):
         return False
 
     @property
-    def attributes(self) -> List[Attribute]:
+    def attributes(self) -> list[Attribute]:
         return []
 
     @classmethod
@@ -98,13 +99,13 @@ AttributeType = TypeVar("AttributeType", bound="Attribute")
 
 @dataclass
 class NestableOption(Option):
-    nested_options: List[Attribute] = field(default_factory=list)
+    nested_options: list[Attribute] = field(default_factory=list)
 
     def is_nestable(self) -> bool:
         return True
 
     @property
-    def attributes(self) -> List[Attribute]:
+    def attributes(self) -> list[Attribute]:
         return self.nested_options
 
     @property
@@ -125,10 +126,10 @@ class NestableOption(Option):
     @deprecated(version="0.1.100", alternative=".add_nested_attribute")
     def add_nested_option(
         self,
-        cls: Type[AttributeType],
+        cls: type[AttributeType],
         name: str,
-        local_uid: Optional[int] = None,
-        feature_node_hash: Optional[str] = None,
+        local_uid: int | None = None,
+        feature_node_hash: str | None = None,
         required: bool = False,
     ) -> AttributeType:
         """
@@ -141,10 +142,10 @@ class NestableOption(Option):
 
     def add_nested_attribute(
         self,
-        cls: Type[AttributeType],
+        cls: type[AttributeType],
         name: str,
-        local_uid: Optional[int] = None,
-        feature_node_hash: Optional[str] = None,
+        local_uid: int | None = None,
+        feature_node_hash: str | None = None,
         required: bool = False,
     ) -> AttributeType:
         """
@@ -175,13 +176,13 @@ OT = TypeVar("OT", bound=Option)
 
 
 def _add_option(
-    options: List[OT],
-    cls: Type[OT],
+    options: list[OT],
+    cls: type[OT],
     label: str,
-    parent_uid: List[int],
-    local_uid: Optional[int] = None,
-    feature_node_hash: Optional[str] = None,
-    value: Optional[str] = None,
+    parent_uid: list[int],
+    local_uid: int | None = None,
+    feature_node_hash: str | None = None,
+    value: str | None = None,
 ) -> OT:
     local_uid, feature_node_hash = _build_identifiers(options, local_uid, feature_node_hash)
     if not value:
@@ -191,7 +192,7 @@ def _add_option(
     return option
 
 
-def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Optional[Option]:
+def _get_option_by_hash(feature_node_hash: str, options: Iterable[Option]) -> Option | None:
     return _get_element_by_hash(feature_node_hash, options, type_=Option)
 
 

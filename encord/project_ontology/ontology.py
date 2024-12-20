@@ -11,7 +11,8 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import uuid
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
+from collections.abc import Iterable
 
 from encord.project_ontology.classification_attribute import ClassificationAttribute
 from encord.project_ontology.classification_option import ClassificationOption
@@ -65,8 +66,8 @@ class Ontology:
     )
 
     def __init__(self) -> None:
-        self.ontology_objects: List[OntologyObject] = []
-        self.ontology_classifications: List[OntologyClassification] = []
+        self.ontology_objects: list[OntologyObject] = []
+        self.ontology_classifications: list[OntologyClassification] = []
         self.color_index = 0
 
     def __str__(self):
@@ -79,7 +80,7 @@ class Ontology:
         return len(self.ontology_classifications) + 1
 
     @classmethod
-    def from_dict(cls, ontology_dict: Dict):
+    def from_dict(cls, ontology_dict: dict):
         """
         Convert python dictionary too an :class:`.Ontology` object.
 
@@ -93,7 +94,7 @@ class Ontology:
         return ontology
 
     @classmethod
-    def __build_ontology_objects(cls, ontology_objects_dict: List[Dict]):
+    def __build_ontology_objects(cls, ontology_objects_dict: list[dict]):
         ontology_objects = []
         for ontology_object_dict in ontology_objects_dict:
             ontology_object = OntologyObject(
@@ -107,7 +108,7 @@ class Ontology:
         return ontology_objects
 
     @classmethod
-    def __build_ontology_classifications(cls, ontology_classifications_dict: List[Dict]):
+    def __build_ontology_classifications(cls, ontology_classifications_dict: list[dict]):
         ontology_classifications = []
         for classification_object_dict in ontology_classifications_dict:
             classification_attributes = []
@@ -133,7 +134,7 @@ class Ontology:
         return ontology_classifications
 
     @classmethod
-    def __build_classification_options(cls, options_dict: List[Dict]):
+    def __build_classification_options(cls, options_dict: list[dict]):
         options = []
         for option_dict in options_dict:
             option = ClassificationOption(
@@ -221,7 +222,7 @@ class Ontology:
 
         return {"objects": objects, "classifications": classifications}
 
-    def ontology_object_to_dict(self, ontology_object: OntologyObject) -> Dict:
+    def ontology_object_to_dict(self, ontology_object: OntologyObject) -> dict:
         return {
             "id": ontology_object.id,
             "color": ontology_object.color,
@@ -232,7 +233,7 @@ class Ontology:
 
     def __ontology_classification_options_to_dict(
         self, options: Optional[Iterable[ClassificationOption]]
-    ) -> Optional[List[Dict]]:
+    ) -> Optional[list[dict]]:
         if options is None:
             return None
 
@@ -247,7 +248,7 @@ class Ontology:
             option_dicts.append(option)
         return option_dicts
 
-    def ontology_classification_to_dict(self, ontology_classification: OntologyClassification) -> Dict:
+    def ontology_classification_to_dict(self, ontology_classification: OntologyClassification) -> dict:
         attributes = []
         for classification_attribute in ontology_classification.attributes:
             attribute = {

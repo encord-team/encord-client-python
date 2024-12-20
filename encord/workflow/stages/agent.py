@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Iterable, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
+from collections.abc import Iterable
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
@@ -21,8 +22,8 @@ class AgentTaskStatus(str, Enum):
 
 class _ActionPathway(WorkflowAction):
     action: Literal["PATHWAY_ACTION"] = "PATHWAY_ACTION"
-    pathway_uuid: Optional[str] = None
-    pathway_name: Optional[str] = None
+    pathway_uuid: str | None = None
+    pathway_name: str | None = None
 
 
 class AgentTask(WorkflowTask):
@@ -30,7 +31,7 @@ class AgentTask(WorkflowTask):
     data_hash: UUID
     data_title: str
     label_branch_name: str
-    assignee: Optional[str]
+    assignee: str | None
 
     """
     Represents a task in an Agent stage.
@@ -49,7 +50,7 @@ class AgentTask(WorkflowTask):
     """
 
     def proceed(
-        self, pathway_name: str | None = None, pathway_uuid: str | None = None, *, bundle: Optional[Bundle] = None
+        self, pathway_name: str | None = None, pathway_uuid: str | None = None, *, bundle: Bundle | None = None
     ) -> None:
         if not pathway_name and not pathway_uuid:
             raise ValueError("Either `pathway_name` or `pathway_uuid` parameter must be provided.")
@@ -63,11 +64,11 @@ class AgentTask(WorkflowTask):
 
 
 class _AgentTasksQueryParams(TasksQueryParams):
-    user_emails: Optional[List[str]] = None
-    data_hashes: Optional[List[UUID]] = None
-    dataset_hashes: Optional[List[UUID]] = None
-    data_title_contains: Optional[str] = None
-    statuses: Optional[List[AgentTaskStatus]] = None
+    user_emails: list[str] | None = None
+    data_hashes: list[UUID] | None = None
+    dataset_hashes: list[UUID] | None = None
+    data_title_contains: str | None = None
+    statuses: list[AgentTaskStatus] | None = None
 
 
 class AgentStage(WorkflowStageBase):
@@ -80,11 +81,11 @@ class AgentStage(WorkflowStageBase):
     def get_tasks(
         self,
         *,
-        assignee: Union[List[str], str, None] = None,
-        data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        data_title: Optional[str] = None,
-        status: Optional[AgentTaskStatus | List[AgentTaskStatus]] = None,
+        assignee: list[str] | str | None = None,
+        data_hash: list[UUID] | UUID | list[str] | str | None = None,
+        dataset_hash: list[UUID] | UUID | list[str] | str | None = None,
+        data_title: str | None = None,
+        status: AgentTaskStatus | list[AgentTaskStatus] | None = None,
     ) -> Iterable[AgentTask]:
         """
         Retrieves tasks for the AgentStage.

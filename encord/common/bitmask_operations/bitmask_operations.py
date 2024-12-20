@@ -1,12 +1,13 @@
 from itertools import groupby
-from typing import List, Sequence, Tuple
+from typing import List, Tuple
+from collections.abc import Sequence
 
 
-def _string_to_rle(mask_string: str) -> List[int]:
+def _string_to_rle(mask_string: str) -> list[int]:
     """
     COCO-compatible string to RLE-encoded mask de-serialisation
     """
-    cnts: List[int] = []
+    cnts: list[int] = []
     p = 0
 
     while p < len(mask_string):
@@ -60,14 +61,14 @@ def _rle_to_string(rle: Sequence[int]) -> str:
     return rle_string
 
 
-def _mask_to_rle(mask: bytes) -> List[int]:
+def _mask_to_rle(mask: bytes) -> list[int]:
     """
     COCO-compatible raw bitmask to COCO-compatible RLE
     """
     return [len(list(group)) for _, group in groupby(mask)]
 
 
-def _rle_to_mask(rle: List[int], size: int) -> bytes:
+def _rle_to_mask(rle: list[int], size: int) -> bytes:
     """
     COCO-compatible RLE to bitmask
     """
@@ -94,7 +95,7 @@ def deserialise_bitmask(serialised_bitmask: str, length: int) -> bytes:
     return _rle_to_mask(rle, length)
 
 
-def transpose_bytearray(byte_data: bytes, shape: Tuple[int, int]) -> bytes:
+def transpose_bytearray(byte_data: bytes, shape: tuple[int, int]) -> bytes:
     rows, cols = shape
     transposed_byte_data = bytearray(len(byte_data))
     for row in range(rows):

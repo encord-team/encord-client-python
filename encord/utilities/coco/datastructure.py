@@ -81,7 +81,7 @@ class PointTuple(NamedTuple):
 
 
 class CocoPolygon(BaseDTO):
-    values: List[PointTuple]
+    values: list[PointTuple]
 
     def to_encord(self, img_w: int, img_h: int) -> PolygonCoordinates:
         return PolygonCoordinates(values=[PointCoordinate(x=p.x / img_w, y=p.y / img_h) for p in self.values])
@@ -149,7 +149,7 @@ class CocoAnnotationModel(BaseDTO):
     id: int
     image_id: ImageID
     category_id: int
-    segmentation: Union[CocoPolygon, List[CocoPolygon], CocoRLE]
+    segmentation: Union[CocoPolygon, list[CocoPolygon], CocoRLE]
     area: float
     bbox: CocoBoundingBox
     iscrowd: bool
@@ -157,7 +157,7 @@ class CocoAnnotationModel(BaseDTO):
 
 class CocoRootModel(BaseDTO):
     info: CocoInfoModel
-    categories: List[CocoCategoryModel]
-    images: List[CocoImageModel]
-    annotations: List[CocoAnnotationModel]
-    licenses: Optional[List[CocoLicenseModel]] = None
+    categories: list[CocoCategoryModel]
+    images: list[CocoImageModel]
+    annotations: list[CocoAnnotationModel]
+    licenses: Optional[list[CocoLicenseModel]] = None

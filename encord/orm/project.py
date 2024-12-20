@@ -74,7 +74,7 @@ class Project(base_orm.BaseORM):
 
     NON_UPDATABLE_FIELDS = {"editor_ontology", "datasets", "label_rows"}
 
-    def get_labels_list(self) -> List[Optional[str]]:
+    def get_labels_list(self) -> list[str | None]:
         """
         Returns a list of all optional label row IDs (label_hash uid) in a project. If no `label_hash` is found,
         a `None` value is appended. This can be useful for working with fetching additional label row data via
@@ -163,7 +163,7 @@ class ProjectDataset(BaseDTO):
     description: str
 
     @classmethod
-    def from_list(cls, dataset_list: List[Dict[str, Any]]) -> List[ProjectDataset]:
+    def from_list(cls, dataset_list: list[dict[str, Any]]) -> list[ProjectDataset]:
         return [cls.from_dict(i) for i in dataset_list]
 
 
@@ -202,9 +202,9 @@ class CopyDatasetOptions:
     """
     One of `CopyDatasetAction.ATTACH` or `CopyDatasetAction.CLONE`. (defaults to ATTACH)
     """
-    dataset_title: Optional[str] = None
-    dataset_description: Optional[str] = None
-    datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
+    dataset_title: str | None = None
+    dataset_description: str | None = None
+    datasets_to_data_hashes_map: dict[str, list[str]] = field(default_factory=dict)
     """ A dictionary of `{ <dataset_hash>: List[<data_unit_hash>]}`.
     When provided with a CLONE action this will filter the copied data units.
     When combined with `CopyLabelsOptions`, only labels from specific data units will be copied.
@@ -215,9 +215,9 @@ class CopyDatasetOptions:
 class CopyLabelsOptions:
     """Options for copying the labels associated with a project."""
 
-    accepted_label_hashes: Optional[List[str]] = None
+    accepted_label_hashes: list[str] | None = None
     """ A list of label hashes that will be copied to the new project  """
-    accepted_label_statuses: Optional[List[ReviewApprovalState]] = None
+    accepted_label_statuses: list[ReviewApprovalState] | None = None
     """ A list of label statuses to filter the labels copied to the new project, defined in `ReviewApprovalState`"""
 
 
@@ -227,21 +227,21 @@ class CopyProjectPayload:
 
     @dataclass
     class _CopyLabelsOptions:
-        datasets_to_data_hashes_map: Dict[str, List[str]] = field(default_factory=dict)
-        accepted_label_hashes: Optional[List[str]] = None
-        accepted_label_statuses: Optional[List[ReviewApprovalState]] = None
-        create_new_dataset: Optional[bool] = None
+        datasets_to_data_hashes_map: dict[str, list[str]] = field(default_factory=dict)
+        accepted_label_hashes: list[str] | None = None
+        accepted_label_statuses: list[ReviewApprovalState] | None = None
+        create_new_dataset: bool | None = None
 
     @dataclass
     class _ProjectCopyMetadata:
-        project_title: Optional[str] = None
-        project_description: Optional[str] = None
-        dataset_title: Optional[str] = None
-        dataset_description: Optional[str] = None
+        project_title: str | None = None
+        project_description: str | None = None
+        dataset_title: str | None = None
+        dataset_description: str | None = None
 
-    copy_project_options: List[ProjectCopyOptions] = field(default_factory=list)
-    copy_labels_options: Optional[_CopyLabelsOptions] = None
-    project_copy_metadata: Optional[_ProjectCopyMetadata] = None
+    copy_project_options: list[ProjectCopyOptions] = field(default_factory=list)
+    copy_labels_options: _CopyLabelsOptions | None = None
+    project_copy_metadata: _ProjectCopyMetadata | None = None
 
 
 class ProjectWorkflowType(Enum):
@@ -259,7 +259,7 @@ class ManualReviewWorkflowSettings:
 class BenchmarkQaWorkflowSettings:
     """Sets the project QA workflow to "Automatic", with benchmark data being presented to all the annotators"""
 
-    source_projects: List[str] = field(default_factory=list)
+    source_projects: list[str] = field(default_factory=list)
     """
     For Benchmark QA projects, a list of project ids (project_hash-es)
         that contain the benchmark source data
@@ -301,7 +301,7 @@ class CvatExportType(str, Enum):
 
 
 class TaskPriorityParams(BaseDTO):
-    priorities: List[Tuple[str, float]]
+    priorities: list[tuple[str, float]]
 
 
 class ProjectDTO(BaseDTO):
@@ -312,11 +312,11 @@ class ProjectDTO(BaseDTO):
     created_at: datetime.datetime
     last_edited_at: datetime.datetime
     ontology_hash: str
-    editor_ontology: Dict[str, Any]
-    user_role: Optional[ProjectUserRole] = None
-    source_projects: Optional[List[str]] = None
-    workflow_manager_uuid: Optional[UUID] = None
-    workflow: Optional[Workflow] = None
+    editor_ontology: dict[str, Any]
+    user_role: ProjectUserRole | None = None
+    source_projects: list[str] | None = None
+    workflow_manager_uuid: UUID | None = None
+    workflow: Workflow | None = None
 
 
 class CvatReviewMode(CamelStrEnum):
@@ -347,7 +347,7 @@ class CvatImportStartPayload(BaseDTO):
     annotations_base64: str
     dataset_uuid: UUID
     review_mode: CvatReviewMode
-    data: List[CvatImportDataItem]
+    data: list[CvatImportDataItem]
     transform_bounding_boxes_to_polygons: bool
 
 
@@ -372,8 +372,8 @@ class CvatImportGetResultResponse(BaseDTO):
     """
 
     status: CvatImportGetResultLongPollingStatus
-    project_uuid: Optional[UUID] = None
-    issues: Optional[Dict] = None
+    project_uuid: UUID | None = None
+    issues: dict | None = None
 
 
 class ProjectFilterParams(BaseDTO):
@@ -381,12 +381,12 @@ class ProjectFilterParams(BaseDTO):
     Filter parameters for the /v2/public/projects endpoint
     """
 
-    title_eq: Optional[str] = None
-    title_like: Optional[str] = None
-    desc_eq: Optional[str] = None
-    desc_like: Optional[str] = None
-    created_before: Optional[Union[str, datetime.datetime]] = None
-    created_after: Optional[Union[str, datetime.datetime]] = None
-    edited_before: Optional[Union[str, datetime.datetime]] = None
-    edited_after: Optional[Union[str, datetime.datetime]] = None
+    title_eq: str | None = None
+    title_like: str | None = None
+    desc_eq: str | None = None
+    desc_like: str | None = None
+    created_before: str | datetime.datetime | None = None
+    created_after: str | datetime.datetime | None = None
+    edited_before: str | datetime.datetime | None = None
+    edited_after: str | datetime.datetime | None = None
     include_org_access: bool = False

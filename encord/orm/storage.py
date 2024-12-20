@@ -46,23 +46,23 @@ class StorageLocationName(CamelStrEnum):
 
 class PathElement(BaseDTO):
     uuid: UUID
-    parent_uuid: Optional[UUID]
+    parent_uuid: UUID | None
     name: str
-    synced_dataset_hash: Optional[UUID]
+    synced_dataset_hash: UUID | None
 
 
 class StorageFolder(BaseDTO):
     uuid: UUID
-    parent: Optional[UUID]
+    parent: UUID | None
     name: str
     description: str
-    client_metadata: Optional[str]
+    client_metadata: str | None
     owner: str
     created_at: datetime
     last_edited_at: datetime
     user_role: StorageUserRole
-    synced_dataset_hash: Optional[UUID]
-    path_to_root: List[PathElement]
+    synced_dataset_hash: UUID | None
+    path_to_root: list[PathElement]
 
 
 class StorageItem(BaseDTO):
@@ -82,23 +82,23 @@ class StorageItem(BaseDTO):
     """This item has been added to the folder but isn't fully processed yet"""
     backed_data_units_count: int
     storage_location: StorageLocationName
-    integration_hash: Optional[UUID]
-    url: Optional[str]
-    signed_url: Optional[str]
-    file_size: Optional[int]
-    mime_type: Optional[str]
-    duration: Optional[float]
-    fps: Optional[float]
-    height: Optional[int]
-    width: Optional[int]
-    dicom_instance_uid: Optional[str]
-    dicom_study_uid: Optional[str]
-    dicom_series_uid: Optional[str]
-    frame_count: Optional[int]
-    audio_sample_rate: Optional[int]
-    audio_bit_depth: Optional[int]
-    audio_codec: Optional[str]
-    audio_num_channels: Optional[int]
+    integration_hash: UUID | None
+    url: str | None
+    signed_url: str | None
+    file_size: int | None
+    mime_type: str | None
+    duration: float | None
+    fps: float | None
+    height: int | None
+    width: int | None
+    dicom_instance_uid: str | None
+    dicom_study_uid: str | None
+    dicom_series_uid: str | None
+    frame_count: int | None
+    audio_sample_rate: int | None
+    audio_bit_depth: int | None
+    audio_codec: str | None
+    audio_num_channels: int | None
 
 
 class StorageItemInaccessible(BaseDTO):
@@ -107,15 +107,15 @@ class StorageItemInaccessible(BaseDTO):
 
 class CreateStorageFolderPayload(BaseDTO):
     name: str
-    description: Optional[str]
-    parent: Optional[UUID]
-    client_metadata: Optional[str]
+    description: str | None
+    parent: UUID | None
+    client_metadata: str | None
 
 
 class UploadSignedUrlsPayload(BaseDTO):
     item_type: StorageItemType
     count: int
-    frames_subfolder_name: Optional[str]
+    frames_subfolder_name: str | None
 
 
 class UploadSignedUrl(BaseDTO):
@@ -140,10 +140,10 @@ class UploadLongPollingState(BaseDTO):
     status: LongPollingStatus
     """Status of the upload job. Documented in detail in :meth:`encord.orm.dataset.LongPollingStatus`"""
 
-    items_with_names: List[StorageItemWithName]
+    items_with_names: list[StorageItemWithName]
     """Information about data which was added to the folder."""
 
-    errors: List[str]
+    errors: list[str]
     """Stringified list of exceptions."""
 
     units_pending_count: int
@@ -158,10 +158,10 @@ class UploadLongPollingState(BaseDTO):
     units_cancelled_count: int
     """Number of upload job units that have been cancelled."""
 
-    unit_errors: List[DataUnitError]
+    unit_errors: list[DataUnitError]
     """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
-    file_name: Optional[str] = None
+    file_name: str | None = None
     """Name of the JSON or CSV file that contained the list of URLs to ingest form the cloud bucket. Optional."""
 
 
@@ -256,7 +256,7 @@ class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
     Missing any of these tags as `tags` dictionary key will raise a validation error.
     """
 
-    tags: Dict[str, Optional[Dict]]
+    tags: dict[str, dict | None]
 
 
 class DataUploadImage(BaseDTO):
@@ -266,16 +266,16 @@ class DataUploadImage(BaseDTO):
 
     object_url: str
     """"URL of the image file to be registered."""
-    title: Optional[str] = None
+    title: str | None = None
     """Title of the image item (derived from the URL if omitted)."""
-    client_metadata: Dict = Field(default_factory=dict)
+    client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the image item."""
     external_file_type: Literal["IMAGE"] = "IMAGE"
     """Type of the external file."""
-    image_metadata: Optional[CustomerProvidedImageMetadata] = None
+    image_metadata: CustomerProvidedImageMetadata | None = None
     """Optional media metadata of the image file (if provided). See :class:`CustomerProvidedImageMetadata` for more details."""
 
-    placeholder_item_uuid: Optional[UUID] = None
+    placeholder_item_uuid: UUID | None = None
     """For system use only."""
 
 
@@ -286,17 +286,17 @@ class DataUploadVideo(BaseDTO):
 
     object_url: str
     """URL of the video file to be registered."""
-    title: Optional[str] = None
+    title: str | None = None
     """Title of the video item (derived from the URL if omitted)."""
-    client_metadata: Dict = Field(default_factory=dict)
+    client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the video item."""
 
     external_file_type: Literal["VIDEO"] = "VIDEO"
     """Type of the external file."""
-    video_metadata: Optional[CustomerProvidedVideoMetadata] = None
+    video_metadata: CustomerProvidedVideoMetadata | None = None
     """Optional media metadata of the video file (if provided). See :class:`CustomerProvidedVideoMetadata` for more details."""
 
-    placeholder_item_uuid: Optional[UUID] = None
+    placeholder_item_uuid: UUID | None = None
     """For system use only."""
 
 
@@ -307,14 +307,14 @@ class DataUploadNifti(BaseDTO):
 
     object_url: str
     """URL of the NIFTI file to be registered."""
-    title: Optional[str] = None
+    title: str | None = None
     """Title of the NIFTI item (derived from the URL if omitted)."""
-    client_metadata: Dict = Field(default_factory=dict)
+    client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the NIFTI item."""
 
     external_file_type: Literal["NIFTI"] = "NIFTI"
     """Type of the external file."""
-    placeholder_item_uuid: Optional[UUID] = None
+    placeholder_item_uuid: UUID | None = None
     """For system use only."""
 
 
@@ -325,12 +325,12 @@ class DataUploadImageGroupImage(BaseDTO):
 
     url: str
     """URL of the image file to be used as the frame in the image group."""
-    title: Optional[str] = None
+    title: str | None = None
     """Title of the image item (derived from the URL if omitted)."""
-    image_metadata: Optional[CustomerProvidedImageMetadata] = None
+    image_metadata: CustomerProvidedImageMetadata | None = None
     """Optional media metadata of the image file (if provided). See :class:`CustomerProvidedImageMetadata` for more details."""
 
-    placeholder_item_uuid: Optional[UUID] = None
+    placeholder_item_uuid: UUID | None = None
     """For system use only."""
 
 
@@ -339,11 +339,11 @@ class DataUploadImageGroup(BaseDTO):
     Data about an image group or image sequence item to be registered with Encord service.
     """
 
-    images: List[DataUploadImageGroupImage]
+    images: list[DataUploadImageGroupImage]
     """List of images to be used as frames in the image group. See :class:`DataUploadImageGroupImage` for more details."""
-    title: Optional[str]
+    title: str | None
     """Title of the image group item (requred if using cloud integration)."""
-    client_metadata: Dict = Field(default_factory=dict)
+    client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the image group item."""
     create_video: bool = False
     """If set to `True`, create an image sequence backed by a video file uploaded to the cloud storage."""
@@ -359,15 +359,15 @@ class DataUploadImageGroupFromItems(BaseDTO):
     Data about an image group item to be created from previously uploaded images.
     """
 
-    image_items: List[UUID]
+    image_items: list[UUID]
     """List of image items to be used as frames in the image group."""
-    title: Optional[str]
+    title: str | None
     """Title of the image group item (required if using cloud integration)."""
-    client_metadata: Dict = Field(default_factory=dict)
+    client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the image group."""
     create_video: bool
     """If set to `True`, create an image sequence backed by a video file uploaded to the cloud storage."""
-    video_url_prefix: Optional[str] = None
+    video_url_prefix: str | None = None
     """URL prefix for the video file to be created from the image group."""
 
     external_file_type: Literal["IMG_GROUP_FROM_ITEMS"] = "IMG_GROUP_FROM_ITEMS"
@@ -383,12 +383,12 @@ class DataUploadDicomSeriesDicomFile(BaseDTO):
 
     url: str
     """URL of the DICOM file to be registered with Encord service."""
-    title: Optional[str]
+    title: str | None
     """Title of the DICOM file (derived from the URL if omitted)."""
-    dicom_metadata: Optional[CustomerProvidedDicomSeriesDicomFileMetadata] = None
+    dicom_metadata: CustomerProvidedDicomSeriesDicomFileMetadata | None = None
     """Optional media metadata of the DICOM file (if provided). See :class:`CustomerProvidedDicomSeriesDicomFileMetadata` for more details."""
 
-    placeholder_item_uuid: Optional[UUID] = None
+    placeholder_item_uuid: UUID | None = None
     """For system use only."""
 
 
@@ -397,11 +397,11 @@ class DataUploadDicomSeries(BaseDTO):
     Data about a DICOM series item to be registered with Encord service.
     """
 
-    dicom_files: List[DataUploadDicomSeriesDicomFile]
+    dicom_files: list[DataUploadDicomSeriesDicomFile]
     """List of DICOM files to be used in the series item. See :class:`DataUploadDicomSeriesDicomFile` for more details."""
-    title: Optional[str]
+    title: str | None
     """Title of the DICOM series item (required if using cloud integration)."""
-    client_metadata: Dict = Field(default_factory=dict)
+    client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the DICOM series item."""
 
     external_file_type: Literal["DICOM"] = "DICOM"
@@ -411,7 +411,7 @@ class DataUploadDicomSeries(BaseDTO):
 class DataUploadText(BaseDTO):
     object_url: str
     """URL of the text (TXT, HTML, etc) file to be registered with Encord service."""
-    title: Optional[str] = None
+    title: str | None = None
     """Title of the file (derived from the URL if omitted)."""
     client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the file."""
@@ -419,14 +419,14 @@ class DataUploadText(BaseDTO):
     external_file_type: Literal["PLAIN_TEXT"] = "PLAIN_TEXT"
     """Type of the external file."""
 
-    placeholder_item_uuid: Optional[UUID] = None
+    placeholder_item_uuid: UUID | None = None
     """For system use only."""
 
 
 class DataUploadPDF(BaseDTO):
     object_url: str
     """URL of the PDF file to be registered with Encord service."""
-    title: Optional[str] = None
+    title: str | None = None
     """Title of the file (derived from the URL if omitted)."""
     client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the file."""
@@ -434,7 +434,7 @@ class DataUploadPDF(BaseDTO):
     external_file_type: Literal["PDF"] = "PDF"
     """Type of the external file."""
 
-    placeholder_item_uuid: Optional[UUID] = None
+    placeholder_item_uuid: UUID | None = None
     """For system use only."""
 
 
@@ -445,17 +445,17 @@ class DataUploadAudio(BaseDTO):
 
     object_url: str
     """URL of the audio file to be registered."""
-    title: Optional[str] = None
+    title: str | None = None
     """Title of the audio item (derived from the URL if omitted)."""
-    client_metadata: Dict = Field(default_factory=dict)
+    client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the audio item."""
 
-    audio_metadata: Optional[CustomerProvidedAudioMetadata] = None
+    audio_metadata: CustomerProvidedAudioMetadata | None = None
     """Optional media metadata of the audio file (if provided). See :class:`CustomerProvidedAudioMetadata` for more details."""
     external_file_type: Literal["AUDIO"] = "AUDIO"
     """Type of the external file."""
 
-    placeholder_item_uuid: Optional[UUID] = None
+    placeholder_item_uuid: UUID | None = None
     """For system use only."""
 
 
@@ -466,32 +466,32 @@ class DataUploadItems(BaseDTO):
     A more structured alternative to using a JSON file.
     """
 
-    videos: List[DataUploadVideo] = Field(default_factory=list)
+    videos: list[DataUploadVideo] = Field(default_factory=list)
     """List of video items to be registered. See :class:`DataUploadVideo` for more details."""
 
-    image_groups: List[DataUploadImageGroup] = Field(default_factory=list)
+    image_groups: list[DataUploadImageGroup] = Field(default_factory=list)
     """List of image group items to be registered. See :class:`DataUploadImageGroup` for more details."""
 
-    dicom_series: List[DataUploadDicomSeries] = Field(default_factory=list)
+    dicom_series: list[DataUploadDicomSeries] = Field(default_factory=list)
     """List of DICOM series items to be registered. See :class:`DataUploadDicomSeries` for more details."""
 
-    images: List[DataUploadImage] = Field(default_factory=list)
+    images: list[DataUploadImage] = Field(default_factory=list)
     """List of image items to be registered. See :class:`DataUploadImage` for more details."""
 
-    image_groups_from_items: List[DataUploadImageGroupFromItems] = Field(default_factory=list)
+    image_groups_from_items: list[DataUploadImageGroupFromItems] = Field(default_factory=list)
     """List of image group items to be created from previously uploaded images.
     See :class:`DataUploadImageGroupFromItems` for more details."""
 
-    audio: List[DataUploadAudio] = Field(default_factory=list)
+    audio: list[DataUploadAudio] = Field(default_factory=list)
     """List of audio items to be registered. See :class:`DataUploadAudio` for more details."""
 
-    nifti: List[DataUploadNifti] = Field(default_factory=list)
+    nifti: list[DataUploadNifti] = Field(default_factory=list)
     """List of NIFTI items to be registered. See :class:`DataUploadNifti` for more details."""
 
-    text: List[DataUploadText] = Field(default_factory=list)
+    text: list[DataUploadText] = Field(default_factory=list)
     """List of text items to be registered. See :class:`DataUploadText` for more details."""
 
-    pdf: List[DataUploadPDF] = Field(default_factory=list)
+    pdf: list[DataUploadPDF] = Field(default_factory=list)
     """List of PDF items to be registered. See :class:`DataUploadPDF` for more details."""
 
     skip_duplicate_urls: bool = False
@@ -504,20 +504,20 @@ class DataUploadItems(BaseDTO):
 
 
 class DatasetDataLongPollingParams(BaseDTO):
-    data_items: Optional[DataUploadItems]
-    files: Optional[dict]
-    integration_id: Optional[UUID]
+    data_items: DataUploadItems | None
+    files: dict | None
+    integration_id: UUID | None
     ignore_errors: bool
-    folder_uuid: Optional[UUID]
-    file_name: Optional[str]
+    folder_uuid: UUID | None
+    file_name: str | None
 
 
 class PostUploadJobParams(BaseDTO):
-    data_items: Optional[DataUploadItems] = None
-    external_files: Optional[dict] = None
-    integration_hash: Optional[UUID] = None
+    data_items: DataUploadItems | None = None
+    external_files: dict | None = None
+    integration_hash: UUID | None = None
     ignore_errors: bool = False
-    file_name: Optional[str] = None
+    file_name: str | None = None
 
 
 class GetUploadJobParams(BaseDTO):
@@ -530,43 +530,43 @@ class FoldersSortBy(CamelStrEnum):
 
 
 class ListItemsParams(BaseDTO):
-    search: Optional[str]
-    is_recursive: Optional[bool] = False
-    is_in_dataset: Optional[bool]
-    item_types: List[StorageItemType]
-    include_org_access: Optional[bool] = None
+    search: str | None
+    is_recursive: bool | None = False
+    is_in_dataset: bool | None
+    item_types: list[StorageItemType]
+    include_org_access: bool | None = None
     order: FoldersSortBy
     desc: bool
-    page_token: Optional[str]
+    page_token: str | None
     page_size: int
     sign_urls: bool
 
 
 class ListFoldersParams(BaseDTO):
-    search: Optional[str] = None
-    is_recursive: Optional[bool] = False
-    dataset_synced: Optional[bool] = None
-    include_org_access: Optional[bool] = None
+    search: str | None = None
+    is_recursive: bool | None = False
+    dataset_synced: bool | None = None
+    include_org_access: bool | None = None
     order: FoldersSortBy = FoldersSortBy.NAME
     desc: bool = False
-    page_token: Optional[str] = None
+    page_token: str | None = None
     page_size: int = 100
 
 
 class PatchItemPayload(BaseDTO):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    client_metadata: Optional[dict] = None
+    name: str | None = None
+    description: str | None = None
+    client_metadata: dict | None = None
 
 
 class PatchFolderPayload(BaseDTO):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    client_metadata: Optional[dict] = None
+    name: str | None = None
+    description: str | None = None
+    client_metadata: dict | None = None
 
 
 class PatchFoldersBulkPayload(BaseDTO):
-    folder_patches: Dict[str, PatchFolderPayload]
+    folder_patches: dict[str, PatchFolderPayload]
 
 
 class StorageFolderSummary(BaseDTO):
@@ -597,9 +597,9 @@ class ItemShortInfo(BaseDTO):
 
 class DatasetShortInfo(BaseDTO):
     dataset_hash: str
-    backing_folder_uuid: Optional[UUID]
+    backing_folder_uuid: UUID | None
     title: str
-    data_hashes: List[UUID]
+    data_hashes: list[UUID]
     data_units_created_at: datetime
 
 
@@ -610,12 +610,12 @@ class StorageItemSummary(BaseDTO):
 
     frame_in_groups: int
     """A number of group items (DICOM_SERIES, IMAGE_GROUP, IMAGE_SEQUENCE) that contain this item"""
-    accessible_group_items: List[ItemShortInfo]
+    accessible_group_items: list[ItemShortInfo]
     """List of group items that contain this item (only those that the user has access to,
     so the length of this list can be less than `frame_in_groups`)"""
     used_in_datasets: int
     """A number of datasets that contain this item as a `DataRow`"""
-    accessible_datasets: List[DatasetShortInfo]
+    accessible_datasets: list[DatasetShortInfo]
     """List of datasets that contain this item as a `DataRow` (only those that the user has access to, so
     the length of this list can be less than `used_in_datasets`)"""
 
@@ -625,7 +625,7 @@ class DeleteItemsParams(BaseDTO):
 
 
 class DeleteItemsPayload(BaseDTO):
-    child_uuids: List[UUID]
+    child_uuids: list[UUID]
     remove_unused_frames: bool
 
 
@@ -635,14 +635,14 @@ class DeleteItemsResponse(BaseDTO):
 
 
 class MoveItemsPayload(BaseDTO):
-    item_uuids: List[UUID]
+    item_uuids: list[UUID]
     new_parent_uuid: UUID
     allow_synced_dataset_move: bool = False
 
 
 class MoveFoldersPayload(BaseDTO):
-    folder_uuids: List[UUID]
-    new_parent_uuid: Optional[UUID]
+    folder_uuids: list[UUID]
+    new_parent_uuid: UUID | None
 
 
 class GetItemParams(BaseDTO):
@@ -654,17 +654,17 @@ class GetChildItemsParams(BaseDTO):
 
 
 class GetItemsBulkPayload(BaseDTO):
-    item_uuids: List[UUID]
+    item_uuids: list[UUID]
     sign_urls: bool = False
 
 
 class PatchItemsBulkPayload(BaseDTO):
-    item_patches: Dict[str, PatchItemPayload]
+    item_patches: dict[str, PatchItemPayload]
 
 
 @dataclass
 class BundledPatchItemPayload:
-    item_patches: Dict[str, PatchItemPayload]
+    item_patches: dict[str, PatchItemPayload]
 
     def add(self, other: BundledPatchItemPayload) -> BundledPatchItemPayload:
         self.item_patches.update(other.item_patches)
@@ -673,7 +673,7 @@ class BundledPatchItemPayload:
 
 @dataclass
 class BundledPatchFolderPayload:
-    folder_patches: Dict[str, PatchFolderPayload]
+    folder_patches: dict[str, PatchFolderPayload]
 
     def add(self, other: BundledPatchFolderPayload) -> BundledPatchFolderPayload:
         self.folder_patches.update(other.folder_patches)
@@ -681,7 +681,7 @@ class BundledPatchFolderPayload:
 
 
 class ReencodeVideoItemsRequest(BaseDTO):
-    storage_items: List[UUID]
+    storage_items: list[UUID]
     process_title: str
     force_full_reencoding: bool
 
@@ -694,14 +694,14 @@ class JobStatus(CamelStrEnum):
 
 class ReencodeVideoItemsResponse(BaseDTO):
     status: JobStatus
-    result: Optional[Union[list, dict]]
+    result: list | dict | None
 
 
 class StorageItemsMigratePayload(BaseDTO):
-    urls_map: Optional[Dict[str, Optional[str]]]
-    items_map: Optional[Dict[UUID, Optional[str]]]
-    from_integration_hash: Optional[UUID] = None
-    to_integration_hash: Optional[UUID] = None
+    urls_map: dict[str, str | None] | None
+    items_map: dict[UUID, str | None] | None
+    from_integration_hash: UUID | None = None
+    to_integration_hash: UUID | None = None
     validate_access: bool = False
     skip_missing: bool = False
 

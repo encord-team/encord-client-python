@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Union
+from collections.abc import Sequence
 
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer
@@ -9,7 +10,7 @@ from encord.objects.options import Option
 
 
 def _search_child_attributes(
-    passed_attribute: Attribute, search_attribute: Attribute, static_answer_map: Dict[str, Answer]
+    passed_attribute: Attribute, search_attribute: Attribute, static_answer_map: dict[str, Answer]
 ) -> bool:
     if passed_attribute == search_attribute:
         return True
@@ -32,7 +33,7 @@ def _search_child_attributes(
     return False
 
 
-def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Optional[Attribute]:
+def _search_for_parent(passed_option: Option, attributes: list[Attribute]) -> Attribute | None:
     for attribute in attributes:
         for option in attribute.options:
             if option == passed_option:
@@ -44,8 +45,8 @@ def _search_for_parent(passed_option: Option, attributes: List[Attribute]) -> Op
     return None
 
 
-def _search_for_text_attributes(attributes: List[Attribute]) -> List[TextAttribute]:
-    text_attributes: List[TextAttribute] = []
+def _search_for_text_attributes(attributes: list[Attribute]) -> list[TextAttribute]:
+    text_attributes: list[TextAttribute] = []
     for attribute in attributes:
         if isinstance(attribute, TextAttribute):
             text_attributes.append(attribute)
@@ -55,9 +56,7 @@ def _search_for_text_attributes(attributes: List[Attribute]) -> List[TextAttribu
     return text_attributes
 
 
-def _infer_attribute_from_answer(
-    attributes: List[Attribute], answer: Union[str, Option, Sequence[Option]]
-) -> Attribute:
+def _infer_attribute_from_answer(attributes: list[Attribute], answer: str | Option | Sequence[Option]) -> Attribute:
     if isinstance(answer, Option):
         parent_opt = _search_for_parent(answer, attributes)  # type: ignore
         if parent_opt is None:

@@ -1,4 +1,5 @@
-from typing import Iterable, List, Optional, Set, Union, cast
+from typing import List, Optional, Set, Union, cast
+from collections.abc import Iterable
 
 from encord.objects.frames import Frames, Range, Ranges
 
@@ -76,7 +77,7 @@ class RangeManager:
 
         return sorted(copied_ranges, key=lambda r: r.start)
 
-    def get_ranges_as_frames(self) -> Set[int]:
+    def get_ranges_as_frames(self) -> set[int]:
         """Returns set of intersecting frames"""
         res = set()
         for r in self.ranges:

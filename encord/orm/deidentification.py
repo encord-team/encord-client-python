@@ -18,17 +18,17 @@ class DicomDeIdSaveConditionType(CamelStrEnum):
 
 
 class DicomDeIdSaveCondition(BaseDTO):
-    value: Union[str, List[str]]
+    value: Union[str, list[str]]
     condition_type: DicomDeIdSaveConditionType
     dicom_tag: str
 
 
 class DicomDeIdStartPayload(BaseDTO):
     integration_uuid: UUID
-    dicom_urls: List[str]
+    dicom_urls: list[str]
     redact_dicom_tags: bool = True
     redact_pixels_mode: DicomDeIdRedactTextMode = DicomDeIdRedactTextMode.REDACT_NO_TEXT
-    save_conditions: Optional[List[DicomDeIdSaveCondition]] = None
+    save_conditions: Optional[list[DicomDeIdSaveCondition]] = None
     upload_dir: Optional[str] = None
 
 
@@ -44,4 +44,4 @@ class DicomDeIdGetResultLongPollingStatus(str, Enum):
 
 class DicomDeIdGetResultResponse(BaseDTO):
     status: DicomDeIdGetResultLongPollingStatus
-    urls: Optional[List[str]] = None
+    urls: Optional[list[str]] = None

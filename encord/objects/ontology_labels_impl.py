@@ -16,7 +16,8 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
+from typing import Any, Dict, List, Optional, Set, Type, Union
+from collections.abc import Iterable, Sequence
 from uuid import UUID
 
 from encord.client import EncordClientProject
@@ -74,7 +75,7 @@ from encord.utilities.type_utilities import exhaustive_guard
 
 log = logging.getLogger(__name__)
 
-OntologyTypes = Union[Type[Object], Type[Classification]]
+OntologyTypes = Union[type[Object], type[Classification]]
 OntologyClasses = Union[Object, Classification]
 
 
@@ -102,22 +103,22 @@ class LabelRowV2:
 
         self._is_labelling_initialised = False
 
-        self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
+        self._frame_to_hashes: defaultdict[int, set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
 
-        self._metadata: Optional[DICOMSeriesMetadata] = None
-        self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
+        self._metadata: DICOMSeriesMetadata | None = None
+        self._frame_metadata: defaultdict[int, DICOMSliceMetadata | None] = defaultdict(lambda: None)
 
-        self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
+        self._classifications_to_frames: defaultdict[Classification, set[int]] = defaultdict(set)
         self._classifications_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
 
-        self._objects_map: Dict[str, ObjectInstance] = dict()
-        self._classifications_map: Dict[str, ClassificationInstance] = dict()
+        self._objects_map: dict[str, ObjectInstance] = dict()
+        self._classifications_map: dict[str, ClassificationInstance] = dict()
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
         # at least at the final objects_index/classifications_index level.
 
     @property
-    def label_hash(self) -> Optional[str]:
+    def label_hash(self) -> str | None:
         """
         Returns the hash of the label row.
 
@@ -253,7 +254,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.annotation_task_status
 
     @property
-    def workflow_graph_node(self) -> Optional[WorkflowGraphNode]:
+    def workflow_graph_node(self) -> WorkflowGraphNode | None:
         """
         Returns the workflow graph node associated with the label row.
 
@@ -273,7 +274,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.is_shadow_data
 
     @property
-    def created_at(self) -> Optional[datetime]:
+    def created_at(self) -> datetime | None:
         """
         Returns the creation date of the label row.
 
@@ -283,7 +284,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.created_at
 
     @property
-    def last_edited_at(self) -> Optional[datetime]:
+    def last_edited_at(self) -> datetime | None:
         """
         Returns the last edited date of the label row.
 
@@ -303,7 +304,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.number_of_frames
 
     @property
-    def duration(self) -> Optional[float]:
+    def duration(self) -> float | None:
         """
         Returns the duration of the video data type.
 
@@ -313,7 +314,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.duration
 
     @property
-    def fps(self) -> Optional[float]:
+    def fps(self) -> float | None:
         """
         Returns the frames per second (fps) of the video data type.
 
@@ -323,7 +324,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.fps
 
     @property
-    def data_link(self) -> Optional[str]:
+    def data_link(self) -> str | None:
         """
         Returns the data link to the underlying object in either cloud storage or Encord storage. This will be `None`
         for DICOM series or image groups created without performance optimisations, as there is no single underlying
@@ -337,7 +338,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.data_link
 
     @property
-    def width(self) -> Optional[int]:
+    def width(self) -> int | None:
         """
         Returns the width of the image data type.
 
@@ -350,7 +351,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.width
 
     @property
-    def height(self) -> Optional[int]:
+    def height(self) -> int | None:
         """
         Returns the height of the image data type.
 
@@ -363,7 +364,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.height
 
     @property
-    def audio_codec(self) -> Optional[str]:
+    def audio_codec(self) -> str | None:
         """
         Returns the codec of the audio data type.
 
@@ -375,7 +376,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_codec
 
     @property
-    def audio_sample_rate(self) -> Optional[int]:
+    def audio_sample_rate(self) -> int | None:
         """
         Returns the sample rate of the audio data type.
 
@@ -387,7 +388,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_sample_rate
 
     @property
-    def audio_bit_depth(self) -> Optional[int]:
+    def audio_bit_depth(self) -> int | None:
         """
         Returns the bit depth of the audio data type.
 
@@ -399,7 +400,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_bit_depth
 
     @property
-    def audio_num_channels(self) -> Optional[int]:
+    def audio_num_channels(self) -> int | None:
         """
         Returns the number of channels of the audio data type.
 
@@ -411,7 +412,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.audio_num_channels
 
     @property
-    def backing_item_uuid(self) -> Optional[UUID]:
+    def backing_item_uuid(self) -> UUID | None:
         """
         Returns the unique identifier (UUID) for the backing storage item associated with this label row.
 
@@ -424,7 +425,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.backing_item_uuid
 
     @property
-    def priority(self) -> Optional[float]:
+    def priority(self) -> float | None:
         """
         Returns the workflow priority for the task associated with the data unit.
 
@@ -485,11 +486,11 @@ class LabelRowV2:
 
     def initialise_labels(
         self,
-        include_object_feature_hashes: Optional[Set[str]] = None,
-        include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_object_feature_hashes: set[str] | None = None,
+        include_classification_feature_hashes: set[str] | None = None,
         include_reviews: bool = False,
         overwrite: bool = False,
-        bundle: Optional[Bundle] = None,
+        bundle: Bundle | None = None,
         *,
         include_signed_url: bool = False,
     ) -> None:
@@ -583,7 +584,7 @@ class LabelRowV2:
         self._classifications_map = dict()
         self._parse_labels_from_dict(label_row_dict)
 
-    def get_image_hash(self, frame_number: int) -> Optional[str]:
+    def get_image_hash(self, frame_number: int) -> str | None:
         """
         Get the corresponding image hash for the frame number.
 
@@ -603,7 +604,7 @@ class LabelRowV2:
 
         return self._label_row_read_only_data.frame_to_image_hash.get(frame_number)
 
-    def get_frame_number(self, image_hash: str) -> Optional[int]:
+    def get_frame_number(self, image_hash: str) -> int | None:
         """
         Get the corresponding frame number for the image hash.
 
@@ -622,7 +623,7 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def save(self, bundle: Optional[Bundle] = None, validate_before_saving: bool = False) -> None:
+    def save(self, bundle: Bundle | None = None, validate_before_saving: bool = False) -> None:
         """
         Upload the created labels to the Encord server.
 
@@ -645,7 +646,7 @@ class LabelRowV2:
         )
 
     @property
-    def metadata(self) -> Optional[DICOMSeriesMetadata]:
+    def metadata(self) -> DICOMSeriesMetadata | None:
         """
         Get metadata for the given data type.
 
@@ -659,7 +660,7 @@ class LabelRowV2:
         self._check_labelling_is_initalised()
         return self._metadata
 
-    def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
+    def get_frame_view(self, frame: int | str = 0) -> FrameView:
         """
         Get a view of the specified frame.
 
@@ -683,7 +684,7 @@ class LabelRowV2:
 
         return self.FrameView(self, self._label_row_read_only_data, frame_num)
 
-    def _get_frame_metadata_list(self) -> List[LabelRowReadOnlyDataImagesDataEntry]:
+    def _get_frame_metadata_list(self) -> list[LabelRowReadOnlyDataImagesDataEntry]:
         if self._label_row_read_only_data.data_type in [DataType.IMAGE, DataType.VIDEO]:
             return [
                 self.LabelRowReadOnlyDataImagesDataEntry(
@@ -701,7 +702,7 @@ class LabelRowV2:
             raise LabelRowError("Image data is not present in the label row")
         return images_data
 
-    def get_frame_metadata(self, frame: Union[int, str] = 0) -> FrameViewMetadata:
+    def get_frame_metadata(self, frame: int | str = 0) -> FrameViewMetadata:
         """
         Get metadata for a specific frame or image hash.
 
@@ -736,7 +737,7 @@ class LabelRowV2:
 
         return self.FrameViewMetadata(data_meta)
 
-    def get_frames_metadata(self) -> List[FrameViewMetadata]:
+    def get_frames_metadata(self) -> list[FrameViewMetadata]:
         """
         Get metadata for all frames in the image group.
 
@@ -751,7 +752,7 @@ class LabelRowV2:
             views.append(self.FrameViewMetadata(data))
         return views
 
-    def get_frame_views(self) -> List[FrameView]:
+    def get_frame_views(self) -> list[FrameView]:
         """
         Get views for all frames.
 
@@ -765,8 +766,8 @@ class LabelRowV2:
         return ret
 
     def get_object_instances(
-        self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
-    ) -> List[ObjectInstance]:
+        self, filter_ontology_object: Object | None = None, filter_frames: Frames | None = None
+    ) -> list[ObjectInstance]:
         """
         Get all object instances that match the given filters.
 
@@ -779,7 +780,7 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
-        ret: List[ObjectInstance] = list()
+        ret: list[ObjectInstance] = list()
 
         if filter_frames is not None:
             filtered_frames_list = frames_class_to_frames_list(filter_frames)
@@ -973,7 +974,7 @@ class LabelRowV2:
                 all_frames.remove(actual_frame)
 
     def add_to_single_frame_to_hashes_map(
-        self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
+        self, label_item: ObjectInstance | ClassificationInstance, frame: int
     ) -> None:
         # This is an internal function, it is not meant to be called by the SDK user.
         self._check_labelling_is_initalised()
@@ -986,8 +987,8 @@ class LabelRowV2:
             raise NotImplementedError(f"Got an unexpected label item class `{type(label_item)}`")
 
     def get_classification_instances(
-        self, filter_ontology_classification: Optional[Classification] = None, filter_frames: Optional[Frames] = None
-    ) -> List[ClassificationInstance]:
+        self, filter_ontology_classification: Classification | None = None, filter_frames: Frames | None = None
+    ) -> list[ClassificationInstance]:
         """
         Get all classification instances that match the given filters.
 
@@ -1000,7 +1001,7 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
-        ret: List[ClassificationInstance] = list()
+        ret: list[ClassificationInstance] = list()
 
         if filter_frames is not None:
             filtered_frames_list = frames_class_to_frames_list(filter_frames)
@@ -1046,7 +1047,7 @@ class LabelRowV2:
             )
         object_instance._parent = None
 
-    def to_encord_dict(self) -> Dict[str, Any]:
+    def to_encord_dict(self) -> dict[str, Any]:
         """
         Convert the label row to a dictionary in Encord format.
 
@@ -1058,7 +1059,7 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
-        ret: Dict[str, Any] = {}
+        ret: dict[str, Any] = {}
         read_only_data = self._label_row_read_only_data
 
         ret["label_hash"] = read_only_data.label_hash
@@ -1080,7 +1081,7 @@ class LabelRowV2:
 
         return ret
 
-    def workflow_reopen(self, bundle: Optional[Bundle] = None) -> None:
+    def workflow_reopen(self, bundle: Bundle | None = None) -> None:
         """
         Return a label row to the first annotation stage for re-labeling.
 
@@ -1100,7 +1101,7 @@ class LabelRowV2:
             payload=BundledWorkflowReopenPayload(label_hashes=[self.label_hash]),
         )
 
-    def workflow_complete(self, bundle: Optional[Bundle] = None) -> None:
+    def workflow_complete(self, bundle: Bundle | None = None) -> None:
         """
         Move a label row to the final workflow node, marking it as 'Complete'.
 
@@ -1129,7 +1130,7 @@ class LabelRowV2:
             payload=BundledWorkflowCompletePayload(label_hashes=[self.label_hash]),
         )
 
-    def set_priority(self, priority: float, bundle: Optional[Bundle] = None) -> None:
+    def set_priority(self, priority: float, bundle: Bundle | None = None) -> None:
         """
         Set priority for a task in a workflow project.
 
@@ -1149,7 +1150,7 @@ class LabelRowV2:
             payload=BundledSetPriorityPayload(priorities=[(self.data_hash, priority)]),
         )
 
-    def get_validation_errors(self) -> List[str] | None:
+    def get_validation_errors(self) -> list[str] | None:
         """
         Get validation errors for the label row.
 
@@ -1334,7 +1335,7 @@ class LabelRowV2:
                 raise LabelRowError(f"Height is expected but not set for the data type {self._label_row.data_type}")
 
         @property
-        def data_link(self) -> Optional[str]:
+        def data_link(self) -> str | None:
             """
             Get the data link for the current frame.
 
@@ -1349,7 +1350,7 @@ class LabelRowV2:
             return self._frame_level_data().data_link
 
         @property
-        def metadata(self) -> Optional[DICOMSliceMetadata]:
+        def metadata(self) -> DICOMSliceMetadata | None:
             """
             Get annotation metadata for the current frame.
 
@@ -1367,12 +1368,12 @@ class LabelRowV2:
             coordinates: Coordinates,
             *,
             overwrite: bool = False,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
-            confidence: Optional[float] = None,
-            manual_annotation: Optional[bool] = None,
+            created_at: datetime | None = None,
+            created_by: str | None = None,
+            last_edited_at: datetime | None = None,
+            last_edited_by: str | None = None,
+            confidence: float | None = None,
+            manual_annotation: bool | None = None,
         ) -> None:
             """
             Add an object instance to the current frame.
@@ -1418,12 +1419,12 @@ class LabelRowV2:
             classification_instance: ClassificationInstance,
             *,
             overwrite: bool = False,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
+            created_at: datetime | None = None,
+            created_by: str | None = None,
             confidence: float = DEFAULT_CONFIDENCE,
             manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
+            last_edited_at: datetime | None = None,
+            last_edited_by: str | None = None,
         ) -> None:
             """
             Add a classification instance to the current frame.
@@ -1468,7 +1469,7 @@ class LabelRowV2:
             if not label_row:
                 self._label_row.add_classification_instance(classification_instance)
 
-        def get_object_instances(self, filter_ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
+        def get_object_instances(self, filter_ontology_object: Object | None = None) -> list[ObjectInstance]:
             """
             Get object instances for the current frame.
 
@@ -1483,8 +1484,8 @@ class LabelRowV2:
             )
 
         def get_classification_instances(
-            self, filter_ontology_classification: Optional[Classification] = None
-        ) -> List[ClassificationInstance]:
+            self, filter_ontology_classification: Classification | None = None
+        ) -> list[ClassificationInstance]:
             """
             Get classification instances for the current frame.
 
@@ -1525,7 +1526,7 @@ class LabelRowV2:
         frame_number: int
         width: int
         height: int
-        data_link: Optional[str] = None
+        data_link: str | None = None
 
     @dataclass(frozen=True)
     class LabelRowReadOnlyDataImagesDataEntry:
@@ -1587,41 +1588,41 @@ class LabelRowV2:
             is_valid: Boolean indicating if the data is valid.
         """
 
-        label_hash: Optional[str]
-        created_at: Optional[datetime]
-        last_edited_at: Optional[datetime]
+        label_hash: str | None
+        created_at: datetime | None
+        last_edited_at: datetime | None
         data_hash: str
         data_type: DataType
-        backing_item_uuid: Optional[UUID]
+        backing_item_uuid: UUID | None
         label_status: LabelStatus
-        annotation_task_status: Optional[AnnotationTaskStatus]
-        workflow_graph_node: Optional[WorkflowGraphNode]
+        annotation_task_status: AnnotationTaskStatus | None
+        workflow_graph_node: WorkflowGraphNode | None
         is_shadow_data: bool
         number_of_frames: int
-        duration: Optional[float]
-        fps: Optional[float]
+        duration: float | None
+        fps: float | None
         dataset_hash: str
         dataset_title: str
         data_title: str
-        audio_codec: Optional[str]
-        audio_bit_depth: Optional[int]
-        audio_num_channels: Optional[int]
-        audio_sample_rate: Optional[int]
-        width: Optional[int]
-        height: Optional[int]
-        data_link: Optional[str]
-        priority: Optional[float]
-        file_type: Optional[str]
-        client_metadata: Optional[Dict[str, Any]]
-        images_data: Optional[List[LabelRowV2.LabelRowReadOnlyDataImagesDataEntry]]
+        audio_codec: str | None
+        audio_bit_depth: int | None
+        audio_num_channels: int | None
+        audio_sample_rate: int | None
+        width: int | None
+        height: int | None
+        data_link: str | None
+        priority: float | None
+        file_type: str | None
+        client_metadata: dict[str, Any] | None
+        images_data: list[LabelRowV2.LabelRowReadOnlyDataImagesDataEntry] | None
         branch_name: str
-        frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
-        image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
-        frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
+        frame_level_data: dict[int, LabelRowV2.FrameLevelImageGroupData] = field(default_factory=dict)
+        image_hash_to_frame: dict[str, int] = field(default_factory=dict)
+        frame_to_image_hash: dict[int, str] = field(default_factory=dict)
         is_valid: bool = field(default=True)
 
-    def _to_object_answers(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    def _to_object_answers(self) -> dict[str, Any]:
+        ret: dict[str, Any] = {}
         for obj in self._objects_map.values():
             all_static_answers = self._get_all_static_answers(obj)
             ret[obj.object_hash] = {
@@ -1646,8 +1647,8 @@ class LabelRowV2:
 
         return ret
 
-    def _to_object_actions(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    def _to_object_actions(self) -> dict[str, Any]:
+        ret: dict[str, Any] = {}
         for obj in self._objects_map.values():
             all_static_answers = self._dynamic_answers_to_encord_dict(obj)
             if len(all_static_answers) == 0:
@@ -1658,8 +1659,8 @@ class LabelRowV2:
             }
         return ret
 
-    def _to_classification_answers(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    def _to_classification_answers(self) -> dict[str, Any]:
+        ret: dict[str, Any] = {}
         for classification in self._classifications_map.values():
             all_static_answers = classification.get_all_static_answers()
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
@@ -1688,7 +1689,7 @@ class LabelRowV2:
         return ret
 
     @staticmethod
-    def _get_all_static_answers(object_instance: ObjectInstance) -> List[Dict[str, Any]]:
+    def _get_all_static_answers(object_instance: ObjectInstance) -> list[dict[str, Any]]:
         ret = []
         for answer in object_instance._get_all_static_answers():
             d_opt = answer.to_encord_dict()
@@ -1697,7 +1698,7 @@ class LabelRowV2:
         return ret
 
     @staticmethod
-    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> List[Dict[str, Any]]:
+    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> list[dict[str, Any]]:
         ret = []
         for answer, ranges in object_instance._get_all_dynamic_answers():
             d_opt = answer.to_encord_dict(ranges)
@@ -1705,17 +1706,17 @@ class LabelRowV2:
                 ret.append(d_opt)
         return ret
 
-    def _to_encord_data_units(self) -> Dict[str, Any]:
+    def _to_encord_data_units(self) -> dict[str, Any]:
         frame_level_data = self._label_row_read_only_data.frame_level_data
         return {value.image_hash: self._to_encord_data_unit(value) for value in frame_level_data.values()}
 
-    def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    def _to_encord_data_unit(self, frame_level_data: FrameLevelImageGroupData) -> dict[str, Any]:
+        ret: dict[str, Any] = {}
 
         data_type = self._label_row_read_only_data.data_type
 
         if data_type == DataType.IMG_GROUP:
-            data_sequence: Union[str, int] = str(frame_level_data.frame_number)
+            data_sequence: str | int = str(frame_level_data.frame_number)
 
         elif (
             data_type == DataType.VIDEO
@@ -1766,8 +1767,8 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_labels(self, frame_level_data: FrameLevelImageGroupData) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    def _to_encord_labels(self, frame_level_data: FrameLevelImageGroupData) -> dict[str, Any]:
+        ret: dict[str, Any] = {}
         data_type = self._label_row_read_only_data.data_type
 
         if data_type == DataType.IMAGE or data_type == DataType.IMG_GROUP:
@@ -1792,8 +1793,8 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_label(self, frame: int) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    def _to_encord_label(self, frame: int) -> dict[str, Any]:
+        ret: dict[str, Any] = {}
 
         ret["objects"] = self._to_encord_objects_list(frame)
         ret["classifications"] = self._to_encord_classifications_list(frame)
@@ -1802,7 +1803,7 @@ class LabelRowV2:
 
     def _to_encord_objects_list(self, frame: int) -> list:
         # Get objects for frame
-        ret: List[dict] = []
+        ret: list[dict] = []
 
         objects = self.get_object_instances(filter_frames=frame)
         for object_ in objects:
@@ -1814,8 +1815,8 @@ class LabelRowV2:
         self,
         object_: ObjectInstance,
         frame: int,
-    ) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    ) -> dict[str, Any]:
+        ret: dict[str, Any] = {}
 
         object_instance_annotation = object_.get_annotation(frame)
         coordinates = object_instance_annotation.coordinates
@@ -1845,7 +1846,7 @@ class LabelRowV2:
         return ret
 
     def _add_coordinates_to_encord_object(
-        self, coordinates: Coordinates, frame: int, encord_object: Dict[str, Any]
+        self, coordinates: Coordinates, frame: int, encord_object: dict[str, Any]
     ) -> None:
         if isinstance(coordinates, BoundingBoxCoordinates):
             encord_object["boundingBox"] = coordinates.to_dict()
@@ -1871,7 +1872,7 @@ class LabelRowV2:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
     def _to_encord_classifications_list(self, frame: int) -> list:
-        ret: List[Dict[str, Any]] = []
+        ret: list[dict[str, Any]] = []
 
         classifications = self.get_classification_instances(filter_frames=frame)
         for classification in classifications:
@@ -1880,8 +1881,8 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> dict[str, Any]:
+        ret: dict[str, Any] = {}
 
         annotation = classification.get_annotation(frame)
         classification_feature_hash = classification.ontology_item.feature_node_hash
@@ -1909,7 +1910,7 @@ class LabelRowV2:
 
     def _is_classification_already_present_on_frames(
         self, classification: Classification, frames: Iterable[int]
-    ) -> Set[int]:
+    ) -> set[int]:
         present_frames = self._classifications_to_frames.get(classification, set())
 
         return present_frames.intersection(frames)
@@ -1937,7 +1938,7 @@ class LabelRowV2:
         self._classifications_to_ranges[classification].remove_ranges(ranges_to_remove)
 
     def _add_to_frame_to_hashes_map(
-        self, label_item: Union[ObjectInstance, ClassificationInstance], frames: Iterable[int]
+        self, label_item: ObjectInstance | ClassificationInstance, frames: Iterable[int]
     ) -> None:
         for frame in frames:
             self.add_to_single_frame_to_hashes_map(label_item, frame)
@@ -2120,13 +2121,13 @@ class LabelRowV2:
 
         self._add_action_answers(label_row_dict)
 
-    def _add_frame_metadata(self, frame: int, metadata: Optional[Dict[str, str]]):
+    def _add_frame_metadata(self, frame: int, metadata: dict[str, str] | None):
         if metadata is not None:
             self._frame_metadata[frame] = DICOMSliceMetadata.from_dict(metadata)
         else:
             self._frame_metadata[frame] = None
 
-    def _add_data_unit_metadata(self, data_type: DataType, metadata: Optional[Dict[str, str]]) -> None:
+    def _add_data_unit_metadata(self, data_type: DataType, metadata: dict[str, str] | None) -> None:
         if metadata is None:
             self._metadata = None
             return
@@ -2152,7 +2153,7 @@ class LabelRowV2:
 
     def _add_object_instances_from_objects(
         self,
-        objects_list: List[dict],
+        objects_list: list[dict],
         frame: int,
     ) -> None:
         for frame_object_label in objects_list:
@@ -2295,7 +2296,7 @@ class LabelRowV2:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
 
     def _add_classification_instances_from_classifications(
-        self, classifications_list: List[dict], classification_answers: dict, frame: int
+        self, classifications_list: list[dict], classification_answers: dict, frame: int
     ):
         for frame_classification_label in classifications_list:
             classification_hash = frame_classification_label["classificationHash"]
@@ -2320,8 +2321,8 @@ class LabelRowV2:
             )
             self.add_classification_instance(classification_instance)
 
-    def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
-        frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
+    def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> dict[int, FrameLevelImageGroupData]:
+        frame_level_data: dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
         for payload in label_row_data_units.values():
             frame_number = int(payload["data_sequence"])
             frame_level_image_group_data = self.FrameLevelImageGroupData(
@@ -2344,7 +2345,7 @@ class LabelRowV2:
         frame_classification_label: dict,
         frame: int,
         classification_answers: dict,
-    ) -> Optional[ClassificationInstance]:
+    ) -> ClassificationInstance | None:
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
 
@@ -2404,7 +2405,7 @@ class LabelRowV2:
         return classification_instance
 
     def _add_static_answers_from_dict(
-        self, classification_instance: ClassificationInstance, answers_list: List[dict]
+        self, classification_instance: ClassificationInstance, answers_list: list[dict]
     ) -> None:
         classification_instance.set_answer_from_list(answers_list)
 
@@ -2430,6 +2431,6 @@ class LabelRowV2:
 
 
 def _frame_views_to_frame_numbers(
-    frame_views: Sequence[Union[ObjectInstance.Annotation, ClassificationInstance.Annotation, LabelRowV2.FrameView]],
-) -> List[int]:
+    frame_views: Sequence[ObjectInstance.Annotation | ClassificationInstance.Annotation | LabelRowV2.FrameView],
+) -> list[int]:
     return [frame_view.frame for frame_view in frame_views]

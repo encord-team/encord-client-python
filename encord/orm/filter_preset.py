@@ -8,7 +8,7 @@ from encord.orm.base_dto import BaseDTO, Field, dto_validator
 
 class GetPresetParams(BaseDTO):
     top_level_folder_uuid: Optional[UUID] = Field(default=None, alias="topLevelFolderUuid")
-    preset_uuids: Optional[List[UUID]] = Field(default=[], alias="uuids")
+    preset_uuids: Optional[list[UUID]] = Field(default=[], alias="uuids")
     page_token: Optional[str] = Field(default=None, alias="pageToken")
     page_size: Optional[int] = Field(default=None, alias="pageSize")
 
@@ -22,7 +22,7 @@ class FilterPreset(BaseDTO):
 
 
 class GetProjectFilterPresetParams(BaseDTO):
-    preset_uuids: Optional[List[uuid.UUID]] = Field(default=[])
+    preset_uuids: Optional[list[uuid.UUID]] = Field(default=[])
     page_token: Optional[str] = Field(default=None)
     page_size: Optional[int] = Field(default=None)
 
@@ -35,13 +35,13 @@ class ProjectFilterPreset(BaseDTO):
 
 
 class FilterDefinition(BaseDTO):
-    filters: List[Dict] = Field(default_factory=list)
+    filters: list[dict] = Field(default_factory=list)
 
 
 # Note alias is strictly required as these are stored in the Annotate DB as unstructured objects
 # Stored not in camelCase like most Models
 class IndexFilterPresetDefinition(BaseDTO):
-    local_filters: Dict[str, FilterDefinition] = Field(
+    local_filters: dict[str, FilterDefinition] = Field(
         default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()},
         alias="local_filters",
     )
@@ -49,14 +49,14 @@ class IndexFilterPresetDefinition(BaseDTO):
 
 
 class ActiveFilterPresetDefinition(BaseDTO):
-    local_filters: Dict[str, FilterDefinition] = Field(
+    local_filters: dict[str, FilterDefinition] = Field(
         default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()},
     )
     global_filters: FilterDefinition = Field(default_factory=FilterDefinition)
 
 
 class GetPresetsResponse(BaseDTO):
-    results: List[FilterPreset]
+    results: list[FilterPreset]
 
 
 class CreatePresetParams(BaseDTO):
@@ -65,13 +65,13 @@ class CreatePresetParams(BaseDTO):
 
 class IndexCreatePresetPayload(BaseDTO):
     name: str
-    filter_preset_json: Dict
+    filter_preset_json: dict
     description: Optional[str] = ""
 
 
 class ActiveCreatePresetPayload(BaseDTO):
     name: str
-    filter_preset_json: Dict
+    filter_preset_json: dict
 
 
 class IndexUpdatePresetPayload(BaseDTO):

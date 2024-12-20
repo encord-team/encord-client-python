@@ -234,7 +234,7 @@ class WorkflowGraphNode:
     title: str
 
     @classmethod
-    def from_optional_dict(cls, json_dict: Optional[Dict]) -> Optional[WorkflowGraphNode]:
+    def from_optional_dict(cls, json_dict: dict | None) -> WorkflowGraphNode | None:
         if json_dict is None:
             return None
         return WorkflowGraphNode(uuid=json_dict["uuid"], title=json_dict["title"])
@@ -246,11 +246,11 @@ class LabelRowMetadata(Formatter):
     Contains helpful information about a label row.
     """
 
-    label_hash: Optional[str]
+    label_hash: str | None
     """Only present if the label row is initiated"""
-    created_at: Optional[datetime.datetime]
+    created_at: datetime.datetime | None
     """Only present if the label row is initiated"""
-    last_edited_at: Optional[datetime.datetime]
+    last_edited_at: datetime.datetime | None
     """Only present if the label row is initiated"""
     branch_name: str
     """Only present if the label row is initiated or branch_name is set specifically"""
@@ -260,42 +260,42 @@ class LabelRowMetadata(Formatter):
     dataset_title: str
     data_title: str
     data_type: str
-    data_link: Optional[str]
+    data_link: str | None
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
     """Can be `None` for TMS2 projects"""
-    annotation_task_status: Optional[AnnotationTaskStatus]
+    annotation_task_status: AnnotationTaskStatus | None
     """Only available for TMS2 project"""
-    workflow_graph_node: Optional[WorkflowGraphNode]
+    workflow_graph_node: WorkflowGraphNode | None
     is_shadow_data: bool
 
     """Only available for the VIDEO and AUDIO data_type"""
-    frames_per_second: Optional[float]
+    frames_per_second: float | None
     number_of_frames: int
-    duration: Optional[float]
+    duration: float | None
 
     """Only available for the VIDEO data_type"""
-    height: Optional[int]
-    width: Optional[int]
+    height: int | None
+    width: int | None
 
     """Only available for the AUDIO data_type"""
-    audio_sample_rate: Optional[int]
-    audio_codec: Optional[str]
-    audio_bit_depth: Optional[int]
-    audio_num_channels: Optional[int]
+    audio_sample_rate: int | None
+    audio_codec: str | None
+    audio_bit_depth: int | None
+    audio_num_channels: int | None
 
-    priority: Optional[float] = None
+    priority: float | None = None
     """Only available for not complete tasks"""
-    client_metadata: Optional[dict] = None
-    images_data: Optional[list] = None
-    file_type: Optional[str] = None
+    client_metadata: dict | None = None
+    images_data: list | None = None
+    file_type: str | None = None
     """Only available for certain read requests"""
     is_valid: bool = True
 
-    backing_item_uuid: Optional[UUID] = None
+    backing_item_uuid: UUID | None = None
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
+    def from_dict(cls, json_dict: dict) -> LabelRowMetadata:
         created_at = json_dict.get("created_at", None)
         if created_at is not None:
             created_at = parse_datetime(created_at)
@@ -344,7 +344,7 @@ class LabelRowMetadata(Formatter):
         )
 
     @classmethod
-    def from_list(cls, json_list: list) -> List[LabelRowMetadata]:
+    def from_list(cls, json_list: list) -> list[LabelRowMetadata]:
         ret = []
         for i in json_list:
             ret.append(cls.from_dict(i))
@@ -371,7 +371,7 @@ class LabelValidationState(BaseDTO):
     branch_name: str
     version: int
     is_valid: bool
-    errors: List[str]
+    errors: list[str]
 
 
 class WorkflowGraphNodeDTO(BaseDTO):
@@ -384,11 +384,11 @@ class LabelRowMetadataDTO(BaseDTO):
     Contains helpful information about a label row.
     """
 
-    label_hash: Optional[str] = Field(default=None, alias="label_uuid")
+    label_hash: str | None = Field(default=None, alias="label_uuid")
     """Only present if the label row is initiated"""
-    created_at: Optional[datetime.datetime] = None
+    created_at: datetime.datetime | None = None
     """Only present if the label row is initiated"""
-    last_edited_at: Optional[datetime.datetime] = None
+    last_edited_at: datetime.datetime | None = None
     """Only present if the label row is initiated"""
     branch_name: str
     """Only present if the label row is initiated or branch_name is set specifically"""
@@ -398,40 +398,40 @@ class LabelRowMetadataDTO(BaseDTO):
     dataset_title: str
     data_title: str
     data_type: str
-    data_link: Optional[str] = None
+    data_link: str | None = None
 
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
     """Can be `None` for TMS2 projects"""
-    annotation_task_status: Optional[AnnotationTaskStatus] = None
+    annotation_task_status: AnnotationTaskStatus | None = None
     """Only available for TMS2 project"""
-    workflow_graph_node: Optional[WorkflowGraphNode] = None
+    workflow_graph_node: WorkflowGraphNode | None = None
     is_shadow_data: bool = False
 
     """Only available for the VIDEO and AUDIO data_type"""
-    frames_per_second: Optional[float]
+    frames_per_second: float | None
     number_of_frames: int
-    duration: Optional[float]
+    duration: float | None
 
     """Only available for the VIDEO data_type"""
-    height: Optional[int]
-    width: Optional[int]
+    height: int | None
+    width: int | None
 
     """Only available for the AUDIO data_type"""
-    audio_sample_rate: Optional[int]
-    audio_codec: Optional[str]
-    audio_bit_depth: Optional[int]
-    audio_num_channels: Optional[int]
+    audio_sample_rate: int | None
+    audio_codec: str | None
+    audio_bit_depth: int | None
+    audio_num_channels: int | None
 
-    priority: Optional[float] = None
+    priority: float | None = None
     """Only available for not complete tasks"""
-    client_metadata: Optional[Dict[str, Any]] = None
-    images_data: Optional[List[Any]] = None
-    file_type: Optional[str] = None
+    client_metadata: dict[str, Any] | None = None
+    images_data: list[Any] | None = None
+    file_type: str | None = None
     """Only available for certain read requests"""
     is_valid: bool = True
 
-    backing_item_uuid: Optional[UUID] = None
+    backing_item_uuid: UUID | None = None
 
 
 def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRowMetadataDTO) -> LabelRowMetadata:

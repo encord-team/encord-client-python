@@ -15,7 +15,8 @@ from __future__ import annotations
 import base64
 import re
 import uuid
-from typing import Any, Iterable, List, Optional, Type, TypeVar, cast
+from typing import Any, List, Optional, Type, TypeVar, cast
+from collections.abc import Iterable
 
 
 def short_uuid_str() -> str:
@@ -27,24 +28,24 @@ def _lower_snake_case(s: str):
     return s.lower().replace(" ", "_")
 
 
-def check_type(obj: Any, type_: Optional[Type[Any]]) -> None:
+def check_type(obj: Any, type_: type[Any] | None) -> None:
     if not does_type_match(obj, type_):
         raise TypeError(f"Expected {type_}, got {type(obj)}")
 
 
-def does_type_match(obj: Any, type_: Optional[Type[Any]]) -> bool:
+def does_type_match(obj: Any, type_: type[Any] | None) -> bool:
     return True if type_ is None else isinstance(obj, type_)
 
 
 T = TypeVar("T")
 
 
-def checked_cast(obj: Any, type_: Optional[Type[T]]) -> T:
+def checked_cast(obj: Any, type_: type[T] | None) -> T:
     check_type(obj, type_)
     return cast(T, obj)
 
 
-def filter_by_type(objects: Iterable[Any], type_: Optional[Type[T]]) -> List[T]:
+def filter_by_type(objects: Iterable[Any], type_: type[T] | None) -> list[T]:
     return [object_ for object_ in objects if does_type_match(object_, type_)]
 
 

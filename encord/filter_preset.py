@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Iterator, List, Optional, Union
+from typing import List, Optional, Union
+from collections.abc import Iterator
 from uuid import UUID
 
 from encord.client import EncordClientProject
@@ -99,7 +100,7 @@ class FilterPreset:
     @staticmethod
     def _get_presets(
         api_client: ApiClient,
-        preset_uuids: List[UUID],
+        preset_uuids: list[UUID],
         page_size: Optional[int] = None,
     ) -> Iterator["FilterPreset"]:
         params = GetPresetParams(uuids=preset_uuids, pageSize=page_size)
@@ -275,7 +276,7 @@ class ProjectFilterPreset:
     def _list_filter_presets(
         client: ApiClient,
         project_uuid: UUID,
-        filter_preset_uuids: Union[List[UUID], None],
+        filter_preset_uuids: Union[list[UUID], None],
         page_size: Optional[int] = None,
     ) -> Iterator["ProjectFilterPreset"]:
         params = GetProjectFilterPresetParams(preset_uuids=filter_preset_uuids, page_size=page_size)

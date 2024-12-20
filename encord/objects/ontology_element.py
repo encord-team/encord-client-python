@@ -14,7 +14,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Iterable, List, Optional, Sequence, Tuple, Type, TypeVar, cast
+from typing import Any, List, Optional, Tuple, Type, TypeVar, cast
+from collections.abc import Iterable, Sequence
 
 from encord.exceptions import OntologyError
 from encord.objects.utils import (
@@ -24,7 +25,7 @@ from encord.objects.utils import (
     short_uuid_str,
 )
 
-NestedID = List[int]
+NestedID = list[int]
 
 OntologyElementT = TypeVar("OntologyElementT", bound="OntologyElement")
 OntologyNestedElementT = TypeVar("OntologyNestedElementT", bound="OntologyNestedElement")
@@ -54,7 +55,7 @@ class OntologyElement(ABC):
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Optional[Type[OntologyNestedElementT]] = None,
+        type_: type[OntologyNestedElementT] | None = None,
     ) -> OntologyNestedElementT:
         """
         Retrieves the first child node of this ontology element with the matching feature node hash.
@@ -77,8 +78,8 @@ class OntologyElement(ABC):
     def get_children_by_title(
         self,
         title: str,
-        type_: Optional[Type[OntologyNestedElementT]] = None,
-    ) -> List[OntologyNestedElementT]:
+        type_: type[OntologyNestedElementT] | None = None,
+    ) -> list[OntologyNestedElementT]:
         """
         Retrieves all child nodes of this ontology element that match the specified title and type.
 
@@ -94,7 +95,7 @@ class OntologyElement(ABC):
     def get_child_by_title(
         self,
         title: str,
-        type_: Optional[Type[OntologyNestedElementT]] = None,
+        type_: type[OntologyNestedElementT] | None = None,
     ) -> OntologyNestedElementT:
         """
         Retrieves a single child node of this ontology element that matches the specified title and type.
@@ -136,8 +137,8 @@ def _assert_singular_result_list(
 
 
 def _get_element_by_hash(
-    feature_node_hash: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
-) -> Optional[OntologyNestedElementT]:
+    feature_node_hash: str, elements: Iterable[OntologyElement], type_: type[OntologyNestedElementT] | None = None
+) -> OntologyNestedElementT | None:
     for element in elements:
         if element.feature_node_hash == feature_node_hash:
             return checked_cast(element, type_)
@@ -150,9 +151,9 @@ def _get_element_by_hash(
 
 
 def _get_elements_by_title(
-    title: str, elements: Iterable[OntologyElement], type_: Optional[Type[OntologyNestedElementT]] = None
-) -> List[OntologyNestedElementT]:
-    res: List[OntologyNestedElementT] = []
+    title: str, elements: Iterable[OntologyElement], type_: type[OntologyNestedElementT] | None = None
+) -> list[OntologyNestedElementT]:
+    res: list[OntologyNestedElementT] = []
     for element in elements:
         if element.title == title and does_type_match(element, type_):
             res.append(cast(OntologyNestedElementT, element))
@@ -170,9 +171,9 @@ def _nested_id_from_json_str(attribute_id: str) -> NestedID:
 
 def _build_identifiers(
     existent_items: Iterable[OntologyNestedElement],
-    local_uid: Optional[int] = None,
-    feature_node_hash: Optional[str] = None,
-) -> Tuple[int, str]:
+    local_uid: int | None = None,
+    feature_node_hash: str | None = None,
+) -> tuple[int, str]:
     if local_uid is None:
         if existent_items:
             local_uid = max([item.uid[-1] for item in existent_items]) + 1

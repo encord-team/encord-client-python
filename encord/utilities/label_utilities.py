@@ -26,7 +26,7 @@ def construct_answer_dictionaries(label_row) -> LabelRow:
     """
     label_row = LabelRow(label_row)  # Cast to label row ORM
     data_type = label_row.data_type
-    data_units = cast(Dict[str, Dict[str, Dict]], label_row.data_units)
+    data_units = cast(dict[str, dict[str, dict]], label_row.data_units)
 
     object_answers = label_row.object_answers
     classification_answers = label_row.classification_answers

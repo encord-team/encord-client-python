@@ -34,14 +34,14 @@ from encord.objects.utils import checked_cast, does_type_match
 
 @dataclass
 class OntologyStructure:
-    objects: List[Object] = field(default_factory=list)
-    classifications: List[Classification] = field(default_factory=list)
-    skeleton_templates: Dict[str, SkeletonTemplate] = field(default_factory=dict)
+    objects: list[Object] = field(default_factory=list)
+    classifications: list[Classification] = field(default_factory=list)
+    skeleton_templates: dict[str, SkeletonTemplate] = field(default_factory=dict)
 
     def get_child_by_hash(
         self,
         feature_node_hash: str,
-        type_: Optional[Type[OntologyElementT]] = None,
+        type_: type[OntologyElementT] | None = None,
     ) -> OntologyElementT:
         """
         Returns the first child node of this ontology tree node with the matching feature node hash. If there is
@@ -75,7 +75,7 @@ class OntologyStructure:
     def get_child_by_title(
         self,
         title: str,
-        type_: Optional[Type[OntologyElementT]] = None,
+        type_: type[OntologyElementT] | None = None,
     ) -> OntologyElementT:
         """
         Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
@@ -96,8 +96,8 @@ class OntologyStructure:
     def get_children_by_title(
         self,
         title: str,
-        type_: Optional[Type[OntologyElementT]] = None,
-    ) -> List[OntologyElementT]:
+        type_: type[OntologyElementT] | None = None,
+    ) -> list[OntologyElementT]:
         """
         Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
@@ -109,7 +109,7 @@ class OntologyStructure:
         Returns:
             List[OntologyElementT]: A list of child nodes with the matching title and type.
         """
-        ret: List[OntologyElement] = []
+        ret: list[OntologyElement] = []
         for object_ in self.objects:
             if object_.title == title and does_type_match(object_, type_):
                 ret.append(object_)
@@ -128,10 +128,10 @@ class OntologyStructure:
 
         # type checks in the code above guarantee the type conformity of the return value
         # but there is no obvious way to tell that to mypy, so just casting here for now
-        return cast(List[OntologyElementT], ret)
+        return cast(list[OntologyElementT], ret)
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> OntologyStructure:
+    def from_dict(cls, d: dict[str, Any]) -> OntologyStructure:
         """
         Create an OntologyStructure from a dictionary.
 
@@ -157,24 +157,24 @@ class OntologyStructure:
             objects=objects_ret, classifications=classifications_ret, skeleton_templates=dict_skeleton_templates
         )
 
-    def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
+    def to_dict(self) -> dict[str, list[dict[str, Any]]]:
         """
         Convert the OntologyStructure to a dictionary.
 
         Returns:
             Dict[str, List[Dict[str, Any]]]: The dictionary representation of the ontology.
         """
-        ret: Dict[str, List[Dict[str, Any]]] = dict()
-        ontology_objects: List[Dict[str, Any]] = list()
+        ret: dict[str, list[dict[str, Any]]] = dict()
+        ontology_objects: list[dict[str, Any]] = list()
         ret["objects"] = ontology_objects
         for ontology_object in self.objects:
             ontology_objects.append(ontology_object.to_dict())
 
-        ontology_classifications: List[Dict[str, Any]] = list()
+        ontology_classifications: list[dict[str, Any]] = list()
         ret["classifications"] = ontology_classifications
         for ontology_classification in self.classifications:
             ontology_classifications.append(ontology_classification.to_dict())
-        skeleton_templates: List[Dict[str, Any]] = list()
+        skeleton_templates: list[dict[str, Any]] = list()
         skeleton_templates = [{"template": template.to_dict()} for template in self.skeleton_templates.values()]
         ret["skeleton_templates"] = skeleton_templates
         return ret
@@ -183,9 +183,9 @@ class OntologyStructure:
         self,
         name: str,
         shape: Shape,
-        uid: Optional[int] = None,
-        color: Optional[str] = None,
-        feature_node_hash: Optional[str] = None,
+        uid: int | None = None,
+        color: str | None = None,
+        feature_node_hash: str | None = None,
     ) -> Object:
         """
         Adds an object class definition to the structure.
@@ -235,8 +235,8 @@ class OntologyStructure:
 
     def add_classification(
         self,
-        uid: Optional[int] = None,
-        feature_node_hash: Optional[str] = None,
+        uid: int | None = None,
+        feature_node_hash: str | None = None,
     ) -> Classification:
         """
         Adds a classification definition to the ontology.
@@ -273,7 +273,7 @@ class OntologyStructure:
     def add_skeleton_template(
         self,
         skeleton_template: SkeletonTemplate,
-        feature_node_hash: Optional[str] = None,
+        feature_node_hash: str | None = None,
     ) -> None:
         """
         Adds a skeleton template to the ontology structure.

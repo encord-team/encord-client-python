@@ -55,15 +55,15 @@ class LabelLog(BaseDTO):
     data_hash: str
     action: Action
     created_at: datetime
-    identifier: Optional[str]
-    feature_hash: Optional[str]
-    label_name: Optional[str]
-    time_taken: Optional[int]
-    frame: Optional[int]
+    identifier: str | None
+    feature_hash: str | None
+    label_name: str | None
+    time_taken: int | None
+    frame: int | None
 
     @property
     @deprecated(version="0.1.100", alternative="LabelLog.identifier")
-    def annotation_hash(self) -> Optional[str]:
+    def annotation_hash(self) -> str | None:
         """
         DEPRECATED: this field is only provided for backwards compatibility, and will be removed in the future versions.
         Please use :attr:`identifier <LabelLog.identifier>` instead.
@@ -72,10 +72,10 @@ class LabelLog(BaseDTO):
 
 
 class LabelLogParams(BaseDTO):
-    user_hash: Optional[str]
-    data_hash: Optional[str]
-    start_timestamp: Optional[int]
-    end_timestamp: Optional[int]
-    user_email: Optional[str]
+    user_hash: str | None
+    data_hash: str | None
+    start_timestamp: int | None
+    end_timestamp: int | None
+    user_email: str | None
     # Flag for backwards compatibility
     include_user_email_and_interface_key: bool = True

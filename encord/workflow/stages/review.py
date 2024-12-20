@@ -13,7 +13,8 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from enum import Enum
-from typing import Iterable, List, Literal, Optional, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
+from collections.abc import Iterable
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
@@ -51,9 +52,9 @@ class _LabelReviewActionReopen(WorkflowReviewAction):
 
 
 class LabelReview(BaseDTO):
-    _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
-    _stage_uuid: Optional[UUID] = PrivateAttr(None)
-    _task_uuid: Optional[UUID] = PrivateAttr(None)
+    _workflow_client: WorkflowClient | None = PrivateAttr(None)
+    _stage_uuid: UUID | None = PrivateAttr(None)
+    _task_uuid: UUID | None = PrivateAttr(None)
 
     uuid: UUID = Field(alias="reviewUuid")
     status: LabelReviewStatus
@@ -61,13 +62,13 @@ class LabelReview(BaseDTO):
     label_type: str
     label_id: str
 
-    def _get_client_data(self) -> Tuple[WorkflowClient, UUID, UUID]:
+    def _get_client_data(self) -> tuple[WorkflowClient, UUID, UUID]:
         assert self._workflow_client
         assert self._stage_uuid
         assert self._task_uuid
         return self._workflow_client, self._stage_uuid, self._task_uuid
 
-    def approve(self, *, bundle: Optional[Bundle] = None):
+    def approve(self, *, bundle: Bundle | None = None):
         """
         Approves the review.
 
@@ -80,7 +81,7 @@ class LabelReview(BaseDTO):
             stage_uuid, task_uuid, _LabelReviewActionApprove(review_uuid=self.uuid), bundle=bundle
         )
 
-    def reject(self, *, bundle: Optional[Bundle] = None):
+    def reject(self, *, bundle: Bundle | None = None):
         """
         Rejects the review.
 
@@ -93,7 +94,7 @@ class LabelReview(BaseDTO):
             stage_uuid, task_uuid, _LabelReviewActionReject(review_uuid=self.uuid), bundle=bundle
         )
 
-    def reopen(self, *, bundle: Optional[Bundle] = None):
+    def reopen(self, *, bundle: Bundle | None = None):
         """
         Reopens the review.
 
@@ -115,11 +116,11 @@ class ReviewTaskStatus(str, Enum):
 
 
 class _ReviewTasksQueryParams(TasksQueryParams):
-    user_emails: Optional[List[str]] = None
-    data_hashes: Optional[List[UUID]] = None
-    dataset_hashes: Optional[List[UUID]] = None
-    data_title_contains: Optional[str] = None
-    statuses: Optional[List[ReviewTaskStatus]] = None
+    user_emails: list[str] | None = None
+    data_hashes: list[UUID] | None = None
+    dataset_hashes: list[UUID] | None = None
+    data_title_contains: str | None = None
+    statuses: list[ReviewTaskStatus] | None = None
 
 
 class ReviewStage(WorkflowStageBase):
@@ -134,11 +135,11 @@ class ReviewStage(WorkflowStageBase):
     def get_tasks(
         self,
         *,
-        assignee: Union[List[str], str, None] = None,
-        data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        data_title: Optional[str] = None,
-        status: Union[ReviewTaskStatus, List[ReviewTaskStatus], None] = None,
+        assignee: list[str] | str | None = None,
+        data_hash: list[UUID] | UUID | list[str] | str | None = None,
+        dataset_hash: list[UUID] | UUID | list[str] | str | None = None,
+        data_title: str | None = None,
+        status: ReviewTaskStatus | list[ReviewTaskStatus] | None = None,
     ) -> Iterable[ReviewTask]:
         """
         Retrieves tasks for the ReviewStage.
@@ -178,14 +179,14 @@ class ReviewStage(WorkflowStageBase):
 class _ActionApprove(WorkflowAction):
     action: Literal["APPROVE"] = "APPROVE"
     approve_label_reviews: bool = True
-    assignee: Optional[str] = None
+    assignee: str | None = None
     retain_assignee: bool = False
 
 
 class _ActionReject(WorkflowAction):
     action: Literal["REJECT"] = "REJECT"
     reject_label_reviews: bool = True
-    assignee: Optional[str] = None
+    assignee: str | None = None
     retain_assignee: bool = False
 
 
@@ -202,7 +203,7 @@ class ReviewTask(WorkflowTask):
     status: ReviewTaskStatus
     data_hash: UUID
     data_title: str
-    assignee: Optional[str]
+    assignee: str | None
 
     """
     Tasks in non-Consensus Review stages.
@@ -225,9 +226,9 @@ class ReviewTask(WorkflowTask):
     def approve(
         self,
         *,
-        assignee: Optional[str] = None,
+        assignee: str | None = None,
         retain_assignee: bool = False,
-        bundle: Optional[Bundle] = None,
+        bundle: Bundle | None = None,
     ) -> None:
         """
         Approves the task.
@@ -248,9 +249,9 @@ class ReviewTask(WorkflowTask):
     def reject(
         self,
         *,
-        assignee: Optional[str] = None,
+        assignee: str | None = None,
         retain_assignee: bool = False,
-        bundle: Optional[Bundle] = None,
+        bundle: Bundle | None = None,
     ) -> None:
         """
         Rejects the task.
@@ -268,7 +269,7 @@ class ReviewTask(WorkflowTask):
             bundle=bundle,
         )
 
-    def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
+    def assign(self, assignee: str, *, bundle: Bundle | None = None) -> None:
         """
         Assigns the task to a user.
 
@@ -280,7 +281,7 @@ class ReviewTask(WorkflowTask):
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
-    def release(self, *, bundle: Optional[Bundle] = None) -> None:
+    def release(self, *, bundle: Bundle | None = None) -> None:
         """
         Releases the task from the current user.
 
@@ -292,7 +293,7 @@ class ReviewTask(WorkflowTask):
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
 
     def get_label_reviews(
-        self, status: Union[ReviewTaskStatus, List[ReviewTaskStatus], None] = None
+        self, status: ReviewTaskStatus | list[ReviewTaskStatus] | None = None
     ) -> Iterable[LabelReview]:
         """
         Retrieves label reviews for the Review task.

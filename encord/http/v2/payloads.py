@@ -6,5 +6,5 @@ T = TypeVar("T")
 
 
 class Page(GenericBaseDTO, Generic[T]):
-    results: List[T]
+    results: list[T]
     next_page_token: Optional[str] = None

@@ -40,13 +40,13 @@ from tests.objects.data.ontology_with_many_dynamic_classifications import (
 )
 
 
-def ontology_from_dict(ontology_structure_dict: Dict):
+def ontology_from_dict(ontology_structure_dict: dict):
     ontology = Mock()
     ontology.structure = OntologyStructure.from_dict(ontology_structure_dict)
     return ontology
 
 
-def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], exclude_regex_paths: List[str] = None):
+def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], exclude_regex_paths: list[str] = None):
     """Basically a deep diff but with an normal assert after. `DeepDiff` to be able to exclude
     regex paths, and `assert` to see an easily comparable diff with tools such as Pycharm."""
     if exclude_regex_paths is None:
@@ -261,7 +261,7 @@ def test_uninitialised_label_row():
     assert label_row.is_labelling_initialised is True
 
 
-def _remove_reviews(labels: Dict[str, Any]) -> Dict[str, Any]:
+def _remove_reviews(labels: dict[str, Any]) -> dict[str, Any]:
     if "reviews" in labels:
         del labels["reviews"]
     for key, value in labels.items():

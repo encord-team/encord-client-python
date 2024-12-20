@@ -12,7 +12,8 @@ category: "64e481b57b6027003f20aaa0"
 
 from datetime import datetime
 from pathlib import Path
-from typing import Collection, Dict, Iterable, List, Optional, TextIO, Union
+from typing import Dict, List, Optional, TextIO, Union
+from collections.abc import Collection, Iterable
 from uuid import UUID
 
 from encord.client import EncordClientDataset
@@ -99,7 +100,7 @@ class Dataset:
         return self._dataset_instance.backing_folder_uuid
 
     @property
-    def data_rows(self) -> List[DataRow]:
+    def data_rows(self) -> list[DataRow]:
         """
         Get the data rows of the dataset.
 
@@ -122,9 +123,9 @@ class Dataset:
         title_like: Optional[str] = None,
         created_before: Optional[Union[str, datetime]] = None,
         created_after: Optional[Union[str, datetime]] = None,
-        data_types: Optional[List[DataType]] = None,
-        data_hashes: Optional[List[str]] = None,
-    ) -> List[DataRow]:
+        data_types: Optional[list[DataType]] = None,
+        data_hashes: Optional[list[str]] = None,
+    ) -> list[DataRow]:
         """
         Retrieve dataset rows (pointers to data, labels).
 
@@ -178,7 +179,7 @@ class Dataset:
         if refetch_data:
             self.refetch_data()
 
-    def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
+    def add_users(self, user_emails: list[str], user_role: DatasetUserRole) -> list[DatasetUser]:
         """
         Add users to the dataset.
 
@@ -205,7 +206,7 @@ class Dataset:
         page = self._client.list_groups(dataset_hash)
         yield from page.results
 
-    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: DatasetUserRole) -> None:
+    def add_group(self, group_hash: Union[list[UUID], UUID], user_role: DatasetUserRole) -> None:
         """
         Add a group to the dataset.
 
@@ -220,7 +221,7 @@ class Dataset:
             group_hash = [group_hash]
         self._client.add_groups(self.dataset_hash, group_hash, user_role)
 
-    def remove_group(self, group_hash: Union[List[UUID], UUID]) -> None:
+    def remove_group(self, group_hash: Union[list[UUID], UUID]) -> None:
         """
         Remove a group from the dataset.
 
@@ -272,7 +273,7 @@ class Dataset:
         *,
         create_video: bool = True,
         folder: Optional[Union[UUID, StorageFolder]] = None,
-    ) -> List[ImageGroup]:
+    ) -> list[ImageGroup]:
         """
         Create an image group in Encord storage.
 
@@ -307,7 +308,7 @@ class Dataset:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         title: Optional[str] = None,
         folder: Optional[Union[UUID, StorageFolder]] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Upload a DICOM series to Encord storage.
 
@@ -359,9 +360,9 @@ class Dataset:
 
     def link_items(
         self,
-        item_uuids: List[UUID],
+        item_uuids: list[UUID],
         duplicates_behavior: DataLinkDuplicatesBehavior = DataLinkDuplicatesBehavior.SKIP,
-    ) -> List[DataRow]:
+    ) -> list[DataRow]:
         """
         Link storage items to the dataset, creating new data rows.
 
@@ -375,7 +376,7 @@ class Dataset:
         """
         return self._client.link_items(item_uuids, duplicates_behavior)
 
-    def delete_data(self, data_hashes: Union[List[str], str]):
+    def delete_data(self, data_hashes: Union[list[str], str]):
         """
         Delete a video/image group from a dataset.
 
@@ -388,7 +389,7 @@ class Dataset:
     def add_private_data_to_dataset(
         self,
         integration_id: str,
-        private_files: Union[str, Dict, Path, TextIO],
+        private_files: Union[str, dict, Path, TextIO],
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
         """
@@ -411,7 +412,7 @@ class Dataset:
     def add_private_data_to_dataset_start(
         self,
         integration_id: str,
-        private_files: Union[str, Dict, Path, TextIO],
+        private_files: Union[str, dict, Path, TextIO],
         ignore_errors: bool = False,
         *,
         folder: Optional[Union[StorageFolder, UUID]] = None,
@@ -477,7 +478,7 @@ class Dataset:
         """
         return self._client.update_data_item(data_hash, new_title)
 
-    def re_encode_data(self, data_hashes: List[str]):
+    def re_encode_data(self, data_hashes: list[str]):
         """
         Launch an async task that can re-encode a list of videos.
 
@@ -504,7 +505,7 @@ class Dataset:
         """
         return self._client.re_encode_data_status(job_id)
 
-    def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
+    def run_ocr(self, image_group_id: str) -> list[ImageGroupOCR]:
         """
         Returns an optical character recognition result for a given image group.
 
@@ -518,7 +519,7 @@ class Dataset:
         """
         return self._client.run_ocr(image_group_id)
 
-    def get_cloud_integrations(self) -> List[CloudIntegration]:
+    def get_cloud_integrations(self) -> list[CloudIntegration]:
         """
         Retrieve a list of cloud integrations configured in Encord.
 

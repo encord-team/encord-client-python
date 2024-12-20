@@ -13,7 +13,8 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Union, cast
+from typing import List, Union, cast
+from collections.abc import Collection
 
 
 @dataclass
@@ -45,8 +46,8 @@ class Range:
         return Range(self.start, self.end)
 
 
-Ranges = List[Range]
-FramesList = List[int]
+Ranges = list[Range]
+FramesList = list[int]
 Frames = Union[int, FramesList, Range, Ranges]
 
 
@@ -95,7 +96,7 @@ def frames_to_ranges(frames: Collection[int]) -> Ranges:
     return ret
 
 
-def ranges_to_list(ranges: Ranges) -> List[List[int]]:
+def ranges_to_list(ranges: Ranges) -> list[list[int]]:
     """
     Convert a list of Range objects to a list of lists (run-length encoded) of integers.
 
@@ -121,7 +122,7 @@ def range_to_ranges(range_: Range) -> Ranges:
     return [range_]
 
 
-def range_to_frames(range_: Range) -> List[int]:
+def range_to_frames(range_: Range) -> list[int]:
     """
     Convert a single Range (run-length encoded) to a list of integers.
 
@@ -134,7 +135,7 @@ def range_to_frames(range_: Range) -> List[int]:
     return list(range(range_.start, range_.end + 1))
 
 
-def ranges_to_frames(range_list: Ranges) -> List[int]:
+def ranges_to_frames(range_list: Ranges) -> list[int]:
     """
     Convert a list of Ranges (run-length encoded) to a list of integers.
 
@@ -150,7 +151,7 @@ def ranges_to_frames(range_list: Ranges) -> List[int]:
     return sorted(list(frames))
 
 
-def ranges_list_to_ranges(range_list: List[List[int]]) -> Ranges:
+def ranges_list_to_ranges(range_list: list[list[int]]) -> Ranges:
     """
     Convert a list of lists (run-length encoded) of integers to a list of Range objects.
 
@@ -163,7 +164,7 @@ def ranges_list_to_ranges(range_list: List[List[int]]) -> Ranges:
     return [Range(start, end) for start, end in range_list]
 
 
-def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
+def frames_class_to_frames_list(frames_class: Frames) -> list[int]:
     """
     Convert a Frames class (which can be an int, a list of ints, a Range, or a list of Ranges) to a list of integers.
 
@@ -182,8 +183,8 @@ def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
         return range_to_frames(frames_class)
     elif isinstance(frames_class, list):
         if all(isinstance(x, int) for x in frames_class):
-            return sorted(list(set(cast(List[int], frames_class))))
+            return sorted(list(set(cast(list[int], frames_class))))
         elif all(isinstance(x, Range) for x in frames_class):
-            return ranges_to_frames(cast(List[Range], frames_class))
+            return ranges_to_frames(cast(list[Range], frames_class))
 
     raise RuntimeError("Unexpected type for frames.")

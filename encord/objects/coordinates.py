@@ -177,7 +177,7 @@ class PolygonCoordinates:
         values (List[PointCoordinate]): A list of PointCoordinate objects defining the polygon.
     """
 
-    values: List[PointCoordinate]
+    values: list[PointCoordinate]
 
     @staticmethod
     def from_dict(d: dict) -> PolygonCoordinates:
@@ -191,7 +191,7 @@ class PolygonCoordinates:
             PolygonCoordinates: An instance of PolygonCoordinates.
         """
         polygon_dict = d["polygon"]
-        values: List[PointCoordinate] = []
+        values: list[PointCoordinate] = []
 
         if isinstance(polygon_dict, dict):
             sorted_dict_value_tuples = sorted((int(key), value) for key, value in polygon_dict.items())
@@ -229,7 +229,7 @@ class PolylineCoordinates:
         values (List[PointCoordinate]): A list of PointCoordinate objects defining the polyline.
     """
 
-    values: List[PointCoordinate]
+    values: list[PointCoordinate]
 
     @staticmethod
     def from_dict(d: dict) -> PolylineCoordinates:
@@ -243,7 +243,7 @@ class PolylineCoordinates:
             PolylineCoordinates: An instance of PolylineCoordinates.
         """
         polyline = d["polyline"]
-        values: List[PointCoordinate] = []
+        values: list[PointCoordinate] = []
 
         if isinstance(polyline, dict):
             sorted_dict_value_tuples = sorted((int(key), value) for key, value in polyline.items())
@@ -304,11 +304,11 @@ class SkeletonCoordinate(BaseDTO):
     x: float
     y: float
     name: str
-    color: Optional[str] = None
-    feature_hash: Optional[str] = None
-    value: Optional[str] = None
+    color: str | None = None
+    feature_hash: str | None = None
+    value: str | None = None
 
-    visibility: Optional[Visibility] = None
+    visibility: Visibility | None = None
 
 
 class SkeletonCoordinates(BaseDTO):
@@ -320,10 +320,10 @@ class SkeletonCoordinates(BaseDTO):
         name (str): The name of the skeleton structure.
     """
 
-    values: List[SkeletonCoordinate]
+    values: list[SkeletonCoordinate]
     name: str
 
-    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+    def to_dict(self, by_alias=True, exclude_none=True) -> dict[str, Any]:
         """
         Convert the SkeletonCoordinates instance to a dictionary.
 
@@ -351,7 +351,7 @@ Coordinates = Union[
     SkeletonCoordinates,
     BitmaskCoordinates,
 ]
-ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
+ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: dict[Shape, type[Coordinates]] = {
     Shape.BOUNDING_BOX: BoundingBoxCoordinates,
     Shape.ROTATABLE_BOUNDING_BOX: RotatableBoundingBoxCoordinates,
     Shape.POINT: PointCoordinate,

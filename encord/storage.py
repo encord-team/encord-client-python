@@ -18,7 +18,8 @@ import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, TextIO, Union
+from typing import Any, Dict, List, Optional, TextIO, Union
+from collections.abc import Collection, Iterable, Sequence
 from uuid import UUID
 
 import requests
@@ -69,7 +70,7 @@ class StorageFolder:
     def __init__(self, api_client: ApiClient, orm_folder: orm_storage.StorageFolder):
         self._api_client = api_client
         self._orm_folder = orm_folder
-        self._parsed_metadata: Optional[Dict[str, Any]] = None
+        self._parsed_metadata: Optional[dict[str, Any]] = None
 
     @property
     def uuid(self) -> UUID:
@@ -123,7 +124,7 @@ class StorageFolder:
         return self._orm_folder.description
 
     @property
-    def client_metadata(self) -> Optional[Dict[str, Any]]:
+    def client_metadata(self) -> Optional[dict[str, Any]]:
         """
         Gets the client metadata of the folder.
 
@@ -136,7 +137,7 @@ class StorageFolder:
         return self._parsed_metadata
 
     @property
-    def path_to_root(self) -> List[PathElement]:
+    def path_to_root(self) -> list[PathElement]:
         """
         Gets the path elements from the current folder to the root.
 
@@ -150,7 +151,7 @@ class StorageFolder:
         *,
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
-        item_types: Optional[List[StorageItemType]] = None,
+        item_types: Optional[list[StorageItemType]] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         get_signed_urls: bool = False,
         desc: bool = False,
@@ -203,7 +204,7 @@ class StorageFolder:
         self,
         file_path: Union[Path, str],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """
@@ -262,7 +263,7 @@ class StorageFolder:
         self,
         file_path: Union[Path, str],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         video_metadata: Optional[CustomerProvidedVideoMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
@@ -328,7 +329,7 @@ class StorageFolder:
         else:
             return upload_result.items_with_names[0].item_uuid
 
-    def re_encode_videos(self, storage_items: List[UUID], process_title: str, force_full_reencoding: bool) -> UUID:
+    def re_encode_videos(self, storage_items: list[UUID], process_title: str, force_full_reencoding: bool) -> UUID:
         """
         Re-encodes the specified video items.
 
@@ -369,7 +370,7 @@ class StorageFolder:
         self,
         file_paths: Sequence[Union[str, Path]],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         """
@@ -441,7 +442,7 @@ class StorageFolder:
         self,
         file_paths: Collection[Union[Path, str]],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         """
@@ -478,7 +479,7 @@ class StorageFolder:
         self,
         file_paths: Collection[Union[Path, str]],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         """
@@ -517,7 +518,7 @@ class StorageFolder:
         file_paths: Collection[Union[Path, str]],
         title: Optional[str],
         create_video: bool,
-        client_metadata: Optional[Dict[str, Any]],
+        client_metadata: Optional[dict[str, Any]],
         cloud_upload_settings: CloudUploadSettings,
     ) -> UUID:
         upload_url_info = self._get_upload_signed_urls(
@@ -570,7 +571,7 @@ class StorageFolder:
         self,
         file_path: Union[Path, str],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         upload_url_info = self._get_upload_signed_urls(
@@ -614,7 +615,7 @@ class StorageFolder:
         self,
         file_path: Union[Path, str],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         audio_metadata: Optional[CustomerProvidedAudioMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
@@ -696,7 +697,7 @@ class StorageFolder:
         self,
         file_path: Union[Path, str],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """
@@ -761,7 +762,7 @@ class StorageFolder:
         self,
         file_path: Union[Path, str],
         title: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """
@@ -825,7 +826,7 @@ class StorageFolder:
     def add_private_data_to_folder_start(
         self,
         integration_id: str,
-        private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
+        private_files: Union[str, dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> UUID:
         """
@@ -934,7 +935,7 @@ class StorageFolder:
         self,
         name: str,
         description: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
     ) -> "StorageFolder":
         """
         Create a new subfolder of this folder. See also :meth:`encord.user_client.EncordUserClient.create_storage_folder`.
@@ -954,7 +955,7 @@ class StorageFolder:
         self,
         search: Optional[str] = None,
         is_in_dataset: Optional[bool] = None,
-        item_types: Optional[List[StorageItemType]] = None,
+        item_types: Optional[list[StorageItemType]] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         get_signed_urls: bool = False,
@@ -1015,7 +1016,7 @@ class StorageFolder:
         self,
         name: Optional[str] = None,
         description: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         bundle: Optional[Bundle] = None,
     ) -> None:
         """
@@ -1125,7 +1126,7 @@ class StorageFolder:
             result_type=None,
         )
 
-    def delete_storage_items(self, item_uuids: List[UUID], remove_unused_frames: bool = True) -> None:
+    def delete_storage_items(self, item_uuids: list[UUID], remove_unused_frames: bool = True) -> None:
         """
         Delete storage items by their UUIDs.
 
@@ -1155,7 +1156,7 @@ class StorageFolder:
 
         yield from page.results
 
-    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: StorageUserRole):
+    def add_group(self, group_hash: Union[list[UUID], UUID], user_role: StorageUserRole):
         """
         Allow access to this folder for members of a group.
 
@@ -1176,7 +1177,7 @@ class StorageFolder:
             result_type=None,
         )
 
-    def remove_group(self, group_hash: Union[List[UUID], UUID]):
+    def remove_group(self, group_hash: Union[list[UUID], UUID]):
         """
         Revoke access to the folder from the members of a group.
 
@@ -1207,7 +1208,7 @@ class StorageFolder:
 
     def _get_upload_signed_urls(
         self, item_type: StorageItemType, count: int, frames_subfolder_name: Optional[str] = None
-    ) -> List[orm_storage.UploadSignedUrl]:
+    ) -> list[orm_storage.UploadSignedUrl]:
         urls = self._api_client.post(
             f"storage/folders/{self.uuid}/upload-signed-urls",
             params=None,
@@ -1290,7 +1291,7 @@ class StorageFolder:
     def _add_data(
         self,
         integration_id: Optional[str],
-        private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
+        private_files: Union[str, dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> orm_storage.UploadLongPollingState:
         upload_job_id = self._add_data_to_folder_start(
@@ -1311,7 +1312,7 @@ class StorageFolder:
     def _add_data_to_folder_start(
         self,
         integration_id: Optional[str],
-        private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
+        private_files: Union[str, dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> UUID:
         file_name: Optional[str] = None
@@ -1472,8 +1473,8 @@ class StorageFolder:
     @staticmethod
     def _patch_multiple_folders(
         api_client: ApiClient,
-        folder_patches: Dict[str, PatchFolderPayload],
-    ) -> List[orm_storage.StorageFolder]:
+        folder_patches: dict[str, PatchFolderPayload],
+    ) -> list[orm_storage.StorageFolder]:
         return api_client.patch(
             "storage/folders/patch-bulk",
             params=None,
@@ -1486,7 +1487,7 @@ class StorageFolder:
         api_client: ApiClient,
         name: str,
         description: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         parent_folder: Optional[Union["StorageFolder", UUID]] = None,
     ) -> "StorageFolder":
         """
@@ -1531,7 +1532,7 @@ class StorageItem:
     def __init__(self, api_client: ApiClient, orm_item: orm_storage.StorageItem):
         self._api_client = api_client
         self._orm_item = orm_item
-        self._parsed_metadata: Optional[Dict[str, Any]] = None
+        self._parsed_metadata: Optional[dict[str, Any]] = None
 
     @property
     def uuid(self) -> UUID:
@@ -1568,7 +1569,7 @@ class StorageItem:
         return self._orm_item.description
 
     @property
-    def client_metadata(self) -> Optional[Dict[str, Any]]:
+    def client_metadata(self) -> Optional[dict[str, Any]]:
         """
         Optional[Dict[str, Any]]: The client metadata of the storage item.
         """
@@ -1742,7 +1743,7 @@ class StorageItem:
         self,
         name: Optional[str] = None,
         description: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None,
+        client_metadata: Optional[dict[str, Any]] = None,
         bundle: Optional[Bundle] = None,
     ) -> None:
         """
@@ -1876,7 +1877,7 @@ class StorageItem:
         return StorageItem(api_client, orm_item)
 
     @staticmethod
-    def _get_items(api_client: ApiClient, item_uuids: List[UUID], get_signed_url: bool) -> List["StorageItem"]:
+    def _get_items(api_client: ApiClient, item_uuids: list[UUID], get_signed_url: bool) -> list["StorageItem"]:
         orm_items = api_client.post(
             "storage/items/get-bulk",
             params=None,
@@ -1888,8 +1889,8 @@ class StorageItem:
     @staticmethod
     def _patch_multiple_items(
         api_client: ApiClient,
-        item_patches: Dict[str, PatchItemPayload],
-    ) -> List[orm_storage.StorageItem]:
+        item_patches: dict[str, PatchItemPayload],
+    ) -> list[orm_storage.StorageItem]:
         return api_client.patch(
             "storage/items/patch-bulk",
             params=None,

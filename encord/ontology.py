@@ -11,7 +11,8 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import datetime
-from typing import Iterable, List, Optional, Union
+from typing import List, Optional, Union
+from collections.abc import Iterable
 from uuid import UUID
 
 from encord.http.v2.api_client import ApiClient
@@ -127,7 +128,7 @@ class Ontology:
 
         yield from page.results
 
-    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: OntologyUserRole):
+    def add_group(self, group_hash: Union[list[UUID], UUID], user_role: OntologyUserRole):
         """
         Add group to an ontology.
 
@@ -149,7 +150,7 @@ class Ontology:
             result_type=None,
         )
 
-    def remove_group(self, group_hash: Union[List[UUID], UUID]):
+    def remove_group(self, group_hash: Union[list[UUID], UUID]):
         """
         Remove group from ontology.
 

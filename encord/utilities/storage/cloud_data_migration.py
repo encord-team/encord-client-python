@@ -18,13 +18,13 @@ STORAGE_CLOUD_DATA_MIGRATION_BUNDLE_LIMIT = 1000
 
 def update_storage_item_cloud_info(
     user_client: EncordUserClient,
-    item: Union[StorageItem, UUID, str],
-    new_url: Optional[str] = None,
-    new_cloud_integration: Optional[Union[CloudIntegration, str, UUID]] = None,
-    from_cloud_integration: Optional[Union[CloudIntegration, str, UUID]] = None,
+    item: StorageItem | UUID | str,
+    new_url: str | None = None,
+    new_cloud_integration: CloudIntegration | str | UUID | None = None,
+    from_cloud_integration: CloudIntegration | str | UUID | None = None,
     verify_access: bool = True,
     skip_missing: bool = False,
-    bundle: Optional[Bundle] = None,
+    bundle: Bundle | None = None,
 ) -> None:
     """
     Update the cloud storage information of a storage item. This can be used to avoid re-importing data when the cloud
@@ -57,8 +57,8 @@ def update_storage_item_cloud_info(
             )
             return
 
-    item_uuid: Optional[UUID] = None
-    item_url: Optional[str] = None
+    item_uuid: UUID | None = None
+    item_url: str | None = None
     if isinstance(item, StorageItem):
         item_uuid = item.uuid
     elif isinstance(item, UUID):
@@ -75,7 +75,7 @@ def update_storage_item_cloud_info(
     if not new_url and not new_cloud_integration:
         raise ValueError("At least one of `new_url` or `new_cloud_integration` must be provided")
 
-    new_cloud_integration_hash: Optional[UUID] = None
+    new_cloud_integration_hash: UUID | None = None
 
     if isinstance(new_cloud_integration, CloudIntegration):
         new_cloud_integration_hash = UUID(new_cloud_integration.id)
@@ -84,7 +84,7 @@ def update_storage_item_cloud_info(
     elif isinstance(new_cloud_integration, str):
         new_cloud_integration_hash = UUID(new_cloud_integration)  # let the exception propagate
 
-    from_cloud_integration_hash: Optional[UUID] = None
+    from_cloud_integration_hash: UUID | None = None
 
     if isinstance(from_cloud_integration, CloudIntegration):
         from_cloud_integration_hash = UUID(from_cloud_integration.id)
@@ -114,11 +114,11 @@ def update_storage_item_cloud_info(
 
 
 class MigrateSingleItemPayload(BaseDTO):
-    item_uuid: Optional[UUID]
-    item_url: Optional[str]
-    new_url: Optional[str]
-    new_cloud_integration: Optional[UUID]
-    from_cloud_integration: Optional[UUID]
+    item_uuid: UUID | None
+    item_url: str | None
+    new_url: str | None
+    new_cloud_integration: UUID | None
+    from_cloud_integration: UUID | None
     verify_access: bool
     skip_missing: bool
 
@@ -137,7 +137,7 @@ class MigrateSingleItemPayload(BaseDTO):
 
 @dataclass
 class BundledStorageMigrationPayload:
-    item_migrations: List[MigrateSingleItemPayload]
+    item_migrations: list[MigrateSingleItemPayload]
 
     def add(self, other: BundledStorageMigrationPayload) -> BundledStorageMigrationPayload:
         self.item_migrations.extend(other.item_migrations)
@@ -147,7 +147,7 @@ class BundledStorageMigrationPayload:
 def _migrate_items_bundle(
     api_client: ApiClient,
     *,
-    item_migrations: List[MigrateSingleItemPayload],
+    item_migrations: list[MigrateSingleItemPayload],
 ) -> None:
     for _, single_call_items in itertools.groupby(
         sorted(((p.payload_key(), p) for p in item_migrations), key=lambda pp: pp[0]),

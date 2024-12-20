@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
+from typing import List, Optional, Tuple, Type, TypeVar
+from collections.abc import Iterable, Sequence
 from uuid import UUID
 
 from encord.http.bundle import Bundle, bundled_operation
@@ -11,7 +12,7 @@ from encord.orm.base_dto import BaseDTO, PrivateAttr
 
 
 class TasksQueryParams(BaseDTO):
-    page_token: Optional[str] = None
+    page_token: str | None = None
 
 
 @dataclass(frozen=True)
@@ -25,14 +26,14 @@ class WorkflowStageBase:
 
 
 class WorkflowTask(BaseDTO):
-    _stage_uuid: Optional[UUID] = PrivateAttr(None)
-    _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
+    _stage_uuid: UUID | None = PrivateAttr(None)
+    _workflow_client: WorkflowClient | None = PrivateAttr(None)
 
     uuid: UUID
     created_at: datetime
     updated_at: datetime
 
-    def _get_client_data(self) -> Tuple[WorkflowClient, UUID]:
+    def _get_client_data(self) -> tuple[WorkflowClient, UUID]:
         assert self._stage_uuid
         assert self._workflow_client
         return self._workflow_client, self._stage_uuid
@@ -49,7 +50,7 @@ ReviewT = TypeVar("ReviewT", bound=BaseDTO)
 @dataclass
 class BundledWorkflowActionPayload:
     stage_uuid: UUID
-    actions: List[WorkflowAction]
+    actions: list[WorkflowAction]
 
     def add(self, other: BundledWorkflowActionPayload) -> BundledWorkflowActionPayload:
         assert self.stage_uuid == other.stage_uuid, "It's only possible to bundle actions for one stage at a time"
@@ -65,7 +66,7 @@ class WorkflowReviewAction(BaseDTO):
 class BundledReviewActionPayload:
     stage_uuid: UUID
     task_uuid: UUID
-    actions: List[WorkflowReviewAction]
+    actions: list[WorkflowReviewAction]
 
     def add(self, other: BundledReviewActionPayload) -> BundledReviewActionPayload:
         assert self.stage_uuid == other.stage_uuid, "It's only possible to bundle actions for one stage at a time"
@@ -79,14 +80,14 @@ class WorkflowClient:
     api_client: ApiClient
     project_hash: UUID
 
-    def get_tasks(self, stage_uuid: UUID, params: TasksQueryParams, type_: Type[TaskT]) -> Iterable[TaskT]:
+    def get_tasks(self, stage_uuid: UUID, params: TasksQueryParams, type_: type[TaskT]) -> Iterable[TaskT]:
         return self.api_client.get_paged_iterator(
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks",
             params=params,
             result_type=type_,
         )
 
-    def action(self, stage_uuid: UUID, action: WorkflowAction, *, bundle: Optional[Bundle] = None) -> None:
+    def action(self, stage_uuid: UUID, action: WorkflowAction, *, bundle: Bundle | None = None) -> None:
         if not bundle:
             self._action(stage_uuid, [action])
         else:
@@ -104,7 +105,7 @@ class WorkflowClient:
             result_type=None,
         )
 
-    def get_label_reviews(self, stage_uuid: UUID, task_uuid: UUID, type_: Type[ReviewT]) -> Iterable[ReviewT]:
+    def get_label_reviews(self, stage_uuid: UUID, task_uuid: UUID, type_: type[ReviewT]) -> Iterable[ReviewT]:
         return self.api_client.get_paged_iterator(
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/tasks/{task_uuid}/reviews",
             params=TasksQueryParams(),
@@ -117,7 +118,7 @@ class WorkflowClient:
         task_uuid: UUID,
         action: WorkflowReviewAction,
         *,
-        bundle: Optional[Bundle] = None,
+        bundle: Bundle | None = None,
     ) -> None:
         if not bundle:
             self._label_review_action(stage_uuid, task_uuid, [action])

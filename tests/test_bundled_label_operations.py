@@ -15,7 +15,7 @@ from tests.test_data.label_rows_metadata_blurb import (
 assert user_client and project and ontology
 
 
-def remove_label_hash(obj: Dict) -> Dict:
+def remove_label_hash(obj: dict) -> dict:
     obj = deepcopy(obj)
     del obj["label_hash"]
     return obj

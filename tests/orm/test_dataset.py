@@ -125,7 +125,7 @@ def test_storage_location_default():
 
 
 def test_storage_location_to_str() -> None:
-    unique_representations: Set[StorageLocation] = set()
+    unique_representations: set[StorageLocation] = set()
 
     for location in StorageLocation:
         string_representation = StorageLocation.get_str(location)

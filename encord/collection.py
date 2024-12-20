@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
-from typing import Iterator, List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Tuple, Union
+from collections.abc import Iterator, Sequence
 from uuid import UUID
 
 import encord.orm.storage as orm_storage
@@ -130,7 +131,7 @@ class Collection:
     def _list_collections(
         api_client: ApiClient,
         top_level_folder_uuid: Union[UUID, None],
-        collection_uuids: Union[List[UUID], None],
+        collection_uuids: Union[list[UUID], None],
         page_size: Optional[int] = None,
     ) -> Iterator["Collection"]:
         params = GetCollectionParams(
@@ -430,7 +431,7 @@ class ProjectCollection:
         project_client: EncordClientProject,
         ontology: Ontology,
         project_uuid: UUID,
-        collection_uuids: Union[List[UUID], None],
+        collection_uuids: Union[list[UUID], None],
         page_size: Optional[int] = None,
     ) -> Iterator["ProjectCollection"]:
         params = GetProjectCollectionParams(projectHash=project_uuid, uuids=collection_uuids, pageSize=page_size)
@@ -490,7 +491,7 @@ class ProjectCollection:
     def list_frames(
         self,
         page_size: Optional[int] = None,
-    ) -> Iterator[Tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]:
+    ) -> Iterator[tuple[LabelRowV2, list[ProjectDataCollectionInstance]]]:
         """
         List frames in the collection.
         Args:
@@ -519,7 +520,7 @@ class ProjectCollection:
     def list_annotations(
         self,
         page_size: Optional[int] = None,
-    ) -> Iterator[Tuple[LabelRowV2, List[ProjectLabelCollectionInstance]]]:
+    ) -> Iterator[tuple[LabelRowV2, list[ProjectLabelCollectionInstance]]]:
         """
         List annotations in the collection.
         Args:
@@ -546,7 +547,7 @@ class ProjectCollection:
             )
 
     def add_items(
-        self, items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
+        self, items: list[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
     ) -> ProjectCollectionBulkItemResponse:
         """
         Add data items to the collection.
@@ -565,7 +566,7 @@ class ProjectCollection:
         return res
 
     def remove_items(
-        self, items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
+        self, items: list[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
     ) -> ProjectCollectionBulkItemResponse:
         """
         Remove data items from the collection.

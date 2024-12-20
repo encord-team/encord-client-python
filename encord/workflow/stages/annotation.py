@@ -13,7 +13,8 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from enum import Enum
-from typing import Iterable, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
+from collections.abc import Iterable
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
@@ -32,11 +33,11 @@ class AnnotationTaskStatus(str, Enum):
 
 
 class _AnnotationTasksQueryParams(TasksQueryParams):
-    user_emails: Optional[List[str]] = None
-    data_hashes: Optional[List[UUID]] = None
-    dataset_hashes: Optional[List[UUID]] = None
-    data_title_contains: Optional[str] = None
-    statuses: Optional[List[AnnotationTaskStatus]] = None
+    user_emails: list[str] | None = None
+    data_hashes: list[UUID] | None = None
+    dataset_hashes: list[UUID] | None = None
+    data_title_contains: str | None = None
+    statuses: list[AnnotationTaskStatus] | None = None
 
 
 class AnnotationStage(WorkflowStageBase):
@@ -51,11 +52,11 @@ class AnnotationStage(WorkflowStageBase):
     def get_tasks(
         self,
         *,
-        assignee: Union[List[str], str, None] = None,
-        data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
-        data_title: Optional[str] = None,
-        status: Union[AnnotationTaskStatus, List[AnnotationTaskStatus], None] = None,
+        assignee: list[str] | str | None = None,
+        data_hash: list[UUID] | UUID | list[str] | str | None = None,
+        dataset_hash: list[UUID] | UUID | list[str] | str | None = None,
+        data_title: str | None = None,
+        status: AnnotationTaskStatus | list[AnnotationTaskStatus] | None = None,
     ) -> Iterable[AnnotationTask]:
         """
         Retrieves tasks for the AnnotationStage.
@@ -89,7 +90,7 @@ class AnnotationStage(WorkflowStageBase):
 class _ActionSubmit(WorkflowAction):
     action: Literal["SUBMIT"] = "SUBMIT"
     resolve_label_reviews: bool = True
-    assignee: Optional[str] = None
+    assignee: str | None = None
     retain_assignee: bool = False
 
 
@@ -107,7 +108,7 @@ class AnnotationTask(WorkflowTask):
     data_hash: UUID
     data_title: str
     label_branch_name: str
-    assignee: Optional[str]
+    assignee: str | None
 
     """
     Represents a task in a non-Consensus Annotate stage.
@@ -130,9 +131,9 @@ class AnnotationTask(WorkflowTask):
     def submit(
         self,
         *,
-        assignee: Optional[str] = None,
+        assignee: str | None = None,
         retain_assignee: bool = False,
-        bundle: Optional[Bundle] = None,
+        bundle: Bundle | None = None,
     ) -> None:
         """
         Submits the task for review.
@@ -150,7 +151,7 @@ class AnnotationTask(WorkflowTask):
             bundle=bundle,
         )
 
-    def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
+    def assign(self, assignee: str, *, bundle: Bundle | None = None) -> None:
         """
         Assigns the task to a user.
 
@@ -162,7 +163,7 @@ class AnnotationTask(WorkflowTask):
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
-    def release(self, *, bundle: Optional[Bundle] = None) -> None:
+    def release(self, *, bundle: Bundle | None = None) -> None:
         """
         Releases the task from the current user.
 

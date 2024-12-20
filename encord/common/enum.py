@@ -15,6 +15,6 @@ class StringEnum(str, Enum):
         return self.name
 
     @classmethod
-    def from_string(cls: Type[T], value: str) -> Optional[T]:
+    def from_string(cls: type[T], value: str) -> T | None:
         # pylint: disable-next=no-member
         return cast(T, cls._value2member_map_.get(value))

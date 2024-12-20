@@ -19,14 +19,14 @@ class ClientMetadataSchemaTypes(StringEnum):
 
 class ClientMetadataSchema(BaseDTO):
     uuid: UUID
-    metadata_schema: Dict[str, ClientMetadataSchemaTypes]
+    metadata_schema: dict[str, ClientMetadataSchemaTypes]
     organisation_id: int
     created_at: datetime
     updated_at: datetime
 
 
 class ClientMetadataSchemaPayload(BaseDTO):
-    metadata_schema: Dict[str, ClientMetadataSchemaTypes]
+    metadata_schema: dict[str, ClientMetadataSchemaTypes]
 
-    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+    def to_dict(self, by_alias=True, exclude_none=True) -> dict[str, Any]:
         return self.metadata_schema

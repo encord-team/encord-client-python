@@ -11,7 +11,8 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import datetime
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from collections.abc import Iterable, Iterator
 from uuid import UUID
 
 from encord.client import EncordClientProject
@@ -112,7 +113,7 @@ class Project:
 
     @property
     @deprecated(version="0.1.95", alternative=".ontology_structure")
-    def ontology(self) -> Dict[str, Any]:
+    def ontology(self) -> dict[str, Any]:
         """
         Get the ontology of the project.
 
@@ -147,7 +148,7 @@ class Project:
         return self._project_instance.user_role
 
     @property
-    def source_projects(self) -> Optional[List[str]]:
+    def source_projects(self) -> Optional[list[str]]:
         """
         Get the source projects for a Training project. Returns None for non-Training projects.
         """
@@ -155,7 +156,7 @@ class Project:
 
     @property
     @deprecated(version="0.1.117", alternative=".list_datasets")
-    def datasets(self) -> List[Dict[str, Any]]:
+    def datasets(self) -> list[dict[str, Any]]:
         """
         DEPRECATED: Prefer using the :meth:`encord.project.list_datasets` class to work with the data.
 
@@ -229,11 +230,11 @@ class Project:
 
     def list_label_rows_v2(
         self,
-        data_hashes: Optional[Union[List[str], List[UUID]]] = None,
-        label_hashes: Optional[Union[List[str], List[UUID]]] = None,
+        data_hashes: Optional[Union[list[str], list[UUID]]] = None,
+        label_hashes: Optional[Union[list[str], list[UUID]]] = None,
         edited_before: Optional[Union[str, datetime.datetime]] = None,
         edited_after: Optional[Union[str, datetime.datetime]] = None,
-        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        label_statuses: Optional[list[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
         data_title_eq: Optional[str] = None,
         data_title_like: Optional[str] = None,
@@ -244,7 +245,7 @@ class Project:
         include_images_data: bool = False,
         include_all_label_branches: bool = False,
         branch_name: Optional[str] = None,
-    ) -> List[LabelRowV2]:
+    ) -> list[LabelRowV2]:
         """
         List label rows with various filtering options.
 
@@ -291,7 +292,7 @@ class Project:
         ]
         return label_rows
 
-    def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
+    def add_users(self, user_emails: list[str], user_role: ProjectUserRole) -> list[ProjectUser]:
         """
         Add users to the project.
 
@@ -320,7 +321,7 @@ class Project:
         page = self._client.list_groups(project_hash)
         yield from page.results
 
-    def add_group(self, group_hash: Union[List[UUID], UUID], user_role: ProjectUserRole):
+    def add_group(self, group_hash: Union[list[UUID], UUID], user_role: ProjectUserRole):
         """
         Add a group to the project.
 
@@ -336,7 +337,7 @@ class Project:
             group_hash = [group_hash]
         self._client.add_groups(project_hash, group_hash, user_role)
 
-    def remove_group(self, group_hash: Union[List[UUID], UUID]):
+    def remove_group(self, group_hash: Union[list[UUID], UUID]):
         """
         Remove a group from the project.
 
@@ -410,7 +411,7 @@ class Project:
         """
         return self._client.submit_label_row_for_review(uid)
 
-    def add_datasets(self, dataset_hashes: List[str]) -> bool:
+    def add_datasets(self, dataset_hashes: list[str]) -> bool:
         """
         Add datasets to the project.
 
@@ -431,7 +432,7 @@ class Project:
         self.refetch_data()
         return res
 
-    def remove_datasets(self, dataset_hashes: List[str]) -> bool:
+    def remove_datasets(self, dataset_hashes: list[str]) -> bool:
         """
         Remove datasets from the project.
 
@@ -521,7 +522,7 @@ class Project:
         self.refetch_ontology()
         return res
 
-    def list_models(self) -> List[ModelConfiguration]:
+    def list_models(self) -> list[ModelConfiguration]:
         """
         List all models that are associated with the project. Use the
         :meth:`encord.project.Project.get_training_metadata` to get more metadata about each training instance.
@@ -552,7 +553,7 @@ class Project:
         get_created_at: bool = False,
         get_training_final_loss: bool = False,
         get_model_training_labels: bool = False,
-    ) -> List[TrainingMetadata]:
+    ) -> list[TrainingMetadata]:
         """
         Given a list of model_iteration_uids, get metadata around each model_iteration.
 
@@ -576,7 +577,7 @@ class Project:
         self,
         title: str,
         description: str,
-        features: List[str],
+        features: list[str],
         model: Union[AutomationModels, str],
     ) -> str:
         """
@@ -620,14 +621,14 @@ class Project:
     def model_inference(
         self,
         uid: str,
-        file_paths: Optional[List[str]] = None,
-        base64_strings: Optional[List[bytes]] = None,
+        file_paths: Optional[list[str]] = None,
+        base64_strings: Optional[list[bytes]] = None,
         conf_thresh: float = 0.6,
         iou_thresh: float = 0.3,
         device: Device = Device.CUDA,
-        detection_frame_range: Optional[List[int]] = None,
+        detection_frame_range: Optional[list[int]] = None,
         allocation_enabled: bool = False,
-        data_hashes: Optional[List[str]] = None,
+        data_hashes: Optional[list[str]] = None,
         rdp_thresh: float = 0.005,
     ):
         """
@@ -677,7 +678,7 @@ class Project:
     def model_train_start(
         self,
         model_hash: Union[str, UUID],
-        label_rows: List[Union[str, UUID]],
+        label_rows: list[Union[str, UUID]],
         epochs: int,
         weights: ModelTrainingWeights,
         batch_size: int = 24,
@@ -844,7 +845,7 @@ class Project:
         """
         return self._client.fitted_bounding_boxes(frames, video)
 
-    def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
+    def get_data(self, data_hash: str, get_signed_url: bool = False) -> tuple[Optional[Video], Optional[list[Image]]]:
         """
         Retrieve information about a video or image group.
 
@@ -871,7 +872,7 @@ class Project:
         after: Optional[datetime.datetime] = None,
         before: Optional[datetime.datetime] = None,
         user_email: Optional[str] = None,
-    ) -> List[LabelLog]:
+    ) -> list[LabelLog]:
         """
         Get label logs, which represent the actions taken in the UI to create labels.
 
@@ -899,7 +900,7 @@ class Project:
             user_email,
         )
 
-    def get_cloud_integrations(self) -> List[CloudIntegration]:
+    def get_cloud_integrations(self) -> list[CloudIntegration]:
         """
         Get the list of cloud integrations.
 
@@ -913,13 +914,13 @@ class Project:
         self,
         edited_before: Optional[Union[str, datetime.datetime]] = None,
         edited_after: Optional[Union[str, datetime.datetime]] = None,
-        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        label_statuses: Optional[list[AnnotationTaskStatus]] = None,
         shadow_data_state: Optional[ShadowDataState] = None,
         *,
         include_uninitialised_labels=False,
-        label_hashes: Optional[List[str]] = None,
-        data_hashes: Optional[List[str]] = None,
-    ) -> List[LabelRowMetadata]:
+        label_hashes: Optional[list[str]] = None,
+        data_hashes: Optional[list[str]] = None,
+    ) -> list[LabelRowMetadata]:
         """
         DEPRECATED - use `list_label_rows_v2` to manage label rows instead.
 
@@ -972,8 +973,8 @@ class Project:
         uid: str,
         get_signed_url: bool = True,
         *,
-        include_object_feature_hashes: Optional[Set[str]] = None,
-        include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_object_feature_hashes: Optional[set[str]] = None,
+        include_classification_feature_hashes: Optional[set[str]] = None,
         include_reviews: bool = False,
     ) -> LabelRow:
         """
@@ -1009,13 +1010,13 @@ class Project:
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def get_label_rows(
         self,
-        uids: List[str],
+        uids: list[str],
         get_signed_url: bool = True,
         *,
-        include_object_feature_hashes: Optional[Set[str]] = None,
-        include_classification_feature_hashes: Optional[Set[str]] = None,
+        include_object_feature_hashes: Optional[set[str]] = None,
+        include_classification_feature_hashes: Optional[set[str]] = None,
         include_reviews: bool = False,
-    ) -> List[LabelRow]:
+    ) -> list[LabelRow]:
         """
         DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
@@ -1159,9 +1160,9 @@ class Project:
 
     def import_coco_labels(
         self,
-        labels_dict: Dict[str, Any],
-        category_id_to_feature_hash: Dict[CategoryID, str],
-        image_id_to_frame_index: Dict[ImageID, FrameIndex],
+        labels_dict: dict[str, Any],
+        category_id_to_feature_hash: dict[CategoryID, str],
+        image_id_to_frame_index: dict[ImageID, FrameIndex],
         branch_name: Optional[str] = None,
     ) -> None:
         """Import labels from a COCO format into your Encord project
@@ -1194,7 +1195,7 @@ class Project:
 
     def list_collections(
         self,
-        collection_uuids: Optional[List[Union[str, UUID]]] = None,
+        collection_uuids: Optional[list[Union[str, UUID]]] = None,
         page_size: Optional[int] = None,
     ) -> Iterator[ProjectCollection]:
         """
@@ -1273,7 +1274,7 @@ class Project:
 
     def list_filter_presets(
         self,
-        filter_preset_uuids: Optional[List[Union[str, UUID]]] = None,
+        filter_preset_uuids: Optional[list[Union[str, UUID]]] = None,
         page_size: Optional[int] = None,
     ) -> Iterator[ProjectFilterPreset]:
         """

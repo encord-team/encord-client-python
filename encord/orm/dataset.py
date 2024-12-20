@@ -76,7 +76,7 @@ class ImageData:
         created_at: datetime,
         last_edited_at: datetime,
         width: int,
-        signed_url: Optional[str],
+        signed_url: str | None,
         height: int,
     ):
         self._image_hash = image_hash
@@ -138,12 +138,12 @@ class ImageData:
         return self._width
 
     @property
-    def signed_url(self) -> Optional[str]:
+    def signed_url(self) -> str | None:
         """The signed URL if one was generated when this class was created."""
         return self._signed_url
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> ImageData:
+    def from_dict(cls, json_dict: dict) -> ImageData:
         return ImageData(
             title=json_dict["title"],
             file_link=json_dict["file_link"],
@@ -159,7 +159,7 @@ class ImageData:
         )
 
     @classmethod
-    def from_list(cls, json_list: List) -> List[ImageData]:
+    def from_list(cls, json_list: list) -> list[ImageData]:
         return [cls.from_dict(json_dict) for json_dict in json_list]
 
     def __repr__(self):
@@ -186,19 +186,19 @@ class DataRow(dict, Formatter):
         data_type: DataType,
         created_at: datetime,
         last_edited_at: datetime,
-        width: Optional[int],
-        height: Optional[int],
-        file_link: Optional[str],
-        file_size: Optional[int],
-        file_type: Optional[str],
+        width: int | None,
+        height: int | None,
+        file_link: str | None,
+        file_size: int | None,
+        file_type: str | None,
         storage_location: StorageLocation,
-        client_metadata: Optional[dict],
-        frames_per_second: Optional[int],
-        duration: Optional[int],
-        images_data: Optional[List[dict]],
-        signed_url: Optional[str],
-        is_optimised_image_group: Optional[bool],
-        backing_item_uuid: Optional[UUID],
+        client_metadata: dict | None,
+        frames_per_second: int | None,
+        duration: int | None,
+        images_data: list[dict] | None,
+        signed_url: str | None,
+        is_optimised_image_group: bool | None,
+        backing_item_uuid: UUID | None,
     ):
         parsed_images = None
         if images_data is not None:
@@ -274,7 +274,7 @@ class DataRow(dict, Formatter):
         self["created_at"] = value.strftime(DATETIME_STRING_FORMAT)
 
     @property
-    def frames_per_second(self) -> Optional[int]:
+    def frames_per_second(self) -> int | None:
         """
         If the data type is :meth:`DataType.VIDEO <encord.constants.enums.DataType.VIDEO>` this returns the
         actual number of frames per second for the video. Otherwise, it returns `None` as a frames_per_second
@@ -283,7 +283,7 @@ class DataRow(dict, Formatter):
         return self["frames_per_second"]
 
     @property
-    def duration(self) -> Optional[int]:
+    def duration(self) -> int | None:
         """
         If the data type is :meth:`DataType.VIDEO <encord.constants.enums.DataType.VIDEO>` this returns the
         actual duration for the video. Otherwise, it returns `None` as a duration field is not applicable.
@@ -293,7 +293,7 @@ class DataRow(dict, Formatter):
         return self["duration"]
 
     @property
-    def client_metadata(self) -> Optional[MappingProxyType]:
+    def client_metadata(self) -> MappingProxyType | None:
         """
         The currently cached client metadata. To cache the client metadata, use the
         :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
@@ -304,12 +304,12 @@ class DataRow(dict, Formatter):
         return MappingProxyType(self["client_metadata"]) if self["client_metadata"] is not None else None
 
     @client_metadata.setter
-    def client_metadata(self, new_client_metadata: Dict) -> None:
+    def client_metadata(self, new_client_metadata: dict) -> None:
         self["_dirty_fields"].append("client_metadata")
         self["client_metadata"] = new_client_metadata
 
     @property
-    def width(self) -> Optional[int]:
+    def width(self) -> int | None:
         """
         An actual width of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
@@ -320,7 +320,7 @@ class DataRow(dict, Formatter):
         return self["width"]
 
     @property
-    def height(self) -> Optional[int]:
+    def height(self) -> int | None:
         """
         An actual height of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
@@ -335,7 +335,7 @@ class DataRow(dict, Formatter):
         return parse_datetime(self["last_edited_at"])
 
     @property
-    def file_link(self) -> Optional[str]:
+    def file_link(self) -> str | None:
         """
         A permanent file link of the given data asset. When stored in
         :meth:`StorageLocation.CORD_STORAGE <encord.orm.dataset.StorageLocation.CORD_STORAGE>` this will be the
@@ -346,7 +346,7 @@ class DataRow(dict, Formatter):
         return self["file_link"]
 
     @property
-    def signed_url(self) -> Optional[str]:
+    def signed_url(self) -> str | None:
         """
         The cached signed url of the given data asset. To cache the signed url, use the
         :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
@@ -372,7 +372,7 @@ class DataRow(dict, Formatter):
         return self["storage_location"]
 
     @property
-    def images_data(self) -> Optional[List[ImageData]]:
+    def images_data(self) -> list[ImageData] | None:
         """
         A list of the cached :class:`~encord.orm.dataset.ImageData` objects for the given data asset.
         Fetch the images with appropriate settings in the :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
@@ -383,7 +383,7 @@ class DataRow(dict, Formatter):
 
     @property
     @deprecated("0.1.98", ".is_image_sequence")
-    def is_optimised_image_group(self) -> Optional[bool]:
+    def is_optimised_image_group(self) -> bool | None:
         """
         If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
         returns whether this is a performance optimised image group. Returns `None` for other data types.
@@ -394,7 +394,7 @@ class DataRow(dict, Formatter):
         return self.is_image_sequence
 
     @property
-    def is_image_sequence(self) -> Optional[bool]:
+    def is_image_sequence(self) -> bool | None:
         """
         If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
         returns whether this is an image sequence. Returns `None` for other data types.
@@ -410,7 +410,7 @@ class DataRow(dict, Formatter):
         The id of the :class:`encord.storage.StorageItem` that underlies this data row.
         See also :meth:`encord.user_client.EncordUserClient.get_storage_item`.
         """
-        backing_item_uuid: Optional[UUID] = self.get("backing_item_uuid")
+        backing_item_uuid: UUID | None = self.get("backing_item_uuid")
         if not backing_item_uuid:
             raise NotImplementedError("Storage API is not yet implemented by the service")
         return backing_item_uuid
@@ -419,7 +419,7 @@ class DataRow(dict, Formatter):
         self,
         *,
         signed_url: bool = False,
-        images_data_fetch_options: Optional[ImagesDataFetchOptions] = None,
+        images_data_fetch_options: ImagesDataFetchOptions | None = None,
         client_metadata: bool = False,
     ):
         """
@@ -474,7 +474,7 @@ class DataRow(dict, Formatter):
             raise EncordException("Could not upload data. The DataRow is in an invalid state.")
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> DataRow:
+    def from_dict(cls, json_dict: dict) -> DataRow:
         data_type = DataType.from_upper_case_string(json_dict["data_type"])
         backing_item_uuid_value = json_dict.get("backing_item_uuid")
         backing_item_uuid = UUID(backing_item_uuid_value) if backing_item_uuid_value else None
@@ -502,8 +502,8 @@ class DataRow(dict, Formatter):
         )
 
     @classmethod
-    def from_dict_list(cls, json_list: List) -> List[DataRow]:
-        ret: List[DataRow] = list()
+    def from_dict_list(cls, json_list: list) -> list[DataRow]:
+        ret: list[DataRow] = list()
         for json_dict in json_list:
             ret.append(cls.from_dict(json_dict))
         return ret
@@ -533,7 +533,7 @@ class DataRows(dict, Formatter):
     Not intended to be used directly
     """
 
-    def __init__(self, data_rows: List[DataRow]):
+    def __init__(self, data_rows: list[DataRow]):
         super().__init__(
             {
                 "data_rows": data_rows,
@@ -541,7 +541,7 @@ class DataRows(dict, Formatter):
         )
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> DataRow:  # type: ignore[override]
+    def from_dict(cls, json_dict: dict) -> DataRow:  # type: ignore[override]
         return DataRow.from_dict(json_dict)
 
 
@@ -558,7 +558,7 @@ class DatasetInfo:
     type: int
     created_at: datetime
     last_edited_at: datetime
-    backing_folder_uuid: Optional[UUID] = None
+    backing_folder_uuid: UUID | None = None
 
 
 class Dataset(dict, Formatter):
@@ -566,10 +566,10 @@ class Dataset(dict, Formatter):
         self,
         title: str,
         storage_location: str,
-        data_rows: List[DataRow],
+        data_rows: list[DataRow],
         dataset_hash: str,
-        description: Optional[str] = None,
-        backing_folder_uuid: Optional[UUID] = None,
+        description: str | None = None,
+        backing_folder_uuid: UUID | None = None,
     ):
         """
         DEPRECATED - prefer using the :class:`encord.dataset.Dataset` class instead.
@@ -622,23 +622,23 @@ class Dataset(dict, Formatter):
         self["dataset_type"] = value.get_str()
 
     @property
-    def data_rows(self) -> List[DataRow]:
+    def data_rows(self) -> list[DataRow]:
         return self["data_rows"]
 
     @data_rows.setter
-    def data_rows(self, value: List[DataRow]) -> None:
+    def data_rows(self, value: list[DataRow]) -> None:
         self["data_rows"] = value
 
     @property
-    def backing_folder_uuid(self) -> Optional[UUID]:
+    def backing_folder_uuid(self) -> UUID | None:
         return self["backing_folder_uuid"]
 
     @backing_folder_uuid.setter
-    def backing_folder_uuid(self, value: Optional[UUID]) -> None:
+    def backing_folder_uuid(self, value: UUID | None) -> None:
         self["backing_folder_uuid"] = value
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> Dataset:
+    def from_dict(cls, json_dict: dict) -> Dataset:
         backing_folder_uuid_value = json_dict.get("backing_folder_uuid")
 
         return Dataset(
@@ -661,10 +661,10 @@ class DatasetDataInfo(BaseDTO):
 class AddPrivateDataResponse(Formatter):
     """Response of add_private_data_to_dataset"""
 
-    dataset_data_list: List[DatasetDataInfo]
+    dataset_data_list: list[DatasetDataInfo]
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> AddPrivateDataResponse:
+    def from_dict(cls, json_dict: dict) -> AddPrivateDataResponse:
         data_info = json_dict["dataset_data_info"]
         dataset_data_info_list = []
         for mapping in data_info:
@@ -679,7 +679,7 @@ class CreateDatasetResponse(dict, Formatter):
         storage_location: int,
         dataset_hash: str,
         user_hash: str,
-        backing_folder_uuid: Optional[UUID],
+        backing_folder_uuid: UUID | None,
     ):
         """
         This class has dict-style accessors for backwards compatibility.
@@ -734,15 +734,15 @@ class CreateDatasetResponse(dict, Formatter):
         self["user_hash"] = value
 
     @property
-    def backing_folder_uuid(self) -> Optional[UUID]:
+    def backing_folder_uuid(self) -> UUID | None:
         return self["backing_folder_uuid"]
 
     @backing_folder_uuid.setter
-    def backing_folder_uuid(self, value: Optional[UUID]) -> None:
+    def backing_folder_uuid(self, value: UUID | None) -> None:
         self["backing_folder_uuid"] = value
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> CreateDatasetResponse:
+    def from_dict(cls, json_dict: dict) -> CreateDatasetResponse:
         backing_folder_uuid_value = json_dict.get("backing_folder_uuid")
         return CreateDatasetResponse(
             title=json_dict["title"],
@@ -789,7 +789,7 @@ class StorageLocation(IntEnum):
         return StorageLocation.NEW_STORAGE
 
 
-STORAGE_LOCATION_BY_STR: Dict[str, StorageLocation] = {location.get_str(): location for location in StorageLocation}
+STORAGE_LOCATION_BY_STR: dict[str, StorageLocation] = {location.get_str(): location for location in StorageLocation}
 
 DatasetType = StorageLocation
 """For backwards compatibility"""
@@ -921,19 +921,19 @@ class DicomSeries:
 
 @dataclasses.dataclass(frozen=True)
 class DicomDeidentifyTask:
-    dicom_urls: List[str]
+    dicom_urls: list[str]
     integration_hash: str
 
 
 @dataclasses.dataclass(frozen=True)
 class ImageGroupOCR:
-    processed_texts: Dict
+    processed_texts: dict
 
 
 class ReEncodeVideoTaskResult(BaseDTO):
     data_hash: str
     # The signed url is only present when using StorageLocation.CORD_STORAGE
-    signed_url: Optional[str]
+    signed_url: str | None
     bucket_path: str
 
 
@@ -941,7 +941,7 @@ class ReEncodeVideoTask(BaseDTO):
     """A re encode video object with supporting information."""
 
     status: str
-    result: Optional[List[ReEncodeVideoTaskResult]] = None
+    result: list[ReEncodeVideoTaskResult] | None = None
 
 
 @dataclasses.dataclass
@@ -1015,7 +1015,7 @@ class DataUnitError(BaseDTO):
     A description of an error for an individual upload item
     """
 
-    object_urls: List[str]
+    object_urls: list[str]
     """URLs involved. A single item for videos and images; a list of frames for image groups and DICOM"""
 
     error: str
@@ -1039,13 +1039,13 @@ class DatasetDataLongPolling(BaseDTO):
     status: LongPollingStatus
     """Status of the upload job. Documented in detail in :meth:`LongPollingStatus`"""
 
-    data_hashes_with_titles: List[DatasetDataInfo]
+    data_hashes_with_titles: list[DatasetDataInfo]
     """Information about data which was added to the dataset."""
 
-    errors: List[str]
+    errors: list[str]
     """Stringified list of exceptions."""
 
-    data_unit_errors: List[DataUnitError]
+    data_unit_errors: list[DataUnitError]
     """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
 
     units_pending_count: int
@@ -1068,7 +1068,7 @@ class DatasetLinkItems:
 
 class CreateDatasetPayload(BaseDTO):
     title: str
-    description: Optional[str]
+    description: str | None
 
     create_backing_folder: bool  # this creates a legacy "mirror" dataset and it's backing folder in one go
 
@@ -1080,19 +1080,19 @@ class CreateDatasetPayload(BaseDTO):
 
 class CreateDatasetResponseV2(BaseDTO):
     dataset_uuid: UUID
-    backing_folder_uuid: Optional[UUID] = None  # a 'not None' indicates a legacy "mirror" dataset was created
+    backing_folder_uuid: UUID | None = None  # a 'not None' indicates a legacy "mirror" dataset was created
 
 
 class DatasetsWithUserRolesListParams(BaseDTO):
-    title_eq: Optional[str]
-    title_like: Optional[str]
-    description_eq: Optional[str]
-    description_like: Optional[str]
-    created_before: Optional[datetime]
-    created_after: Optional[datetime]
-    edited_before: Optional[datetime]
-    edited_after: Optional[datetime]
-    include_org_access: Optional[bool] = False
+    title_eq: str | None
+    title_like: str | None
+    description_eq: str | None
+    description_like: str | None
+    created_before: datetime | None
+    created_after: datetime | None
+    edited_before: datetime | None
+    edited_after: datetime | None
+    include_org_access: bool | None = False
 
 
 class DatasetWithUserRole(BaseDTO):
@@ -1101,11 +1101,11 @@ class DatasetWithUserRole(BaseDTO):
     description: str
     created_at: datetime
     last_edited_at: datetime
-    user_role: Optional[DatasetUserRoleV2]
+    user_role: DatasetUserRoleV2 | None
 
-    storage_location: Optional[StorageLocation] = None  # legacy field: you can have data from mixed locations now
-    backing_folder_uuid: Optional[UUID] = None  # if set, this indicates a legacy 'mirror' dataset
+    storage_location: StorageLocation | None = None  # legacy field: you can have data from mixed locations now
+    backing_folder_uuid: UUID | None = None  # if set, this indicates a legacy 'mirror' dataset
 
 
 class DatasetsWithUserRolesListResponse(BaseDTO):
-    result: List[DatasetWithUserRole]
+    result: list[DatasetWithUserRole]

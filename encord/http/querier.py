@@ -1,7 +1,8 @@
 import dataclasses
 import logging
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from collections.abc import Generator, Sequence
 
 import orjson
 import requests
@@ -28,7 +29,7 @@ class Querier:
     """Querier for DB get/post requests."""
 
     T = TypeVar("T")
-    PayloadType = Union[None, Dict[str, Any], BaseDTO, Sequence[Dict[str, Any]], Sequence[BaseDTO]]
+    PayloadType = Union[None, dict[str, Any], BaseDTO, Sequence[dict[str, Any]], Sequence[BaseDTO]]
 
     def __init__(self, config: BaseConfig, resource_type: Optional[str] = None, resource_id: Optional[str] = None):
         self._config = config
@@ -36,7 +37,7 @@ class Querier:
         self.resource_id = resource_id
 
     def basic_getter(
-        self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
+        self, db_object_type: type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
     ) -> T:
         """Single DB object getter."""
         request = self._request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
@@ -47,23 +48,23 @@ class Querier:
             raise ResourceNotFoundError("Resource not found.", context=context)
 
     def get_multiple(
-        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
-    ) -> List[T]:
+        self, object_type: type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
+    ) -> list[T]:
         return self._request_multiple(QueryMethods.GET, object_type, uid, payload, retryable=retryable)
 
     def post_multiple(
-        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
-    ) -> List[T]:
+        self, object_type: type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+    ) -> list[T]:
         return self._request_multiple(QueryMethods.POST, object_type, uid, payload)
 
     def put_multiple(
-        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
-    ) -> List[T]:
+        self, object_type: type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+    ) -> list[T]:
         return self._request_multiple(QueryMethods.PUT, object_type, uid, payload)
 
     def _request_multiple(
-        self, method: QueryMethods, object_type: Type[T], uid: UIDType, payload: PayloadType = None, retryable=False
-    ) -> List[T]:
+        self, method: QueryMethods, object_type: type[T], uid: UIDType, payload: PayloadType = None, retryable=False
+    ) -> list[T]:
         request = self._request(method, object_type, uid, self._config.read_timeout, payload=payload)
         result, context = self._execute(request, retryable=retryable)
 
@@ -75,7 +76,7 @@ class Querier:
             )
 
     @staticmethod
-    def _parse_response(object_type: Type[T], item: Dict[str, Any]) -> T:
+    def _parse_response(object_type: type[T], item: dict[str, Any]) -> T:
         if issubclass(object_type, BaseDTO):
             return object_type.from_dict(item)  # type: ignore
         if issubclass(object_type, Formatter):
@@ -86,7 +87,7 @@ class Querier:
             return object_type(item)  # type: ignore
 
     @staticmethod
-    def _serialise_payload(payload: PayloadType) -> Union[None, Dict[str, Any], List[Dict[str, Any]]]:
+    def _serialise_payload(payload: PayloadType) -> Union[None, dict[str, Any], list[dict[str, Any]]]:
         if isinstance(payload, BaseDTO):
             return payload.to_dict()
         elif isinstance(payload, Sequence) and all(isinstance(x, BaseDTO) for x in payload):
@@ -94,7 +95,7 @@ class Querier:
         else:
             return payload  # type: ignore
 
-    def basic_delete(self, db_object_type: Type[T], uid: UIDType = None, retryable=False):
+    def basic_delete(self, db_object_type: type[T], uid: UIDType = None, retryable=False):
         """Single DB object getter."""
         request = self._request(
             QueryMethods.DELETE,
@@ -106,7 +107,7 @@ class Querier:
         res, _ = self._execute(request, retryable=retryable)
         return res
 
-    def basic_setter(self, db_object_type: Type[T], uid: UIDType, payload: PayloadType, retryable=False):
+    def basic_setter(self, db_object_type: type[T], uid: UIDType, payload: PayloadType, retryable=False):
         """Single DB object setter."""
         request = self._request(
             QueryMethods.POST,
@@ -154,7 +155,7 @@ class Querier:
             return RequestContext()
 
     def _request(
-        self, method: QueryMethods, db_object_type: Type[T], uid: UIDType, timeout: int, payload: PayloadType = None
+        self, method: QueryMethods, db_object_type: type[T], uid: UIDType, timeout: int, payload: PayloadType = None
     ):
         request = Request(
             method, db_object_type, uid, timeout, self._config.connect_timeout, self._serialise_payload(payload)
@@ -165,7 +166,7 @@ class Querier:
         )
         return request
 
-    def _execute(self, request: Request, retryable=False, enable_logging: bool = True) -> Tuple[Any, RequestContext]:
+    def _execute(self, request: Request, retryable=False, enable_logging: bool = True) -> tuple[Any, RequestContext]:
         """Execute a request."""
         if enable_logging:
             logger.info("Request: %s", (request.data[:100] + "..") if len(request.data) > 100 else request.data)

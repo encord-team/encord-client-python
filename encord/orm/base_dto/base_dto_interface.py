@@ -7,9 +7,9 @@ T = TypeVar("T", bound="BaseDTOInterface")
 class BaseDTOInterface(ABC):
     @classmethod
     @abstractmethod
-    def from_dict(cls: Type[T], d: Dict[str, Any]) -> T:
+    def from_dict(cls: type[T], d: dict[str, Any]) -> T:
         pass
 
     @abstractmethod
-    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+    def to_dict(self, by_alias=True, exclude_none=True) -> dict[str, Any]:
         pass

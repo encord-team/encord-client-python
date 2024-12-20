@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.http.query_methods import QueryMethods
 
-UIDType = Union[None, int, str, Dict[str, str], Dict[str, object], List[int], List[str], List[Dict[str, str]]]
+UIDType = Union[None, int, str, dict[str, str], dict[str, object], list[int], list[str], list[dict[str, str]]]
 
 
 class Request:
@@ -14,11 +14,11 @@ class Request:
     def __init__(
         self,
         query_method: QueryMethods,
-        db_object_type: Type,
+        db_object_type: type,
         uid: UIDType,
         timeout: int,
         connect_timeout: int,
-        payload: Union[None, Dict[str, Any], List[Dict[str, Any]]],
+        payload: Union[None, dict[str, Any], list[dict[str, Any]]],
     ) -> None:
         self.http_method = QueryMethods.POST
         self.data: str = json.dumps(
@@ -34,7 +34,7 @@ class Request:
         self.timeout = timeout
         self.connect_timeout = connect_timeout
 
-        self.headers: Optional[Dict] = None
+        self.headers: Optional[dict] = None
 
     def __str__(self):
         return f"Request({self.http_method}, {self.data}, {self.headers}, {self.timeout}, {self.connect_timeout})"

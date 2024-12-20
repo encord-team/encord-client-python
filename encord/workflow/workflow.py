@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import List, Optional, Type, TypeVar, Union
 from uuid import UUID
 
-from typing_extensions import Annotated
+from typing import Annotated
 
 from encord.http.v2.api_client import ApiClient
 from encord.objects.utils import checked_cast
@@ -72,7 +72,7 @@ def _ensure_uuid(v: str | UUID) -> UUID:
 
 
 class Workflow:
-    stages: List[WorkflowStage] = []
+    stages: list[WorkflowStage] = []
 
     """
     Workflow class in Projects.
@@ -86,9 +86,9 @@ class Workflow:
     def get_stage(
         self,
         *,
-        name: Optional[str] = None,
-        uuid: Optional[UUID | str] = None,
-        type_: Optional[Type[WorkflowStageT]] = None,
+        name: str | None = None,
+        uuid: UUID | str | None = None,
+        type_: type[WorkflowStageT] | None = None,
     ) -> WorkflowStageT:
         """
         **Params**

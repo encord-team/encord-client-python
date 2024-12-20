@@ -13,7 +13,8 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Type
+from typing import Any, Dict, List, Optional, Type
+from collections.abc import Sequence
 
 from encord.objects.attributes import (
     Attribute,
@@ -34,7 +35,7 @@ class Object(OntologyElement):
     shape: Shape
     feature_node_hash: str
     required: bool = False
-    attributes: List[Attribute] = field(default_factory=list)
+    attributes: list[Attribute] = field(default_factory=list)
 
     @property
     def title(self) -> str:
@@ -77,7 +78,7 @@ class Object(OntologyElement):
         if shape_opt is None:
             raise TypeError(f"The shape '{d['shape']}' of the object '{d}' is not recognised")
 
-        attributes_ret: List[Attribute] = [
+        attributes_ret: list[Attribute] = [
             attribute_from_dict(attribute_dict) for attribute_dict in d.get("attributes", [])
         ]
         return Object(
@@ -90,14 +91,14 @@ class Object(OntologyElement):
             required=bool(d.get("required", False)),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the Object to a dictionary.
 
         Returns:
             Dict[str, Any]: The dictionary representation of the object.
         """
-        ret: Dict[str, Any] = {
+        ret: dict[str, Any] = {
             "id": str(self.uid),
             "name": self.name,
             "color": self.color,
@@ -112,10 +113,10 @@ class Object(OntologyElement):
 
     def add_attribute(
         self,
-        cls: Type[AttributeType],
+        cls: type[AttributeType],
         name: str,
-        local_uid: Optional[int] = None,
-        feature_node_hash: Optional[str] = None,
+        local_uid: int | None = None,
+        feature_node_hash: str | None = None,
         required: bool = False,
         dynamic: bool = False,
     ) -> AttributeType:
