@@ -1012,6 +1012,8 @@ def test_frame_view(ontology) -> None:
     frame_view.add_classification_instance(classification_instance)
 
     frames = label_row.get_frame_views()
+    assert label_row_metadata.duration is not None
+    assert label_row_metadata.frames_per_second is not None
     assert len(frames) == label_row_metadata.duration * label_row_metadata.frames_per_second
 
     frame_num = 0
@@ -1149,13 +1151,14 @@ def test_audio_classification_exceed_max_frames(ontology, empty_audio_label_row:
 
 def test_audio_object_exceed_max_frames(ontology, empty_audio_label_row: LabelRowV2):
     object_instance = ObjectInstance(audio_obj_ontology_item)
-    object_instance.set_for_frames(AudioCoordinates(), Range(start=0, end=100))
+    object_instance.set_for_frames(AudioCoordinates(range=[Range(start=0, end=100)]))
     empty_audio_label_row.add_object_instance(object_instance)
 
     with pytest.raises(LabelRowError):
-        object_instance.set_for_frames(AudioCoordinates(), Range(start=200, end=5000))
+        object_instance.set_for_frames(AudioCoordinates(range=[Range(start=200, end=5000)]))
 
     range_list = object_instance.range_list
+    assert range_list is not None
     assert len(range_list) == 1
     assert range_list[0].start == 0
     assert range_list[0].end == 100
@@ -1192,8 +1195,7 @@ def test_get_annotations_from_audio_object(ontology) -> None:
 
     object_instance = ObjectInstance(audio_obj_ontology_item)
     object_instance.set_for_frames(
-        AudioCoordinates(),
-        Range(start=0, end=1500),
+        AudioCoordinates(range=[Range(start=0, end=1500)]),
         created_at=now,
         created_by="user1",
         last_edited_at=now,
@@ -1260,8 +1262,9 @@ def test_non_geometric_label_rows_must_use_classification_instance_with_range_on
 def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
     label_row = empty_audio_label_row
     obj_instance = ObjectInstance(audio_obj_ontology_item)
-    obj_instance.set_for_frames(AudioCoordinates(), Range(start=0, end=1500))
+    obj_instance.set_for_frames(AudioCoordinates(range=[Range(start=0, end=1500)]))
     range_list = obj_instance.range_list
+    assert range_list is not None
     assert len(range_list) == 1
     assert range_list[0].start == 0
     assert range_list[0].end == 1500
@@ -1269,19 +1272,16 @@ def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_labe
     label_row.add_object_instance(obj_instance)
     assert len(label_row.get_classification_instances()) == 0
     assert len(label_row.get_object_instances()) == 1
-    obj_instance.set_for_frames(AudioCoordinates(), Range(start=2000, end=2499))
+    obj_instance.set_for_frames(AudioCoordinates(range=[Range(start=2000, end=2499)]), overwrite=True)
     range_list = obj_instance.range_list
-    assert len(range_list) == 2
-    assert range_list[0].start == 0
-    assert range_list[0].end == 1500
-    assert range_list[1].start == 2000
-    assert range_list[1].end == 2499
-
-    obj_instance.remove_from_frames(Range(start=0, end=1500))
-    range_list = obj_instance.range_list
+    assert range_list is not None
     assert len(range_list) == 1
     assert range_list[0].start == 2000
     assert range_list[0].end == 2499
+
+    obj_instance.remove_from_frames(frames=0)
+    range_list = obj_instance.range_list
+    assert range_list is None
 
     label_row.remove_object(obj_instance)
     assert len(label_row.get_object_instances()) == 0
@@ -1321,7 +1321,7 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
         )
     ]
 
-    obj_instance.set_for_frames(TextCoordinates(), range_html=initial_range_html)
+    obj_instance.set_for_frames(TextCoordinates(range_html=initial_range_html))
     range_html = obj_instance.range_html
 
     assert range_html is not None
@@ -1346,7 +1346,7 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
         ),
     ]
 
-    obj_instance.set_for_frames(TextCoordinates(), range_html=edited_range_html)
+    obj_instance.set_for_frames(TextCoordinates(range_html=edited_range_html), overwrite=True)
     range_html = obj_instance.range_html
     assert range_html is not None
     assert len(range_html) == 2
@@ -1360,8 +1360,7 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
     assert range_html[1].end.node == "end_node_new"
     assert range_html[1].end.offset == 7
 
-    empty_range_html = []
-    obj_instance.set_for_frames(TextCoordinates(), range_html=empty_range_html)
+    obj_instance.remove_from_frames(frames=0)
     range_html = obj_instance.range_html
     assert range_html is None
 
@@ -1377,7 +1376,7 @@ def test_html_text_object_cannot_be_added_to_non_html_label_row(ontology, empty_
         )
     ]
 
-    obj_instance.set_for_frames(TextCoordinates(), range_html=initial_range_html)
+    obj_instance.set_for_frames(TextCoordinates(range_html=initial_range_html))
     range_html = obj_instance.range_html
 
     assert range_html is not None
@@ -1406,11 +1405,11 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
     # Adding range_html to an object instance where the object's shape is NOT text
     audio_obj_instance = ObjectInstance(audio_obj_ontology_item)
     with pytest.raises(LabelRowError) as e:
-        audio_obj_instance.set_for_frames(coordinates=TextCoordinates(), range_html=range_html)
+        audio_obj_instance.set_for_frames(coordinates=TextCoordinates(range_html=range_html))
 
     assert (
         str(e.value.message)
-        == f"Setting range_html of the object instance is only allowed for objects with the {Shape.TEXT} shape"
+        == f"Expected a coordinate of type `{AudioCoordinates}`, but got type `{TextCoordinates}`."
     )
 
     # Adding range_html to an object instance which is attached to a label row where the
@@ -1420,15 +1419,6 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
     empty_plain_text_label_row.add_object_instance(html_text_obj_instance)
 
     with pytest.raises(LabelRowError) as e:
-        html_text_obj_instance.set_for_frames(coordinates=TextCoordinates(), range_html=range_html)
+        html_text_obj_instance.set_for_frames(coordinates=TextCoordinates(range_html=range_html), overwrite=True)
 
-    assert str(e.value.message) == "Cannot add range_html to a non-html text file"
-
-    # Adding range_html to an object instance which has some normal ranges set
-    html_text_obj_instance = ObjectInstance(text_obj_ontology_item)
-    html_text_obj_instance.set_for_frames(coordinates=TextCoordinates(), frames=0)
-
-    with pytest.raises(LabelRowError) as e:
-        html_text_obj_instance.set_for_frames(coordinates=TextCoordinates(), range_html=range_html)
-
-    assert str(e.value.message) == "Cannot add range_html to an object instance that has a non-html range"
+    assert str(e.value.message) == "For non-html labels, ensure the `range` property is set when instantiating the TextCoordinates."

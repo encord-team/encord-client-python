@@ -70,6 +70,10 @@ class RangeManager:
         for r in ranges_to_remove:
             self.remove_range(r)
 
+    def clear_ranges(self) -> None:
+        """Clear all ranges."""
+        self.ranges = []
+
     def get_ranges(self) -> Ranges:
         """Return the sorted list of merged ranges."""
         copied_ranges = [range.copy() for range in self.ranges]

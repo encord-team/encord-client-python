@@ -15,9 +15,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Collection, List, Union, cast
 
+from encord.orm.base_dto import BaseDTO
 
-@dataclass
-class HtmlNode:
+
+class HtmlNode(BaseDTO):
     """
     A class representing a single HTML node, with the node and offset.
 
@@ -33,8 +34,7 @@ class HtmlNode:
         return f"(Node: {self.node} Offset: {self.offset})"
 
 
-@dataclass
-class HtmlRange:
+class HtmlRange(BaseDTO):
     """
     A class representing a section of HTML with a start and end node.
 

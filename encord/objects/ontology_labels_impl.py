@@ -855,9 +855,8 @@ class LabelRowV2:
         self._objects_map[object_hash] = object_instance
         object_instance._parent = self
 
-        if not object_instance.is_range_only():
-            frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
-            self._add_to_frame_to_hashes_map(object_instance, frames)
+        frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
+        self._add_to_frame_to_hashes_map(object_instance, frames)
 
     def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
         """
@@ -1640,7 +1639,8 @@ class LabelRowV2:
 
             # At some point, we also want to add these to the other modalities
             if not is_geometric(self.data_type):
-                annotation = obj.get_annotations()[0]
+                # For non-frame entities, all annotations exist only on one frame
+                annotation = obj.get_annotation(0)
                 object_answer_dict = ret[obj.object_hash]
                 object_answer_dict["createdBy"] = annotation.created_by
                 object_answer_dict["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
@@ -1653,10 +1653,14 @@ class LabelRowV2:
                 object_answer_dict["shape"] = obj.ontology_item.shape.value
                 object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
 
-                if self.data_type == DataType.PLAIN_TEXT and obj.range_html is not None:
+                if self.file_type == "text/html":
+                    if obj.range_html is None:
+                        raise LabelRowError("Html annotations should have range_html set within the TextCoordinates")
                     object_answer_dict["range_html"] = [x.to_dict() for x in obj.range_html]
                     object_answer_dict["range"] = []
                 else:
+                    if obj.range_list is None:
+                        raise LabelRowError("Non-geometric annotations should have range set within the Coordinates")
                     object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
 
         return ret
@@ -2285,8 +2289,8 @@ class LabelRowV2:
             raise LabelRowError("Unsupported object shape for data type")
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
         object_instance.set_for_frames(
-            AudioCoordinates(),
-            ranges,
+            AudioCoordinates(range=ranges),
+            frames=0,
             created_at=object_frame_instance_info.created_at,
             created_by=object_frame_instance_info.created_by,
             confidence=object_frame_instance_info.confidence,
@@ -2318,9 +2322,8 @@ class LabelRowV2:
 
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
         object_instance.set_for_frames(
-            TextCoordinates(),
+            TextCoordinates(range_html=[HtmlRange.from_dict(x) for x in range_html]),
             frames=0,
-            range_html=[HtmlRange.from_dict(x) for x in range_html],
             created_at=object_frame_instance_info.created_at,
             created_by=object_frame_instance_info.created_by,
             confidence=object_frame_instance_info.confidence,
