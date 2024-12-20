@@ -487,8 +487,10 @@ class ObjectInstance:
                 raise LabelRowError("Expecting non-geometric coordinate type")
 
             elif frames != 0:
-                raise LabelRowError(f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
-                                    f"There is only one frame. Please ensure `set_for_frames` is called with `frames=0`.")
+                raise LabelRowError(
+                    f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
+                    f"There is only one frame. Please ensure `set_for_frames` is called with `frames=0`."
+                )
 
         frames_list = frames_class_to_frames_list(frames)
 
@@ -504,15 +506,19 @@ class ObjectInstance:
 
             if isinstance(coordinates, (AudioCoordinates, TextCoordinates)) and coordinates.range is not None:
                 if self._parent is not None and self._parent == "text/html":
-                    raise LabelRowError("For html labels, ensure the `range_html` property "
-                                        "is set when instantiating the TextCoordinates.")
+                    raise LabelRowError(
+                        "For html labels, ensure the `range_html` property "
+                        "is set when instantiating the TextCoordinates."
+                    )
 
                 self.check_within_range(coordinates.range[0].end)
 
             elif isinstance(coordinates, TextCoordinates) and coordinates.range_html is not None:
                 if self._parent is not None and self._parent.file_type != "text/html":
-                    raise LabelRowError("For non-html labels, ensure the `range` property "
-                                        "is set when instantiating the TextCoordinates.")
+                    raise LabelRowError(
+                        "For non-html labels, ensure the `range` property "
+                        "is set when instantiating the TextCoordinates."
+                    )
                 # Unable to validate xPaths here. Do validation in BE instead
             else:
                 self.check_within_range(frame)
@@ -544,10 +550,6 @@ class ObjectInstance:
             return None
         else:
             return self.get_annotation(0)
-
-
-
-
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
@@ -625,8 +627,10 @@ class ObjectInstance:
             frames: The frames from which to remove the object instance.
         """
         if self._non_geometric and frames != 0:
-            raise LabelRowError(f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
-                                f"There is only one frame. Please ensure `remove_from_frames` is called with `frames=0`.")
+            raise LabelRowError(
+                f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
+                f"There is only one frame. Please ensure `remove_from_frames` is called with `frames=0`."
+            )
 
         frames_list = frames_class_to_frames_list(frames)
         for frame in frames_list:

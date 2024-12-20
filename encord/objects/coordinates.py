@@ -346,6 +346,7 @@ class AudioCoordinates(BaseDTO):
     Attributes:
         range (Ranges): Ranges in milliseconds for audio files
     """
+
     range: Ranges
 
     def __post_init__(self):

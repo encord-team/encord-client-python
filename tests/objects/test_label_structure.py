@@ -1,5 +1,4 @@
 import datetime
-import json
 import math
 from dataclasses import asdict
 from unittest.mock import Mock, PropertyMock
@@ -16,7 +15,6 @@ from encord.objects import (
     Object,
     ObjectInstance,
     RadioAttribute,
-    Shape,
     TextAttribute,
 )
 from encord.objects.attributes import Attribute
@@ -1367,9 +1365,7 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
 
 
 def test_html_text_object_cannot_be_added_to_non_html_label_row(
-        ontology,
-        empty_audio_label_row: LabelRowV2,
-        empty_plain_text_label_row: LabelRowV2
+    ontology, empty_audio_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
 ) -> None:
     obj_instance = ObjectInstance(text_obj_ontology_item)
 
@@ -1417,8 +1413,7 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
         audio_obj_instance.set_for_frames(coordinates=TextCoordinates(range_html=range_html))
 
     assert (
-        str(e.value.message)
-        == f"Expected a coordinate of type `{AudioCoordinates}`, but got type `{TextCoordinates}`."
+        str(e.value.message) == f"Expected a coordinate of type `{AudioCoordinates}`, but got type `{TextCoordinates}`."
     )
 
     # Adding range_html to an object instance which is attached to a label row where the
@@ -1430,7 +1425,10 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
     with pytest.raises(LabelRowError) as e:
         html_text_obj_instance.set_for_frames(coordinates=TextCoordinates(range_html=range_html), overwrite=True)
 
-    assert str(e.value.message) == "For non-html labels, ensure the `range` property is set when instantiating the TextCoordinates."
+    assert (
+        str(e.value.message)
+        == "For non-html labels, ensure the `range` property is set when instantiating the TextCoordinates."
+    )
 
 
 def test_plain_text_object_can_be_added_edited_and_removed(ontology, empty_plain_text_label_row: LabelRowV2):
@@ -1464,10 +1462,7 @@ def test_plain_text_object_can_be_added_edited_and_removed(ontology, empty_plain
     assert range_html is None
 
 
-def test_plain_text_object_cannot_be_added_to_html_label_row(
-        ontology,
-        empty_html_text_label_row: LabelRowV2
-) -> None:
+def test_plain_text_object_cannot_be_added_to_html_label_row(ontology, empty_html_text_label_row: LabelRowV2) -> None:
     label_row = empty_html_text_label_row
     obj_instance = ObjectInstance(text_obj_ontology_item)
 
