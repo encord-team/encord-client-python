@@ -1235,7 +1235,7 @@ class Project:
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
         ProjectCollection._delete_collection(
-            self._client._get_api_client(), self._project_instance.project_hash, collection_uuid
+            self._client._api_client, self._project_instance.project_hash, collection_uuid
         )
 
     def create_collection(
@@ -1253,7 +1253,7 @@ class Project:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
         """
         new_uuid = ProjectCollection._create_collection(
-            self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type
+            self._client._api_client, self._project_instance.project_hash, name, description, collection_type
         )
         return self.get_collection(new_uuid)
 
@@ -1296,7 +1296,7 @@ class Project:
             else None
         )
         return ProjectFilterPreset._list_filter_presets(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuids=filter_presets,
             page_size=page_size,
@@ -1304,27 +1304,27 @@ class Project:
 
     def get_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> ProjectFilterPreset:
         return ProjectFilterPreset._get_filter_preset(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
         )
 
     def delete_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> None:
         ProjectFilterPreset._delete_filter_preset(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
         )
 
     def create_filter_preset(self, name: str, filter_preset: ActiveFilterPresetDefinition) -> ProjectFilterPreset:
         uuid = ProjectFilterPreset._create_filter_preset(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             name=name,
             filter_preset=filter_preset,
         )
         return ProjectFilterPreset._get_filter_preset(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=uuid,
         )
