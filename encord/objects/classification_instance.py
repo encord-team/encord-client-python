@@ -221,6 +221,9 @@ class ClassificationInstance:
             last_edited_at = datetime.now()
 
         if self._range_only:
+            # TODO: Enforce checking of ranges (here or on BE)
+            # Audio range should cover entire audio file
+            # Text range should always be [0, 0]
             self._set_for_ranges(
                 frames=frames,
                 overwrite=overwrite,

@@ -103,6 +103,13 @@ all_ontology_types = {
         {"id": "9", "name": "audio 2", "color": "#A4DD00", "shape": "audio", "featureNodeHash": "VDeQk05m"},
         {"id": "10", "name": "audio 3", "color": "#A4DD00", "shape": "audio", "featureNodeHash": "bjvtzFgi"},
         {"id": "11", "name": "audio 4", "color": "#A4DD00", "shape": "audio", "featureNodeHash": "3X3+Ydcy"},
+        {
+            "id": "12",
+            "name": "text object",
+            "color": "#A4DD00",
+            "shape": "text",
+            "featureNodeHash": "textObjectFeatureNodeHash",
+        },
     ],
     "classifications": [
         {
