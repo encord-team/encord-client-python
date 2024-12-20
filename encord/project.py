@@ -899,6 +899,7 @@ class Project:
             user_email,
         )
 
+    @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         """
         Get the list of cloud integrations.
