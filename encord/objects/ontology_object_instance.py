@@ -43,8 +43,10 @@ from encord.objects.attributes import Attribute, _get_attribute_by_hash
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    NON_GEOMETRIC_COORDINATES,
     AudioCoordinates,
     Coordinates,
+    HtmlCoordinates,
     TextCoordinates,
 )
 from encord.objects.frames import (
@@ -177,8 +179,8 @@ class ObjectInstance:
 
         coordinates = non_geometric_annotation.coordinates
 
-        if isinstance(coordinates, TextCoordinates):
-            return coordinates.range_html
+        if isinstance(coordinates, HtmlCoordinates):
+            return coordinates.range
         else:
             return None
 
@@ -483,7 +485,7 @@ class ObjectInstance:
         """
 
         if self._non_geometric:
-            if not isinstance(coordinates, AudioCoordinates) and not isinstance(coordinates, TextCoordinates):
+            if not isinstance(coordinates, tuple(NON_GEOMETRIC_COORDINATES)):
                 raise LabelRowError("Expecting non-geometric coordinate type")
 
             elif frames != 0:
@@ -502,24 +504,11 @@ class ObjectInstance:
                     "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
                 )
 
-            check_coordinate_type(coordinates, self._ontology_object)
+            check_coordinate_type(coordinates, self._ontology_object, self._parent)
 
-            if isinstance(coordinates, (AudioCoordinates, TextCoordinates)) and coordinates.range is not None:
-                if self._parent is not None and self._parent == "text/html":
-                    raise LabelRowError(
-                        "For html labels, ensure the `range_html` property "
-                        "is set when instantiating the TextCoordinates."
-                    )
-
-                self.check_within_range(coordinates.range[0].end)
-
-            elif isinstance(coordinates, TextCoordinates) and coordinates.range_html is not None:
-                if self._parent is not None and self._parent.file_type != "text/html":
-                    raise LabelRowError(
-                        "For non-html labels, ensure the `range` property "
-                        "is set when instantiating the TextCoordinates."
-                    )
-                # Unable to validate xPaths here. Do validation in BE instead
+            if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
+                for non_geometric_range in coordinates.range:
+                    self.check_within_range(non_geometric_range.end)
             else:
                 self.check_within_range(frame)
 
@@ -960,22 +949,37 @@ class ObjectInstance:
         return self._object_hash < other._object_hash
 
 
-def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
+def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, parent: Optional[LabelRowV2]) -> None:
     """
     Check if the coordinate type matches the expected type for the ontology object.
 
     Args:
         coordinates (Coordinates): The coordinates to check.
         ontology_object (Object): The ontology object to check against.
+        parent (LabelRowV2): The parent label row (if any) of the ontology object.
 
     Raises:
         LabelRowError: If the coordinate type does not match the expected type.
     """
-    expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
-    if not isinstance(coordinates, expected_coordinate_type):
+    expected_coordinate_types = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
+    if all(
+        not isinstance(coordinates, expected_coordinate_type) for expected_coordinate_type in expected_coordinate_types
+    ):
         raise LabelRowError(
-            f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
+            f"Expected coordinates of one of the following types: `{expected_coordinate_types}`, but got type `{type(coordinates)}`."
         )
+
+    # An ontology object with `Text` shape can have both coordinates `HtmlCoordinates` and `TextCoordinates`
+    # Therefore, we need to further check the file type, to ensure that `HtmlCoordinates` are only used for
+    # HTML files, and `TextCoordinates` are only used for plain text files.
+    if isinstance(coordinates, TextCoordinates):
+        if parent is not None and parent == "text/html":
+            raise LabelRowError(f"Expected coordinates of type {HtmlCoordinates}`, but got type `{type(coordinates)}`.")
+    elif isinstance(coordinates, HtmlCoordinates):
+        if parent is not None and parent.file_type != "text/html":
+            raise LabelRowError(
+                "For non-html labels, ensure the `range` property " "is set when instantiating the TextCoordinates."
+            )
 
 
 class DynamicAnswerManager:

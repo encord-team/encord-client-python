@@ -31,7 +31,7 @@ from typing import (
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
-from encord.constants.enums import DataType
+from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer, ValueType, _get_static_answer_map
 from encord.objects.attributes import (
@@ -53,6 +53,17 @@ from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2
+
+
+# For Audio and Text files, classifications can only be applied to Range(start=0, end=0)
+# Because we treat the entire file as being on one frame (for classifications, its different for objects)
+def _verify_non_geometric_classifications_range(ranges_to_add: Ranges, label_row: Optional[LabelRowV2]) -> None:
+    is_range_only_on_frame_0 = len(ranges_to_add) == 1 and ranges_to_add[0].start == 0 and ranges_to_add[0].end == 0
+    if label_row is not None and not is_geometric(label_row.data_type) and not is_range_only_on_frame_0:
+        raise LabelRowError(
+            "For audio files and text files, classifications can only be attached to frame=0 "
+            "You may use `ClassificationInstance.set_for_frames(frames=Range(start=0, end=0))`."
+        )
 
 
 class ClassificationInstance:
@@ -104,6 +115,10 @@ class ClassificationInstance:
     def _last_frame(self) -> Union[int, float]:
         if self._parent is None or self._parent.data_type is DataType.DICOM:
             return float("inf")
+        elif self._parent is not None and self._parent.data_type == "text/html":
+            # For HTML files, the entire file is treated as one frame
+            # Note: for Audio and Plain Text, classifications must be applied to ALL the "frames"
+            return 1
         else:
             return self._parent.number_of_frames
 
@@ -139,7 +154,11 @@ class ClassificationInstance:
         reviews: Optional[List[dict]],
     ):
         new_range_manager = RangeManager(frame_class=frames)
-        conflicting_ranges = self._is_classification_already_present_on_range(new_range_manager.get_ranges())
+        ranges_to_add = new_range_manager.get_ranges()
+
+        _verify_non_geometric_classifications_range(ranges_to_add, self._parent)
+
+        conflicting_ranges = self._is_classification_already_present_on_range(ranges_to_add)
         if conflicting_ranges and not overwrite:
             raise LabelRowError(
                 f"The classification '{self.classification_hash}' already exists "
@@ -147,14 +166,13 @@ class ClassificationInstance:
                 f"Set 'overwrite' parameter to True to override."
             )
 
-        ranges_to_add = new_range_manager.get_ranges()
         for range_to_add in ranges_to_add:
             self._check_within_range(range_to_add.end)
 
         """
         At this point, this classification instance operates on ranges, NOT on frames.
-        We therefore leave only FRAME 0 in the map.The frame_data for FRAME 0 will be
-        treated as the data for all "frames" in this classification instance.
+        We therefore leave only FRAME 0 in the map. The frame_data for FRAME 0 will be
+        treated as the data for the entire classification instance.
         """
         self._set_frame_and_frame_data(
             frame=0,
@@ -221,8 +239,6 @@ class ClassificationInstance:
             last_edited_at = datetime.now()
 
         if self._range_only:
-            # Audio range should cover entire audio file
-            # Text range should always be [0, 0]
             self._set_for_ranges(
                 frames=frames,
                 overwrite=overwrite,
@@ -687,7 +703,9 @@ class ClassificationInstance:
     def _check_within_range(self, frame: int) -> None:
         if frame < 0 or frame >= self._last_frame:
             raise LabelRowError(
-                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
+                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`. "
+                f"Note: for non-geometric data (e.g. {DataType.AUDIO} and {DataType.PLAIN_TEXT}), "
+                f"the entire file has only 1 frame."
             )
 
     def _is_classification_already_present(self, frames: Iterable[int]) -> Set[int]:

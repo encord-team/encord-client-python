@@ -360,30 +360,31 @@ class TextCoordinates(BaseDTO):
     Represents coordinates for a text file
 
     Attributes:
-        range_html (List[HtmlRange]): A list of HtmlRange objects
         range (Ranges): Ranges of chars for simple text files
     """
 
-    range_html: Optional[List[HtmlRange]] = None
-    range: Optional[Ranges] = None
+    range: Ranges
 
-    def __post_init__(self):
-        if self.range_html is None and self.range is None:
-            raise ValueError("At least one of either `range` or `range_html` must be set.")
 
-        if self.range_html is not None and self.range is not None:
-            raise ValueError("Only one of either `range` or `range_html` must be set.")
+class HtmlCoordinates(BaseDTO):
+    """
+    Represents coordinates for a html file
 
-        if self.range_html is not None and len(self.range_html) == 0:
-            raise ValueError("Range HTML list must contain at least one html range.")
+    Attributes:
+        range_html (List[HtmlRange]): A list of HtmlRange objects
+    """
 
-        if self.range is not None and len(self.range) == 0:
-            raise ValueError("Range list must contain at least one range.")
+    range: List[HtmlRange]
+
+
+NON_GEOMETRIC_COORDINATES = {AudioCoordinates, TextCoordinates, HtmlCoordinates}
 
 
 Coordinates = Union[
     AudioCoordinates,
     TextCoordinates,
+    Union[HtmlCoordinates, TextCoordinates],
+    HtmlCoordinates,
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
     PointCoordinate,
@@ -393,14 +394,14 @@ Coordinates = Union[
     BitmaskCoordinates,
 ]
 
-ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
-    Shape.BOUNDING_BOX: BoundingBoxCoordinates,
-    Shape.ROTATABLE_BOUNDING_BOX: RotatableBoundingBoxCoordinates,
-    Shape.POINT: PointCoordinate,
-    Shape.POLYGON: PolygonCoordinates,
-    Shape.POLYLINE: PolylineCoordinates,
-    Shape.SKELETON: SkeletonCoordinates,
-    Shape.BITMASK: BitmaskCoordinates,
-    Shape.AUDIO: AudioCoordinates,
-    Shape.TEXT: TextCoordinates,
+ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
+    Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
+    Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
+    Shape.POINT: [PointCoordinate],
+    Shape.POLYGON: [PolygonCoordinates],
+    Shape.POLYLINE: [PolylineCoordinates],
+    Shape.SKELETON: [SkeletonCoordinates],
+    Shape.BITMASK: [BitmaskCoordinates],
+    Shape.AUDIO: [AudioCoordinates],
+    Shape.TEXT: [TextCoordinates, HtmlCoordinates],
 }

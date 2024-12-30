@@ -40,7 +40,7 @@ from encord.objects.bundled_operations import (
     BundledWorkflowReopenPayload,
 )
 from encord.objects.classification import Classification
-from encord.objects.classification_instance import ClassificationInstance
+from encord.objects.classification_instance import ClassificationInstance, _verify_non_geometric_classifications_range
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
     DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
@@ -51,6 +51,7 @@ from encord.objects.coordinates import (
     BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
+    HtmlCoordinates,
     PointCoordinate,
     PolygonCoordinates,
     PolylineCoordinates,
@@ -834,9 +835,15 @@ class LabelRowV2:
         # We want to ensure that we are only adding the object_instance to a label_row
         # IF AND ONLY IF the file type is text/html and the object_instance has range_html set
         if self.file_type == "text/html" and object_instance.range_html is None:
-            raise LabelRowError("Unable to assign object instance without a html range to a html file")
+            raise LabelRowError(
+                "Unable to assign object instance without a html range to a html file. "
+                f"Please ensure the object instance exists on frame=0, and has coordinates of type {HtmlCoordinates}."
+            )
         elif self.file_type != "text/html" and object_instance.range_html is not None:
-            raise LabelRowError("Unable to assign object instance with a html range to a non-html file")
+            raise LabelRowError(
+                "Unable to assign object instance with a html range to a non-html file. "
+                f"Please ensure the object instance does not have coordinates of type {HtmlCoordinates}."
+            )
 
         if object_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -899,10 +906,10 @@ class LabelRowV2:
             )
 
         """
-        Implementation here diverges because audio data will operate on ranges, whereas
+        Implementation here diverges because non-geometric data will operate on ranges, whereas
         everything else will operate on frames.
         """
-        if self.data_type == DataType.AUDIO:
+        if not is_geometric(self.data_type):
             self._add_classification_instance_for_range(
                 classification_instance=classification_instance,
                 force=force,
@@ -931,7 +938,7 @@ class LabelRowV2:
             self._classifications_to_frames[classification_instance.ontology_item].update(frames)
             self._add_to_frame_to_hashes_map(classification_instance, frames)
 
-    # This should only be used for Audio classification instances
+    # This should only be used for Non-geometric data
     def _add_classification_instance_for_range(
         self,
         classification_instance: ClassificationInstance,
@@ -939,6 +946,10 @@ class LabelRowV2:
     ):
         classification_hash = classification_instance.classification_hash
         ranges_to_add = classification_instance.range_list
+
+        if classification_instance.is_range_only():
+            _verify_non_geometric_classifications_range(ranges_to_add, self)
+
         already_present_ranges = self._is_classification_already_present_on_ranges(
             classification_instance.ontology_item, ranges_to_add
         )
@@ -971,7 +982,7 @@ class LabelRowV2:
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
 
-        if self.data_type == DataType.AUDIO:
+        if not is_geometric(self.data_type):
             range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
             ranges_to_remove = classification_instance.range_list
             range_manager.remove_ranges(ranges_to_remove)
@@ -2327,7 +2338,7 @@ class LabelRowV2:
 
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
         object_instance.set_for_frames(
-            TextCoordinates(range_html=[HtmlRange.from_dict(x) for x in range_html]),
+            HtmlCoordinates(range=[HtmlRange.from_dict(x) for x in range_html]),
             frames=0,
             created_at=object_frame_instance_info.created_at,
             created_by=object_frame_instance_info.created_by,

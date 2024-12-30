@@ -56,7 +56,7 @@ class HtmlRange(BaseDTO):
         }
 
     def __hash__(self):
-        return hash(self.__repr__())
+        return f"{self.start.node}-{self.start.offset}-{self.end.node}-{self.end.offset}"
 
     @classmethod
     def from_dict(cls, d: dict):
