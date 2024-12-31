@@ -10,7 +10,6 @@ category: "64e481b57b6027003f20aaa0"
 ---
 """
 
-import dataclasses
 import datetime
 from typing import Iterable, List, Optional, Union
 from uuid import UUID
@@ -94,7 +93,8 @@ class Ontology:
         The Ontology class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be dirty.
         """
-        self._ontology_instance = self._get_ontology()
+        cls = type(self)
+        self._ontology_instance = cls._fetch_ontology(self.api_client, self.ontology_hash)
 
     def save(self) -> None:
         """
@@ -117,15 +117,6 @@ class Ontology:
                 params=None,
                 payload=payload,
             )
-
-    def _get_ontology(self) -> OrmOntology:
-        ontology_model = self.api_client.get(
-            f"/ontologies/{self._ontology_instance.ontology_hash}",
-            params=None,
-            result_type=OntologyWithUserRole,
-        )
-
-        return self._legacy_orm_from_api_payload(ontology_model)
 
     def list_groups(self) -> Iterable[OntologyGroup]:
         """
@@ -189,4 +180,17 @@ class Ontology:
         ontology_with_user_role: OntologyWithUserRole,
         api_client: ApiClient,
     ) -> "Ontology":
-        return Ontology(Ontology._legacy_orm_from_api_payload(ontology_with_user_role), api_client)
+        return Ontology(
+            Ontology._legacy_orm_from_api_payload(ontology_with_user_role),
+            api_client,
+        )
+
+    @classmethod
+    def _fetch_ontology(cls, api_client: ApiClient, ontology_hash: str) -> OrmOntology:
+        ontology_model = api_client.get(
+            f"/ontologies/{ontology_hash}",
+            params=None,
+            result_type=OntologyWithUserRole,
+        )
+
+        return cls._legacy_orm_from_api_payload(ontology_model)

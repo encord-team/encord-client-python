@@ -56,6 +56,7 @@ project_dto = ProjectDTO(
     created_at=datetime.now(),
     last_edited_at=datetime.now(),
     ontology_hash=str(ONTOLOGY_UUID),
+    editor_ontology=ontology_orm.editor,
     workflow=None,
 )
 

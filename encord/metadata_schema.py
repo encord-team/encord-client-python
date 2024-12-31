@@ -337,6 +337,35 @@ class MetadataSchema:
         )
         self._dirty = True
 
+    def set_scalar(
+        self,
+        k: str,
+        *,
+        data_type: Union[
+            Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"],
+            MetadataSchemaScalarType,
+        ],
+    ) -> None:
+        """
+        Sets a simple metadata type for a given key in the schema.
+
+        Alias of add_scalar
+
+        **Parameters:**
+
+        - k : str: The key for which the metadata type is being set.
+        - data_type : Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"]
+                   The type of metadata to be associated with the key. Must be a valid identifier.
+                   "string" is an alias of "varchar"
+                   "long_string" is an alias of "text"
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is already defined in the schema with a conflicting type.
+        ValueError: If `data_type` is not a valid type of metadata identifier.
+        """
+        self.add_scalar(k, data_type=data_type)
+
     def delete_key(self, k: str, *, hard: bool = False) -> None:
         """
         Delete a metadata key from the schema.

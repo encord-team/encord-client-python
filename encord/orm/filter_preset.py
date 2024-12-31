@@ -21,24 +21,38 @@ class FilterPreset(BaseDTO):
     last_updated_at: Optional[datetime] = Field(default=None, alias="lastUpdatedAt")
 
 
+class GetProjectFilterPresetParams(BaseDTO):
+    preset_uuids: Optional[List[uuid.UUID]] = Field(default=[])
+    page_token: Optional[str] = Field(default=None)
+    page_size: Optional[int] = Field(default=None)
+
+
+class ProjectFilterPreset(BaseDTO):
+    preset_uuid: uuid.UUID = Field(alias="presetUuid")
+    name: str
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
+
+
 class FilterDefinition(BaseDTO):
     filters: List[Dict] = Field(default_factory=list)
 
 
-class FilterPresetDefinition(BaseDTO):
+# Note alias is strictly required as these are stored in the Annotate DB as unstructured objects
+# Stored not in camelCase like most Models
+class IndexFilterPresetDefinition(BaseDTO):
     local_filters: Dict[str, FilterDefinition] = Field(
-        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()}, alias="local_filters"
+        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()},
+        alias="local_filters",
     )
     global_filters: FilterDefinition = Field(default_factory=FilterDefinition, alias="global_filters")
 
-    @dto_validator(mode="after")
-    def check_not_empty(cls, self):
-        if len(self.global_filters.filters) == 0 and all(
-            [len(value.filters) == 0 for value in self.local_filters.values()]
-        ):
-            raise ValueError("FilterPresetDefinition definition must contain at least one global or local filter.")
 
-        return self
+class ActiveFilterPresetDefinition(BaseDTO):
+    local_filters: Dict[str, FilterDefinition] = Field(
+        default_factory=lambda: {str(uuid.UUID(int=0)): FilterDefinition()},
+    )
+    global_filters: FilterDefinition = Field(default_factory=FilterDefinition)
 
 
 class GetPresetsResponse(BaseDTO):
@@ -49,13 +63,23 @@ class CreatePresetParams(BaseDTO):
     top_level_folder_uuid: UUID = Field(default=UUID(int=0), alias="topLevelFolderUuid")
 
 
-class CreatePresetPayload(BaseDTO):
+class IndexCreatePresetPayload(BaseDTO):
     name: str
+    filter_preset_json: Dict
     description: Optional[str] = ""
+
+
+class ActiveCreatePresetPayload(BaseDTO):
+    name: str
     filter_preset_json: Dict
 
 
-class UpdatePresetPayload(BaseDTO):
+class IndexUpdatePresetPayload(BaseDTO):
     name: Optional[str] = None
-    description: Optional[str] = None
-    filter_preset: Optional[FilterPresetDefinition] = None
+    description: Optional[str] = ""
+    filter_preset: Optional[IndexFilterPresetDefinition] = None
+
+
+class ActiveUpdatePresetPayload(BaseDTO):
+    name: Optional[str] = None
+    filter_preset: Optional[ActiveFilterPresetDefinition] = None
