@@ -311,6 +311,20 @@ class SkeletonCoordinate(BaseDTO):
 
     visibility: Optional[Visibility] = None
 
+    @staticmethod
+    def from_dict(value: dict) -> SkeletonCoordinate:
+        visibility: Optional[str] = value.get("visibility")
+
+        return SkeletonCoordinate(
+            name=value["name"],
+            x=value["x"],
+            y=value["y"],
+            color=value["color"],
+            feature_hash=value["featureHash"],
+            value=value["value"],
+            visibility=Visibility[visibility.upper()] if visibility else Visibility.VISIBLE,
+        )
+
 
 @dataclass(frozen=True)
 class SkeletonCoordinates:
@@ -338,8 +352,6 @@ class SkeletonCoordinates:
 
         """
         skeleton_dict = d["skeleton"]
-        values: List[SkeletonCoordinate] = []
-        visible = None
 
         if isinstance(skeleton_dict, dict):
             sorted_dict_value_tuples = sorted((int(key), value) for key, value in skeleton_dict.items())
@@ -348,25 +360,10 @@ class SkeletonCoordinates:
             sorted_dict_values = list(skeleton_dict)
         else:
             raise LabelRowError(f"Invalid format for skeleton coordinates: {skeleton_dict}")
-        for value in sorted_dict_values:
-            if value.get("invisible") and value["invisible"]:
-                visible = Visibility.INVISIBLE
-            elif value.get("occluded") and value["occluded"]:
-                visible = Visibility.OCCLUDED
-            else:
-                visible = Visibility.VISIBLE
-            skeleton_coordinates = SkeletonCoordinate(
-                name=value["name"],
-                x=value["x"],
-                y=value["y"],
-                color=value["color"],
-                feature_hash=value["featureHash"],
-                value=value["value"],
-                visibility=visible,
-            )
-            values.append(skeleton_coordinates)
 
-        return SkeletonCoordinates(name=d["name"], values=values)
+        return SkeletonCoordinates(
+            name=d["name"], values=[SkeletonCoordinate.from_dict(value) for value in sorted_dict_values]
+        )
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
         """
