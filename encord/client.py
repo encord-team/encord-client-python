@@ -169,6 +169,7 @@ class EncordClient:
         self._config = config
         self._api_client = api_client
 
+    @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return [
             CloudIntegration(
