@@ -164,21 +164,10 @@ class EncordClient:
     with a project (e.g. label rows, datasets).
     """
 
-    def __init__(self, querier: Querier, config: Config, api_client: Optional[ApiClient] = None):
+    def __init__(self, querier: Querier, config: Config, api_client: ApiClient):
         self._querier = querier
         self._config = config
         self._api_client = api_client
-
-    def _get_api_client(self) -> ApiClient:
-        if not (isinstance(self._config, (SshConfig, BearerConfig))):
-            raise EncordException(
-                "This functionality requires private SSH key authentication. API keys are not supported."
-            )
-
-        if not self._api_client:
-            raise RuntimeError("ApiClient should exist when authenticated with SSH key.")
-
-        return self._api_client
 
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return [
@@ -186,17 +175,15 @@ class EncordClient:
                 id=str(x.integration_uuid),
                 title=x.title,
             )
-            for x in self._get_api_client()
-            .get(
+            for x in self._api_client.get(
                 "cloud-integrations",
                 params=None,
                 result_type=GetCloudIntegrationsResponse,
-            )
-            .result
+            ).result
         ]
 
     def get_bearer_token(self) -> BearerTokenResponse:
-        return self._get_api_client().get("user/bearer-token", None, result_type=BearerTokenResponse)
+        return self._api_client.get("user/bearer-token", None, result_type=BearerTokenResponse)
 
 
 class EncordClientDataset(EncordClient):
@@ -211,6 +198,9 @@ class EncordClientDataset(EncordClient):
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
         api_client: Optional[ApiClient] = None,
     ):
+        if api_client is None:
+            raise ValueError("api_client is None")
+
         super().__init__(querier, config, api_client)
         self._dataset_access_settings = dataset_access_settings
 
@@ -307,17 +297,15 @@ class EncordClientDataset(EncordClient):
         return [DatasetUser.from_dict(user) for user in users]
 
     def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
-        return self._get_api_client().get(
-            f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup]
-        )
+        return self._api_client.get(f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup])
 
     def add_groups(self, dataset_hash: str, group_hash: List[uuid.UUID], user_role: DatasetUserRole) -> None:
         payload = AddDatasetGroupsPayload(group_hash_list=group_hash, user_role=user_role)
-        self._get_api_client().post(f"datasets/{dataset_hash}/groups", params=None, payload=payload, result_type=None)
+        self._api_client.post(f"datasets/{dataset_hash}/groups", params=None, payload=payload, result_type=None)
 
     def remove_groups(self, dataset_hash: uuid.UUID, group_hash: List[uuid.UUID]) -> None:
         params = RemoveGroupsParams(group_hash_list=group_hash)
-        self._get_api_client().delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
+        self._api_client.delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
 
     def __add_data_to_dataset_get_result(
         self,
@@ -881,7 +869,7 @@ class EncordClientProject(EncordClient):
         This is an internal method, do not use it directly.
         Use :meth:`UserClient.get_project` instead.
         """
-        return self._get_api_client().get(f"/projects/{self.project_hash}", params=None, result_type=ProjectOrmV2)
+        return self._api_client.get(f"/projects/{self.project_hash}", params=None, result_type=ProjectOrmV2)
 
     def list_label_rows(
         self,
@@ -956,17 +944,15 @@ class EncordClientProject(EncordClient):
         return [ProjectUser.from_dict(user) for user in users]
 
     def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
-        return self._get_api_client().get(
-            f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup]
-        )
+        return self._api_client.get(f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])
 
     def add_groups(self, project_hash: uuid.UUID, group_hash: List[uuid.UUID], user_role: ProjectUserRole) -> None:
         payload = AddProjectGroupsPayload(group_hash_list=group_hash, user_role=user_role)
-        self._get_api_client().post(f"projects/{project_hash}/groups", params=None, payload=payload, result_type=None)
+        self._api_client.post(f"projects/{project_hash}/groups", params=None, payload=payload, result_type=None)
 
     def remove_groups(self, group_hash: List[uuid.UUID]) -> None:
         params = RemoveGroupsParams(group_hash_list=group_hash)
-        self._get_api_client().delete(f"projects/{self.project_hash}/groups", params=params, result_type=None)
+        self._api_client.delete(f"projects/{self.project_hash}/groups", params=params, result_type=None)
 
     def copy_project(
         self,
@@ -1133,11 +1119,9 @@ class EncordClientProject(EncordClient):
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
 
     def list_project_datasets(self, project_hash: UUID) -> Iterable[ProjectDataset]:
-        return (
-            self._get_api_client()
-            .get(f"projects/{project_hash}/datasets", params=None, result_type=Page[ProjectDataset])
-            .results
-        )
+        return self._api_client.get(
+            f"projects/{project_hash}/datasets", params=None, result_type=Page[ProjectDataset]
+        ).results
 
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def get_project_ontology(self) -> LegacyOntology:
@@ -1354,7 +1338,7 @@ class EncordClientProject(EncordClient):
                 message="You must pass weights from the `encord.constants.model_weights` module to train a model."
             )
 
-        training_hash = self._get_api_client().post(
+        training_hash = self._api_client.post(
             f"ml-models/{model_hash}/training",
             params=None,
             payload=PublicModelTrainStartPayload(
@@ -1394,7 +1378,7 @@ class EncordClientProject(EncordClient):
                 polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
 
                 logger.info(f"__model_train_get_result started polling call {polling_elapsed_seconds=}")
-                tmp_res = self._get_api_client().get(
+                tmp_res = self._api_client.get(
                     f"ml-models/{model_hash}/{training_hash}/training",
                     params=PublicModelTrainGetResultParams(
                         timeout_seconds=min(
@@ -1584,7 +1568,7 @@ class EncordClientProject(EncordClient):
         )
 
     def workflow_set_priority(self, priorities: List[Tuple[str, float]]) -> None:
-        self._get_api_client().post(
+        self._api_client.post(
             f"projects/{self.project_hash}/priorities",
             params=None,
             payload=TaskPriorityParams(priorities=priorities),
@@ -1592,12 +1576,12 @@ class EncordClientProject(EncordClient):
         )
 
     def get_collaborator_timers(self, params: CollaboratorTimerParams) -> Iterable[CollaboratorTimer]:
-        yield from self._get_api_client().get_paged_iterator(
+        yield from self._api_client.get_paged_iterator(
             "analytics/collaborators/timers", params=params, result_type=CollaboratorTimer
         )
 
     def get_label_validation_errors(self, label_hash: str) -> List[str]:
-        errors = self._get_api_client().get(
+        errors = self._api_client.get(
             f"projects/{self.project_hash}/labels/{label_hash}/validation-state",
             params=None,
             result_type=LabelValidationState,
@@ -1609,7 +1593,7 @@ class EncordClientProject(EncordClient):
         return errors.errors or []
 
     def active_import(self, project_mode: ActiveProjectMode, video_sampling_rate: Optional[float] = None) -> None:
-        self._get_api_client().post(
+        self._api_client.post(
             f"active/{self.project_hash}/import",
             params=None,
             payload=ActiveProjectImportPayload(project_mode=project_mode, video_sampling_rate=video_sampling_rate),
@@ -1618,7 +1602,7 @@ class EncordClientProject(EncordClient):
         logger.info("Import initiated in Active, please check the app to see progress")
 
     def active_sync(self) -> None:
-        self._get_api_client().post(
+        self._api_client.post(
             f"active/{self.project_hash}/sync",
             params=None,
             payload=None,
