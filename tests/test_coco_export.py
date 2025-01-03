@@ -1,13 +1,14 @@
+from typing import Any, Dict
 from unittest.mock import patch
 
 import pytest
 
 from encord.objects.ontology_structure import OntologyStructure
-from tests.objects.data.data_1 import ontology as BASE_ONTOLOGY_DICT
 from tests.objects.data.data_1 import labels as BASE_LABEL_DICT
+from tests.objects.data.data_1 import ontology as BASE_ONTOLOGY_DICT
 
 ontology_structure = OntologyStructure.from_dict(BASE_ONTOLOGY_DICT)
-EXPECTED_COCO_RESULT = {
+EXPECTED_COCO_RESULT: Dict[str, Any] = {
     "info": {
         "description": "failing_video_new.mp4",
         "contributor": None,
@@ -251,6 +252,5 @@ def test_coco_exporter_with_coco_extra():
         from encord.utilities.coco.exporter import CocoExporter
     except ImportError:
         return
-
     output = CocoExporter([BASE_LABEL_DICT], ontology_structure).export()
     assert output == EXPECTED_COCO_RESULT

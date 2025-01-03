@@ -11,7 +11,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 from pycocotools import mask as cocomask
@@ -43,16 +43,16 @@ class CocoAnnotation(BaseModel):
     id_: int
     image_id: int
     is_crowd: int
-    segmentation: Union[List[List[float]], Dict[str,Any]]
+    segmentation: Union[List[List[float]], Dict[str, Any]]
     keypoints: Optional[List[float]] = None
     num_keypoints: Optional[int] = None
     track_id: Optional[int] = None
     encord_track_uuid: Optional[str] = None
     rotation: Optional[float] = None
-    classifications: Optional[Dict[str,Any]] = None
+    classifications: Optional[Dict[str, Any]] = None
     manual_annotation: Optional[bool] = None
 
-    def to_dict(self) -> Dict[str,Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "area": self.area,
             "bbox": list(self.bbox),
@@ -108,13 +108,13 @@ class CocoExporter:
 
     def __init__(
         self,
-        labels_list: List[Dict[str,Any]],
+        labels_list: List[Dict[str, Any]],
         ontology: OntologyStructure,
         include_videos: bool = True,
     ) -> None:
         self._labels_list = labels_list
         self._ontology = ontology
-        self._coco_json: Dict[str,Any] = {}
+        self._coco_json: Dict[str, Any] = {}
         self._current_annotation_id = 0
         self._object_hash_to_track_id_map: Dict[str, int] = {}
         self._coco_categories_id_to_ontology_object_map: Dict = {}  # TODO: do we need this?
@@ -126,7 +126,7 @@ class CocoExporter:
         self._id_and_object_hash_to_answers_map: Optional[Dict[Tuple[int, str], Dict]] = None
         self._include_videos = include_videos
 
-    def export(self) -> Dict[str,Any]:
+    def export(self) -> Dict[str, Any]:
         self._coco_json["info"] = self.get_info()
         self._coco_json["categories"] = self.get_categories()
         self._coco_json["images"] = self.get_images()
@@ -134,7 +134,7 @@ class CocoExporter:
 
         return self._coco_json
 
-    def get_info(self) -> Dict[str,Optional[str]]:
+    def get_info(self) -> Dict[str, Optional[str]]:
         return {
             "description": self.get_description(),
             "contributor": None,  # TODO: these fields also need a response
@@ -153,7 +153,7 @@ class CocoExporter:
 
         return res
 
-    def get_categories(self) -> List[Dict]:
+    def get_categories(self) -> List[Dict[str, Any]]:
         """This does not translate classifications as they are not part of the Coco spec."""
         categories = []
         for object_ in self._ontology.objects:
@@ -192,7 +192,7 @@ class CocoExporter:
     def get_category_name(self, object_: Object) -> str:
         return object_.name
 
-    def get_images(self) -> List:
+    def get_images(self) -> List[Dict[str, Any]]:
         """All the data is in the specific label_row"""
         images = []
 
@@ -216,17 +216,8 @@ class CocoExporter:
             for key, label in data_unit["labels"].items()
         ]
 
-    def get_image(self, data_unit: Dict) -> Dict:
+    def get_image(self, data_unit: Dict[str, Any]) -> Dict[str, Any]:
         # TODO: we probably want a map of this image id to image hash in our DB, including the image_group hash.
-
-        """
-        TODO: next up: here we need to branch off and create the videos
-        * coco_url, height, width will be the same
-        * id will be continuous
-        * file_name will be also continuous according to all the images that are being extracted from the video.
-        Do all the frames, and the ones without annotations will just have no corresponding annotations. We can
-        still later have an option to exclude them and delete the produced images.
-        """
         image_id = len(self._data_hash_to_image_id_map)
         data_hash = data_unit["data_hash"]
         self._data_hash_to_image_id_map[(data_hash, 0)] = image_id
@@ -240,7 +231,7 @@ class CocoExporter:
             "width": data_unit["width"],
         }
 
-    def get_video_images(self, data_unit: Dict) -> List[Dict]:
+    def get_video_images(self, data_unit: Dict[str, Any]) -> List[Dict[str, Any]]:
         if not self._include_videos:
             return []
 
@@ -268,7 +259,7 @@ class CocoExporter:
 
     def _dicom_label_to_coco_image(
         self, frame: int, data_hash: str, series_width: int, series_height: int, dicom_label: Dict
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         image_id = len(self._data_hash_to_image_id_map)
         # ideally this should be verify_arg, but currently we can't be sure that the metadata is on every frame
         metadata = dicom_label.get("metadata")
@@ -302,7 +293,7 @@ class CocoExporter:
         height: int,
         width: int,
         frame_num: int,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         image_id = len(self._data_hash_to_image_id_map)
         self._data_hash_to_image_id_map[(data_hash, frame_num)] = image_id
 
@@ -480,9 +471,7 @@ class CocoExporter:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications = self.get_flat_classifications(
-            object_, image_id, object_answers, object_actions
-        )
+        classifications = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -526,9 +515,7 @@ class CocoExporter:
 
         rotation = object_["rotatableBoundingBox"]["theta"]
 
-        classifications = self.get_flat_classifications(
-            object_, image_id, object_answers, object_actions
-        )
+        classifications = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -607,9 +594,7 @@ class CocoExporter:
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
 
-        classifications = self.get_flat_classifications(
-            object_, image_id, object_answers, object_actions
-        )
+        classifications = self.get_flat_classifications(object_, image_id, object_answers, object_actions)
 
         return CocoAnnotation(
             area=area,
@@ -815,7 +800,7 @@ class CocoExporter:
 
     def get_flat_classifications(
         self, object_: Dict, image_id: int, object_answers: Dict, object_actions: Dict
-    ) -> Dict[str,Any]:
+    ) -> Dict[str, Any]:
         object_hash = object_["objectHash"]
         feature_hash = object_["featureHash"]
 
@@ -853,9 +838,9 @@ class CocoExporter:
         self,
         object_hash: str,
         object_feature_hash: str,
-        object_answers: Dict[str,Any],
+        object_answers: Dict[str, Any],
         feature_hash_to_attribute_map: Dict[str, Attribute],
-    ) -> Dict[str,Any]:
+    ) -> Dict[str, Any]:
         ret = {}
         classifications = object_answers[object_hash]["classifications"]
         for classification in classifications:
@@ -880,12 +865,12 @@ class CocoExporter:
 
     def get_id_and_object_hash_to_answers_map(
         self,
-        object_actions: Dict[str,Any],
+        object_actions: Dict[str, Any],
     ) -> Dict[Tuple[int, str], Dict]:
         if self._id_and_object_hash_to_answers_map is not None:
             return self._id_and_object_hash_to_answers_map
 
-        ret: Dict[Tuple[int, str], Dict[str,Any]] = defaultdict(Dict)
+        ret: Dict[Tuple[int, str], Dict[str, Any]] = defaultdict(Dict)
         feature_hash_to_attribute_map = self.get_feature_hash_to_flat_object_attribute_map()
         for object_hash, payload in object_actions.items():
             for action in payload["actions"]:
@@ -896,7 +881,7 @@ class CocoExporter:
 
                 attribute = feature_hash_to_attribute_map[feature_hash]
                 answers = action["answers"]
-                answers_dict: Dict[str,Any] = {}
+                answers_dict: Dict[str, Any] = {}
 
                 if attribute.get_property_type() == PropertyType.TEXT:
                     answers_dict.update(self.get_text_answer(attribute, answers))
@@ -918,8 +903,8 @@ class CocoExporter:
         object_hash: str,
         feature_hash: str,
         image_id: int,
-        id_and_object_hash_to_answers_map: Dict[Tuple[int, str], Dict[str,Any]],
-    ) -> Dict[str,Any]:
+        id_and_object_hash_to_answers_map: Dict[Tuple[int, str], Dict[str, Any]],
+    ) -> Dict[str, Any]:
         ret = {}
         id_and_object_hash = (image_id, object_hash)
 
@@ -931,7 +916,7 @@ class CocoExporter:
         return ret
 
     def add_unselected_attributes(
-        self, feature_hash: str, attributes_dict: Dict[str,Optional[bool]], match_dynamic_attributes: bool
+        self, feature_hash: str, attributes_dict: Dict[str, Optional[bool]], match_dynamic_attributes: bool
     ) -> None:
         """
         Attributes which have never been selected will not show up in the actions map. They will need to be
@@ -963,13 +948,13 @@ class CocoExporter:
 
         return ret
 
-    def get_radio_answer(self, attribute: Attribute, answers: List[Dict[str,str]]) -> Dict[str,str]:
+    def get_radio_answer(self, attribute: Attribute, answers: List[Dict[str, str]]) -> Dict[str, str]:
         answer = answers[0]  # radios only have one answer by definition
         return {attribute.name: answer["name"]}
 
-    def get_checklist_answer(self, attribute: Attribute, answers: Dict[str,Any]) -> Dict[str,bool]:
-        ret: Dict[str,bool] = {}
-        found_checklist_answers: set[str] = set()
+    def get_checklist_answer(self, attribute: Attribute, answers: List[Dict[str, Any]]) -> Dict[str, bool]:
+        ret: Dict[str, bool] = {}
+        found_checklist_answers: Set[str] = set()
 
         for answer in answers:
             found_checklist_answers.add(answer["name"])
@@ -980,10 +965,10 @@ class CocoExporter:
 
         return ret
 
-    def get_text_answer(self, attribute: Attribute, answers: str) -> Dict[str,Any]:
+    def get_text_answer(self, attribute: Attribute, answers: str) -> Dict[str, Any]:
         return {attribute.name: answers}
 
-    def get_category_id(self, object_: Dict[str,Any]) -> int:
+    def get_category_id(self, object_: Dict[str, Any]) -> int:
         feature_hash = object_["featureHash"]
         try:
             return self._feature_hash_to_coco_category_id_map[feature_hash]
@@ -994,7 +979,7 @@ class CocoExporter:
             ) from None
 
     def get_coco_annotation_default_fields(
-        self, object_: Dict[str,Any]
+        self, object_: Dict[str, Any]
     ) -> Tuple[
         int,
         int,
