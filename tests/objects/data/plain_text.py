@@ -25,19 +25,7 @@ PLAIN_TEXT_LABELS = {
             "objectHash": "textObjectHash",
             "featureHash": "textObjectFeatureNodeHash",
             "classifications": [],
-            "range": [],
-            "range_html": [
-                {
-                    "start": {
-                        "node": "start_node",
-                        "offset": 5,
-                    },
-                    "end": {
-                        "node": "end_node",
-                        "offset": 10,
-                    },
-                }
-            ],
+            "range": [[0, 5]],
             "createdBy": "user1Hash",
             "createdAt": "Tue, 05 Nov 2024 09:41:37 ",
             "lastEditedBy": "user1Hash",

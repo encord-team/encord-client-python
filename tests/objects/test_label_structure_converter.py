@@ -39,6 +39,7 @@ from tests.objects.data.image_group import image_group_labels, image_group_ontol
 from tests.objects.data.ontology_with_many_dynamic_classifications import (
     ontology as ontology_with_many_dynamic_classifications,
 )
+from tests.objects.data.plain_text import PLAIN_TEXT_LABELS
 
 
 def ontology_from_dict(ontology_structure_dict: Dict):
@@ -172,6 +173,23 @@ def test_serialise_html_text():
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         HTML_TEXT_LABELS,
+        actual,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
+    )
+
+
+def test_serialise_plain_text():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "plain_text"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(PLAIN_TEXT_LABELS)
+
+    actual = label_row.to_encord_dict()
+    deep_diff_enhanced(
+        PLAIN_TEXT_LABELS,
         actual,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
