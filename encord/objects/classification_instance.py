@@ -115,9 +115,8 @@ class ClassificationInstance:
     def _last_frame(self) -> Union[int, float]:
         if self._parent is None or self._parent.data_type is DataType.DICOM:
             return float("inf")
-        elif self._parent is not None and self._parent.data_type == "text/html":
-            # For HTML files, the entire file is treated as one frame
-            # Note: for Audio and Plain Text, classifications must be applied to ALL the "frames"
+        elif self._parent is not None and not is_geometric(self._parent.data_type):
+            # For audio and text files, the entire file is treated as one frame
             return 1
         else:
             return self._parent.number_of_frames
@@ -166,12 +165,8 @@ class ClassificationInstance:
                 f"Set 'overwrite' parameter to True to override."
             )
 
-        for range_to_add in ranges_to_add:
-            self._check_within_range(range_to_add.end)
-
         """
-        At this point, this classification instance operates on ranges, NOT on frames.
-        We therefore leave only FRAME 0 in the map. The frame_data for FRAME 0 will be
+        For non-geometric files, the frame_data for FRAME 0 will be
         treated as the data for the entire classification instance.
         """
         self._set_frame_and_frame_data(
