@@ -37,7 +37,88 @@ PLAIN_TEXT_LABELS = {
             "shape": "text",
         },
     },
-    "classification_answers": {},
+    "classification_answers": {   "textClassificationHash": {
+            "classificationHash": "textClassificationHash",
+            "featureHash": "jPOcEsbw",
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": "Text Answer",
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                },
+            ],
+            "range": [],
+            "createdBy": "user1Hash",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 ",
+            "lastEditedBy": "user1Hash",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 ",
+            "manualAnnotation": True,
+        },
+        "radioClassificationHash": {
+            "classificationHash": "radioClassificationHash",
+            "featureHash": "NzIxNTU1",
+            "classifications": [
+                {
+                    "name": "Radio classification 1",
+                    "value": "radio_classification_1",
+                    "answers": [
+                        {
+                            "name": "cl 1 option 1",
+                            "value": "cl_1_option_1",
+                            "featureHash": "MTcwMjM5",
+                        }
+                    ],
+                    "featureHash": "MjI5MTA5",
+                    "manualAnnotation": True,
+                },
+                {
+                    "name": "cl 1 2 text",
+                    "value": "cl_1_2_text",
+                    "answers": "Nested Text Answer",
+                    "featureHash": "MTg0MjIw",
+                    "manualAnnotation": True,
+                },
+            ],
+            "range": [],
+            "createdBy": "user1Hash",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 ",
+            "lastEditedBy": "user1Hash",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 ",
+            "manualAnnotation": True,
+        },
+        "checklistClassificationHash": {
+            "classificationHash": "checklistClassificationHash",
+            "featureHash": "3DuQbFxo",
+            "classifications": [
+                {
+                    "name": "Checklist classification",
+                    "value": "checklist_classification",
+                    "answers": [
+                        {
+                            "name": "Checklist classification answer 1",
+                            "value": "checklist_classification_answer_1",
+                            "featureHash": "fvLjF0qZ",
+                        },
+                        {
+                            "name": "Checklist classification answer 2",
+                            "value": "checklist_classification_answer_2",
+                            "featureHash": "a4r7nK9i",
+                        },
+                    ],
+                    "featureHash": "9mwWr3OE",
+                    "manualAnnotation": True,
+                },
+            ],
+            "range": [],
+            "createdBy": "user1Hash",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 ",
+            "lastEditedBy": "user1Hash",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 ",
+            "manualAnnotation": True,
+        },
+    },
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
 }

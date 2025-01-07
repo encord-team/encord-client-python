@@ -1701,11 +1701,11 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if self.data_type == DataType.AUDIO or self.data_type == DataType.PLAIN_TEXT:
+            if not is_geometric(self.data_type):
                 annotation = classification.get_annotations()[0]
-                ret[classification.classification_hash]["range"] = [
-                    [range.start, range.end] for range in classification.range_list
-                ]
+
+                # For non-geometric data, classifications apply to whole file
+                ret[classification.classification_hash]["range"] = []
                 ret[classification.classification_hash]["createdBy"] = annotation.created_by
                 ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
                     DATETIME_LONG_STRING_FORMAT
@@ -2429,12 +2429,8 @@ class LabelRowV2:
         classification_answers: dict,
     ):
         for classification_answer in classification_answers.values():
-            ranges: Ranges = []
-            for range_elem in classification_answer["range"]:
-                ranges.append(Range(range_elem[0], range_elem[1]))
-
             classification_instance = self._create_new_classification_instance_with_ranges(
-                classification_answer, ranges
+                classification_answer
             )
             self.add_classification_instance(classification_instance)
 
@@ -2493,7 +2489,7 @@ class LabelRowV2:
 
     # This is only to be used by non-frame modalities (e.g. Audio)
     def _create_new_classification_instance_with_ranges(
-        self, classification_answer: dict, ranges: Ranges
+        self, classification_answer: dict
     ) -> ClassificationInstance:
         feature_hash = classification_answer["featureHash"]
         classification_hash = classification_answer["classificationHash"]
@@ -2505,8 +2501,10 @@ class LabelRowV2:
         classification_instance = ClassificationInstance(
             label_class, classification_hash=classification_hash, range_only=True
         )
+
+        # For non-geometric data, the classification will always be treated as being on frame=0,
+        # which is the entire file
         classification_instance.set_for_frames(
-            ranges,
             created_at=range_view.created_at,
             created_by=range_view.created_by,
             confidence=range_view.confidence,
