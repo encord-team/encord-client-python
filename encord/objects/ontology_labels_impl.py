@@ -2429,9 +2429,7 @@ class LabelRowV2:
         classification_answers: dict,
     ):
         for classification_answer in classification_answers.values():
-            classification_instance = self._create_new_classification_instance_with_ranges(
-                classification_answer
-            )
+            classification_instance = self._create_new_classification_instance_with_ranges(classification_answer)
             self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
@@ -2488,9 +2486,7 @@ class LabelRowV2:
         return None
 
     # This is only to be used by non-frame modalities (e.g. Audio)
-    def _create_new_classification_instance_with_ranges(
-        self, classification_answer: dict
-    ) -> ClassificationInstance:
+    def _create_new_classification_instance_with_ranges(self, classification_answer: dict) -> ClassificationInstance:
         feature_hash = classification_answer["featureHash"]
         classification_hash = classification_answer["classificationHash"]
 

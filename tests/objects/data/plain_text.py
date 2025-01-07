@@ -37,7 +37,8 @@ PLAIN_TEXT_LABELS = {
             "shape": "text",
         },
     },
-    "classification_answers": {   "textClassificationHash": {
+    "classification_answers": {
+        "textClassificationHash": {
             "classificationHash": "textClassificationHash",
             "featureHash": "jPOcEsbw",
             "classifications": [
