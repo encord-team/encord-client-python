@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO
@@ -16,3 +16,9 @@ class CloudIntegrationV2(BaseDTO):
 
 class GetCloudIntegrationsResponse(BaseDTO):
     result: List[CloudIntegrationV2]
+
+
+class GetCloudIntegrationsParams(BaseDTO):
+    filter_integration_uuids: Optional[List[UUID]] = None
+    filter_integration_titles: Optional[List[str]] = None
+    include_org_access: bool = False
