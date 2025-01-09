@@ -1,4 +1,4 @@
-from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
+from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates, Visibility
 
 ontology = {
     "objects": [
@@ -106,6 +106,7 @@ labels = {
                                 "color": "#000000",
                                 "value": "point_0",
                                 "featureHash": "1wthOoHe",
+                                "visibility": "visible",
                             },
                             "1": {
                                 "x": 0.4649,
@@ -114,6 +115,7 @@ labels = {
                                 "color": "#000000",
                                 "value": "point_1",
                                 "featureHash": "KGp1oToz",
+                                "visibility": "occluded",
                             },
                             "2": {
                                 "x": 0.2356,
@@ -122,6 +124,7 @@ labels = {
                                 "color": "#000000",
                                 "value": "point_2",
                                 "featureHash": "OqR+F4dN",
+                                "visibility": "invisible",
                             },
                         },
                         "manualAnnotation": True,
@@ -139,6 +142,7 @@ labels = {
     "object_actions": {},
     "label_status": "LABELLED",
 }
+
 expected_coordinates = SkeletonCoordinates(
     values=[
         SkeletonCoordinate(
@@ -148,7 +152,7 @@ expected_coordinates = SkeletonCoordinates(
             color="#000000",
             feature_hash="1wthOoHe",
             value="point_0",
-            visibility=None,
+            visibility=Visibility.VISIBLE,
         ),
         SkeletonCoordinate(
             x=0.4649,
@@ -157,7 +161,7 @@ expected_coordinates = SkeletonCoordinates(
             color="#000000",
             feature_hash="KGp1oToz",
             value="point_1",
-            visibility=None,
+            visibility=Visibility.OCCLUDED,
         ),
         SkeletonCoordinate(
             x=0.2356,
@@ -166,7 +170,7 @@ expected_coordinates = SkeletonCoordinates(
             color="#000000",
             feature_hash="OqR+F4dN",
             value="point_2",
-            visibility=None,
+            visibility=Visibility.INVISIBLE,
         ),
     ],
     name="Triangle",

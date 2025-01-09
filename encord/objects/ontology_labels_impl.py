@@ -56,6 +56,7 @@ from encord.objects.coordinates import (
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
+    Visibility,
 )
 from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
@@ -2284,9 +2285,20 @@ class LabelRowV2:
         elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
+
+            def _with_visibility_enum(point: dict):
+                if point.get(Visibility.INVISIBLE.value):
+                    point["visibility"] = Visibility.INVISIBLE
+                elif point.get(Visibility.OCCLUDED.value):
+                    point["visibility"] = Visibility.OCCLUDED
+                elif point.get(Visibility.VISIBLE.value):
+                    point["visibility"] = Visibility.VISIBLE
+                return point
+
+            values = [_with_visibility_enum(pnt) for pnt in frame_object_label["skeleton"].values()]
             skeleton_frame_object_label = {
                 "name": frame_object_label["name"],
-                "values": list(frame_object_label["skeleton"].values()),
+                "values": values,
             }
             return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
         elif "bitmask" in frame_object_label:
