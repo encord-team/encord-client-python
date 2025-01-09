@@ -273,6 +273,21 @@ class PolylineCoordinates:
         return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
 
 
+class Visibility(CamelStrEnum):
+    """
+    An enumeration to represent the visibility state of an item.
+
+    Attributes:
+        VISIBLE: The item is visible within the frame.
+        INVISIBLE: The item is outside the frame and thus invisible.
+        OCCLUDED: The item is within the frame but occluded by something else.
+    """
+
+    VISIBLE = auto()
+    INVISIBLE = auto()
+    OCCLUDED = auto()
+
+
 class SkeletonCoordinate(BaseDTO):
     """
     Represents a coordinate for a skeleton structure in an image.
@@ -284,9 +299,7 @@ class SkeletonCoordinate(BaseDTO):
         color (Optional[str]): The color associated with the skeleton point.
         feature_hash (Optional[str]): A unique hash for the feature.
         value (Optional[str]): An optional value associated with the skeleton point.
-        visible (Optional[bool]): `True` if the skeleton point is visible within the frame (default).
-        invisible (Optional[bool]): `True` if the skeleton point is outside the frame and thus invisible.
-        occluded (Optional[bool]): `True` if the skeleton point is within the frame but occluded by something else.
+        visibility (Optional[Visibility]): The visibility state of the skeleton point.
     """
 
     x: float
@@ -296,9 +309,7 @@ class SkeletonCoordinate(BaseDTO):
     feature_hash: Optional[str] = None
     value: Optional[str] = None
 
-    visible: Optional[bool] = None
-    invisible: Optional[bool] = None
-    occluded: Optional[bool] = None
+    visibility: Optional[Visibility] = None
 
 
 class SkeletonCoordinates(BaseDTO):
