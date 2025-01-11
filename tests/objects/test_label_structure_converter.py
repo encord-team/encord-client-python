@@ -339,9 +339,11 @@ def test_skeleton_template_coordinates():
     assert len(obj_instances) == 1
 
     obj_instance = obj_instances[0]
-    ann = obj_instance.get_annotations()[0]
-    assert ann.coordinates == skeleton_coordinates.expected_coordinates
+    annotation = obj_instance.get_annotations()[0]
+    assert annotation.coordinates == skeleton_coordinates.expected_coordinates
+
     label_dict = label_row.to_encord_dict()
-    label_dict_obj = list(skeleton_coordinates.labels["data_units"].values())[0]["labels"]["objects"][0]
-    origin_obj = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]
-    assert origin_obj["skeleton"] == label_dict_obj["skeleton"]
+    skeleton_dict = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]
+    expected_skeleton_dict = list(skeleton_coordinates.labels["data_units"].values())[0]["labels"]["objects"][0]
+
+    assert skeleton_dict["skeleton"] == expected_skeleton_dict["skeleton"]

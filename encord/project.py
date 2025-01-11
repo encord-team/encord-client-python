@@ -1185,6 +1185,45 @@ class Project:
             branch_name=branch_name,
         )
 
+    def export_coco_labels(
+        self,
+        label_hashes: Optional[List[str]] = None,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
+        branch_name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Export labels from the project to the COCO format.
+        This method requires the 'coco' extra to be installed. Install it using:
+        `pip install encord[coco]`.
+        Args:
+            label_hashes: List of label hashes to include. If not provided, all label rows will be included.
+            include_object_feature_hashes: If `None`, all objects will be included.
+                 Otherwise, only objects with the specified feature hashes will be included.
+            include_classification_feature_hashes: If `None`, all classifications will be included.
+                Otherwise, only classifications with the specified feature hashes will be included.
+            branch_name: Optionally specify a branch name. Defaults to the `main` branch.
+        Returns:
+            Dict[str, Any]: A dictionary in the COCO format containing the exported labels,
+                including annotations and metadata conforming to COCO standards.
+                The dictionary also includes additional fields specific to Encord,
+                providing supplementary information not defined in the COCO standard.
+        Raises:
+            ImportError: If the 'coco' extra dependencies are not installed.
+        """
+        from encord.utilities.coco.exporter import CocoExporter
+
+        label_rows = self.list_label_rows_v2(label_hashes=label_hashes, branch_name=branch_name)
+        with self.create_bundle() as bundle:
+            for row in label_rows:
+                row.initialise_labels(
+                    include_object_feature_hashes=include_object_feature_hashes,
+                    include_classification_feature_hashes=include_classification_feature_hashes,
+                    bundle=bundle,
+                )
+        labels = [row.to_encord_dict() for row in label_rows]
+        coco_labels = CocoExporter(labels, ontology=self.ontology_structure).export()
+        return coco_labels
+
     def get_collection(self, collection_uuid: Union[str, UUID]) -> ProjectCollection:
         return ProjectCollection._get_collection(
             project_client=self._client,
