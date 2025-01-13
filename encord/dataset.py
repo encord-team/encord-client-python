@@ -16,6 +16,7 @@ from typing import Collection, Dict, Iterable, List, Optional, TextIO, Union
 from uuid import UUID
 
 from encord.client import EncordClientDataset
+from encord.common.deprecated import deprecated
 from encord.constants.enums import DataType
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
@@ -518,6 +519,7 @@ class Dataset:
         """
         return self._client.run_ocr(image_group_id)
 
+    @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         """
         Retrieve a list of cloud integrations configured in Encord.

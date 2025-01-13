@@ -52,7 +52,7 @@ from encord.objects.common import (
 )
 from encord.ontology import Ontology
 from encord.orm.client_metadata_schema import ClientMetadataSchemaTypes
-from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
+from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsParams, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
     CreateDatasetPayload,
@@ -865,7 +865,27 @@ class EncordUserClient:
 
         return dataset_hash, image_title_to_image
 
-    def get_cloud_integrations(self) -> List[CloudIntegration]:
+    def get_cloud_integrations(
+        self,
+        filter_integration_uuids: Optional[Union[List[UUID], List[str], List[Union[UUID, str]]]] = None,
+        filter_integration_titles: Optional[List[str]] = None,
+        include_org_access: bool = False,
+    ) -> List[CloudIntegration]:
+        """
+        List either all (if called with no arguments) or matching cloud integrations the user has access to.
+
+        Args:
+            filter_integration_uuids: optional list of integration UUIDs to include.
+            filter_integration_titles: optional list of integration titles to include (exact match).
+            include_org_access: if set to true and the calling user is the organization admin, the
+              method will return all cloud integrations in the organization.
+
+        If `filter_integration_uuids` and `filter_integration_titles` are both provided, the method will return
+        the integrations that match both of the filters.
+        """
+
+        if filter_integration_uuids is not None:
+            filter_integration_uuids = [UUID(x) if isinstance(x, str) else x for x in filter_integration_uuids]
         return [
             CloudIntegration(
                 id=str(x.integration_uuid),
@@ -873,7 +893,11 @@ class EncordUserClient:
             )
             for x in self._api_client.get(
                 "cloud-integrations",
-                params=None,
+                params=GetCloudIntegrationsParams(
+                    filter_integration_uuids=filter_integration_uuids,
+                    filter_integration_titles=filter_integration_titles,
+                    include_org_access=include_org_access,
+                ),
                 result_type=GetCloudIntegrationsResponse,
             ).result
         ]

@@ -1,4 +1,6 @@
-labels = {
+from typing import Any, Dict
+
+labels: Dict[str, Any] = {
     "label_hash": "1b4398aa-1d4d-4873-8470-2ac9fa373ac0",
     "branch_name": "main",
     "created_at": "2023-02-09 14:12:03",
@@ -167,7 +169,7 @@ labels = {
     "label_status": "LABELLED",
 }
 
-ontology = {
+ontology: Dict[str, Any] = {
     "objects": [
         {"id": "1", "name": "Epiglottis ", "color": "#D33115", "shape": "bounding_box", "featureNodeHash": "249c9370"},
         {"id": "2", "name": "Larynx", "color": "#E27300", "shape": "bounding_box", "featureNodeHash": "e3c87d43"},
