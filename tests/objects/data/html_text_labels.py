@@ -29,11 +29,11 @@ HTML_TEXT_LABELS = {
             "range_html": [
                 {
                     "start": {
-                        "xpath": "start_node",
+                        "node": "start_node",
                         "offset": 5,
                     },
                     "end": {
-                        "xpath": "end_node",
+                        "node": "end_node",
                         "offset": 10,
                     },
                 }

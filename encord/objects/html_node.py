@@ -20,18 +20,18 @@ from encord.orm.base_dto import BaseDTO
 
 class HtmlNode(BaseDTO):
     """
-    A class representing a single HTML node, with the xpath and offset.
+    A class representing a single HTML node, with the node and offset.
 
     Attributes:
-        xpath (str): The xpath of the node
+        node (str): The xpath of the node
         offset (int): The offset of the content from the xpath
     """
 
-    xpath: str
+    node: str
     offset: int
 
     def __repr__(self):
-        return f"(Node: {self.xpath} Offset: {self.offset})"
+        return f"(Node: {self.node} Offset: {self.offset})"
 
 
 class HtmlRange(BaseDTO):
@@ -51,18 +51,18 @@ class HtmlRange(BaseDTO):
 
     def to_dict(self):
         return {
-            "start": {"xpath": self.start.xpath, "offset": self.start.offset},
-            "end": {"xpath": self.end.xpath, "offset": self.end.offset},
+            "start": {"node": self.start.node, "offset": self.start.offset},
+            "end": {"node": self.end.node, "offset": self.end.offset},
         }
 
     def __hash__(self):
-        return f"{self.start.xpath}-{self.start.offset}-{self.end.xpath}-{self.end.offset}"
+        return f"{self.start.node}-{self.start.offset}-{self.end.node}-{self.end.offset}"
 
     @classmethod
     def from_dict(cls, d: dict):
         return HtmlRange(
-            start=HtmlNode(xpath=d["start"]["xpath"], offset=d["start"]["offset"]),
-            end=HtmlNode(xpath=d["end"]["xpath"], offset=d["end"]["offset"]),
+            start=HtmlNode(node=d["start"]["node"], offset=d["start"]["offset"]),
+            end=HtmlNode(node=d["end"]["node"], offset=d["end"]["offset"]),
         )
 
 
