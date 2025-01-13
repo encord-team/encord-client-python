@@ -19,9 +19,9 @@ from typing import Any, Dict, List, Optional, Type, Union
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
-from encord.orm.analytics import CamelStrEnum
 from encord.objects.frames import Ranges
 from encord.objects.html_node import HtmlRange
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
 

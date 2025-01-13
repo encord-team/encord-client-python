@@ -57,8 +57,8 @@ from encord.objects.coordinates import (
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
-    Visibility,
     TextCoordinates,
+    Visibility,
 )
 from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.html_node import HtmlRange
