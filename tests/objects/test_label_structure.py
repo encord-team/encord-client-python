@@ -1264,8 +1264,8 @@ def test_get_annotations_from_html_text_object(ontology) -> None:
     now = datetime.datetime.now()
 
     range = HtmlRange(
-        start=HtmlNode(node="/html[1]/body[1]/div[1]/text()[1]", offset=50),
-        end=HtmlNode(node="/html[1]/body[1]/div[1]/text()[1]", offset=60),
+        start=HtmlNode(xpath="/html[1]/body[1]/div[1]/text()[1]", offset=50),
+        end=HtmlNode(xpath="/html[1]/body[1]/div[1]/text()[1]", offset=60),
     )
 
     object_instance = ObjectInstance(text_obj_ontology_item)
@@ -1313,8 +1313,8 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
 
     initial_range = [
         HtmlRange(
-            start=HtmlNode(node="start_node", offset=50),
-            end=HtmlNode(node="end_node", offset=100),
+            start=HtmlNode(xpath="start_node", offset=50),
+            end=HtmlNode(xpath="end_node", offset=100),
         )
     ]
 
@@ -1323,9 +1323,9 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
 
     assert range is not None
     assert len(range) == 1
-    assert range[0].start.node == "start_node"
+    assert range[0].start.xpath == "start_node"
     assert range[0].start.offset == 50
-    assert range[0].end.node == "end_node"
+    assert range[0].end.xpath == "end_node"
     assert range[0].end.offset == 100
 
     label_row.add_object_instance(obj_instance)
@@ -1334,12 +1334,12 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
 
     edited_range = [
         HtmlRange(
-            start=HtmlNode(node="start_node_edited", offset=70),
-            end=HtmlNode(node="end_node_edited", offset=90),
+            start=HtmlNode(xpath="start_node_edited", offset=70),
+            end=HtmlNode(xpath="end_node_edited", offset=90),
         ),
         HtmlRange(
-            start=HtmlNode(node="start_node_new", offset=5),
-            end=HtmlNode(node="end_node_new", offset=7),
+            start=HtmlNode(xpath="start_node_new", offset=5),
+            end=HtmlNode(xpath="end_node_new", offset=7),
         ),
     ]
 
@@ -1347,14 +1347,14 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
     range = obj_instance.range_html
     assert range is not None
     assert len(range) == 2
-    assert range[0].start.node == "start_node_edited"
+    assert range[0].start.xpath == "start_node_edited"
     assert range[0].start.offset == 70
-    assert range[0].end.node == "end_node_edited"
+    assert range[0].end.xpath == "end_node_edited"
     assert range[0].end.offset == 90
 
-    assert range[1].start.node == "start_node_new"
+    assert range[1].start.xpath == "start_node_new"
     assert range[1].start.offset == 5
-    assert range[1].end.node == "end_node_new"
+    assert range[1].end.xpath == "end_node_new"
     assert range[1].end.offset == 7
 
     obj_instance.remove_from_frames(frames=0)
@@ -1369,8 +1369,8 @@ def test_html_text_object_cannot_be_added_to_non_html_label_row(
 
     initial_range = [
         HtmlRange(
-            start=HtmlNode(node="start_node", offset=50),
-            end=HtmlNode(node="end_node", offset=100),
+            start=HtmlNode(xpath="start_node", offset=50),
+            end=HtmlNode(xpath="end_node", offset=100),
         )
     ]
 
@@ -1379,9 +1379,9 @@ def test_html_text_object_cannot_be_added_to_non_html_label_row(
 
     assert range is not None
     assert len(range) == 1
-    assert range[0].start.node == "start_node"
+    assert range[0].start.xpath == "start_node"
     assert range[0].start.offset == 50
-    assert range[0].end.node == "end_node"
+    assert range[0].end.xpath == "end_node"
     assert range[0].end.offset == 100
 
     with pytest.raises(LabelRowError) as e:
@@ -1406,8 +1406,8 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
 ):
     range_html = [
         HtmlRange(
-            start=HtmlNode(node="start_node", offset=50),
-            end=HtmlNode(node="end_node", offset=100),
+            start=HtmlNode(xpath="start_node", offset=50),
+            end=HtmlNode(xpath="end_node", offset=100),
         )
     ]
 
