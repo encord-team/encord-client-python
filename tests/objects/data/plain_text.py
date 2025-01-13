@@ -1,4 +1,4 @@
-AUDIO_LABELS = {
+PLAIN_TEXT_LABELS = {
     "label_hash": "0aea5ac7-cbc0-4451-a242-e22445d2c9fa",
     "branch_name": "main",
     "created_at": "2023-02-09 14:12:03",
@@ -7,25 +7,36 @@ AUDIO_LABELS = {
     "annotation_task_status": "QUEUED",
     "is_shadow_data": False,
     "dataset_hash": "b02ba3d9-883b-4c5e-ba09-751072ccfc57",
-    "dataset_title": "Audio Dataset",
-    "data_title": "sample-audio.mp3",
-    "data_type": "audio",
+    "dataset_title": "Text Dataset",
+    "data_title": "text.txt",
+    "data_type": "plain_text",
     "data_units": {
         "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2": {
             "data_hash": "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2",
-            "data_title": "sample-audio.mp3",
-            "data_type": "audio/mpeg",
-            "data_duration": 100,
+            "data_title": "text.txt",
+            "data_type": "text/plain",
             "data_sequence": 0,
-            "data_link": "audio-link",
+            "data_link": "text-link",
             "labels": {},
-            "audio_codec": "mp3",
-            "audio_num_channels": 2,
-            "audio_sample_rate": 44100,
-            "audio_bit_depth": 8,
         }
     },
-    "object_answers": {},
+    "object_answers": {
+        "textObjectHash": {
+            "objectHash": "textObjectHash",
+            "featureHash": "textObjectFeatureNodeHash",
+            "classifications": [],
+            "range": [[0, 5]],
+            "createdBy": "user1Hash",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 ",
+            "lastEditedBy": "user1Hash",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 ",
+            "manualAnnotation": True,
+            "name": "text object",
+            "value": "text_object",
+            "color": "#A4DD00",
+            "shape": "text",
+        },
+    },
     "classification_answers": {
         "textClassificationHash": {
             "classificationHash": "textClassificationHash",
@@ -113,7 +124,7 @@ AUDIO_LABELS = {
     "label_status": "LABEL_IN_PROGRESS",
 }
 
-EMPTY_AUDIO_LABELS = {
+EMPTY_PLAIN_TEXT_LABELS = {
     "label_hash": "0aea5ac7-cbc0-4451-a242-e22445d2c9fa",
     "branch_name": "main",
     "created_at": "2023-02-09 14:12:03",
@@ -122,22 +133,17 @@ EMPTY_AUDIO_LABELS = {
     "annotation_task_status": "QUEUED",
     "is_shadow_data": False,
     "dataset_hash": "b02ba3d9-883b-4c5e-ba09-751072ccfc57",
-    "dataset_title": "Audio Dataset",
-    "data_title": "sample-audio.mp3",
-    "data_type": "audio",
+    "dataset_title": "Text Dataset",
+    "data_title": "text.txt",
+    "data_type": "plain_text",
     "data_units": {
         "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2": {
             "data_hash": "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2",
-            "data_title": "sample-audio.mp3",
-            "data_type": "audio/mpeg",
-            "data_duration": 100,
+            "data_title": "text.txt",
+            "data_type": "text/plain",
             "data_sequence": 0,
-            "data_link": "audio-link",
+            "data_link": "text-link",
             "labels": {},
-            "audio_codec": "mp3",
-            "audio_num_channels": 2,
-            "audio_sample_rate": 44100,
-            "audio_bit_depth": 8,
         }
     },
     "object_answers": {},

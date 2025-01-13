@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Optional, Type, Union
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
+from encord.objects.frames import Ranges
+from encord.objects.html_node import HtmlRange
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
@@ -339,11 +341,50 @@ class SkeletonCoordinates(BaseDTO):
 
 
 class AudioCoordinates(BaseDTO):
-    pass
+    """
+    Represents coordinates for an audio file
+
+    Attributes:
+        range (Ranges): Ranges in milliseconds for audio files
+    """
+
+    range: Ranges
+
+    def __post_init__(self):
+        if len(self.range) == 0:
+            raise ValueError("Range list must contain at least one range.")
+
+
+class TextCoordinates(BaseDTO):
+    """
+    Represents coordinates for a text file
+
+    Attributes:
+        range (Ranges): Ranges of chars for simple text files
+    """
+
+    range: Ranges
+
+
+class HtmlCoordinates(BaseDTO):
+    """
+    Represents coordinates for a html file
+
+    Attributes:
+        range_html (List[HtmlRange]): A list of HtmlRange objects
+    """
+
+    range: List[HtmlRange]
+
+
+NON_GEOMETRIC_COORDINATES = {AudioCoordinates, TextCoordinates, HtmlCoordinates}
 
 
 Coordinates = Union[
     AudioCoordinates,
+    TextCoordinates,
+    Union[HtmlCoordinates, TextCoordinates],
+    HtmlCoordinates,
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
     PointCoordinate,
@@ -352,13 +393,15 @@ Coordinates = Union[
     SkeletonCoordinates,
     BitmaskCoordinates,
 ]
-ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
-    Shape.BOUNDING_BOX: BoundingBoxCoordinates,
-    Shape.ROTATABLE_BOUNDING_BOX: RotatableBoundingBoxCoordinates,
-    Shape.POINT: PointCoordinate,
-    Shape.POLYGON: PolygonCoordinates,
-    Shape.POLYLINE: PolylineCoordinates,
-    Shape.SKELETON: SkeletonCoordinates,
-    Shape.BITMASK: BitmaskCoordinates,
-    Shape.AUDIO: AudioCoordinates,
+
+ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
+    Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
+    Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
+    Shape.POINT: [PointCoordinate],
+    Shape.POLYGON: [PolygonCoordinates],
+    Shape.POLYLINE: [PolylineCoordinates],
+    Shape.SKELETON: [SkeletonCoordinates],
+    Shape.BITMASK: [BitmaskCoordinates],
+    Shape.AUDIO: [AudioCoordinates],
+    Shape.TEXT: [TextCoordinates, HtmlCoordinates],
 }

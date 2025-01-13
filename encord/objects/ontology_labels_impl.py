@@ -22,7 +22,7 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.common.range_manager import RangeManager
-from encord.constants.enums import DataType
+from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.limits import (
@@ -40,7 +40,7 @@ from encord.objects.bundled_operations import (
     BundledWorkflowReopenPayload,
 )
 from encord.objects.classification import Classification
-from encord.objects.classification_instance import ClassificationInstance
+from encord.objects.classification_instance import ClassificationInstance, _verify_non_geometric_classifications_range
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
     DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
@@ -51,14 +51,17 @@ from encord.objects.coordinates import (
     BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
+    HtmlCoordinates,
     PointCoordinate,
     PolygonCoordinates,
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
+    TextCoordinates,
     Visibility,
 )
 from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.html_node import HtmlRange
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -829,6 +832,19 @@ class LabelRowV2:
 
         object_instance.is_valid()
 
+        # We want to ensure that we are only adding the object_instance to a label_row
+        # IF AND ONLY IF the file type is text/html and the object_instance has range_html set
+        if self.file_type == "text/html" and object_instance.range_html is None:
+            raise LabelRowError(
+                "Unable to assign object instance without a html range to a html file. "
+                f"Please ensure the object instance exists on frame=0, and has coordinates of type {HtmlCoordinates}."
+            )
+        elif self.file_type != "text/html" and object_instance.range_html is not None:
+            raise LabelRowError(
+                "Unable to assign object instance with a html range to a non-html file. "
+                f"Please ensure the object instance does not have coordinates of type {HtmlCoordinates}."
+            )
+
         if object_instance.is_assigned_to_label_row():
             raise LabelRowError(
                 "The supplied ObjectInstance is already part of a LabelRowV2. You can only add a ObjectInstance to one "
@@ -847,9 +863,8 @@ class LabelRowV2:
         self._objects_map[object_hash] = object_instance
         object_instance._parent = self
 
-        if not object_instance.is_range_only():
-            frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
-            self._add_to_frame_to_hashes_map(object_instance, frames)
+        frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
+        self._add_to_frame_to_hashes_map(object_instance, frames)
 
     def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
         """
@@ -867,9 +882,9 @@ class LabelRowV2:
         classification_instance.is_valid()
 
         # TODO: Need to update the docstring for this method, talk to Laverne.
-        if not classification_instance.is_range_only() and self.data_type == DataType.AUDIO:
+        if not classification_instance.is_range_only() and not is_geometric(self.data_type):
             raise LabelRowError(
-                "To add a ClassificationInstance object to an Audio LabelRow,"
+                f"To add a ClassificationInstance object to a label row where data_type = {self.data_type},"
                 "the ClassificationInstance object needs to be created with the "
                 "range_only property set to True."
                 "You can do ClassificationInstance(range_only=True) or "
@@ -891,10 +906,10 @@ class LabelRowV2:
             )
 
         """
-        Implementation here diverges because audio data will operate on ranges, whereas
+        Implementation here diverges because non-geometric data will operate on ranges, whereas
         everything else will operate on frames.
         """
-        if self.data_type == DataType.AUDIO:
+        if not is_geometric(self.data_type):
             self._add_classification_instance_for_range(
                 classification_instance=classification_instance,
                 force=force,
@@ -923,7 +938,7 @@ class LabelRowV2:
             self._classifications_to_frames[classification_instance.ontology_item].update(frames)
             self._add_to_frame_to_hashes_map(classification_instance, frames)
 
-    # This should only be used for Audio classification instances
+    # This should only be used for Non-geometric data
     def _add_classification_instance_for_range(
         self,
         classification_instance: ClassificationInstance,
@@ -931,6 +946,10 @@ class LabelRowV2:
     ):
         classification_hash = classification_instance.classification_hash
         ranges_to_add = classification_instance.range_list
+
+        if classification_instance.is_range_only():
+            _verify_non_geometric_classifications_range(ranges_to_add, self)
+
         already_present_ranges = self._is_classification_already_present_on_ranges(
             classification_instance.ontology_item, ranges_to_add
         )
@@ -963,7 +982,7 @@ class LabelRowV2:
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
 
-        if self.data_type == DataType.AUDIO:
+        if not is_geometric(self.data_type):
             range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
             ranges_to_remove = classification_instance.range_list
             range_manager.remove_ranges(ranges_to_remove)
@@ -1631,19 +1650,30 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if self.data_type == DataType.AUDIO:
-                annotation = obj.get_annotations()[0]
-                ret[obj.object_hash]["range"] = [[range.start, range.end] for range in obj.range_list]
-                ret[obj.object_hash]["createdBy"] = annotation.created_by
-                ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                ret[obj.object_hash]["lastEditedBy"] = annotation.last_edited_by
-                ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
-                ret[obj.object_hash]["featureHash"] = obj.feature_hash
-                ret[obj.object_hash]["name"] = obj.ontology_item.name
-                ret[obj.object_hash]["color"] = obj.ontology_item.color
-                ret[obj.object_hash]["shape"] = obj.ontology_item.shape.value
-                ret[obj.object_hash]["value"] = _lower_snake_case(obj.ontology_item.name)
+            if not is_geometric(self.data_type):
+                # For non-frame entities, all annotations exist only on one frame
+                annotation = obj.get_annotation(0)
+                object_answer_dict = ret[obj.object_hash]
+                object_answer_dict["createdBy"] = annotation.created_by
+                object_answer_dict["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                object_answer_dict["lastEditedBy"] = annotation.last_edited_by
+                object_answer_dict["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                object_answer_dict["manualAnnotation"] = annotation.manual_annotation
+                object_answer_dict["featureHash"] = obj.feature_hash
+                object_answer_dict["name"] = obj.ontology_item.name
+                object_answer_dict["color"] = obj.ontology_item.color
+                object_answer_dict["shape"] = obj.ontology_item.shape.value
+                object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
+
+                if self.file_type == "text/html":
+                    if obj.range_html is None:
+                        raise LabelRowError("Html annotations should have range_html set within the TextCoordinates")
+                    object_answer_dict["range_html"] = [x.to_dict() for x in obj.range_html]
+                    object_answer_dict["range"] = []
+                else:
+                    if obj.range_list is None:
+                        raise LabelRowError("Non-geometric annotations should have range set within the Coordinates")
+                    object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
 
         return ret
 
@@ -1671,11 +1701,11 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if self.data_type == DataType.AUDIO:
+            if not is_geometric(self.data_type):
                 annotation = classification.get_annotations()[0]
-                ret[classification.classification_hash]["range"] = [
-                    [range.start, range.end] for range in classification.range_list
-                ]
+
+                # For non-geometric data, classifications apply to whole file
+                ret[classification.classification_hash]["range"] = []
                 ret[classification.classification_hash]["createdBy"] = annotation.created_by
                 ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
                     DATETIME_LONG_STRING_FORMAT
@@ -1745,24 +1775,40 @@ class LabelRowV2:
             ret["data_link"] = frame_level_data.data_link
 
         ret["data_type"] = frame_level_data.file_type
-
         ret["data_sequence"] = data_sequence
 
-        if self.data_type != DataType.AUDIO:
-            ret["width"] = frame_level_data.width
-            ret["height"] = frame_level_data.height
-
-        else:
+        if self.data_type == DataType.AUDIO:
             ret["audio_codec"] = self._label_row_read_only_data.audio_codec
             ret["audio_sample_rate"] = self._label_row_read_only_data.audio_sample_rate
             ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
             ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
+        elif self.data_type == DataType.PLAIN_TEXT or self.data_type == DataType.PDF:
+            pass
+        elif (
+            self.data_type == DataType.IMAGE
+            or self.data_type == DataType.NIFTI
+            or self.data_type == DataType.VIDEO
+            or self.data_type == DataType.IMG_GROUP
+            or self.data_type == DataType.DICOM
+            or self.data_type == DataType.DICOM_STUDY
+        ):
+            ret["width"] = frame_level_data.width
+            ret["height"] = frame_level_data.height
+        elif self.data_type == DataType.MISSING_DATA_TYPE:
+            raise LabelRowError("Label row is missing data type.")
+        else:
+            exhaustive_guard(self.data_type)
 
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
-        if self._label_row_read_only_data.duration is not None:
+        if self._label_row_read_only_data.duration is not None and self.data_type != DataType.PLAIN_TEXT:
             ret["data_duration"] = self._label_row_read_only_data.duration
-        if self._label_row_read_only_data.fps is not None and self.data_type != DataType.AUDIO:
+
+        if (
+            self._label_row_read_only_data.fps is not None
+            and self.data_type != DataType.AUDIO
+            and self.data_type != DataType.PLAIN_TEXT
+        ):
             ret["data_fps"] = self._label_row_read_only_data.fps
 
         return ret
@@ -1998,6 +2044,7 @@ class LabelRowV2:
         if data_type == DataType.VIDEO or data_type == DataType.IMAGE:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
             # Dimensions should be always there
             # But we have some older entries that don't have them
             # So setting them to None for now until the format is not guaranteed to be enforced
@@ -2007,12 +2054,15 @@ class LabelRowV2:
         elif data_type == DataType.DICOM or data_type == DataType.NIFTI:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
             data_link = None
+            file_type = dicom_dict["data_type"]
+
             height = dicom_dict["height"]
             width = dicom_dict["width"]
 
         elif data_type == DataType.AUDIO:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
             height = None
             width = None
             audio_codec = data_dict["audio_codec"]
@@ -2020,8 +2070,16 @@ class LabelRowV2:
             audio_num_channels = data_dict["audio_num_channels"]
             audio_bit_depth = data_dict["audio_bit_depth"]
 
+        elif data_type == DataType.PLAIN_TEXT:
+            data_dict = list(label_row_dict["data_units"].values())[0]
+            data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
+            height = None
+            width = None
+
         elif data_type == DataType.IMG_GROUP:
             data_link = None
+            file_type = None
             height = None
             width = None
 
@@ -2031,6 +2089,7 @@ class LabelRowV2:
         elif data_type == DataType.PLAIN_TEXT or data_type == DataType.PDF:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
             height = None
             width = None
 
@@ -2072,7 +2131,7 @@ class LabelRowV2:
             priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
             client_metadata=label_row_dict.get("client_metadata", self._label_row_read_only_data.client_metadata),
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
-            file_type=label_row_dict.get("file_type", None),
+            file_type=file_type,
             is_valid=bool(label_row_dict.get("is_valid", True)),
             backing_item_uuid=self.backing_item_uuid,
         )
@@ -2111,7 +2170,8 @@ class LabelRowV2:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
             elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
-                self._add_objects_instances_from_objects_without_frames(object_answers)
+                is_html = data_unit["data_type"] == "text/html"
+                self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
 
             else:
@@ -2142,14 +2202,21 @@ class LabelRowV2:
     def _add_objects_instances_from_objects_without_frames(
         self,
         object_answers: dict,
+        html: bool = False,
     ):
-        for object_answer in object_answers.values():
-            ranges: Ranges = []
-            for range_elem in object_answer["range"]:
-                ranges.append(Range(range_elem[0], range_elem[1]))
+        if html:
+            for object_answer in object_answers.values():
+                object_instance = self._create_new_html_object_instance(object_answer, object_answer["range_html"])
+                self.add_object_instance(object_instance)
 
-            object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges)
-            self.add_object_instance(object_instance)
+        else:
+            for object_answer in object_answers.values():
+                ranges: Ranges = []
+                for range_elem in object_answer["range"]:
+                    ranges.append(Range(range_elem[0], range_elem[1]))
+
+                object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges)
+                self.add_object_instance(object_instance)
 
     def _add_object_instances_from_objects(
         self,
@@ -2223,17 +2290,56 @@ class LabelRowV2:
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
 
         expected_shape: Shape
+        coordinates: Union[AudioCoordinates, TextCoordinates]
         if self._label_row_read_only_data.data_type == DataType.AUDIO:
             expected_shape = Shape.AUDIO
+            coordinates = AudioCoordinates(range=ranges)
+        elif self._label_row_read_only_data.data_type == DataType.PLAIN_TEXT:
+            expected_shape = Shape.TEXT
+            coordinates = TextCoordinates(range=ranges)
         else:
             unknown_data_type = self._label_row_read_only_data.data_type
             raise RuntimeError(f"Unexpected data type[{unknown_data_type}] for range based objects")
         if label_class.shape != expected_shape:
             raise LabelRowError("Unsupported object shape for data type")
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
+
         object_instance.set_for_frames(
-            AudioCoordinates(),
-            ranges,
+            coordinates,
+            frames=0,
+            created_at=object_frame_instance_info.created_at,
+            created_by=object_frame_instance_info.created_by,
+            confidence=object_frame_instance_info.confidence,
+            manual_annotation=object_frame_instance_info.manual_annotation,
+            last_edited_at=object_frame_instance_info.last_edited_at,
+            last_edited_by=object_frame_instance_info.last_edited_by,
+            reviews=object_frame_instance_info.reviews,
+            overwrite=True,
+            # Always overwrite during label row dict parsing, as older dicts known to have duplicates
+        )
+        answer_list = object_answer["classifications"]
+        object_instance.set_answer_from_list(answer_list)
+
+        return object_instance
+
+    def _create_new_html_object_instance(
+        self,
+        object_answer: dict,
+        range_html: dict,
+    ) -> ObjectInstance:
+        feature_hash = object_answer["featureHash"]
+        object_hash = object_answer["objectHash"]
+
+        label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Object)
+
+        frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
+        frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
+
+        object_instance = ObjectInstance(label_class, object_hash=object_hash)
+        object_instance.set_for_frames(
+            HtmlCoordinates(range=[HtmlRange.from_dict(x) for x in range_html]),
+            frames=0,
             created_at=object_frame_instance_info.created_at,
             created_by=object_frame_instance_info.created_by,
             confidence=object_frame_instance_info.confidence,
@@ -2323,13 +2429,7 @@ class LabelRowV2:
         classification_answers: dict,
     ):
         for classification_answer in classification_answers.values():
-            ranges: Ranges = []
-            for range_elem in classification_answer["range"]:
-                ranges.append(Range(range_elem[0], range_elem[1]))
-
-            classification_instance = self._create_new_classification_instance_with_ranges(
-                classification_answer, ranges
-            )
+            classification_instance = self._create_new_classification_instance_with_ranges(classification_answer)
             self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
@@ -2386,9 +2486,7 @@ class LabelRowV2:
         return None
 
     # This is only to be used by non-frame modalities (e.g. Audio)
-    def _create_new_classification_instance_with_ranges(
-        self, classification_answer: dict, ranges: Ranges
-    ) -> ClassificationInstance:
+    def _create_new_classification_instance_with_ranges(self, classification_answer: dict) -> ClassificationInstance:
         feature_hash = classification_answer["featureHash"]
         classification_hash = classification_answer["classificationHash"]
 
@@ -2399,8 +2497,10 @@ class LabelRowV2:
         classification_instance = ClassificationInstance(
             label_class, classification_hash=classification_hash, range_only=True
         )
+
+        # For non-geometric data, the classification will always be treated as being on frame=0,
+        # which is the entire file
         classification_instance.set_for_frames(
-            ranges,
             created_at=range_view.created_at,
             created_by=range_view.created_by,
             confidence=range_view.confidence,
