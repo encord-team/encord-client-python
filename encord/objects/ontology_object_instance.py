@@ -43,8 +43,11 @@ from encord.objects.attributes import Attribute, _get_attribute_by_hash
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    NON_GEOMETRIC_COORDINATES,
     AudioCoordinates,
     Coordinates,
+    HtmlCoordinates,
+    TextCoordinates,
 )
 from encord.objects.frames import (
     Frames,
@@ -54,6 +57,7 @@ from encord.objects.frames import (
     frames_to_ranges,
     ranges_list_to_ranges,
 )
+from encord.objects.html_node import HtmlRange, HtmlRanges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
@@ -82,10 +86,8 @@ class ObjectInstance:
         self._dynamic_answer_manager = DynamicAnswerManager(self)
 
         # Only used for non-frame entities
-        self._range_only = ontology_object.shape in (Shape.AUDIO,)
-        self._range_manager: RangeManager = RangeManager()
+        self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
 
-        # Only used for frame entities
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
 
     def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
@@ -145,9 +147,19 @@ class ObjectInstance:
             return self._parent.number_of_frames
 
     @property
-    def range_list(self) -> Ranges:
-        if self._range_only:
-            return self._range_manager.get_ranges()
+    def range_list(self) -> Ranges | None:
+        if self._non_geometric:
+            non_geometric_annotation = self._get_non_geometric_annotation()
+            if non_geometric_annotation is None:
+                return None
+
+            coordinates = non_geometric_annotation.coordinates
+
+            if isinstance(coordinates, (AudioCoordinates, TextCoordinates)):
+                return coordinates.range
+            else:
+                return None
+
         else:
             raise LabelRowError(
                 "No ranges available for this object instance."
@@ -156,8 +168,24 @@ class ObjectInstance:
                 "You can do ObjectInstance(audio_ontology_object) to achieve this."
             )
 
+    @property
+    def range_html(self) -> Optional[HtmlRanges]:
+        if not self._non_geometric:
+            return None
+
+        non_geometric_annotation = self._get_non_geometric_annotation()
+        if non_geometric_annotation is None:
+            return None
+
+        coordinates = non_geometric_annotation.coordinates
+
+        if isinstance(coordinates, HtmlCoordinates):
+            return coordinates.range
+        else:
+            return None
+
     def is_range_only(self) -> bool:
-        return self._range_only
+        return self._non_geometric
 
     def get_answer(
         self,
@@ -414,16 +442,6 @@ class ObjectInstance:
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
-    def _set_for_ranges(
-        self,
-        frames: Frames,
-    ) -> None:
-        new_range_manager = RangeManager(frame_class=frames)
-        ranges_to_add = new_range_manager.get_ranges()
-        for range_to_add in ranges_to_add:
-            self.check_within_range(range_to_add.end)
-        self._range_manager.add_ranges(ranges_to_add)
-
     def set_for_frames(
         self,
         coordinates: Coordinates,
@@ -465,73 +483,62 @@ class ObjectInstance:
             reviews: Should only be set by internal functions.
             is_deleted: Should only be set by internal functions.
         """
-        if self._range_only:
-            if not isinstance(coordinates, AudioCoordinates):
-                raise LabelRowError("Expecting range only coordinate type")
-            existing_frame_data = self._frames_to_instance_data.get(0)
 
-            if overwrite is False and existing_frame_data is not None and self._range_manager.intersection(frames):
+        if self._non_geometric:
+            if not isinstance(coordinates, tuple(NON_GEOMETRIC_COORDINATES)):
+                raise LabelRowError("Expecting non-geometric coordinate type")
+
+            elif frames != 0:
+                raise LabelRowError(
+                    f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
+                    f"There is only one frame. Please ensure `set_for_frames` is called with `frames=0`."
+                )
+
+        frames_list = frames_class_to_frames_list(frames)
+
+        for frame in frames_list:
+            existing_frame_data = self._frames_to_instance_data.get(frame)
+
+            if overwrite is False and existing_frame_data is not None:
                 raise LabelRowError(
                     "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
                 )
 
-            self._set_for_ranges(
-                frames=frames,
-            )
+            check_coordinate_type(coordinates, self._ontology_object, self._parent)
+
+            if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
+                for non_geometric_range in coordinates.range:
+                    self.check_within_range(non_geometric_range.end)
+            else:
+                self.check_within_range(frame)
 
             if existing_frame_data is None:
                 existing_frame_data = ObjectInstance.FrameData(
                     coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
                 )
-                self._frames_to_instance_data[0] = existing_frame_data
+                self._frames_to_instance_data[frame] = existing_frame_data
 
-                existing_frame_data.object_frame_instance_info.update_from_optional_fields(
-                    created_at=created_at,
-                    created_by=created_by,
-                    last_edited_at=last_edited_at,
-                    last_edited_by=last_edited_by,
-                    confidence=confidence,
-                    manual_annotation=manual_annotation,
-                    reviews=reviews,
-                    is_deleted=is_deleted,
-                )
+            existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                reviews=reviews,
+                is_deleted=is_deleted,
+            )
+            existing_frame_data.coordinates = coordinates
 
+            if self._parent:
+                self._parent.add_to_single_frame_to_hashes_map(self, frame)
+
+    def _get_non_geometric_annotation(self) -> Optional[Annotation]:
+        # Non-geometric annotations (e.g. Audio and Text) only have one frame.
+        if 0 not in self._frames_to_instance_data:
+            return None
         else:
-            if isinstance(coordinates, AudioCoordinates):
-                raise LabelRowError("Cannot add audio coordinates to object with frames")
-            frames_list = frames_class_to_frames_list(frames)
-
-            for frame in frames_list:
-                existing_frame_data = self._frames_to_instance_data.get(frame)
-
-                if overwrite is False and existing_frame_data is not None:
-                    raise LabelRowError(
-                        "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
-                    )
-
-                check_coordinate_type(coordinates, self._ontology_object)
-                self.check_within_range(frame)
-
-                if existing_frame_data is None:
-                    existing_frame_data = ObjectInstance.FrameData(
-                        coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
-                    )
-                    self._frames_to_instance_data[frame] = existing_frame_data
-
-                existing_frame_data.object_frame_instance_info.update_from_optional_fields(
-                    created_at=created_at,
-                    created_by=created_by,
-                    last_edited_at=last_edited_at,
-                    last_edited_by=last_edited_by,
-                    confidence=confidence,
-                    manual_annotation=manual_annotation,
-                    reviews=reviews,
-                    is_deleted=is_deleted,
-                )
-                existing_frame_data.coordinates = coordinates
-
-                if self._parent:
-                    self._parent.add_to_single_frame_to_hashes_map(self, frame)
+            return self.get_annotation(0)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """
@@ -547,7 +554,7 @@ class ObjectInstance:
         Raises:
             LabelRowError: If the frame is not present in the label row.
         """
-        if self._range_only and frame != 0:
+        if self._non_geometric and frame != 0:
             raise LabelRowError(
                 'This annotation data for this object instance is stored on only one "frame". '
                 "Use `get_annotation(0)` to get the frame data of the first frame."
@@ -598,10 +605,8 @@ class ObjectInstance:
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
-        if self._range_only:
-            return self._range_manager.get_ranges_as_frames()
-        else:
-            return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
+
+        return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
 
     def remove_from_frames(self, frames: Frames) -> None:
         """
@@ -610,19 +615,18 @@ class ObjectInstance:
         Args:
             frames: The frames from which to remove the object instance.
         """
-        if self._range_only:
-            new_range_manager = RangeManager(frame_class=frames)
-            ranges_to_add = new_range_manager.get_ranges()
-            for range_to_add in ranges_to_add:
-                self.check_within_range(range_to_add.end)
-            self._range_manager.remove_ranges(ranges_to_add)
-        else:
-            frames_list = frames_class_to_frames_list(frames)
-            for frame in frames_list:
-                self._frames_to_instance_data.pop(frame)
+        if self._non_geometric and frames != 0:
+            raise LabelRowError(
+                f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
+                f"There is only one frame. Please ensure `remove_from_frames` is called with `frames=0`."
+            )
 
-            if self._parent:
-                self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
+        frames_list = frames_class_to_frames_list(frames)
+        for frame in frames_list:
+            self._frames_to_instance_data.pop(frame)
+
+        if self._parent:
+            self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
 
     def is_valid(self) -> None:
         """
@@ -631,12 +635,8 @@ class ObjectInstance:
         Raises:
             LabelRowError: If the ObjectInstance is not on any frames.
         """
-        if self._range_only:
-            if len(self._range_manager.get_ranges()) == 0:
-                raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
-        else:
-            if len(self._frames_to_instance_data) == 0:
-                raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+        if len(self._frames_to_instance_data) == 0:
+            raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
 
         self.are_dynamic_answers_valid()
 
@@ -822,7 +822,7 @@ class ObjectInstance:
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
                 confidence=d["confidence"],
-                manual_annotation=d["manualAnnotation"],
+                manual_annotation=d.get("manualAnnotation", True),
                 reviews=d.get("reviews"),
                 is_deleted=d.get("isDeleted"),
             )
@@ -949,22 +949,37 @@ class ObjectInstance:
         return self._object_hash < other._object_hash
 
 
-def check_coordinate_type(coordinates: Coordinates, ontology_object: Object) -> None:
+def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, parent: Optional[LabelRowV2]) -> None:
     """
     Check if the coordinate type matches the expected type for the ontology object.
 
     Args:
         coordinates (Coordinates): The coordinates to check.
         ontology_object (Object): The ontology object to check against.
+        parent (LabelRowV2): The parent label row (if any) of the ontology object.
 
     Raises:
         LabelRowError: If the coordinate type does not match the expected type.
     """
-    expected_coordinate_type = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
-    if not isinstance(coordinates, expected_coordinate_type):
+    expected_coordinate_types = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
+    if all(
+        not isinstance(coordinates, expected_coordinate_type) for expected_coordinate_type in expected_coordinate_types
+    ):
         raise LabelRowError(
-            f"Expected a coordinate of type `{expected_coordinate_type}`, but got type `{type(coordinates)}`."
+            f"Expected coordinates of one of the following types: `{expected_coordinate_types}`, but got type `{type(coordinates)}`."
         )
+
+    # An ontology object with `Text` shape can have both coordinates `HtmlCoordinates` and `TextCoordinates`
+    # Therefore, we need to further check the file type, to ensure that `HtmlCoordinates` are only used for
+    # HTML files, and `TextCoordinates` are only used for plain text files.
+    if isinstance(coordinates, TextCoordinates):
+        if parent is not None and parent == "text/html":
+            raise LabelRowError(f"Expected coordinates of type {HtmlCoordinates}`, but got type `{type(coordinates)}`.")
+    elif isinstance(coordinates, HtmlCoordinates):
+        if parent is not None and parent.file_type != "text/html":
+            raise LabelRowError(
+                "For non-html labels, ensure the `range` property " "is set when instantiating the TextCoordinates."
+            )
 
 
 class DynamicAnswerManager:
