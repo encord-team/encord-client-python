@@ -371,7 +371,7 @@ class HtmlCoordinates(BaseDTO):
     Represents coordinates for a html file
 
     Attributes:
-        range_html (List[HtmlRange]): A list of HtmlRange objects
+        range (List[HtmlRange]): A list of HtmlRange objects
     """
 
     range: List[HtmlRange]
@@ -383,7 +383,6 @@ NON_GEOMETRIC_COORDINATES = {AudioCoordinates, TextCoordinates, HtmlCoordinates}
 Coordinates = Union[
     AudioCoordinates,
     TextCoordinates,
-    Union[HtmlCoordinates, TextCoordinates],
     HtmlCoordinates,
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
