@@ -311,7 +311,6 @@ class SshConfig(Config):
             ssh_private_key: The content of a private key file.
             password: The password for the private key file.
             requests_settings: The requests settings for all outgoing network requests.
-            kwargs: Extra network parameters, includes domain
 
         Returns:
             SshConfig: The SSH configuration.
@@ -398,7 +397,6 @@ class BearerConfig(Config):
         Args:
             token: The bearer token.
             requests_settings: The requests settings for all outgoing network requests.
-            **kwargs: network related args
         Returns:
             BearerConfig: The bearer token configuration.
         """
