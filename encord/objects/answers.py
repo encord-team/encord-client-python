@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Answers"
 slug: "sdk-ref-objects-answer"
 hidden: false
@@ -90,8 +89,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         return self._value
 
     def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict[str, Any]]:
-        """
-        A low level helper to convert to the Encord JSON format.
+        """A low level helper to convert to the Encord JSON format.
         For most use cases the `get_answer` function should be used instead.
         """
         if not self.is_answered():
@@ -272,8 +270,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
 
 @dataclass
 class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
-    """
-    Checkboxes behave slightly different from the other answer types. When the checkbox is unanswered, it will be
+    """Checkboxes behave slightly different from the other answer types. When the checkbox is unanswered, it will be
     the equivalent of not having selected any checkbox answer in the Encord platform.
     The initial state will be every checkbox unchecked.
     """

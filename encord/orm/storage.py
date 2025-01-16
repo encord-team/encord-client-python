@@ -130,8 +130,7 @@ class StorageItemWithName(BaseDTO):
 
 
 class UploadLongPollingState(BaseDTO):
-    """
-    Response of the upload job's long polling request.
+    """Response of the upload job's long polling request.
 
     Note: An upload job consists of job units, where job unit could be
     either a video, image group, dicom series, or a single image.
@@ -166,9 +165,7 @@ class UploadLongPollingState(BaseDTO):
 
 
 class CustomerProvidedImageMetadata(BaseDTO):
-    """
-    Media metadata for an image file; if provided, Encord service will use the values here instead of scanning the files
-    """
+    """Media metadata for an image file; if provided, Encord service will use the values here instead of scanning the files"""
 
     mime_type: str
     """MIME type of the image file (e.g. `image/jpeg` or `image/png`)."""
@@ -181,8 +178,7 @@ class CustomerProvidedImageMetadata(BaseDTO):
 
 
 class CustomerProvidedVideoMetadata(BaseDTO):
-    """
-    Media metadata for a video file; if provided, Encord service will skip frame synchronisation checks
+    """Media metadata for a video file; if provided, Encord service will skip frame synchronisation checks
     and will use the values specified here to render the video in the label editor.
     """
 
@@ -201,9 +197,7 @@ class CustomerProvidedVideoMetadata(BaseDTO):
 
 
 class CustomerProvidedAudioMetadata(BaseDTO):
-    """
-    Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files
-    """
+    """Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files"""
 
     duration: float
     """Audio duration in (float) seconds."""
@@ -222,8 +216,7 @@ class CustomerProvidedAudioMetadata(BaseDTO):
 
 
 class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
-    """
-    Metadata for a DICOM file containing required DICOM tags and their values.
+    """Metadata for a DICOM file containing required DICOM tags and their values.
     This metadata is used to validate and process DICOM files without needing to access the actual files.
 
     The `tags` dictionary must contain all required DICOM tags as keys, though their corresponding values may be None.
@@ -260,9 +253,7 @@ class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
 
 
 class DataUploadImage(BaseDTO):
-    """
-    Data about a single image item to be registered with Encord service.
-    """
+    """Data about a single image item to be registered with Encord service."""
 
     object_url: str
     """"URL of the image file to be registered."""
@@ -280,9 +271,7 @@ class DataUploadImage(BaseDTO):
 
 
 class DataUploadVideo(BaseDTO):
-    """
-    Data about a video item to be registered with Encord service.
-    """
+    """Data about a video item to be registered with Encord service."""
 
     object_url: str
     """URL of the video file to be registered."""
@@ -301,9 +290,7 @@ class DataUploadVideo(BaseDTO):
 
 
 class DataUploadNifti(BaseDTO):
-    """
-    Data about a NIFTI item to be registered with Encord service.
-    """
+    """Data about a NIFTI item to be registered with Encord service."""
 
     object_url: str
     """URL of the NIFTI file to be registered."""
@@ -319,9 +306,7 @@ class DataUploadNifti(BaseDTO):
 
 
 class DataUploadImageGroupImage(BaseDTO):
-    """
-    Data about a single image item to be used as a frame in an image group or sequence.
-    """
+    """Data about a single image item to be used as a frame in an image group or sequence."""
 
     url: str
     """URL of the image file to be used as the frame in the image group."""
@@ -335,9 +320,7 @@ class DataUploadImageGroupImage(BaseDTO):
 
 
 class DataUploadImageGroup(BaseDTO):
-    """
-    Data about an image group or image sequence item to be registered with Encord service.
-    """
+    """Data about an image group or image sequence item to be registered with Encord service."""
 
     images: List[DataUploadImageGroupImage]
     """List of images to be used as frames in the image group. See :class:`DataUploadImageGroupImage` for more details."""
@@ -355,9 +338,7 @@ class DataUploadImageGroup(BaseDTO):
 
 
 class DataUploadImageGroupFromItems(BaseDTO):
-    """
-    Data about an image group item to be created from previously uploaded images.
-    """
+    """Data about an image group item to be created from previously uploaded images."""
 
     image_items: List[UUID]
     """List of image items to be used as frames in the image group."""
@@ -377,9 +358,7 @@ class DataUploadImageGroupFromItems(BaseDTO):
 
 
 class DataUploadDicomSeriesDicomFile(BaseDTO):
-    """
-    Data about a single DICOM file to be used in a series item.
-    """
+    """Data about a single DICOM file to be used in a series item."""
 
     url: str
     """URL of the DICOM file to be registered with Encord service."""
@@ -393,9 +372,7 @@ class DataUploadDicomSeriesDicomFile(BaseDTO):
 
 
 class DataUploadDicomSeries(BaseDTO):
-    """
-    Data about a DICOM series item to be registered with Encord service.
-    """
+    """Data about a DICOM series item to be registered with Encord service."""
 
     dicom_files: List[DataUploadDicomSeriesDicomFile]
     """List of DICOM files to be used in the series item. See :class:`DataUploadDicomSeriesDicomFile` for more details."""
@@ -439,9 +416,7 @@ class DataUploadPDF(BaseDTO):
 
 
 class DataUploadAudio(BaseDTO):
-    """
-    Data about an audio item to be registered with Encord service.
-    """
+    """Data about an audio item to be registered with Encord service."""
 
     object_url: str
     """URL of the audio file to be registered."""
@@ -460,8 +435,7 @@ class DataUploadAudio(BaseDTO):
 
 
 class DataUploadItems(BaseDTO):
-    """
-    A collection of items to be registered with Encord service.
+    """A collection of items to be registered with Encord service.
 
     A more structured alternative to using a JSON file.
     """
@@ -604,9 +578,7 @@ class DatasetShortInfo(BaseDTO):
 
 
 class StorageItemSummary(BaseDTO):
-    """
-    A summary of item usage in the system
-    """
+    """A summary of item usage in the system"""
 
     frame_in_groups: int
     """A number of group items (DICOM_SERIES, IMAGE_GROUP, IMAGE_SEQUENCE) that contain this item"""

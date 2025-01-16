@@ -4,9 +4,7 @@ from encord.objects.frames import Frames, Range, Ranges
 
 
 class RangeManager:
-    """
-    Range Manager class to hold a list of frame ranges, and operate on them.
-    """
+    """Range Manager class to hold a list of frame ranges, and operate on them."""
 
     def __init__(self, frame_class: Optional[Frames] = None):
         self.ranges: Ranges = []

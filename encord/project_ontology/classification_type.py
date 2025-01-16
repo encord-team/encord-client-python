@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "ClassificationType DEPRECATED"
 slug: "sdk-ref-classification-type-deprecated"
 hidden: false
@@ -14,8 +13,7 @@ from enum import Enum
 
 
 class ClassificationType(Enum):
-    """
-    DEPRECATED: prefer using :class:`encord.ontology.Ontology`
+    """DEPRECATED: prefer using :class:`encord.ontology.Ontology`
 
     Enum used to define classification type in ontologies.
     """

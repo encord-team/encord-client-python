@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "ClassificationAttribute DEPRECATED"
 slug: "sdk-ref-classification-attribute-deprecated"
 hidden: false
@@ -19,8 +18,7 @@ from encord.project_ontology.classification_type import ClassificationType
 
 @dataclass
 class ClassificationAttribute:
-    """
-    DEPRECATED: prefer using :class:`encord.ontology.Ontology`
+    """DEPRECATED: prefer using :class:`encord.ontology.Ontology`
 
     A dataclass which holds classification attributes.
     """

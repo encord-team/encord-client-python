@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Consensus Annotation Stage"
 slug: "sdk-ref-stage-consen-annotation"
 hidden: false
@@ -44,8 +43,7 @@ class ConsensusAnnotationStage(WorkflowStageBase):
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
     ) -> Iterable[ConsensusAnnotationTask]:
-        """
-        Retrieves tasks for the ConsensusAnnotationStage.
+        """Retrieves tasks for the ConsensusAnnotationStage.
 
         **Parameters**
 
@@ -79,8 +77,7 @@ class ConsensusAnnotationStage(WorkflowStageBase):
 
 
 class ConsensusAnnotationTask(WorkflowTask):
-    """
-    Represents tasks in the Annotate stage of a Consensus Project.
+    """Represents tasks in the Annotate stage of a Consensus Project.
 
     **Attributes**
 

@@ -16,8 +16,7 @@ HTTP_GENERAL_ERROR = 500
 
 
 def handle_error_response(status_code: int, message=None, context=None):
-    """
-    Checks server response.
+    """Checks server response.
     Called if HTTP response status code is an error response.
     """
     if status_code == HTTP_UNAUTHORIZED:

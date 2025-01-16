@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Model Weights"
 slug: "sdk-ref-model-weights"
 hidden: false

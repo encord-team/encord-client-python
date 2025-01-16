@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Storage"
 slug: "sdk-ref-storage"
 hidden: false
@@ -62,9 +61,7 @@ STORAGE_BUNDLE_CREATE_LIMIT = 1000
 
 
 class StorageFolder:
-    """
-    Represents a storage folder within the Encord system.
-    """
+    """Represents a storage folder within the Encord system."""
 
     def __init__(self, api_client: ApiClient, orm_folder: orm_storage.StorageFolder):
         self._api_client = api_client
@@ -73,8 +70,7 @@ class StorageFolder:
 
     @property
     def uuid(self) -> UUID:
-        """
-        Gets the unique identifier of the folder.
+        """Gets the unique identifier of the folder.
 
         Returns:
             UUID: The UUID of the folder.
@@ -83,8 +79,7 @@ class StorageFolder:
 
     @property
     def parent_uuid(self) -> Optional[UUID]:
-        """
-        Gets the unique identifier of the parent folder.
+        """Gets the unique identifier of the parent folder.
 
         Returns:
             Optional[UUID]: The UUID of the parent folder, or None if there is no parent.
@@ -93,8 +88,7 @@ class StorageFolder:
 
     @property
     def parent(self) -> Optional["StorageFolder"]:
-        """
-        Gets the parent folder.
+        """Gets the parent folder.
 
         Returns:
             Optional[StorageFolder]: The parent StorageFolder object, or None if there is no parent.
@@ -104,8 +98,7 @@ class StorageFolder:
 
     @property
     def name(self) -> str:
-        """
-        Gets the name of the folder.
+        """Gets the name of the folder.
 
         Returns:
             str: The name of the folder.
@@ -114,8 +107,7 @@ class StorageFolder:
 
     @property
     def description(self) -> str:
-        """
-        Gets the description of the folder.
+        """Gets the description of the folder.
 
         Returns:
             str: The description of the folder.
@@ -124,8 +116,7 @@ class StorageFolder:
 
     @property
     def client_metadata(self) -> Optional[Dict[str, Any]]:
-        """
-        Gets the client metadata of the folder.
+        """Gets the client metadata of the folder.
 
         Returns:
             Optional[Dict[str, Any]]: The client metadata as a dictionary, or None if there is no metadata.
@@ -137,8 +128,7 @@ class StorageFolder:
 
     @property
     def path_to_root(self) -> List[PathElement]:
-        """
-        Gets the path elements from the current folder to the root.
+        """Gets the path elements from the current folder to the root.
 
         Returns:
             List[PathElement]: A list of PathElement objects representing the path to the root.
@@ -156,8 +146,7 @@ class StorageFolder:
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageItem"]:
-        """
-        Lists items in the folder.
+        """Lists items in the folder.
 
         Args:
             search (Optional[str]): Search string to filter items by name.
@@ -194,9 +183,7 @@ class StorageFolder:
             yield StorageItem(self._api_client, item)
 
     def delete(self) -> None:
-        """
-        Deletes the folder.
-        """
+        """Deletes the folder."""
         self._api_client.delete(f"storage/folders/{self.uuid}", params=None, result_type=None)
 
     def upload_image(
@@ -206,8 +193,7 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
-        """
-        Uploads an image to a folder in Encord storage.
+        """Uploads an image to a folder in Encord storage.
 
         Args:
             file_path (Union[Path, str]): Path to the image file (e.g., '/home/user/data/image.png').
@@ -266,8 +252,7 @@ class StorageFolder:
         video_metadata: Optional[CustomerProvidedVideoMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
-        """
-        Uploads a video to a folder in Encord storage.
+        """Uploads a video to a folder in Encord storage.
 
         Args:
             file_path (Union[Path, str]): Path to the video file (e.g., '/home/user/data/video.mp4').
@@ -329,8 +314,7 @@ class StorageFolder:
             return upload_result.items_with_names[0].item_uuid
 
     def re_encode_videos(self, storage_items: List[UUID], process_title: str, force_full_reencoding: bool) -> UUID:
-        """
-        Re-encodes the specified video items.
+        """Re-encodes the specified video items.
 
         Args:
             storage_items (List[UUID]): List of UUIDs representing the video items to be re-encoded.
@@ -352,8 +336,7 @@ class StorageFolder:
         )
 
     def get_re_encoding_status(self, process_hash: UUID) -> ReencodeVideoItemsResponse:
-        """
-        Retrieves the status of a re-encoding process.
+        """Retrieves the status of a re-encoding process.
 
         Args:
             process_hash (UUID): The UUID of the re-encoding process.
@@ -372,8 +355,7 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
-        """
-        Uploads a DICOM series to a folder in Encord storage.
+        """Uploads a DICOM series to a folder in Encord storage.
 
         Args:
             file_paths (Sequence[Union[str, Path]]): A list of paths to DICOM files, e.g.,
@@ -444,8 +426,7 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
-        """
-        Creates an image group in Encord storage. Choose this type of image upload for non-sequential images that are
+        """Creates an image group in Encord storage. Choose this type of image upload for non-sequential images that are
         logically connected (e.g., multiple views of the same object). See also :meth:`.Folder.create_image_sequence`
         and :meth:`.Folder.upload_image`.
 
@@ -481,8 +462,7 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
-        """
-        Creates an image sequence in Encord storage. Choose this type of image upload for sequential images (a timelapse
+        """Creates an image sequence in Encord storage. Choose this type of image upload for sequential images (a timelapse
         or similar). A compressed video will be created from the images.
 
         See also :meth:`.Folder.create_image_group` and :meth:`.Folder.upload_image`.
@@ -618,8 +598,7 @@ class StorageFolder:
         audio_metadata: Optional[CustomerProvidedAudioMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
-        """
-        Upload audio to a Folder in Encord storage.
+        """Upload audio to a Folder in Encord storage.
 
         Args:
             file_path: File path to audio. For example: '/home/user/data/audio.mp3'
@@ -699,8 +678,7 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
-        """
-        Upload a text file to a Folder in Encord storage.
+        """Upload a text file to a Folder in Encord storage.
 
         Args:
             file_path: File path of the text file. For example: '/home/user/data/report.txt'
@@ -764,8 +742,7 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
-        """
-        Upload a PDF file to a Folder in Encord storage.
+        """Upload a PDF file to a Folder in Encord storage.
 
         Args:
             file_path: File path of the PDF file. For example: '/home/user/data/report.pdf'
@@ -828,8 +805,7 @@ class StorageFolder:
         private_files: Union[str, Dict, Path, TextIO, DataUploadItems],
         ignore_errors: bool = False,
     ) -> UUID:
-        """
-        Starts the process of adding private data to a folder in Encord storage.
+        """Starts the process of adding private data to a folder in Encord storage.
 
         Args:
             integration_id (str): The integration ID for the folder.
@@ -848,8 +824,7 @@ class StorageFolder:
         upload_job_id: UUID,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> UploadLongPollingState:
-        """
-        Retrieves the result of adding private data to a folder in Encord storage.
+        """Retrieves the result of adding private data to a folder in Encord storage.
 
         Args:
             upload_job_id (UUID): The UUID of the upload job.
@@ -869,8 +844,7 @@ class StorageFolder:
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageFolder"]:
-        """
-        Lists subfolders of the current folder.
+        """Lists subfolders of the current folder.
 
         Args:
             search (Optional[str]): Search string to filter folders by name.
@@ -903,8 +877,7 @@ class StorageFolder:
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageFolder"]:
-        """
-        Recursively searches for storage folders, starting from this folder.
+        """Recursively searches for storage folders, starting from this folder.
 
         Args:
             search (Optional[str]): Search string to filter folders by name.
@@ -936,8 +909,7 @@ class StorageFolder:
         description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
     ) -> "StorageFolder":
-        """
-        Create a new subfolder of this folder. See also :meth:`encord.user_client.EncordUserClient.create_storage_folder`.
+        """Create a new subfolder of this folder. See also :meth:`encord.user_client.EncordUserClient.create_storage_folder`.
 
         Args:
             name: The name of the folder.
@@ -960,8 +932,7 @@ class StorageFolder:
         get_signed_urls: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageItem"]:
-        """
-        Recursively search for storage items, starting from this folder.
+        """Recursively search for storage items, starting from this folder.
 
         Args:
             search (Optional[str]): Search string to filter items by name.
@@ -980,7 +951,6 @@ class StorageFolder:
         Raises:
             ValueError: If neither `search` nor `item_types` are provided.
         """
-
         params = ListItemsParams(
             search=search,
             is_recursive=True,
@@ -996,8 +966,7 @@ class StorageFolder:
         return StorageFolder._list_items(self._api_client, f"storage/folders/{self.uuid}/items", params)
 
     def get_summary(self) -> StorageFolderSummary:
-        """
-        Get a summary of the folder (total size, number of items, etc).
+        """Get a summary of the folder (total size, number of items, etc).
 
         Returns:
             StorageFolderSummary: A summary of the folder.
@@ -1018,8 +987,7 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """
-        Update the folder's modifiable properties. Any parameters that are not provided will not be updated.
+        """Update the folder's modifiable properties. Any parameters that are not provided will not be updated.
 
         Args:
             name (Optional[str]): New folder name.
@@ -1069,8 +1037,7 @@ class StorageFolder:
             )
 
     def move_to_folder(self, target_folder: Optional[Union["StorageFolder", UUID]]) -> None:
-        """
-        Move the folder to another folder (specify folder object or UUID), or to the root level if `target_folder` is None.
+        """Move the folder to another folder (specify folder object or UUID), or to the root level if `target_folder` is None.
 
         Args:
             target_folder (Optional[Union[StorageFolder, UUID]]): The target folder to move to, or `None` to move to the root level.
@@ -1097,8 +1064,7 @@ class StorageFolder:
         items_to_move: Sequence[Union[UUID, "StorageItem"]],
         allow_mirror_dataset_changes: bool = False,
     ) -> None:
-        """
-        Move items (list of `StorageItem` objects or UUIDs) to another folder (specify folder object or UUID).
+        """Move items (list of `StorageItem` objects or UUIDs) to another folder (specify folder object or UUID).
 
         Args:
             target_folder (Union[StorageFolder, UUID]): Target folder to move items to.
@@ -1126,8 +1092,7 @@ class StorageFolder:
         )
 
     def delete_storage_items(self, item_uuids: List[UUID], remove_unused_frames: bool = True) -> None:
-        """
-        Delete storage items by their UUIDs.
+        """Delete storage items by their UUIDs.
 
         Args:
             item_uuids (List[UUID]): List of UUIDs of items to delete. All the items should be immediate children
@@ -1146,9 +1111,7 @@ class StorageFolder:
         )
 
     def list_groups(self) -> Iterable[StorageFolderGroup]:
-        """
-        List all groups that have access to this folder.
-        """
+        """List all groups that have access to this folder."""
         page = self._api_client.get(
             f"/storage/folders/{self.uuid}/groups", params=None, result_type=Page[StorageFolderGroup]
         )
@@ -1156,8 +1119,7 @@ class StorageFolder:
         yield from page.results
 
     def add_group(self, group_hash: Union[List[UUID], UUID], user_role: StorageUserRole):
-        """
-        Allow access to this folder for members of a group.
+        """Allow access to this folder for members of a group.
 
         Args:
             group_hash: Group hash, or a list of group hashes to be added.
@@ -1177,8 +1139,7 @@ class StorageFolder:
         )
 
     def remove_group(self, group_hash: Union[List[UUID], UUID]):
-        """
-        Revoke access to the folder from the members of a group.
+        """Revoke access to the folder from the members of a group.
 
         Args:
             group_hash: Group hash, or a list of group hashes to be removed.
@@ -1192,8 +1153,7 @@ class StorageFolder:
         self._api_client.delete(f"/storage/folders/{self.uuid}/groups", params=params, result_type=None)
 
     def refetch_data(self) -> None:
-        """
-        Refetch data for the folder.
+        """Refetch data for the folder.
 
         Returns:
             None
@@ -1414,8 +1374,7 @@ class StorageFolder:
         self,
         upload_job_id: UUID,
     ) -> orm_storage.AddDataToFolderJobCancelResponse:
-        """
-        Cancels a data upload in progress job, associated with this folder.
+        """Cancels a data upload in progress job, associated with this folder.
 
         Args:
             upload_job_id (UUID): The unique identifier for the upload job.
@@ -1423,7 +1382,6 @@ class StorageFolder:
         Returns:
             AddDataToFolderJobCancelResponse: A response indicating the result of the cancelled job.
         """
-
         return self._api_client.post(
             f"storage/folders/{self.uuid}/data-upload-jobs/{upload_job_id}/cancel",
             params=None,
@@ -1489,19 +1447,6 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         parent_folder: Optional[Union["StorageFolder", UUID]] = None,
     ) -> "StorageFolder":
-        """
-        Create a new storage folder.
-
-        Args:
-            name: The name of the folder.
-            description: The description of the folder.
-            client_metadata: Optional arbitrary metadata to be associated with the folder. Should be a dictionary
-                that is JSON-serializable.
-            parent_folder: The parent folder of the folder; or `None` if the folder is to be created at the root level.
-
-        Returns:
-            The created storage folder. See :class:`encord.storage.StorageFolder` for details.
-        """
         if isinstance(parent_folder, StorageFolder):
             parent_folder = parent_folder.uuid
 
@@ -1544,8 +1489,7 @@ class StorageItem:
         return self._orm_item.parent
 
     def parent_folder(self) -> StorageFolder:
-        """
-        Retrieve the parent folder of the storage item.
+        """Retrieve the parent folder of the storage item.
 
         Returns:
             StorageFolder: The parent folder.
@@ -1569,9 +1513,7 @@ class StorageItem:
 
     @property
     def client_metadata(self) -> Optional[Dict[str, Any]]:
-        """
-        Optional[Dict[str, Any]]: The client metadata of the storage item.
-        """
+        """Optional[Dict[str, Any]]: The client metadata of the storage item."""
         if self._parsed_metadata is None:
             if self._orm_item.client_metadata is not None:
                 self._parsed_metadata = json.loads(self._orm_item.client_metadata)
@@ -1678,8 +1620,7 @@ class StorageItem:
         return self._orm_item.audio_num_channels
 
     def get_signed_url(self, refetch: bool = False) -> Optional[str]:
-        """
-        Get a signed URL for downloading the item.
+        """Get a signed URL for downloading the item.
 
         Returns `None` if the item is a synthetic entity (e.g., image group or DICOM series).
 
@@ -1701,8 +1642,7 @@ class StorageItem:
         return self._orm_item.signed_url
 
     def get_summary(self) -> StorageItemSummary:
-        """
-        Retrieve a summary of the item, including linked datasets and other information.
+        """Retrieve a summary of the item, including linked datasets and other information.
 
         Returns:
             StorageItemSummary: Object containing summary information about the item.
@@ -1714,8 +1654,7 @@ class StorageItem:
         )
 
     def get_child_items(self, get_signed_urls: bool = False) -> Iterable["StorageItem"]:
-        """
-        Get child items of the item, such as frames of an image group or files of DICOM series.
+        """Get child items of the item, such as frames of an image group or files of DICOM series.
 
         Args:
             get_signed_urls: If `True`, include signed URLs for child items.
@@ -1745,8 +1684,7 @@ class StorageItem:
         client_metadata: Optional[Dict[str, Any]] = None,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """
-        Update modifiable properties of the item.
+        """Update modifiable properties of the item.
 
         Args:
             name: New item name.
@@ -1800,8 +1738,7 @@ class StorageItem:
             )
 
     def delete(self, remove_unused_frames=True) -> None:
-        """
-        Delete the item from the storage.
+        """Delete the item from the storage.
 
         Args:
             remove_unused_frames: If `True` (default), remove individual images or DICOM files not used elsewhere.
@@ -1821,8 +1758,7 @@ class StorageItem:
         target_folder: Union[StorageFolder, UUID],
         allow_mirror_dataset_changes: bool = False,
     ) -> None:
-        """
-        Move the item to another folder.
+        """Move the item to another folder.
 
         Args:
             target_folder: Target folder to move the item to. Can be a `StorageFolder` object or a UUID.
@@ -1849,8 +1785,7 @@ class StorageItem:
         self.refetch_data()
 
     def refetch_data(self, get_signed_url: bool = False) -> None:
-        """
-        Refetches data for the item, updating its attributes.
+        """Refetches data for the item, updating its attributes.
 
         Args:
             get_signed_url: If `True`, refetches the signed URL for downloading the item.
