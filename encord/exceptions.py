@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Exceptions"
 slug: "sdk-ref-exceptions"
 hidden: false
@@ -55,8 +54,7 @@ class AuthenticationError(EncordException):
 
 
 class AuthorisationError(EncordException):
-    """
-    Exception thrown when access is unauthorised.
+    """Exception thrown when access is unauthorised.
     (E.g. access to a data asset or method).
     """
 
@@ -64,8 +62,7 @@ class AuthorisationError(EncordException):
 
 
 class ResourceNotFoundError(EncordException):
-    """
-    Exception thrown when a requested resource is not found.
+    """Exception thrown when a requested resource is not found.
     (E.g. label, data asset).
     """
 
@@ -103,8 +100,7 @@ class MethodNotAllowedError(EncordException):
 
 
 class OperationNotAllowed(EncordException):
-    """
-    Exception thrown when a read/write operation is not allowed.
+    """Exception thrown when a read/write operation is not allowed.
     The API key blocks the operation.
     """
 
@@ -112,8 +108,7 @@ class OperationNotAllowed(EncordException):
 
 
 class AnswerDictionaryError(EncordException):
-    """
-    Exception thrown when answer dictionaries are incomplete.
+    """Exception thrown when answer dictionaries are incomplete.
     Occurs when an object or classification is missing.
     """
 
@@ -121,8 +116,7 @@ class AnswerDictionaryError(EncordException):
 
 
 class CorruptedLabelError(EncordException):
-    """
-    Exception thrown when a label is corrupted.
+    """Exception thrown when a label is corrupted.
     (E.g. the frame labels have more frames than the video).
     """
 
@@ -130,8 +124,7 @@ class CorruptedLabelError(EncordException):
 
 
 class FileTypeNotSupportedError(EncordException):
-    """
-    Exception thrown when a file type is not supported.
+    """Exception thrown when a file type is not supported.
     Supported file types are: image/jpeg, image/png, video/webm, video/mp4.
     """
 
@@ -139,24 +132,19 @@ class FileTypeNotSupportedError(EncordException):
 
 
 class FileSizeNotSupportedError(EncordException):
-    """
-    Exception thrown when the combined size of the input files is larger than the supported limit.
-    """
+    """Exception thrown when the combined size of the input files is larger than the supported limit."""
 
     pass
 
 
 class FeatureDoesNotExistError(EncordException):
-    """
-    If a feature uid does not exist in a given project ontology.
-    """
+    """If a feature uid does not exist in a given project ontology."""
 
     pass
 
 
 class ModelWeightsInconsistentError(EncordException):
-    """
-    Exception thrown when an attempted model training iteration has a different
+    """Exception thrown when an attempted model training iteration has a different
     type of weights than what is recorded (i.e. if type of model_hash (uid) is faster_rcnn,
     but is attempted trained with different model weights).
     """
@@ -165,8 +153,7 @@ class ModelWeightsInconsistentError(EncordException):
 
 
 class ModelFeaturesInconsistentError(EncordException):
-    """
-    If a feature type is different than what is supported by the model (e.g. if
+    """If a feature type is different than what is supported by the model (e.g. if
     creating a classification model using a bounding box).
     """
 
@@ -180,8 +167,7 @@ class UploadOperationNotSupportedError(EncordException):
 
 
 class DetectionRangeInvalidError(EncordException):
-    """
-    Exception thrown when a detection range is invalid.
+    """Exception thrown when a detection range is invalid.
     (E.g. negative or higher than num frames in video).
     """
 
@@ -195,8 +181,7 @@ class InvalidAlgorithmError(EncordException):
 
 
 class ResourceExistsError(EncordException):
-    """
-    Exception thrown when trying to re-create a resource.
+    """Exception thrown when trying to re-create a resource.
     Avoids overriding existing work.
     """
 
@@ -204,17 +189,13 @@ class ResourceExistsError(EncordException):
 
 
 class DuplicateSshKeyError(EncordException):
-    """
-    Exception thrown when using an SSH key that was added twice to the platform.
-    """
+    """Exception thrown when using an SSH key that was added twice to the platform."""
 
     pass
 
 
 class SshKeyNotFound(EncordException):
-    """
-    Exception thrown when using an SSH key that was not added to the platform.
-    """
+    """Exception thrown when using an SSH key that was not added to the platform."""
 
 
 class InvalidArgumentsError(EncordException):
@@ -224,8 +205,7 @@ class InvalidArgumentsError(EncordException):
 
 
 class GenericServerError(EncordException):
-    """
-    The server has reported an error which is not recognised by this SDK version. Try upgrading the SDK version to
+    """The server has reported an error which is not recognised by this SDK version. Try upgrading the SDK version to
     see the precise error that is reported.
     """
 
@@ -233,17 +213,13 @@ class GenericServerError(EncordException):
 
 
 class CloudUploadError(EncordException):
-    """
-    The upload to the cloud was not successful
-    """
+    """The upload to the cloud was not successful"""
 
     pass
 
 
 class MultiLabelLimitError(EncordException):
-    """
-    Too many labels were requested
-    """
+    """Too many labels were requested"""
 
     def __init__(self, message, maximum_labels_allowed: int, context: Optional[ExceptionContext] = None):
         super().__init__(message=message, context=context)
@@ -263,7 +239,6 @@ class OntologyError(EncordException):
 
 
 class WrongProjectTypeError(CordException):
-    """
-    An error thrown when project type does not match the operation
+    """An error thrown when project type does not match the operation
     E.g. when TMS2 specific operations are attempted on non-TMS2 project
     """

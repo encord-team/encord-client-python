@@ -51,8 +51,7 @@ WRONG_PROJECT_TYPE_ERROR = ["WRONG_PROJECT_TYPE_ERROR"]
 
 
 def check_error_response(response, context=None, payload=None):
-    """
-    Checks server response.
+    """Checks server response.
     Called if HTTP response status code is an error response.
     """
     if response == AUTHENTICATION_ERROR:

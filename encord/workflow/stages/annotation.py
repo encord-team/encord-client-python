@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Annotation Stage"
 slug: "sdk-ref-stage-annotation"
 hidden: false
@@ -57,8 +56,7 @@ class AnnotationStage(WorkflowStageBase):
         data_title: Optional[str] = None,
         status: Union[AnnotationTaskStatus, List[AnnotationTaskStatus], None] = None,
     ) -> Iterable[AnnotationTask]:
-        """
-        Retrieves tasks for the AnnotationStage.
+        """Retrieves tasks for the AnnotationStage.
 
         **Parameters**
 
@@ -134,8 +132,7 @@ class AnnotationTask(WorkflowTask):
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """
-        Submits the task for review.
+        """Submits the task for review.
 
         **Parameters**
 
@@ -151,8 +148,7 @@ class AnnotationTask(WorkflowTask):
         )
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
-        """
-        Assigns the task to a user.
+        """Assigns the task to a user.
 
         **Parameters**
 
@@ -163,8 +159,7 @@ class AnnotationTask(WorkflowTask):
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
-        """
-        Releases the task from the current user.
+        """Releases the task from the current user.
 
         **Parameters**
 

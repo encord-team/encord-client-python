@@ -16,8 +16,7 @@ from encord.utilities.project_user import ProjectUserRole
 
 
 class Project(base_orm.BaseORM):
-    """
-    DEPRECATED - prefer using the `encord.project.Project` class instead.
+    """DEPRECATED - prefer using the `encord.project.Project` class instead.
 
     A project defines a label ontology and is a collection of datasets and label rows.
 
@@ -75,8 +74,7 @@ class Project(base_orm.BaseORM):
     NON_UPDATABLE_FIELDS = {"editor_ontology", "datasets", "label_rows"}
 
     def get_labels_list(self) -> List[Optional[str]]:
-        """
-        Returns a list of all optional label row IDs (label_hash uid) in a project. If no `label_hash` is found,
+        """Returns a list of all optional label row IDs (label_hash uid) in a project. If no `label_hash` is found,
         a `None` value is appended. This can be useful for working with fetching additional label row data via
         :meth:`encord.project.Project.get_label_rows` for example.
 
@@ -138,9 +136,7 @@ class Project(base_orm.BaseORM):
 
     @property
     def workflow_manager_uuid(self) -> UUID:
-        """
-        Accessing this property will raise a `WrongProjectTypeError` if the project is not a workflow project.
-        """
+        """Accessing this property will raise a `WrongProjectTypeError` if the project is not a workflow project."""
         try:
             return self["workflow_manager_uuid"]
         except KeyError as e:
@@ -278,8 +274,7 @@ Currently one of:
 
 
 class ReviewMode(str, Enum):
-    """
-    UNLABELLED:
+    """UNLABELLED:
         The labels are added to the images. However, the one person must still go over
             all of the labels before submitting them for review.
     LABELLED:
@@ -320,8 +315,7 @@ class ProjectDTO(BaseDTO):
 
 
 class CvatReviewMode(CamelStrEnum):
-    """
-    UNLABELLED:
+    """UNLABELLED:
         The labels are added to the images. However, the one person must still go over
             all the labels before submitting them for review.
     LABELLED:
@@ -362,8 +356,7 @@ class CvatImportGetResultLongPollingStatus(str, Enum):
 
 
 class CvatImportGetResultResponse(BaseDTO):
-    """
-    Response model for CVAT import operation status.
+    """Response model for CVAT import operation status.
 
     Attributes:
         status (CvatImportGetResultLongPollingStatus): Import status ("DONE", "ERROR", "PENDING")
@@ -377,9 +370,7 @@ class CvatImportGetResultResponse(BaseDTO):
 
 
 class ProjectFilterParams(BaseDTO):
-    """
-    Filter parameters for the /v2/public/projects endpoint
-    """
+    """Filter parameters for the /v2/public/projects endpoint"""
 
     title_eq: Optional[str] = None
     title_like: Optional[str] = None

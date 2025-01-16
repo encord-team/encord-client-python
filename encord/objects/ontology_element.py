@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Ontology element"
 slug: "sdk-ref-objects-ont-element"
 hidden: false
@@ -36,8 +35,7 @@ class OntologyElement(ABC):
 
     @property
     def children(self) -> Sequence[OntologyElement]:
-        """
-        Returns an empty sequence of children nodes for this ontology element.
+        """Returns an empty sequence of children nodes for this ontology element.
         This method is meant to be overridden by subclasses that have actual child nodes.
         """
         return []
@@ -45,8 +43,7 @@ class OntologyElement(ABC):
     @property
     @abstractmethod
     def title(self) -> str:
-        """
-        Abstract property that should return the title of the ontology element.
+        """Abstract property that should return the title of the ontology element.
         Must be implemented by subclasses.
         """
         raise NotImplementedError("This method is not implemented for this class")
@@ -56,8 +53,7 @@ class OntologyElement(ABC):
         feature_node_hash: str,
         type_: Optional[Type[OntologyNestedElementT]] = None,
     ) -> OntologyNestedElementT:
-        """
-        Retrieves the first child node of this ontology element with the matching feature node hash.
+        """Retrieves the first child node of this ontology element with the matching feature node hash.
         If multiple children have the same hash, the ontology is in an invalid state.
         Throws an exception if no matching child is found or if the type does not match.
 
@@ -79,8 +75,7 @@ class OntologyElement(ABC):
         title: str,
         type_: Optional[Type[OntologyNestedElementT]] = None,
     ) -> List[OntologyNestedElementT]:
-        """
-        Retrieves all child nodes of this ontology element that match the specified title and type.
+        """Retrieves all child nodes of this ontology element that match the specified title and type.
 
         Args:
             title: The exact title of the child nodes to find.
@@ -96,8 +91,7 @@ class OntologyElement(ABC):
         title: str,
         type_: Optional[Type[OntologyNestedElementT]] = None,
     ) -> OntologyNestedElementT:
-        """
-        Retrieves a single child node of this ontology element that matches the specified title and type.
+        """Retrieves a single child node of this ontology element that matches the specified title and type.
         Throws an exception if more than one or no child with the specified title and type is found.
 
         Args:

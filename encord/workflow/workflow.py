@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Workflow"
 slug: "sdk-ref-workflows"
 hidden: false
@@ -90,8 +89,7 @@ class Workflow:
         uuid: Optional[UUID | str] = None,
         type_: Optional[Type[WorkflowStageT]] = None,
     ) -> WorkflowStageT:
-        """
-        **Params**
+        """**Params**
 
         - name: Name of the stage.
         - uuid: Unique identifier for the stage.

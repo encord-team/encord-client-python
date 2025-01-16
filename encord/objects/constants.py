@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Constants"
 slug: "sdk-ref-objects-constant"
 hidden: false

@@ -151,17 +151,13 @@ class _ClientMetadataSchemaOption(
 
 
 class _ClientMetadataSchema(RootModelDTO[Dict[str, _ClientMetadataSchemaOption]]):
-    """
-    Internal type for a metadata schema.
-    """
+    """Internal type for a metadata schema."""
 
     pass
 
 
 class MetadataSchemaError(RuntimeError):
-    """
-    Raised when an invariant is violated when mutating metadata schemas
-    """
+    """Raised when an invariant is violated when mutating metadata schemas"""
 
     pass
 
@@ -185,8 +181,7 @@ def _assert_valid_metadata_key(value: str) -> None:
 
 
 class MetadataSchema:
-    """
-    A class to manage the metadata schema for an organization.
+    """A class to manage the metadata schema for an organization.
 
     **Methods:**
 
@@ -209,9 +204,7 @@ class MetadataSchema:
         self._dirty = False
 
     def save(self) -> None:
-        """
-        Saves the metadata schema to the backend if changes have been made.
-        """
+        """Saves the metadata schema to the backend if changes have been made."""
         if self._dirty:
             self._api_client.post(
                 "organisation/client-metadata-schema-v2",
@@ -222,8 +215,7 @@ class MetadataSchema:
             self._dirty = False
 
     def add_embedding(self, k: str, *, size: int) -> None:
-        """
-        Adds a new embedding to the metadata schema.
+        """Adds a new embedding to the metadata schema.
 
         **Parameters:**
 
@@ -241,8 +233,7 @@ class MetadataSchema:
         self._dirty = True
 
     def add_enum(self, k: str, *, values: Sequence[str]) -> None:
-        """
-        Adds a new enum to the metadata schema.
+        """Adds a new enum to the metadata schema.
 
         **Parameters:**
 
@@ -264,8 +255,7 @@ class MetadataSchema:
         self._dirty = True
 
     def add_enum_options(self, k: str, *, values: Sequence[str]) -> None:
-        """
-        Adds extra valid enum values to an existing enum schema.
+        """Adds extra valid enum values to an existing enum schema.
 
         **Parameters:**
 
@@ -299,8 +289,7 @@ class MetadataSchema:
             MetadataSchemaScalarType,
         ],
     ) -> None:
-        """
-        Sets a simple metadata type for a given key in the schema.
+        """Sets a simple metadata type for a given key in the schema.
 
         **Parameters:**
 
@@ -346,8 +335,7 @@ class MetadataSchema:
             MetadataSchemaScalarType,
         ],
     ) -> None:
-        """
-        Sets a simple metadata type for a given key in the schema.
+        """Sets a simple metadata type for a given key in the schema.
 
         Alias of add_scalar
 
@@ -367,8 +355,7 @@ class MetadataSchema:
         self.add_scalar(k, data_type=data_type)
 
     def delete_key(self, k: str, *, hard: bool = False) -> None:
-        """
-        Delete a metadata key from the schema.
+        """Delete a metadata key from the schema.
 
         **Parameters:**
 
@@ -395,8 +382,7 @@ class MetadataSchema:
         self._dirty = True
 
     def restore_key(self, k: str) -> None:
-        """
-        Restore a deleted metadata key to its original value.
+        """Restore a deleted metadata key to its original value.
 
         **Parameters:**
 
@@ -418,8 +404,7 @@ class MetadataSchema:
         self._dirty = True
 
     def keys(self) -> Sequence[str]:
-        """
-        Returns a sequence of all keys defined in the metadata schema.
+        """Returns a sequence of all keys defined in the metadata schema.
 
         **Returns:**
 
@@ -428,8 +413,7 @@ class MetadataSchema:
         return list(self._schema.keys())
 
     def has_key(self, k: str) -> bool:
-        """
-        Check if any definition exists for a key.
+        """Check if any definition exists for a key.
 
         **Parameters:**
 
@@ -438,8 +422,7 @@ class MetadataSchema:
         return k in self._schema
 
     def is_key_deleted(self, k: str) -> bool:
-        """
-        Check if the key is defined as deleted. (Tombstone type)
+        """Check if the key is defined as deleted. (Tombstone type)
 
         **Parameters:**
 
@@ -454,8 +437,7 @@ class MetadataSchema:
     def get_key_type(
         self, k: str
     ) -> Union[Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"], None]:
-        """
-        Retrieves the metadata type associated with a given key.
+        """Retrieves the metadata type associated with a given key.
 
         **Parameters:**
 
@@ -466,7 +448,6 @@ class MetadataSchema:
         Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]: The metadata type associated with the key `k`.
 
         Raises:
-
         MetadataSchemaError: If the key `k` is not supported by the current SDK.
         """
         if k not in self._schema:
@@ -497,8 +478,7 @@ class MetadataSchema:
             raise MetadataSchemaError(f"{k} is not supported in the current SDK")
 
     def get_embedding_size(self, k: str) -> int:
-        """
-        Retrieves size associated with a given embedding.
+        """Retrieves size associated with a given embedding.
 
         **Parameters:**
 
@@ -522,8 +502,7 @@ class MetadataSchema:
             raise MetadataSchemaError(f"{k} does not refer to an embedding")
 
     def get_enum_options(self, k: str) -> Sequence[str]:
-        """
-        Retrieves all values associated with a given enum.
+        """Retrieves all values associated with a given enum.
 
         **Parameters:**
 

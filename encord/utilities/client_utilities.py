@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Utilities - Client"
 slug: "sdk-ref-utilities-client"
 hidden: false
@@ -24,8 +23,7 @@ def pretty_print(data):
 
 @dataclass
 class LocalImport:
-    """
-    file_path:
+    """file_path:
         Supply the path of the exported folder which contains the images and `annotations.xml` file. Make
         sure to select "Save images" when exporting your CVAT Task or Project.
     transform_file_names:
@@ -44,8 +42,7 @@ ImportMethod = LocalImport
 
 @dataclass
 class Issue:
-    """
-    For each `issue_type` there may be multiple occurrences which are documented in the `instances`. The `instances`
+    """For each `issue_type` there may be multiple occurrences which are documented in the `instances`. The `instances`
     list can provide additional information on how the issue was encountered. If there is no additional information
     available, the `instances` list will be empty.
     """
@@ -56,8 +53,7 @@ class Issue:
 
 @dataclass
 class Issues:
-    """
-    Any issues that came up during importing a project. These usually come from incompatibilities between data saved
+    """Any issues that came up during importing a project. These usually come from incompatibilities between data saved
     on different platforms.
     """
 

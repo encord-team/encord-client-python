@@ -461,7 +461,6 @@ def test_classification_index_answer_overwrite():
 
 def test_classification_answering_with_ontology_access() -> None:
     """A demonstrative test to show how easy it would be for clients to use the ontology to answer classifications"""
-
     # NOTE: it is important to add the `Classification` here, to distinguish between the attribute and classification,
     # which both go by the same name.
     radio_classification_ = all_types_structure.get_child_by_title("Radio classification 1", Classification)

@@ -98,8 +98,7 @@ def get_polygon_from_dict(
 
 
 class CocoExporter:
-    """
-    This class is intentionally designed in a modular fashion to facilitate extensibility.
+    """This class is intentionally designed in a modular fashion to facilitate extensibility.
     You are encouraged to subclass this exporter and modify any of the custom functions.
     While return types are provided for convenience, they can also be subclassed to suit your specific requirements.
     All functions that could be static are intentionally not made static, allowing you the option to access the `self`
@@ -637,8 +636,7 @@ class CocoExporter:
     def join_polyline_from_polygon(
         polygon: List[float],
     ) -> List[float]:
-        """
-        Essentially a trick to represent a polyline in coco. We pretend for this to be a polygon and join every
+        """Essentially a trick to represent a polyline in coco. We pretend for this to be a polygon and join every
         coordinate from the end back to the beginning, so it will essentially be an area-less polygon.
         This function technically changes the input polygon in place.
         """
@@ -918,8 +916,7 @@ class CocoExporter:
     def add_unselected_attributes(
         self, feature_hash: str, attributes_dict: Dict[str, Optional[bool]], match_dynamic_attributes: bool
     ) -> None:
-        """
-        Attributes which have never been selected will not show up in the actions map. They will need to be
+        """Attributes which have never been selected will not show up in the actions map. They will need to be
         added separately. NOTE: this assumes uniqueness of features. Quite an edge case but if it ever comes
         up it needs to be solved somewhere here.
         """

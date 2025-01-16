@@ -16,8 +16,7 @@ from encord.orm.formatter import Formatter
 
 
 class LabelRow(base_orm.BaseORM):
-    """
-    A label row contains a data unit or a collection of data units and associated
+    """A label row contains a data unit or a collection of data units and associated
     labels, and is specific to a data asset with type ``video`` or ``img_group``:
 
     * A label row with a data asset of type video contains a single data unit.
@@ -242,9 +241,7 @@ class WorkflowGraphNode:
 
 @dataclass(frozen=True)
 class LabelRowMetadata(Formatter):
-    """
-    Contains helpful information about a label row.
-    """
+    """Contains helpful information about a label row."""
 
     label_hash: Optional[str]
     """Only present if the label row is initiated"""
@@ -351,9 +348,8 @@ class LabelRowMetadata(Formatter):
         return ret
 
     def to_dict(self) -> dict:
-        """
-        Returns:
-            The dict equivalent of LabelRowMetadata.
+        """Returns:
+        The dict equivalent of LabelRowMetadata.
         """
 
         def transform(value: Any):
@@ -380,9 +376,7 @@ class WorkflowGraphNodeDTO(BaseDTO):
 
 
 class LabelRowMetadataDTO(BaseDTO):
-    """
-    Contains helpful information about a label row.
-    """
+    """Contains helpful information about a label row."""
 
     label_hash: Optional[str] = Field(default=None, alias="label_uuid")
     """Only present if the label row is initiated"""

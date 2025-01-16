@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Classification"
 slug: "sdk-ref-objects-classification"
 hidden: false
@@ -27,8 +26,7 @@ from encord.objects.ontology_element import OntologyElement
 
 @dataclass
 class Classification(OntologyElement):
-    """
-    Represents a whole-image classification as part of the Ontology structure. Wraps a single Attribute that describes
+    """Represents a whole-image classification as part of the Ontology structure. Wraps a single Attribute that describes
     the image in general rather than an individual object.
 
     Attributes:
@@ -43,8 +41,7 @@ class Classification(OntologyElement):
 
     @property
     def title(self) -> str:
-        """
-        Returns the title of the classification, which is the name of the first attribute.
+        """Returns the title of the classification, which is the name of the first attribute.
 
         Returns:
             str: The title of the classification.
@@ -53,8 +50,7 @@ class Classification(OntologyElement):
 
     @property
     def children(self) -> Sequence[OntologyElement]:
-        """
-        Returns the attributes of the classification as children elements.
+        """Returns the attributes of the classification as children elements.
 
         Returns:
             Sequence[OntologyElement]: The attributes of the classification.
@@ -62,8 +58,7 @@ class Classification(OntologyElement):
         return self.attributes
 
     def create_instance(self, range_only: bool = False) -> ClassificationInstance:
-        """
-        Create a ClassificationInstance to be used with a label row.
+        """Create a ClassificationInstance to be used with a label row.
 
         Returns:
             ClassificationInstance: An instance of ClassificationInstance.
@@ -72,8 +67,7 @@ class Classification(OntologyElement):
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:
-        """
-        Create a Classification instance from a dictionary.
+        """Create a Classification instance from a dictionary.
 
         Args:
             d (dict): A dictionary containing classification information.
@@ -89,8 +83,7 @@ class Classification(OntologyElement):
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert the Classification instance to a dictionary.
+        """Convert the Classification instance to a dictionary.
 
         Returns:
             Dict[str, Any]: A dictionary representation of the classification.
@@ -117,8 +110,7 @@ class Classification(OntologyElement):
         feature_node_hash: Optional[str] = None,
         required: bool = False,
     ) -> AttributeType:
-        """
-        Adds an attribute to the classification.
+        """Adds an attribute to the classification.
 
         Args:
             cls (Type[AttributeType]): The attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`.

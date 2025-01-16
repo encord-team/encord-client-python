@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Dataset"
 slug: "sdk-ref-dataset"
 hidden: false
@@ -41,9 +40,7 @@ from encord.utilities.hash_utilities import convert_to_uuid
 
 
 class Dataset:
-    """
-    Access dataset-related data and manipulate the dataset.
-    """
+    """Access dataset-related data and manipulate the dataset."""
 
     def __init__(self, client: EncordClientDataset, orm_dataset: OrmDataset):
         self._client = client
@@ -51,8 +48,7 @@ class Dataset:
 
     @property
     def dataset_hash(self) -> str:
-        """
-        Get the dataset hash (i.e. the Dataset ID).
+        """Get the dataset hash (i.e. the Dataset ID).
 
         Returns:
             str: The dataset hash.
@@ -61,8 +57,7 @@ class Dataset:
 
     @property
     def title(self) -> str:
-        """
-        Get the title of the dataset.
+        """Get the title of the dataset.
 
         Returns:
             str: The title of the dataset.
@@ -71,8 +66,7 @@ class Dataset:
 
     @property
     def description(self) -> str:
-        """
-        Get the description of the dataset.
+        """Get the description of the dataset.
 
         Returns:
             str: The description of the dataset.
@@ -81,8 +75,7 @@ class Dataset:
 
     @property
     def storage_location(self) -> StorageLocation:
-        """
-        Get the storage location of the dataset.
+        """Get the storage location of the dataset.
 
         Returns:
             StorageLocation: The storage location of the dataset.
@@ -91,8 +84,7 @@ class Dataset:
 
     @property
     def backing_folder_uuid(self) -> Optional[UUID]:
-        """
-        Get the UUID of the backing folder.
+        """Get the UUID of the backing folder.
 
         Returns:
             Optional[UUID]: The UUID of the backing folder, if any.
@@ -101,8 +93,7 @@ class Dataset:
 
     @property
     def data_rows(self) -> List[DataRow]:
-        """
-        Get the data rows of the dataset.
+        """Get the data rows of the dataset.
 
         Part of the response of this function can be configured by the
         :meth:`encord.dataset.Dataset.set_access_settings` method.
@@ -126,8 +117,7 @@ class Dataset:
         data_types: Optional[List[DataType]] = None,
         data_hashes: Optional[List[str]] = None,
     ) -> List[DataRow]:
-        """
-        Retrieve dataset rows (pointers to data, labels).
+        """Retrieve dataset rows (pointers to data, labels).
 
         Args:
             title_eq: Optional exact title row filter.
@@ -148,8 +138,7 @@ class Dataset:
         return self._client.list_data_rows(title_eq, title_like, created_before, created_after, data_types, data_hashes)
 
     def refetch_data(self) -> None:
-        """
-        Refetch the dataset properties.
+        """Refetch the dataset properties.
 
         The Dataset class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be outdated.
@@ -157,8 +146,7 @@ class Dataset:
         self._dataset_instance = self._client.get_dataset()
 
     def get_dataset(self) -> OrmDataset:
-        """
-        Get the dataset instance.
+        """Get the dataset instance.
 
         This function is exposed for convenience. You are encouraged to use the property accessors instead.
 
@@ -168,8 +156,7 @@ class Dataset:
         return self._client.get_dataset()
 
     def set_access_settings(self, dataset_access_settings: DatasetAccessSettings, *, refetch_data: bool = True) -> None:
-        """
-        Set access settings for the dataset.
+        """Set access settings for the dataset.
 
         Args:
             dataset_access_settings: The access settings to use going forward.
@@ -180,8 +167,7 @@ class Dataset:
             self.refetch_data()
 
     def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
-        """
-        Add users to the dataset.
+        """Add users to the dataset.
 
         If the user was already added, this operation will succeed but the `user_role` will be unchanged. The existing
         `user_role` will be reflected in the `DatasetUser` instance.
@@ -196,8 +182,7 @@ class Dataset:
         return self._client.add_users(user_emails, user_role)
 
     def list_groups(self) -> Iterable[DatasetGroup]:
-        """
-        List all groups that have access to the dataset.
+        """List all groups that have access to the dataset.
 
         Returns:
             Iterable[DatasetGroup]: An iterable of DatasetGroup instances.
@@ -207,8 +192,7 @@ class Dataset:
         yield from page.results
 
     def add_group(self, group_hash: Union[List[UUID], UUID], user_role: DatasetUserRole) -> None:
-        """
-        Add a group to the dataset.
+        """Add a group to the dataset.
 
         Args:
             group_hash: List of group hashes to be added.
@@ -222,8 +206,7 @@ class Dataset:
         self._client.add_groups(self.dataset_hash, group_hash, user_role)
 
     def remove_group(self, group_hash: Union[List[UUID], UUID]) -> None:
-        """
-        Remove a group from the dataset.
+        """Remove a group from the dataset.
 
         Args:
             group_hash: List of group hashes to be removed.
@@ -243,8 +226,7 @@ class Dataset:
         title: Optional[str] = None,
         folder: Optional[Union[UUID, StorageFolder]] = None,
     ) -> Video:
-        """
-        Upload a video to Encord storage.
+        """Upload a video to Encord storage.
 
         Args:
             file_path: Path to the video, e.g., '/home/user/data/video.mp4'.
@@ -274,8 +256,7 @@ class Dataset:
         create_video: bool = True,
         folder: Optional[Union[UUID, StorageFolder]] = None,
     ) -> List[ImageGroup]:
-        """
-        Create an image group in Encord storage.
+        """Create an image group in Encord storage.
 
         Choose this type of image upload for sequential images. Else, you can choose the :meth:`.Dataset.upload_image` function.
 
@@ -309,8 +290,7 @@ class Dataset:
         title: Optional[str] = None,
         folder: Optional[Union[UUID, StorageFolder]] = None,
     ) -> Dict:
-        """
-        Upload a DICOM series to Encord storage.
+        """Upload a DICOM series to Encord storage.
 
         Args:
             file_paths: A collection of paths to DICOM files. Example: ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm']
@@ -341,8 +321,7 @@ class Dataset:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder: Optional[Union[UUID, StorageFolder]] = None,
     ) -> Image:
-        """
-        Upload a single image to Encord storage. For sequential images, consider creating an image group
+        """Upload a single image to Encord storage. For sequential images, consider creating an image group
         using the :meth:`.Dataset.create_image_group` function.
 
         Args:
@@ -363,8 +342,7 @@ class Dataset:
         item_uuids: List[UUID],
         duplicates_behavior: DataLinkDuplicatesBehavior = DataLinkDuplicatesBehavior.SKIP,
     ) -> List[DataRow]:
-        """
-        Link storage items to the dataset, creating new data rows.
+        """Link storage items to the dataset, creating new data rows.
 
         Args:
             item_uuids: List of item UUIDs to link to the dataset.
@@ -377,8 +355,7 @@ class Dataset:
         return self._client.link_items(item_uuids, duplicates_behavior)
 
     def delete_data(self, data_hashes: Union[List[str], str]):
-        """
-        Delete a video/image group from a dataset.
+        """Delete a video/image group from a dataset.
 
         Args:
             data_hashes: List of hashes of the videos/image_groups you'd like to delete. All should belong to the same dataset.
@@ -392,8 +369,7 @@ class Dataset:
         private_files: Union[str, Dict, Path, TextIO],
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
-        """
-        Append data hosted on a private cloud to an existing dataset.
+        """Append data hosted on a private cloud to an existing dataset.
 
         For a more complete example of safe uploads, please follow the guide found in our docs under
         :ref:`https://python.docs.encord.com/tutorials/datasets.html#adding-data-from-a-private-cloud`
@@ -417,8 +393,7 @@ class Dataset:
         *,
         folder: Optional[Union[StorageFolder, UUID]] = None,
     ) -> str:
-        """
-        Append data hosted on a private cloud to an existing dataset.
+        """Append data hosted on a private cloud to an existing dataset.
 
         This method initializes the upload in Encord's backend.
         Once the upload ID has been returned, you can exit the terminal
@@ -448,8 +423,7 @@ class Dataset:
         upload_job_id: str,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> DatasetDataLongPolling:
-        """
-        Fetch data upload status, perform long polling process for `timeout_seconds`.
+        """Fetch data upload status, perform long polling process for `timeout_seconds`.
 
         Args:
             upload_job_id: UUID Identifier of the upload job. This ID enables the user to track the job progress via SDK or web app.
@@ -462,8 +436,7 @@ class Dataset:
         return self._client.add_private_data_to_dataset_get_result(upload_job_id, timeout_seconds)
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
-        """
-        DEPRECATED: Use the individual setter properties of the respective :class:`encord.orm.dataset.DataRow`
+        """DEPRECATED: Use the individual setter properties of the respective :class:`encord.orm.dataset.DataRow`
         instance instead. These can be retrieved via the :meth:`.Dataset.data_rows` function.
 
         Update a data item.
@@ -479,8 +452,7 @@ class Dataset:
         return self._client.update_data_item(data_hash, new_title)
 
     def re_encode_data(self, data_hashes: List[str]):
-        """
-        Launch an async task that can re-encode a list of videos.
+        """Launch an async task that can re-encode a list of videos.
 
         Args:
             data_hashes: List of hashes of the videos you'd like to re-encode. All should belong to the same dataset.
@@ -492,8 +464,7 @@ class Dataset:
         return self._client.re_encode_data(data_hashes)
 
     def re_encode_data_status(self, job_id: int):
-        """
-        Returns the status of an existing async task aimed at re-encoding videos.
+        """Returns the status of an existing async task aimed at re-encoding videos.
 
         Args:
             job_id: ID of the async task that was launched to re-encode the videos.
@@ -506,8 +477,7 @@ class Dataset:
         return self._client.re_encode_data_status(job_id)
 
     def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
-        """
-        Returns an optical character recognition result for a given image group.
+        """Returns an optical character recognition result for a given image group.
 
         Args:
             image_group_id: The ID of the image group in this dataset to run OCR on.
@@ -521,8 +491,7 @@ class Dataset:
 
     @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        """
-        Retrieve a list of cloud integrations configured in Encord.
+        """Retrieve a list of cloud integrations configured in Encord.
 
         Returns:
             List of CloudIntegration objects representing configured cloud integrations.

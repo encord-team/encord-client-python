@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Consensus Review Stage"
 slug: "sdk-ref-stage-consen-review"
 hidden: false
@@ -54,8 +53,7 @@ class ConsensusReviewStage(WorkflowStageBase):
         data_title: Optional[str] = None,
         status: Union[ConsensusReviewTaskStatus, List[ConsensusReviewTaskStatus], None] = None,
     ) -> Iterable[ConsensusReviewTask]:
-        """
-        Retrieves tasks for the ConsensusReviewStage.
+        """Retrieves tasks for the ConsensusReviewStage.
 
         **Parameters**
 
@@ -150,8 +148,7 @@ class ConsensusReviewTask(WorkflowTask):
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """
-        Approve the current task.
+        """Approve the current task.
 
         **Parameters**
 
@@ -177,8 +174,7 @@ class ConsensusReviewTask(WorkflowTask):
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """
-        Reject the current task.
+        """Reject the current task.
 
         **Parameters**
 
@@ -198,8 +194,7 @@ class ConsensusReviewTask(WorkflowTask):
         )
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
-        """
-        Assign the current task to a user.
+        """Assign the current task to a user.
 
         **Parameters**
 
@@ -214,8 +209,7 @@ class ConsensusReviewTask(WorkflowTask):
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
-        """
-        Release the current task from the current user.
+        """Release the current task from the current user.
 
         **Parameters**
 

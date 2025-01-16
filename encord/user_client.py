@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "User Client"
 slug: "sdk-ref-user-client"
 hidden: false
@@ -144,8 +143,7 @@ class EncordUserClient:
         dataset_hash: Union[str, UUID],
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
     ) -> Dataset:
-        """
-        Get the Dataset class to access dataset fields and manipulate a dataset.
+        """Get the Dataset class to access dataset fields and manipulate a dataset.
 
         You only have access to this project if you are one of the following
 
@@ -171,8 +169,7 @@ class EncordUserClient:
         return Dataset(client, orm_dataset)
 
     def get_project(self, project_hash: Union[str, UUID]) -> Project:
-        """
-        Get the Project class to access project fields and manipulate a project.
+        """Get the Project class to access project fields and manipulate a project.
 
         You will only have access to this project if you are one of the following
 
@@ -185,7 +182,6 @@ class EncordUserClient:
         Args:
             project_hash: The Project ID
         """
-
         # Querying ontology using project querier to avoid permission error,
         # as there might be only read-only ontology structure access in scope of the project,
         # not full access, that is implied by get_ontology method
@@ -238,10 +234,7 @@ class EncordUserClient:
         dataset_type: StorageLocation,
         dataset_description: Optional[str] = None,
     ) -> CreateDatasetResponse:
-        """
-        DEPRECATED - please use `create_dataset` instead.
-        """
-
+        """DEPRECATED - please use `create_dataset` instead."""
         return self.__create_dataset(
             title=dataset_title,
             description=dataset_description,
@@ -257,18 +250,17 @@ class EncordUserClient:
         dataset_description: Optional[str] = None,
         create_backing_folder: bool = True,
     ) -> CreateDatasetResponse:
-        """
-        Args:
+        """Args:
             dataset_title:
                 Title of dataset.
             dataset_type:
                 StorageLocation type where data will be stored.
             dataset_description:
                 Optional description of the dataset.
+
         Returns:
             CreateDatasetResponse
         """
-
         return self.__create_dataset(
             title=dataset_title,
             description=dataset_description,
@@ -289,8 +281,7 @@ class EncordUserClient:
         edited_after: Optional[Union[str, datetime]] = None,
         include_org_access: bool = False,
     ) -> List[Dict[str, Any]]:
-        """
-        List either all (if called with no arguments) or matching datasets the user has access to.
+        """List either all (if called with no arguments) or matching datasets the user has access to.
 
         Args:
             title_eq: optional exact title filter
@@ -309,7 +300,6 @@ class EncordUserClient:
             is a dictionary with `"dataset"` and `"user_role"` keys. If include_org_access is set to
             True, some of the datasets may have a `None` value for the `"user_role"` key.
         """
-
         res = self._api_client.get(
             "/datasets/list",
             params=DatasetsWithUserRolesListParams(
@@ -351,8 +341,7 @@ class EncordUserClient:
         ssh_private_key_path: Optional[Union[str, Path]] = None,
         **kwargs,
     ) -> EncordUserClient:
-        """
-        Creates an instance of EncordUserClient authenticated with private SSH key.
+        """Creates an instance of EncordUserClient authenticated with private SSH key.
         Accepts the private key content, path to key file, that can be provided as method parameters or as following environment variables:
 
         * **ENCORD_SSH_KEY**: environment variable with the private key content
@@ -360,10 +349,11 @@ class EncordUserClient:
 
         Args:
             ssh_private_key: the private key content
-            ssh_private_key_path: the pah to the private key file
             password: private key password
+            requests_settings: Request settings. Useful default provided
+            ssh_private_key_path: the path to the private key file
+            **kwargs: network related args
         """
-
         if ssh_private_key_path is not None:
             if isinstance(ssh_private_key_path, str):
                 ssh_private_key_path = Path(ssh_private_key_path)
@@ -400,8 +390,7 @@ class EncordUserClient:
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
     ) -> List[Dict]:
-        """
-        List either all (if called with no arguments) or matching projects the user has access to.
+        """List either all (if called with no arguments) or matching projects the user has access to.
 
         Args:
             title_eq: optional exact title filter
@@ -434,8 +423,7 @@ class EncordUserClient:
         edited_after: Optional[Union[str, datetime]] = None,
         include_org_access: bool = False,
     ) -> Iterable[Project]:
-        """
-        List either all (if called with no arguments) or matching projects the user has access to.
+        """List either all (if called with no arguments) or matching projects the user has access to.
 
         Args:
             title_eq: optional exact title filter
@@ -476,8 +464,7 @@ class EncordUserClient:
         workflow_settings: ProjectWorkflowSettings = ManualReviewWorkflowSettings(),
         workflow_template_hash: Optional[str] = None,
     ) -> str:
-        """
-        Creates a new Project and returns its uid ('project_hash')
+        """Creates a new Project and returns its uid ('project_hash')
 
         Args:
             project_title: the title of the Project
@@ -486,6 +473,7 @@ class EncordUserClient:
             ontology_hash: the uid of an Ontology to be used. If omitted, a new empty Ontology will be created
             workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
             workflow_template_hash: Project is created using a Workflow based on the template provided. This parameter must be included to create a Workflow Project.
+
         Returns:
             the uid of the Project.
         """
@@ -513,10 +501,7 @@ class EncordUserClient:
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
         **kwargs,
     ) -> EncordClientDataset:
-        """
-        DEPRECATED - prefer using :meth:`get_dataset()` instead.
-        """
-
+        """DEPRECATED - prefer using :meth:`get_dataset()` instead."""
         if isinstance(dataset_hash, UUID):
             dataset_hash = str(dataset_hash)
 
@@ -537,10 +522,7 @@ class EncordUserClient:
         project_hash: str,
         **kwargs,
     ) -> EncordClientProject:
-        """
-        DEPRECATED - prefer using :meth:`get_project()` instead.
-        """
-
+        """DEPRECATED - prefer using :meth:`get_project()` instead."""
         if isinstance(project_hash, UUID):
             project_hash = str(project_hash)
 
@@ -562,8 +544,7 @@ class EncordUserClient:
         review_mode: ReviewMode,
         transform_bounding_boxes_to_polygons: bool,
     ) -> UUID:
-        """
-        Start importing a CVAT project into Encord. This is the first part of a two-step import process.
+        """Start importing a CVAT project into Encord. This is the first part of a two-step import process.
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to begin
         importing your images and annotations. Ensure that the "Save images" checkbox is enabled when
         exporting from CVAT.
@@ -586,7 +567,6 @@ class EncordUserClient:
             ValueError:
                 If the CVAT directory has an invalid format or if a non-LocalImport method is used.
         """
-
         if not isinstance(import_method, LocalImport):
             raise ValueError("Only local imports are currently supported ")
 
@@ -651,8 +631,7 @@ class EncordUserClient:
         *,
         timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
     ) -> Union[CvatImporterSuccess, CvatImporterError]:
-        """
-        Check the status and get the result of a CVAT import process. This is the second part of the
+        """Check the status and get the result of a CVAT import process. This is the second part of the
         two-step import process.
 
         Args:
@@ -671,7 +650,6 @@ class EncordUserClient:
             ValueError:
                 If the server returns an unexpected status or invalid response structure.
         """
-
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
 
@@ -745,8 +723,7 @@ class EncordUserClient:
         transform_bounding_boxes_to_polygons=False,
         timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
     ) -> Union[CvatImporterSuccess, CvatImporterError]:
-        """
-        Create a new Encord project from a CVAT export. This method combines the two-step import process
+        """Create a new Encord project from a CVAT export. This method combines the two-step import process
         (create_project_from_cvat_start and create_project_from_cvat_get_result) into a single call.
         Export your CVAT project with the "CVAT for images 1.1" option and use this function to import
         your images and annotations. Ensure that the "Save images" checkbox is enabled when exporting
@@ -777,7 +754,6 @@ class EncordUserClient:
                 If the CVAT directory has an invalid format, if a non-LocalImport method is used,
                 or if the server returns an unexpected status.
         """
-
         return self.create_project_from_cvat_get_result(
             cvat_import_uuid=self.create_project_from_cvat_start(
                 import_method=import_method,
@@ -828,13 +804,12 @@ class EncordUserClient:
     def __upload_cvat_images(
         self, images_paths: List[Path], used_base_path: Path, dataset_name: str
     ) -> Tuple[str, Dict[str, Dict[str, str]]]:
-        """
-        This function does not create any image groups yet.
+        """This function does not create any image groups yet.
+
         Returns:
             * The created dataset_hash
             * A map from an image title to the image hash which is stored in the DB.
         """
-
         dataset_info = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
 
         dataset_hash = dataset_info.dataset_hash
@@ -871,8 +846,7 @@ class EncordUserClient:
         filter_integration_titles: Optional[List[str]] = None,
         include_org_access: bool = False,
     ) -> List[CloudIntegration]:
-        """
-        List either all (if called with no arguments) or matching cloud integrations the user has access to.
+        """List either all (if called with no arguments) or matching cloud integrations the user has access to.
 
         Args:
             filter_integration_uuids: optional list of integration UUIDs to include.
@@ -883,7 +857,6 @@ class EncordUserClient:
         If `filter_integration_uuids` and `filter_integration_titles` are both provided, the method will return
         the integrations that match both of the filters.
         """
-
         if filter_integration_uuids is not None:
             filter_integration_uuids = [UUID(x) if isinstance(x, str) else x for x in filter_integration_uuids]
         return [
@@ -914,8 +887,7 @@ class EncordUserClient:
         edited_after: Optional[Union[str, datetime]] = None,
         include_org_access: bool = False,
     ) -> List[Dict]:
-        """
-        List either all (if called with no arguments) or matching ontologies the user has access to.
+        """List either all (if called with no arguments) or matching ontologies the user has access to.
 
         Args:
             title_eq: optional exact title filter
@@ -1004,9 +976,7 @@ class EncordUserClient:
         return ret
 
     def list_groups(self) -> Iterable[OrmGroup]:
-        """
-        List all groups belonging to the user's current organization.
-        """
+        """List all groups belonging to the user's current organization."""
         page = self._api_client.get("user/current-organisation/groups", params=None, result_type=Page[OrmGroup])
         yield from page.results
 
@@ -1019,8 +989,7 @@ class EncordUserClient:
         save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,
         upload_dir: Optional[str] = None,
     ) -> UUID:
-        """
-        Initiate the DICOM files deidentification process.
+        """Initiate the DICOM files deidentification process.
 
         This method starts the deidentification job for the specified DICOM files and returns
         a UUID that can be used to track and retrieve the deidentification job results.
@@ -1040,7 +1009,6 @@ class EncordUserClient:
             A UUID representing the initiated deidentification job,
             which can be used to retrieve job results.
         """
-
         if save_conditions is None:
             save_conditions_api = None
         else:
@@ -1075,8 +1043,7 @@ class EncordUserClient:
         *,
         timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
     ) -> List[str]:
-        """
-        Retrieve the results of a DICOM deidentification job.
+        """Retrieve the results of a DICOM deidentification job.
 
         This method polls the server to check the status of a previously initiated
         DICOM deidentification job and returns the URLs of deidentified files
@@ -1091,7 +1058,6 @@ class EncordUserClient:
         Returns:
             A list of URLs pointing to the deidentified DICOM files.
         """
-
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
 
@@ -1153,8 +1119,7 @@ class EncordUserClient:
         save_conditions: Optional[List[SaveDeidentifiedDicomCondition]] = None,
         upload_dir: Optional[str] = None,
     ) -> List[str]:
-        """
-        Deidentify DICOM files in external storage.
+        """Deidentify DICOM files in external storage.
         Given links to DICOM files pointing to AWS, GCP, AZURE or OTC, for example:
         [ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]
         Function executes deidentification on those files, it removes all
@@ -1189,6 +1154,7 @@ class EncordUserClient:
             upload_dir:
                 Specifies a directory that files will be uploaded to. By default, set to None,
                 deidentified files will be uploaded to the same directory as source files.
+
         Returns:
             Function returns list of links pointing to deidentified DICOM files,
             those will be saved to the same bucket and the same directory
@@ -1197,7 +1163,6 @@ class EncordUserClient:
             `[ "https://s3.region-code.amazonaws.com/bucket-name/deid_167294769118005312_dicom-file-input.dcm" ]`
 
         """
-
         return self.deidentify_dicom_files_get_result(
             dicom_deid_uuid=self.deidentify_dicom_files_start(
                 dicom_urls=dicom_urls,
@@ -1216,8 +1181,7 @@ class EncordUserClient:
         client_metadata: Optional[Dict[str, Any]] = None,
         parent_folder: Optional[Union[StorageFolder, UUID]] = None,
     ) -> StorageFolder:
-        """
-        Create a new storage folder.
+        """Create a new storage folder.
 
         Args:
             name: The name of the folder.
@@ -1229,12 +1193,10 @@ class EncordUserClient:
         Returns:
             The created storage folder. See :class:`encord.storage.StorageFolder` for details.
         """
-
         return StorageFolder._create_folder(self._api_client, name, description, client_metadata, parent_folder)
 
     def get_storage_folder(self, folder_uuid: Union[UUID, str]) -> StorageFolder:
-        """
-        Get a storage folder by its UUID.
+        """Get a storage folder by its UUID.
 
         Args:
             folder_uuid: The UUID of the folder to retrieve.
@@ -1252,8 +1214,7 @@ class EncordUserClient:
         return StorageFolder._get_folder(self._api_client, folder_uuid)
 
     def get_storage_item(self, item_uuid: Union[UUID, str], sign_url: bool = False) -> StorageItem:
-        """
-        Get a storage item by its unique identifier.
+        """Get a storage item by its unique identifier.
 
         Args:
             item_uuid: The UUID of the item to retrieve.
@@ -1276,8 +1237,7 @@ class EncordUserClient:
         item_uuids: Sequence[Union[UUID, str]],
         sign_url: bool = False,
     ) -> List[StorageItem]:
-        """
-        Get storage items by their UUIDs, in bulk. Useful for retrieving multiple items at once, e.g. when getting
+        """Get storage items by their UUIDs, in bulk. Useful for retrieving multiple items at once, e.g. when getting
         items pointed to by :attr:`encord.orm.dataset.DataRow.backing_item_uuid` for all data rows of a dataset.
 
         Args:
@@ -1305,8 +1265,7 @@ class EncordUserClient:
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable[StorageFolder]:
-        """
-        List top-level storage folders.
+        """List top-level storage folders.
 
         Args:
             search: Search string to filter folders by name (optional)
@@ -1322,7 +1281,6 @@ class EncordUserClient:
         Returns:
             Iterable of :class:`encord.StorageFolder` objects.
         """
-
         return StorageFolder._list_folders(
             self._api_client,
             "storage/folders",
@@ -1346,8 +1304,7 @@ class EncordUserClient:
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable[StorageFolder]:
-        """
-        Recursively search for storage folders, starting from the top level.
+        """Recursively search for storage folders, starting from the top level.
 
         Args:
             search: Search string to filter folders by name (optional)
@@ -1363,7 +1320,6 @@ class EncordUserClient:
         Returns:
             Iterable of :class:`encord.StorageFolder` objects.
         """
-
         return StorageFolder._list_folders(
             self._api_client,
             "storage/search/folders",
@@ -1389,8 +1345,7 @@ class EncordUserClient:
         get_signed_urls: bool = False,
         page_size: int = 100,
     ) -> Iterable[StorageItem]:
-        """
-        Recursively search for storage items, starting from the root level.
+        """Recursively search for storage items, starting from the root level.
 
         Args:
             search: Search string to filter items by name.
@@ -1411,7 +1366,6 @@ class EncordUserClient:
         Returns:
             Iterable of items in the folder.
         """
-
         params = ListItemsParams(
             search=search,
             is_in_dataset=is_in_dataset,
@@ -1438,8 +1392,7 @@ class EncordUserClient:
         return MetadataSchema(self._api_client)
 
     def get_collection(self, collection_uuid: Union[str, UUID]) -> Collection:
-        """
-        Get a collection by its unique identifier (UUID).
+        """Get a collection by its unique identifier (UUID).
 
         Args:
             collection_uuid: The unique identifier of the collection to retrieve.
@@ -1463,8 +1416,7 @@ class EncordUserClient:
         collection_uuids: Optional[List[Union[str, UUID]]] = None,
         page_size: Optional[int] = None,
     ) -> Iterator[Collection]:
-        """
-        Get collections by top level folder or list of collection IDs.
+        """Get collections by top level folder or list of collection IDs.
         If both top_level_folder_uuid and collection_uuid_list are preset
         then the intersection of the two conditions is returned.
 
@@ -1472,6 +1424,7 @@ class EncordUserClient:
             top_level_folder_uuid: The unique identifier of the top level folder.
             collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+
         Returns:
             The list of collections which match the given criteria.
 
@@ -1494,8 +1447,7 @@ class EncordUserClient:
         )
 
     def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:
-        """
-        Delete a collection by its UUID if it exists.
+        """Delete a collection by its UUID if it exists.
 
         Args:
             collection_uuid: The unique identifier (UUID) of the collection to delete.
@@ -1514,8 +1466,7 @@ class EncordUserClient:
     def create_collection(
         self, top_level_folder_uuid: Union[str, UUID], name: str, description: str = ""
     ) -> Collection:
-        """
-        Create a collection.
+        """Create a collection.
 
         Args:
             top_level_folder_uuid: The unique identifier (UUID) of the folder that the collection is created in.
@@ -1535,8 +1486,7 @@ class EncordUserClient:
         return self.get_collection(new_uuid)
 
     def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
-        """
-        Get a preset by its unique identifier (UUID).
+        """Get a preset by its unique identifier (UUID).
 
         Args:
             preset_uuid: The unique identifier of the preset to retrieve.
@@ -1556,12 +1506,12 @@ class EncordUserClient:
     def get_filter_presets(
         self, preset_uuids: List[Union[str, UUID]] = [], page_size: Optional[int] = None
     ) -> Iterator[FilterPreset]:
-        """
-        Get presets by list of preset unique identifiers (UUIDs).
+        """Get presets by list of preset unique identifiers (UUIDs).
 
         Args:
             preset_uuids: The list of unique identifiers (UUIDs) to be retrieved.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+
         Returns:
             The list of presets which match the given criteria.
 
@@ -1577,8 +1527,7 @@ class EncordUserClient:
     def list_presets(
         self, top_level_folder_uuid: Union[str, UUID, None] = None, page_size: Optional[int] = None
     ) -> Iterator[FilterPreset]:
-        """
-        Get presets by top level folder.
+        """Get presets by top level folder.
 
         Args:
             top_level_folder_uuid: The unique identifier of the top level folder.
@@ -1596,8 +1545,7 @@ class EncordUserClient:
         return FilterPreset._list_presets(self._api_client, top_level_folder_uuid, page_size=page_size)
 
     def create_preset(self, name: str, filter_preset_json: dict, description: str = "") -> FilterPreset:
-        """
-        Create a preset.
+        """Create a preset.
 
         Args:
             name: The name of the preset.
@@ -1613,8 +1561,7 @@ class EncordUserClient:
         return self.get_filter_preset(new_uuid)
 
     def delete_preset(self, preset_uuid: Union[str, UUID]) -> None:
-        """
-        Delete a preset by its unique identifier (UUID) if it exists.
+        """Delete a preset by its unique identifier (UUID) if it exists.
 
         Args:
             preset_uuid: The uuid/id of the preset to delete.
@@ -1632,8 +1579,7 @@ class EncordUserClient:
 
 
 class ListingFilter(Enum):
-    """
-    Available properties_filter keys for get_projects() and get_datasets().
+    """Available properties_filter keys for get_projects() and get_datasets().
 
     The values for *_before* and *_after* should be datetime objects.
     """

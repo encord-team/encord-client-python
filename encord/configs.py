@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Configs"
 slug: "sdk-ref-configs"
 hidden: false
@@ -50,8 +49,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseConfig(ABC):
-    """
-    Abstract base class for configuration.
+    """Abstract base class for configuration.
 
     Args:
         endpoint (str): The API endpoint URL.
@@ -75,8 +73,7 @@ class BaseConfig(ABC):
 
     @abstractmethod
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for a request.
+        """Define headers for a request.
 
         Args:
             resource_id (Optional[str]): The resource ID.
@@ -90,8 +87,7 @@ class BaseConfig(ABC):
 
     @abstractmethod
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for a request (v2).
+        """Define headers for a request (v2).
 
         Args:
             request (PreparedRequest): The prepared request.
@@ -103,8 +99,7 @@ class BaseConfig(ABC):
 
 
 class UserConfig(BaseConfig):
-    """
-    Configuration for user-specific requests, redirecting to the "/public/user" endpoint.
+    """Configuration for user-specific requests, redirecting to the "/public/user" endpoint.
 
     Args:
         config (Config): The base configuration.
@@ -119,8 +114,7 @@ class UserConfig(BaseConfig):
 
     @property
     def domain(self) -> str:
-        """
-        Get the domain from the base configuration.
+        """Get the domain from the base configuration.
 
         Returns:
             str: The domain.
@@ -128,8 +122,7 @@ class UserConfig(BaseConfig):
         return self.config.domain
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for a user-specific request.
+        """Define headers for a user-specific request.
 
         Args:
             resource_id (Optional[str]): The resource ID.
@@ -142,8 +135,7 @@ class UserConfig(BaseConfig):
         return self.config.define_headers(resource_id, resource_type, data)
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for a user-specific request (v2).
+        """Define headers for a user-specific request (v2).
 
         Args:
             request (PreparedRequest): The prepared request.
@@ -155,8 +147,7 @@ class UserConfig(BaseConfig):
 
 
 class Config(BaseConfig):
-    """
-    Configuration defining endpoint, project ID, API key, and timeouts.
+    """Configuration defining endpoint, project ID, API key, and timeouts.
 
     Args:
         web_file_path (str): The web file path for the endpoint.
@@ -191,8 +182,7 @@ class Config(BaseConfig):
 
 
 def get_env_ssh_key() -> str:
-    """
-    Get the raw SSH key from environment variables.
+    """Get the raw SSH key from environment variables.
 
     Returns:
         str: The raw SSH key.
@@ -228,8 +218,7 @@ def get_env_ssh_key() -> str:
 
 
 class SshConfig(Config):
-    """
-    Configuration for SSH key-based authorization.
+    """Configuration for SSH key-based authorization.
 
     Args:
         private_key (Ed25519PrivateKey): The private SSH key.
@@ -267,8 +256,7 @@ class SshConfig(Config):
         return f"{public_key_hex}:{signature.hex()}"
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for an SSH key-based request.
+        """Define headers for an SSH key-based request.
 
         Args:
             resource_id (Optional[str]): The resource ID.
@@ -291,8 +279,7 @@ class SshConfig(Config):
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for an SSH key-based request (v2).
+        """Define headers for an SSH key-based request (v2).
 
         Args:
             request (PreparedRequest): The prepared request.
@@ -312,13 +299,13 @@ class SshConfig(Config):
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
     ) -> SshConfig:
-        """
-        Instantiate a SshConfig object by the content of a private SSH key.
+        """Instantiate a SshConfig object by the content of a private SSH key.
 
         Args:
             ssh_private_key: The content of a private key file.
             password: The password for the private key file.
             requests_settings: The requests settings for all outgoing network requests.
+            kwargs: Extra network parameters, includes domain
 
         Returns:
             SshConfig: The SSH configuration.
@@ -337,8 +324,7 @@ class SshConfig(Config):
 
 
 class BearerConfig(Config):
-    """
-    Configuration for bearer token-based authorization.
+    """Configuration for bearer token-based authorization.
 
     Args:
         token (str): The bearer token.
@@ -359,8 +345,7 @@ class BearerConfig(Config):
         super().__init__(domain=domain, requests_settings=requests_settings)
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for a bearer token-based request.
+        """Define headers for a bearer token-based request.
 
         Args:
             resource_id (Optional[str]): The resource ID.
@@ -382,8 +367,7 @@ class BearerConfig(Config):
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for a bearer token-based request (v2).
+        """Define headers for a bearer token-based request (v2).
 
         Args:
             request (PreparedRequest): The prepared request.
@@ -403,13 +387,12 @@ class BearerConfig(Config):
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
     ) -> BearerConfig:
-        """
-        Instantiate a BearerConfig object using a bearer token.
+        """Instantiate a BearerConfig object using a bearer token.
 
         Args:
             token: The bearer token.
             requests_settings: The requests settings for all outgoing network requests.
-
+            **kwargs: network related args
         Returns:
             BearerConfig: The bearer token configuration.
         """

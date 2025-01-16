@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Attributes"
 slug: "sdk-ref-objects-attributes"
 hidden: false
@@ -30,9 +29,7 @@ AttributeType = TypeVar("AttributeType", bound="Attribute")
 
 
 class Attribute(OntologyNestedElement, Generic[OptionType]):
-    """
-    Base class for shared Attribute fields
-    """
+    """Base class for shared Attribute fields"""
 
     name: str
     required: bool
@@ -166,8 +163,7 @@ class RadioAttribute(Attribute["NestableOption"]):
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
     ) -> NestableOption:
-        """
-        Args:
+        """Args:
             label: user-visible name of the option
             value: internal unique value; optional; normally mechanically constructed from the label
             local_uid: integer identifier of the option. Normally auto-generated;
@@ -220,8 +216,7 @@ class ChecklistAttribute(Attribute["FlatOption"]):
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
     ) -> FlatOption:
-        """
-        Args:
+        """Args:
             label: user-visible name of the option
             value: internal unique value; optional; normally mechanically constructed from the label
             local_uid: integer identifier of the option. Normally auto-generated;

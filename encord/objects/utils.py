@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Utils"
 slug: "sdk-ref-objects-utils"
 hidden: false
@@ -49,9 +48,7 @@ def filter_by_type(objects: Iterable[Any], type_: Optional[Type[T]]) -> List[T]:
 
 
 def is_valid_email(email: str) -> bool:
-    """
-    Validate that an email is a valid one
-    """
+    """Validate that an email is a valid one"""
     regex = r"[^@]+@[^@]+\.[^@]+"
     return bool(re.match(regex, email))
 

@@ -52,8 +52,7 @@ class ApiClient:
         return url
 
     def get_bound_operation(self, operation: Callable) -> Callable:
-        """
-        Wrap a function to bind it to the current API client instance (via a named parameter). This is useful for
+        """Wrap a function to bind it to the current API client instance (via a named parameter). This is useful for
         bundling, as the 'Bundle' groups operations based on the 'operation' function, which means that if
         you use an entity object method as the operation, then it will not be grouped with other similar operations.
         """

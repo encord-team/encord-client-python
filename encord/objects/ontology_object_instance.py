@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Ontology Object Instance"
 slug: "sdk-ref-objects-ont-object-instance"
 hidden: false
@@ -71,9 +70,7 @@ if TYPE_CHECKING:
 
 
 class ObjectInstance:
-    """
-    An object instance is an object that has coordinates and can be placed on one or multiple frames in a label row.
-    """
+    """An object instance is an object that has coordinates and can be placed on one or multiple frames in a label row."""
 
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
@@ -91,8 +88,7 @@ class ObjectInstance:
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
 
     def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
-        """
-        Checks if the object instance is assigned to a label row.
+        """Checks if the object instance is assigned to a label row.
 
         Returns:
             The LabelRowV2 instance if assigned, otherwise None.
@@ -101,8 +97,7 @@ class ObjectInstance:
 
     @property
     def object_hash(self) -> str:
-        """
-        A unique identifier for the object instance.
+        """A unique identifier for the object instance.
 
         Returns:
             The unique object hash.
@@ -111,8 +106,7 @@ class ObjectInstance:
 
     @property
     def ontology_item(self) -> Object:
-        """
-        The ontology object associated with this instance.
+        """The ontology object associated with this instance.
 
         Returns:
             The ontology object.
@@ -121,8 +115,7 @@ class ObjectInstance:
 
     @property
     def feature_hash(self) -> str:
-        """
-        Feature node hash from the project ontology.
+        """Feature node hash from the project ontology.
 
         Returns:
             The feature node hash.
@@ -131,8 +124,7 @@ class ObjectInstance:
 
     @property
     def object_name(self) -> str:
-        """
-        Object name from the project ontology.
+        """Object name from the project ontology.
 
         Returns:
             The object name.
@@ -194,8 +186,7 @@ class ObjectInstance:
         filter_frame: Optional[int] = None,
         is_dynamic: Optional[bool] = None,
     ) -> Union[str, Option, Iterable[Option], AnswersForFrames, None]:
-        """
-        Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
+        """Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
 
         For the ChecklistAttribute, it returns None if and only if
         the attribute is nested and the parent is unselected. Otherwise, if not yet answered it will return an empty
@@ -245,8 +236,7 @@ class ObjectInstance:
         overwrite: bool = False,
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
     ) -> None:
-        """
-        Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
+        """Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
         UI after drawing the ObjectInstance. There is only one answer per ObjectInstance per Attribute, unless
         the attribute is dynamic (check the args list for more instructions on how to set dynamic answers).
 
@@ -293,8 +283,7 @@ class ObjectInstance:
         static_answer.set(answer, manual_annotation=manual_annotation)
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
-        """
-        This is a low level helper function and should usually not be used directly.
+        """This is a low level helper function and should usually not be used directly.
 
         Sets the answer for the classification from a dictionary.
 
@@ -411,8 +400,7 @@ class ObjectInstance:
         filter_answer: Optional[Union[str, Option, Iterable[Option]]] = None,
         filter_frame: Optional[int] = None,
     ) -> None:
-        """
-        Reset the answer of an attribute as if it was never set.
+        """Reset the answer of an attribute as if it was never set.
 
         Args:
             attribute: The attribute to delete the answer for.
@@ -428,8 +416,7 @@ class ObjectInstance:
         static_answer.unset()
 
     def check_within_range(self, frame: int) -> None:
-        """
-        Check if the given frame is within the acceptable range.
+        """Check if the given frame is within the acceptable range.
 
         Args:
             frame: The frame number to check.
@@ -457,8 +444,7 @@ class ObjectInstance:
         reviews: Optional[List[dict]] = None,
         is_deleted: Optional[bool] = None,
     ) -> None:
-        """
-        Place the object onto the specified frame(s).
+        """Place the object onto the specified frame(s).
 
         If the object already exists on the frame and overwrite is set to `True`,
         the currently specified values will be overwritten.
@@ -483,7 +469,6 @@ class ObjectInstance:
             reviews: Should only be set by internal functions.
             is_deleted: Should only be set by internal functions.
         """
-
         if self._non_geometric:
             if not isinstance(coordinates, tuple(NON_GEOMETRIC_COORDINATES)):
                 raise LabelRowError("Expecting non-geometric coordinate type")
@@ -541,8 +526,7 @@ class ObjectInstance:
             return self.get_annotation(0)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
-        """
-        Get the annotation for the object instance on the specified frame.
+        """Get the annotation for the object instance on the specified frame.
 
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
@@ -574,8 +558,7 @@ class ObjectInstance:
         return self.Annotation(self, frame_num)
 
     def copy(self) -> ObjectInstance:
-        """
-        Create an exact copy of this ObjectInstance.
+        """Create an exact copy of this ObjectInstance.
 
         The new copy will have a new object hash and will not be associated with any `LabelRowV2`.
         This is useful for adding the semantically same ObjectInstance to multiple `LabelRowV2`s.
@@ -590,8 +573,7 @@ class ObjectInstance:
         return ret
 
     def get_annotations(self) -> List[Annotation]:
-        """
-        Get all annotations for the object instance on all frames it has been placed on.
+        """Get all annotations for the object instance on all frames it has been placed on.
 
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
@@ -599,18 +581,15 @@ class ObjectInstance:
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def get_annotation_frames(self) -> set[int]:
-        """
-        Get all annotations for the object instance on all frames it has been placed on.
+        """Get all annotations for the object instance on all frames it has been placed on.
 
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
-
         return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
 
     def remove_from_frames(self, frames: Frames) -> None:
-        """
-        Remove the object instance from the specified frames.
+        """Remove the object instance from the specified frames.
 
         Args:
             frames: The frames from which to remove the object instance.
@@ -629,8 +608,7 @@ class ObjectInstance:
             self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
 
     def is_valid(self) -> None:
-        """
-        Check if the ObjectInstance is valid.
+        """Check if the ObjectInstance is valid.
 
         Raises:
             LabelRowError: If the ObjectInstance is not on any frames.
@@ -641,8 +619,7 @@ class ObjectInstance:
         self.are_dynamic_answers_valid()
 
     def are_dynamic_answers_valid(self) -> None:
-        """
-        Validate if there are any dynamic answers on frames that have no coordinates.
+        """Validate if there are any dynamic answers on frames that have no coordinates.
 
         Raises:
             LabelRowError: If there are dynamic answers on frames without coordinates.
@@ -658,8 +635,7 @@ class ObjectInstance:
             )
 
     class Annotation:
-        """
-        Represents an annotation for a specific frame of an ObjectInstance.
+        """Represents an annotation for a specific frame of an ObjectInstance.
 
         Allows setting or getting data for the ObjectInstance on the given frame number.
         """
@@ -699,9 +675,7 @@ class ObjectInstance:
 
         @created_by.setter
         def created_by(self, created_by: Optional[str]) -> None:
-            """
-            Set the created_by field with a user email or None if it should default to the current user of the SDK.
-            """
+            """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
             self._check_if_frame_view_is_valid()
             if created_by is not None:
                 check_email(created_by)
@@ -724,9 +698,7 @@ class ObjectInstance:
 
         @last_edited_by.setter
         def last_edited_by(self, last_edited_by: Optional[str]) -> None:
-            """
-            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
-            """
+            """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
             self._check_if_frame_view_is_valid()
             if last_edited_by is not None:
                 check_email(last_edited_by)
@@ -754,8 +726,7 @@ class ObjectInstance:
 
         @property
         def reviews(self) -> Optional[List[Dict[str, Any]]]:
-            """
-            Get the reviews for this object on this frame.
+            """Get the reviews for this object on this frame.
 
             Returns:
                 Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
@@ -765,8 +736,7 @@ class ObjectInstance:
 
         @property
         def is_deleted(self) -> Optional[bool]:
-            """
-            Check if the object instance is marked as deleted on this frame.
+            """Check if the object instance is marked as deleted on this frame.
 
             Returns:
                 Optional[bool]: `True` if deleted, `False` otherwise, or `None` if not set.
@@ -785,9 +755,7 @@ class ObjectInstance:
 
     @dataclass
     class FrameInfo:
-        """
-        Contains metadata information about a frame.
-        """
+        """Contains metadata information about a frame."""
 
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
@@ -802,8 +770,7 @@ class ObjectInstance:
 
         @staticmethod
         def from_dict(d: dict) -> ObjectInstance.FrameInfo:
-            """
-            Create a FrameInfo instance from a dictionary.
+            """Create a FrameInfo instance from a dictionary.
 
             Args:
                 d: A dictionary containing frame information.
@@ -838,8 +805,7 @@ class ObjectInstance:
             reviews: Optional[List[Dict[str, Any]]] = None,
             is_deleted: Optional[bool] = None,
         ) -> None:
-            """
-            Update the FrameInfo fields with the specified values.
+            """Update the FrameInfo fields with the specified values.
 
             Args:
                 created_at: Optional creation time.
@@ -868,8 +834,7 @@ class ObjectInstance:
 
     @dataclass
     class FrameData:
-        """
-        Data class for storing frame-specific data.
+        """Data class for storing frame-specific data.
 
         Attributes:
             coordinates (Coordinates): The coordinates associated with the frame.
@@ -950,8 +915,7 @@ class ObjectInstance:
 
 
 def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, parent: Optional[LabelRowV2]) -> None:
-    """
-    Check if the coordinate type matches the expected type for the ontology object.
+    """Check if the coordinate type matches the expected type for the ontology object.
 
     Args:
         coordinates (Coordinates): The coordinates to check.
@@ -983,8 +947,7 @@ def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, par
 
 
 class DynamicAnswerManager:
-    """
-    Manages dynamic answers for different frames of an ObjectInstance.
+    """Manages dynamic answers for different frames of an ObjectInstance.
 
     This class is an internal helper class and should not be interacted with directly by the user.
     """
@@ -999,8 +962,7 @@ class DynamicAnswerManager:
         # ^ I might not need this object but only need the _get_dynamic_answers object.
 
     def is_valid_dynamic_attribute(self, attribute: Attribute) -> bool:
-        """
-        Check if the attribute is a valid dynamic attribute.
+        """Check if the attribute is a valid dynamic attribute.
 
         Args:
             attribute (Attribute): The attribute to check.
@@ -1019,8 +981,7 @@ class DynamicAnswerManager:
         frames: Optional[Frames] = None,
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
     ) -> None:
-        """
-        Delete the answer for a given attribute and frames.
+        """Delete the answer for a given attribute and frames.
 
         Args:
             attribute (Attribute): The attribute to delete the answer for.
@@ -1054,8 +1015,7 @@ class DynamicAnswerManager:
     def set_answer(
         self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
     ) -> None:
-        """
-        Set the answer for a given attribute and frames.
+        """Set the answer for a given attribute and frames.
 
         Args:
             answer (Union[str, Option, Iterable[Option]]): The answer to set.
@@ -1089,8 +1049,7 @@ class DynamicAnswerManager:
         filter_answer: Union[str, Option, Iterable[Option], None] = None,
         filter_frames: Optional[Frames] = None,
     ) -> AnswersForFrames:
-        """
-        Get answers for a given attribute, filtered by the specified criteria.
+        """Get answers for a given attribute, filtered by the specified criteria.
 
         Args:
             attribute (Attribute): The attribute to get the answers for.
@@ -1118,8 +1077,7 @@ class DynamicAnswerManager:
         return ret
 
     def frames(self) -> Iterable[int]:
-        """
-        Get all frames that have answers set.
+        """Get all frames that have answers set.
 
         Returns:
             Iterable[int]: An iterable of frames.
@@ -1127,8 +1085,7 @@ class DynamicAnswerManager:
         return self._frames_to_answers.keys()
 
     def get_all_answers(self) -> List[Tuple[Answer, Ranges]]:
-        """
-        Get all answers that are set.
+        """Get all answers that are set.
 
         Returns:
             List[Tuple[Answer, Ranges]]: A list of tuples containing the answer and its associated ranges.
@@ -1136,8 +1093,7 @@ class DynamicAnswerManager:
         return [(answer, frames_to_ranges(frames)) for answer, frames in self._answers_to_frames.items()]
 
     def copy(self) -> DynamicAnswerManager:
-        """
-        Create a deep copy of the DynamicAnswerManager instance.
+        """Create a deep copy of the DynamicAnswerManager instance.
 
         Returns:
             DynamicAnswerManager: A new instance of DynamicAnswerManager with copied data.
@@ -1168,8 +1124,7 @@ class DynamicAnswerManager:
 
 @dataclass
 class AnswerForFrames:
-    """
-    Data class for storing an answer and its associated frame ranges.
+    """Data class for storing an answer and its associated frame ranges.
 
     Attributes:
         answer (Union[str, Option, Iterable[Option]]): The answer set for the frames.
