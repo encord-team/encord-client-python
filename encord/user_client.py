@@ -352,7 +352,6 @@ class EncordUserClient:
             password: private key password
             requests_settings: Request settings. Useful default provided
             ssh_private_key_path: the path to the private key file
-            **kwargs: network related args
         """
         if ssh_private_key_path is not None:
             if isinstance(ssh_private_key_path, str):
