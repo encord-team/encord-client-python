@@ -1695,7 +1695,7 @@ class LabelRowV2:
             all_static_answers = classification.get_all_static_answers()
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
             ret[classification.classification_hash] = {
-                "classifications": list(reversed(classifications)),
+                "classifications": list(classifications),
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
             }
