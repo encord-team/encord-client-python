@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Final Stage"
 slug: "sdk-ref-stage-final"
 hidden: false
@@ -39,8 +38,7 @@ class FinalStage(WorkflowStageBase):
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
     ) -> Iterable[FinalStageTask]:
-        """
-        Retrieves tasks for the FinalStage.
+        """Retrieves tasks for the FinalStage.
 
         **Parameters**
 

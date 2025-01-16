@@ -7,9 +7,7 @@ T = TypeVar("T", bound="StringEnum")
 
 
 class StringEnum(str, Enum):
-    """
-    Use this enum class if you need the helper that creates the enum instance from a string.
-    """
+    """Use this enum class if you need the helper that creates the enum instance from a string."""
 
     def __str__(self):
         return self.name

@@ -22,8 +22,7 @@ class Ontology(dict, Formatter):
         description: Optional[str] = None,
         user_role: Optional[OntologyUserRole] = None,
     ):
-        """
-        DEPRECATED - prefer using the :class:`encord.ontology.Ontology` class instead.
+        """DEPRECATED - prefer using the :class:`encord.ontology.Ontology` class instead.
 
         This class has dict-style accessors for backwards compatibility.
         Clients who are using this class for the first time are encouraged to use the property accessors and setters

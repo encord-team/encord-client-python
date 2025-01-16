@@ -7,9 +7,7 @@ UIDType = Union[None, int, str, Dict[str, str], Dict[str, object], List[int], Li
 
 
 class Request:
-    """
-    Request object. Takes query parameters and prepares them for execution.
-    """
+    """Request object. Takes query parameters and prepares them for execution."""
 
     def __init__(
         self,

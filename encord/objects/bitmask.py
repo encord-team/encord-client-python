@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Bitmask"
 slug: "sdk-ref-objects-bitmask"
 hidden: false
@@ -21,8 +20,7 @@ from encord.orm.base_dto import BaseDTO
 
 @runtime_checkable
 class ArrayProtocol(Protocol):
-    """
-    Protocol for any object implementing
+    """Protocol for any object implementing
     :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`
     """
 
@@ -48,14 +46,12 @@ class BitmaskCoordinates:
                 return None
 
     def __init__(self, source: Union[ArrayProtocol, BitmaskCoordinates.EncodedBitmask, Dict[str, Any]]):
-        """
-        Creates a BitmaskCoordinates object from a NumPy array, or other objects that implement
+        """Creates a BitmaskCoordinates object from a NumPy array, or other objects that implement
         :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`,
         such as Pillow images.
 
         For detailed information please refer to :ref:`bitmask tutorial <tutorials/bitmasks:Bitmasks>`
         """
-
         if isinstance(source, BitmaskCoordinates.EncodedBitmask):
             self._encoded_bitmask = source
         elif isinstance(source, ArrayProtocol):
@@ -67,8 +63,7 @@ class BitmaskCoordinates:
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> BitmaskCoordinates:
-        """
-        This method is used to construct object from Encord bitmask dictionary format.
+        """This method is used to construct object from Encord bitmask dictionary format.
         In most cases external users don't need it. Please consider just passing bitmask numpy array compatible object
         to the BitmaskCoordinates constructor.
         """
@@ -101,8 +96,7 @@ class BitmaskCoordinates:
         return BitmaskCoordinates.EncodedBitmask(top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string)
 
     def to_dict(self) -> Dict[str, Any]:
-        """
-        This method is used to serialise the object to Encord bitmask dictionary format.
+        """This method is used to serialise the object to Encord bitmask dictionary format.
         In most cases external users don't need it. Please consider using .to_numpy_array method, or just pass this
         BitmaskCoordinates objects to a constructor of any class that supports numpy array protocol,
         such as NumPy array, Pillow image, etc.
@@ -110,8 +104,7 @@ class BitmaskCoordinates:
         return self._encoded_bitmask.to_dict()
 
     def to_numpy_array(self):
-        """
-        Converts the mask to a 2D numpy array with dtype bool.
+        """Converts the mask to a 2D numpy array with dtype bool.
 
         Numpy needs to be installed for this call to work.
         """

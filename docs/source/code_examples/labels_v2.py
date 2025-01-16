@@ -1,5 +1,4 @@
-"""
-Working with the LabelRowV2
+"""Working with the LabelRowV2
 ===========================
 
 The :class:`encord.objects.LabelRowV2` class is a wrapper around the Encord label row data format. It

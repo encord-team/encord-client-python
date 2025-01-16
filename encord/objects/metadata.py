@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - DICOM Metadata"
 slug: "sdk-ref-objects-dicom-metadata"
 hidden: false
@@ -16,8 +15,7 @@ from encord.orm.base_dto import BaseDTO
 
 
 class DICOMSeriesMetadata(BaseDTO):
-    """
-    Metadata for a DICOM series.
+    """Metadata for a DICOM series.
 
     Attributes:
         patient_id (Optional[str]): The ID of the patient. This attribute is optional.
@@ -31,8 +29,7 @@ class DICOMSeriesMetadata(BaseDTO):
 
 
 class DICOMSliceMetadata(BaseDTO):
-    """
-    Metadata for a slice in a DICOM series.
+    """Metadata for a slice in a DICOM series.
 
     Attributes:
         dicom_instance_uid (str): The unique identifier for the DICOM instance.

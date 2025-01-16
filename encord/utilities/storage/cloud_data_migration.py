@@ -26,8 +26,7 @@ def update_storage_item_cloud_info(
     skip_missing: bool = False,
     bundle: Optional[Bundle] = None,
 ) -> None:
-    """
-    Update the cloud storage information of a storage item. This can be used to avoid re-importing data when the cloud
+    """Update the cloud storage information of a storage item. This can be used to avoid re-importing data when the cloud
     configuration changes (and thus the data is accessible through a different cloud integration), or if the data has
     been moved to a different location (and thus the URL has changed).
 

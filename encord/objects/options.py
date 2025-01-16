@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Options"
 slug: "sdk-ref-objects-options"
 hidden: false
@@ -30,9 +29,7 @@ from encord.objects.ontology_element import (
 
 @dataclass
 class Option(OntologyNestedElement):
-    """
-    Base class for shared Option fields
-    """
+    """Base class for shared Option fields"""
 
     label: str
     value: str
@@ -131,8 +128,7 @@ class NestableOption(Option):
         feature_node_hash: Optional[str] = None,
         required: bool = False,
     ) -> AttributeType:
-        """
-        This method is deprecated, please use :meth:`.add_nested_option` instead.
+        """This method is deprecated, please use :meth:`.add_nested_option` instead.
         There is no functional difference between these methods.
         """
         return self.add_nested_attribute(
@@ -147,8 +143,7 @@ class NestableOption(Option):
         feature_node_hash: Optional[str] = None,
         required: bool = False,
     ) -> AttributeType:
-        """
-        Adds a nested attribute to a RadioAttribute option.
+        """Adds a nested attribute to a RadioAttribute option.
 
         Args:
             cls: attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`

@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Bundle (Batch)"
 slug: "sdk-ref-bundle"
 hidden: false
@@ -25,8 +24,7 @@ BundlablePayloadT = TypeVar("BundlablePayloadT", bound="BundlablePayload")
 
 
 class BundlablePayload(Protocol[BundlablePayloadT]):
-    """
-    All payloads that work with bundles need to provide "add" method
+    """All payloads that work with bundles need to provide "add" method
     that would allow bundler to combine multiple payloads into one or few aggregates.
     """
 
@@ -76,8 +74,7 @@ class BundledOperation(Generic[BundlablePayloadT, R]):
 
 
 class Bundle:
-    """
-    This class allows to perform operations in bundles to improve performance by reducing number of network calls.
+    """This class allows to perform operations in bundles to improve performance by reducing number of network calls.
 
     It is not supposed to be instantiated directly by a user. Use :meth:`encord.project.Project.create_bundle()`
     method to initiate bundled operations.
@@ -110,8 +107,7 @@ class Bundle:
         payload: BundlablePayloadT,
         limit: int,
     ) -> None:
-        """
-        This is an internal method and normally is not supposed to be used externally.
+        """This is an internal method and normally is not supposed to be used externally.
 
         Adds an operation to a bundle for delayed execution.
         """
@@ -122,10 +118,7 @@ class Bundle:
         )
 
     def execute(self) -> None:
-        """
-        Executes all scheduled operations in bundles and populates results
-        """
-
+        """Executes all scheduled operations in bundles and populates results"""
         for operation in self._operations.values():
             for bundled_payload in operation.get_bundled_payload():
                 bundle_result = operation.operation(**asdict(bundled_payload))

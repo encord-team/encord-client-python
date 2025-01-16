@@ -4,8 +4,7 @@ from encord.orm.base_dto import BaseDTO
 
 
 class ProjectUserRole(IntEnum):
-    """
-    Enumeration for user roles within a project.
+    """Enumeration for user roles within a project.
 
     Attributes:
         ADMIN (int): Represents an admin user with value 0.
@@ -23,8 +22,7 @@ class ProjectUserRole(IntEnum):
 
 
 class ProjectUser(BaseDTO):
-    """
-    Data transfer object representing a user within a project.
+    """Data transfer object representing a user within a project.
 
     Attributes:
         user_email (str): The email address of the user.

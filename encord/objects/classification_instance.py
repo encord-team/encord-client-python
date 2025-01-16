@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Classification Instance"
 slug: "sdk-ref-objects-classification-instance"
 hidden: false
@@ -200,8 +199,7 @@ class ClassificationInstance:
         last_edited_by: Optional[str] = None,
         reviews: Optional[List[dict]] = None,
     ) -> None:
-        """
-        Places the classification onto the specified frame. If the classification already exists on the frame and
+        """Places the classification onto the specified frame. If the classification already exists on the frame and
         overwrite is set to `True`, the currently specified values will be overwritten.
 
         Args:
@@ -296,12 +294,10 @@ class ClassificationInstance:
             self._parent._add_to_frame_to_hashes_map(self, frames_list)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
+        """Args:
+        frame: Either the frame number or the image hash if the data type is an image or image group.
+            Defaults to the first frame.
         """
-        Args:
-            frame: Either the frame number or the image hash if the data type is an image or image group.
-                Defaults to the first frame.
-        """
-
         if self._range_only and frame != 0:
             raise LabelRowError(
                 "This Classification Instance only works on ranges, technically only has one 'frame'"
@@ -348,9 +344,8 @@ class ClassificationInstance:
                 self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
     def get_annotations(self) -> List[Annotation]:
-        """
-        Returns:
-            A list of `ClassificationInstance.Annotation` in order of available frames.
+        """Returns:
+        A list of `ClassificationInstance.Annotation` in order of available frames.
         """
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
 
@@ -364,8 +359,7 @@ class ClassificationInstance:
         attribute: Optional[Attribute] = None,
         overwrite: bool = False,
     ) -> None:
-        """
-        Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
+        """Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
         UI after adding a ClassificationInstance. There is only one answer per ClassificationInstance per Attribute.
 
         Args:
@@ -398,15 +392,13 @@ class ClassificationInstance:
         static_answer.set(answer)
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
-        """
-        This is a low level helper function and should not be used directly.
+        """This is a low level helper function and should not be used directly.
 
         Sets the answer for the classification from a dictionary.
 
         Args:
             answers_list: The list to set the answer from.
         """
-
         for answer_dict in answers_list:
             attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_classification.attributes)
             if attribute is None:
@@ -441,8 +433,7 @@ class ClassificationInstance:
                 raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
     def get_answer(self, attribute: Optional[Attribute] = None) -> Union[str, Option, Iterable[Option], None]:
-        """
-        Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
+        """Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
 
         For the ChecklistAttribute, it returns None if and only if
         the attribute is nested and the parent is unselected. Otherwise, if not yet answered it will return an empty
@@ -465,8 +456,7 @@ class ClassificationInstance:
         return static_answer.get()
 
     def delete_answer(self, attribute: Optional[Attribute] = None) -> None:
-        """
-        This resets the answer of an attribute as if it was never set.
+        """This resets the answer of an attribute as if it was never set.
 
         Args:
             attribute: The ontology attribute to delete the answer for. If not provided, the first level attribute is
@@ -481,8 +471,7 @@ class ClassificationInstance:
         static_answer.unset()
 
     def copy(self) -> ClassificationInstance:
-        """
-        Creates an exact copy of this ClassificationInstance but with a new classification hash and without being
+        """Creates an exact copy of this ClassificationInstance but with a new classification hash and without being
         associated to any LabelRowV2. This is useful if you want to add the semantically same
         ClassificationInstance to multiple `LabelRowV2`s.
         """
@@ -496,8 +485,7 @@ class ClassificationInstance:
         return list(self._static_answer_map.values())
 
     class Annotation:
-        """
-        This class can be used to set or get data for a specific annotation (i.e. the ClassificationInstance for a given
+        """This class can be used to set or get data for a specific annotation (i.e. the ClassificationInstance for a given
         frame number).
         """
 
@@ -526,9 +514,7 @@ class ClassificationInstance:
 
         @created_by.setter
         def created_by(self, created_by: Optional[str]) -> None:
-            """
-            Set the created_by field with a user email or None if it should default to the current user of the SDK.
-            """
+            """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
             self._check_if_frame_view_valid()
             if created_by is not None:
                 check_email(created_by)
@@ -551,9 +537,7 @@ class ClassificationInstance:
 
         @last_edited_by.setter
         def last_edited_by(self, last_edited_by: Optional[str]) -> None:
-            """
-            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
-            """
+            """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
             self._check_if_frame_view_valid()
             if last_edited_by is not None:
                 check_email(last_edited_by)
@@ -581,9 +565,7 @@ class ClassificationInstance:
 
         @property
         def reviews(self) -> Optional[List[dict]]:
-            """
-            A read only property about the reviews that happened for this object on this frame.
-            """
+            """A read only property about the reviews that happened for this object on this frame."""
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().reviews
 

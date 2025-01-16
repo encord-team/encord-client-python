@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Utilities - Ontology Helper"
 slug: "sdk-ref-utilities-ont-helper"
 hidden: false
@@ -25,9 +24,7 @@ class OntologyUserRole(IntEnum):
 
 
 class OntologyWithUserRole(BaseDTO):
-    """
-    An on-the-wire representation from /v2/public/ontologies endpoints
-    """
+    """An on-the-wire representation from /v2/public/ontologies endpoints"""
 
     ontology_uuid: UUID
     title: str
@@ -39,9 +36,7 @@ class OntologyWithUserRole(BaseDTO):
 
 
 class OntologiesFilterParams(BaseDTO):
-    """
-    Filter parameters for the /v2/public/ontologies endpoint
-    """
+    """Filter parameters for the /v2/public/ontologies endpoint"""
 
     title_eq: Optional[str] = None
     title_like: Optional[str] = None

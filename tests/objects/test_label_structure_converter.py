@@ -1,6 +1,4 @@
-"""
-All tests regarding converting from and to Encord dict to the label row.
-"""
+"""All tests regarding converting from and to Encord dict to the label row."""
 
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
@@ -50,7 +48,8 @@ def ontology_from_dict(ontology_structure_dict: Dict):
 
 def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], exclude_regex_paths: List[str] = None):
     """Basically a deep diff but with an normal assert after. `DeepDiff` to be able to exclude
-    regex paths, and `assert` to see an easily comparable diff with tools such as Pycharm."""
+    regex paths, and `assert` to see an easily comparable diff with tools such as Pycharm.
+    """
     if exclude_regex_paths is None:
         exclude_regex_paths = []
     if DeepDiff(
