@@ -252,12 +252,13 @@ class SshConfig(Config):
         private_key: Ed25519PrivateKey,
         domain: str = ENCORD_DOMAIN,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        user_agent_suffix: Optional[str] = None,
     ):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
         self.public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
 
-        super().__init__(domain=domain, requests_settings=requests_settings)
+        super().__init__(domain=domain, requests_settings=requests_settings, user_agent_suffix=user_agent_suffix)
 
     @staticmethod
     def _get_v1_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:

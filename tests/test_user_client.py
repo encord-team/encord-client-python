@@ -48,6 +48,14 @@ def test_initialise_with_correct_ssh_file_content():
     assert isinstance(user_client, EncordUserClient)
 
 
+def test_initialise_with_custom_user_agent():
+    custom_agent_suffix = "CustomAgentSuffix/1.1.2"
+    user_client = EncordUserClient.create_with_ssh_private_key(PRIVATE_KEY_PEM, user_agent_suffix=custom_agent_suffix)
+    assert isinstance(user_client, EncordUserClient)
+    user_agent_header = user_client._config.config._user_agent()
+    assert custom_agent_suffix in user_agent_header
+
+
 def test_initialise_with_correct_ssh_file_content_from_env():
     assert _ENCORD_SSH_KEY_FILE not in os.environ
     os.environ[_ENCORD_SSH_KEY] = PRIVATE_KEY_PEM
