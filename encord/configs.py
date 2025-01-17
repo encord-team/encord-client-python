@@ -29,6 +29,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat,
 from requests import PreparedRequest
 
 from encord._version import __version__ as encord_version
+from encord.common.utils import validate_user_agent_suffix
 from encord.exceptions import ResourceNotFoundError
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
@@ -172,17 +173,21 @@ class Config(BaseConfig):
         web_file_path: str = ENCORD_PUBLIC_PATH,
         domain: Optional[str] = None,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        user_agent_suffix: Optional[str] = None,
     ):
         if domain is None:
             raise RuntimeError("`domain` must be specified")
 
         self.domain = domain
+        self.user_agent_suffix = validate_user_agent_suffix(user_agent_suffix) if user_agent_suffix else None
         endpoint = domain + web_file_path
         super().__init__(endpoint, requests_settings=requests_settings)
 
-    @staticmethod
-    def _user_agent() -> str:
-        return f"encord-sdk-python/{encord_version} python/{platform.python_version()} pydantic/{pydantic_version_str}"
+    def _user_agent(self) -> str:
+        base_agent_header = (
+            f"encord-sdk-python/{encord_version} python/{platform.python_version()} pydantic/{pydantic_version_str}"
+        )
+        return base_agent_header + " " + self.user_agent_suffix if self.user_agent_suffix else base_agent_header
 
     def _tracing_id(self) -> str:
         if self.requests_settings.trace_id_provider:
@@ -247,12 +252,13 @@ class SshConfig(Config):
         private_key: Ed25519PrivateKey,
         domain: str = ENCORD_DOMAIN,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        user_agent_suffix: Optional[str] = None,
     ):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
         self.public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
 
-        super().__init__(domain=domain, requests_settings=requests_settings)
+        super().__init__(domain=domain, requests_settings=requests_settings, user_agent_suffix=user_agent_suffix)
 
     @staticmethod
     def _get_v1_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
