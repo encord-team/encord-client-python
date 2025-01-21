@@ -682,13 +682,9 @@ class StorageFolder:
 
         Args:
             file_path: File path of the text file. For example: '/home/user/data/report.txt'
-            title:
-                The item title. If unspecified, the file name is used as the title.
-            client_metadata:
-                Optional custom metadata to be associated with the audio. Should be a dictionary
-                that is JSON-serializable.
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title: The item title. If unspecified, the file name is used as the title.
+            client_metadata: Optional custom metadata to be associated with the audio. Should be a dictionary that is JSON-serializable.
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
         Returns:
             UUID of the newly created text item.
@@ -746,13 +742,9 @@ class StorageFolder:
 
         Args:
             file_path: File path of the PDF file. For example: '/home/user/data/report.pdf'
-            title:
-                The item title. If unspecified, the file name is used as the title.
-            client_metadata:
-                Optional custom metadata to be associated with the audio. Should be a dictionary
-                that is JSON-serializable.
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            title: The item title. If unspecified, the file name is used as the title.
+            client_metadata: Optional custom metadata to be associated with the audio. Should be a dictionary that is JSON-serializable.
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
         Returns:
             UUID of the newly created PDF item.

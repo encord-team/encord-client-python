@@ -251,12 +251,9 @@ class EncordUserClient:
         create_backing_folder: bool = True,
     ) -> CreateDatasetResponse:
         """Args:
-            dataset_title:
-                Title of dataset.
-            dataset_type:
-                StorageLocation type where data will be stored.
-            dataset_description:
-                Optional description of the dataset.
+            dataset_title: Title of dataset.
+            dataset_type: StorageLocation type where data will be stored.
+            dataset_description: Optional description of the dataset.
 
         Returns:
             CreateDatasetResponse
@@ -293,7 +290,7 @@ class EncordUserClient:
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
             include_org_access: if set to true and the calling user is the organization admin, the
-              method will return all datasets in the organization.
+              method returns all datasets in the organization.
 
         Returns:
             list of datasets matching filter conditions, with the roles that the current user has on them. Each item
@@ -549,15 +546,10 @@ class EncordUserClient:
         exporting from CVAT.
 
         Args:
-            import_method:
-                The chosen import method. Currently, only LocalImport is supported.
-            dataset_name:
-                The name of the dataset that will be created.
-            review_mode:
-                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
-                See the `ReviewMode` documentation for more details.
-            transform_bounding_boxes_to_polygons:
-                If True, all instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
+            import_method: The chosen import method. Currently, only LocalImport is supported.
+            dataset_name: The name of the dataset that will be created.
+            review_mode: Set how much interaction is needed from the labeler and reviewer for the CVAT labels. See the `ReviewMode` documentation for more details.
+            transform_bounding_boxes_to_polygons: If True, all instances of CVAT bounding boxes will be converted to polygons in the final Encord project.
 
         Returns:
             UUID: A unique identifier for tracking the import process.
@@ -634,11 +626,8 @@ class EncordUserClient:
         two-step import process.
 
         Args:
-            cvat_import_uuid:
-                The UUID returned by create_project_from_cvat_start.
-            timeout_seconds:
-                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
-                The method will poll the server periodically during this time.
+            cvat_import_uuid: The UUID returned by create_project_from_cvat_start.
+            timeout_seconds: Maximum time in seconds to wait for the import to complete. Defaults to 24 hours. The method polls the server periodically during this time.
 
         Returns:
             Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
@@ -646,8 +635,7 @@ class EncordUserClient:
             - CvatImporterError: Contains any issues if the import failed.
 
         Raises:
-            ValueError:
-                If the server returns an unexpected status or invalid response structure.
+            ValueError: If the server returns an unexpected status or invalid response structure.
         """
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
@@ -729,19 +717,11 @@ class EncordUserClient:
         from CVAT.
 
         Args:
-            import_method:
-                The chosen import method. Currently, only LocalImport is supported.
-            dataset_name:
-                The name of the dataset that will be created.
-            review_mode:
-                Set how much interaction is needed from the labeler and reviewer for the CVAT labels.
-                See the `ReviewMode` documentation for more details. Defaults to ReviewMode.LABELLED.
-            transform_bounding_boxes_to_polygons:
-                If True, all instances of CVAT bounding boxes will be converted to polygons in the final
-                Encord project. Defaults to False.
-            timeout_seconds:
-                Maximum time in seconds to wait for the import to complete. Defaults to 24 hours.
-                The method will poll the server periodically during this time.
+            import_method: The chosen import method. Currently, only LocalImport is supported.
+            dataset_name: The name of the dataset that will be created.
+            review_mode: Set how much interaction is needed from the labeler and reviewer for the CVAT labels. See the `ReviewMode` documentation for more details. Defaults to ReviewMode.LABELLED.
+            transform_bounding_boxes_to_polygons: If True, all instances of CVAT bounding boxes will be converted to polygons in the final Encord project. Defaults to False.
+            timeout_seconds: Maximum time in seconds to wait for the import to complete. Defaults to 24 hours. The method polls the server periodically during this time.
 
         Returns:
             Union[CvatImporterSuccess, CvatImporterError]: The result of the import process.
@@ -749,9 +729,7 @@ class EncordUserClient:
             - CvatImporterError: Contains any issues if the import failed.
 
         Raises:
-            ValueError:
-                If the CVAT directory has an invalid format, if a non-LocalImport method is used,
-                or if the server returns an unexpected status.
+            ValueError:If the CVAT directory has an invalid format, if a non-LocalImport method is used, or if the server returns an unexpected status.
         """
         return self.create_project_from_cvat_get_result(
             cvat_import_uuid=self.create_project_from_cvat_start(
@@ -1049,10 +1027,8 @@ class EncordUserClient:
         when the job is complete.
 
         Args:
-            dicom_deid_uuid: The UUID of the deidentification job returned
-                by deidentify_dicom_files_start(...).
-            timeout_seconds: Maximum time to wait for job completion.
-                Defaults to 1 day (86400 seconds).
+            dicom_deid_uuid: The UUID of the deidentification job returned by deidentify_dicom_files_start(...).
+            timeout_seconds: Maximum time to wait for job completion. Defaults to 1 day (86400 seconds).
 
         Returns:
             A list of URLs pointing to the deidentified DICOM files.
@@ -1140,19 +1116,12 @@ class EncordUserClient:
 
         Args:
             self: Encord client object.
-            dicom_urls: a list of urls to DICOM files, e.g.
-                `[ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]`
-            integration_hash:
-                integration_hash parameter of Encord platform external storage integration
-            redact_dicom_tags:
-                Specifies if DICOM tags redaction should be enabled.
-            redact_pixels_mode:
-                Specifies which text redaction policy should be applied to pixel data.
-            save_conditions:
-                Specifies a list of conditions which all have to be true for DICOM deidentified file to be saved.
-            upload_dir:
-                Specifies a directory that files will be uploaded to. By default, set to None,
-                deidentified files will be uploaded to the same directory as source files.
+            dicom_urls: a list of urls to DICOM files, for example: `[ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]`
+            integration_hash: integration_hash parameter of Encord platform external storage integration
+            redact_dicom_tags: Specifies if DICOM tags redaction should be enabled.
+            redact_pixels_mode: Specifies which text redaction policy should be applied to pixel data.
+            save_conditions: Specifies a list of conditions which all have to be true for DICOM deidentified file to be saved.
+            upload_dir: Specifies a directory that files will be uploaded to. By default, set to None, deidentified files will be uploaded to the same directory as source files.
 
         Returns:
             Function returns list of links pointing to deidentified DICOM files,
