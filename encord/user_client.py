@@ -447,7 +447,7 @@ class EncordUserClient:
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
             include_org_access: if set to true and the calling user is the organization admin, the
-              method will return all ontologies in the organization.
+              method will return all projects in the organization.
 
         Returns:
             list of Projects matching filter conditions, as :class:`~encord.project.Project` instances.
