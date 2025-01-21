@@ -51,6 +51,7 @@ from encord.objects.coordinates import (
     BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
+    CuboidCoordinates,
     HtmlCoordinates,
     PointCoordinate,
     PolygonCoordinates,
@@ -1898,6 +1899,8 @@ class LabelRowV2:
             encord_object["boundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
             encord_object["rotatableBoundingBox"] = coordinates.to_dict()
+        elif isinstance(coordinates, CuboidCoordinates):
+            encord_object["cuboid"] = coordinates.to_dict()
         elif isinstance(coordinates, PolygonCoordinates):
             encord_object["polygon"] = coordinates.to_dict()
         elif isinstance(coordinates, PolylineCoordinates):
@@ -2384,6 +2387,8 @@ class LabelRowV2:
             return BoundingBoxCoordinates.from_dict(frame_object_label)
         if "rotatableBoundingBox" in frame_object_label:
             return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
+        if "cuboid" in frame_object_label:
+            return CuboidCoordinates.from_dict(frame_object_label)
         elif "polygon" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
         elif "point" in frame_object_label:

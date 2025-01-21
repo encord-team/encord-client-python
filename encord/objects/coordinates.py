@@ -77,6 +77,44 @@ class BoundingBoxCoordinates:
 
 
 @dataclass(frozen=True)
+class CuboidCoordinates:
+    w1: float
+    h1: float
+    x1: float
+    y1: float
+    w2: float
+    h2: float
+    x2: float
+    y2: float
+
+    @staticmethod
+    def from_dict(d: dict) -> CuboidCoordinates:
+        cuboid_dict = d["cuboid"]
+        return CuboidCoordinates(
+            x1=cuboid_dict["x1"],
+            y1=cuboid_dict["y1"],
+            w1=cuboid_dict["w1"],
+            h1=cuboid_dict["h1"],
+            x2=cuboid_dict["x2"],
+            y2=cuboid_dict["y2"],
+            w2=cuboid_dict["w2"],
+            h2=cuboid_dict["h2"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "x1": self.x1,
+            "y1": self.y1,
+            "w1": self.w1,
+            "h1": self.h1,
+            "x2": self.x2,
+            "y2": self.y2,
+            "w2": self.w2,
+            "h2": self.h2,
+        }
+
+
+@dataclass(frozen=True)
 class RotatableBoundingBoxCoordinates:
     """
     Represents rotatable bounding box coordinates, where all values are percentages relative to the total image size.
@@ -391,11 +429,13 @@ Coordinates = Union[
     PolylineCoordinates,
     SkeletonCoordinates,
     BitmaskCoordinates,
+    CuboidCoordinates,
 ]
 
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
     Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
     Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
+    Shape.CUBOID: [CuboidCoordinates],
     Shape.POINT: [PointCoordinate],
     Shape.POLYGON: [PolygonCoordinates],
     Shape.POLYLINE: [PolylineCoordinates],
