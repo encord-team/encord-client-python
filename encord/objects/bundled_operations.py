@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Bundled Operations"
 slug: "sdk-ref-objects-bundled-op"
 hidden: false

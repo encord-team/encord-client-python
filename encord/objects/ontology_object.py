@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Ontology Object"
 slug: "sdk-ref-objects-ont-object"
 hidden: false
@@ -38,21 +37,16 @@ class Object(OntologyElement):
 
     @property
     def title(self) -> str:
-        """
-        Returns the name of the object, used as the title.
-        """
+        """Returns the name of the object, used as the title."""
         return self.name
 
     @property
     def children(self) -> Sequence[OntologyElement]:
-        """
-        Returns the attributes of the object as its children.
-        """
+        """Returns the attributes of the object as its children."""
         return self.attributes
 
     def create_instance(self) -> ObjectInstance:
-        """
-        Create a :class:`encord.objects.ObjectInstance` to be used with a label row.
+        """Create a :class:`encord.objects.ObjectInstance` to be used with a label row.
 
         Returns:
             ObjectInstance: An instance of the object to be used in labeling.
@@ -61,8 +55,7 @@ class Object(OntologyElement):
 
     @classmethod
     def from_dict(cls, d: dict) -> Object:
-        """
-        Create an Object from a dictionary.
+        """Create an Object from a dictionary.
 
         Args:
             d: A dictionary representing the object.
@@ -91,8 +84,7 @@ class Object(OntologyElement):
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert the Object to a dictionary.
+        """Convert the Object to a dictionary.
 
         Returns:
             Dict[str, Any]: The dictionary representation of the object.
@@ -119,8 +111,7 @@ class Object(OntologyElement):
         required: bool = False,
         dynamic: bool = False,
     ) -> AttributeType:
-        """
-        Adds an attribute to the object.
+        """Adds an attribute to the object.
 
         Args:
             cls: The attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`.

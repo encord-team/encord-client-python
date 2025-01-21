@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "CloudUpload"
 slug: "sdk-ref-cloudupload"
 hidden: false
@@ -43,8 +42,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CloudUploadSettings:
-    """
-    The settings for uploading data into the GCP cloud storage. These apply for each individual upload. These settings
+    """The settings for uploading data into the GCP cloud storage. These apply for each individual upload. These settings
     will overwrite the :meth:`encord.http.constants.RequestsSettings` which is set during
     :class:`encord.EncordUserClient` creation.
     """

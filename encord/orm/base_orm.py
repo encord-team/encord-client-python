@@ -13,8 +13,7 @@ class BaseORM(dict):
     NON_UPDATABLE_FIELDS: set = set()
 
     def __init__(self, dic):
-        """
-        Construct client ORM compatible database object from dict object.
+        """Construct client ORM compatible database object from dict object.
         Ensures strict type and attribute name check.
         The real k,v is stored in inner dict.
         :param dic:
@@ -50,8 +49,7 @@ class BaseORM(dict):
             raise Exception(f"Convert failed {e}")
 
     def __getattr__(self, name):
-        """
-        Override attribute method for easy access of field value.
+        """Override attribute method for easy access of field value.
         To be used instead of ["attr"].
         Return None if there is no such attribute
         :param name:
@@ -66,8 +64,7 @@ class BaseORM(dict):
             raise AttributeError(f"Attribute does not exist: {name}")
 
     def __setattr__(self, name, value):
-        """
-        Strict attribute name and type check.
+        """Strict attribute name and type check.
         :param name:
         :param value:
         :return:

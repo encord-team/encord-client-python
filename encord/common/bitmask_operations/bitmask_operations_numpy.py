@@ -7,9 +7,7 @@ from .bitmask_operations import _rle_to_mask, _rle_to_string, _string_to_rle
 
 
 def _mask_to_rle(mask: bytes) -> List[int]:
-    """
-    COCO-compatible raw bitmask to COCO-compatible RLE
-    """
+    """COCO-compatible raw bitmask to COCO-compatible RLE"""
     mask_buffer = np.frombuffer(mask, dtype=np.bool_)
     changes = np.diff(mask_buffer, prepend=mask_buffer[0], append=mask_buffer[-1])
     change_indices = np.flatnonzero(changes != 0)

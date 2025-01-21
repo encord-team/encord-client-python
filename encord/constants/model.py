@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Model"
 slug: "sdk-ref-model"
 hidden: false
@@ -40,11 +39,10 @@ class AutomationModels(Enum):
 
     @staticmethod
     def classification_options() -> Set[AutomationModels]:
-        """
-        Returns:
-            Model types that can be used for frame-level classifications.
-            That is, model types that can be used with ``<feature_node_hash>``es from
-            the ``classification`` part of the ontology.
+        """Returns:
+        Model types that can be used for frame-level classifications.
+        That is, model types that can be used with ``<feature_node_hash>``es from
+        the ``classification`` part of the ontology.
         """
         return {
             AutomationModels.FAST_AI,
@@ -59,19 +57,17 @@ class AutomationModels(Enum):
 
     @staticmethod
     def object_detection_options() -> Set[AutomationModels]:
-        """
-        Returns:
-            Model types that can be used with bounding_box type
-            ``<feature_node_hashes>`` from the ``objects`` part of the project ontology.
+        """Returns:
+        Model types that can be used with bounding_box type
+        ``<feature_node_hashes>`` from the ``objects`` part of the project ontology.
         """
         return {AutomationModels.FASTER_RCNN}
 
     @staticmethod
     def instance_segmentation_options() -> Set[AutomationModels]:
-        """
-        Returns:
-            Model types that can be used with polygon type ``<feature_node_hashes>``
-            from the ``objects`` part of the project ontology.
+        """Returns:
+        Model types that can be used with polygon type ``<feature_node_hashes>``
+        from the ``objects`` part of the project ontology.
         """
         return {AutomationModels.MASK_RCNN}
 

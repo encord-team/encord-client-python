@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Ontology Labels"
 slug: "sdk-ref-objects-ont-labels"
 hidden: false
@@ -83,8 +82,7 @@ OntologyClasses = Union[Object, Classification]
 
 
 class LabelRowV2:
-    """
-    This class represents a single label row. It corresponds to exactly one data row within a project and holds all
+    """This class represents a single label row. It corresponds to exactly one data row within a project and holds all
     the labels for that data row.
 
     You can access many metadata fields with this class directly. To read or write labels, you need to call
@@ -122,8 +120,7 @@ class LabelRowV2:
 
     @property
     def label_hash(self) -> Optional[str]:
-        """
-        Returns the hash of the label row.
+        """Returns the hash of the label row.
 
         Returns:
             Optional[str]: The label row hash or None if not set.
@@ -132,8 +129,7 @@ class LabelRowV2:
 
     @property
     def branch_name(self) -> str:
-        """
-        Returns the branch name of the label row.
+        """Returns the branch name of the label row.
 
         Returns:
             str: The branch name.
@@ -142,8 +138,7 @@ class LabelRowV2:
 
     @property
     def data_hash(self) -> str:
-        """
-        Returns the hash of the data row.
+        """Returns the hash of the data row.
 
         Returns:
             str: The data row hash.
@@ -152,8 +147,7 @@ class LabelRowV2:
 
     @property
     def dataset_hash(self) -> str:
-        """
-        Returns the hash of the dataset.
+        """Returns the hash of the dataset.
 
         Returns:
             str: The dataset hash.
@@ -162,8 +156,7 @@ class LabelRowV2:
 
     @property
     def dataset_title(self) -> str:
-        """
-        Returns the title of the dataset.
+        """Returns the title of the dataset.
 
         Returns:
             str: The dataset title.
@@ -172,8 +165,7 @@ class LabelRowV2:
 
     @property
     def data_title(self) -> str:
-        """
-        Returns the title of the data row.
+        """Returns the title of the data row.
 
         Returns:
             str: The data row title.
@@ -182,8 +174,7 @@ class LabelRowV2:
 
     @property
     def data_type(self) -> DataType:
-        """
-        Returns the data type of the label row.
+        """Returns the data type of the label row.
 
         Returns:
             DataType: The data type.
@@ -192,8 +183,7 @@ class LabelRowV2:
 
     @property
     def file_type(self) -> str | None:
-        """
-        Returns the file type of the data row.
+        """Returns the file type of the data row.
 
         Returns:
             str | None: The file type or None if not set.
@@ -202,8 +192,7 @@ class LabelRowV2:
 
     @property
     def client_metadata(self) -> dict | None:
-        """
-        Returns the client metadata associated with the label row.
+        """Returns the client metadata associated with the label row.
 
         Returns:
             dict | None: The client metadata or None if not set.
@@ -212,8 +201,7 @@ class LabelRowV2:
 
     @property
     def label_status(self) -> LabelStatus:
-        """
-        Returns the current labeling status for the label row.
+        """Returns the current labeling status for the label row.
 
         **Note**: This method is not supported for workflow-based projects. Please see our
         :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
@@ -234,8 +222,7 @@ class LabelRowV2:
 
     @property
     def annotation_task_status(self) -> AnnotationTaskStatus:
-        """
-        Returns the current annotation task status for the label row.
+        """Returns the current annotation task status for the label row.
 
         **Note**: This method is not supported for workflow-based projects. Please see our
         :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
@@ -258,8 +245,7 @@ class LabelRowV2:
 
     @property
     def workflow_graph_node(self) -> Optional[WorkflowGraphNode]:
-        """
-        Returns the workflow graph node associated with the label row.
+        """Returns the workflow graph node associated with the label row.
 
         Returns:
             Optional[WorkflowGraphNode]: The workflow graph node or None if not set.
@@ -268,8 +254,7 @@ class LabelRowV2:
 
     @property
     def is_shadow_data(self) -> bool:
-        """
-        Indicates if the label row is shadow data.
+        """Indicates if the label row is shadow data.
 
         Returns:
             bool: True if the label row is shadow data, False otherwise.
@@ -278,8 +263,7 @@ class LabelRowV2:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """
-        Returns the creation date of the label row.
+        """Returns the creation date of the label row.
 
         Returns:
             Optional[datetime]: The creation date or None if not yet created.
@@ -288,8 +272,7 @@ class LabelRowV2:
 
     @property
     def last_edited_at(self) -> Optional[datetime]:
-        """
-        Returns the last edited date of the label row.
+        """Returns the last edited date of the label row.
 
         Returns:
             Optional[datetime]: The last edited date or None if not yet edited.
@@ -298,8 +281,7 @@ class LabelRowV2:
 
     @property
     def number_of_frames(self) -> int:
-        """
-        Returns the number of frames in the label row.
+        """Returns the number of frames in the label row.
 
         Returns:
             int: The number of frames.
@@ -308,8 +290,7 @@ class LabelRowV2:
 
     @property
     def duration(self) -> Optional[float]:
-        """
-        Returns the duration of the video data type.
+        """Returns the duration of the video data type.
 
         Returns:
             Optional[float]: The duration or None if not applicable.
@@ -318,8 +299,7 @@ class LabelRowV2:
 
     @property
     def fps(self) -> Optional[float]:
-        """
-        Returns the frames per second (fps) of the video data type.
+        """Returns the frames per second (fps) of the video data type.
 
         Returns:
             Optional[float]: The fps or None if not applicable.
@@ -328,8 +308,7 @@ class LabelRowV2:
 
     @property
     def data_link(self) -> Optional[str]:
-        """
-        Returns the data link to the underlying object in either cloud storage or Encord storage. This will be `None`
+        """Returns the data link to the underlying object in either cloud storage or Encord storage. This will be `None`
         for DICOM series or image groups created without performance optimisations, as there is no single underlying
         file for these data types.
 
@@ -342,8 +321,7 @@ class LabelRowV2:
 
     @property
     def width(self) -> Optional[int]:
-        """
-        Returns the width of the image data type.
+        """Returns the width of the image data type.
 
         This is `None` for image groups without performance optimisation, as there is no single underlying width
         for this data type.
@@ -355,8 +333,7 @@ class LabelRowV2:
 
     @property
     def height(self) -> Optional[int]:
-        """
-        Returns the height of the image data type.
+        """Returns the height of the image data type.
 
         This is `None` for image groups without performance optimisation, as there is no single underlying height
         for this data type.
@@ -368,8 +345,7 @@ class LabelRowV2:
 
     @property
     def audio_codec(self) -> Optional[str]:
-        """
-        Returns the codec of the audio data type.
+        """Returns the codec of the audio data type.
 
         This only applies to audio data types, and returns None for all other data types.
 
@@ -380,8 +356,7 @@ class LabelRowV2:
 
     @property
     def audio_sample_rate(self) -> Optional[int]:
-        """
-        Returns the sample rate of the audio data type.
+        """Returns the sample rate of the audio data type.
 
         This only applies to audio data types, and returns None for all other data types.
 
@@ -392,8 +367,7 @@ class LabelRowV2:
 
     @property
     def audio_bit_depth(self) -> Optional[int]:
-        """
-        Returns the bit depth of the audio data type.
+        """Returns the bit depth of the audio data type.
 
         This only applies to audio data types, and returns None for all other data types.
 
@@ -404,8 +378,7 @@ class LabelRowV2:
 
     @property
     def audio_num_channels(self) -> Optional[int]:
-        """
-        Returns the number of channels of the audio data type.
+        """Returns the number of channels of the audio data type.
 
         This only applies to audio data types, and returns None for all other data types.
 
@@ -416,8 +389,7 @@ class LabelRowV2:
 
     @property
     def backing_item_uuid(self) -> Optional[UUID]:
-        """
-        Returns the unique identifier (UUID) for the backing storage item associated with this label row.
+        """Returns the unique identifier (UUID) for the backing storage item associated with this label row.
 
         While it is always included in server responses, it is marked as optional for backward compatibility with earlier versions.
 
@@ -429,8 +401,7 @@ class LabelRowV2:
 
     @property
     def priority(self) -> Optional[float]:
-        """
-        Returns the workflow priority for the task associated with the data unit.
+        """Returns the workflow priority for the task associated with the data unit.
 
         This property only works for workflow-based projects.
 
@@ -449,8 +420,7 @@ class LabelRowV2:
 
     @property
     def is_valid(self) -> bool:
-        """
-        Indicates if the labels are valid.
+        """Indicates if the labels are valid.
 
         For labels uploaded via the SDK, a check is run to ensure that the labels are valid.
         This property returns `True` if the labels have correct structure and match the project ontology.
@@ -472,8 +442,7 @@ class LabelRowV2:
 
     @property
     def is_labelling_initialised(self) -> bool:
-        """
-        Check if labelling is initialized.
+        """Check if labelling is initialized.
 
         Returns:
             bool: `True` if labelling is initialized, `False` otherwise.
@@ -497,8 +466,7 @@ class LabelRowV2:
         *,
         include_signed_url: bool = False,
     ) -> None:
-        """
-        Initialize labels from the Encord server.
+        """Initialize labels from the Encord server.
 
         This function downloads or exports labels stored on the Encord server and performs
         any other reading or writing operations. If you only want to inspect a subset of labels,
@@ -564,8 +532,7 @@ class LabelRowV2:
             )
 
     def from_labels_dict(self, label_row_dict: dict) -> None:
-        """
-        Initialize the LabelRow from a label row dictionary.
+        """Initialize the LabelRow from a label row dictionary.
 
         This function also initializes the label row. It resets all the labels currently
         stored within this class.
@@ -588,8 +555,7 @@ class LabelRowV2:
         self._parse_labels_from_dict(label_row_dict)
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
-        """
-        Get the corresponding image hash for the frame number.
+        """Get the corresponding image hash for the frame number.
 
         Args:
             frame_number: The frame number.
@@ -608,8 +574,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.frame_to_image_hash.get(frame_number)
 
     def get_frame_number(self, image_hash: str) -> Optional[int]:
-        """
-        Get the corresponding frame number for the image hash.
+        """Get the corresponding frame number for the image hash.
 
         Args:
             image_hash: The image hash.
@@ -627,8 +592,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
     def save(self, bundle: Optional[Bundle] = None, validate_before_saving: bool = False) -> None:
-        """
-        Upload the created labels to the Encord server.
+        """Upload the created labels to the Encord server.
 
         This will overwrite any labels that someone else has created on the platform in the meantime.
 
@@ -650,8 +614,7 @@ class LabelRowV2:
 
     @property
     def metadata(self) -> Optional[DICOMSeriesMetadata]:
-        """
-        Get metadata for the given data type.
+        """Get metadata for the given data type.
 
         Returns:
             Optional[DICOMSeriesMetadata]: Metadata for the data type, or `None` if not supported.
@@ -664,8 +627,7 @@ class LabelRowV2:
         return self._metadata
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
-        """
-        Get a view of the specified frame.
+        """Get a view of the specified frame.
 
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
@@ -674,7 +636,6 @@ class LabelRowV2:
         Returns:
             FrameView: A view of the specified frame.
         """
-
         self._method_not_supported_for_audio()
 
         self._check_labelling_is_initalised()
@@ -706,8 +667,7 @@ class LabelRowV2:
         return images_data
 
     def get_frame_metadata(self, frame: Union[int, str] = 0) -> FrameViewMetadata:
-        """
-        Get metadata for a specific frame or image hash.
+        """Get metadata for a specific frame or image hash.
 
         Args:
             frame: The frame number or the image hash. Defaults to the first frame.
@@ -741,8 +701,7 @@ class LabelRowV2:
         return self.FrameViewMetadata(data_meta)
 
     def get_frames_metadata(self) -> List[FrameViewMetadata]:
-        """
-        Get metadata for all frames in the image group.
+        """Get metadata for all frames in the image group.
 
         Returns:
             List[FrameViewMetadata]: A list of metadata for each frame.
@@ -756,8 +715,7 @@ class LabelRowV2:
         return views
 
     def get_frame_views(self) -> List[FrameView]:
-        """
-        Get views for all frames.
+        """Get views for all frames.
 
         Returns:
             List[FrameView]: A list of frame views in order of available frames.
@@ -771,8 +729,7 @@ class LabelRowV2:
     def get_object_instances(
         self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
     ) -> List[ObjectInstance]:
-        """
-        Get all object instances that match the given filters.
+        """Get all object instances that match the given filters.
 
         Args:
             filter_ontology_object: Optionally filter by a specific ontology object.
@@ -815,8 +772,7 @@ class LabelRowV2:
         return ret
 
     def add_object_instance(self, object_instance: ObjectInstance, force: bool = True) -> None:
-        """
-        Add an object instance to the label row. If the object instance already exists, it overwrites the current instance.
+        """Add an object instance to the label row. If the object instance already exists, it overwrites the current instance.
 
         Args:
             object_instance: The object instance to add.
@@ -825,7 +781,6 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the object instance is already part of another LabelRowV2.
         """
-
         self._method_not_supported_for_audio(range_only=object_instance.is_range_only())
 
         self._check_labelling_is_initalised()
@@ -867,8 +822,7 @@ class LabelRowV2:
         self._add_to_frame_to_hashes_map(object_instance, frames)
 
     def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
-        """
-        Add a classification instance to the label row.
+        """Add a classification instance to the label row.
 
         Args:
             classification_instance: The classification instance to add.
@@ -971,8 +925,7 @@ class LabelRowV2:
         self._classifications_to_ranges[classification_instance.ontology_item].add_ranges(ranges_to_add)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
-        """
-        Remove a classification instance from a label row.
+        """Remove a classification instance from a label row.
 
         Args:
             classification_instance: The classification instance to remove.
@@ -1008,8 +961,7 @@ class LabelRowV2:
     def get_classification_instances(
         self, filter_ontology_classification: Optional[Classification] = None, filter_frames: Optional[Frames] = None
     ) -> List[ClassificationInstance]:
-        """
-        Get all classification instances that match the given filters.
+        """Get all classification instances that match the given filters.
 
         Args:
             filter_ontology_classification: Optionally filter by a specific ontology classification.
@@ -1051,8 +1003,7 @@ class LabelRowV2:
         return ret
 
     def remove_object(self, object_instance: ObjectInstance):
-        """
-        Remove an object instance from a label row.
+        """Remove an object instance from a label row.
 
         Args:
             object_instance: The object instance to remove.
@@ -1067,8 +1018,7 @@ class LabelRowV2:
         object_instance._parent = None
 
     def to_encord_dict(self) -> Dict[str, Any]:
-        """
-        Convert the label row to a dictionary in Encord format.
+        """Convert the label row to a dictionary in Encord format.
 
         This is an internal helper function. Likely this should not be used by a user. To upload labels use the
         :meth:`.save()` function.
@@ -1101,8 +1051,7 @@ class LabelRowV2:
         return ret
 
     def workflow_reopen(self, bundle: Optional[Bundle] = None) -> None:
-        """
-        Return a label row to the first annotation stage for re-labeling.
+        """Return a label row to the first annotation stage for re-labeling.
 
         No data will be lost during this call. This method is only relevant for the projects that use the
         :ref:`Workflow <tutorials/workflows:Workflows>` feature, and will raise an error for pre-workflow projects.
@@ -1121,8 +1070,7 @@ class LabelRowV2:
         )
 
     def workflow_complete(self, bundle: Optional[Bundle] = None) -> None:
-        """
-        Move a label row to the final workflow node, marking it as 'Complete'.
+        """Move a label row to the final workflow node, marking it as 'Complete'.
 
         This method can be called only for labels for which :meth:`.initialise_labels()` was called at least once, and
         consequentially the "label_hash" field is not `None`. Labels need not be initialised every time the
@@ -1150,8 +1098,7 @@ class LabelRowV2:
         )
 
     def set_priority(self, priority: float, bundle: Optional[Bundle] = None) -> None:
-        """
-        Set priority for a task in a workflow project.
+        """Set priority for a task in a workflow project.
 
         Args:
             priority: Float value from 0.0 to 1.0, where 1.0 is the highest priority.
@@ -1170,8 +1117,7 @@ class LabelRowV2:
         )
 
     def get_validation_errors(self) -> List[str] | None:
-        """
-        Get validation errors for the label row.
+        """Get validation errors for the label row.
 
         Returns:
             List[str] | None: A list of error messages if the label row is invalid, otherwise `None`.
@@ -1182,9 +1128,7 @@ class LabelRowV2:
         return self._project_client.get_label_validation_errors(self.label_hash)
 
     class FrameViewMetadata:
-        """
-        Class to inspect metadata for a frame view.
-        """
+        """Class to inspect metadata for a frame view."""
 
         def __init__(self, images_data: LabelRowV2.LabelRowReadOnlyDataImagesDataEntry):
             self._image_data = images_data
@@ -1231,8 +1175,7 @@ class LabelRowV2:
 
         @property
         def image_hash(self) -> str:
-            """
-            Get the hash of the image.
+            """Get the hash of the image.
 
             Returns:
                 str: The image hash.
@@ -1241,8 +1184,7 @@ class LabelRowV2:
 
         @property
         def frame_number(self) -> int:
-            """
-            Get the frame number.
+            """Get the frame number.
 
             Returns:
                 int: The frame number.
@@ -1250,8 +1192,7 @@ class LabelRowV2:
             return self._image_data.index
 
     class FrameView:
-        """
-        This class can be used to inspect object or classification instances on a given frame,
+        """This class can be used to inspect object or classification instances on a given frame,
         or metadata such as image file size for a given frame.
         """
 
@@ -1264,8 +1205,7 @@ class LabelRowV2:
 
         @property
         def image_hash(self) -> str:
-            """
-            Get the image hash for the current frame.
+            """Get the image hash for the current frame.
 
             Returns:
                 str: The image hash.
@@ -1279,8 +1219,7 @@ class LabelRowV2:
 
         @property
         def image_title(self) -> str:
-            """
-            Get the image title for the current frame.
+            """Get the image title for the current frame.
 
             Returns:
                 str: The image title.
@@ -1294,8 +1233,7 @@ class LabelRowV2:
 
         @property
         def file_type(self) -> str:
-            """
-            Get the file type for the current frame.
+            """Get the file type for the current frame.
 
             Returns:
                 str: The file type.
@@ -1309,8 +1247,7 @@ class LabelRowV2:
 
         @property
         def frame(self) -> int:
-            """
-            Get the frame number.
+            """Get the frame number.
 
             Returns:
                 int: The frame number.
@@ -1319,8 +1256,7 @@ class LabelRowV2:
 
         @property
         def width(self) -> int:
-            """
-            Get the width of the image or image group.
+            """Get the width of the image or image group.
 
             Returns:
                 int: The width of the image or image group.
@@ -1337,8 +1273,7 @@ class LabelRowV2:
 
         @property
         def height(self) -> int:
-            """
-            Get the height of the image or image group.
+            """Get the height of the image or image group.
 
             Returns:
                 int: The height of the image or image group.
@@ -1355,8 +1290,7 @@ class LabelRowV2:
 
         @property
         def data_link(self) -> Optional[str]:
-            """
-            Get the data link for the current frame.
+            """Get the data link for the current frame.
 
             Returns:
                 Optional[str]: The data link, or `None` if not available.
@@ -1370,8 +1304,7 @@ class LabelRowV2:
 
         @property
         def metadata(self) -> Optional[DICOMSliceMetadata]:
-            """
-            Get annotation metadata for the current frame.
+            """Get annotation metadata for the current frame.
 
             Returns:
                 Optional[DICOMSliceMetadata]: The metadata for the frame, or `None` if not applicable.
@@ -1394,8 +1327,7 @@ class LabelRowV2:
             confidence: Optional[float] = None,
             manual_annotation: Optional[bool] = None,
         ) -> None:
-            """
-            Add an object instance to the current frame.
+            """Add an object instance to the current frame.
 
             Args:
                 object_instance: The object instance to add.
@@ -1445,8 +1377,7 @@ class LabelRowV2:
             last_edited_at: Optional[datetime] = None,
             last_edited_by: Optional[str] = None,
         ) -> None:
-            """
-            Add a classification instance to the current frame.
+            """Add a classification instance to the current frame.
 
             Args:
                 classification_instance: The classification instance to add.
@@ -1489,8 +1420,7 @@ class LabelRowV2:
                 self._label_row.add_classification_instance(classification_instance)
 
         def get_object_instances(self, filter_ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
-            """
-            Get object instances for the current frame.
+            """Get object instances for the current frame.
 
             Args:
                 filter_ontology_object: Optionally filter by a specific ontology object.
@@ -1505,8 +1435,7 @@ class LabelRowV2:
         def get_classification_instances(
             self, filter_ontology_classification: Optional[Classification] = None
         ) -> List[ClassificationInstance]:
-            """
-            Get classification instances for the current frame.
+            """Get classification instances for the current frame.
 
             Args:
                 filter_ontology_classification: Optionally filter by a specific ontology classification.
@@ -1526,8 +1455,7 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class FrameLevelImageGroupData:
-        """
-        Data related to a specific frame in an image group.
+        """Data related to a specific frame in an image group.
 
         Attributes:
             image_hash: Hash of the image.
@@ -1549,8 +1477,7 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class LabelRowReadOnlyDataImagesDataEntry:
-        """
-        Read-only data entry for image data in a label row.
+        """Read-only data entry for image data in a label row.
 
         Attributes:
             index: Index of the image.
@@ -1570,8 +1497,7 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class LabelRowReadOnlyData:
-        """
-        Read-only data for a label row.
+        """Read-only data for a label row.
 
         Attributes:
             label_hash: Optional hash for the label. `None` if not initialized for labeling.

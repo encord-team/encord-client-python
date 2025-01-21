@@ -86,8 +86,7 @@ class AgentStage(WorkflowStageBase):
         data_title: Optional[str] = None,
         status: Optional[AgentTaskStatus | List[AgentTaskStatus]] = None,
     ) -> Iterable[AgentTask]:
-        """
-        Retrieves tasks for the AgentStage.
+        """Retrieves tasks for the AgentStage.
 
         **Parameters**
 

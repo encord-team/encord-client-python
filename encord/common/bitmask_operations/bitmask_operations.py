@@ -3,9 +3,7 @@ from typing import List, Sequence, Tuple
 
 
 def _string_to_rle(mask_string: str) -> List[int]:
-    """
-    COCO-compatible string to RLE-encoded mask de-serialisation
-    """
+    """COCO-compatible string to RLE-encoded mask de-serialisation"""
     cnts: List[int] = []
     p = 0
 
@@ -33,9 +31,7 @@ def _string_to_rle(mask_string: str) -> List[int]:
 
 
 def _rle_to_string(rle: Sequence[int]) -> str:
-    """
-    COCO-compatible RLE-encoded mask to string serialisation
-    """
+    """COCO-compatible RLE-encoded mask to string serialisation"""
     rle_string = ""
     for i, x in enumerate(rle):
         if i > 2:
@@ -61,16 +57,12 @@ def _rle_to_string(rle: Sequence[int]) -> str:
 
 
 def _mask_to_rle(mask: bytes) -> List[int]:
-    """
-    COCO-compatible raw bitmask to COCO-compatible RLE
-    """
+    """COCO-compatible raw bitmask to COCO-compatible RLE"""
     return [len(list(group)) for _, group in groupby(mask)]
 
 
 def _rle_to_mask(rle: List[int], size: int) -> bytes:
-    """
-    COCO-compatible RLE to bitmask
-    """
+    """COCO-compatible RLE to bitmask"""
     res = bytearray(size)
     offset = 0
 

@@ -21,8 +21,7 @@ class ModelOperations(Enum):
 
 
 class Model(base_orm.BaseORM):
-    """
-    Model base ORM.
+    """Model base ORM.
 
     ORM:
 
@@ -137,8 +136,7 @@ class TrainingMetadata(Formatter):
 
 
 class ModelRow(base_orm.BaseORM):
-    """
-    A model row contains a set of features and a model (resnet18, resnet34, resnet50, resnet101, resnet152,
+    """A model row contains a set of features and a model (resnet18, resnet34, resnet50, resnet101, resnet152,
     vgg16, vgg19, faster_rcnn, mask_rcnn).
 
     ORM:
@@ -163,8 +161,7 @@ class ModelRow(base_orm.BaseORM):
 
 
 class ModelInferenceParams(base_orm.BaseORM):
-    """
-    Model inference parameters for running models trained via the platform.
+    """Model inference parameters for running models trained via the platform.
 
     ORM:
 
@@ -191,8 +188,7 @@ class ModelInferenceParams(base_orm.BaseORM):
 
 
 class ModelTrainingWeights(base_orm.BaseORM):
-    """
-    Model training weights.
+    """Model training weights.
 
     ORM:
 
@@ -209,8 +205,7 @@ class ModelTrainingWeights(base_orm.BaseORM):
 
 
 class ModelTrainingParams(base_orm.BaseORM):
-    """
-    Model training parameters.
+    """Model training parameters.
 
     ORM:
 
