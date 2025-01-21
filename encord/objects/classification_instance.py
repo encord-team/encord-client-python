@@ -203,27 +203,18 @@ class ClassificationInstance:
         overwrite is set to `True`, the currently specified values will be overwritten.
 
         Args:
-            frames:
-                The frame to add the classification instance to. Defaulting to the first frame for convenience.
-            overwrite:
-                If `True`, overwrite existing data for the given frames. This will not reset all the
+            frames: The frame to add the classification instance to. Defaulting to the first frame for convenience.
+            overwrite: If `True`, overwrite existing data for the given frames. This will not reset all the
                 non-specified values. If `False` and data already exists for the given frames,
                 raises an error.
-            created_at:
-                Optionally specify the creation time of the classification instance on this frame. Defaults to `datetime.now()`.
-            created_by:
-                Optionally specify the creator of the classification instance on this frame. Defaults to the current SDK user.
-            last_edited_at:
-                Optionally specify the last edit time of the classification instance on this frame. Defaults to `datetime.now()`.
-            last_edited_by:
-                Optionally specify the last editor of the classification instance on this frame. Defaults to the current SDK
+            created_at: Optionally specify the creation time of the classification instance on this frame. Defaults to `datetime.now()`.
+            created_by: Optionally specify the creator of the classification instance on this frame. Defaults to the current SDK user.
+            last_edited_at: Optionally specify the last edit time of the classification instance on this frame. Defaults to `datetime.now()`.
+            last_edited_by: Optionally specify the last editor of the classification instance on this frame. Defaults to the current SDK
                 user.
-            confidence:
-                Optionally specify the confidence of the classification instance on this frame. Defaults to `1.0`.
-            manual_annotation:
-                Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
-            reviews:
-                Should only be set by internal functions.
+            confidence: Optionally specify the confidence of the classification instance on this frame. Defaults to `1.0`.
+            manual_annotation: Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
+            reviews: Should only be set by internal functions.
         """
         if created_at is None:
             created_at = datetime.now()

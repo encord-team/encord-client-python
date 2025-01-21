@@ -302,10 +302,8 @@ class Dataset:
             A dictionary describing the created series.
 
         Raises:
-            UploadOperationNotSupportedError:
-                If trying to upload to external datasets (e.g., S3/GPC/Azure).
-            InvalidArgumentError:
-                If the folder is specified, but the dataset is a mirror dataset.
+            UploadOperationNotSupportedError: If trying to upload to external datasets (e.g., S3/GPC/Azure).
+            InvalidArgumentError: If the folder is specified, but the dataset is a mirror dataset.
         """
         return self._client.create_dicom_series(
             file_paths,
