@@ -127,8 +127,12 @@ class ApiClient:
     ) -> T:
         return self._request_with_payload("PATCH", path, params, payload, result_type)
 
-    def _serialise_payload(self, payload: Union[BaseDTO, Sequence[BaseDTO], None]) -> Union[List[Dict], Dict, None]:
-        if isinstance(payload, list):
+    def serialise_payload(
+        self, payload: Union[BaseDTO, Sequence[BaseDTO], List, Dict, None]
+    ) -> Union[List[Dict], Dict, None]:
+        if isinstance(payload, dict):
+            return payload
+        elif isinstance(payload, list):
             return [p.to_dict() for p in payload]
         elif isinstance(payload, BaseDTO):
             return payload.to_dict()
@@ -153,7 +157,7 @@ class ApiClient:
         allow_none: bool = False,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
-        payload_serialised = self._serialise_payload(payload)
+        payload_serialised = self.serialise_payload(payload)
 
         req = requests.Request(
             method=method,
