@@ -1106,10 +1106,15 @@ class Project:
         )
 
     def analyze_prediction(self, label_branch_name: str) -> None:
+        """Analyse your predictions against a given label branch in Active
+
+        Args:
+            label_branch_name (str): Name of the label branch that we'll analyse
+        """
         self._client._api_client.post(
             path=f"active/{self.project_hash}/predictions",
             params=None,
             payload=ActivePredictionPayload(label_branch_name=label_branch_name),
             result_type=None,
         )
-        logger.info("Prediction imported initiated in Active. Please check the platform to see progress")
+        logger.info("Prediction import initiated in Active. Please check the platform to see progress")
