@@ -217,7 +217,31 @@ class MlModelsClient:
             model_uuid: UUID of the model to train
             batch_size: Training batch size
             epochs: Number of training epochs
-            features_mapping: Mapping of features for training
+            features_mapping: Maps project UUIDs to mappings between ontology features and model features.
+                This complex structure allows training examples for model features to be sourced from multiple
+                projects with different ontologies. For example:
+                {
+                    project_uuid_0: {
+                        "ontology_0_feature_0": ["model_feature_0"],
+                        "ontology_0_feature_1": ["model_feature_1"]
+                    },
+                    project_uuid_1: {
+                        "ontology_1_feature_0": ["model_feature_0", "model_feature_1"]
+                    }
+                }
+                In this case:
+                - Training examples for model_feature_0 will come from:
+                    - project_uuid_0's ontology_0_feature_0
+                    - project_uuid_1's ontology_1_feature_0
+                - Training examples for model_feature_1 will come from:
+                    - project_uuid_0's ontology_0_feature_1
+                    - project_uuid_1's ontology_1_feature_0
+
+                The project-level mapping is essential because:
+                1. Different projects can use different ontologies
+                2. The same semantic concept (e.g. "car") might have different feature IDs across ontologies
+                3. Allows flexibly combining training data from multiple sources while maintaining correct
+                   mappings between ontology features and model features
             labels_uuids: List of label UUIDs to use for training
             pretrained_training_uuid: Optional UUID of previous training to use for transfer learning
             pretrained_weights_type: Optional type of pretrained weights to use
