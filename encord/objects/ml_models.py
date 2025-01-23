@@ -155,7 +155,7 @@ class ApiRequestModelAttachToProject(BaseDTO):
     features_mapping: Dict[str, str]
     iteration_policy: ApiIterationPolicy
     model_uuid: UUID
-    training_uuids: Union[List[UUID], None]
+    training_uuids: Optional[List[UUID]]
 
 
 class ApiRequestModelInsert(BaseDTO):
@@ -192,7 +192,7 @@ class ApiRequestObjectDetectionPrediction(BaseDTO):
 class ApiRequestProjectModelUpdate(BaseDTO):
     features_mapping: Dict[str, str]
     iteration_policy: ApiIterationPolicy
-    training_uuids: Union[List[UUID], None]
+    training_uuids: Optional[List[UUID]]
 
 
 class ApiResponseGetTrainingResult(BaseDTO):

@@ -416,7 +416,7 @@ class MlModelsClient:
         features_mapping: Dict[str, str],
         iteration_policy: ApiIterationPolicy,
         model_uuid: UUID,
-        training_uuids: Union[List[UUID], None],
+        training_uuids: Optional[List[UUID]],
     ) -> None:
         """
         Attach a model to a project by mapping the model's features to corresponding ontology features in the project.
@@ -477,7 +477,7 @@ class MlModelsClient:
         project_model_uuid: UUID,
         features_mapping: Dict[str, str],
         iteration_policy: ApiIterationPolicy,
-        training_uuids: Union[List[UUID], None],
+        training_uuids: Optional[List[UUID]],
     ) -> None:
         """
         Update how a model is attached to a project by modifying its feature mappings and iteration settings.
