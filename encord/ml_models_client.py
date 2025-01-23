@@ -470,14 +470,26 @@ class MlModelsClient:
         training_uuids: Union[List[UUID], None],
     ) -> None:
         """
-        Update a model attachment configuration.
+        Update how a model is attached to a project by modifying its feature mappings and iteration settings.
+        This allows you to change how the model's features map to the project's ontology features,
+        or update which model iterations are used for inference.
 
         Args:
             project_uuid: UUID of the project
-            project_model_uuid: UUID of the model attachment to project
-            features_mapping: Updated mapping between model features and ontology features
-            iteration_policy: Updated iteration selection policy
-            training_uuids: Optional updated list of training iterations
+            project_model_uuid: UUID identifying this specific model attachment to the project
+            features_mapping: Maps model features to project ontology features. For example:
+                {
+                    "model_feature_0": "new_ontology_feature_hash_1",
+                    "model_feature_1": "new_ontology_feature_hash_2"
+                }
+                This lets you remap model features to different ontology features - useful
+                when the project's ontology has changed or if you want the model to detect
+                different classes than it was originally mapped to.
+            iteration_policy: Updated policy for selecting which trained iteration of the model to use.
+                Can be changed between automatically using latest iteration or manually specified ones.
+            training_uuids: Optional list of specific training iterations to use. Only required
+                when iteration_policy is set to MANUAL_SELECTION. Allows cherry-picking which
+                trained versions of the model to use for inference.
         """
         return _api_project_update_model_attachment(
             project_uuid,
