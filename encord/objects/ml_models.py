@@ -250,8 +250,8 @@ class ApiResponseInstanceSegmentationPredictionResultItem(BaseDTO):
     manual_annotation: bool
     name: str
     object_id: str
-    polygon: List[ApiInstanceSegmentationPredictionPolygonItem]
     value: str
+    polygon: List[ApiInstanceSegmentationPredictionPolygonItem]
 
 
 class ApiResponseInstanceSegmentationPredictionResult(BaseDTO):
@@ -266,7 +266,6 @@ class ApiResponseObjectDetectionPredictionResultItemBoundingBox(BaseDTO):
 
 
 class ApiResponseObjectDetectionPredictionResultItem(BaseDTO):
-    bounding_box: ApiResponseObjectDetectionPredictionResultItemBoundingBox
     color: str
     confidence: float
     created_at: datetime.datetime
@@ -276,6 +275,7 @@ class ApiResponseObjectDetectionPredictionResultItem(BaseDTO):
     name: str
     object_id: str
     value: str
+    bounding_box: ApiResponseObjectDetectionPredictionResultItemBoundingBox
 
 
 class ApiResponseObjectDetectionPredictionResult(BaseDTO):
