@@ -61,7 +61,19 @@ logger = logging.getLogger(__name__)
 
 
 class MlModelsClient:
+    """
+    Client for interacting with Encord's ML models functionality. This client provides methods
+    to create, manage, and use machine learning models within Encord, including classification,
+    object detection, and instance segmentation models.
+    """
+
     def __init__(self, user_client: EncordUserClient) -> None:
+        """
+        Initialize the ML Models client.
+
+        Args:
+            user_client: An authenticated EncordUserClient instance
+        """
         self.user_client = user_client
 
     def create_model(
@@ -72,6 +84,18 @@ class MlModelsClient:
         title: str,
         description: Union[None, str],
     ) -> UUID:
+        """
+        Create a new model in Encord.
+
+        Args:
+            features: List of feature identifiers that the model will be trained on
+            model: The architecture type of the model to create
+            title: Title for the model
+            description: Optional description for the model
+
+        Returns:
+            UUID: The unique identifier of the created model
+        """
         return _api_ml_create_model(
             client=self.user_client._api_client,
             body=ApiRequestModelInsert(
@@ -87,6 +111,15 @@ class MlModelsClient:
         *,
         model_uuid: UUID,
     ) -> ApiResponseModelReadItem:
+        """
+        Get information about a specific model.
+
+        Args:
+            model_uuid: UUID of the model to get information for
+
+        Returns:
+            Information about the requested model
+        """
         return _api_ml_get_model_info(
             model_uuid,
             client=self.user_client._api_client,
@@ -97,6 +130,12 @@ class MlModelsClient:
         *,
         model_uuid: UUID,
     ) -> None:
+        """
+        Delete a model.
+
+        Args:
+            model_uuid: UUID of the model to delete
+        """
         return _api_ml_delete_model(
             model_uuid,
             client=self.user_client._api_client,
@@ -111,6 +150,19 @@ class MlModelsClient:
         offset: int,
         query: Union[None, str],
     ) -> ApiResponseModelRead:
+        """
+        List available models with filtering and pagination options.
+
+        Args:
+            order_by: Field to order results by
+            order_asc: True for ascending order, False for descending
+            limit: Maximum number of results to return
+            offset: Number of results to skip
+            query: Optional search query to filter results
+
+        Returns:
+            List of models matching the specified criteria
+        """
         return _api_ml_list_models(
             client=self.user_client._api_client,
             order_by=order_by,
@@ -127,6 +179,17 @@ class MlModelsClient:
         description: Union[None, str],
         title: Union[None, str],
     ) -> ApiResponseModelReadItem:
+        """
+        Update a model's metadata.
+
+        Args:
+            model_uuid: UUID of the model to update
+            description: New description for the model
+            title: New title for the model
+
+        Returns:
+            Updated model information
+        """
         return _api_ml_update_model(
             model_uuid,
             client=self.user_client._api_client,
@@ -147,6 +210,21 @@ class MlModelsClient:
         pretrained_training_uuid: Union[None, UUID],
         pretrained_weights_type: Union[ApiPretrainedWeightsType, None],
     ) -> UUID:
+        """
+        Create a new training job for a model.
+
+        Args:
+            model_uuid: UUID of the model to train
+            batch_size: Training batch size
+            epochs: Number of training epochs
+            features_mapping: Mapping of features for training
+            labels_uuids: List of label UUIDs to use for training
+            pretrained_training_uuid: Optional UUID of previous training to use for transfer learning
+            pretrained_weights_type: Optional type of pretrained weights to use
+
+        Returns:
+            UUID: The unique identifier of the created training job
+        """
         return _api_ml_create_training_job(
             model_uuid,
             client=self.user_client._api_client,
@@ -167,6 +245,21 @@ class MlModelsClient:
         training_uuid: UUID,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> ApiModelIteration:
+        """
+        Get the status of a training job.
+
+        Args:
+            model_uuid: UUID of the model being trained
+            training_uuid: UUID of the training job
+            timeout_seconds: Maximum time to wait for training completion (default: 7 days)
+
+        Returns:
+            Information about the training iteration
+
+        Raises:
+            EncordException: If training encountered an error
+            ValueError: If status response is invalid
+        """
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
 
@@ -225,6 +318,16 @@ class MlModelsClient:
         model_uuid: UUID,
         training_uuid: UUID,
     ) -> List[ApiModelIterationTrainingDataItem]:
+        """
+        Get information about data used in a training iteration.
+
+        Args:
+            model_uuid: UUID of the model
+            training_uuid: UUID of the training iteration
+
+        Returns:
+            List of training data items
+        """
         return _api_ml_get_training_data(
             model_uuid,
             training_uuid,
@@ -237,6 +340,16 @@ class MlModelsClient:
         model_uuid: UUID,
         training_uuid: UUID,
     ) -> str:
+        """
+        Get a download link for trained model weights.
+
+        Args:
+            model_uuid: UUID of the model
+            training_uuid: UUID of the training iteration
+
+        Returns:
+            str: URL for downloading model weights
+        """
         return _api_ml_get_weights_download_link(
             model_uuid,
             training_uuid,
@@ -249,6 +362,13 @@ class MlModelsClient:
         model_uuid: UUID,
         training_uuid: UUID,
     ) -> None:
+        """
+        Delete a training iteration.
+
+        Args:
+            model_uuid: UUID of the model
+            training_uuid: UUID of the training iteration to delete
+        """
         return _api_ml_delete_training_iteration(
             model_uuid,
             training_uuid,
@@ -264,6 +384,16 @@ class MlModelsClient:
         model_uuid: UUID,
         training_uuids: Union[List[UUID], None],
     ) -> None:
+        """
+        Attach a model to a project.
+
+        Args:
+            project_uuid: UUID of the project to attach the model to
+            features_mapping: Mapping between model features and project features
+            iteration_policy: Policy for model iteration selection
+            model_uuid: UUID of the model to attach
+            training_uuids: Optional list of specific training iterations to use
+        """
         return _api_project_create_model_attachment(
             project_uuid,
             client=self.user_client._api_client,
@@ -280,6 +410,15 @@ class MlModelsClient:
         *,
         project_uuid: UUID,
     ) -> List[ApiResponseProjectModelReadItem]:
+        """
+        List models attached to a project.
+
+        Args:
+            project_uuid: UUID of the project
+
+        Returns:
+            List of attached model information
+        """
         return _api_project_list_model_attachments(
             project_uuid,
             client=self.user_client._api_client,
@@ -294,6 +433,16 @@ class MlModelsClient:
         iteration_policy: ApiIterationPolicy,
         training_uuids: Union[List[UUID], None],
     ) -> None:
+        """
+        Update a model attachment configuration.
+
+        Args:
+            project_uuid: UUID of the project
+            project_model_uuid: UUID of the attached model
+            features_mapping: Updated feature mapping
+            iteration_policy: Updated iteration selection policy
+            training_uuids: Optional updated list of training iterations
+        """
         return _api_project_update_model_attachment(
             project_uuid,
             project_model_uuid,
@@ -311,6 +460,13 @@ class MlModelsClient:
         project_uuid: UUID,
         project_model_uuid: UUID,
     ) -> None:
+        """
+        Remove a model attachment from a project.
+
+        Args:
+            project_uuid: UUID of the project
+            project_model_uuid: UUID of the attached model to remove
+        """
         return _api_project_delete_model_attachment(
             project_uuid,
             project_model_uuid,
@@ -329,6 +485,22 @@ class MlModelsClient:
         frame_range_to: int | None,
         conf_thresh: float,
     ) -> ApiResponseClassificationPredictionResult:
+        """
+        Run classification prediction on data.
+
+        Args:
+            project_uuid: UUID of the project
+            project_model_uuid: UUID of the attached model
+            training_uuid: UUID of the training iteration to use
+            data_uuid: Optional UUID of data to predict on
+            data_path: Optional path to local data file
+            frame_range_from: Optional starting frame for prediction
+            frame_range_to: Optional ending frame for prediction
+            conf_thresh: Confidence threshold for predictions
+
+        Returns:
+            Classification prediction results
+        """
         return _api_project_predict_classification(
             project_uuid,
             project_model_uuid,
@@ -358,6 +530,25 @@ class MlModelsClient:
         iou_thresh: float,
         rdp_thresh: Union[None, float],
     ) -> ApiResponseInstanceSegmentationPredictionResult:
+        """
+        Run instance segmentation prediction on data.
+
+        Args:
+            project_uuid: UUID of the project
+            project_model_uuid: UUID of the attached model
+            training_uuid: UUID of the training iteration to use
+            data_uuid: Optional UUID of data to predict on
+            data_path: Optional path to local data file
+            frame_range_from: Optional starting frame for prediction
+            frame_range_to: Optional ending frame for prediction
+            allocation_enabled: Whether to enable object tracking/allocation
+            conf_thresh: Confidence threshold for predictions
+            iou_thresh: Intersection over Union threshold
+            rdp_thresh: Optional Ramer-Douglas-Peucker algorithm threshold for polygon simplification
+
+        Returns:
+            Instance segmentation prediction results
+        """
         return _api_project_predict_instance_segmentation(
             project_uuid,
             project_model_uuid,
@@ -389,6 +580,24 @@ class MlModelsClient:
         conf_thresh: float,
         iou_thresh: float,
     ) -> ApiResponseObjectDetectionPredictionResult:
+        """
+        Run object detection prediction on data.
+
+        Args:
+            project_uuid: UUID of the project
+            project_model_uuid: UUID of the attached model
+            training_uuid: UUID of the training iteration to use
+            data_uuid: Optional UUID of data to predict on
+            data_path: Optional path to local data file
+            frame_range_from: Optional starting frame for prediction
+            frame_range_to: Optional ending frame for prediction
+            allocation_enabled: Whether to enable object tracking/allocation
+            conf_thresh: Confidence threshold for predictions
+            iou_thresh: Intersection over Union threshold
+
+        Returns:
+            Object detection prediction results
+        """
         return _api_project_predict_object_detection(
             project_uuid,
             project_model_uuid,
