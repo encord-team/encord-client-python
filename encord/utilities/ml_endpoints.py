@@ -1,6 +1,7 @@
 from typing import (
     Dict,
     List,
+    Optional,
     Union,
 )
 from uuid import UUID
@@ -36,7 +37,7 @@ def _api_ml_list_models(
     order_asc: bool,
     limit: int,
     offset: int,
-    query: Union[None, str],
+    query: Optional[str],
 ) -> ApiResponseModelRead:
     return client._request(
         Request(
@@ -183,7 +184,7 @@ def _api_ml_get_training_status(
     training_uuid: UUID,
     *,
     client: ApiClient,
-    timeout_seconds: Union[None, int] = 0,
+    timeout_seconds: Optional[int] = 0,
 ) -> ApiResponseGetTrainingResult:
     return client._request(
         Request(

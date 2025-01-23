@@ -3,7 +3,7 @@ import logging
 import time
 from math import ceil
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 import requests
@@ -82,7 +82,7 @@ class MlModelsClient:
         features: List[str],
         model: ApiModelArchitecture,
         title: str,
-        description: Union[None, str],
+        description: Optional[str],
     ) -> UUID:
         """
         Create a new model in Encord.
@@ -158,7 +158,7 @@ class MlModelsClient:
         order_asc: bool,
         limit: int,
         offset: int,
-        query: Union[None, str],
+        query: Optional[str],
     ) -> ApiResponseModelRead:
         """
         List available models with filtering and pagination options.
@@ -186,8 +186,8 @@ class MlModelsClient:
         self,
         *,
         model_uuid: UUID,
-        description: Union[None, str],
-        title: Union[None, str],
+        description: Optional[str],
+        title: Optional[str],
     ) -> ApiResponseModelReadItem:
         """
         Update a model's metadata.
@@ -215,10 +215,10 @@ class MlModelsClient:
         model_uuid: UUID,
         batch_size: int,
         epochs: int,
-        features_mapping: Dict[UUID, Dict[str, list[str]]],
+        features_mapping: Dict[UUID, Dict[str, List[str]]],
         labels_uuids: List[UUID],
-        pretrained_training_uuid: Union[None, UUID],
-        pretrained_weights_type: Union[ApiPretrainedWeightsType, None],
+        pretrained_training_uuid: Optional[UUID],
+        pretrained_weights_type: Optional[ApiPretrainedWeightsType],
     ) -> UUID:
         """
         Create a new training job for a model.
@@ -537,10 +537,10 @@ class MlModelsClient:
         project_uuid: UUID,
         project_model_uuid: UUID,
         training_uuid: UUID,
-        data_uuid: UUID | None,
-        data_path: Path | None,
-        frame_range_from: int | None,
-        frame_range_to: int | None,
+        data_uuid: Optional[UUID],
+        data_path: Optional[Path],
+        frame_range_from: Optional[int],
+        frame_range_to: Optional[int],
         conf_thresh: float,
     ) -> ApiResponseClassificationPredictionResult:
         """
@@ -579,14 +579,14 @@ class MlModelsClient:
         project_uuid: UUID,
         project_model_uuid: UUID,
         training_uuid: UUID,
-        data_uuid: UUID | None,
-        data_path: Path | None,
-        frame_range_from: int | None,
-        frame_range_to: int | None,
+        data_uuid: Optional[UUID],
+        data_path: Optional[Path],
+        frame_range_from: Optional[int],
+        frame_range_to: Optional[int],
         allocation_enabled: bool,
         conf_thresh: float,
         iou_thresh: float,
-        rdp_thresh: Union[None, float],
+        rdp_thresh: Optional[float],
     ) -> ApiResponseInstanceSegmentationPredictionResult:
         """
         Run instance segmentation prediction on either data_uuid or data_path.
@@ -630,10 +630,10 @@ class MlModelsClient:
         project_uuid: UUID,
         project_model_uuid: UUID,
         training_uuid: UUID,
-        data_uuid: UUID | None,
-        data_path: Path | None,
-        frame_range_from: int | None,
-        frame_range_to: int | None,
+        data_uuid: Optional[UUID],
+        data_path: Optional[Path],
+        frame_range_from: Optional[int],
+        frame_range_to: Optional[int],
         allocation_enabled: bool,
         conf_thresh: float,
         iou_thresh: float,

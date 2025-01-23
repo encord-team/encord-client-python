@@ -4,6 +4,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Optional,
     Union,
 )
 from uuid import UUID
@@ -120,7 +121,7 @@ class ApiOntologyFeature(BaseDTO):
     feature_node_uuid: str
     name: str
     type: ApiFeaturesMappingFeatureType
-    color: Union[None, str]
+    color: Optional[str]
 
 
 class ApiProjectModel(BaseDTO):
@@ -134,21 +135,21 @@ class ApiProjectModel(BaseDTO):
 
 class ApiRequestClassificationPrediction(BaseDTO):
     conf_thresh: float
-    data_uuid: UUID | None
-    data_base64: str | None
-    frame_range_from: int | None
-    frame_range_to: int | None
+    data_uuid: Optional[UUID]
+    data_base64: Optional[str]
+    frame_range_from: Optional[int]
+    frame_range_to: Optional[int]
 
 
 class ApiRequestInstanceSegmentationPrediction(BaseDTO):
     allocation_enabled: bool
     conf_thresh: float
-    data_uuid: UUID | None
-    data_base64: str | None
-    frame_range_from: int | None
-    frame_range_to: int | None
+    data_uuid: Optional[UUID]
+    data_base64: Optional[str]
+    frame_range_from: Optional[int]
+    frame_range_to: Optional[int]
     iou_thresh: float
-    rdp_thresh: Union[None, float]
+    rdp_thresh: Optional[float]
 
 
 class ApiRequestModelAttachToProject(BaseDTO):
@@ -162,30 +163,30 @@ class ApiRequestModelInsert(BaseDTO):
     features: List[str]
     model: ApiModelArchitecture
     title: str
-    description: Union[None, str]
+    description: Optional[str]
 
 
 class ApiRequestModelOperationsTrain(BaseDTO):
     batch_size: int
     epochs: int
-    features_mapping: Dict[UUID, Dict[str, list[str]]]
+    features_mapping: Dict[UUID, Dict[str, List[str]]]
     labels_uuids: List[UUID]
-    pretrained_training_uuid: Union[None, UUID]
-    pretrained_weights_type: Union[ApiPretrainedWeightsType, None]
+    pretrained_training_uuid: Optional[UUID]
+    pretrained_weights_type: Optional[ApiPretrainedWeightsType]
 
 
 class ApiRequestModelPatch(BaseDTO):
-    description: Union[None, str]
-    title: Union[None, str]
+    description: Optional[str]
+    title: Optional[str]
 
 
 class ApiRequestObjectDetectionPrediction(BaseDTO):
     allocation_enabled: bool
     conf_thresh: float
-    data_uuid: UUID | None
-    data_base64: str | None
-    frame_range_from: int | None
-    frame_range_to: int | None
+    data_uuid: Optional[UUID]
+    data_base64: Optional[str]
+    frame_range_from: Optional[int]
+    frame_range_to: Optional[int]
     iou_thresh: float
 
 
@@ -196,7 +197,7 @@ class ApiRequestProjectModelUpdate(BaseDTO):
 
 
 class ApiResponseGetTrainingResult(BaseDTO):
-    result: ApiModelIteration | None = None
+    result: Optional[ApiModelIteration] = None
     status: ApiResponseGetTrainingResultStatus
 
 
@@ -233,7 +234,7 @@ class ApiResponseClassificationPredictionResultItem(BaseDTO):
 
 
 class ApiResponseClassificationPredictionResult(BaseDTO):
-    result: dict[int, ApiResponseClassificationPredictionResultItem | None]
+    result: Dict[int, Optional[ApiResponseClassificationPredictionResultItem]]
 
 
 class ApiInstanceSegmentationPredictionPolygonItem(BaseDTO):
@@ -255,7 +256,7 @@ class ApiResponseInstanceSegmentationPredictionResultItem(BaseDTO):
 
 
 class ApiResponseInstanceSegmentationPredictionResult(BaseDTO):
-    result: Dict[int, list[ApiResponseInstanceSegmentationPredictionResultItem]]
+    result: Dict[int, List[ApiResponseInstanceSegmentationPredictionResultItem]]
 
 
 class ApiResponseObjectDetectionPredictionResultItemBoundingBox(BaseDTO):
@@ -279,4 +280,4 @@ class ApiResponseObjectDetectionPredictionResultItem(BaseDTO):
 
 
 class ApiResponseObjectDetectionPredictionResult(BaseDTO):
-    result: Dict[int, list[ApiResponseObjectDetectionPredictionResultItem]]
+    result: Dict[int, List[ApiResponseObjectDetectionPredictionResultItem]]
