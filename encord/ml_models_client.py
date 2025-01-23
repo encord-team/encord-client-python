@@ -409,15 +409,26 @@ class MlModelsClient:
         training_uuids: Union[List[UUID], None],
     ) -> None:
         """
-        Attach a model to a project.
+        Attach a model to a project by mapping the model's features to corresponding ontology features in the project.
+        This allows a single trained model to be reused across different projects, even if they use different
+        ontologies to represent the same concepts.
 
         Args:
             project_uuid: UUID of the project to attach the model to
-            features_mapping: Mapping between model features and ontology features
+            features_mapping: Maps model features to project ontology features. For example:
+                {
+                    "model_feature_0": "ontology_feature_hash_1",
+                    "model_feature_1": "ontology_feature_hash_2"
+                }
+                This mapping connects each model feature (e.g. "car" detection) to the corresponding
+                feature in the project's ontology. Since different projects may use different
+                ontologies with different feature hashes for the same concept, this mapping allows
+                the same trained model to be reused across projects by correctly mapping its
+                features to each project's specific ontology structure.
             iteration_policy: Policy for model iteration selection
             model_uuid: UUID of the model to attach
-            training_uuids: Optional list of specific training
-                iterations to use (only for ApiIterationPolicy.MANUAL_SELECTION)
+            training_uuids: Optional list of specific training iterations to use. Only required
+                when iteration_policy is set to MANUAL_SELECTION.
         """
         return _api_project_create_model_attachment(
             project_uuid,
