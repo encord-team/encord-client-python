@@ -171,7 +171,7 @@ def _api_ml_create_training_job(
     return client._request(
         Request(
             method="post",
-            url=f"{client._domain}/v2/public/ml-models/{model_uuid}/training",
+            url=f"{client._domain}/v2/public/ml-models/{model_uuid}/trainings",
             json=client._serialise_payload(body),
         ).prepare(),
         result_type=UUID,
@@ -188,7 +188,7 @@ def _api_ml_get_training_status(
     return client._request(
         Request(
             method="get",
-            url=f"{client._domain}/v2/public/ml-models/{model_uuid}/{training_uuid}/training",
+            url=f"{client._domain}/v2/public/ml-models/{model_uuid}/{training_uuid}/trainings",
             params={
                 k: v
                 for k, v in {
