@@ -389,10 +389,11 @@ class MlModelsClient:
 
         Args:
             project_uuid: UUID of the project to attach the model to
-            features_mapping: Mapping between model features and project features
+            features_mapping: Mapping between model features and ontology features
             iteration_policy: Policy for model iteration selection
             model_uuid: UUID of the model to attach
-            training_uuids: Optional list of specific training iterations to use
+            training_uuids: Optional list of specific training
+                iterations to use (only for ApiIterationPolicy.MANUAL_SELECTION)
         """
         return _api_project_create_model_attachment(
             project_uuid,
@@ -438,8 +439,8 @@ class MlModelsClient:
 
         Args:
             project_uuid: UUID of the project
-            project_model_uuid: UUID of the attached model
-            features_mapping: Updated feature mapping
+            project_model_uuid: UUID of the model attachment to project
+            features_mapping: Updated mapping between model features and ontology features
             iteration_policy: Updated iteration selection policy
             training_uuids: Optional updated list of training iterations
         """
@@ -465,7 +466,7 @@ class MlModelsClient:
 
         Args:
             project_uuid: UUID of the project
-            project_model_uuid: UUID of the attached model to remove
+            project_model_uuid: UUID of the model attachment to project
         """
         return _api_project_delete_model_attachment(
             project_uuid,
@@ -486,17 +487,17 @@ class MlModelsClient:
         conf_thresh: float,
     ) -> ApiResponseClassificationPredictionResult:
         """
-        Run classification prediction on data.
+        Run classification prediction on either data_uuid or data_path.
 
         Args:
             project_uuid: UUID of the project
-            project_model_uuid: UUID of the attached model
+            project_model_uuid: UUID of the model attachment to project
             training_uuid: UUID of the training iteration to use
             data_uuid: Optional UUID of data to predict on
             data_path: Optional path to local data file
-            frame_range_from: Optional starting frame for prediction
-            frame_range_to: Optional ending frame for prediction
-            conf_thresh: Confidence threshold for predictions
+            frame_range_from: Optional starting frame for prediction (first frame if not set)
+            frame_range_to: Optional ending frame for prediction (last frame if not set)
+            conf_thresh: Confidence threshold for predictions (0.0 - 1.0)
 
         Returns:
             Classification prediction results
@@ -531,19 +532,19 @@ class MlModelsClient:
         rdp_thresh: Union[None, float],
     ) -> ApiResponseInstanceSegmentationPredictionResult:
         """
-        Run instance segmentation prediction on data.
+        Run instance segmentation prediction on either data_uuid or data_path.
 
         Args:
             project_uuid: UUID of the project
-            project_model_uuid: UUID of the attached model
+            project_model_uuid: UUID of the model attachment to project
             training_uuid: UUID of the training iteration to use
             data_uuid: Optional UUID of data to predict on
             data_path: Optional path to local data file
-            frame_range_from: Optional starting frame for prediction
-            frame_range_to: Optional ending frame for prediction
-            allocation_enabled: Whether to enable object tracking/allocation
-            conf_thresh: Confidence threshold for predictions
-            iou_thresh: Intersection over Union threshold
+            frame_range_from: Optional starting frame for prediction (first frame if not set)
+            frame_range_to: Optional ending frame for prediction (last frame if not set)
+            allocation_enabled: Whether to enable object id tracking
+            conf_thresh: Confidence threshold for predictions (0.0 - 1.0)
+            iou_thresh: Intersection over Union threshold (0.0 - 1.0)
             rdp_thresh: Optional Ramer-Douglas-Peucker algorithm threshold for polygon simplification
 
         Returns:
@@ -581,19 +582,19 @@ class MlModelsClient:
         iou_thresh: float,
     ) -> ApiResponseObjectDetectionPredictionResult:
         """
-        Run object detection prediction on data.
+        Run object detection prediction on either data_uuid or data_path.
 
         Args:
             project_uuid: UUID of the project
-            project_model_uuid: UUID of the attached model
+            project_model_uuid: UUID of the model attachment to project
             training_uuid: UUID of the training iteration to use
             data_uuid: Optional UUID of data to predict on
             data_path: Optional path to local data file
-            frame_range_from: Optional starting frame for prediction
-            frame_range_to: Optional ending frame for prediction
+            frame_range_from: Optional starting frame for prediction (first frame if not set)
+            frame_range_to: Optional ending frame for prediction (last frame if not set)
             allocation_enabled: Whether to enable object tracking/allocation
-            conf_thresh: Confidence threshold for predictions
-            iou_thresh: Intersection over Union threshold
+            conf_thresh: Confidence threshold for predictions (0.0 - 1.0)
+            iou_thresh: Intersection over Union threshold (0.0 - 1.0)
 
         Returns:
             Object detection prediction results
