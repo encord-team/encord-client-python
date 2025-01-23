@@ -1,0 +1,406 @@
+import base64
+import logging
+import time
+from math import ceil
+from pathlib import Path
+from typing import Dict, List, Union
+from uuid import UUID
+
+import requests
+
+from encord import EncordUserClient
+from encord.exceptions import EncordException, RequestException
+from encord.objects.ml_models import (
+    ApiIterationPolicy,
+    ApiModelArchitecture,
+    ApiModelIteration,
+    ApiModelIterationTrainingDataItem,
+    ApiPretrainedWeightsType,
+    ApiReadModelsOrderBy,
+    ApiRequestClassificationPrediction,
+    ApiRequestInstanceSegmentationPrediction,
+    ApiRequestModelAttachToProject,
+    ApiRequestModelInsert,
+    ApiRequestModelOperationsTrain,
+    ApiRequestModelPatch,
+    ApiRequestObjectDetectionPrediction,
+    ApiRequestProjectModelUpdate,
+    ApiResponseClassificationPredictionResult,
+    ApiResponseGetTrainingResultStatus,
+    ApiResponseInstanceSegmentationPredictionResult,
+    ApiResponseModelRead,
+    ApiResponseModelReadItem,
+    ApiResponseObjectDetectionPredictionResult,
+    ApiResponseProjectModelReadItem,
+)
+from encord.utilities.ml_endpoints import (
+    _api_ml_create_model,
+    _api_ml_create_training_job,
+    _api_ml_delete_model,
+    _api_ml_delete_training_iteration,
+    _api_ml_get_model_info,
+    _api_ml_get_training_data,
+    _api_ml_get_training_status,
+    _api_ml_get_weights_download_link,
+    _api_ml_list_models,
+    _api_ml_update_model,
+    _api_project_create_model_attachment,
+    _api_project_delete_model_attachment,
+    _api_project_list_model_attachments,
+    _api_project_predict_classification,
+    _api_project_predict_instance_segmentation,
+    _api_project_predict_object_detection,
+    _api_project_update_model_attachment,
+)
+
+LONG_POLLING_RESPONSE_RETRY_N = 3
+LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
+LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
+
+logger = logging.getLogger(__name__)
+
+
+class MlModelsClient:
+    def __init__(self, user_client: EncordUserClient) -> None:
+        self.user_client = user_client
+
+    def create_model(
+        self,
+        *,
+        features: List[str],
+        model: ApiModelArchitecture,
+        title: str,
+        description: Union[None, str],
+    ) -> UUID:
+        return _api_ml_create_model(
+            client=self.user_client._api_client,
+            body=ApiRequestModelInsert(
+                features=features,
+                model=model,
+                title=title,
+                description=description,
+            ),
+        )
+
+    def get_model_info(
+        self,
+        *,
+        model_uuid: UUID,
+    ) -> ApiResponseModelReadItem:
+        return _api_ml_get_model_info(
+            model_uuid,
+            client=self.user_client._api_client,
+        )
+
+    def delete_model(
+        self,
+        *,
+        model_uuid: UUID,
+    ) -> None:
+        return _api_ml_delete_model(
+            model_uuid,
+            client=self.user_client._api_client,
+        )
+
+    def list_models(
+        self,
+        *,
+        order_by: ApiReadModelsOrderBy,
+        order_asc: bool,
+        limit: int,
+        offset: int,
+        query: Union[None, str],
+    ) -> ApiResponseModelRead:
+        return _api_ml_list_models(
+            client=self.user_client._api_client,
+            order_by=order_by,
+            order_asc=order_asc,
+            limit=limit,
+            offset=offset,
+            query=query,
+        )
+
+    def update_model(
+        self,
+        *,
+        model_uuid: UUID,
+        description: Union[None, str],
+        title: Union[None, str],
+    ) -> ApiResponseModelReadItem:
+        return _api_ml_update_model(
+            model_uuid,
+            client=self.user_client._api_client,
+            body=ApiRequestModelPatch(
+                description=description,
+                title=title,
+            ),
+        )
+
+    def create_training_job(
+        self,
+        *,
+        model_uuid: UUID,
+        batch_size: int,
+        epochs: int,
+        features_mapping: Dict[UUID, Dict[str, list[str]]],
+        labels_uuids: List[UUID],
+        pretrained_training_uuid: Union[None, UUID],
+        pretrained_weights_type: Union[ApiPretrainedWeightsType, None],
+    ) -> UUID:
+        return _api_ml_create_training_job(
+            model_uuid,
+            client=self.user_client._api_client,
+            body=ApiRequestModelOperationsTrain(
+                batch_size=batch_size,
+                epochs=epochs,
+                features_mapping=features_mapping,
+                labels_uuids=labels_uuids,
+                pretrained_training_uuid=pretrained_training_uuid,
+                pretrained_weights_type=pretrained_weights_type,
+            ),
+        )
+
+    def get_training_status(
+        self,
+        *,
+        model_uuid: UUID,
+        training_uuid: UUID,
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> ApiModelIteration:
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                logger.info(f"get_training_status started polling call {polling_elapsed_seconds=}")
+
+                tmp_res = _api_ml_get_training_status(
+                    model_uuid,
+                    training_uuid,
+                    client=self.user_client._api_client,
+                    timeout_seconds=min(
+                        polling_available_seconds,
+                        LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                    ),
+                )
+
+                if tmp_res.status == ApiResponseGetTrainingResultStatus.DONE:
+                    logger.info(f"get_training_status completed with training_uuid={training_uuid}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    ApiResponseGetTrainingResultStatus.DONE,
+                    ApiResponseGetTrainingResultStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == ApiResponseGetTrainingResultStatus.DONE:
+            if res.result is None:
+                raise ValueError(f"{res.status=}, res.result should not be None with DONE status")
+
+            return res.result
+        elif res.status == ApiResponseGetTrainingResultStatus.ERROR:
+            raise EncordException(f"get_training_status error occurred, {model_uuid=}, {training_uuid=}")
+        else:
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
+
+    def get_training_data(
+        self,
+        *,
+        model_uuid: UUID,
+        training_uuid: UUID,
+    ) -> List[ApiModelIterationTrainingDataItem]:
+        return _api_ml_get_training_data(
+            model_uuid,
+            training_uuid,
+            client=self.user_client._api_client,
+        ).items
+
+    def get_weights_download_link(
+        self,
+        *,
+        model_uuid: UUID,
+        training_uuid: UUID,
+    ) -> str:
+        return _api_ml_get_weights_download_link(
+            model_uuid,
+            training_uuid,
+            client=self.user_client._api_client,
+        )
+
+    def delete_training_iteration(
+        self,
+        *,
+        model_uuid: UUID,
+        training_uuid: UUID,
+    ) -> None:
+        return _api_ml_delete_training_iteration(
+            model_uuid,
+            training_uuid,
+            client=self.user_client._api_client,
+        )
+
+    def create_model_attachment(
+        self,
+        *,
+        project_uuid: UUID,
+        features_mapping: Dict[str, str],
+        iteration_policy: ApiIterationPolicy,
+        model_uuid: UUID,
+        training_uuids: Union[List[UUID], None],
+    ) -> None:
+        return _api_project_create_model_attachment(
+            project_uuid,
+            client=self.user_client._api_client,
+            body=ApiRequestModelAttachToProject(
+                features_mapping=features_mapping,
+                iteration_policy=iteration_policy,
+                model_uuid=model_uuid,
+                training_uuids=training_uuids,
+            ),
+        )
+
+    def list_model_attachments(
+        self,
+        *,
+        project_uuid: UUID,
+    ) -> List[ApiResponseProjectModelReadItem]:
+        return _api_project_list_model_attachments(
+            project_uuid,
+            client=self.user_client._api_client,
+        ).items
+
+    def update_model_attachment(
+        self,
+        *,
+        project_uuid: UUID,
+        project_model_uuid: UUID,
+        features_mapping: Dict[str, str],
+        iteration_policy: ApiIterationPolicy,
+        training_uuids: Union[List[UUID], None],
+    ) -> None:
+        return _api_project_update_model_attachment(
+            project_uuid,
+            project_model_uuid,
+            client=self.user_client._api_client,
+            body=ApiRequestProjectModelUpdate(
+                features_mapping=features_mapping,
+                iteration_policy=iteration_policy,
+                training_uuids=training_uuids,
+            ),
+        )
+
+    def delete_model_attachment(
+        self,
+        *,
+        project_uuid: UUID,
+        project_model_uuid: UUID,
+    ) -> None:
+        return _api_project_delete_model_attachment(
+            project_uuid,
+            project_model_uuid,
+            client=self.user_client._api_client,
+        )
+
+    def predict_classification(
+        self,
+        *,
+        project_uuid: UUID,
+        project_model_uuid: UUID,
+        training_uuid: UUID,
+        data_uuid: UUID | None,
+        data_path: Path | None,
+        frame_range_from: int | None,
+        frame_range_to: int | None,
+        conf_thresh: float,
+    ) -> ApiResponseClassificationPredictionResult:
+        return _api_project_predict_classification(
+            project_uuid,
+            project_model_uuid,
+            training_uuid,
+            client=self.user_client._api_client,
+            body=ApiRequestClassificationPrediction(
+                conf_thresh=conf_thresh,
+                data_uuid=data_uuid,
+                data_base64=base64.b64encode(Path(data_path).read_bytes()).decode("utf-8") if data_path else None,
+                frame_range_from=frame_range_from,
+                frame_range_to=frame_range_to,
+            ),
+        )
+
+    def predict_instance_segmentation(
+        self,
+        *,
+        project_uuid: UUID,
+        project_model_uuid: UUID,
+        training_uuid: UUID,
+        data_uuid: UUID | None,
+        data_path: Path | None,
+        frame_range_from: int | None,
+        frame_range_to: int | None,
+        allocation_enabled: bool,
+        conf_thresh: float,
+        iou_thresh: float,
+        rdp_thresh: Union[None, float],
+    ) -> ApiResponseInstanceSegmentationPredictionResult:
+        return _api_project_predict_instance_segmentation(
+            project_uuid,
+            project_model_uuid,
+            training_uuid,
+            client=self.user_client._api_client,
+            body=ApiRequestInstanceSegmentationPrediction(
+                allocation_enabled=allocation_enabled,
+                conf_thresh=conf_thresh,
+                data_uuid=data_uuid,
+                data_base64=base64.b64encode(Path(data_path).read_bytes()).decode("utf-8") if data_path else None,
+                frame_range_from=frame_range_from,
+                frame_range_to=frame_range_to,
+                iou_thresh=iou_thresh,
+                rdp_thresh=rdp_thresh,
+            ),
+        )
+
+    def predict_object_detection(
+        self,
+        *,
+        project_uuid: UUID,
+        project_model_uuid: UUID,
+        training_uuid: UUID,
+        data_uuid: UUID | None,
+        data_path: Path | None,
+        frame_range_from: int | None,
+        frame_range_to: int | None,
+        allocation_enabled: bool,
+        conf_thresh: float,
+        iou_thresh: float,
+    ) -> ApiResponseObjectDetectionPredictionResult:
+        return _api_project_predict_object_detection(
+            project_uuid,
+            project_model_uuid,
+            training_uuid,
+            client=self.user_client._api_client,
+            body=ApiRequestObjectDetectionPrediction(
+                allocation_enabled=allocation_enabled,
+                conf_thresh=conf_thresh,
+                data_uuid=data_uuid,
+                data_base64=base64.b64encode(Path(data_path).read_bytes()).decode("utf-8") if data_path else None,
+                frame_range_from=frame_range_from,
+                frame_range_to=frame_range_to,
+                iou_thresh=iou_thresh,
+            ),
+        )
