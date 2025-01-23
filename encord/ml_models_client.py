@@ -88,7 +88,17 @@ class MlModelsClient:
         Create a new model in Encord.
 
         Args:
-            features: List of feature identifiers that the model will be trained on
+            features: List of feature names that define the model's output layer structure (e.g. ["car", "person"]).
+                These features are directly mapped to neurons in the model's final layer and remain fixed across
+                all training iterations. The number and names of features cannot be changed without rebuilding
+                the model's architecture, since they determine the size and structure of the output layer.
+                This fixed structure enables several key capabilities:
+                1. Transfer Learning: The model can be retrained on new datasets while preserving its
+                   learned feature detectors, since the output layer structure stays consistent
+                2. Cross-Project Usage: The same model can be used across different projects by mapping
+                   its fixed features to different ontology features in each project
+                3. Flexible Inference: A model trained to detect "vehicle" can be mapped to detect
+                   "car", "truck" etc. in different projects based on their specific ontologies
             model: The architecture type of the model to create
             title: Title for the model
             description: Optional description for the model
@@ -639,7 +649,7 @@ class MlModelsClient:
             data_path: Optional path to local data file
             frame_range_from: Optional starting frame for prediction (first frame if not set)
             frame_range_to: Optional ending frame for prediction (last frame if not set)
-            allocation_enabled: Whether to enable object tracking/allocation
+            allocation_enabled: Whether to enable object id tracking
             conf_thresh: Confidence threshold for predictions (0.0 - 1.0)
             iou_thresh: Intersection over Union threshold (0.0 - 1.0)
 
