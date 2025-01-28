@@ -1644,20 +1644,20 @@ class LabelRowV2:
         ret: Dict[str, Any] = {}
         for obj in self._objects_map.values():
             all_static_answers = self._get_all_static_answers(obj)
+            annotation = obj.get_annotation(0)
             ret[obj.object_hash] = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
+                "createdBy": annotation.created_by,
+                "createdAt": annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT),
+                "lastEditedBy": annotation.last_edited_by,
+                "lastEditedAt": annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT),
             }
 
             # At some point, we also want to add these to the other modalities
             if not is_geometric(self.data_type):
                 # For non-frame entities, all annotations exist only on one frame
-                annotation = obj.get_annotation(0)
                 object_answer_dict = ret[obj.object_hash]
-                object_answer_dict["createdBy"] = annotation.created_by
-                object_answer_dict["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                object_answer_dict["lastEditedBy"] = annotation.last_edited_by
-                object_answer_dict["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
                 object_answer_dict["manualAnnotation"] = annotation.manual_annotation
                 object_answer_dict["featureHash"] = obj.feature_hash
                 object_answer_dict["name"] = obj.ontology_item.name
@@ -1694,26 +1694,21 @@ class LabelRowV2:
         for classification in self._classifications_map.values():
             all_static_answers = classification.get_all_static_answers()
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
+            annotation = classification.get_annotations()[0]
             ret[classification.classification_hash] = {
                 "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
+                "createdBy": annotation.created_by,
+                "createdAt": annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT),
+                "lastEditedBy": annotation.last_edited_by,
+                "lastEditedAt": annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT),
             }
 
             # At some point, we also want to add these to the other modalities
             if not is_geometric(self.data_type):
-                annotation = classification.get_annotations()[0]
-
                 # For non-geometric data, classifications apply to whole file
                 ret[classification.classification_hash]["range"] = []
-                ret[classification.classification_hash]["createdBy"] = annotation.created_by
-                ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
-                    DATETIME_LONG_STRING_FORMAT
-                )
-                ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
-                ret[classification.classification_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(
-                    DATETIME_LONG_STRING_FORMAT
-                )
                 ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
 
         return ret
