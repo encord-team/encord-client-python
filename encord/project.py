@@ -1117,4 +1117,4 @@ class Project:
             payload=ActivePredictionPayload(label_branch_name=label_branch_name),
             result_type=None,
         )
-        logger.info("Prediction import initiated in Active. Please check the platform to see progress")
+        logger.info("Prediction import initiated in Active. Please check the platform to see the progress.")
