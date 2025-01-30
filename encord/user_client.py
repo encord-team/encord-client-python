@@ -44,6 +44,7 @@ from encord.http.utils import (
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.metadata_schema import MetadataSchema
+from encord.ml_models_client import MlModelsClient
 from encord.objects import OntologyStructure
 from encord.objects.common import (
     DeidentifyRedactTextMode,
@@ -125,6 +126,16 @@ class EncordUserClient:
         self._config = config
         self._querier = querier
         self._api_client = ApiClient(config.config)
+
+    @property
+    def ml_models(self) -> MlModelsClient:
+        """
+        Access Encord ML Models functionality.
+
+        Returns:
+            MlModelsClient: Client for interacting with Encord's ML models
+        """
+        return MlModelsClient(self._api_client)
 
     @property
     def querier(self) -> Querier:
