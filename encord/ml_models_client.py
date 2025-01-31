@@ -127,7 +127,7 @@ class MlModelsClient:
             model_uuid: UUID of the model to get information for
 
         Returns:
-            Information about the requested model
+            ModelWithIterations: Information about the requested model
         """
         return _api_ml_get_model(
             model_uuid,
@@ -191,7 +191,7 @@ class MlModelsClient:
             title: New title for the model
 
         Returns:
-            Updated model information
+            ModelWithIterations: Updated model information
         """
         return _api_ml_update_model(
             model_uuid,
@@ -354,7 +354,7 @@ class MlModelsClient:
             training_uuid: UUID of the training iteration
 
         Returns:
-            List of training data items
+            Iterable[ModelIterationTrainingData]: Iterator of training data items
         """
         yield from _api_ml_get_training_data(
             model_uuid,
@@ -433,6 +433,9 @@ class MlModelsClient:
             model_uuid: UUID of the model to attach
             training_uuids: Optional list of specific training iterations to use. Only required
                 when iteration_policy is set to MANUAL_SELECTION.
+
+        Returns:
+            ProjectModelWithIterations: Information about the created model attachment
         """
         return _api_project_create_model_attachment(
             project_uuid,
