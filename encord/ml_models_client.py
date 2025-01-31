@@ -103,7 +103,7 @@ class MlModelsClient:
             description: Optional description for the model
 
         Returns:
-            UUID: The unique identifier of the created model
+            ModelWithIterations: The created model and its iterations
         """
         return _api_ml_create_model(
             client=self._api_client,
@@ -150,7 +150,7 @@ class MlModelsClient:
             query: Optional search query to filter results
 
         Returns:
-            List of models matching the specified criteria
+            Iterable[ModelWithIterations]: Iterator of models matching the specified criteria
         """
         yield from _api_ml_list_models(
             client=self._api_client,
@@ -281,11 +281,12 @@ class MlModelsClient:
             timeout_seconds: Maximum time to wait for training completion (default: 7 days)
 
         Returns:
-            Information about the training iteration
+            ModelIteration: Information about the training iteration
 
         Raises:
             EncordException: If training encountered an error
             ValueError: If status response is invalid
+            RequestException: If there are network connectivity issues
         """
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
