@@ -179,16 +179,16 @@ class MlModelsClient:
         self,
         *,
         model_uuid: UUID,
-        description: Optional[str],
         title: Optional[str],
+        description: Optional[str],
     ) -> ModelWithIterations:
         """
         Update a model's metadata.
 
         Args:
             model_uuid: UUID of the model to update
-            description: New description for the model
             title: New title for the model
+            description: New description for the model
 
         Returns:
             ModelWithIterations: Updated model information
@@ -278,7 +278,7 @@ class MlModelsClient:
         Args:
             model_uuid: UUID of the model being trained
             training_uuid: UUID of the training job
-            timeout_seconds: Maximum time to wait for training completion (default: 7 days)
+            timeout_seconds: Maximum time to wait for training completion. Defaults to 7 days.
 
         Returns:
             ModelIteration: Information about the training iteration
