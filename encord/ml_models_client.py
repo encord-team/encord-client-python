@@ -460,7 +460,7 @@ class MlModelsClient:
             project_uuid: UUID of the project
 
         Returns:
-            List of attached model information
+            Iterable[ProjectModelWithIterations]: Iterator of attached model information
         """
         yield from _api_project_list_model_attachments(
             project_uuid,
@@ -497,6 +497,9 @@ class MlModelsClient:
             training_uuids: Optional list of specific training iterations to use. Only required
                 when iteration_policy is set to MANUAL_SELECTION. Allows cherry-picking which
                 trained versions of the model to use for inference.
+
+        Returns:
+            ProjectModelWithIterations: Information about the updated model attachment
         """
         return _api_project_update_model_attachment(
             project_uuid,
@@ -554,7 +557,7 @@ class MlModelsClient:
             conf_thresh: Confidence threshold for predictions (0.0 - 1.0)
 
         Returns:
-            Classification prediction results
+            Dict[int, Optional[PredictionClassificationResultItem]]: Dictionary mapping frame numbers to classification results
         """
         return _api_project_predict_classification(
             project_uuid,
@@ -602,7 +605,7 @@ class MlModelsClient:
             rdp_thresh: Optional Ramer-Douglas-Peucker algorithm threshold for polygon simplification
 
         Returns:
-            Instance segmentation prediction results
+            Dict[int, List[PredictionInstanceSegmentationResultItem]]: Dictionary mapping frame numbers to lists of instance segmentation results
         """
         return _api_project_predict_instance_segmentation(
             project_uuid,
@@ -651,7 +654,7 @@ class MlModelsClient:
             iou_thresh: Intersection over Union threshold (0.0 - 1.0)
 
         Returns:
-            Object detection prediction results
+            Dict[int, List[PredictionObjectDetectionResultItem]]: Dictionary mapping frame numbers to lists of object detection results
         """
         return _api_project_predict_object_detection(
             project_uuid,
