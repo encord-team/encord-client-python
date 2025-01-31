@@ -18,7 +18,6 @@ Returns:
 
 from __future__ import annotations
 
-import base64
 import dataclasses
 import json
 import logging
@@ -36,14 +35,12 @@ import requests
 
 import encord.exceptions
 from encord.common.deprecated import deprecated
-from encord.configs import BearerConfig, Config, SshConfig
+from encord.configs import Config
 from encord.constants.enums import DataType
-from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import (
     FITTED_BOUNDING_BOX,
     INTERPOLATION,
 )
-from encord.exceptions import EncordException
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
@@ -102,19 +99,6 @@ from encord.orm.labeling_algorithm import (
     BoundingBoxFittingParams,
     LabelingAlgorithm,
     ObjectInterpolationParams,
-)
-from encord.orm.model import (
-    Model,
-    ModelConfiguration,
-    ModelInferenceParams,
-    ModelOperations,
-    ModelRow,
-    ModelTrainingWeights,
-    PublicModelTrainGetResultLongPollingStatus,
-    PublicModelTrainGetResultParams,
-    PublicModelTrainGetResultResponse,
-    PublicModelTrainStartPayload,
-    TrainingMetadata,
 )
 from encord.orm.project import (
     CopyDatasetAction,
@@ -1089,251 +1073,6 @@ class EncordClientProject(EncordClient):
         ontology.add_classification(name, classification_type, required, options)
         return self.__set_project_ontology(ontology)
 
-    def list_models(self) -> List[ModelConfiguration]:
-        """This function is documented in :meth:`encord.project.Project.list_models`."""
-        return self._querier.get_multiple(ModelConfiguration)
-
-    def get_training_metadata(
-        self,
-        model_iteration_uids: Iterable[str],
-        get_created_at: bool = False,
-        get_training_final_loss: bool = False,
-        get_model_training_labels: bool = False,
-    ) -> List[TrainingMetadata]:
-        """This function is documented in :meth:`encord.project.Project.get_training_metadata`."""
-        payload = {
-            "model_iteration_uids": list(model_iteration_uids),
-            "get_created_at": get_created_at,
-            "get_training_final_loss": get_training_final_loss,
-            "get_model_training_labels": get_model_training_labels,
-        }
-        return self._querier.get_multiple(TrainingMetadata, payload=payload)
-
-    def create_model_row(
-        self,
-        title: str,
-        description: str,
-        features: List[str],
-        model: Union[AutomationModels, str],
-    ) -> str:
-        """This function is documented in :meth:`encord.project.Project.create_model_row`."""
-        if title is None:
-            raise encord.exceptions.EncordException(message="You must set a title to create a model row.")
-
-        if features is None:
-            raise encord.exceptions.EncordException(
-                message="You must pass a list of feature uid's (hashes) to create a model row."
-            )
-
-        if isinstance(model, AutomationModels):
-            model = model.value
-
-        elif model is None or not AutomationModels.has_value(model):  # Backward compatibility with string options
-            raise encord.exceptions.EncordException(
-                message="You must pass a model from the `encord.constants.model.AutomationModels` Enum to create a "
-                "model row."
-            )
-
-        model_row = ModelRow(
-            {
-                "title": title,
-                "description": description,
-                "features": features,
-                "model": model,
-            }
-        )
-
-        model_payload = Model(
-            {
-                "model_operation": ModelOperations.CREATE.value,
-                "model_parameters": model_row,
-            }
-        )
-
-        return self._querier.basic_put(Model, None, payload=model_payload)
-
-    def model_delete(self, uid: str) -> bool:
-        """This function is documented in :meth:`encord.project.Project.model_delete`."""
-        return self._querier.basic_delete(Model, uid=uid)
-
-    def model_inference(
-        self,
-        uid: str,
-        file_paths: Optional[List[str]] = None,
-        base64_strings: Optional[List[bytes]] = None,
-        conf_thresh: float = 0.6,
-        iou_thresh: float = 0.3,
-        device: Device = Device.CUDA,
-        detection_frame_range: Optional[List[int]] = None,
-        allocation_enabled: bool = False,
-        data_hashes: Optional[List[str]] = None,
-        rdp_thresh: float = 0.005,
-    ):
-        """This function is documented in :meth:`encord.project.Project.model_inference`."""
-        if (file_paths is None and base64_strings is None and data_hashes is None) or (
-            file_paths is not None
-            and len(file_paths) > 0
-            and base64_strings is not None
-            and len(base64_strings) > 0
-            and data_hashes is not None
-            and len(data_hashes) > 0
-        ):
-            raise encord.exceptions.EncordException(
-                message="To run model inference, you must pass either a list of files or base64 strings or list of"
-                " data hash."
-            )
-
-        if detection_frame_range is None:
-            detection_frame_range = []
-
-        files = []
-        if file_paths is not None:
-            for file_path in file_paths:
-                file = open(file_path, "rb").read()
-                files.append(
-                    {
-                        "uid": file_path,  # Add file path as inference identifier
-                        "base64_str": base64.b64encode(file).decode("utf-8"),  # File to base64 string
-                    }
-                )
-
-        elif base64_strings is not None:
-            for base64_string in base64_strings:
-                files.append(
-                    {
-                        "uid": str(uuid.uuid4()),  # Add uuid as inference identifier
-                        "base64_str": base64_string.decode("utf-8"),  # base64 string to utf-8
-                    }
-                )
-
-        inference_params = ModelInferenceParams(
-            {
-                "files": files,
-                "conf_thresh": conf_thresh,
-                "iou_thresh": iou_thresh,
-                "device": _device_to_string(device),
-                "detection_frame_range": detection_frame_range,
-                "allocation_enabled": allocation_enabled,
-                "data_hashes": data_hashes,
-                "rdp_thresh": rdp_thresh,
-            }
-        )
-
-        model = Model(
-            {
-                "model_operation": ModelOperations.INFERENCE.value,
-                "model_parameters": inference_params,
-            }
-        )
-
-        return self._querier.basic_setter(Model, uid, payload=model)
-
-    def model_train_start(
-        self,
-        model_hash: Union[str, UUID],
-        label_rows: List[Union[str, UUID]],
-        epochs: int,
-        weights: ModelTrainingWeights,
-        batch_size: int = 24,
-        device: Device = Device.CUDA,
-    ) -> UUID:
-        """This function is documented in :meth:`encord.project.Project.model_train_start`."""
-        if not label_rows:
-            raise encord.exceptions.EncordException(
-                message="You must pass a list of label row uid's (hashes) to train a model."
-            )
-
-        if not epochs:
-            raise encord.exceptions.EncordException(message="You must set number of epochs to train a model.")
-
-        if not batch_size:
-            raise encord.exceptions.EncordException(message="You must set a batch size to train a model.")
-
-        if weights is None or not isinstance(weights, ModelTrainingWeights):
-            raise encord.exceptions.EncordException(
-                message="You must pass weights from the `encord.constants.model_weights` module to train a model."
-            )
-
-        training_hash = self._api_client.post(
-            f"ml-models/{model_hash}/training",
-            params=None,
-            payload=PublicModelTrainStartPayload(
-                label_rows=[x if isinstance(x, UUID) else UUID(x) for x in label_rows],
-                epochs=epochs,
-                batch_size=batch_size,
-                model=weights.model,
-                training_weights_link=weights.training_weights_link,
-                device=_device_to_string(device),
-            ),
-            result_type=UUID,
-        )
-
-        logger.info(f"model_train job started with training_hash={training_hash}.")
-        logger.info("SDK process can be terminated, this will not affect successful job execution.")
-        logger.info("You can follow the progress in the SDK using model_train_get_result method.")
-        logger.info("You can also follow the progress in the web app via notifications.")
-
-        return training_hash
-
-    def model_train_get_result(
-        self,
-        model_hash: Union[str, UUID],
-        training_hash: Union[str, UUID],
-        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
-    ) -> dict:
-        """This function is documented in :meth:`encord.project.Project.model_train_get_result`."""
-        failed_requests_count = 0
-        polling_start_timestamp = time.perf_counter()
-
-        while True:
-            try:
-                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
-                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
-
-                logger.info(f"__model_train_get_result started polling call {polling_elapsed_seconds=}")
-                tmp_res = self._api_client.get(
-                    f"ml-models/{model_hash}/{training_hash}/training",
-                    params=PublicModelTrainGetResultParams(
-                        timeout_seconds=min(
-                            polling_available_seconds,
-                            LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
-                        ),
-                    ),
-                    result_type=PublicModelTrainGetResultResponse,
-                )
-
-                if tmp_res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
-                    logger.info(f"model_train job completed with training_hash={training_hash}.")
-
-                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
-                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
-
-                if polling_available_seconds == 0 or tmp_res.status in [
-                    PublicModelTrainGetResultLongPollingStatus.DONE,
-                    PublicModelTrainGetResultLongPollingStatus.ERROR,
-                ]:
-                    res = tmp_res
-                    break
-
-                failed_requests_count = 0
-            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
-                failed_requests_count += 1
-
-                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
-                    raise
-
-                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
-
-        if res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
-            if res.result is None:
-                raise ValueError(f"{res.status=}, res.result should not be None with DONE status")
-
-            return res.result.dict()
-        elif res.status == PublicModelTrainGetResultLongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"model_train error occurred, {model_hash=}, {training_hash=}")
-        else:
-            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
-
     def object_interpolation(
         self,
         key_frames,
@@ -1509,15 +1248,6 @@ class EncordClientProject(EncordClient):
             result_type=None,
         )
         logger.info("Sync initiated in Active, please check the app to see progress")
-
-
-def _device_to_string(device: Device) -> str:
-    if not isinstance(device, Device):
-        if device is None or not Device.has_value(device):  # Backward compatibility with string options
-            raise EncordException(message="You must pass a device from the `from encord.constants.model.Device` enum.")
-        return cast(str, device)
-
-    return device.value
 
 
 CordClientProject = EncordClientProject

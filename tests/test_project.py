@@ -1,12 +1,7 @@
 import uuid
 from unittest.mock import MagicMock, PropertyMock, patch
 
-import pytest
-
-from encord.client import EncordClientProject, _device_to_string
-from encord.constants.model import Device
-from encord.constants.model_weights import faster_rcnn_R_101_C4_3x
-from encord.exceptions import EncordException
+from encord.client import EncordClientProject
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.label_row import LabelRow
@@ -19,62 +14,6 @@ assert user_client and project and ontology
 
 
 UID = "d958ddbb-fcd0-477a-adf9-de14431dbbd2"
-
-
-@pytest.mark.parametrize("weights", [None, "invalid-weight"])
-def test_invalid_weights_raises(project: Project, weights):
-    with pytest.raises(EncordException) as excinfo:
-        project.model_train_start(
-            model_hash=UID,
-            label_rows=[uuid.uuid4()],
-            epochs=500,
-            weights=weights,
-            batch_size=24,
-            device=Device.CUDA,
-        )
-
-    assert "encord.constants.model_weights" in excinfo.value.message
-
-
-@pytest.mark.parametrize("device", [None, "gpu"])
-def test_invalid_device_raises(project: Project, device):
-    with pytest.raises(EncordException) as trainExcInfo:
-        project.model_train_start(
-            model_hash=UID,
-            label_rows=[uuid.uuid4()],
-            epochs=500,
-            weights=faster_rcnn_R_101_C4_3x,
-            batch_size=24,
-            device=device,
-        )
-
-    assert "encord.constants.model.Device" in trainExcInfo.value.message
-
-    with pytest.raises(EncordException) as inferenceExcInfo:
-        project.model_inference(
-            uid=UID,
-            base64_strings=[bytes("base64string", "utf-8")],
-            device=device,
-        )
-
-    assert "encord.constants.model.Device" in inferenceExcInfo.value.message
-
-
-def test_device_parsing():
-    assert {
-        x: _device_to_string(x)
-        for x in [
-            Device.CPU,
-            Device.CUDA,
-            "cuda",
-            "cpu",
-        ]
-    } == {
-        Device.CPU: "cpu",
-        Device.CUDA: "cuda",
-        "cuda": "cuda",
-        "cpu": "cpu",
-    }
 
 
 @patch.object(EncordClientProject, "get_project")
