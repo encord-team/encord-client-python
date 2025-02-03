@@ -29,6 +29,7 @@ class PropertyType(StringEnum):
 
 class Shape(StringEnum):
     BOUNDING_BOX = "bounding_box"
+    CUBOID = "cuboid"
     POLYGON = "polygon"
     POINT = "point"
     SKELETON = "skeleton"
