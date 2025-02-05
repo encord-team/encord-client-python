@@ -921,10 +921,10 @@ class EncordUserClient:
         title (str): The title of the ontology.
         description (str, optional): A brief description of the ontology. Defaults to an empty string.
         structure (Optional[OntologyStructure], optional): The structural definition of the ontology. If not provided, a default structure is used.
-            
+
         Returns:
         Ontology: The newly created ontology object.
-            
+
         Raises:
         ValueError: If the provided structure contains a classification without any attributes.
         """
