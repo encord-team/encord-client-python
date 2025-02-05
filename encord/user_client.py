@@ -916,7 +916,7 @@ class EncordUserClient:
         structure: Optional[OntologyStructure] = None,
     ) -> Ontology:
         """Creates a new ontology with the given title, description, and structure.
- 
+
         Args:
         title (str): The title of the ontology.
         description (str, optional): A brief description of the ontology. Defaults to an empty string.
