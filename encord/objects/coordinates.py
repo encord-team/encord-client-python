@@ -11,7 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import auto
 from typing import Any, Dict, List, Optional, Type, Union
 
@@ -163,25 +163,51 @@ class PointCoordinate:
 
 @dataclass(frozen=True)
 class PolygonCoordinates:
-    """Represents polygon coordinates as a list of point coordinates.
+    """Represents polygon coordinates
 
     Attributes:
-        values (List[PointCoordinate]): A list of PointCoordinate objects defining the polygon.
+        values (List[PointCoordinate]): A list of coordinates defining the outer ring of the first polygon.
+        polygons (List[List[List[PointCoordinate]]]): A list of polygons, where each polygon contains:
+            - A list of contours (outer ring first, followed by inner rings/holes)
+            - Each contour is a list of PointCoordinate objects
     """
 
-    values: List[PointCoordinate]
+    values: List[PointCoordinate] = field(default_factory=list)
+    polygons: List[List[List[PointCoordinate]]] = field(default_factory=list)
+
+    def __post_init__(self):
+        if self.values and not self.polygons:
+            object.__setattr__(
+                self,
+                "polygons",
+                [[[point for point in self.values]]]
+            )
+        elif self.polygons and not self.values:
+            if self.polygons[0] and self.polygons[0][0]:
+                object.__setattr__(
+                    self,
+                    "values",
+                    [point for point in self.polygons[0][0]]
+                )
+        if self.polygons[0][0] != self.values:
+            raise ValueError("Init values are not consistent")
+
 
     @staticmethod
-    def from_dict(d: dict) -> PolygonCoordinates:
+    def from_dict(d: dict) -> 'PolygonCoordinates':
         """Create a PolygonCoordinates instance from a dictionary.
+
+        Supports both legacy format (single polygon with one contour) and new complex format.
 
         Args:
             d (dict): A dictionary containing polygon coordinates information.
+                Legacy format: {"polygon": {str(idx): {"x": x, "y": y}} or {"polygon": [{"x": x, "y": y}]}
+                New format: {"polygons": [[[{"x": x, "y": y}]]]}
 
         Returns:
             PolygonCoordinates: An instance of PolygonCoordinates.
         """
-        polygon_dict = d["polygon"]
+        polygon_dict = d.get("polygon")
         values: List[PointCoordinate] = []
 
         if isinstance(polygon_dict, dict):
@@ -189,6 +215,8 @@ class PolygonCoordinates:
             sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
         elif isinstance(polygon_dict, list):
             sorted_dict_values = list(polygon_dict)
+        elif not polygon_dict:  # Empty dict case
+            sorted_dict_values = []
         else:
             raise LabelRowError(f"Invalid format for polygon coordinates: {polygon_dict}")
 
@@ -199,7 +227,24 @@ class PolygonCoordinates:
             )
             values.append(point_coordinate)
 
-        return PolygonCoordinates(values=values)
+        # Parse new format if present
+        polygons = []
+        if "polygons" in d:
+            for polygon in d["polygons"]:
+                contours = []
+                for contour in polygon:
+                    points = [
+                        PointCoordinate(x=point["x"], y=point["y"])
+                        for point in contour
+                    ]
+                    contours.append(points)
+                polygons.append(contours)
+
+        # If no explicit polygons data, use values as the only polygon/contour
+        if not polygons and values:
+            polygons = [[[point for point in values]]]
+
+        return PolygonCoordinates(values=values, polygons=polygons)
 
     def to_dict(self) -> dict:
         """Convert the PolygonCoordinates instance to a dictionary.
@@ -207,7 +252,16 @@ class PolygonCoordinates:
         Returns:
             dict: A dictionary representation of the polygon coordinates.
         """
-        return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
+        return {
+            "polygon": {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)},
+            "polygons": [
+                [
+                    [{"x": point.x, "y": point.y} for point in contour]
+                    for contour in polygon
+                ]
+                for polygon in self.polygons
+            ]
+        }
 
 
 @dataclass(frozen=True)

@@ -112,6 +112,31 @@ def ontology():
     yield ontology
 
 
+def test_polygon_coordinates():
+    c1 = PolygonCoordinates(values=[PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)])
+    assert len(c1.polygons) == 1 # 1 polygon
+    assert len(c1.polygons[0]) == 1  # 1 ring
+    assert c1.polygons[0][0] == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+
+    c2 = PolygonCoordinates(polygons=[[[PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]], [[PointCoordinate(x=2, y=2), PointCoordinate(x=3, y=3)]]])
+    assert len(c2.polygons) == 2  # 2 polygons
+    assert c2.values == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]  # only contains the first polygon, second is ignored
+
+    with pytest.raises(ValueError):
+        # inconsistent values being provided should raise an error
+        PolygonCoordinates(values=[PointCoordinate(x=0, y=0)], polygons=[[[PointCoordinate(x=1, y=1)]]])
+
+def test_polygon_coordinates_from_dict():
+    c1 = PolygonCoordinates.from_dict({"polygon": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]})
+    assert c1.values == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+    assert c1.polygons[0][0] == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+
+    c2 = PolygonCoordinates.from_dict({"polygons": [[[{"x": 0, "y": 0}, {"x": 1, "y": 1}]], [[{"x": 2, "y": 2}, {"x": 3, "y": 3}]]]})
+    assert c2.values == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+    assert len(c2.polygons) == 2
+    assert c2.polygons[0][0] == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+    assert c2.polygons[1][0] == [PointCoordinate(x=2, y=2), PointCoordinate(x=3, y=3)]
+
 def test_create_object_instance_one_coordinate():
     object_instance = box_ontology_item.create_instance()
 

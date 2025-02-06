@@ -78,6 +78,7 @@ def test_serialise_image_group_with_classifications():
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(image_group_ontology))
     label_row.from_labels_dict(image_group_labels)
 
+    # FIXME HERE: have a nested polygon instead of a dict of coordinates.
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         image_group_labels,
