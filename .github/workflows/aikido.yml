@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: aikidosecurity/local-scanner:v1.0.52
-    steps: 
-      - uses: actions/checkout@v4 
+    steps:
+      - uses: actions/checkout@v4
       - name: Run scan
         run: aikido-local-scanner scan ./ --apikey ${{ secrets.AIKIDO_API_Key }} --repositoryname enncord-client-python --branchname main
