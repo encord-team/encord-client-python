@@ -53,6 +53,7 @@ from encord.objects.coordinates import (
     HtmlCoordinates,
     PointCoordinate,
     PolygonCoordinates,
+    PolygonCoordsToDict,
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
@@ -1826,6 +1827,7 @@ class LabelRowV2:
             encord_object["rotatableBoundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, PolygonCoordinates):
             encord_object["polygon"] = coordinates.to_dict()
+            encord_object["polygons"] = coordinates.to_dict(PolygonCoordsToDict.multiple_polygons)
         elif isinstance(coordinates, PolylineCoordinates):
             encord_object["polyline"] = coordinates.to_dict()
         elif isinstance(coordinates, PointCoordinate):
@@ -2310,7 +2312,7 @@ class LabelRowV2:
             return BoundingBoxCoordinates.from_dict(frame_object_label)
         if "rotatableBoundingBox" in frame_object_label:
             return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
-        elif "polygon" in frame_object_label:
+        elif "polygon" in frame_object_label or "polygons" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
         elif "point" in frame_object_label:
             return PointCoordinate.from_dict(frame_object_label)
