@@ -11,8 +11,7 @@ from encord.common.constants import DATETIME_LONG_STRING_FORMAT
 # Cache: major performance win for large classification ranges
 @lru_cache(maxsize=8192)
 def parse_datetime(time_string: str) -> datetime:
-    """
-    Parsing datetime strings in the most compatible yet performant way.
+    """Parsing datetime strings in the most compatible yet performant way.
 
     Our labels can contain timestamps in different formats, but applying dateutil.parse straight away is expensive
     as it is very smart and tries to guess the time format.

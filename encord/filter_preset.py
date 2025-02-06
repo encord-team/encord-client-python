@@ -25,8 +25,7 @@ from encord.orm.filter_preset import ProjectFilterPreset as OrmProjectFilterPres
 
 
 class FilterPreset:
-    """
-    Represents preset in Index.
+    """Represents preset in Index.
     Preset is a group of filters persisted which can be re-used for faster data curation.
     """
 
@@ -36,8 +35,7 @@ class FilterPreset:
 
     @property
     def uuid(self) -> UUID:
-        """
-        Get the preset uuid (i.e. the preset ID).
+        """Get the preset uuid (i.e. the preset ID).
 
         Returns:
             str: The preset uuid.
@@ -46,8 +44,7 @@ class FilterPreset:
 
     @property
     def name(self) -> str:
-        """
-        Get the preset name
+        """Get the preset name
 
         Returns:
             str: The preset name.
@@ -56,8 +53,7 @@ class FilterPreset:
 
     @property
     def description(self) -> Optional[str]:
-        """
-        Get the preset description
+        """Get the preset description
 
         Returns:
             Optional[str]: The preset description.
@@ -66,8 +62,7 @@ class FilterPreset:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """
-        Get the preset creation timestamp
+        """Get the preset creation timestamp
 
         Returns:
             Optional[datetime]: The preset creation timestamp.
@@ -76,8 +71,7 @@ class FilterPreset:
 
     @property
     def last_updated_at(self) -> Optional[datetime]:
-        """
-        Get the preset last update timestamp
+        """Get the preset last update timestamp
 
         Returns:
             Optional[datetime]: The preset last update timestamp.
@@ -159,8 +153,8 @@ class FilterPreset:
     def update_preset(
         self, name: Optional[str] = None, description: Optional[str] = None, filter_preset_json: Optional[dict] = None
     ) -> None:
-        """
-        Update the preset's definition.
+        """Update the preset's definition.
+
         Args:
            name (Optional[str]): The new name for the preset.
            description (Optional[str]): The new description for the preset.
@@ -186,9 +180,7 @@ class FilterPreset:
 
 
 class ProjectFilterPreset:
-    """
-    Represents Active filter presets.
-    """
+    """Represents Active filter presets."""
 
     def __init__(
         self,
@@ -202,8 +194,7 @@ class ProjectFilterPreset:
 
     @property
     def uuid(self) -> UUID:
-        """
-        Get the filter preset unique identifier (UUID).
+        """Get the filter preset unique identifier (UUID).
 
         Returns:
             UUID: The filter preset UUID.
@@ -212,8 +203,7 @@ class ProjectFilterPreset:
 
     @property
     def name(self) -> str:
-        """
-        Get the filter preset name.
+        """Get the filter preset name.
 
         Returns:
             str: The collection name.
@@ -222,8 +212,7 @@ class ProjectFilterPreset:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """
-        Get the filter preset creation timestamp.
+        """Get the filter preset creation timestamp.
 
         Returns:
             Optional[datetime]: The timestamp when the filter preset was created, or None if not available.
@@ -232,8 +221,7 @@ class ProjectFilterPreset:
 
     @property
     def updated_at(self) -> Optional[datetime]:
-        """
-        Get the filter preset last edit timestamp.
+        """Get the filter preset last edit timestamp.
 
         Returns:
             Optional[datetime]: The timestamp when the filter preset was last edited, or None if not available.
@@ -242,8 +230,8 @@ class ProjectFilterPreset:
 
     @property
     def project_hash(self) -> UUID:
-        """
-        Get the project hash of the filter preset.
+        """Get the project hash of the filter preset.
+
         Returns:
             UUID: The project hash of the filter preset.
         """

@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Enums"
 slug: "sdk-ref-enums"
 hidden: false

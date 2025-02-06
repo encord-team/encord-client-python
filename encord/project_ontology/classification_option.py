@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "ClassificationOption DEPRECATED"
 slug: "sdk-ref-classification-option-deprecated"
 hidden: false
@@ -15,8 +14,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ClassificationOption:
-    """
-    DEPRECATED: prefer using :class:`encord.ontology.Ontology`
+    """DEPRECATED: prefer using :class:`encord.ontology.Ontology`
 
     A dataclass which holds nested options for the :class:`.ClassificationAttribute`.
     """

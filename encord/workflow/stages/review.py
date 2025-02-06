@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Review Stage"
 slug: "sdk-ref-stage-review"
 hidden: false
@@ -68,8 +67,7 @@ class LabelReview(BaseDTO):
         return self._workflow_client, self._stage_uuid, self._task_uuid
 
     def approve(self, *, bundle: Optional[Bundle] = None):
-        """
-        Approves the review.
+        """Approves the review.
 
         **Parameters**
 
@@ -81,8 +79,7 @@ class LabelReview(BaseDTO):
         )
 
     def reject(self, *, bundle: Optional[Bundle] = None):
-        """
-        Rejects the review.
+        """Rejects the review.
 
         **Parameters**
 
@@ -94,8 +91,7 @@ class LabelReview(BaseDTO):
         )
 
     def reopen(self, *, bundle: Optional[Bundle] = None):
-        """
-        Reopens the review.
+        """Reopens the review.
 
         **Parameters**
 
@@ -140,8 +136,7 @@ class ReviewStage(WorkflowStageBase):
         data_title: Optional[str] = None,
         status: Union[ReviewTaskStatus, List[ReviewTaskStatus], None] = None,
     ) -> Iterable[ReviewTask]:
-        """
-        Retrieves tasks for the ReviewStage.
+        """Retrieves tasks for the ReviewStage.
 
         **Parameters**
 
@@ -229,8 +224,7 @@ class ReviewTask(WorkflowTask):
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """
-        Approves the task.
+        """Approves the task.
 
         **Parameters**
 
@@ -252,8 +246,7 @@ class ReviewTask(WorkflowTask):
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """
-        Rejects the task.
+        """Rejects the task.
 
         **Parameters**
 
@@ -269,8 +262,7 @@ class ReviewTask(WorkflowTask):
         )
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
-        """
-        Assigns the task to a user.
+        """Assigns the task to a user.
 
         **Parameters**
 
@@ -281,8 +273,7 @@ class ReviewTask(WorkflowTask):
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
-        """
-        Releases the task from the current user.
+        """Releases the task from the current user.
 
         **Parameters**
 
@@ -294,8 +285,7 @@ class ReviewTask(WorkflowTask):
     def get_label_reviews(
         self, status: Union[ReviewTaskStatus, List[ReviewTaskStatus], None] = None
     ) -> Iterable[LabelReview]:
-        """
-        Retrieves label reviews for the Review task.
+        """Retrieves label reviews for the Review task.
 
         **Parameters**
         - `status` (Union[ReviewTaskStatus, List[ReviewTaskStatus], None]): Status of the task.

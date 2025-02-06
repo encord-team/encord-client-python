@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - HTML Node"
 slug: "sdk-ref-objects-html-node"
 hidden: false
@@ -19,8 +18,7 @@ from encord.orm.base_dto import BaseDTO
 
 
 class HtmlNode(BaseDTO):
-    """
-    A class representing a single HTML node, with the xpath and offset.
+    """A class representing a single HTML node, with the xpath and offset.
 
     Attributes:
         xpath (str): The xpath of the node
@@ -35,8 +33,7 @@ class HtmlNode(BaseDTO):
 
 
 class HtmlRange(BaseDTO):
-    """
-    A class representing a section of HTML with a start and end node.
+    """A class representing a section of HTML with a start and end node.
 
     Attributes:
         start (HtmlNode): The starting node of the range.

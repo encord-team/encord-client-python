@@ -14,8 +14,7 @@ from encord.orm.label_row import LabelRow
 
 
 def construct_answer_dictionaries(label_row) -> LabelRow:
-    """
-    Adds answer object and classification answer dictionaries from a label row if they do not exist.
+    """Adds answer object and classification answer dictionaries from a label row if they do not exist.
     Integrity checks are conducted upon saving of labels.
 
     Args:
@@ -55,8 +54,7 @@ def construct_answer_dictionaries(label_row) -> LabelRow:
 #                   Helper functions
 # ---------------------------------------------------------
 def add_answers_to_items(items, classification_answers, object_answers):
-    """
-    If object_hash (uid) or classification_hash (uid) are not in answer dictionaries,
+    """If object_hash (uid) or classification_hash (uid) are not in answer dictionaries,
     add key entry with empty classification list.
     """
     for item in items:

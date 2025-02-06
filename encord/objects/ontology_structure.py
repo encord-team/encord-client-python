@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Ontology Structure"
 slug: "sdk-ref-objects-ont-structure"
 hidden: false
@@ -43,8 +42,7 @@ class OntologyStructure:
         feature_node_hash: str,
         type_: Optional[Type[OntologyElementT]] = None,
     ) -> OntologyElementT:
-        """
-        Returns the first child node of this ontology tree node with the matching feature node hash. If there is
+        """Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
         an invalid state. Throws if nothing is found or if the type is not matched.
 
@@ -77,8 +75,7 @@ class OntologyStructure:
         title: str,
         type_: Optional[Type[OntologyElementT]] = None,
     ) -> OntologyElementT:
-        """
-        Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
+        """Returns a child node of this ontology tree node with the matching title and matching type if specified. If more
         than one child in this Object have the same title, then an error will be thrown. If no item is found, an error
         will be thrown as well.
 
@@ -98,8 +95,7 @@ class OntologyStructure:
         title: str,
         type_: Optional[Type[OntologyElementT]] = None,
     ) -> List[OntologyElementT]:
-        """
-        Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
+        """Returns all the child nodes of this ontology tree node with the matching title and matching type if specified.
         Title in ontologies do not need to be unique, however, we recommend unique titles when creating ontologies.
 
         Args:
@@ -132,8 +128,7 @@ class OntologyStructure:
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> OntologyStructure:
-        """
-        Create an OntologyStructure from a dictionary.
+        """Create an OntologyStructure from a dictionary.
 
         Args:
             d: A JSON blob of an "ontology structure" (e.g. from Encord web app)
@@ -158,8 +153,7 @@ class OntologyStructure:
         )
 
     def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Convert the OntologyStructure to a dictionary.
+        """Convert the OntologyStructure to a dictionary.
 
         Returns:
             Dict[str, List[Dict[str, Any]]]: The dictionary representation of the ontology.
@@ -187,8 +181,7 @@ class OntologyStructure:
         color: Optional[str] = None,
         feature_node_hash: Optional[str] = None,
     ) -> Object:
-        """
-        Adds an object class definition to the structure.
+        """Adds an object class definition to the structure.
 
         Args:
             name: The user-visible name of the object.
@@ -238,8 +231,7 @@ class OntologyStructure:
         uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
     ) -> Classification:
-        """
-        Adds a classification definition to the ontology.
+        """Adds a classification definition to the ontology.
 
         Args:
             uid: Integer identifier of the object. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
@@ -275,8 +267,7 @@ class OntologyStructure:
         skeleton_template: SkeletonTemplate,
         feature_node_hash: Optional[str] = None,
     ) -> None:
-        """
-        Adds a skeleton template to the ontology structure.
+        """Adds a skeleton template to the ontology structure.
 
         Args:
             skeleton_template: The SkeletonTemplate object to be added.

@@ -59,8 +59,7 @@ class DataClientMetadata:
 
 
 class ImageData:
-    """
-    Information about individual images within a single :class:`~encord.orm.dataset.DataRow` of type
+    """Information about individual images within a single :class:`~encord.orm.dataset.DataRow` of type
     :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`. Get this information
     via the :meth:`DataRow.images <encord.orm.dataset.DataRow.images>` property.
     """
@@ -105,16 +104,12 @@ class ImageData:
 
     @property
     def file_type(self) -> str:
-        """
-        The MIME type of the file.
-        """
+        """The MIME type of the file."""
         return self._file_type
 
     @property
     def file_size(self) -> int:
-        """
-        The size of the file in bytes.
-        """
+        """The size of the file in bytes."""
         return self._file_size
 
     @property
@@ -167,8 +162,7 @@ class ImageData:
 
 
 class DataRow(dict, Formatter):
-    """
-    Each individual DataRow is one upload of a video, image group, single image, or DICOM series.
+    """Each individual DataRow is one upload of a video, image group, single image, or DICOM series.
 
     This class has dict-style accessors for backwards compatibility.
     Clients who are using this class for the first time are encouraged to use the property accessors and setters
@@ -231,9 +225,7 @@ class DataRow(dict, Formatter):
 
     @property
     def uid(self) -> str:
-        """
-        The unique identifier for this data row. Note that the setter does not update the data on the server.
-        """
+        """The unique identifier for this data row. Note that the setter does not update the data on the server."""
         return self["data_hash"]
 
     @uid.setter
@@ -242,8 +234,7 @@ class DataRow(dict, Formatter):
 
     @property
     def title(self) -> str:
-        """
-        The data title.
+        """The data title.
 
         The setter updates the custom client metadata. This queues a request for the backend which will be
         executed on a call of :meth:`.DataRow.upload`.
@@ -275,8 +266,7 @@ class DataRow(dict, Formatter):
 
     @property
     def frames_per_second(self) -> Optional[int]:
-        """
-        If the data type is :meth:`DataType.VIDEO <encord.constants.enums.DataType.VIDEO>` this returns the
+        """If the data type is :meth:`DataType.VIDEO <encord.constants.enums.DataType.VIDEO>` this returns the
         actual number of frames per second for the video. Otherwise, it returns `None` as a frames_per_second
         field is not applicable.
         """
@@ -284,8 +274,7 @@ class DataRow(dict, Formatter):
 
     @property
     def duration(self) -> Optional[int]:
-        """
-        If the data type is :meth:`DataType.VIDEO <encord.constants.enums.DataType.VIDEO>` this returns the
+        """If the data type is :meth:`DataType.VIDEO <encord.constants.enums.DataType.VIDEO>` this returns the
         actual duration for the video. Otherwise, it returns `None` as a duration field is not applicable.
         """
         if self.data_type != DataType.VIDEO:
@@ -294,8 +283,7 @@ class DataRow(dict, Formatter):
 
     @property
     def client_metadata(self) -> Optional[MappingProxyType]:
-        """
-        The currently cached client metadata. To cache the client metadata, use the
+        """The currently cached client metadata. To cache the client metadata, use the
         :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
 
         The setter updates the custom client metadata. This queues a request for the backend which will
@@ -310,8 +298,7 @@ class DataRow(dict, Formatter):
 
     @property
     def width(self) -> Optional[int]:
-        """
-        An actual width of the data asset. This is `None` for data types of
+        """An actual width of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
         :meth:`is_image_sequence <encord.data.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
@@ -321,8 +308,7 @@ class DataRow(dict, Formatter):
 
     @property
     def height(self) -> Optional[int]:
-        """
-        An actual height of the data asset. This is `None` for data types of
+        """An actual height of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
         :meth:`is_image_sequence <encord.data.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
@@ -336,8 +322,7 @@ class DataRow(dict, Formatter):
 
     @property
     def file_link(self) -> Optional[str]:
-        """
-        A permanent file link of the given data asset. When stored in
+        """A permanent file link of the given data asset. When stored in
         :meth:`StorageLocation.CORD_STORAGE <encord.orm.dataset.StorageLocation.CORD_STORAGE>` this will be the
         internal file path. In private bucket storage location this will be the full path to the file.
         If the data type is `DataType.DICOM` then this returns None as no single file is associated with the
@@ -347,24 +332,19 @@ class DataRow(dict, Formatter):
 
     @property
     def signed_url(self) -> Optional[str]:
-        """
-        The cached signed url of the given data asset. To cache the signed url, use the
+        """The cached signed url of the given data asset. To cache the signed url, use the
         :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
         """
         return self["signed_url"]
 
     @property
     def file_size(self) -> int:
-        """
-        The file size of the given data asset in bytes.
-        """
+        """The file size of the given data asset in bytes."""
         return self["file_size"]
 
     @property
     def file_type(self) -> str:
-        """
-        A MIME file type of the given data asset as a string
-        """
+        """A MIME file type of the given data asset as a string"""
         return self["file_type"]
 
     @property
@@ -373,8 +353,7 @@ class DataRow(dict, Formatter):
 
     @property
     def images_data(self) -> Optional[List[ImageData]]:
-        """
-        A list of the cached :class:`~encord.orm.dataset.ImageData` objects for the given data asset.
+        """A list of the cached :class:`~encord.orm.dataset.ImageData` objects for the given data asset.
         Fetch the images with appropriate settings in the :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
         If the data type is not :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`
         then this returns None.
@@ -384,8 +363,7 @@ class DataRow(dict, Formatter):
     @property
     @deprecated("0.1.98", ".is_image_sequence")
     def is_optimised_image_group(self) -> Optional[bool]:
-        """
-        If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
+        """If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
         returns whether this is a performance optimised image group. Returns `None` for other data types.
 
         DEPRECATED: This method is deprecated and will be removed in the upcoming library version.
@@ -395,8 +373,7 @@ class DataRow(dict, Formatter):
 
     @property
     def is_image_sequence(self) -> Optional[bool]:
-        """
-        If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
+        """If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
         returns whether this is an image sequence. Returns `None` for other data types.
 
         For more details refer to the
@@ -406,8 +383,7 @@ class DataRow(dict, Formatter):
 
     @property
     def backing_item_uuid(self) -> UUID:
-        """
-        The id of the :class:`encord.storage.StorageItem` that underlies this data row.
+        """The id of the :class:`encord.storage.StorageItem` that underlies this data row.
         See also :meth:`encord.user_client.EncordUserClient.get_storage_item`.
         """
         backing_item_uuid: Optional[UUID] = self.get("backing_item_uuid")
@@ -422,8 +398,7 @@ class DataRow(dict, Formatter):
         images_data_fetch_options: Optional[ImagesDataFetchOptions] = None,
         client_metadata: bool = False,
     ):
-        """
-        Fetches all the most up-to-date data. If any of the parameters are falsy, the current values will not be
+        """Fetches all the most up-to-date data. If any of the parameters are falsy, the current values will not be
         updated.
 
         Args:
@@ -452,8 +427,7 @@ class DataRow(dict, Formatter):
             raise EncordException("Could not fetch data. The DataRow is in an invalid state.")
 
     def save(self) -> None:
-        """
-        Sync local state to the server, if updates are made. This is a blocking function.
+        """Sync local state to the server, if updates are made. This is a blocking function.
 
         The newest values from the Encord server will update the current :class:`.DataRow` object.
         """
@@ -509,8 +483,7 @@ class DataRow(dict, Formatter):
         return ret
 
     def _compare_upload_payload(self, upload_res: dict, initial_payload: dict) -> None:
-        """
-        Compares the upload payload with the response from the server.
+        """Compares the upload payload with the response from the server.
 
         NOTE: this could also compare the new fields, field by field and update the current DataRow.
         """
@@ -528,8 +501,7 @@ class DataRow(dict, Formatter):
 
 @dataclasses.dataclass(frozen=True)
 class DataRows(dict, Formatter):
-    """
-    This is a helper class that forms request for filtered dataset rows
+    """This is a helper class that forms request for filtered dataset rows
     Not intended to be used directly
     """
 
@@ -547,9 +519,7 @@ class DataRows(dict, Formatter):
 
 @dataclasses.dataclass(frozen=True)
 class DatasetInfo:
-    """
-    This class represents a dataset in the context of listing
-    """
+    """This class represents a dataset in the context of listing"""
 
     dataset_hash: str
     user_hash: str
@@ -571,8 +541,7 @@ class Dataset(dict, Formatter):
         description: Optional[str] = None,
         backing_folder_uuid: Optional[UUID] = None,
     ):
-        """
-        DEPRECATED - prefer using the :class:`encord.dataset.Dataset` class instead.
+        """DEPRECATED - prefer using the :class:`encord.dataset.Dataset` class instead.
 
         This class has dict-style accessors for backwards compatibility.
         Clients who are using this class for the first time are encouraged to use the property accessors and setters
@@ -681,8 +650,7 @@ class CreateDatasetResponse(dict, Formatter):
         user_hash: str,
         backing_folder_uuid: Optional[UUID],
     ):
-        """
-        This class has dict-style accessors for backwards compatibility.
+        """This class has dict-style accessors for backwards compatibility.
         Clients who are using this class for the first time are encouraged to use the property accessors and setters
         instead of the underlying dictionary.
         The mixed use of the `dict` style member functions and the property accessors and setters is discouraged.
@@ -690,7 +658,6 @@ class CreateDatasetResponse(dict, Formatter):
         WARNING: Do NOT use the `.data` member of this class. Its usage could corrupt the correctness of the
         datastructure.
         """
-
         super().__init__(
             {
                 "title": title,
@@ -796,9 +763,7 @@ DatasetType = StorageLocation
 
 
 class DatasetData(base_orm.BaseORM):
-    """
-    Video base ORM.
-    """
+    """Video base ORM."""
 
     DB_FIELDS = OrderedDict(
         [
@@ -1011,9 +976,7 @@ class LongPollingStatus(str, Enum):
 
 
 class DataUnitError(BaseDTO):
-    """
-    A description of an error for an individual upload item
-    """
+    """A description of an error for an individual upload item"""
 
     object_urls: List[str]
     """URLs involved. A single item for videos and images; a list of frames for image groups and DICOM"""
@@ -1029,8 +992,7 @@ class DataUnitError(BaseDTO):
 
 
 class DatasetDataLongPolling(BaseDTO):
-    """
-    Response of the upload job's long polling request.
+    """Response of the upload job's long polling request.
 
     Note: An upload job consists of job units, where job unit could be
     either a video, image group, dicom series, or a single image.
