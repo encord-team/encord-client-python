@@ -10,4 +10,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run scan
-        run: aikido-local-scanner scan ./ --apikey ${{ secrets.AIKIDO_API_Key }} --repositoryname enncord-client-python --branchname main
+        run: aikido-local-scanner scan ./ --apikey ${{ secrets.AIKIDO_API_Key }} --repositoryname enncord-client-python --branchname master
