@@ -250,13 +250,12 @@ class PolygonCoordinates:
         Returns:
             dict: A dictionary representation of the polygon coordinates.
         """
-        match kind:
-            case PolygonCoordsToDict.single_polygon:
-                return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self._values)}
-            case PolygonCoordsToDict.multiple_polygons:
-                return [[pnt_coordinates_to_flat(contour) for contour in polygon] for polygon in self._polygons]
-            case _:
-                raise LabelRowError(f"Invalid argument: {kind}")
+        if kind == PolygonCoordsToDict.single_polygon:
+            return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self._values)}
+        elif kind == PolygonCoordsToDict.multiple_polygons:
+            return [[pnt_coordinates_to_flat(contour) for contour in polygon] for polygon in self._polygons]
+        else:
+            raise LabelRowError(f"Invalid argument: {kind}")
 
 
 def flat_to_pnt_coordinates(ring: list[float]) -> list[PointCoordinate]:
