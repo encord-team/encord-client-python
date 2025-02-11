@@ -11,8 +11,8 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from enum import StrEnum, auto
+from dataclasses import dataclass
+from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.exceptions import LabelRowError
@@ -161,7 +161,7 @@ class PointCoordinate:
         return {"0": {"x": self.x, "y": self.y}}
 
 
-class PolygonCoordsToDict(StrEnum):
+class PolygonCoordsToDict(str, Enum):
     single_polygon = "single_polygon"
     multiple_polygons = "multiple_polygons"
 
