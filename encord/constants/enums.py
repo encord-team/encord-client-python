@@ -53,6 +53,7 @@ GEOMETRIC_TYPES = {
     DataType.DICOM,
     DataType.DICOM_STUDY,
     DataType.NIFTI,
+    DataType.PDF,
 }
 
 
