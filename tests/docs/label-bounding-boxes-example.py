@@ -236,7 +236,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
     # Loop through the frames for the current data unit
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  # ✅ Multiple objects in the frame
+        if not isinstance(items, list):  #  Multiple objects in the frame
             items = [items]
 
         for item in items:
@@ -244,10 +244,10 @@ for data_unit, frame_coordinates in video_frame_labels.items():
             coord = item["coordinates"]
             cherry_type = item["cherry_type"]
 
-            # ✅ Check if label_ref already exists for reusability
+            #  Check if label_ref already exists for reusability
             if label_ref not in object_instances_by_label_ref:
                 box_object_instance: ObjectInstance = box_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = box_object_instance  # ✅ Store for reuse
+                object_instances_by_label_ref[label_ref] = box_object_instance  #  Store for reuse
                 checklist_attribute = None
 
                 # Set cherry type attribute
@@ -280,18 +280,18 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     box_object_instance.set_answer(attribute=checklist_attribute, answer=checklist_answers, overwrite=True)
 
             else:
-                # ✅ Reuse existing instance across frames
+                #  Reuse existing instance across frames
                 box_object_instance = object_instances_by_label_ref[label_ref]
 
-            # ✅ Assign the object to the frame and track it
+            #  Assign the object to the frame and track it
             box_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-    # ✅ Add object instances to label_row **only if they have frames assigned**
+    #  Add object instances to label_row **only if they have frames assigned**
     for box_object_instance in object_instances_by_label_ref.values():
-        if box_object_instance.get_annotation_frames():  # ✅ Ensures it has at least one frame
+        if box_object_instance.get_annotation_frames():  #  Ensures it has at least one frame
             label_row.add_object_instance(box_object_instance)
 
-    # ✅ Upload all labels for this data unit (video/image) to the server
+    #  Upload all labels for this data unit (video/image) to the server
     label_row.save()
 
-print("✅ Labels with cherry type radio buttons, checklist attributes, and text labels added for all data units.")
+print(" Labels with cherry type radio buttons, checklist attributes, and text labels added for all data units.")
