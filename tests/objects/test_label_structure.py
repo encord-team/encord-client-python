@@ -32,6 +32,7 @@ from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.data import empty_video
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
@@ -1050,6 +1051,16 @@ def test_classification_can_be_added_edited_and_removed(ontology):
 
 
 @pytest.fixture
+def empty_video_label_row() -> LabelRowV2:
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(empty_video.labels)
+    return label_row
+
+
+@pytest.fixture
 def empty_audio_label_row() -> LabelRowV2:
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
@@ -1106,6 +1117,37 @@ def test_non_geometric_label_rows_must_use_classification_instance_with_range_on
             "You can do ClassificationInstance(range_only=True) or "
             "Classification.create_instance(range_only=True) to achieve this."
         )
+
+
+def test_both_polygons_supported(empty_video_label_row: LabelRowV2):
+    polygon_tool = all_types_structure.get_child_by_title("Polygon", Object)
+
+    # Adding a complex polygon: old `values` field is still present
+    cplx_polygon = polygon_tool.create_instance()
+    cplx_polygon.set_for_frames(
+        coordinates=PolygonCoordinates(polygons=[[[PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]]]), frames=0
+    )
+    empty_video_label_row.add_object_instance(cplx_polygon)
+    obj = empty_video_label_row.get_object_instances()[0]
+    coords = obj.get_annotations()[0].coordinates
+    assert isinstance(coords, PolygonCoordinates)
+    assert coords.polygons == [[[PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]]]
+    assert coords.values == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+
+    empty_video_label_row.remove_object(obj)
+    assert empty_video_label_row.get_object_instances() == []
+
+    # Adding a simple/old polygon: new `polygons` field is present too
+    simple_polygon = polygon_tool.create_instance()
+    simple_polygon.set_for_frames(
+        coordinates=PolygonCoordinates(values=[PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]), frames=0
+    )
+    empty_video_label_row.add_object_instance(simple_polygon)
+    obj = empty_video_label_row.get_object_instances()[0]
+    coords = obj.get_annotations()[0].coordinates
+    assert isinstance(coords, PolygonCoordinates)
+    assert coords.polygons == [[[PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]]]
+    assert coords.values == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
 
 
 def test_non_range_classification_cannot_be_added_to_audio_label_row(ontology):

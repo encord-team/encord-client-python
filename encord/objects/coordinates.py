@@ -12,7 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import auto
+from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.exceptions import LabelRowError
@@ -161,27 +161,60 @@ class PointCoordinate:
         return {"0": {"x": self.x, "y": self.y}}
 
 
-@dataclass(frozen=True)
+class PolygonCoordsToDict(str, Enum):
+    single_polygon = "single_polygon"
+    multiple_polygons = "multiple_polygons"
+
+
 class PolygonCoordinates:
-    """Represents polygon coordinates as a list of point coordinates.
+    """Represents polygon coordinates"""
 
-    Attributes:
-        values (List[PointCoordinate]): A list of PointCoordinate objects defining the polygon.
-    """
+    def __init__(
+        self, values: list[PointCoordinate] | None = None, polygons: list[list[list[PointCoordinate]]] | None = None
+    ):
+        """
+        Args:
+            values (List[PointCoordinate]): A list of PointCoordinate objects defining the polygon.
+            polygons (List[List[List[PointCoordinate]]]): A list of polygons, where each polygon is a list of contours, where each contour is a list of points.
+        """
 
-    values: List[PointCoordinate]
+        if not values and not polygons:
+            raise LabelRowError("Either `values` or `polygons` must be provided")
+        elif values and not polygons:
+            self._values = values
+            self._polygons = [[list(values)]]
+        elif polygons and not values:
+            self._polygons = polygons
+            self._values = [point for point in self._polygons[0][0]]
+        elif polygons and values:
+            if polygons[0][0] != values:
+                raise LabelRowError("`values` and `polygons` are not consistent")
+            self._values = values
+            self._polygons = polygons
+
+    @property
+    def values(self) -> list[PointCoordinate]:
+        return self._values
+
+    @property
+    def polygons(self) -> list[list[list[PointCoordinate]]]:
+        return self._polygons
 
     @staticmethod
-    def from_dict(d: dict) -> PolygonCoordinates:
+    def from_dict(d: dict) -> "PolygonCoordinates":
         """Create a PolygonCoordinates instance from a dictionary.
+
+        Supports both legacy format (single polygon with one contour) and new complex format.
 
         Args:
             d (dict): A dictionary containing polygon coordinates information.
+                Legacy format: {"polygon": {str(idx): {"x": x, "y": y}} or {"polygon": [{"x": x, "y": y}]}
+                New format: {"polygons": [[[{"x": x, "y": y}]]]}
 
         Returns:
             PolygonCoordinates: An instance of PolygonCoordinates.
         """
-        polygon_dict = d["polygon"]
+        polygon_dict = d.get("polygon")
         values: List[PointCoordinate] = []
 
         if isinstance(polygon_dict, dict):
@@ -189,6 +222,8 @@ class PolygonCoordinates:
             sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
         elif isinstance(polygon_dict, list):
             sorted_dict_values = list(polygon_dict)
+        elif not polygon_dict:  # Empty dict case
+            sorted_dict_values = []
         else:
             raise LabelRowError(f"Invalid format for polygon coordinates: {polygon_dict}")
 
@@ -199,15 +234,36 @@ class PolygonCoordinates:
             )
             values.append(point_coordinate)
 
-        return PolygonCoordinates(values=values)
+        # Parse new format if present
+        polygons = []
+        for polygon in d.get("polygons", []):
+            contours = [flat_to_pnt_coordinates(contour) for contour in polygon]
+            polygons.append(contours)
 
-    def to_dict(self) -> dict:
+        return PolygonCoordinates(values=values, polygons=polygons)
+
+    def to_dict(
+        self, kind: PolygonCoordsToDict | str = PolygonCoordsToDict.single_polygon
+    ) -> dict | list[list[list[float]]]:
         """Convert the PolygonCoordinates instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the polygon coordinates.
         """
-        return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
+        if kind == PolygonCoordsToDict.single_polygon:
+            return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self._values)}
+        elif kind == PolygonCoordsToDict.multiple_polygons:
+            return [[pnt_coordinates_to_flat(contour) for contour in polygon] for polygon in self._polygons]
+        else:
+            raise LabelRowError(f"Invalid argument: {kind}")
+
+
+def flat_to_pnt_coordinates(ring: list[float]) -> list[PointCoordinate]:
+    return [PointCoordinate(x=ring[idx], y=ring[idx + 1]) for idx in range(0, len(ring), 2)]
+
+
+def pnt_coordinates_to_flat(coordinates: list[PointCoordinate]) -> list[float]:
+    return [coord for point in coordinates for coord in [point.x, point.y]]
 
 
 @dataclass(frozen=True)
