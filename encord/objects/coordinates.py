@@ -182,7 +182,7 @@ class PolygonCoordinates:
             raise LabelRowError("Either `values` or `polygons` must be provided")
         elif values and not polygons:
             self._values = values
-            self._polygons = [[[point for point in values]]]
+            self._polygons = [[list(values)]]
         elif polygons and not values:
             self._polygons = polygons
             self._values = [point for point in self._polygons[0][0]]
@@ -193,7 +193,7 @@ class PolygonCoordinates:
             self._polygons = polygons
 
     @property
-    def values(self) -> List[PointCoordinate]:
+    def values(self) -> list[PointCoordinate]:
         return self._values
 
     @property
