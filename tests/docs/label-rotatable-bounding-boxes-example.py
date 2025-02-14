@@ -22,16 +22,6 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 # Get project for which labels are to be added
 project: Project = user_client.get_project(PROJECT_HASH)
 
-# List of data units for which labels need to be added
-data_units = [
-    "persimmons-001.jpg",
-    "persimmons-010.jpg",
-    "persimmons-ig", 
-    "persimmons-is", 
-    "persimmons-vid-001.mp4"
-]
-
-
 # Create radio button attribute for persimmon type
 ontology_structure = project.ontology_structure
 
