@@ -16,7 +16,9 @@ PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 
 # Create user client using ssh key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
-    ssh_private_key_path=SSH_PATH
+    ssh_private_key_path=SSH_PATH,
+    # For US platform users use "https://api.us.encord.com"
+    domain="https://api.encord.com",
 )
 
 # Get project for which labels are to be added
