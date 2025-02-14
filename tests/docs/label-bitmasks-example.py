@@ -1,16 +1,10 @@
 # Import dependencies
+from pathlib import Path
+
 import numpy as np
 
-from pathlib import Path
 from encord import EncordUserClient, Project
-from encord.objects import (
-    Object,
-    ObjectInstance,
-    RadioAttribute,
-    ChecklistAttribute,
-    TextAttribute,
-    Option
-)
+from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import BitmaskCoordinates
 
 # First, we need to prepare the mask itself.
@@ -38,13 +32,9 @@ project: Project = user_client.get_project(PROJECT_HASH)
 ontology_structure = project.ontology_structure
 
 # Find a bounding box annotation object in the project ontology
-bitmask_ontology_object: Object = ontology_structure.get_child_by_title(
-    title="Apples", type_=Object
-)
+bitmask_ontology_object: Object = ontology_structure.get_child_by_title(title="Apples", type_=Object)
 
-apple_type_radio_attribute = ontology_structure.get_child_by_title(
-    type_=RadioAttribute, title="Type?"
-)
+apple_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
 
 # Create options for the radio buttons
 sugar_bee_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Sugar Bee")
@@ -88,140 +78,148 @@ video_frame_labels = {
     "apples-001.jpg": {
         0: {
             "label_ref": "apple_001",
-            "coordinates": BitmaskCoordinates(numpy_coordinates), 
-            "apple_type": "Sugar Bee", 
-            "sugar_bee_quality_options": "Plump, Juicy"
-            }
+            "coordinates": BitmaskCoordinates(numpy_coordinates),
+            "apple_type": "Sugar Bee",
+            "sugar_bee_quality_options": "Plump, Juicy",
+        }
     },
     "apples-010.jpg": {
         0: [
             {
-                "label_ref": "apple_002", 
-                "coordinates": BitmaskCoordinates(numpy_coordinates), 
-                "apple_type": "Granny Smith", 
-                "granny_smith_quality_options": "Plump, Juicy, Large"
-                },
+                "label_ref": "apple_002",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Granny Smith",
+                "granny_smith_quality_options": "Plump, Juicy, Large",
+            },
             {
                 "label_ref": "apple_003",
-                "coordinates": BitmaskCoordinates(numpy_coordinates), 
-                "apple_type": "Honey Crisp", 
-                "honey_crisp_quality_options": "Plump"
-                },
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Honey Crisp",
+                "honey_crisp_quality_options": "Plump",
+            },
             {
-                "label_ref": "apple_004", 
-                "coordinates": BitmaskCoordinates(numpy_coordinates), 
-                "apple_type": "Other apple type", "Specify apple type": "Fuji"
-                },
+                "label_ref": "apple_004",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Other apple type",
+                "Specify apple type": "Fuji",
+            },
         ],
     },
     "apples-ig": {
         0: {
-            "label_ref": "apple_005", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates), 
-            "apple_type": "Sugar Bee", 
-            "sugar_bee_quality_options": "Plump, Juicy"
-            },
+            "label_ref": "apple_005",
+            "coordinates": BitmaskCoordinates(numpy_coordinates),
+            "apple_type": "Sugar Bee",
+            "sugar_bee_quality_options": "Plump, Juicy",
+        },
         2: [
             {
-            "label_ref": "apple_006", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Granny Smith", 
-            "granny_smith_quality_options": "Large"
+                "label_ref": "apple_006",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Granny Smith",
+                "granny_smith_quality_options": "Large",
             },
             {
-            "label_ref": "apple_007", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates), 
-            "apple_type": "Honey Crisp", 
-            "honey_crisp_quality_options": "Plump"
+                "label_ref": "apple_007",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Honey Crisp",
+                "honey_crisp_quality_options": "Plump",
             },
             {
-            "label_ref": "apple_008", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Other apple type", "Specify apple type": "Jazz"
+                "label_ref": "apple_008",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Other apple type",
+                "Specify apple type": "Jazz",
             },
-        ]
+        ],
     },
     "apples-is": {
         0: {
-            "label_ref": "apple_009", 
+            "label_ref": "apple_009",
             "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Sugar Bee", 
-            "sugar_bee_quality_options": "Plump"
-            },
+            "apple_type": "Sugar Bee",
+            "sugar_bee_quality_options": "Plump",
+        },
         3: [
             {
-            "label_ref": "apple_010", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates), 
-            "apple_type": "Granny Smith", 
-            "granny_smith_quality_options": "Plump, Juicy, Large"
+                "label_ref": "apple_010",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Granny Smith",
+                "granny_smith_quality_options": "Plump, Juicy, Large",
             },
             {
-            "label_ref": "apple_011", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates), 
-            "apple_type": "Honey Crisp", 
-            "honey_crisp_quality_options": "Plump"
+                "label_ref": "apple_011",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Honey Crisp",
+                "honey_crisp_quality_options": "Plump",
             },
             {
-            "label_ref": "apple_012", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates), 
-            "apple_type": "Other apple type", 
-            "Specify apple type": "Red Delicious"},
-        ]
+                "label_ref": "apple_012",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Other apple type",
+                "Specify apple type": "Red Delicious",
+            },
+        ],
     },
     "apples-vid-001.mp4": {
         103: [
             {
-            "label_ref": "apple_013", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Honey Crisp", 
-            "honey_crisp_quality_options": "Plump"},
-            {
-            "label_ref": "apple_014", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Sugar Bee", 
-            "sugar_bee_quality_options": "Plump, Juicy, Large"
+                "label_ref": "apple_013",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Honey Crisp",
+                "honey_crisp_quality_options": "Plump",
             },
             {
-            "label_ref": "apple_015", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Other apple type", "Specify apple type": "Jazz"
+                "label_ref": "apple_014",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Sugar Bee",
+                "sugar_bee_quality_options": "Plump, Juicy, Large",
+            },
+            {
+                "label_ref": "apple_015",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Other apple type",
+                "Specify apple type": "Jazz",
             },
         ],
         104: [
             {
-            "label_ref": "apple_016", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates), 
-            "apple_type": "Honey Crisp", 
-            "honey_crisp_quality_options": "Plump"},
-            {
-            "label_ref": "apple_014", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Sugar Bee", 
-            "sugar_bee_quality_options": "Plump, Juicy, Large"
+                "label_ref": "apple_016",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Honey Crisp",
+                "honey_crisp_quality_options": "Plump",
             },
             {
-            "label_ref": "apple_017", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Other apple type", "Specify apple type": "Fuji"
+                "label_ref": "apple_014",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Sugar Bee",
+                "sugar_bee_quality_options": "Plump, Juicy, Large",
+            },
+            {
+                "label_ref": "apple_017",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Other apple type",
+                "Specify apple type": "Fuji",
             },
         ],
         105: [
             {
-            "label_ref": "apple_016", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates), 
-            "apple_type": "Honey Crisp", 
-            "honey_crisp_quality_options": "Plump"
+                "label_ref": "apple_016",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Honey Crisp",
+                "honey_crisp_quality_options": "Plump",
             },
             {
-            "label_ref": "apple_014", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Sugar Bee", 
-            "sugar_bee_quality_options": "Plump, Juicy, Large"
+                "label_ref": "apple_014",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Sugar Bee",
+                "sugar_bee_quality_options": "Plump, Juicy, Large",
             },
             {
-            "label_ref": "apple_017", 
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Other apple type", "Specify apple type": "Red Delicious"
+                "label_ref": "apple_017",
+                "coordinates": BitmaskCoordinates(numpy_coordinates),
+                "apple_type": "Other apple type",
+                "Specify apple type": "Red Delicious",
             },
         ],
     },
@@ -264,7 +262,9 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     checklist_attribute = honey_crisp_checklist_attribute
                 elif apple_type == "Other apple type":
                     bitmask_object_instance.set_answer(attribute=apple_type_radio_attribute, answer=other_apple_option)
-                    bitmask_object_instance.set_answer(attribute=other_apple_option_text_attribute, answer=item.get("Specify apple type", ""))
+                    bitmask_object_instance.set_answer(
+                        attribute=other_apple_option_text_attribute, answer=item.get("Specify apple type", "")
+                    )
 
                 # Set checklist attributes
                 checklist_answers = []
@@ -272,14 +272,34 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
                 for quality in quality_options:
                     if quality == "Plump":
-                        checklist_answers.append(sugar_bee_plump_option if apple_type == "Sugar Bee" else granny_smith_plump_option if apple_type == "Granny Smith" else honey_crisp_plump_option)
+                        checklist_answers.append(
+                            sugar_bee_plump_option
+                            if apple_type == "Sugar Bee"
+                            else granny_smith_plump_option
+                            if apple_type == "Granny Smith"
+                            else honey_crisp_plump_option
+                        )
                     elif quality == "Juicy":
-                        checklist_answers.append(sugar_bee_juicy_option if apple_type == "Sugar Bee" else granny_smith_juicy_option if apple_type == "Granny Smith" else honey_crisp_juicy_option)
+                        checklist_answers.append(
+                            sugar_bee_juicy_option
+                            if apple_type == "Sugar Bee"
+                            else granny_smith_juicy_option
+                            if apple_type == "Granny Smith"
+                            else honey_crisp_juicy_option
+                        )
                     elif quality == "Large":
-                        checklist_answers.append(sugar_bee_large_option if apple_type == "Sugar Bee" else granny_smith_large_option if apple_type == "Granny Smith" else honey_crisp_large_option)
+                        checklist_answers.append(
+                            sugar_bee_large_option
+                            if apple_type == "Sugar Bee"
+                            else granny_smith_large_option
+                            if apple_type == "Granny Smith"
+                            else honey_crisp_large_option
+                        )
 
                 if checklist_attribute and checklist_answers:
-                    bitmask_object_instance.set_answer(attribute=checklist_attribute, answer=checklist_answers, overwrite=True)
+                    bitmask_object_instance.set_answer(
+                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                    )
 
             else:
                 #  Reuse existing instance across frames

@@ -1,14 +1,8 @@
 # Import dependencies
 from pathlib import Path
+
 from encord import EncordUserClient, Project
-from encord.objects import (
-    Object,
-    ObjectInstance,
-    RadioAttribute,
-    ChecklistAttribute,
-    TextAttribute,
-    Option
-)
+from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
 from encord.objects.skeleton_template import SkeletonTemplate
 
@@ -29,29 +23,25 @@ project: Project = user_client.get_project(PROJECT_HASH)
 ontology_structure = project.ontology_structure
 
 # Find a bounding box annotation object in the project ontology
-skeleton_ontology_object: Object = ontology_structure.get_child_by_title(
-    title="strawberries", type_=Object
-)
+skeleton_ontology_object: Object = ontology_structure.get_child_by_title(title="strawberries", type_=Object)
 
-skeleton_template: SkeletonTemplate = project.ontology_structure.skeleton_templates['Triangle']
+skeleton_template: SkeletonTemplate = project.ontology_structure.skeleton_templates["Triangle"]
 
 skeleton_ids = [coord.feature_hash for coord in skeleton_template.skeleton.values()]
 
-strawberry_type_radio_attribute = ontology_structure.get_child_by_title(
-    type_=RadioAttribute, title="Type?"
-)
+strawberry_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
 
 # Create options for the radio buttons
 albion_option = strawberry_type_radio_attribute.get_child_by_title(type_=Option, title="Albion")
 redcoat_option = strawberry_type_radio_attribute.get_child_by_title(type_=Option, title="Redcoat")
 sweet_kiss_option = strawberry_type_radio_attribute.get_child_by_title(type_=Option, title="Sweet Kiss")
-other_strawberry_option = strawberry_type_radio_attribute.get_child_by_title(type_=Option, title="Other strawberry type")
+other_strawberry_option = strawberry_type_radio_attribute.get_child_by_title(
+    type_=Option, title="Other strawberry type"
+)
 
 # Create checklist attributes and options for each strawberry type
 # Albion Qualities
-albion_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Albion Qualities?"
-)
+albion_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Albion Qualities?")
 albion_plump_option = albion_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 albion_juicy_option = albion_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 albion_large_option = albion_checklist_attribute.get_child_by_title(type_=Option, title="Large")
@@ -85,243 +75,689 @@ video_frame_labels = {
             "label_ref": "strawberry_001",
             "coordinates": SkeletonCoordinates(
                 values=[
-                    SkeletonCoordinate(x=0.25, y=0.25, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                    SkeletonCoordinate(x=0.35, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                    SkeletonCoordinate(x=0.25, y=0.35, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                    name="Triangle"), 
-            "strawberry_type": "Albion", 
-            "albion_quality_options": "Plump, Juicy"
-            }
+                    SkeletonCoordinate(
+                        x=0.25, y=0.25, name="point_0", color="#000000", value="point_0", feature_hash=skeleton_ids[0]
+                    ),
+                    SkeletonCoordinate(
+                        x=0.35, y=0.25, name="point_1", color="#000000", value="point_1", feature_hash=skeleton_ids[1]
+                    ),
+                    SkeletonCoordinate(
+                        x=0.25, y=0.35, name="point_2", color="#000000", value="point_2", feature_hash=skeleton_ids[2]
+                    ),
+                ],
+                name="Triangle",
+            ),
+            "strawberry_type": "Albion",
+            "albion_quality_options": "Plump, Juicy",
+        }
     },
     "strawberries-010.jpg": {
         0: [
             {
-                "label_ref": "strawberry_002", 
+                "label_ref": "strawberry_002",
                 "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.25, y=0.25, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.35, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.25, y=0.35, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-                "strawberry_type": "Redcoat", 
-                "redcoat_quality_options": "Plump, Juicy, Large"
-                },
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.25,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.35,
+                            y=0.25,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.35,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Redcoat",
+                "redcoat_quality_options": "Plump, Juicy, Large",
+            },
             {
                 "label_ref": "strawberry_003",
                 "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.45, y=0.45, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.55, y=0.45, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.45, y=0.55, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-                "strawberry_type": "Sweet Kiss", 
-                "sweet_kiss_quality_options": "Plump"
-                },
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.45,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.55,
+                            y=0.45,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.55,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Sweet Kiss",
+                "sweet_kiss_quality_options": "Plump",
+            },
             {
-                "label_ref": "strawberry_004", 
+                "label_ref": "strawberry_004",
                 "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.65, y=0.65, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.75, y=0.65, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.65, y=0.75, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-                "strawberry_type": "Other strawberry type", "Specify strawberry type": "Pineberry"
-                },
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.65,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.75,
+                            y=0.65,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.75,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Other strawberry type",
+                "Specify strawberry type": "Pineberry",
+            },
         ],
     },
     "strawberries-ig": {
         0: {
-            "label_ref": "strawberry_005", 
+            "label_ref": "strawberry_005",
             "coordinates": SkeletonCoordinates(
-                    values=[
-                        SkeletonCoordinate(x=0.25, y=0.25, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.35, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.25, y=0.35, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-            "strawberry_type": "Albion", 
-            "albion_quality_options": "Plump, Juicy"
-            },
+                values=[
+                    SkeletonCoordinate(
+                        x=0.25, y=0.25, name="point_0", color="#000000", value="point_0", feature_hash=skeleton_ids[0]
+                    ),
+                    SkeletonCoordinate(
+                        x=0.35, y=0.25, name="point_1", color="#000000", value="point_1", feature_hash=skeleton_ids[1]
+                    ),
+                    SkeletonCoordinate(
+                        x=0.25, y=0.35, name="point_2", color="#000000", value="point_2", feature_hash=skeleton_ids[2]
+                    ),
+                ],
+                name="Triangle",
+            ),
+            "strawberry_type": "Albion",
+            "albion_quality_options": "Plump, Juicy",
+        },
         2: [
             {
-            "label_ref": "strawberry_006", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_006",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.25, y=0.25, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.35, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.25, y=0.35, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Redcoat", 
-            "redcoat_quality_options": "Large"
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.25,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.35,
+                            y=0.25,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.35,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Redcoat",
+                "redcoat_quality_options": "Large",
             },
             {
-            "label_ref": "strawberry_007", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_007",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.45, y=0.45, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.55, y=0.45, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.45, y=0.55, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-            "strawberry_type": "Sweet Kiss", 
-            "sweet_kiss_quality_options": "Plump"
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.45,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.55,
+                            y=0.45,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.55,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Sweet Kiss",
+                "sweet_kiss_quality_options": "Plump",
             },
             {
-            "label_ref": "strawberry_008", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_008",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.65, y=0.65, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.75, y=0.65, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.65, y=0.75, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Other strawberry type", "Specify strawberry type": "Pineberry"
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.65,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.75,
+                            y=0.65,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.75,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Other strawberry type",
+                "Specify strawberry type": "Pineberry",
             },
-        ]
+        ],
     },
     "strawberries-is": {
         0: {
-            "label_ref": "strawberry_009", 
+            "label_ref": "strawberry_009",
             "coordinates": SkeletonCoordinates(
-                    values=[
-                        SkeletonCoordinate(x=0.25, y=0.25, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.35, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.25, y=0.35, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Albion", 
-            "albion_quality_options": "Plump"
-            },
+                values=[
+                    SkeletonCoordinate(
+                        x=0.25, y=0.25, name="point_0", color="#000000", value="point_0", feature_hash=skeleton_ids[0]
+                    ),
+                    SkeletonCoordinate(
+                        x=0.35, y=0.25, name="point_1", color="#000000", value="point_1", feature_hash=skeleton_ids[1]
+                    ),
+                    SkeletonCoordinate(
+                        x=0.25, y=0.35, name="point_2", color="#000000", value="point_2", feature_hash=skeleton_ids[2]
+                    ),
+                ],
+                name="Triangle",
+            ),
+            "strawberry_type": "Albion",
+            "albion_quality_options": "Plump",
+        },
         3: [
             {
-            "label_ref": "strawberry_010", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_010",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.25, y=0.25, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.35, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.25, y=0.35, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-            "strawberry_type": "Redcoat", 
-            "redcoat_quality_options": "Plump, Juicy, Large"
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.25,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.35,
+                            y=0.25,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.35,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Redcoat",
+                "redcoat_quality_options": "Plump, Juicy, Large",
             },
             {
-            "label_ref": "strawberry_011", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_011",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.45, y=0.45, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.55, y=0.45, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.45, y=0.55, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-            "strawberry_type": "Sweet Kiss", 
-            "sweet_kiss_quality_options": "Plump"
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.45,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.55,
+                            y=0.45,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.55,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Sweet Kiss",
+                "sweet_kiss_quality_options": "Plump",
             },
             {
-            "label_ref": "strawberry_012", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_012",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.65, y=0.65, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.75, y=0.65, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.65, y=0.75, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-            "strawberry_type": "Other strawberry type", 
-            "Specify strawberry type": "Pineberry"},
-        ]
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.65,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.75,
+                            y=0.65,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.75,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Other strawberry type",
+                "Specify strawberry type": "Pineberry",
+            },
+        ],
     },
     "strawberries-vid-001.mp4": {
         103: [
             {
-            "label_ref": "strawberry_013", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_013",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.25, y=0.25, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.35, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.25, y=0.35, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Sweet Kiss", 
-            "sweet_kiss_quality_options": "Plump"},
-            {
-            "label_ref": "strawberry_014", 
-            "coordinates": SkeletonCoordinates(
-                    values=[
-                        SkeletonCoordinate(x=0.45, y=0.45, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.55, y=0.45, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.45, y=0.55, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Albion", 
-            "albion_quality_options": "Plump, Juicy, Large"
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.25,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.35,
+                            y=0.25,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.35,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Sweet Kiss",
+                "sweet_kiss_quality_options": "Plump",
             },
             {
-            "label_ref": "strawberry_015", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_014",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.65, y=0.65, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.75, y=0.65, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.65, y=0.75, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Other strawberry type", "Specify strawberry type": "Pineberry"
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.45,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.55,
+                            y=0.45,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.55,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Albion",
+                "albion_quality_options": "Plump, Juicy, Large",
+            },
+            {
+                "label_ref": "strawberry_015",
+                "coordinates": SkeletonCoordinates(
+                    values=[
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.65,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.75,
+                            y=0.65,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.75,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Other strawberry type",
+                "Specify strawberry type": "Pineberry",
             },
         ],
         104: [
             {
-            "label_ref": "strawberry_016", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_016",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.15, y=0.15, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.25, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.15, y=0.15, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-            "strawberry_type": "Sweet Kiss", 
-            "sweet_kiss_quality_options": "Plump"},
-            {
-            "label_ref": "strawberry_014", 
-            "coordinates": SkeletonCoordinates(
-                    values=[
-                        SkeletonCoordinate(x=0.35, y=0.35, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.45, y=0.35, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.35, y=0.45, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Albion", 
-            "albion_quality_options": "Plump, Juicy, Large"
+                        SkeletonCoordinate(
+                            x=0.15,
+                            y=0.15,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.25,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.15,
+                            y=0.15,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Sweet Kiss",
+                "sweet_kiss_quality_options": "Plump",
             },
             {
-            "label_ref": "strawberry_017", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_014",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.55, y=0.55, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.65, y=0.55, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.55, y=0.65, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Other strawberry type", "Specify strawberry type": "Pineberry"
+                        SkeletonCoordinate(
+                            x=0.35,
+                            y=0.35,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.35,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.35,
+                            y=0.45,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Albion",
+                "albion_quality_options": "Plump, Juicy, Large",
+            },
+            {
+                "label_ref": "strawberry_017",
+                "coordinates": SkeletonCoordinates(
+                    values=[
+                        SkeletonCoordinate(
+                            x=0.55,
+                            y=0.55,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.55,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.55,
+                            y=0.65,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Other strawberry type",
+                "Specify strawberry type": "Pineberry",
             },
         ],
         105: [
             {
-            "label_ref": "strawberry_016", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_016",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.25, y=0.25, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.35, y=0.25, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.25, y=0.35, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"),  
-            "strawberry_type": "Sweet Kiss", 
-            "sweet_kiss_quality_options": "Plump"
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.25,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.35,
+                            y=0.25,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.25,
+                            y=0.35,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Sweet Kiss",
+                "sweet_kiss_quality_options": "Plump",
             },
             {
-            "label_ref": "strawberry_014", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_014",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.45, y=0.45, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.55, y=0.45, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.45, y=0.55, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Albion", 
-            "albion_quality_options": "Plump, Juicy, Large"
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.45,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.55,
+                            y=0.45,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.45,
+                            y=0.55,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Albion",
+                "albion_quality_options": "Plump, Juicy, Large",
             },
             {
-            "label_ref": "strawberry_017", 
-            "coordinates": SkeletonCoordinates(
+                "label_ref": "strawberry_017",
+                "coordinates": SkeletonCoordinates(
                     values=[
-                        SkeletonCoordinate(x=0.75, y=0.75, name='point_0', color='#000000', value="point_0", feature_hash=skeleton_ids[0]), 
-                        SkeletonCoordinate(x=0.65, y=0.75, name='point_1', color='#000000', value="point_1", feature_hash=skeleton_ids[1]), 
-                        SkeletonCoordinate(x=0.75, y=0.65, name='point_2', color='#000000', value="point_2", feature_hash=skeleton_ids[2])], 
-                        name="Triangle"), 
-            "strawberry_type": "Other strawberry type", "Specify strawberry type": "Pineberry"
+                        SkeletonCoordinate(
+                            x=0.75,
+                            y=0.75,
+                            name="point_0",
+                            color="#000000",
+                            value="point_0",
+                            feature_hash=skeleton_ids[0],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.65,
+                            y=0.75,
+                            name="point_1",
+                            color="#000000",
+                            value="point_1",
+                            feature_hash=skeleton_ids[1],
+                        ),
+                        SkeletonCoordinate(
+                            x=0.75,
+                            y=0.65,
+                            name="point_2",
+                            color="#000000",
+                            value="point_2",
+                            feature_hash=skeleton_ids[2],
+                        ),
+                    ],
+                    name="Triangle",
+                ),
+                "strawberry_type": "Other strawberry type",
+                "Specify strawberry type": "Pineberry",
             },
         ],
     },
@@ -357,14 +793,22 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     skeleton_object_instance.set_answer(attribute=strawberry_type_radio_attribute, answer=albion_option)
                     checklist_attribute = albion_checklist_attribute
                 elif strawberry_type == "Redcoat":
-                    skeleton_object_instance.set_answer(attribute=strawberry_type_radio_attribute, answer=redcoat_option)
+                    skeleton_object_instance.set_answer(
+                        attribute=strawberry_type_radio_attribute, answer=redcoat_option
+                    )
                     checklist_attribute = redcoat_checklist_attribute
                 elif strawberry_type == "Sweet Kiss":
-                    skeleton_object_instance.set_answer(attribute=strawberry_type_radio_attribute, answer=sweet_kiss_option)
+                    skeleton_object_instance.set_answer(
+                        attribute=strawberry_type_radio_attribute, answer=sweet_kiss_option
+                    )
                     checklist_attribute = sweet_kiss_checklist_attribute
                 elif strawberry_type == "Other strawberry type":
-                    skeleton_object_instance.set_answer(attribute=strawberry_type_radio_attribute, answer=other_strawberry_option)
-                    skeleton_object_instance.set_answer(attribute=other_strawberry_option_text_attribute, answer=item.get("Specify strawberry type", ""))
+                    skeleton_object_instance.set_answer(
+                        attribute=strawberry_type_radio_attribute, answer=other_strawberry_option
+                    )
+                    skeleton_object_instance.set_answer(
+                        attribute=other_strawberry_option_text_attribute, answer=item.get("Specify strawberry type", "")
+                    )
 
                 # Set checklist attributes
                 checklist_answers = []
@@ -372,14 +816,34 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
                 for quality in quality_options:
                     if quality == "Plump":
-                        checklist_answers.append(albion_plump_option if strawberry_type == "Albion" else redcoat_plump_option if strawberry_type == "Redcoat" else sweet_kiss_plump_option)
+                        checklist_answers.append(
+                            albion_plump_option
+                            if strawberry_type == "Albion"
+                            else redcoat_plump_option
+                            if strawberry_type == "Redcoat"
+                            else sweet_kiss_plump_option
+                        )
                     elif quality == "Juicy":
-                        checklist_answers.append(albion_juicy_option if strawberry_type == "Albion" else redcoat_juicy_option if strawberry_type == "Redcoat" else sweet_kiss_juicy_option)
+                        checklist_answers.append(
+                            albion_juicy_option
+                            if strawberry_type == "Albion"
+                            else redcoat_juicy_option
+                            if strawberry_type == "Redcoat"
+                            else sweet_kiss_juicy_option
+                        )
                     elif quality == "Large":
-                        checklist_answers.append(albion_large_option if strawberry_type == "Albion" else redcoat_large_option if strawberry_type == "Redcoat" else sweet_kiss_large_option)
+                        checklist_answers.append(
+                            albion_large_option
+                            if strawberry_type == "Albion"
+                            else redcoat_large_option
+                            if strawberry_type == "Redcoat"
+                            else sweet_kiss_large_option
+                        )
 
                 if checklist_attribute and checklist_answers:
-                    skeleton_object_instance.set_answer(attribute=checklist_attribute, answer=checklist_answers, overwrite=True)
+                    skeleton_object_instance.set_answer(
+                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                    )
 
             else:
                 #  Reuse existing instance across frames

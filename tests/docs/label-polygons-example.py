@@ -1,15 +1,9 @@
 # Import dependencies
 from pathlib import Path
+
 from encord import EncordUserClient, Project
-from encord.objects import (
-    Object,
-    ObjectInstance,
-    RadioAttribute,
-    ChecklistAttribute,
-    TextAttribute,
-    Option
-)
-from encord.objects.coordinates import PolygonCoordinates, PointCoordinate
+from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
+from encord.objects.coordinates import PointCoordinate, PolygonCoordinates
 
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
@@ -28,13 +22,9 @@ project: Project = user_client.get_project(PROJECT_HASH)
 ontology_structure = project.ontology_structure
 
 # Find a bounding box annotation object in the project ontology
-polygon_ontology_object: Object = ontology_structure.get_child_by_title(
-    title="Blueberries", type_=Object
-)
+polygon_ontology_object: Object = ontology_structure.get_child_by_title(title="Blueberries", type_=Object)
 
-blueberry_type_radio_attribute = ontology_structure.get_child_by_title(
-    type_=RadioAttribute, title="Type?"
-)
+blueberry_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
 
 # Create options for the radio buttons
 bluegold_option = blueberry_type_radio_attribute.get_child_by_title(type_=Option, title="Bluegold")
@@ -52,9 +42,7 @@ bluegold_juicy_option = bluegold_checklist_attribute.get_child_by_title(type_=Op
 bluegold_large_option = bluegold_checklist_attribute.get_child_by_title(type_=Option, title="Large")
 
 # Duke Qualities
-duke_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Duke Qualities?"
-)
+duke_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Duke Qualities?")
 duke_plump_option = duke_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 duke_juicy_option = duke_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 duke_large_option = duke_checklist_attribute.get_child_by_title(type_=Option, title="Large")
@@ -78,245 +66,316 @@ video_frame_labels = {
     "blueberries-001.jpg": {
         0: {
             "label_ref": "blueberry_001",
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.01,.02), 
-                PointCoordinate(.03,.03), 
-                PointCoordinate(.05,.02), 
-                PointCoordinate(.04,.01), 
-                PointCoordinate(.02,.01)]), 
-            "blueberry_type": "Bluegold", 
-            "bluegold_quality_options": "Plump, Juicy"
-            }
+            "coordinates": PolygonCoordinates(
+                [
+                    PointCoordinate(0.01, 0.02),
+                    PointCoordinate(0.03, 0.03),
+                    PointCoordinate(0.05, 0.02),
+                    PointCoordinate(0.04, 0.01),
+                    PointCoordinate(0.02, 0.01),
+                ]
+            ),
+            "blueberry_type": "Bluegold",
+            "bluegold_quality_options": "Plump, Juicy",
+        }
     },
     "blueberries-010.jpg": {
         0: [
             {
-                "label_ref": "blueberry_002", 
-                "coordinates": PolygonCoordinates([
-                    PointCoordinate(.01,.02), 
-                    PointCoordinate(.03,.03), 
-                    PointCoordinate(.05,.02), 
-                    PointCoordinate(.04,.01), 
-                    PointCoordinate(.02,.01)]), 
-                "blueberry_type": "Duke", 
-                "duke_quality_options": "Plump, Juicy, Large"
-                },
+                "label_ref": "blueberry_002",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.01, 0.02),
+                        PointCoordinate(0.03, 0.03),
+                        PointCoordinate(0.05, 0.02),
+                        PointCoordinate(0.04, 0.01),
+                        PointCoordinate(0.02, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Duke",
+                "duke_quality_options": "Plump, Juicy, Large",
+            },
             {
                 "label_ref": "blueberry_003",
-                "coordinates": PolygonCoordinates([
-                    PointCoordinate(.04,.05), 
-                    PointCoordinate(.06,.06), 
-                    PointCoordinate(.08,.05), 
-                    PointCoordinate(.07,.04), 
-                    PointCoordinate(.05,.04)]), 
-                "blueberry_type": "Blueray", 
-                "blueray_quality_options": "Plump"
-                },
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.04, 0.05),
+                        PointCoordinate(0.06, 0.06),
+                        PointCoordinate(0.08, 0.05),
+                        PointCoordinate(0.07, 0.04),
+                        PointCoordinate(0.05, 0.04),
+                    ]
+                ),
+                "blueberry_type": "Blueray",
+                "blueray_quality_options": "Plump",
+            },
             {
-                "label_ref": "blueberry_004", 
-                "coordinates": PolygonCoordinates([
-                    PointCoordinate(.07,.02), 
-                    PointCoordinate(.09,.03), 
-                    PointCoordinate(.11,.02), 
-                    PointCoordinate(.10,.01), 
-                    PointCoordinate(.08,.01)]), 
-                "blueberry_type": "Other blueberry type", "Specify blueberry type": "Highbush"
-                },
+                "label_ref": "blueberry_004",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.07, 0.02),
+                        PointCoordinate(0.09, 0.03),
+                        PointCoordinate(0.11, 0.02),
+                        PointCoordinate(0.10, 0.01),
+                        PointCoordinate(0.08, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Other blueberry type",
+                "Specify blueberry type": "Highbush",
+            },
         ],
     },
     "blueberries-ig": {
         0: {
-            "label_ref": "blueberry_005", 
-            "coordinates": PolygonCoordinates([
-                    PointCoordinate(.01,.02), 
-                    PointCoordinate(.03,.03), 
-                    PointCoordinate(.05,.02), 
-                    PointCoordinate(.04,.01), 
-                    PointCoordinate(.02,.01)]), 
-            "blueberry_type": "Bluegold", 
-            "bluegold_quality_options": "Plump, Juicy"
-            },
+            "label_ref": "blueberry_005",
+            "coordinates": PolygonCoordinates(
+                [
+                    PointCoordinate(0.01, 0.02),
+                    PointCoordinate(0.03, 0.03),
+                    PointCoordinate(0.05, 0.02),
+                    PointCoordinate(0.04, 0.01),
+                    PointCoordinate(0.02, 0.01),
+                ]
+            ),
+            "blueberry_type": "Bluegold",
+            "bluegold_quality_options": "Plump, Juicy",
+        },
         2: [
             {
-            "label_ref": "blueberry_006", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.01,.02), 
-                PointCoordinate(.03,.03), 
-                PointCoordinate(.05,.02), 
-                PointCoordinate(.04,.01), 
-                PointCoordinate(.02,.01)]),
-            "blueberry_type": "Duke", 
-            "duke_quality_options": "Large"
+                "label_ref": "blueberry_006",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.01, 0.02),
+                        PointCoordinate(0.03, 0.03),
+                        PointCoordinate(0.05, 0.02),
+                        PointCoordinate(0.04, 0.01),
+                        PointCoordinate(0.02, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Duke",
+                "duke_quality_options": "Large",
             },
             {
-            "label_ref": "blueberry_007", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.04,.05), 
-                PointCoordinate(.06,.06), 
-                PointCoordinate(.08,.05), 
-                PointCoordinate(.07,.04), 
-                PointCoordinate(.05,.04)]), 
-            "blueberry_type": "Blueray", 
-            "blueray_quality_options": "Plump"
+                "label_ref": "blueberry_007",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.04, 0.05),
+                        PointCoordinate(0.06, 0.06),
+                        PointCoordinate(0.08, 0.05),
+                        PointCoordinate(0.07, 0.04),
+                        PointCoordinate(0.05, 0.04),
+                    ]
+                ),
+                "blueberry_type": "Blueray",
+                "blueray_quality_options": "Plump",
             },
             {
-            "label_ref": "blueberry_008", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.07,.02), 
-                PointCoordinate(.09,.03), 
-                PointCoordinate(.11,.02), 
-                PointCoordinate(.10,.01), 
-                PointCoordinate(.08,.01)]),
-            "blueberry_type": "Other blueberry type", "Specify blueberry type": "Lowbush"
+                "label_ref": "blueberry_008",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.07, 0.02),
+                        PointCoordinate(0.09, 0.03),
+                        PointCoordinate(0.11, 0.02),
+                        PointCoordinate(0.10, 0.01),
+                        PointCoordinate(0.08, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Other blueberry type",
+                "Specify blueberry type": "Lowbush",
             },
-        ]
+        ],
     },
     "blueberries-is": {
         0: {
-            "label_ref": "blueberry_009", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.01,.02), 
-                PointCoordinate(.03,.03), 
-                PointCoordinate(.05,.02), 
-                PointCoordinate(.04,.01), 
-                PointCoordinate(.02,.01)]),
-            "blueberry_type": "Bluegold", 
-            "bluegold_quality_options": "Plump"
-            },
+            "label_ref": "blueberry_009",
+            "coordinates": PolygonCoordinates(
+                [
+                    PointCoordinate(0.01, 0.02),
+                    PointCoordinate(0.03, 0.03),
+                    PointCoordinate(0.05, 0.02),
+                    PointCoordinate(0.04, 0.01),
+                    PointCoordinate(0.02, 0.01),
+                ]
+            ),
+            "blueberry_type": "Bluegold",
+            "bluegold_quality_options": "Plump",
+        },
         3: [
             {
-            "label_ref": "blueberry_010", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.01,.02), 
-                PointCoordinate(.03,.03), 
-                PointCoordinate(.05,.02), 
-                PointCoordinate(.04,.01), 
-                PointCoordinate(.02,.01)]), 
-            "blueberry_type": "Duke", 
-            "duke_quality_options": "Plump, Juicy, Large"
+                "label_ref": "blueberry_010",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.01, 0.02),
+                        PointCoordinate(0.03, 0.03),
+                        PointCoordinate(0.05, 0.02),
+                        PointCoordinate(0.04, 0.01),
+                        PointCoordinate(0.02, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Duke",
+                "duke_quality_options": "Plump, Juicy, Large",
             },
             {
-            "label_ref": "blueberry_011", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.04,.05), 
-                PointCoordinate(.06,.06), 
-                PointCoordinate(.08,.05), 
-                PointCoordinate(.07,.04), 
-                PointCoordinate(.05,.04)]), 
-            "blueberry_type": "Blueray", 
-            "blueray_quality_options": "Plump"
+                "label_ref": "blueberry_011",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.04, 0.05),
+                        PointCoordinate(0.06, 0.06),
+                        PointCoordinate(0.08, 0.05),
+                        PointCoordinate(0.07, 0.04),
+                        PointCoordinate(0.05, 0.04),
+                    ]
+                ),
+                "blueberry_type": "Blueray",
+                "blueray_quality_options": "Plump",
             },
             {
-            "label_ref": "blueberry_012", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.07,.02), 
-                PointCoordinate(.09,.03), 
-                PointCoordinate(.11,.02), 
-                PointCoordinate(.10,.01), 
-                PointCoordinate(.08,.01)]), 
-            "blueberry_type": "Other blueberry type", 
-            "Specify blueberry type": "Powder Blue"},
-        ]
+                "label_ref": "blueberry_012",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.07, 0.02),
+                        PointCoordinate(0.09, 0.03),
+                        PointCoordinate(0.11, 0.02),
+                        PointCoordinate(0.10, 0.01),
+                        PointCoordinate(0.08, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Other blueberry type",
+                "Specify blueberry type": "Powder Blue",
+            },
+        ],
     },
     "blueberries-vid-001.mp4": {
         103: [
             {
-            "label_ref": "blueberry_013", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.01,.02), 
-                PointCoordinate(.03,.03), 
-                PointCoordinate(.05,.02), 
-                PointCoordinate(.04,.01), 
-                PointCoordinate(.02,.01)]),
-            "blueberry_type": "Blueray", 
-            "blueray_quality_options": "Plump"},
-            {
-            "label_ref": "blueberry_014", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.04,.05), 
-                PointCoordinate(.06,.06), 
-                PointCoordinate(.08,.05), 
-                PointCoordinate(.07,.04), 
-                PointCoordinate(.05,.04)]),
-            "blueberry_type": "Bluegold", 
-            "bluegold_quality_options": "Plump, Juicy, Large"
+                "label_ref": "blueberry_013",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.01, 0.02),
+                        PointCoordinate(0.03, 0.03),
+                        PointCoordinate(0.05, 0.02),
+                        PointCoordinate(0.04, 0.01),
+                        PointCoordinate(0.02, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Blueray",
+                "blueray_quality_options": "Plump",
             },
             {
-            "label_ref": "blueberry_015", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.07,.02), 
-                PointCoordinate(.09,.03), 
-                PointCoordinate(.11,.02), 
-                PointCoordinate(.10,.01), 
-                PointCoordinate(.08,.01)]),
-            "blueberry_type": "Other blueberry type", "Specify blueberry type": "Lowbush"
+                "label_ref": "blueberry_014",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.04, 0.05),
+                        PointCoordinate(0.06, 0.06),
+                        PointCoordinate(0.08, 0.05),
+                        PointCoordinate(0.07, 0.04),
+                        PointCoordinate(0.05, 0.04),
+                    ]
+                ),
+                "blueberry_type": "Bluegold",
+                "bluegold_quality_options": "Plump, Juicy, Large",
+            },
+            {
+                "label_ref": "blueberry_015",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.07, 0.02),
+                        PointCoordinate(0.09, 0.03),
+                        PointCoordinate(0.11, 0.02),
+                        PointCoordinate(0.10, 0.01),
+                        PointCoordinate(0.08, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Other blueberry type",
+                "Specify blueberry type": "Lowbush",
             },
         ],
         104: [
             {
-            "label_ref": "blueberry_016", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.01,.02), 
-                PointCoordinate(.03,.03), 
-                PointCoordinate(.05,.02), 
-                PointCoordinate(.04,.01), 
-                PointCoordinate(.02,.01)]), 
-            "blueberry_type": "Blueray", 
-            "blueray_quality_options": "Plump"},
-            {
-            "label_ref": "blueberry_014", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.041,.052), 
-                PointCoordinate(.061,.062), 
-                PointCoordinate(.081,.052), 
-                PointCoordinate(.071,.042), 
-                PointCoordinate(.051,.042)]),
-            "blueberry_type": "Bluegold", 
-            "bluegold_quality_options": "Plump, Juicy, Large"
+                "label_ref": "blueberry_016",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.01, 0.02),
+                        PointCoordinate(0.03, 0.03),
+                        PointCoordinate(0.05, 0.02),
+                        PointCoordinate(0.04, 0.01),
+                        PointCoordinate(0.02, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Blueray",
+                "blueray_quality_options": "Plump",
             },
             {
-            "label_ref": "blueberry_017", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.07,.02), 
-                PointCoordinate(.09,.03), 
-                PointCoordinate(.11,.02), 
-                PointCoordinate(.10,.01), 
-                PointCoordinate(.08,.01)]),
-            "blueberry_type": "Other blueberry type", "Specify blueberry type": "Highbush"
+                "label_ref": "blueberry_014",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.041, 0.052),
+                        PointCoordinate(0.061, 0.062),
+                        PointCoordinate(0.081, 0.052),
+                        PointCoordinate(0.071, 0.042),
+                        PointCoordinate(0.051, 0.042),
+                    ]
+                ),
+                "blueberry_type": "Bluegold",
+                "bluegold_quality_options": "Plump, Juicy, Large",
+            },
+            {
+                "label_ref": "blueberry_017",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.07, 0.02),
+                        PointCoordinate(0.09, 0.03),
+                        PointCoordinate(0.11, 0.02),
+                        PointCoordinate(0.10, 0.01),
+                        PointCoordinate(0.08, 0.01),
+                    ]
+                ),
+                "blueberry_type": "Other blueberry type",
+                "Specify blueberry type": "Highbush",
             },
         ],
         105: [
             {
-            "label_ref": "blueberry_016", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.011,.022), 
-                PointCoordinate(.031,.032), 
-                PointCoordinate(.051,.022), 
-                PointCoordinate(.041,.012), 
-                PointCoordinate(.021,.012)]), 
-            "blueberry_type": "Blueray", 
-            "blueray_quality_options": "Plump"
+                "label_ref": "blueberry_016",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.011, 0.022),
+                        PointCoordinate(0.031, 0.032),
+                        PointCoordinate(0.051, 0.022),
+                        PointCoordinate(0.041, 0.012),
+                        PointCoordinate(0.021, 0.012),
+                    ]
+                ),
+                "blueberry_type": "Blueray",
+                "blueray_quality_options": "Plump",
             },
             {
-            "label_ref": "blueberry_014", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.043,.055), 
-                PointCoordinate(.063,.065), 
-                PointCoordinate(.083,.055), 
-                PointCoordinate(.073,.045), 
-                PointCoordinate(.053,.045)]),
-            "blueberry_type": "Bluegold", 
-            "bluegold_quality_options": "Plump, Juicy, Large"
+                "label_ref": "blueberry_014",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.043, 0.055),
+                        PointCoordinate(0.063, 0.065),
+                        PointCoordinate(0.083, 0.055),
+                        PointCoordinate(0.073, 0.045),
+                        PointCoordinate(0.053, 0.045),
+                    ]
+                ),
+                "blueberry_type": "Bluegold",
+                "bluegold_quality_options": "Plump, Juicy, Large",
             },
             {
-            "label_ref": "blueberry_017", 
-            "coordinates": PolygonCoordinates([
-                PointCoordinate(.071,.022), 
-                PointCoordinate(.091,.032), 
-                PointCoordinate(.111,.022), 
-                PointCoordinate(.101,.012), 
-                PointCoordinate(.081,.012)]),
-            "blueberry_type": "Other blueberry type", "Specify blueberry type": "Powder Blue"
+                "label_ref": "blueberry_017",
+                "coordinates": PolygonCoordinates(
+                    [
+                        PointCoordinate(0.071, 0.022),
+                        PointCoordinate(0.091, 0.032),
+                        PointCoordinate(0.111, 0.022),
+                        PointCoordinate(0.101, 0.012),
+                        PointCoordinate(0.081, 0.012),
+                    ]
+                ),
+                "blueberry_type": "Other blueberry type",
+                "Specify blueberry type": "Powder Blue",
             },
         ],
     },
@@ -358,8 +417,12 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=blueray_option)
                     checklist_attribute = blueray_checklist_attribute
                 elif blueberry_type == "Other blueberry type":
-                    polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=other_blueberry_option)
-                    polygon_object_instance.set_answer(attribute=other_blueberry_option_text_attribute, answer=item.get("Specify blueberry type", ""))
+                    polygon_object_instance.set_answer(
+                        attribute=blueberry_type_radio_attribute, answer=other_blueberry_option
+                    )
+                    polygon_object_instance.set_answer(
+                        attribute=other_blueberry_option_text_attribute, answer=item.get("Specify blueberry type", "")
+                    )
 
                 # Set checklist attributes
                 checklist_answers = []
@@ -367,14 +430,34 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
                 for quality in quality_options:
                     if quality == "Plump":
-                        checklist_answers.append(bluegold_plump_option if blueberry_type == "Bluegold" else duke_plump_option if blueberry_type == "Duke" else blueray_plump_option)
+                        checklist_answers.append(
+                            bluegold_plump_option
+                            if blueberry_type == "Bluegold"
+                            else duke_plump_option
+                            if blueberry_type == "Duke"
+                            else blueray_plump_option
+                        )
                     elif quality == "Juicy":
-                        checklist_answers.append(bluegold_juicy_option if blueberry_type == "Bluegold" else duke_juicy_option if blueberry_type == "Duke" else blueray_juicy_option)
+                        checklist_answers.append(
+                            bluegold_juicy_option
+                            if blueberry_type == "Bluegold"
+                            else duke_juicy_option
+                            if blueberry_type == "Duke"
+                            else blueray_juicy_option
+                        )
                     elif quality == "Large":
-                        checklist_answers.append(bluegold_large_option if blueberry_type == "Bluegold" else duke_large_option if blueberry_type == "Duke" else blueray_large_option)
+                        checklist_answers.append(
+                            bluegold_large_option
+                            if blueberry_type == "Bluegold"
+                            else duke_large_option
+                            if blueberry_type == "Duke"
+                            else blueray_large_option
+                        )
 
                 if checklist_attribute and checklist_answers:
-                    polygon_object_instance.set_answer(attribute=checklist_attribute, answer=checklist_answers, overwrite=True)
+                    polygon_object_instance.set_answer(
+                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                    )
 
             else:
                 #  Reuse existing instance across frames

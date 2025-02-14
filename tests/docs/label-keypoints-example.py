@@ -1,14 +1,8 @@
 # Import dependencies
 from pathlib import Path
+
 from encord import EncordUserClient, Project
-from encord.objects import (
-    Object,
-    ObjectInstance,
-    RadioAttribute,
-    ChecklistAttribute,
-    TextAttribute,
-    Option
-)
+from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import PointCoordinate
 
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
@@ -28,18 +22,16 @@ project: Project = user_client.get_project(PROJECT_HASH)
 ontology_structure = project.ontology_structure
 
 # Find a bounding box annotation object in the project ontology
-keypoint_ontology_object: Object = ontology_structure.get_child_by_title(
-    title="Floral axis", type_=Object
-)
+keypoint_ontology_object: Object = ontology_structure.get_child_by_title(title="Floral axis", type_=Object)
 
-floral_axis_type_radio_attribute = ontology_structure.get_child_by_title(
-    type_=RadioAttribute, title="Type?"
-)
+floral_axis_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
 
 # Create options for the radio buttons
 pedicel_option = floral_axis_type_radio_attribute.get_child_by_title(type_=Option, title="Pedicel")
 peduncle_option = floral_axis_type_radio_attribute.get_child_by_title(type_=Option, title="Peduncle")
-other_floral_axis_option = floral_axis_type_radio_attribute.get_child_by_title(type_=Option, title="Other floral axis type")
+other_floral_axis_option = floral_axis_type_radio_attribute.get_child_by_title(
+    type_=Option, title="Other floral axis type"
+)
 
 # Create checklist attributes and options for each floral axis type
 
@@ -49,7 +41,9 @@ pedicel_checklist_attribute = ontology_structure.get_child_by_title(
 )
 pedicel_robust_option = pedicel_checklist_attribute.get_child_by_title(type_=Option, title="Robust")
 pedicel_healthy_option = pedicel_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
-pedicel_growth_alignment_option = pedicel_checklist_attribute.get_child_by_title(type_=Option, title="Good Growth and Alignment")
+pedicel_growth_alignment_option = pedicel_checklist_attribute.get_child_by_title(
+    type_=Option, title="Good Growth and Alignment"
+)
 
 # Peduncle Qualities
 peduncle_checklist_attribute = ontology_structure.get_child_by_title(
@@ -57,7 +51,9 @@ peduncle_checklist_attribute = ontology_structure.get_child_by_title(
 )
 peduncle_robust_option = peduncle_checklist_attribute.get_child_by_title(type_=Option, title="Robust")
 peduncle_healthy_option = peduncle_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
-peduncle_growth_alignment_option = peduncle_checklist_attribute.get_child_by_title(type_=Option, title="Good Growth and Alignment")
+peduncle_growth_alignment_option = peduncle_checklist_attribute.get_child_by_title(
+    type_=Option, title="Good Growth and Alignment"
+)
 
 # Other floral axis Types
 other_floral_axis_option_text_attribute = ontology_structure.get_child_by_title(
@@ -69,140 +65,148 @@ video_image_frame_labels = {
     "blueberries-001.jpg": {
         0: {
             "label_ref": "floral_axis_001",
-            "coordinates": PointCoordinate(.01,.02), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust, Healthy"
-            }
+            "coordinates": PointCoordinate(0.01, 0.02),
+            "floral_axis_type": "Pedicel",
+            "pedicel_quality_options": "Robust, Healthy",
+        }
     },
     "persimmons-010.jpg": {
         0: [
             {
-                "label_ref": "floral_axis_002", 
-                "coordinates": PointCoordinate(.03,.03),
-                "floral_axis_type": "Peduncle", 
-                "peduncle_quality_options": "Robust, Healthy, Good Growth and Alignment"
-                },
+                "label_ref": "floral_axis_002",
+                "coordinates": PointCoordinate(0.03, 0.03),
+                "floral_axis_type": "Peduncle",
+                "peduncle_quality_options": "Robust, Healthy, Good Growth and Alignment",
+            },
             {
                 "label_ref": "floral_axis_003",
-                "coordinates": PointCoordinate(.05,.04), 
-                "floral_axis_type": "Peduncle", 
-                "peduncle_quality_options": "Robust"
-                },
+                "coordinates": PointCoordinate(0.05, 0.04),
+                "floral_axis_type": "Peduncle",
+                "peduncle_quality_options": "Robust",
+            },
             {
-                "label_ref": "floral_axis_004", 
-                "coordinates": PointCoordinate(.09,.03), 
-                "floral_axis_type": "Other floral axis type", "Specify floral axis type": "Calyx"
-                },
+                "label_ref": "floral_axis_004",
+                "coordinates": PointCoordinate(0.09, 0.03),
+                "floral_axis_type": "Other floral axis type",
+                "Specify floral axis type": "Calyx",
+            },
         ],
     },
     "blueberries-ig": {
         0: {
-            "label_ref": "floral_axis_005", 
-            "coordinates": PointCoordinate(.05,.02), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust, Healthy"
-            },
+            "label_ref": "floral_axis_005",
+            "coordinates": PointCoordinate(0.05, 0.02),
+            "floral_axis_type": "Pedicel",
+            "pedicel_quality_options": "Robust, Healthy",
+        },
         2: [
             {
-            "label_ref": "floral_axis_006", 
-            "coordinates": PointCoordinate(.03,.03), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Good Growth and Alignment"
+                "label_ref": "floral_axis_006",
+                "coordinates": PointCoordinate(0.03, 0.03),
+                "floral_axis_type": "Pedicel",
+                "pedicel_quality_options": "Good Growth and Alignment",
             },
             {
-            "label_ref": "floral_axis_007", 
-            "coordinates": PointCoordinate(.04,.05), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust"
+                "label_ref": "floral_axis_007",
+                "coordinates": PointCoordinate(0.04, 0.05),
+                "floral_axis_type": "Pedicel",
+                "pedicel_quality_options": "Robust",
             },
             {
-            "label_ref": "floral_axis_008", 
-            "coordinates": PointCoordinate(.11,.02), 
-            "floral_axis_type": "Other floral axis type", 
-            "Specify floral axis type": "Calyx"},
-        ]
+                "label_ref": "floral_axis_008",
+                "coordinates": PointCoordinate(0.11, 0.02),
+                "floral_axis_type": "Other floral axis type",
+                "Specify floral axis type": "Calyx",
+            },
+        ],
     },
     "persimmons-is": {
         0: {
-            "label_ref": "floral_axis_009", 
-            "coordinates": PointCoordinate(.01,.02), 
-            "floral_axis_type": "Peduncle", 
-            "peduncle_quality_options": "Robust"
-            },
+            "label_ref": "floral_axis_009",
+            "coordinates": PointCoordinate(0.01, 0.02),
+            "floral_axis_type": "Peduncle",
+            "peduncle_quality_options": "Robust",
+        },
         3: [
             {
-            "label_ref": "floral_axis_010", 
-            "coordinates": PointCoordinate(.03,.03), 
-            "floral_axis_type": "Peduncle", 
-            "peduncle_quality_options": "Robust, Healthy, Good Growth and Alignment"
+                "label_ref": "floral_axis_010",
+                "coordinates": PointCoordinate(0.03, 0.03),
+                "floral_axis_type": "Peduncle",
+                "peduncle_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
-            "label_ref": "floral_axis_011", 
-            "coordinates": PointCoordinate(.08,.05), 
-            "floral_axis_type": "Peduncle", 
-            "peduncle_quality_options": "Robust"
+                "label_ref": "floral_axis_011",
+                "coordinates": PointCoordinate(0.08, 0.05),
+                "floral_axis_type": "Peduncle",
+                "peduncle_quality_options": "Robust",
             },
             {
-            "label_ref": "floral_axis_012", 
-            "coordinates": PointCoordinate(.11,.02), 
-            "floral_axis_type": "Other floral axis type", 
-            "Specify floral axis type": "Calyx"},
-        ]
+                "label_ref": "floral_axis_012",
+                "coordinates": PointCoordinate(0.11, 0.02),
+                "floral_axis_type": "Other floral axis type",
+                "Specify floral axis type": "Calyx",
+            },
+        ],
     },
     "blueberries-vid-001.mp4": {
         103: [
             {
-            "label_ref": "floral_axis_013", 
-            "coordinates": PointCoordinate(.02,.01),
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust"},
-            {
-            "label_ref": "floral_axis_014", 
-            "coordinates": PointCoordinate(.06,.06), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment"
+                "label_ref": "floral_axis_013",
+                "coordinates": PointCoordinate(0.02, 0.01),
+                "floral_axis_type": "Pedicel",
+                "pedicel_quality_options": "Robust",
             },
             {
-            "label_ref": "floral_axis_015", 
-            "coordinates": PointCoordinate(.10,.01), 
-            "floral_axis_type": "Other floral axis type", "Specify floral axis type": "Calyx"
+                "label_ref": "floral_axis_014",
+                "coordinates": PointCoordinate(0.06, 0.06),
+                "floral_axis_type": "Pedicel",
+                "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
+            },
+            {
+                "label_ref": "floral_axis_015",
+                "coordinates": PointCoordinate(0.10, 0.01),
+                "floral_axis_type": "Other floral axis type",
+                "Specify floral axis type": "Calyx",
             },
         ],
         104: [
             {
-            "label_ref": "floral_axis_016", 
-            "coordinates": PointCoordinate(.04,.01), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust"},
-            {
-            "label_ref": "floral_axis_014", 
-            "coordinates": PointCoordinate(.08,.05), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment"
+                "label_ref": "floral_axis_016",
+                "coordinates": PointCoordinate(0.04, 0.01),
+                "floral_axis_type": "Pedicel",
+                "pedicel_quality_options": "Robust",
             },
             {
-            "label_ref": "floral_axis_017", 
-            "coordinates": PointCoordinate(.11,.02), 
-            "floral_axis_type": "Other floral axis type", "Specify floral axis type": "Calyx"
+                "label_ref": "floral_axis_014",
+                "coordinates": PointCoordinate(0.08, 0.05),
+                "floral_axis_type": "Pedicel",
+                "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
+            },
+            {
+                "label_ref": "floral_axis_017",
+                "coordinates": PointCoordinate(0.11, 0.02),
+                "floral_axis_type": "Other floral axis type",
+                "Specify floral axis type": "Calyx",
             },
         ],
         105: [
             {
-            "label_ref": "floral_axis_016", 
-            "coordinates": PointCoordinate(.05,.02), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust"
+                "label_ref": "floral_axis_016",
+                "coordinates": PointCoordinate(0.05, 0.02),
+                "floral_axis_type": "Pedicel",
+                "pedicel_quality_options": "Robust",
             },
             {
-            "label_ref": "floral_axis_014", 
-            "coordinates": PointCoordinate(.07,.04), 
-            "floral_axis_type": "Pedicel", 
-            "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment"
+                "label_ref": "floral_axis_014",
+                "coordinates": PointCoordinate(0.07, 0.04),
+                "floral_axis_type": "Pedicel",
+                "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
-            "label_ref": "floral_axis_017", 
-            "coordinates": PointCoordinate(.09,.03), 
-            "floral_axis_type": "Other floral axis type", "Specify floral axis type": "Calyx"
+                "label_ref": "floral_axis_017",
+                "coordinates": PointCoordinate(0.09, 0.03),
+                "floral_axis_type": "Other floral axis type",
+                "Specify floral axis type": "Calyx",
             },
         ],
     },
@@ -235,14 +239,23 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
 
                 # Set floral axis type attribute
                 if floral_axis_type == "Pedicel":
-                    keypoint_object_instance.set_answer(attribute=floral_axis_type_radio_attribute, answer=pedicel_option)
+                    keypoint_object_instance.set_answer(
+                        attribute=floral_axis_type_radio_attribute, answer=pedicel_option
+                    )
                     checklist_attribute = pedicel_checklist_attribute
                 elif floral_axis_type == "Peduncle":
-                    keypoint_object_instance.set_answer(attribute=floral_axis_type_radio_attribute, answer=peduncle_option)
+                    keypoint_object_instance.set_answer(
+                        attribute=floral_axis_type_radio_attribute, answer=peduncle_option
+                    )
                     checklist_attribute = peduncle_checklist_attribute
                 elif floral_axis_type == "Other floral axis type":
-                    keypoint_object_instance.set_answer(attribute=floral_axis_type_radio_attribute, answer=other_floral_axis_option)
-                    keypoint_object_instance.set_answer(attribute=other_floral_axis_option_text_attribute, answer=item.get("Specify floral axis type", ""))
+                    keypoint_object_instance.set_answer(
+                        attribute=floral_axis_type_radio_attribute, answer=other_floral_axis_option
+                    )
+                    keypoint_object_instance.set_answer(
+                        attribute=other_floral_axis_option_text_attribute,
+                        answer=item.get("Specify floral axis type", ""),
+                    )
 
                 # Set checklist attributes
                 checklist_answers = []
@@ -250,14 +263,24 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
 
                 for quality in quality_options:
                     if quality == "Robust":
-                        checklist_answers.append(pedicel_robust_option if floral_axis_type == "Pedicel" else peduncle_robust_option)
+                        checklist_answers.append(
+                            pedicel_robust_option if floral_axis_type == "Pedicel" else peduncle_robust_option
+                        )
                     elif quality == "Healthy":
-                        checklist_answers.append(pedicel_healthy_option if floral_axis_type == "Pedicel" else peduncle_healthy_option)
+                        checklist_answers.append(
+                            pedicel_healthy_option if floral_axis_type == "Pedicel" else peduncle_healthy_option
+                        )
                     elif quality == "Good Growth and Alignment":
-                        checklist_answers.append(pedicel_growth_alignment_option if floral_axis_type == "Pedicel" else peduncle_growth_alignment_option)
+                        checklist_answers.append(
+                            pedicel_growth_alignment_option
+                            if floral_axis_type == "Pedicel"
+                            else peduncle_growth_alignment_option
+                        )
 
                 if checklist_attribute and checklist_answers:
-                    keypoint_object_instance.set_answer(attribute=checklist_attribute, answer=checklist_answers, overwrite=True)
+                    keypoint_object_instance.set_answer(
+                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                    )
 
             else:
                 #  Reuse existing instance across frames

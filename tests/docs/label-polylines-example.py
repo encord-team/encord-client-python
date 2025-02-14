@@ -1,15 +1,9 @@
 # Import dependencies
 from pathlib import Path
+
 from encord import EncordUserClient, Project
-from encord.objects import (
-    Object,
-    ObjectInstance,
-    RadioAttribute,
-    ChecklistAttribute,
-    TextAttribute,
-    Option
-)
-from encord.objects.coordinates import PolylineCoordinates, PointCoordinate
+from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
+from encord.objects.coordinates import PointCoordinate, PolylineCoordinates
 
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
@@ -28,13 +22,9 @@ project: Project = user_client.get_project(PROJECT_HASH)
 ontology_structure = project.ontology_structure
 
 # Find a bounding box annotation object in the project ontology
-polyline_ontology_object: Object = ontology_structure.get_child_by_title(
-    title="Branches", type_=Object
-)
+polyline_ontology_object: Object = ontology_structure.get_child_by_title(title="Branches", type_=Object)
 
-branch_type_radio_attribute = ontology_structure.get_child_by_title(
-    type_=RadioAttribute, title="Type?"
-)
+branch_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
 
 # Create options for the radio buttons
 fruiting_spur_option = branch_type_radio_attribute.get_child_by_title(type_=Option, title="Fruiting spur")
@@ -48,13 +38,13 @@ fruiting_spur_checklist_attribute = ontology_structure.get_child_by_title(
     type_=ChecklistAttribute, title="Fruiting spur Qualities?"
 )
 fruiting_spur_short_length = fruiting_spur_checklist_attribute.get_child_by_title(type_=Option, title="Short length")
-fruiting_spur_high_bud_density = fruiting_spur_checklist_attribute.get_child_by_title(type_=Option, title="High bud density")
+fruiting_spur_high_bud_density = fruiting_spur_checklist_attribute.get_child_by_title(
+    type_=Option, title="High bud density"
+)
 fruiting_spur_healthy_option = fruiting_spur_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
 
 # Sucker Qualities
-sucker_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Sucker Qualities?"
-)
+sucker_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Sucker Qualities?")
 sucker_short_length = sucker_checklist_attribute.get_child_by_title(type_=Option, title="Short length")
 sucker_high_bud_density = sucker_checklist_attribute.get_child_by_title(type_=Option, title="High bud density")
 sucker_healthy_option = sucker_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
@@ -78,224 +68,295 @@ video_image_frame_labels = {
     "blueberries-001.jpg": {
         0: {
             "label_ref": "blueberry_001",
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.013,.023), 
-                PointCoordinate(.033,.033), 
-                PointCoordinate(.053,.023), 
-                PointCoordinate(.043,.013)]), 
-            "branch_type": "Fruiting spur", 
-            "fruiting_spur_quality_options": "Short length, High bud density"
-            }
+            "coordinates": PolylineCoordinates(
+                [
+                    PointCoordinate(0.013, 0.023),
+                    PointCoordinate(0.033, 0.033),
+                    PointCoordinate(0.053, 0.023),
+                    PointCoordinate(0.043, 0.013),
+                ]
+            ),
+            "branch_type": "Fruiting spur",
+            "fruiting_spur_quality_options": "Short length, High bud density",
+        }
     },
     "blueberries-010.jpg": {
         0: [
             {
-                "label_ref": "blueberry_002", 
-                "coordinates": PolylineCoordinates([
-                    PointCoordinate(.03,.023), 
-                    PointCoordinate(.033,.033), 
-                    PointCoordinate(.053,.033), 
-                    PointCoordinate(.043,.013)]), 
-                "branch_type": "Sucker", 
-                "sucker_quality_options": "Short length, High bud density, Healthy"
-                },
+                "label_ref": "blueberry_002",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.03, 0.023),
+                        PointCoordinate(0.033, 0.033),
+                        PointCoordinate(0.053, 0.033),
+                        PointCoordinate(0.043, 0.013),
+                    ]
+                ),
+                "branch_type": "Sucker",
+                "sucker_quality_options": "Short length, High bud density, Healthy",
+            },
             {
                 "label_ref": "blueberry_003",
-                "coordinates": PolylineCoordinates([
-                    PointCoordinate(.043,.053), 
-                    PointCoordinate(.063,.063), 
-                    PointCoordinate(.083,.053), 
-                    PointCoordinate(.073,.043)]), 
-                "branch_type": "Side shoot", 
-                "side_shoot_quality_options": "Short length"
-                },
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.043, 0.053),
+                        PointCoordinate(0.063, 0.063),
+                        PointCoordinate(0.083, 0.053),
+                        PointCoordinate(0.073, 0.043),
+                    ]
+                ),
+                "branch_type": "Side shoot",
+                "side_shoot_quality_options": "Short length",
+            },
             {
-                "label_ref": "blueberry_004", 
-                "coordinates": PolylineCoordinates([
-                    PointCoordinate(.073,.023), 
-                    PointCoordinate(.093,.033), 
-                    PointCoordinate(.113,.023), 
-                    PointCoordinate(.103,.013)]), 
-                "branch_type": "Other branch type", "Specify branch type": "Cane"
-                },
+                "label_ref": "blueberry_004",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.073, 0.023),
+                        PointCoordinate(0.093, 0.033),
+                        PointCoordinate(0.113, 0.023),
+                        PointCoordinate(0.103, 0.013),
+                    ]
+                ),
+                "branch_type": "Other branch type",
+                "Specify branch type": "Cane",
+            },
         ],
     },
     "blueberries-ig": {
         0: {
-            "label_ref": "blueberry_005", 
-            "coordinates": PolylineCoordinates([
-                    PointCoordinate(.013,.023), 
-                    PointCoordinate(.033,.033), 
-                    PointCoordinate(.053,.023), 
-                    PointCoordinate(.043,.013)]), 
-            "branch_type": "Fruiting spur", 
-            "fruiting_spur_quality_options": "Short length, High bud density"
-            },
+            "label_ref": "blueberry_005",
+            "coordinates": PolylineCoordinates(
+                [
+                    PointCoordinate(0.013, 0.023),
+                    PointCoordinate(0.033, 0.033),
+                    PointCoordinate(0.053, 0.023),
+                    PointCoordinate(0.043, 0.013),
+                ]
+            ),
+            "branch_type": "Fruiting spur",
+            "fruiting_spur_quality_options": "Short length, High bud density",
+        },
         2: [
             {
-            "label_ref": "blueberry_006", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.013,.023), 
-                PointCoordinate(.033,.033), 
-                PointCoordinate(.053,.023), 
-                PointCoordinate(.043,.013)]),
-            "branch_type": "Sucker", 
-            "sucker_quality_options": "Healthy"
+                "label_ref": "blueberry_006",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.013, 0.023),
+                        PointCoordinate(0.033, 0.033),
+                        PointCoordinate(0.053, 0.023),
+                        PointCoordinate(0.043, 0.013),
+                    ]
+                ),
+                "branch_type": "Sucker",
+                "sucker_quality_options": "Healthy",
             },
             {
-            "label_ref": "blueberry_007", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.043,.053), 
-                PointCoordinate(.063,.063), 
-                PointCoordinate(.083,.053), 
-                PointCoordinate(.073,.043)]), 
-            "branch_type": "Side shoot", 
-            "side_shoot_quality_options": "Short length"
+                "label_ref": "blueberry_007",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.043, 0.053),
+                        PointCoordinate(0.063, 0.063),
+                        PointCoordinate(0.083, 0.053),
+                        PointCoordinate(0.073, 0.043),
+                    ]
+                ),
+                "branch_type": "Side shoot",
+                "side_shoot_quality_options": "Short length",
             },
             {
-            "label_ref": "blueberry_008", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.073,.023), 
-                PointCoordinate(.093,.033), 
-                PointCoordinate(.113,.023), 
-                PointCoordinate(.103,.013)]),
-            "branch_type": "Other branch type", "Specify branch type": "Cane"
+                "label_ref": "blueberry_008",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.073, 0.023),
+                        PointCoordinate(0.093, 0.033),
+                        PointCoordinate(0.113, 0.023),
+                        PointCoordinate(0.103, 0.013),
+                    ]
+                ),
+                "branch_type": "Other branch type",
+                "Specify branch type": "Cane",
             },
-        ]
+        ],
     },
     "blueberries-is": {
         0: {
-            "label_ref": "blueberry_009", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.013,.023), 
-                PointCoordinate(.033,.033), 
-                PointCoordinate(.053,.023), 
-                PointCoordinate(.043,.013)]),
-            "branch_type": "Fruiting spur", 
-            "fruiting_spur_quality_options": "Short length"
-            },
+            "label_ref": "blueberry_009",
+            "coordinates": PolylineCoordinates(
+                [
+                    PointCoordinate(0.013, 0.023),
+                    PointCoordinate(0.033, 0.033),
+                    PointCoordinate(0.053, 0.023),
+                    PointCoordinate(0.043, 0.013),
+                ]
+            ),
+            "branch_type": "Fruiting spur",
+            "fruiting_spur_quality_options": "Short length",
+        },
         3: [
             {
-            "label_ref": "blueberry_010", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.013,.023), 
-                PointCoordinate(.033,.033), 
-                PointCoordinate(.053,.023), 
-                PointCoordinate(.043,.013)]), 
-            "branch_type": "Sucker", 
-            "sucker_quality_options": "Short length, High bud density, Healthy"
+                "label_ref": "blueberry_010",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.013, 0.023),
+                        PointCoordinate(0.033, 0.033),
+                        PointCoordinate(0.053, 0.023),
+                        PointCoordinate(0.043, 0.013),
+                    ]
+                ),
+                "branch_type": "Sucker",
+                "sucker_quality_options": "Short length, High bud density, Healthy",
             },
             {
-            "label_ref": "blueberry_011", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.043,.053), 
-                PointCoordinate(.063,.063), 
-                PointCoordinate(.083,.053), 
-                PointCoordinate(.073,.043)]), 
-            "branch_type": "Side shoot", 
-            "side_shoot_quality_options": "Short length"
+                "label_ref": "blueberry_011",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.043, 0.053),
+                        PointCoordinate(0.063, 0.063),
+                        PointCoordinate(0.083, 0.053),
+                        PointCoordinate(0.073, 0.043),
+                    ]
+                ),
+                "branch_type": "Side shoot",
+                "side_shoot_quality_options": "Short length",
             },
             {
-            "label_ref": "blueberry_012", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.073,.023), 
-                PointCoordinate(.093,.033), 
-                PointCoordinate(.113,.023), 
-                PointCoordinate(.103,.013)]), 
-            "branch_type": "Other branch type", 
-            "Specify branch type": "Cane"},
-        ]
+                "label_ref": "blueberry_012",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.073, 0.023),
+                        PointCoordinate(0.093, 0.033),
+                        PointCoordinate(0.113, 0.023),
+                        PointCoordinate(0.103, 0.013),
+                    ]
+                ),
+                "branch_type": "Other branch type",
+                "Specify branch type": "Cane",
+            },
+        ],
     },
     "blueberries-vid-001.mp4": {
         103: [
             {
-            "label_ref": "blueberry_013", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.013,.023), 
-                PointCoordinate(.033,.033), 
-                PointCoordinate(.053,.023), 
-                PointCoordinate(.043,.013)]),
-            "branch_type": "Side shoot", 
-            "side_shoot_quality_options": "Short length"},
-            {
-            "label_ref": "blueberry_014", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.043,.053), 
-                PointCoordinate(.063,.063), 
-                PointCoordinate(.083,.053), 
-                PointCoordinate(.073,.043)]),
-            "branch_type": "Fruiting spur", 
-            "fruiting_spur_quality_options": "Short length, High bud density, Healthy"
+                "label_ref": "blueberry_013",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.013, 0.023),
+                        PointCoordinate(0.033, 0.033),
+                        PointCoordinate(0.053, 0.023),
+                        PointCoordinate(0.043, 0.013),
+                    ]
+                ),
+                "branch_type": "Side shoot",
+                "side_shoot_quality_options": "Short length",
             },
             {
-            "label_ref": "blueberry_015", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.073,.023), 
-                PointCoordinate(.093,.033), 
-                PointCoordinate(.113,.023), 
-                PointCoordinate(.103,.013)]),
-            "branch_type": "Other branch type", "Specify branch type": "Cane"
+                "label_ref": "blueberry_014",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.043, 0.053),
+                        PointCoordinate(0.063, 0.063),
+                        PointCoordinate(0.083, 0.053),
+                        PointCoordinate(0.073, 0.043),
+                    ]
+                ),
+                "branch_type": "Fruiting spur",
+                "fruiting_spur_quality_options": "Short length, High bud density, Healthy",
+            },
+            {
+                "label_ref": "blueberry_015",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.073, 0.023),
+                        PointCoordinate(0.093, 0.033),
+                        PointCoordinate(0.113, 0.023),
+                        PointCoordinate(0.103, 0.013),
+                    ]
+                ),
+                "branch_type": "Other branch type",
+                "Specify branch type": "Cane",
             },
         ],
         104: [
             {
-            "label_ref": "blueberry_016", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.013,.023), 
-                PointCoordinate(.033,.033), 
-                PointCoordinate(.053,.023), 
-                PointCoordinate(.043,.013)]), 
-            "branch_type": "Side shoot", 
-            "side_shoot_quality_options": "Short length"},
-            {
-            "label_ref": "blueberry_014", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.0413,.0523), 
-                PointCoordinate(.0613,.0623), 
-                PointCoordinate(.0813,.0523), 
-                PointCoordinate(.0713,.0423)]),
-            "branch_type": "Fruiting spur", 
-            "fruiting_spur_quality_options": "Short length, High bud density, Healthy"
+                "label_ref": "blueberry_016",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.013, 0.023),
+                        PointCoordinate(0.033, 0.033),
+                        PointCoordinate(0.053, 0.023),
+                        PointCoordinate(0.043, 0.013),
+                    ]
+                ),
+                "branch_type": "Side shoot",
+                "side_shoot_quality_options": "Short length",
             },
             {
-            "label_ref": "blueberry_017", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.073,.023), 
-                PointCoordinate(.093,.033), 
-                PointCoordinate(.113,.023), 
-                PointCoordinate(.103,.013)]),
-            "branch_type": "Other branch type", "Specify branch type": "Cane"
+                "label_ref": "blueberry_014",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.0413, 0.0523),
+                        PointCoordinate(0.0613, 0.0623),
+                        PointCoordinate(0.0813, 0.0523),
+                        PointCoordinate(0.0713, 0.0423),
+                    ]
+                ),
+                "branch_type": "Fruiting spur",
+                "fruiting_spur_quality_options": "Short length, High bud density, Healthy",
+            },
+            {
+                "label_ref": "blueberry_017",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.073, 0.023),
+                        PointCoordinate(0.093, 0.033),
+                        PointCoordinate(0.113, 0.023),
+                        PointCoordinate(0.103, 0.013),
+                    ]
+                ),
+                "branch_type": "Other branch type",
+                "Specify branch type": "Cane",
             },
         ],
         105: [
             {
-            "label_ref": "blueberry_016", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.0113,.0223), 
-                PointCoordinate(.0313,.0323), 
-                PointCoordinate(.0513,.0223), 
-                PointCoordinate(.0413,.0123)]), 
-            "branch_type": "Side shoot", 
-            "side_shoot_quality_options": "Short length"
+                "label_ref": "blueberry_016",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.0113, 0.0223),
+                        PointCoordinate(0.0313, 0.0323),
+                        PointCoordinate(0.0513, 0.0223),
+                        PointCoordinate(0.0413, 0.0123),
+                    ]
+                ),
+                "branch_type": "Side shoot",
+                "side_shoot_quality_options": "Short length",
             },
             {
-            "label_ref": "blueberry_014", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.0433,.0553), 
-                PointCoordinate(.0633,.0653), 
-                PointCoordinate(.0833,.0553), 
-                PointCoordinate(.0733,.0453)]),
-            "branch_type": "Fruiting spur", 
-            "fruiting_spur_quality_options": "Short length, High bud density, Healthy"
+                "label_ref": "blueberry_014",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.0433, 0.0553),
+                        PointCoordinate(0.0633, 0.0653),
+                        PointCoordinate(0.0833, 0.0553),
+                        PointCoordinate(0.0733, 0.0453),
+                    ]
+                ),
+                "branch_type": "Fruiting spur",
+                "fruiting_spur_quality_options": "Short length, High bud density, Healthy",
             },
             {
-            "label_ref": "blueberry_017", 
-            "coordinates": PolylineCoordinates([
-                PointCoordinate(.0713,.0223), 
-                PointCoordinate(.0913,.0323), 
-                PointCoordinate(.1113,.0223), 
-                PointCoordinate(.1013,.0123)]),
-            "branch_type": "Other branch type", "Specify branch type": "Cane"
+                "label_ref": "blueberry_017",
+                "coordinates": PolylineCoordinates(
+                    [
+                        PointCoordinate(0.0713, 0.0223),
+                        PointCoordinate(0.0913, 0.0323),
+                        PointCoordinate(0.1113, 0.0223),
+                        PointCoordinate(0.1013, 0.0123),
+                    ]
+                ),
+                "branch_type": "Other branch type",
+                "Specify branch type": "Cane",
             },
         ],
     },
@@ -328,7 +389,9 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
 
                 # Set branch type attribute
                 if branch_type == "Fruiting spur":
-                    polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=fruiting_spur_option)
+                    polyline_object_instance.set_answer(
+                        attribute=branch_type_radio_attribute, answer=fruiting_spur_option
+                    )
                     checklist_attribute = fruiting_spur_checklist_attribute
                 elif branch_type == "Sucker":
                     polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=sucker_option)
@@ -337,8 +400,12 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                     polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=side_shoot_option)
                     checklist_attribute = side_shoot_checklist_attribute
                 elif branch_type == "Other branch type":
-                    polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=other_branch_option)
-                    polyline_object_instance.set_answer(attribute=other_branch_option_text_attribute, answer=item.get("Specify branch type", ""))
+                    polyline_object_instance.set_answer(
+                        attribute=branch_type_radio_attribute, answer=other_branch_option
+                    )
+                    polyline_object_instance.set_answer(
+                        attribute=other_branch_option_text_attribute, answer=item.get("Specify branch type", "")
+                    )
 
                 # Set checklist attributes
                 checklist_answers = []
@@ -346,14 +413,34 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
 
                 for quality in quality_options:
                     if quality == "Short length":
-                        checklist_answers.append(fruiting_spur_short_length if branch_type == "Fruiting spur" else sucker_short_length if branch_type == "Sucker" else side_shoot_short_length)
+                        checklist_answers.append(
+                            fruiting_spur_short_length
+                            if branch_type == "Fruiting spur"
+                            else sucker_short_length
+                            if branch_type == "Sucker"
+                            else side_shoot_short_length
+                        )
                     elif quality == "High bud density":
-                        checklist_answers.append(fruiting_spur_high_bud_density if branch_type == "Fruiting spur" else sucker_high_bud_density if branch_type == "Sucker" else side_shoot_high_bud_density)
+                        checklist_answers.append(
+                            fruiting_spur_high_bud_density
+                            if branch_type == "Fruiting spur"
+                            else sucker_high_bud_density
+                            if branch_type == "Sucker"
+                            else side_shoot_high_bud_density
+                        )
                     elif quality == "Healthy":
-                        checklist_answers.append(fruiting_spur_healthy_option if branch_type == "Fruiting spur" else sucker_healthy_option if branch_type == "Sucker" else side_shoot_healthy_option)
+                        checklist_answers.append(
+                            fruiting_spur_healthy_option
+                            if branch_type == "Fruiting spur"
+                            else sucker_healthy_option
+                            if branch_type == "Sucker"
+                            else side_shoot_healthy_option
+                        )
 
                 if checklist_attribute and checklist_answers:
-                    polyline_object_instance.set_answer(attribute=checklist_attribute, answer=checklist_answers, overwrite=True)
+                    polyline_object_instance.set_answer(
+                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                    )
 
             else:
                 #  Reuse existing instance across frames
