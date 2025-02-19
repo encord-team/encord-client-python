@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Union
+from typing import Any, List, Union
 from uuid import UUID
 
 from typing_extensions import Annotated
@@ -53,8 +53,8 @@ class WorkflowAgentNode(WorkflowNode):
     pathways: List[AgentNodePathway]
 
 
-def _get_discriminator_value(model: dict) -> str:
-    stage_type = model["stageType"]
+def _get_discriminator_value(model: Any) -> str:
+    stage_type = model.stage_type if isinstance(model, WorkflowNode) else model["stageType"]
     if stage_type == WorkflowStageType.AGENT:
         return "AGENT"
     return "GENERIC"
