@@ -1,4 +1,3 @@
-# Import dependencies
 from pathlib import Path
 
 import numpy as np
@@ -7,313 +6,109 @@ from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import BitmaskCoordinates
 
-# First, we need to prepare the mask itself.
-# For simplicity, we'll mask the entire frame
-# Note, that the size of the mask must be identical to the size of the image/frame
-numpy_coordinates = np.ones((1080, 1920))
+# Prepare the bitmask
+numpy_coordinates = np.ones((483, 322), dtype=bool)
 
-# we also need to make sure that the image/frame is in boolean format
-numpy_coordinates = numpy_coordinates.astype(bool)
-
+# SSH and Project details
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
-PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+PROJECT_ID = "dbb776e8-feaa-4401-97d3-52395bac6c02"
 
-# Create user client using ssh key
+# Create user client
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     ssh_private_key_path=SSH_PATH,
-    # For US platform users use "https://api.us.encord.com"
     domain="https://api.encord.com",
 )
 
-# Get project for which labels are to be added
-project: Project = user_client.get_project(PROJECT_HASH)
-
-# Create radio button attribute for apple type
+# Get project
+project: Project = user_client.get_project(PROJECT_ID)
 ontology_structure = project.ontology_structure
 
-# Find a bounding box annotation object in the project ontology
-bitmask_ontology_object: Object = ontology_structure.get_child_by_title(title="Apples", type_=Object)
+# Get ontology object
+text_object: Object = ontology_structure.get_child_by_title(title="Edit", type_=Object)
+if text_object is None:
+    raise ValueError("Ontology object for 'Edit' not found.")
 
-apple_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
+# Define attributes
+correction_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Corrections")
+english_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="English corrections")
+chinese_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="繁體中文修正")
 
-# Create options for the radio buttons
-sugar_bee_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Sugar Bee")
-granny_smith_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Granny Smith")
-honey_crisp_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Honey Crisp")
-other_apple_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Other apple type")
+# Define checklist attributes
+english_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="English")
+en_ca_option = english_checklist_attribute.get_child_by_title(type_=Option, title="en-ca")
+en_gb_option = english_checklist_attribute.get_child_by_title(type_=Option, title="en-gb")
+en_us_option = english_checklist_attribute.get_child_by_title(type_=Option, title="en-us")
 
-# Create checklist attributes and options for each apple type
-# Sugar Bee Qualities
-sugar_bee_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Sugar Bee Qualities?"
-)
-sugar_bee_plump_option = sugar_bee_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
-sugar_bee_juicy_option = sugar_bee_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
-sugar_bee_large_option = sugar_bee_checklist_attribute.get_child_by_title(type_=Option, title="Large")
+chinese_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="繁體中文")
+zh_tw_option = chinese_checklist_attribute.get_child_by_title(type_=Option, title="zh-tw")
+zh_hk_option = chinese_checklist_attribute.get_child_by_title(type_=Option, title="zh-hk")
 
-# Granny Smith Qualities
-granny_smith_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Granny Smith Qualities?"
-)
-granny_smith_plump_option = granny_smith_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
-granny_smith_juicy_option = granny_smith_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
-granny_smith_large_option = granny_smith_checklist_attribute.get_child_by_title(type_=Option, title="Large")
+# Define text attributes
+english_correction_text_attribute = ontology_structure.get_child_by_title(type_=TextAttribute, title="Correction text")
+chinese_correction_text_attribute = ontology_structure.get_child_by_title(type_=TextAttribute, title="更正")
 
-# Honey Crisp Qualities
-honey_crisp_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Honey Crisp Qualities?"
-)
-honey_crisp_plump_option = honey_crisp_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
-honey_crisp_juicy_option = honey_crisp_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
-honey_crisp_large_option = honey_crisp_checklist_attribute.get_child_by_title(type_=Option, title="Large")
-
-# Other apple Types
-other_apple_option_text_attribute = ontology_structure.get_child_by_title(
-    type_=TextAttribute, title="Specify apple type"
-)
-
-
-# Dictionary of labels per data unit and per frame with apple type specified, including quality options
-video_frame_labels = {
-    "apples-001.jpg": {
-        0: {
-            "label_ref": "apple_001",
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Sugar Bee",
-            "sugar_bee_quality_options": "Plump, Juicy",
-        }
-    },
-    "apples-010.jpg": {
-        0: [
-            {
-                "label_ref": "apple_002",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Granny Smith",
-                "granny_smith_quality_options": "Plump, Juicy, Large",
-            },
-            {
-                "label_ref": "apple_003",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Honey Crisp",
-                "honey_crisp_quality_options": "Plump",
-            },
-            {
-                "label_ref": "apple_004",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Other apple type",
-                "Specify apple type": "Fuji",
-            },
-        ],
-    },
-    "apples-ig": {
-        0: {
-            "label_ref": "apple_005",
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Sugar Bee",
-            "sugar_bee_quality_options": "Plump, Juicy",
-        },
-        2: [
-            {
-                "label_ref": "apple_006",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Granny Smith",
-                "granny_smith_quality_options": "Large",
-            },
-            {
-                "label_ref": "apple_007",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Honey Crisp",
-                "honey_crisp_quality_options": "Plump",
-            },
-            {
-                "label_ref": "apple_008",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Other apple type",
-                "Specify apple type": "Jazz",
-            },
-        ],
-    },
-    "apples-is": {
-        0: {
-            "label_ref": "apple_009",
-            "coordinates": BitmaskCoordinates(numpy_coordinates),
-            "apple_type": "Sugar Bee",
-            "sugar_bee_quality_options": "Plump",
-        },
-        3: [
-            {
-                "label_ref": "apple_010",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Granny Smith",
-                "granny_smith_quality_options": "Plump, Juicy, Large",
-            },
-            {
-                "label_ref": "apple_011",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Honey Crisp",
-                "honey_crisp_quality_options": "Plump",
-            },
-            {
-                "label_ref": "apple_012",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Other apple type",
-                "Specify apple type": "Red Delicious",
-            },
-        ],
-    },
-    "apples-vid-001.mp4": {
+# Mapping of text files to multiple text regions
+text_annotations = {
+    "the-iliad.pdf": {
         103: [
             {
-                "label_ref": "apple_013",
+                "label_ref": "text_region_001",
                 "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Honey Crisp",
-                "honey_crisp_quality_options": "Plump",
-            },
-            {
-                "label_ref": "apple_014",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Sugar Bee",
-                "sugar_bee_quality_options": "Plump, Juicy, Large",
-            },
-            {
-                "label_ref": "apple_015",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Other apple type",
-                "Specify apple type": "Jazz",
-            },
-        ],
-        104: [
-            {
-                "label_ref": "apple_016",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Honey Crisp",
-                "honey_crisp_quality_options": "Plump",
-            },
-            {
-                "label_ref": "apple_014",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Sugar Bee",
-                "sugar_bee_quality_options": "Plump, Juicy, Large",
-            },
-            {
-                "label_ref": "apple_017",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Other apple type",
-                "Specify apple type": "Fuji",
-            },
-        ],
-        105: [
-            {
-                "label_ref": "apple_016",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Honey Crisp",
-                "honey_crisp_quality_options": "Plump",
-            },
-            {
-                "label_ref": "apple_014",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Sugar Bee",
-                "sugar_bee_quality_options": "Plump, Juicy, Large",
-            },
-            {
-                "label_ref": "apple_017",
-                "coordinates": BitmaskCoordinates(numpy_coordinates),
-                "apple_type": "Other apple type",
-                "Specify apple type": "Red Delicious",
-            },
+                "languages": "en-ca, en-us",
+                "correction_text": "This needs to be updated for clarity.",
+            }
         ],
     },
 }
 
+# Iterate over each data unit
+for data_title, annotations in text_annotations.items():
+    label_rows = project.list_label_rows_v2(data_title_eq=data_title)
+    if not label_rows:
+        print(f"Skipping: No label row found for {data_title}")
+        continue
 
-# Loop through each data unit (image, video, etc.)
-for data_unit, frame_coordinates in video_frame_labels.items():
-    object_instances_by_label_ref = {}
-
-    # Get the label row for the current data unit
-    label_row = project.list_label_rows_v2(data_title_eq=data_unit)[0]
+    label_row = label_rows[0]
     label_row.initialise_labels()
 
-    # Loop through the frames for the current data unit
-    for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  #  Multiple objects in the frame
-            items = [items]
+    for page_number, page_annotations in annotations.items():
+        for annotation in page_annotations:
+            selected_languages = annotation.get("languages", "").split(", ")
 
-        for item in items:
-            label_ref = item["label_ref"]
-            coord = item["coordinates"]
-            apple_type = item["apple_type"]
+            # Ensure BitmaskCoordinates
+            if not isinstance(annotation["coordinates"], BitmaskCoordinates):
+                raise TypeError(f"Expected BitmaskCoordinates, got {type(annotation['coordinates'])}")
 
-            #  Check if label_ref already exists for reusability
-            if label_ref not in object_instances_by_label_ref:
-                bitmask_object_instance: ObjectInstance = bitmask_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = bitmask_object_instance  #  Store for reuse
-                checklist_attribute = None
+            # Create object instance
+            instance: ObjectInstance = text_object.create_instance()
+            instance.set_for_frames(coordinates=annotation["coordinates"], frames=page_number)
 
-                # Set apple type attribute
-                if apple_type == "Sugar Bee":
-                    bitmask_object_instance.set_answer(attribute=apple_type_radio_attribute, answer=sugar_bee_option)
-                    checklist_attribute = sugar_bee_checklist_attribute
-                elif apple_type == "Granny Smith":
-                    bitmask_object_instance.set_answer(attribute=apple_type_radio_attribute, answer=granny_smith_option)
-                    checklist_attribute = granny_smith_checklist_attribute
-                elif apple_type == "Honey Crisp":
-                    bitmask_object_instance.set_answer(attribute=apple_type_radio_attribute, answer=honey_crisp_option)
-                    checklist_attribute = honey_crisp_checklist_attribute
-                elif apple_type == "Other apple type":
-                    bitmask_object_instance.set_answer(attribute=apple_type_radio_attribute, answer=other_apple_option)
-                    bitmask_object_instance.set_answer(
-                        attribute=other_apple_option_text_attribute, answer=item.get("Specify apple type", "")
-                    )
+            # Apply correction type
+            if any(lang in ["en-ca", "en-gb", "en-us"] for lang in selected_languages):
+                instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
+                checklist_options = [
+                    opt
+                    for lang, opt in {"en-ca": en_ca_option, "en-gb": en_gb_option, "en-us": en_us_option}.items()
+                    if lang in selected_languages
+                ]
+                if checklist_options:
+                    instance.set_answer(attribute=english_checklist_attribute, answer=checklist_options)
+                instance.set_answer(attribute=english_correction_text_attribute, answer=annotation["correction_text"])
 
-                # Set checklist attributes
-                checklist_answers = []
-                quality_options = item.get(f"{apple_type.lower()}_quality_options", "").split(", ")
+            elif any(lang in ["zh-tw", "zh-hk"] for lang in selected_languages):
+                instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
+                checklist_options = [
+                    opt
+                    for lang, opt in {"zh-tw": zh_tw_option, "zh-hk": zh_hk_option}.items()
+                    if lang in selected_languages
+                ]
+                if checklist_options:
+                    instance.set_answer(attribute=chinese_checklist_attribute, answer=checklist_options)
+                instance.set_answer(attribute=chinese_correction_text_attribute, answer=annotation["correction_text"])
 
-                for quality in quality_options:
-                    if quality == "Plump":
-                        checklist_answers.append(
-                            sugar_bee_plump_option
-                            if apple_type == "Sugar Bee"
-                            else granny_smith_plump_option
-                            if apple_type == "Granny Smith"
-                            else honey_crisp_plump_option
-                        )
-                    elif quality == "Juicy":
-                        checklist_answers.append(
-                            sugar_bee_juicy_option
-                            if apple_type == "Sugar Bee"
-                            else granny_smith_juicy_option
-                            if apple_type == "Granny Smith"
-                            else honey_crisp_juicy_option
-                        )
-                    elif quality == "Large":
-                        checklist_answers.append(
-                            sugar_bee_large_option
-                            if apple_type == "Sugar Bee"
-                            else granny_smith_large_option
-                            if apple_type == "Granny Smith"
-                            else honey_crisp_large_option
-                        )
+            label_row.add_object_instance(instance)
 
-                if checklist_attribute and checklist_answers:
-                    bitmask_object_instance.set_answer(
-                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
-                    )
-
-            else:
-                #  Reuse existing instance across frames
-                bitmask_object_instance = object_instances_by_label_ref[label_ref]
-
-            #  Assign the object to the frame and track it
-            bitmask_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
-
-    #  Add object instances to label_row **only if they have frames assigned**
-    for bitmask_object_instance in object_instances_by_label_ref.values():
-        if bitmask_object_instance.get_annotation_frames():  #  Ensures it has at least one frame
-            label_row.add_object_instance(bitmask_object_instance)
-
-    #  Upload all labels for this data unit (video/image) to the server
     label_row.save()
+    print(f"Saved label row for {data_title}")
 
-print(" Labels with apple type radio buttons, checklist attributes, and text labels added for all data units.")
+print("Bitmask text annotations applied successfully!")
