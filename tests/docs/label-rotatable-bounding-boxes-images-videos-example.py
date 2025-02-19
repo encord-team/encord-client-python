@@ -20,7 +20,7 @@ project: Project = user_client.get_project(PROJECT_HASH)
 ontology_structure = project.ontology_structure
 
 # Find a bounding box annotation object in the project ontology
-rbbox_ontology_object: Object = ontology_structure.get_child_by_title(title="persimmons", type_=Object)
+rbbox_ontology_object: Object = ontology_structure.get_child_by_title(title="Persimmons", type_=Object)
 
 persimmon_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
 
@@ -46,9 +46,7 @@ fuyu_juicy_option = fuyu_checklist_attribute.get_child_by_title(type_=Option, ti
 fuyu_large_option = fuyu_checklist_attribute.get_child_by_title(type_=Option, title="Large")
 
 # Rojo Brilliante Qualities
-rjb_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Rojo Brilliante Qualities?"
-)
+rjb_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Rojo Brilliante Qualities?")
 rjb_plump_option = rjb_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 rjb_juicy_option = rjb_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 rjb_large_option = rjb_checklist_attribute.get_child_by_title(type_=Option, title="Large")
@@ -67,8 +65,8 @@ video_frame_labels = {
             "coordinates": RotatableBoundingBoxCoordinates(
                 height=0.4, width=0.4, top_left_x=0.1, top_left_y=0.1, theta=23
             ),
-            "persimmon_type": "Hachiya",
-            "hachiya_quality_options": "Plump, Juicy",
+            "persimmon_type": "Rojo Brilliante",
+            "rjb_quality_options": "Plump, Juicy",
         }
     },
     "persimmons-010.jpg": {
@@ -159,7 +157,7 @@ video_frame_labels = {
                     height=0.3, width=0.3, top_left_x=0.2, top_left_y=0.2, theta=23
                 ),
                 "persimmon_type": "Rojo Brilliante",
-                "rjb_quality_options": "Plump",
+                "rjb_quality_options": "Plump, Juicy",
             },
             {
                 "label_ref": "persimmon_012",
@@ -253,7 +251,7 @@ video_frame_labels = {
     },
 }
 
-
+# Loop through each data unit (image, video, etc.)
 # Loop through each data unit (image, video, etc.)
 for data_unit, frame_coordinates in video_frame_labels.items():
     object_instances_by_label_ref = {}
@@ -262,88 +260,82 @@ for data_unit, frame_coordinates in video_frame_labels.items():
     label_row = project.list_label_rows_v2(data_title_eq=data_unit)[0]
     label_row.initialise_labels()
 
-    # Loop through the frames for the current data unit
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  #  Multiple objects in the frame
+        if not isinstance(items, list):
             items = [items]
 
-        for item in items:
+        for item in items:  # ✅ Correct indentation
             label_ref = item["label_ref"]
             coord = item["coordinates"]
             persimmon_type = item["persimmon_type"]
 
-            #  Check if label_ref already exists for reusability
             if label_ref not in object_instances_by_label_ref:
                 rbbox_object_instance: ObjectInstance = rbbox_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = rbbox_object_instance  #  Store for reuse
                 checklist_attribute = None
+                quality_options = []
 
-                # Set persimmon type attribute
                 if persimmon_type == "Hachiya":
                     rbbox_object_instance.set_answer(attribute=persimmon_type_radio_attribute, answer=hachiya_option)
                     checklist_attribute = hachiya_checklist_attribute
+                    quality_options = item.get("hachiya_quality_options", "").split(", ")
                 elif persimmon_type == "Fuyu":
                     rbbox_object_instance.set_answer(attribute=persimmon_type_radio_attribute, answer=fuyu_option)
                     checklist_attribute = fuyu_checklist_attribute
+                    quality_options = item.get("fuyu_quality_options", "").split(", ")
                 elif persimmon_type == "Rojo Brilliante":
                     rbbox_object_instance.set_answer(attribute=persimmon_type_radio_attribute, answer=rjb_option)
                     checklist_attribute = rjb_checklist_attribute
+                    quality_options = item.get("rjb_quality_options", "").split(", ")  # ✅ Ensure correct key
                 elif persimmon_type == "Other persimmon type":
-                    rbbox_object_instance.set_answer(
-                        attribute=persimmon_type_radio_attribute, answer=other_persimmon_option
-                    )
+                    rbbox_object_instance.set_answer(attribute=persimmon_type_radio_attribute, answer=other_persimmon_option)
                     rbbox_object_instance.set_answer(
                         attribute=other_persimmon_option_text_attribute, answer=item.get("Specify persimmon type", "")
                     )
+                    quality_options = []
 
                 # Set checklist attributes
                 checklist_answers = []
-                quality_options = item.get(f"{persimmon_type.lower()}_quality_options", "").split(", ")
-
                 for quality in quality_options:
+                    option = None
                     if quality == "Plump":
-                        checklist_answers.append(
-                            hachiya_plump_option
-                            if persimmon_type == "Hachiya"
-                            else fuyu_plump_option
-                            if persimmon_type == "Fuyu"
-                            else rjb_plump_option
+                        option = (
+                            hachiya_plump_option if persimmon_type == "Hachiya" else
+                            fuyu_plump_option if persimmon_type == "Fuyu" else
+                            rjb_plump_option if persimmon_type == "Rojo Brilliante" else None
                         )
                     elif quality == "Juicy":
-                        checklist_answers.append(
-                            hachiya_juicy_option
-                            if persimmon_type == "Hachiya"
-                            else fuyu_juicy_option
-                            if persimmon_type == "Fuyu"
-                            else rjb_juicy_option
+                        option = (
+                            hachiya_juicy_option if persimmon_type == "Hachiya" else
+                            fuyu_juicy_option if persimmon_type == "Fuyu" else
+                            rjb_juicy_option if persimmon_type == "Rojo Brilliante" else None
                         )
                     elif quality == "Large":
-                        checklist_answers.append(
-                            hachiya_large_option
-                            if persimmon_type == "Hachiya"
-                            else fuyu_large_option
-                            if persimmon_type == "Fuyu"
-                            else rjb_large_option
+                        option = (
+                            hachiya_large_option if persimmon_type == "Hachiya" else
+                            fuyu_large_option if persimmon_type == "Fuyu" else
+                            rjb_large_option if persimmon_type == "Rojo Brilliante" else None
                         )
 
+                    if option:
+                        checklist_answers.append(option)
+
                 if checklist_attribute and checklist_answers:
-                    rbbox_object_instance.set_answer(
-                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
-                    )
+                    rbbox_object_instance.set_answer(attribute=checklist_attribute, answer=checklist_answers, overwrite=True)
+
+                object_instances_by_label_ref[label_ref] = rbbox_object_instance  # ✅ Move inside loop
 
             else:
-                #  Reuse existing instance across frames
-                rbbox_object_instance = object_instances_by_label_ref[label_ref]
+                rbbox_object_instance = object_instances_by_label_ref[label_ref]  # ✅ Reuse existing instance
 
-            #  Assign the object to the frame and track it
+            # ✅ Move inside the loop
             rbbox_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-    #  Add object instances to label_row **only if they have frames assigned**
+    # Add object instances to label_row **only if they have frames assigned**
     for rbbox_object_instance in object_instances_by_label_ref.values():
-        if rbbox_object_instance.get_annotation_frames():  #  Ensures it has at least one frame
+        if rbbox_object_instance.get_annotation_frames():  # Ensures it has at least one frame
             label_row.add_object_instance(rbbox_object_instance)
 
-    #  Upload all labels for this data unit (video/image) to the server
+    # Upload all labels for this data unit (video/image) to the server
     label_row.save()
 
 print(" Labels with persimmon type radio buttons, checklist attributes, and text labels added for all data units.")
