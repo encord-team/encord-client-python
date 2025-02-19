@@ -20,9 +20,9 @@ from encord.http.v2.api_client import ApiClient
 from encord.objects.utils import checked_cast
 from encord.orm.base_dto import Field
 from encord.orm.workflow import Workflow as WorkflowDTO
-from encord.orm.workflow import WorkflowNode, WorkflowStageType
+from encord.orm.workflow import WorkflowAgentNode, WorkflowNode, WorkflowStageType
 from encord.workflow.common import WorkflowClient
-from encord.workflow.stages.agent import AgentStage
+from encord.workflow.stages.agent import AgentPathway, AgentStage
 from encord.workflow.stages.annotation import AnnotationStage
 from encord.workflow.stages.consensus_annotation import ConsensusAnnotationStage
 from encord.workflow.stages.consensus_review import ConsensusReviewStage
@@ -47,7 +47,16 @@ def _construct_stage(workflow_client: WorkflowClient, node: WorkflowNode) -> Wor
     elif node.stage_type == WorkflowStageType.DONE:
         return FinalStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
     elif node.stage_type == WorkflowStageType.AGENT:
-        return AgentStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
+        assert isinstance(node, WorkflowAgentNode)
+        return AgentStage(
+            uuid=node.uuid,
+            title=node.title,
+            pathways=[
+                AgentPathway(uuid=pathway.uuid, name=pathway.title, destination_uuid=pathway.destination_uuid)
+                for pathway in node.pathways
+            ],
+            _workflow_client=workflow_client,
+        )
     else:
         raise AssertionError(f"Unknown stage type: {node.stage_type}")
 
