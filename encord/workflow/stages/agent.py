@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
+from encord.orm.base_dto import Field
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
 
@@ -70,7 +72,16 @@ class _AgentTasksQueryParams(TasksQueryParams):
     statuses: Optional[List[AgentTaskStatus]] = None
 
 
+@dataclass(frozen=True)
+class AgentPathway:
+    uuid: UUID
+    name: str
+    destination_uuid: UUID
+
+
+@dataclass(frozen=True)
 class AgentStage(WorkflowStageBase):
+    pathways: list[AgentPathway]
     stage_type: Literal[WorkflowStageType.AGENT] = WorkflowStageType.AGENT
 
     """

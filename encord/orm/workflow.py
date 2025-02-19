@@ -1,8 +1,10 @@
 from enum import Enum
-from typing import List
+from typing import List, Union
 from uuid import UUID
 
-from encord.orm.base_dto import BaseDTO
+from typing_extensions import Annotated
+
+from encord.orm.base_dto import BaseDTO, Discriminator, Field, Tag, dto_validator
 
 
 class WorkflowAction(str, Enum):
@@ -22,6 +24,11 @@ class WorkflowStageType(str, Enum):
 
 
 class LabelWorkflowGraphNode:
+    """
+    This class only required to indicate correct request type to basic querier,
+    don't use this anywhere else.
+    """
+
     pass
 
 
@@ -30,10 +37,33 @@ class LabelWorkflowGraphNodePayload(BaseDTO):
 
 
 class WorkflowNode(BaseDTO):
-    uuid: UUID
     stage_type: WorkflowStageType
+    uuid: UUID
     title: str
 
 
+class AgentNodePathway(BaseDTO):
+    uuid: UUID
+    title: str
+    destination_uuid: UUID
+
+
+class WorkflowAgentNode(WorkflowNode):
+    stage_type: WorkflowStageType = WorkflowStageType.AGENT
+    pathways: List[AgentNodePathway]
+
+
+def _get_discriminator_value(model: dict) -> str:
+    stage_type = model["stageType"]
+    if stage_type == WorkflowStageType.AGENT:
+        return "AGENT"
+    return "GENERIC"
+
+
 class Workflow(BaseDTO):
-    stages: List[WorkflowNode]
+    stages: List[
+        Annotated[
+            Union[Annotated[WorkflowNode, Tag("GENERIC")], Annotated[WorkflowAgentNode, Tag("AGENT")]],
+            Discriminator(_get_discriminator_value),
+        ]
+    ]
