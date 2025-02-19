@@ -46,7 +46,9 @@ fuyu_juicy_option = fuyu_checklist_attribute.get_child_by_title(type_=Option, ti
 fuyu_large_option = fuyu_checklist_attribute.get_child_by_title(type_=Option, title="Large")
 
 # Rojo Brilliante Qualities
-rjb_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Rojo Brilliante Qualities?")
+rjb_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Rojo Brilliante Qualities?"
+)
 rjb_plump_option = rjb_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 rjb_juicy_option = rjb_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 rjb_large_option = rjb_checklist_attribute.get_child_by_title(type_=Option, title="Large")
@@ -252,7 +254,6 @@ video_frame_labels = {
 }
 
 # Loop through each data unit (image, video, etc.)
-# Loop through each data unit (image, video, etc.)
 for data_unit, frame_coordinates in video_frame_labels.items():
     object_instances_by_label_ref = {}
 
@@ -287,7 +288,9 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     checklist_attribute = rjb_checklist_attribute
                     quality_options = item.get("rjb_quality_options", "").split(", ")  # ✅ Ensure correct key
                 elif persimmon_type == "Other persimmon type":
-                    rbbox_object_instance.set_answer(attribute=persimmon_type_radio_attribute, answer=other_persimmon_option)
+                    rbbox_object_instance.set_answer(
+                        attribute=persimmon_type_radio_attribute, answer=other_persimmon_option
+                    )
                     rbbox_object_instance.set_answer(
                         attribute=other_persimmon_option_text_attribute, answer=item.get("Specify persimmon type", "")
                     )
@@ -299,33 +302,47 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     option = None
                     if quality == "Plump":
                         option = (
-                            hachiya_plump_option if persimmon_type == "Hachiya" else
-                            fuyu_plump_option if persimmon_type == "Fuyu" else
-                            rjb_plump_option if persimmon_type == "Rojo Brilliante" else None
+                            hachiya_plump_option
+                            if persimmon_type == "Hachiya"
+                            else fuyu_plump_option
+                            if persimmon_type == "Fuyu"
+                            else rjb_plump_option
+                            if persimmon_type == "Rojo Brilliante"
+                            else None
                         )
                     elif quality == "Juicy":
                         option = (
-                            hachiya_juicy_option if persimmon_type == "Hachiya" else
-                            fuyu_juicy_option if persimmon_type == "Fuyu" else
-                            rjb_juicy_option if persimmon_type == "Rojo Brilliante" else None
+                            hachiya_juicy_option
+                            if persimmon_type == "Hachiya"
+                            else fuyu_juicy_option
+                            if persimmon_type == "Fuyu"
+                            else rjb_juicy_option
+                            if persimmon_type == "Rojo Brilliante"
+                            else None
                         )
                     elif quality == "Large":
                         option = (
-                            hachiya_large_option if persimmon_type == "Hachiya" else
-                            fuyu_large_option if persimmon_type == "Fuyu" else
-                            rjb_large_option if persimmon_type == "Rojo Brilliante" else None
+                            hachiya_large_option
+                            if persimmon_type == "Hachiya"
+                            else fuyu_large_option
+                            if persimmon_type == "Fuyu"
+                            else rjb_large_option
+                            if persimmon_type == "Rojo Brilliante"
+                            else None
                         )
 
                     if option:
                         checklist_answers.append(option)
 
                 if checklist_attribute and checklist_answers:
-                    rbbox_object_instance.set_answer(attribute=checklist_attribute, answer=checklist_answers, overwrite=True)
+                    rbbox_object_instance.set_answer(
+                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                    )
 
-                object_instances_by_label_ref[label_ref] = rbbox_object_instance  # ✅ Move inside loop
+                object_instances_by_label_ref[label_ref] = rbbox_object_instance
 
             else:
-                rbbox_object_instance = object_instances_by_label_ref[label_ref]  # ✅ Reuse existing instance
+                rbbox_object_instance = object_instances_by_label_ref[label_ref]
 
             # ✅ Move inside the loop
             rbbox_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
