@@ -58,7 +58,6 @@ other_persimmon_option_text_attribute = ontology_structure.get_child_by_title(
     type_=TextAttribute, title="Specify persimmon type"
 )
 
-
 # Dictionary of labels per data unit and per frame with persimmon type specified, including quality options
 video_frame_labels = {
     "persimmons-001.jpg": {
@@ -265,7 +264,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
         if not isinstance(items, list):
             items = [items]
 
-        for item in items:  # ✅ Correct indentation
+        for item in items:
             label_ref = item["label_ref"]
             coord = item["coordinates"]
             persimmon_type = item["persimmon_type"]
@@ -344,7 +343,6 @@ for data_unit, frame_coordinates in video_frame_labels.items():
             else:
                 rbbox_object_instance = object_instances_by_label_ref[label_ref]
 
-            # ✅ Move inside the loop
             rbbox_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
     # Add object instances to label_row **only if they have frames assigned**
