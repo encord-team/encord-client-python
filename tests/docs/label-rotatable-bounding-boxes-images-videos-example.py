@@ -285,7 +285,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                 elif persimmon_type == "Rojo Brilliante":
                     rbbox_object_instance.set_answer(attribute=persimmon_type_radio_attribute, answer=rjb_option)
                     checklist_attribute = rjb_checklist_attribute
-                    quality_options = item.get("rjb_quality_options", "").split(", ")  # ✅ Ensure correct key
+                    quality_options = item.get("rjb_quality_options", "").split(", ") 
                 elif persimmon_type == "Other persimmon type":
                     rbbox_object_instance.set_answer(
                         attribute=persimmon_type_radio_attribute, answer=other_persimmon_option
