@@ -500,6 +500,12 @@ class LabelRowV2:
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
+        if self.data_type == DataType.PDF:
+            raise LabelRowError(
+                "You are trying to initialise a label row for a PDF file. "
+                "The SDK does not yet support working with labels on PDF files."
+            )
+
         if not self.label_hash:
             # If label_hash is None, it means we need to explicitly create the label row first
             bundled_operation(
