@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum, auto
 from typing import Optional
+from uuid import UUID
 
 from encord.common.utils import snake_to_camel
 from encord.orm.base_dto import BaseDTO
@@ -32,3 +33,24 @@ class CollaboratorTimer(BaseDTO):
     user_role: ProjectUserRole
     data_title: Optional[str] = None
     time_seconds: float
+
+
+class SessionTimerParams(BaseDTO):
+    project_hash: str
+    after: datetime
+    before: Optional[datetime] = None
+    page_token: Optional[str] = None
+
+
+class SessionTimer(BaseDTO):
+    timestamp: datetime
+    user_email: str
+    user_role: str
+    data_uuid: UUID
+    data_title: str
+    dataset_uuid: UUID
+    dataset_title: str
+    workflow_task_uuid: Optional[UUID] = None
+    workflow_stage_uuid: Optional[UUID] = None
+    workflow_stage_title: Optional[str] = None
+    time_seconds: int
