@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum, auto
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from encord.common.utils import snake_to_camel
@@ -39,6 +39,11 @@ class SessionTimerParams(BaseDTO):
     project_hash: str
     after: datetime
     before: Optional[datetime] = None
+    workflow_stages: Optional[List[UUID]] = None
+    user_emails: Optional[List[str]] = None
+    datasets: Optional[List[UUID]] = None
+    data_units: Optional[List[UUID]] = None
+    data_unit_title: Optional[str] = None
     page_token: Optional[str] = None
 
 

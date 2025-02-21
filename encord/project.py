@@ -18,6 +18,7 @@ from requests import Session
 from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
+from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
@@ -874,11 +875,19 @@ class Project:
         self,
         after: datetime.datetime,
         before: Optional[datetime.datetime] = None,
+        workflow_stage_uuid: Union[List[UUID], List[str], UUID, str, None] = None,
+        user_email: Union[List[str], str, None] = None,
     ) -> Iterable[SessionTimer]:
         """
         TODO: documentation here
         """
-        params = SessionTimerParams(project_hash=self.project_hash, after=after, before=before)
+        params = SessionTimerParams(
+            project_hash=self.project_hash,
+            after=after,
+            before=before,
+            workflow_stages=ensure_uuid_list(workflow_stage_uuid),
+            user_emails=ensure_list(user_email),
+        )
 
         yield from self._client.get_session_timers(params)
 
