@@ -13,9 +13,12 @@ import datetime
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
+from requests import Session
+
 from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
+from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
@@ -26,6 +29,8 @@ from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
     CollaboratorTimersGroupBy,
+    SessionTimer,
+    SessionTimerParams,
 )
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
@@ -865,6 +870,26 @@ class Project:
         )
 
         yield from self._client.get_collaborator_timers(params)
+
+    def list_session_timers(
+        self,
+        after: datetime.datetime,
+        before: Optional[datetime.datetime] = None,
+        workflow_stage_uuid: Union[List[UUID], List[str], UUID, str, None] = None,
+        user_email: Union[List[str], str, None] = None,
+    ) -> Iterable[SessionTimer]:
+        """
+        TODO: documentation here
+        """
+        params = SessionTimerParams(
+            project_hash=self.project_hash,
+            after=after,
+            before=before,
+            workflow_stages=ensure_uuid_list(workflow_stage_uuid),
+            user_emails=ensure_list(user_email),
+        )
+
+        yield from self._client.get_session_timers(params)
 
     def list_datasets(self) -> Iterable[ProjectDataset]:
         """List all datasets associated with the project.

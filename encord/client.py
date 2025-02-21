@@ -49,10 +49,7 @@ from encord.http.utils import (
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.active import ActiveProjectImportPayload, ActiveProjectMode
-from encord.orm.analytics import (
-    CollaboratorTimer,
-    CollaboratorTimerParams,
-)
+from encord.orm.analytics import CollaboratorTimer, CollaboratorTimerParams, SessionTimer, SessionTimerParams
 from encord.orm.bearer_request import BearerTokenResponse
 from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
@@ -1217,6 +1214,11 @@ class EncordClientProject(EncordClient):
     def get_collaborator_timers(self, params: CollaboratorTimerParams) -> Iterable[CollaboratorTimer]:
         yield from self._api_client.get_paged_iterator(
             "analytics/collaborators/timers", params=params, result_type=CollaboratorTimer
+        )
+
+    def get_session_timers(self, params: SessionTimerParams) -> Iterable[SessionTimer]:
+        yield from self._api_client.get_paged_iterator(
+            "analytics/session-timers", params=params, result_type=SessionTimer
         )
 
     def get_label_validation_errors(self, label_hash: str) -> List[str]:
