@@ -29,8 +29,8 @@ from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
     CollaboratorTimersGroupBy,
-    SessionTimer,
-    SessionTimerParams,
+    TimeSpent,
+    TimeSpentParams,
 )
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
@@ -877,11 +877,11 @@ class Project:
         before: Optional[datetime.datetime] = None,
         workflow_stage_uuid: Union[List[UUID], List[str], UUID, str, None] = None,
         user_email: Union[List[str], str, None] = None,
-    ) -> Iterable[SessionTimer]:
+    ) -> Iterable[TimeSpent]:
         """
         TODO: documentation here
         """
-        params = SessionTimerParams(
+        params = TimeSpentParams(
             project_hash=self.project_hash,
             after=after,
             before=before,
@@ -889,7 +889,7 @@ class Project:
             user_emails=ensure_list(user_email),
         )
 
-        yield from self._client.get_session_timers(params)
+        yield from self._client.get_time_spent(params)
 
     def list_datasets(self) -> Iterable[ProjectDataset]:
         """List all datasets associated with the project.
