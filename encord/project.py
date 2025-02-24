@@ -871,7 +871,7 @@ class Project:
 
         yield from self._client.get_collaborator_timers(params)
 
-    def list_session_timers(
+    def list_time_spent(
         self,
         after: datetime.datetime,
         before: Optional[datetime.datetime] = None,
