@@ -5,7 +5,7 @@ from uuid import UUID
 
 from encord.common.utils import snake_to_camel
 from encord.orm.base_dto import BaseDTO
-from encord.orm.workflow import WorkflowStageType
+from encord.orm.workflow import WorkflowNode, WorkflowStageType
 from encord.utilities.project_user import ProjectUserRole
 
 
@@ -60,6 +60,7 @@ class TimeSpent(BaseDTO):
     dataset_uuid: UUID
     dataset_title: str
     workflow_task_uuid: Optional[UUID] = None
-    workflow_stage_uuid: Optional[UUID] = None
-    workflow_stage_title: Optional[str] = None
-    workflow_stage_type: Optional[WorkflowStageType] = None
+    workflow_stage: WorkflowNode
+    # workflow_stage_uuid: Optional[UUID] = None
+    # workflow_stage_title: Optional[str] = None
+    # workflow_stage_type: Optional[WorkflowStageType] = None
