@@ -882,10 +882,10 @@ class Project:
         TODO: documentation here
         """
         params = TimeSpentParams(
-            project_hash=self.project_hash,
+            project_uuid=self.project_hash,
             after=after,
             before=before,
-            workflow_stages=ensure_uuid_list(workflow_stage_uuid),
+            workflow_stage_uuids=ensure_uuid_list(workflow_stage_uuid),
             user_emails=ensure_list(user_email),
         )
 

@@ -37,13 +37,13 @@ class CollaboratorTimer(BaseDTO):
 
 
 class TimeSpentParams(BaseDTO):
-    project_hash: str
+    project_uuid: str
     after: datetime
     before: Optional[datetime] = None
-    workflow_stages: Optional[List[UUID]] = None
+    workflow_stage_uuids: Optional[List[UUID]] = None
     user_emails: Optional[List[str]] = None
-    datasets: Optional[List[UUID]] = None
-    data_units: Optional[List[UUID]] = None
+    dataset_uuids: Optional[List[UUID]] = None
+    data_unit_uuids: Optional[List[UUID]] = None
     data_unit_title: Optional[str] = None
     page_token: Optional[str] = None
 
@@ -61,6 +61,3 @@ class TimeSpent(BaseDTO):
     dataset_title: str
     workflow_task_uuid: Optional[UUID] = None
     workflow_stage: WorkflowNode
-    # workflow_stage_uuid: Optional[UUID] = None
-    # workflow_stage_title: Optional[str] = None
-    # workflow_stage_type: Optional[WorkflowStageType] = None
