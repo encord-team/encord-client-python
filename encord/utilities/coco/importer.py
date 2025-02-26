@@ -4,18 +4,22 @@ from typing import (
     Optional,
 )
 
+from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
+from encord.objects.coordinates import BoundingBoxCoordinates, PolygonCoordinates
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.objects.ontology_object import Object
 from encord.project import Project
 from encord.utilities.coco.datastructure import (
     CategoryID,
+    CocoAnnotationModel,
     CocoPolygon,
     CocoRLE,
     CocoRootModel,
     FrameIndex,
     ImageID,
 )
+from encord.utilities.coco.polygon_utils import rle_to_polygons_coordinates
 
 logger = logging.getLogger()
 
@@ -87,42 +91,47 @@ def import_coco_labels(
                 f"The provided coco annotation dictionary have annotations with `image_id`s that do not match any image ids in the provided `images` list. Couldn't find image id {annotation.image_id}."
             )
 
-        segmentation = annotation.segmentation
-        width, height = coco_image.width, coco_image.height
-        ins = ont_obj.create_instance()
-        if ont_obj.shape == Shape.BOUNDING_BOX:
-            ins.set_for_frames(
-                coordinates=annotation.bbox.to_encord(img_w=width, img_h=height),
-                frames=frame_idx.frame,
-            )
-            label_row.add_object_instance(ins)
-        elif ont_obj.shape == Shape.BITMASK:
-            if not isinstance(segmentation, CocoRLE):
-                raise ValueError(
-                    f"A mismatch between the format in the `labels_dict` and the expected shape in the ontology object with feature node hash {ont_obj.feature_node_hash} was detected for annotation id {annotation.id}. Expected format was an RLE."
-                )
-            ins.set_for_frames(coordinates=segmentation.to_encord(), frames=frame_idx.frame)
-            label_row.add_object_instance(ins)
-        elif ont_obj.shape == Shape.POLYGON:
-            if not isinstance(segmentation, CocoPolygon) or (
-                isinstance(segmentation, list) and isinstance(segmentation[0], CocoPolygon)
-            ):
-                raise ValueError(
-                    f"A mismatch between the format in the `labels_dict` and the expected shape in the ontology object with feature node hash {ont_obj.feature_node_hash} was detected for annotation id {annotation.id}. Expected format was a polygon or a list of polygons. {segmentation}"
-                )
-            if isinstance(segmentation, CocoPolygon):
-                segmentation = [segmentation]
-
-            for poly in segmentation:
-                ins.set_for_frames(
-                    coordinates=poly.to_encord(img_w=width, img_h=height),
-                    frames=frame_idx.frame,
-                )
-                label_row.add_object_instance(ins)
-                ins = ont_obj.create_instance()
-        else:
-            raise ValueError(f"Ontology objects of shape {ont_obj.shape} are not supported for coco import")
+        coordinates = coco_annotation_to_encord_coordinates(
+            coco_annotation=annotation,
+            shape=ont_obj.shape,
+            width=coco_image.width,
+            height=coco_image.height,
+        )
+        obj_instance = ont_obj.create_instance()
+        obj_instance.set_for_frames(coordinates=coordinates, frames=frame_idx.frame)
+        label_row.add_object_instance(obj_instance)
 
     with project.create_bundle() as bundle:
         for label_row in label_rows.values():
             label_row.save(bundle=bundle)
+
+
+def coco_annotation_to_encord_coordinates(
+    coco_annotation: CocoAnnotationModel,
+    shape: Shape,
+    width: int,
+    height: int,
+) -> PolygonCoordinates | BoundingBoxCoordinates | BitmaskCoordinates:
+    if shape == Shape.BOUNDING_BOX:
+        return coco_annotation.bbox.to_encord(img_w=width, img_h=height)
+    elif shape == Shape.BITMASK:
+        if not isinstance(coco_annotation.segmentation, CocoRLE):
+            raise ValueError(
+                f"Mismatch in `labels_dict` for annotation id {coco_annotation.id}. Expected format was an RLE."
+            )
+        return coco_annotation.segmentation.to_bitmask()
+    elif shape == Shape.POLYGON:
+        if isinstance(coco_annotation.segmentation, CocoPolygon):
+            return coco_annotation.segmentation.to_encord(img_w=width, img_h=height)
+        elif isinstance(coco_annotation.segmentation, CocoRLE):
+            return rle_to_polygons_coordinates(
+                counts=coco_annotation.segmentation.counts,
+                height=coco_annotation.segmentation.size.height,
+                width=coco_annotation.segmentation.size.width,
+            )
+        else:
+            raise ValueError(
+                f"Mismatch in `labels_dict` for annotation id {coco_annotation.id}. Expected format was a list of polygons or RLE string."
+            )
+    else:
+        raise ValueError(f"Ontology objects of shape {shape} are not supported for coco import")
