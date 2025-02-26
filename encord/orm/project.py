@@ -381,3 +381,7 @@ class ProjectFilterParams(BaseDTO):
     edited_before: Optional[Union[str, datetime.datetime]] = None
     edited_after: Optional[Union[str, datetime.datetime]] = None
     include_org_access: bool = False
+
+
+class ActivePredictionPayload(BaseDTO):
+    label_branch_name: str
