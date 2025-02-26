@@ -3,8 +3,7 @@ from unittest.mock import MagicMock
 
 from pytest import fixture
 
-from encord.orm.workflow import Workflow as WorkflowDTO
-from encord.orm.workflow import WorkflowNode, WorkflowStageType
+from encord.orm.workflow import WorkflowDTO, WorkflowNode, WorkflowStageType
 from encord.workflow import Workflow
 
 WORKFLOW_ANNOTATION_UUID = uuid.uuid4()
