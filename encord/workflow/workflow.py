@@ -19,8 +19,7 @@ from typing_extensions import Annotated
 from encord.http.v2.api_client import ApiClient
 from encord.objects.utils import checked_cast
 from encord.orm.base_dto import Field
-from encord.orm.workflow import Workflow as WorkflowDTO
-from encord.orm.workflow import WorkflowAgentNode, WorkflowNode, WorkflowStageType
+from encord.orm.workflow import WorkflowAgentNode, WorkflowDTO, WorkflowNode, WorkflowStageType
 from encord.workflow.common import WorkflowClient
 from encord.workflow.stages.agent import AgentPathway, AgentStage
 from encord.workflow.stages.annotation import AnnotationStage
@@ -35,7 +34,7 @@ WorkflowStage = Annotated[
 ]
 
 
-def _construct_stage(workflow_client: WorkflowClient, node: WorkflowNode) -> WorkflowStage:
+def _construct_stage(workflow_client: WorkflowClient, node: Union[WorkflowAgentNode, WorkflowNode]) -> WorkflowStage:
     if node.stage_type == WorkflowStageType.ANNOTATION:
         return AnnotationStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
     elif node.stage_type == WorkflowStageType.REVIEW:

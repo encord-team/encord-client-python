@@ -4,7 +4,7 @@ from uuid import UUID
 
 from typing_extensions import Annotated
 
-from encord.orm.base_dto import BaseDTO, Discriminator, Field, Tag, dto_validator
+from encord.orm.base_dto import BaseDTO, dto_validator
 
 
 class WorkflowAction(str, Enum):
@@ -33,13 +33,23 @@ class LabelWorkflowGraphNode:
 
 
 class LabelWorkflowGraphNodePayload(BaseDTO):
-    action: str
+    action: WorkflowAction
 
 
-class WorkflowNode(BaseDTO):
+class BaseWorkflowNode(BaseDTO):
     stage_type: WorkflowStageType
     uuid: UUID
     title: str
+
+
+class WorkflowNode(BaseWorkflowNode):
+    @dto_validator(mode="before")
+    def check_stage_type_not_agent(cls, v: Any) -> Any:
+        # Handle creation of Object from dictionary or from cls() call
+        stage_type = v.stage_type if isinstance(v, BaseWorkflowNode) else (v.get("stageType") or v.get("stage_type"))
+        if stage_type == WorkflowStageType.AGENT:
+            raise ValueError("stage_type cannot be AGENT for WorkflowNode")
+        return v
 
 
 class AgentNodePathway(BaseDTO):
@@ -48,22 +58,25 @@ class AgentNodePathway(BaseDTO):
     destination_uuid: UUID
 
 
-class WorkflowAgentNode(WorkflowNode):
-    stage_type: WorkflowStageType = WorkflowStageType.AGENT
+class WorkflowAgentNode(BaseWorkflowNode):
+    @dto_validator(mode="before")
+    def check_stage_type_agent(cls, v: Any) -> Any:
+        # Handle creation of Object from dictionary or from cls() call
+        stage_type = v.stage_type if isinstance(v, BaseWorkflowNode) else (v.get("stageType") or v.get("stage_type"))
+        if stage_type != WorkflowStageType.AGENT:
+            raise ValueError("stage_type must be AGENT for WorkflowNode")
+        return v
+
     pathways: List[AgentNodePathway]
 
-
-def _get_discriminator_value(model: Any) -> str:
-    stage_type = model.stage_type if isinstance(model, WorkflowNode) else model["stageType"]
-    if stage_type == WorkflowStageType.AGENT:
-        return "AGENT"
-    return "GENERIC"
+    # def _get_discriminator_value(model: Any) -> str:
+    # stage_type = model.stage_type if isinstance(model, BaseWorkflowNode) else model["stageType"]
 
 
-class Workflow(BaseDTO):
-    stages: List[
-        Annotated[
-            Union[Annotated[WorkflowNode, Tag("GENERIC")], Annotated[WorkflowAgentNode, Tag("AGENT")]],
-            Discriminator(_get_discriminator_value),
-        ]
-    ]
+#     if stage_type == WorkflowStageType.AGENT:
+#         return "AGENT"
+#     return "GENERIC"
+
+
+class WorkflowDTO(BaseDTO):
+    stages: List[Union[WorkflowAgentNode, WorkflowNode]]
