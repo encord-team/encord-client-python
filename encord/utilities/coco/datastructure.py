@@ -81,10 +81,14 @@ class PointTuple(NamedTuple):
 
 
 class CocoPolygon(BaseDTO):
-    values: List[PointTuple]
+    values: List[List[PointTuple]]
 
     def to_encord(self, img_w: int, img_h: int) -> PolygonCoordinates:
-        return PolygonCoordinates(values=[PointCoordinate(x=p.x / img_w, y=p.y / img_h) for p in self.values])
+        # The COCO format does not specify how to handle holes vs. disjoint polygons. We assume that each polygon in the list is disjoint, and that each polygon has a single contour.
+        polygons: List[List[List[PointCoordinate]]] = []
+        for polygon in self.values:
+            polygons.append([[PointCoordinate(x=p.x / img_w, y=p.y / img_h) for p in polygon]])
+        return PolygonCoordinates(polygons=polygons)
 
 
 class CocoRLE(BaseDTO):
@@ -116,7 +120,7 @@ class CocoRLE(BaseDTO):
             rle = _value
         return rle
 
-    def to_encord(self) -> BitmaskCoordinates:
+    def to_bitmask(self) -> BitmaskCoordinates:
         encoded_bitmask = BitmaskCoordinates.EncodedBitmask(
             top=0, left=0, height=self.size.height, width=self.size.width, rle_string=self.counts
         )
@@ -131,15 +135,19 @@ class CocoAnnotationModel(BaseDTO):
             # Generate a polygon from the existing bounding box
             bbox = CocoBoundingBox(*_value["bbox"])
             coords = [
-                (bbox.x, bbox.y),
-                (bbox.x, bbox.y + bbox.h),
-                (bbox.x + bbox.w, bbox.y + bbox.h),
-                (bbox.x + bbox.w, bbox.y),
+                [
+                    (bbox.x, bbox.y),
+                    (bbox.x, bbox.y + bbox.h),
+                    (bbox.x + bbox.w, bbox.y + bbox.h),
+                    (bbox.x + bbox.w, bbox.y),
+                ]
             ]
             _value["segmentation"] = CocoPolygon.from_dict({"values": coords})
         elif isinstance(segm, list) and len(segm) > 0 and isinstance(segm[0], list):
-            coords = [(segm[0][i], segm[0][i + 1]) for i in range(0, len(segm[0]), 2)]
-            poly = CocoPolygon.from_dict({"values": coords})
+            values: List[List[PointTuple]] = []
+            for polygon in segm:
+                values.append([PointTuple(polygon[i], polygon[i + 1]) for i in range(0, len(polygon), 2)])
+            poly = CocoPolygon.from_dict({"values": values})
             _value["segmentation"] = poly
         elif isinstance(segm, dict) and "counts" in segm:
             rle = CocoRLE.from_dict(segm)

@@ -242,6 +242,17 @@ class PolygonCoordinates:
 
         return PolygonCoordinates(values=values, polygons=polygons)
 
+    @staticmethod
+    def from_polygons_list(flat_polygons: list[list[list[float]]]) -> "PolygonCoordinates":
+        polygons: list[list[list[PointCoordinate]]] = []
+        for polygon in flat_polygons:
+            contours: list[list[PointCoordinate]] = []
+            for contour in polygon:
+                contours.append(flat_to_pnt_coordinates(contour))
+            polygons.append(contours)
+
+        return PolygonCoordinates(polygons=polygons)
+
     def to_dict(
         self, kind: PolygonCoordsToDict | str = PolygonCoordsToDict.single_polygon
     ) -> dict | list[list[list[float]]]:
