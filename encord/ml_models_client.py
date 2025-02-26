@@ -223,6 +223,7 @@ class MlModelsClient:
             features_mapping: Maps project UUIDs to mappings between ontology features and model features.
                 This complex structure allows training examples for model features to be sourced from multiple
                 projects with different ontologies. For example:
+                ```json
                 {
                     project_uuid_0: {
                         "ontology_0_feature_0": ["model_feature_0"],
@@ -232,6 +233,7 @@ class MlModelsClient:
                         "ontology_1_feature_0": ["model_feature_0", "model_feature_1"]
                     }
                 }
+                ```
                 In this case:
                 - Training examples for model_feature_0 will come from:
                     - project_uuid_0's ontology_0_feature_0
@@ -420,10 +422,12 @@ class MlModelsClient:
         Args:
             project_uuid: UUID of the project to attach the model to
             features_mapping: Maps model features to project ontology features. For example:
+                ```json
                 {
                     "model_feature_0": "ontology_feature_hash_1",
                     "model_feature_1": "ontology_feature_hash_2"
                 }
+                ```
                 This mapping connects each model feature (e.g. "car" detection) to the corresponding
                 feature in the project's ontology. Since different projects may use different
                 ontologies with different feature hashes for the same concept, this mapping allows
@@ -485,10 +489,12 @@ class MlModelsClient:
             project_uuid: UUID of the project
             project_model_uuid: UUID identifying this specific model attachment to the project
             features_mapping: Maps model features to project ontology features. For example:
+                ```json
                 {
                     "model_feature_0": "new_ontology_feature_hash_1",
                     "model_feature_1": "new_ontology_feature_hash_2"
                 }
+                ```
                 This lets you remap model features to different ontology features - useful
                 when the project's ontology has changed or if you want the model to detect
                 different classes than it was originally mapped to.
