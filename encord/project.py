@@ -873,18 +873,27 @@ class Project:
 
     def list_time_spent(
         self,
-        after: datetime.datetime,
-        before: Optional[datetime.datetime] = None,
+        start: datetime.datetime,
+        end: Optional[datetime.datetime] = None,
         workflow_stage_uuid: Union[List[UUID], List[str], UUID, str, None] = None,
         user_email: Union[List[str], str, None] = None,
     ) -> Iterable[TimeSpent]:
         """
-        TODO: documentation here
+        Get time spent by collaborators on a task per day. If a task spans multiple days, the time spent on each day will be returned separately.
+
+        Args:
+            start: The beginning of the period of interest.
+            end: The end of the period of interest.
+            workflow_stage_uuid: The UUID or list of UUIDs of the workflow stages of interest.
+            user_email: The email or list of emails of the users of interest.
+
+        Returns:
+            Iterable[TimeSpent]: Information about the time spent by a collaborator on a task per day.
         """
         params = TimeSpentParams(
             project_uuid=self.project_hash,
-            after=after,
-            before=before,
+            after=start,
+            before=end,
             workflow_stage_uuids=ensure_uuid_list(workflow_stage_uuid),
             user_emails=ensure_list(user_email),
         )

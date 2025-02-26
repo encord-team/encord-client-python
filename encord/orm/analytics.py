@@ -43,8 +43,8 @@ class TimeSpentParams(BaseDTO):
     workflow_stage_uuids: Optional[List[UUID]] = None
     user_emails: Optional[List[str]] = None
     dataset_uuids: Optional[List[UUID]] = None
-    data_unit_uuids: Optional[List[UUID]] = None
-    data_unit_title: Optional[str] = None
+    data_uuids: Optional[List[UUID]] = None
+    data_title: Optional[str] = None
     page_token: Optional[str] = None
 
 
