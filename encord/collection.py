@@ -44,8 +44,7 @@ log = logging.getLogger(__name__)
 
 
 class Collection:
-    """
-    Represents collections in Index.
+    """Represents collections in Index.
     Collections are a logical grouping of data items that can be used to
     create datasets and perform various data curation flows.
     """
@@ -56,8 +55,7 @@ class Collection:
 
     @property
     def uuid(self) -> UUID:
-        """
-        Get the collection unique identifier (UUID).
+        """Get the collection unique identifier (UUID).
 
         Returns:
             UUID: The collection UUID.
@@ -66,8 +64,7 @@ class Collection:
 
     @property
     def name(self) -> str:
-        """
-        Get the collection name.
+        """Get the collection name.
 
         Returns:
             str: The collection name.
@@ -76,8 +73,7 @@ class Collection:
 
     @property
     def description(self) -> Optional[str]:
-        """
-        Get the collection description.
+        """Get the collection description.
 
         Returns:
             Optional[str]: The collection description, or None if not available.
@@ -86,8 +82,7 @@ class Collection:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """
-        Get the collection creation timestamp.
+        """Get the collection creation timestamp.
 
         Returns:
             Optional[datetime]: The timestamp when the collection was created, or None if not available.
@@ -96,8 +91,7 @@ class Collection:
 
     @property
     def last_edited_at(self) -> Optional[datetime]:
-        """
-        Get the collection last edit timestamp.
+        """Get the collection last edit timestamp.
 
         Returns:
             Optional[datetime]: The timestamp when the collection was last edited, or None if not available.
@@ -106,8 +100,7 @@ class Collection:
 
     @property
     def top_level_folder_uuid(self) -> UUID:
-        """
-        Get the uuid of the top level folder that the collection is on.
+        """Get the uuid of the top level folder that the collection is on.
 
         Returns:
             UUID: the uuid of the top level folder that the collection is on
@@ -167,8 +160,8 @@ class Collection:
         return orm_item
 
     def update_collection(self, name: Optional[str] = None, description: Optional[str] = None) -> None:
-        """
-        Update the collection's name and/or description.
+        """Update the collection's name and/or description.
+
         Args:
            name (Optional[str]): The new name for the collection.
            description (Optional[str]): The new description for the collection.
@@ -185,10 +178,11 @@ class Collection:
         self,
         page_size: Optional[int] = None,
     ) -> Iterator[StorageItem]:
-        """
-        List storage items in the collection.
+        """List storage items in the collection.
+
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
+
         Returns:
             Iterator[StorageItem]: An iterator containing storage items in the collection.
         """
@@ -204,10 +198,11 @@ class Collection:
     def list_items_include_inaccessible(
         self, page_size: Optional[int] = None
     ) -> Iterator[Union[StorageItem, StorageItemInaccessible]]:
-        """
-        List storage items in the collection, including those that are inaccessible.
+        """List storage items in the collection, including those that are inaccessible.
+
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
+
         Returns:
             Iterator[Union[StorageItem, StorageItemInaccessible]]: An iterator containing both accessible
             and inaccessible storage items in the collection.
@@ -227,12 +222,12 @@ class Collection:
                 yield StorageItemInaccessible(orm_item=item)
 
     def add_items(self, storage_item_uuids: Sequence[Union[UUID, str]]) -> CollectionBulkItemResponse:
-        """
-        Add storage items to the collection.
+        """Add storage items to the collection.
 
         Args:
             storage_item_uuids (Sequence[Union[UUID, str]]): The list of storage item UUIDs to be added.
             Either UUIDs or string representations of UUIDs are accepted.
+
         Returns:
             CollectionBulkItemResponse: The response after adding items to the collection.
         """
@@ -246,12 +241,12 @@ class Collection:
         return res
 
     def remove_items(self, storage_item_uuids: Sequence[Union[UUID, str]]) -> CollectionBulkItemResponse:
-        """
-        Remove storage items from the collection.
+        """Remove storage items from the collection.
 
         Args:
             storage_item_uuids (Sequence[Union[UUID, str]]): The list of storage item UUIDs to be removed.
             Either UUIDs or string representations of UUIDs are accepted.
+
         Returns:
             CollectionBulkItemResponse: The response after removing items from the collection.
         """
@@ -265,8 +260,7 @@ class Collection:
         return res
 
     def add_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
-        """
-         Async operation to add storage items matching a filter preset to the collection.
+        """Async operation to add storage items matching a filter preset to the collection.
 
         Args:
              filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
@@ -289,8 +283,7 @@ class Collection:
         )
 
     def remove_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
-        """
-        Async operation to remove storage items matching a filter preset from the collection.
+        """Async operation to remove storage items matching a filter preset from the collection.
 
         Args:
             filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
@@ -314,8 +307,7 @@ class Collection:
 
 
 class ProjectCollection:
-    """
-    Represents Active collections inside a Project.
+    """Represents Active collections inside a Project.
     Active Project Collections are a logical grouping of frames (images or video frames) or
     annotations (objects and classifications) that can be used to perform various data curation flows.
     """
@@ -328,15 +320,14 @@ class ProjectCollection:
         orm_collection: OrmProjectCollection,
     ):
         self._project_uuid = project_uuid
-        self._client = project_client._get_api_client()
+        self._client = project_client._api_client
         self._project_client = project_client
         self._ontology = ontology
         self._collection_instance = orm_collection
 
     @property
     def uuid(self) -> UUID:
-        """
-        Get the collection unique identifier (UUID).
+        """Get the collection unique identifier (UUID).
 
         Returns:
             UUID: The collection UUID.
@@ -345,8 +336,7 @@ class ProjectCollection:
 
     @property
     def name(self) -> str:
-        """
-        Get the collection name.
+        """Get the collection name.
 
         Returns:
             str: The collection name.
@@ -355,8 +345,7 @@ class ProjectCollection:
 
     @property
     def description(self) -> Optional[str]:
-        """
-        Get the collection description.
+        """Get the collection description.
 
         Returns:
             Optional[str]: The collection description, or None if not available.
@@ -365,8 +354,7 @@ class ProjectCollection:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """
-        Get the collection creation timestamp.
+        """Get the collection creation timestamp.
 
         Returns:
             Optional[datetime]: The timestamp when the collection was created, or None if not available.
@@ -375,8 +363,7 @@ class ProjectCollection:
 
     @property
     def last_edited_at(self) -> Optional[datetime]:
-        """
-        Get the collection last edit timestamp.
+        """Get the collection last edit timestamp.
 
         Returns:
             Optional[datetime]: The timestamp when the collection was last edited, or None if not available.
@@ -385,8 +372,8 @@ class ProjectCollection:
 
     @property
     def collection_type(self) -> ProjectCollectionType:
-        """
-        Get the type of the collection.
+        """Get the type of the collection.
+
         Returns:
             ProjectCollectionType: The type of the collection.
         """
@@ -394,8 +381,8 @@ class ProjectCollection:
 
     @property
     def project_hash(self) -> UUID:
-        """
-        Get the project hash of the collection.
+        """Get the project hash of the collection.
+
         Returns:
             UUID: The project hash of the collection.
         """
@@ -410,7 +397,7 @@ class ProjectCollection:
     ) -> "ProjectCollection":
         params = GetProjectCollectionParams(uuids=[collection_uuid])
         orm_items = list(
-            project_client._get_api_client().get_paged_iterator(
+            project_client._api_client.get_paged_iterator(
                 f"active/{project_uuid}/collections",
                 params=params,
                 result_type=OrmProjectCollection,
@@ -434,7 +421,7 @@ class ProjectCollection:
         page_size: Optional[int] = None,
     ) -> Iterator["ProjectCollection"]:
         params = GetProjectCollectionParams(projectHash=project_uuid, uuids=collection_uuids, pageSize=page_size)
-        paged_collections = project_client._get_api_client().get_paged_iterator(
+        paged_collections = project_client._api_client.get_paged_iterator(
             f"active/{project_uuid}/collections",
             params=params,
             result_type=OrmProjectCollection,
@@ -473,8 +460,8 @@ class ProjectCollection:
         )
 
     def update_collection(self, name: Optional[str] = None, description: Optional[str] = None) -> None:
-        """
-        Update the collection's name and/or description.
+        """Update the collection's name and/or description.
+
         Args:
            name (Optional[str]): The new name for the collection.
            description (Optional[str]): The new description for the collection.
@@ -491,10 +478,11 @@ class ProjectCollection:
         self,
         page_size: Optional[int] = None,
     ) -> Iterator[Tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]:
-        """
-        List frames in the collection.
+        """List frames in the collection.
+
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
+
         Returns:
             Iterator[Tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]: An list of tuples containing label
             row and corresponding frame instances in the collection.
@@ -520,10 +508,11 @@ class ProjectCollection:
         self,
         page_size: Optional[int] = None,
     ) -> Iterator[Tuple[LabelRowV2, List[ProjectLabelCollectionInstance]]]:
-        """
-        List annotations in the collection.
+        """List annotations in the collection.
+
         Args:
             page_size (Optional[int]): The number of items to fetch per page.
+
         Returns:
             Iterator[Tuple[LabelRowV2, List[ProjectLabelCollectionInstance]]]: An list of tuples containing label
             row and corresponding label instances in the collection.
@@ -548,11 +537,11 @@ class ProjectCollection:
     def add_items(
         self, items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
     ) -> ProjectCollectionBulkItemResponse:
-        """
-        Add data items to the collection.
+        """Add data items to the collection.
 
         Args:
             items (Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]): The list of data items to be added.
+
         Returns:
             ProjectCollectionBulkItemResponse: The response after adding items to the collection.
         """
@@ -567,11 +556,11 @@ class ProjectCollection:
     def remove_items(
         self, items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
     ) -> ProjectCollectionBulkItemResponse:
-        """
-        Remove data items from the collection.
+        """Remove data items from the collection.
 
         Args:
             items (Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]): The list of data items to be removed.
+
         Returns:
             ProjectCollectionBulkItemResponse: The response after removing items from the collection.
         """
@@ -584,8 +573,7 @@ class ProjectCollection:
         return res
 
     def add_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
-        """
-         Async operation to add storage items matching a filter preset to the collection.
+        """Async operation to add storage items matching a filter preset to the collection.
 
         Args:
              filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
@@ -608,8 +596,7 @@ class ProjectCollection:
         )
 
     def remove_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
-        """
-        Async operation to remove storage items matching a filter preset from the collection.
+        """Async operation to remove storage items matching a filter preset from the collection.
 
         Args:
             filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.

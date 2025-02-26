@@ -9,21 +9,23 @@ from encord.exceptions import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.orm.filter_preset import (
+    ActiveCreatePresetPayload,
+    ActiveFilterPresetDefinition,
+    ActiveUpdatePresetPayload,
     CreatePresetParams,
-    CreatePresetPayload,
-    FilterPresetDefinition,
     GetPresetParams,
     GetPresetsResponse,
     GetProjectFilterPresetParams,
-    UpdatePresetPayload,
+    IndexCreatePresetPayload,
+    IndexFilterPresetDefinition,
+    IndexUpdatePresetPayload,
 )
 from encord.orm.filter_preset import FilterPreset as OrmFilterPreset
 from encord.orm.filter_preset import ProjectFilterPreset as OrmProjectFilterPreset
 
 
 class FilterPreset:
-    """
-    Represents preset in Index.
+    """Represents preset in Index.
     Preset is a group of filters persisted which can be re-used for faster data curation.
     """
 
@@ -33,8 +35,7 @@ class FilterPreset:
 
     @property
     def uuid(self) -> UUID:
-        """
-        Get the preset uuid (i.e. the preset ID).
+        """Get the preset uuid (i.e. the preset ID).
 
         Returns:
             str: The preset uuid.
@@ -43,8 +44,7 @@ class FilterPreset:
 
     @property
     def name(self) -> str:
-        """
-        Get the preset name
+        """Get the preset name
 
         Returns:
             str: The preset name.
@@ -53,8 +53,7 @@ class FilterPreset:
 
     @property
     def description(self) -> Optional[str]:
-        """
-        Get the preset description
+        """Get the preset description
 
         Returns:
             Optional[str]: The preset description.
@@ -63,8 +62,7 @@ class FilterPreset:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """
-        Get the preset creation timestamp
+        """Get the preset creation timestamp
 
         Returns:
             Optional[datetime]: The preset creation timestamp.
@@ -73,8 +71,7 @@ class FilterPreset:
 
     @property
     def last_updated_at(self) -> Optional[datetime]:
-        """
-        Get the preset last update timestamp
+        """Get the preset last update timestamp
 
         Returns:
             Optional[datetime]: The preset last update timestamp.
@@ -91,7 +88,7 @@ class FilterPreset:
         )
         if len(orm_item.results) > 0:
             return FilterPreset(api_client, orm_item.results[0])
-        raise AuthorisationError("Collection not found")
+        raise AuthorisationError("Preset not found")
 
     @staticmethod
     def _get_presets(
@@ -130,13 +127,14 @@ class FilterPreset:
         )
 
     @staticmethod
-    def _create_preset(api_client: ApiClient, name: str, *, filter_preset_json: dict) -> UUID:
-        filter_preset = FilterPresetDefinition.from_dict(filter_preset_json)
+    def _create_preset(api_client: ApiClient, name: str, description: str = "", *, filter_preset_json: dict) -> UUID:
+        filter_preset = IndexFilterPresetDefinition.from_dict(filter_preset_json)
         if not filter_preset.local_filters and not filter_preset.global_filters:
             raise EncordException("We require there to be a non-zero number of filters in a preset")
-        payload = CreatePresetPayload(
+        payload = IndexCreatePresetPayload(
             name=name,
             filter_preset_json=filter_preset.to_dict(),
+            description=description,
         )
         return api_client.post(
             "index/presets",
@@ -145,16 +143,18 @@ class FilterPreset:
             result_type=UUID,
         )
 
-    def get_filter_preset_json(self) -> FilterPresetDefinition:
+    def get_filter_preset_json(self) -> IndexFilterPresetDefinition:
         return self._client.get(
             f"index/presets/{self._preset_instance.uuid}",
             params=None,
-            result_type=FilterPresetDefinition,
+            result_type=IndexFilterPresetDefinition,
         )
 
-    def update_preset(self, name: Optional[str] = None, filter_preset_json: Optional[dict] = None) -> None:
-        """
-        Update the preset's definition.
+    def update_preset(
+        self, name: Optional[str] = None, description: Optional[str] = None, filter_preset_json: Optional[dict] = None
+    ) -> None:
+        """Update the preset's definition.
+
         Args:
            name (Optional[str]): The new name for the preset.
            description (Optional[str]): The new description for the preset.
@@ -162,25 +162,25 @@ class FilterPreset:
         """
         filters_definition = None
         if isinstance(filter_preset_json, dict):
-            filters_definition = FilterPresetDefinition.from_dict(filter_preset_json)
-        elif isinstance(filter_preset_json, FilterPresetDefinition):
+            filters_definition = IndexFilterPresetDefinition.from_dict(filter_preset_json)
+        elif isinstance(filter_preset_json, IndexFilterPresetDefinition):
             filters_definition = filter_preset_json
         if filters_definition:
             if not filters_definition.local_filters and not filters_definition.global_filters:
                 raise EncordException("We require there to be a non-zero number of filters in a preset")
-        payload = UpdatePresetPayload(name=name, filter_preset=filters_definition)
+        payload = IndexUpdatePresetPayload(name=name, description=description, filter_preset=filters_definition)
         self._client.patch(
             f"index/presets/{self.uuid}",
             params=None,
             payload=payload,
             result_type=None,
         )
+        self._preset_instance.name = name or self.name
+        self._preset_instance.description = description or self.description
 
 
 class ProjectFilterPreset:
-    """
-    Represents Active filter presets.
-    """
+    """Represents Active filter presets."""
 
     def __init__(
         self,
@@ -194,8 +194,7 @@ class ProjectFilterPreset:
 
     @property
     def uuid(self) -> UUID:
-        """
-        Get the filter preset unique identifier (UUID).
+        """Get the filter preset unique identifier (UUID).
 
         Returns:
             UUID: The filter preset UUID.
@@ -204,8 +203,7 @@ class ProjectFilterPreset:
 
     @property
     def name(self) -> str:
-        """
-        Get the filter preset name.
+        """Get the filter preset name.
 
         Returns:
             str: The collection name.
@@ -214,8 +212,7 @@ class ProjectFilterPreset:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """
-        Get the filter preset creation timestamp.
+        """Get the filter preset creation timestamp.
 
         Returns:
             Optional[datetime]: The timestamp when the filter preset was created, or None if not available.
@@ -224,8 +221,7 @@ class ProjectFilterPreset:
 
     @property
     def updated_at(self) -> Optional[datetime]:
-        """
-        Get the filter preset last edit timestamp.
+        """Get the filter preset last edit timestamp.
 
         Returns:
             Optional[datetime]: The timestamp when the filter preset was last edited, or None if not available.
@@ -234,8 +230,8 @@ class ProjectFilterPreset:
 
     @property
     def project_hash(self) -> UUID:
-        """
-        Get the project hash of the filter preset.
+        """Get the project hash of the filter preset.
+
         Returns:
             UUID: The project hash of the filter preset.
         """
@@ -261,7 +257,7 @@ class ProjectFilterPreset:
                 client=client,
                 orm_filter_preset=orm_items[0],
             )
-        raise AuthorisationError("No collection found")
+        raise AuthorisationError("No Project preset found")
 
     @staticmethod
     def _list_filter_presets(
@@ -291,27 +287,29 @@ class ProjectFilterPreset:
             result_type=None,
         )
 
-    def get_filter_preset_json(self) -> FilterPresetDefinition:
+    def get_filter_preset_json(self) -> ActiveFilterPresetDefinition:
         return self._client.get(
             f"active/{self._project_uuid}/presets/{self._filter_preset_instance.preset_uuid}/raw",
             params=None,
-            result_type=FilterPresetDefinition,
+            result_type=ActiveFilterPresetDefinition,
         )
 
-    def update_preset(self, name: Optional[str] = None, filter_preset: Optional[FilterPresetDefinition] = None) -> None:
+    def update_preset(
+        self, name: Optional[str] = None, filter_preset: Optional[ActiveFilterPresetDefinition] = None
+    ) -> None:
         if name is None and filter_preset is None:
             return
-        payload = UpdatePresetPayload(name=name, filter_preset=filter_preset)
+        payload = ActiveUpdatePresetPayload(name=name, filter_preset=filter_preset)
         self._client.patch(
             f"active/{self.project_hash}/presets/{self.uuid}", params=None, payload=payload, result_type=None
         )
 
     @staticmethod
     def _create_filter_preset(
-        client: ApiClient, project_uuid: UUID, name: str, filter_preset: FilterPresetDefinition
+        client: ApiClient, project_uuid: UUID, name: str, filter_preset: ActiveFilterPresetDefinition
     ) -> UUID:
         if not filter_preset.local_filters and not filter_preset.global_filters:
             raise EncordException("We require there to be a non-zero number of filters in a preset for creation")
-        payload = CreatePresetPayload(name=name, filter_preset_json=filter_preset.to_dict())
+        payload = ActiveCreatePresetPayload(name=name, filter_preset_json=filter_preset.to_dict())
         orm_resp = client.post(f"active/{project_uuid}/presets", params=None, payload=payload, result_type=UUID)
         return orm_resp

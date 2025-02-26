@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Workflow"
 slug: "sdk-ref-workflows"
 hidden: false
@@ -90,8 +89,7 @@ class Workflow:
         uuid: Optional[UUID | str] = None,
         type_: Optional[Type[WorkflowStageT]] = None,
     ) -> WorkflowStageT:
-        """
-        **Params**
+        """**Params**
 
         - name: Name of the stage.
         - uuid: Unique identifier for the stage.
@@ -99,7 +97,7 @@ class Workflow:
 
         **Returns**
 
-        Returns a list of Workflow stages (`type_`) from non-Consensus and Consensus Projects.
+        Returns a Workflow stage (`type_`) from non-Consensus and Consensus Projects.
         """
         for stage in self.stages:
             if (uuid is not None and stage.uuid == _ensure_uuid(uuid)) or (name is not None and stage.title == name):

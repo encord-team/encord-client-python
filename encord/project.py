@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Project"
 slug: "sdk-ref-project"
 hidden: false
@@ -17,7 +16,6 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
-from encord.constants.model import AutomationModels, Device
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
@@ -32,7 +30,7 @@ from encord.orm.analytics import (
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
-from encord.orm.filter_preset import FilterPresetDefinition
+from encord.orm.filter_preset import ActiveFilterPresetDefinition
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
@@ -42,7 +40,6 @@ from encord.orm.label_row import (
     LabelStatus,
     ShadowDataState,
 )
-from encord.orm.model import ModelConfiguration, ModelTrainingWeights, TrainingMetadata
 from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectDataset, ProjectDTO, ProjectType
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
@@ -55,65 +52,53 @@ from encord.workflow import Workflow
 
 
 class Project:
-    """
-    Access project related data and manipulate the project.
-    """
+    """Access project related data and manipulate the project."""
 
     def __init__(
         self,
         client: EncordClientProject,
         project_instance: ProjectDTO,
-        ontology: Ontology,
+        ontology: Optional[Ontology],
         api_client: ApiClient,
     ):
         self._client = client
         self._project_instance = project_instance
-        self._ontology = ontology
+        self._ontology_internal = ontology
+        self._api_client = api_client
 
         if project_instance.workflow:
             self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
 
     @property
     def project_hash(self) -> str:
-        """
-        Get the project hash (i.e. the Project ID).
-        """
+        """Get the project hash (i.e. the Project ID)."""
         # Keeping the interface backward compatible, so converting UUID to str for now
         return str(self._project_instance.project_hash)
 
     @property
     def title(self) -> str:
-        """
-        Get the title of the project.
-        """
+        """Get the title of the project."""
         return self._project_instance.title
 
     @property
     def description(self) -> str:
-        """
-        Get the description of the project.
-        """
+        """Get the description of the project."""
         return self._project_instance.description
 
     @property
     def created_at(self) -> datetime.datetime:
-        """
-        Get the time the project was created at.
-        """
+        """Get the time the project was created at."""
         return self._project_instance.created_at
 
     @property
     def last_edited_at(self) -> datetime.datetime:
-        """
-        Get the time the project was last edited at.
-        """
+        """Get the time the project was last edited at."""
         return self._project_instance.last_edited_at
 
     @property
     @deprecated(version="0.1.95", alternative=".ontology_structure")
     def ontology(self) -> Dict[str, Any]:
-        """
-        Get the ontology of the project.
+        """Get the ontology of the project.
 
         DEPRECATED: Prefer using the :meth:`encord.Project.ontology_structure` method.
         This method returns the same structure as :meth:`encord.Project.ontology_structure`, just in
@@ -123,23 +108,32 @@ class Project:
 
     @property
     def ontology_hash(self) -> str:
-        """
-        Get the ontology hash of the project's ontology.
-        """
-        return self._ontology.ontology_hash
+        """Get the ontology hash of the project's ontology."""
+        return self._project_instance.ontology_hash
 
     @property
     def ontology_structure(self) -> OntologyStructure:
-        """
-        Get the ontology structure of the project's ontology.
-        """
+        """Get the ontology structure of the project's ontology."""
         return self._ontology.structure
+
+    @property
+    def user_role(self) -> Optional[ProjectUserRole]:
+        """Get the current user's role in the project.
+
+        This may return `None` if the user is an organisational admin and has accessed the project e.g. using
+        `include_org_access=True` of :meth:`encord.user_client.UserClient.list_projects`.
+        """
+        return self._project_instance.user_role
+
+    @property
+    def source_projects(self) -> Optional[List[str]]:
+        """Get the source projects for a Training project. Returns None for non-Training projects."""
+        return self._project_instance.source_projects
 
     @property
     @deprecated(version="0.1.117", alternative=".list_datasets")
     def datasets(self) -> List[Dict[str, Any]]:
-        """
-        DEPRECATED: Prefer using the :meth:`encord.project.list_datasets` class to work with the data.
+        """DEPRECATED: Prefer using the :meth:`encord.project.list_datasets` class to work with the data.
 
         Get the info about datasets associated with this project.
         """
@@ -147,16 +141,13 @@ class Project:
 
     @property
     def project_type(self) -> ProjectType:
-        """
-        Get the project type.
-        """
+        """Get the project type."""
         return self._project_instance.project_type
 
     @property
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
     def label_rows(self) -> dict:
-        """
-        Get the label rows.
+        """Get the label rows.
         DEPRECATED: Prefer using :meth:`list_label_rows_v2()` method and :meth:`LabelRowV2` class to work with the data.
 
         .. code::
@@ -171,28 +162,22 @@ class Project:
         return self._client.get_project(include_labels_metadata=True).label_rows
 
     def refetch_data(self) -> None:
-        """
-        The Project class will only fetch its properties once. Use this function if you suspect the state of those
+        """The Project class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be dirty.
         """
         self._project_instance = self._client.get_project_v2()
 
     def refetch_ontology(self) -> None:
-        """
-        Update the ontology for the project to reflect changes on the backend.
-        """
+        """Update the ontology for the project to reflect changes on the backend."""
         self._ontology.refetch_data()
 
     def get_project(self) -> OrmProject:
-        """
-        This function is exposed for convenience. You are encouraged to use the property accessors instead.
-        """
+        """This function is exposed for convenience. You are encouraged to use the property accessors instead."""
         return self._client.get_project()
 
     @property
     def workflow(self) -> Workflow:
-        """
-        Get the workflow of the project.
+        """Get the workflow of the project.
 
         Available only for workflow projects.
         """
@@ -200,6 +185,14 @@ class Project:
             self.project_type == ProjectType.WORKFLOW
         ), "project.workflow property only available for workflow projects"
         return self._workflow
+
+    @property
+    def _ontology(self) -> Ontology:
+        if self._ontology_internal is None:
+            self._ontology_internal = Ontology(
+                Ontology._fetch_ontology(self._api_client, self.ontology_hash), self._api_client
+            )  # lazy loading
+        return self._ontology_internal
 
     def list_label_rows_v2(
         self,
@@ -219,8 +212,7 @@ class Project:
         include_all_label_branches: bool = False,
         branch_name: Optional[str] = None,
     ) -> List[LabelRowV2]:
-        """
-        List label rows with various filtering options.
+        """List label rows with various filtering options.
 
         Args:
             data_hashes: List of data hashes to filter by.
@@ -266,8 +258,7 @@ class Project:
         return label_rows
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
-        """
-        Add users to the project.
+        """Add users to the project.
 
         Args:
             user_emails: List of user emails to be added.
@@ -284,8 +275,7 @@ class Project:
         return self._client.add_users(user_emails, user_role)
 
     def list_groups(self) -> Iterable[ProjectGroup]:
-        """
-        List all groups that have access to a particular project.
+        """List all groups that have access to a particular project.
 
         Returns:
             Iterable[ProjectGroup]: An iterable of ProjectGroup objects.
@@ -295,8 +285,7 @@ class Project:
         yield from page.results
 
     def add_group(self, group_hash: Union[List[UUID], UUID], user_role: ProjectUserRole):
-        """
-        Add a group to the project.
+        """Add a group to the project.
 
         Args:
             group_hash: List of group hashes or a single group hash to be added.
@@ -311,8 +300,7 @@ class Project:
         self._client.add_groups(project_hash, group_hash, user_role)
 
     def remove_group(self, group_hash: Union[List[UUID], UUID]):
-        """
-        Remove a group from the project.
+        """Remove a group from the project.
 
         Args:
             group_hash: List of group hashes or a single group hash to be removed.
@@ -334,8 +322,7 @@ class Project:
         new_title: Optional[str] = None,
         new_description: Optional[str] = None,
     ) -> str:
-        """
-        Copy the current project into a new one with copied contents including settings, datasets, and users.
+        """Copy the current project into a new one with copied contents including settings, datasets, and users.
         Labels and models are optional.
 
         Args:
@@ -365,8 +352,7 @@ class Project:
         )
 
     def submit_label_row_for_review(self, uid: str):
-        """
-        Submit a label row for review.
+        """Submit a label row for review.
 
         **Note:** This method is not supported for workflow-based projects. See the documentation about the workflows.
 
@@ -385,8 +371,7 @@ class Project:
         return self._client.submit_label_row_for_review(uid)
 
     def add_datasets(self, dataset_hashes: List[str]) -> bool:
-        """
-        Add datasets to the project.
+        """Add datasets to the project.
 
         Args:
             dataset_hashes: List of dataset hashes of the datasets to be added.
@@ -406,8 +391,7 @@ class Project:
         return res
 
     def remove_datasets(self, dataset_hashes: List[str]) -> bool:
-        """
-        Remove datasets from the project.
+        """Remove datasets from the project.
 
         Args:
             dataset_hashes: List of dataset hashes of the datasets to be removed.
@@ -428,8 +412,7 @@ class Project:
 
     @deprecated(version="0.1.95", alternative=".ontology_structure")
     def get_project_ontology(self) -> LegacyOntology:
-        """
-        DEPRECATED: Prefer using the `ontology_structure` property accessor instead.
+        """DEPRECATED: Prefer using the `ontology_structure` property accessor instead.
 
         Returns:
             LegacyOntology: The project's ontology.
@@ -438,8 +421,7 @@ class Project:
 
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
-        """
-        DEPRECATED: Prefer using :class:`Ontology [encord.ontology.Ontology]` to manipulate ontology.
+        """DEPRECATED: Prefer using :class:`Ontology [encord.ontology.Ontology]` to manipulate ontology.
 
         Add an object to an ontology.
 
@@ -471,8 +453,7 @@ class Project:
         required: bool,
         options: Optional[Iterable[str]] = None,
     ):
-        """
-        DEPRECATED: Prefer using :class:`Ontology encord.ontology.Ontology` to manipulate ontology.
+        """DEPRECATED: Prefer using :class:`Ontology encord.ontology.Ontology` to manipulate ontology.
 
         Add a classification to an ontology.
 
@@ -495,241 +476,12 @@ class Project:
         self.refetch_ontology()
         return res
 
-    def list_models(self) -> List[ModelConfiguration]:
-        """
-        List all models that are associated with the project. Use the
-        :meth:`encord.project.Project.get_training_metadata` to get more metadata about each training instance.
-
-        Example:
-
-        .. code::
-
-            from encord.utilities.project_utilities import get_all_model_iteration_uids
-
-            project = client_instance.get_project([project_hash])
-
-            model_configurations = project.list_models()
-            all_model_iteration_uids = get_all_model_iteration_uids(model_configurations)
-            training_metadata = project.get_training_metadata(
-                all_model_iteration_uids,
-                get_model_training_labels=True,
-            )
-
-        Returns:
-            List[ModelConfiguration]: A list of ModelConfiguration objects representing the models associated with the project.
-        """
-        return self._client.list_models()
-
-    def get_training_metadata(
-        self,
-        model_iteration_uids: Iterable[str],
-        get_created_at: bool = False,
-        get_training_final_loss: bool = False,
-        get_model_training_labels: bool = False,
-    ) -> List[TrainingMetadata]:
-        """
-        Given a list of model_iteration_uids, get metadata around each model_iteration.
-
-        Args:
-            model_iteration_uids: The model iteration uids.
-            get_created_at: Whether the `created_at` field should be retrieved.
-            get_training_final_loss: Whether the `training_final_loss` field should be retrieved.
-            get_model_training_labels: Whether the `model_training_labels` field should be retrieved.
-
-        Returns:
-            List[TrainingMetadata]: A list of TrainingMetadata objects containing the requested metadata.
-        """
-        return self._client.get_training_metadata(
-            model_iteration_uids,
-            get_created_at,
-            get_training_final_loss,
-            get_model_training_labels,
-        )
-
-    def create_model_row(
-        self,
-        title: str,
-        description: str,
-        features: List[str],
-        model: Union[AutomationModels, str],
-    ) -> str:
-        """
-        Create a model row.
-
-        Args:
-            title: Model title.
-            description: Model description.
-            features: List of feature_node_hashes which are IDs of ontology objects or classifications to be included in the model.
-            model: The model type to be used. For backwards compatibility purposes, strings corresponding to the values of
-                the :class:`.AutomationModels` Enum are also allowed.
-
-        Returns:
-            str: The uid of the added model row.
-
-        Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ModelFeaturesInconsistentError: If a feature type is different from what is supported by the model (e.g. if creating a classification model using a bounding box).
-        """
-        return self._client.create_model_row(title, description, features, model)
-
-    def model_delete(self, uid: str) -> bool:
-        """
-        Delete a model created on the platform.
-
-        Args:
-            uid: A model_hash (uid) string.
-
-        Returns:
-            bool: True if the model was successfully deleted, False otherwise.
-
-        Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no model exists by the specified model_hash (uid).
-            UnknownError: If an error occurs during deletion.
-        """
-        return self._client.model_delete(uid)
-
-    def model_inference(
-        self,
-        uid: str,
-        file_paths: Optional[List[str]] = None,
-        base64_strings: Optional[List[bytes]] = None,
-        conf_thresh: float = 0.6,
-        iou_thresh: float = 0.3,
-        device: Device = Device.CUDA,
-        detection_frame_range: Optional[List[int]] = None,
-        allocation_enabled: bool = False,
-        data_hashes: Optional[List[str]] = None,
-        rdp_thresh: float = 0.005,
-    ):
-        """
-        Run inference with a model trained on the platform.
-
-        The image(s)/video(s) can be provided either as local file paths, base64 strings, or as data hashes if the
-        data is already uploaded on the Encord platform.
-
-        Args:
-            uid: A model_iteration_hash (uid) string.
-            file_paths: List of local file paths to image(s) or video(s) - if running inference on files.
-            base64_strings: List of base64 strings of image(s) or video(s) - if running inference on base64 strings.
-            conf_thresh: Confidence threshold (default 0.6).
-            iou_thresh: Intersection over union threshold (default 0.3).
-            device: Device (CPU or CUDA, default is CUDA).
-            detection_frame_range: Detection frame range (for videos).
-            allocation_enabled: Object UID allocation (tracking) enabled (disabled by default).
-            data_hashes: List of hashes of the videos/image_groups you'd like to run inference on.
-            rdp_thresh: Parameter specifying the polygon coarseness to be used while running inference. The higher the
-                        value, the fewer points in the segmented image.
-
-        Returns:
-            dict: A dictionary of inference results.
-
-        Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no model exists by the specified model_iteration_hash (uid).
-            UnknownError: If an error occurs while running inference.
-            FileTypeNotSupportedError: If the file type is not supported for inference (has to be an image or video).
-            FileSizeNotSupportedError: If the file size is too big to be supported.
-            DetectionRangeInvalidError: If a detection range is invalid for video inference.
-        """
-        return self._client.model_inference(
-            uid,
-            file_paths,
-            base64_strings,
-            conf_thresh,
-            iou_thresh,
-            device,
-            detection_frame_range,
-            allocation_enabled,
-            data_hashes,
-            rdp_thresh,
-        )
-
-    def model_train_start(
-        self,
-        model_hash: Union[str, UUID],
-        label_rows: List[Union[str, UUID]],
-        epochs: int,
-        weights: ModelTrainingWeights,
-        batch_size: int = 24,
-        device: Device = Device.CUDA,
-    ) -> UUID:
-        """
-        This method initializes model training in Encord's backend.
-        Once the training_hash (UUID) is returned, you can exit the terminal
-        while the job continues uninterrupted.
-
-        You can check job status at any point using
-        the :meth:`model_train_get_result` method.
-        This can be done in a separate Python session to the one
-        where the job was initialized.
-
-        Args:
-            model_hash: A unique identifier (UUID) for the model. The format is a string.
-            label_rows: List of label row uids (hashes) for training.
-            epochs: Number of passes through the training dataset.
-            weights: Model weights.
-            batch_size: Number of training examples utilized in one iteration.
-            device: Device (CPU or CUDA, default is CUDA).
-
-        Returns:
-            UUID: A model iteration training_hash.
-
-        Raises:
-            AuthorisationError: If access to the specified resource is restricted.
-            ModelWeightsInconsistentError: If the passed model weights are incompatible with the selected model.
-            ResourceNotFoundError: If no model exists by the specified model_hash (uid).
-        """
-
-        return self._client.model_train_start(
-            model_hash,
-            label_rows,
-            epochs,
-            weights,
-            batch_size,
-            device,
-        )
-
-    def model_train_get_result(
-        self,
-        model_hash: Union[str, UUID],
-        training_hash: Union[str, UUID],
-        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
-    ) -> dict:
-        """
-        Fetch model training status, perform long polling process for `timeout_seconds`.
-
-        Args:
-            model_hash:
-               A unique identifier (UUID) for the model.
-            training_hash:
-                A unique identifier(UUID) of the model iteration. This ID enables the user to track the job progress using the SDK or web app.
-            timeout_seconds:
-                Number of seconds the method waits while waiting for a response.
-                If `timeout_seconds == 0`, only a single checking request is performed.
-                Responses are immediately returned.
-
-        Returns:
-            Response containing details about job status, errors, and progress.
-
-        """
-
-        return self._client.model_train_get_result(
-            model_hash,
-            training_hash,
-            timeout_seconds,
-        )
-
     def object_interpolation(
         self,
         key_frames,
         objects_to_interpolate,
     ):
-        """
-        Run object interpolation algorithm on project labels (requires an editor ontology and feature uids).
+        """Run object interpolation algorithm on project labels (requires an editor ontology and feature uids).
 
         Interpolation is supported for bounding box, polygon, and keypoint.
 
@@ -773,8 +525,7 @@ class Project:
         frames: dict,
         video: dict,
     ):
-        """
-        Fit bounding boxes to the given frames of a video.
+        """Fit bounding boxes to the given frames of a video.
 
         Args:
             frames: Labels for frames to be fitted. Frames are consumed in the form::
@@ -819,8 +570,7 @@ class Project:
         return self._client.fitted_bounding_boxes(frames, video)
 
     def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
-        """
-        Retrieve information about a video or image group.
+        """Retrieve information about a video or image group.
 
         Args:
             data_hash: The uid of the data object.
@@ -846,8 +596,7 @@ class Project:
         before: Optional[datetime.datetime] = None,
         user_email: Optional[str] = None,
     ) -> List[LabelLog]:
-        """
-        Get label logs, which represent the actions taken in the UI to create labels.
+        """Get label logs, which represent the actions taken in the UI to create labels.
 
         All arguments can be left as `None` if no filtering should be applied.
 
@@ -873,9 +622,9 @@ class Project:
             user_email,
         )
 
+    @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:
-        """
-        Get the list of cloud integrations.
+        """Get the list of cloud integrations.
 
         Returns:
             List of CloudIntegration objects.
@@ -894,8 +643,7 @@ class Project:
         label_hashes: Optional[List[str]] = None,
         data_hashes: Optional[List[str]] = None,
     ) -> List[LabelRowMetadata]:
-        """
-        DEPRECATED - use `list_label_rows_v2` to manage label rows instead.
+        """DEPRECATED - use `list_label_rows_v2` to manage label rows instead.
 
         Args:
             edited_before: Optionally filter to only rows last edited before the specified time.
@@ -924,8 +672,7 @@ class Project:
         )
 
     def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
-        """
-        Set the label status for a label row to a desired value.
+        """Set the label status for a label row to a desired value.
 
         Args:
             label_hash: Unique identifier of the label row whose status is to be updated.
@@ -950,8 +697,7 @@ class Project:
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
     ) -> LabelRow:
-        """
-        DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+        """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
         Retrieve label row. If you need to retrieve multiple label rows, prefer using get_label_rows instead.
 
@@ -990,8 +736,7 @@ class Project:
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
     ) -> List[LabelRow]:
-        """
-        DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+        """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
         Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
 
@@ -1023,8 +768,7 @@ class Project:
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def save_label_row(self, uid, label, validate_before_saving: bool = False):
-        """
-        DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+        """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
         Save an existing label row.
 
@@ -1053,8 +797,7 @@ class Project:
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def create_label_row(self, uid: str):
-        """
-        DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+        """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
         Create a label row (for data in a project not previously labeled).
 
@@ -1078,8 +821,7 @@ class Project:
         return self._client.create_label_row(uid)
 
     def create_bundle(self, bundle_size: Optional[int] = None) -> Bundle:
-        """
-        Initializes a bundle to reduce the number of network calls performed by the Encord SDK.
+        """Initializes a bundle to reduce the number of network calls performed by the Encord SDK.
 
         See the :class:`encord.http.bundle.Bundle` documentation for more details.
 
@@ -1098,9 +840,12 @@ class Project:
         before: Optional[datetime.datetime] = None,
         group_by_data_unit: bool = True,
     ) -> Iterable[CollaboratorTimer]:
-        """
-        Provides information about time spent by each collaborator who has worked on the project within a specified
+        """Provides information about time spent by each collaborator who has worked on the project within a specified
         range of dates.
+
+        This endpoint is deprecated and retrieves collaborator timers from the Legacy Performance Dashboards, not the Upgraded Analytics Dashboard.
+
+        If you want to access the new Analytics Dashboards using the API or SDK contact your Encord team.
 
         Args:
             after: The beginning of the period of interest.
@@ -1111,7 +856,6 @@ class Project:
         Yields:
             CollaboratorTimer: Information about the time spent by each collaborator.
         """
-
         params = CollaboratorTimerParams(
             project_hash=self.project_hash,
             after=after,
@@ -1123,8 +867,7 @@ class Project:
         yield from self._client.get_collaborator_timers(params)
 
     def list_datasets(self) -> Iterable[ProjectDataset]:
-        """
-        List all datasets associated with the project.
+        """List all datasets associated with the project.
 
         Returns:
             Iterable[ProjectDataset]: An iterable of ProjectDataset instances.
@@ -1158,6 +901,48 @@ class Project:
             branch_name=branch_name,
         )
 
+    def export_coco_labels(
+        self,
+        label_hashes: Optional[List[str]] = None,
+        include_object_feature_hashes: Optional[Set[str]] = None,
+        include_classification_feature_hashes: Optional[Set[str]] = None,
+        branch_name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Export labels from the project to the COCO format.
+        This method requires the 'coco' extra to be installed. Install it using:
+        `pip install encord[coco]`.
+
+        Args:
+            label_hashes: List of label hashes to include. If not provided, all label rows will be included.
+            include_object_feature_hashes: If `None`, all objects will be included.
+                 Otherwise, only objects with the specified feature hashes will be included.
+            include_classification_feature_hashes: If `None`, all classifications will be included.
+                Otherwise, only classifications with the specified feature hashes will be included.
+            branch_name: Optionally specify a branch name. Defaults to the `main` branch.
+
+        Returns:
+            Dict[str, Any]: A dictionary in the COCO format containing the exported labels,
+                including annotations and metadata conforming to COCO standards.
+                The dictionary also includes additional fields specific to Encord,
+                providing supplementary information not defined in the COCO standard.
+
+        Raises:
+            ImportError: If the 'coco' extra dependencies are not installed.
+        """
+        from encord.utilities.coco.exporter import CocoExporter
+
+        label_rows = self.list_label_rows_v2(label_hashes=label_hashes, branch_name=branch_name)
+        with self.create_bundle() as bundle:
+            for row in label_rows:
+                row.initialise_labels(
+                    include_object_feature_hashes=include_object_feature_hashes,
+                    include_classification_feature_hashes=include_classification_feature_hashes,
+                    bundle=bundle,
+                )
+        labels = [row.to_encord_dict() for row in label_rows]
+        coco_labels = CocoExporter(labels, ontology=self.ontology_structure).export()
+        return coco_labels
+
     def get_collection(self, collection_uuid: Union[str, UUID]) -> ProjectCollection:
         return ProjectCollection._get_collection(
             project_client=self._client,
@@ -1171,13 +956,15 @@ class Project:
         collection_uuids: Optional[List[Union[str, UUID]]] = None,
         page_size: Optional[int] = None,
     ) -> Iterator[ProjectCollection]:
-        """
-        List all collections associated to the project.
+        """List all collections associated to the project.
+
         Args:
             collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+
         Returns:
             The list of collections which match the given criteria.
+
         Raises:
             ValueError: If any of the collection uuids is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
@@ -1196,10 +983,11 @@ class Project:
         )
 
     def delete_collection(self, collection_uuid: Union[str, UUID]) -> None:
-        """
-        Delete a project collection by its UUID if it exists.
+        """Delete a project collection by its UUID if it exists.
+
         Args:
             collection_uuid: The unique identifier (UUID) of the collection to delete.
+
         Returns:
             None
         Raises:
@@ -1209,25 +997,27 @@ class Project:
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
         ProjectCollection._delete_collection(
-            self._client._get_api_client(), self._project_instance.project_hash, collection_uuid
+            self._client._api_client, self._project_instance.project_hash, collection_uuid
         )
 
     def create_collection(
         self, name: str, description: str = "", collection_type: ProjectCollectionType = ProjectCollectionType.FRAME
     ) -> ProjectCollection:
-        """
-        Create a project collection.
+        """Create a project collection.
+
         Args:
             name: The name of the collection.
             description: The description of the collection.
             collection_type: The type of the collection, could be either frame or label.
+
         Returns:
             ProjectCollection: Newly created collection.
+
         Raises:
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
         """
         new_uuid = ProjectCollection._create_collection(
-            self._client._get_api_client(), self._project_instance.project_hash, name, description, collection_type
+            self._client._api_client, self._project_instance.project_hash, name, description, collection_type
         )
         return self.get_collection(new_uuid)
 
@@ -1250,13 +1040,15 @@ class Project:
         filter_preset_uuids: Optional[List[Union[str, UUID]]] = None,
         page_size: Optional[int] = None,
     ) -> Iterator[ProjectFilterPreset]:
-        """
-        List all filter presets associated to the project.
+        """List all filter presets associated to the project.
+
         Args:
             filter_preset_uuids: The unique identifiers (UUIDs) of the filter presets to retrieve.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+
         Returns:
             The list of filter presets which match the given criteria.
+
         Raises:
             ValueError: If any of the filter preset uuids is a badly formed UUID.
             :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
@@ -1270,7 +1062,7 @@ class Project:
             else None
         )
         return ProjectFilterPreset._list_filter_presets(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuids=filter_presets,
             page_size=page_size,
@@ -1278,27 +1070,27 @@ class Project:
 
     def get_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> ProjectFilterPreset:
         return ProjectFilterPreset._get_filter_preset(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
         )
 
     def delete_filter_preset(self, filter_preset_uuid: Union[str, UUID]) -> None:
         ProjectFilterPreset._delete_filter_preset(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=UUID(filter_preset_uuid) if isinstance(filter_preset_uuid, str) else filter_preset_uuid,
         )
 
-    def create_filter_preset(self, name: str, filter_preset: FilterPresetDefinition) -> ProjectFilterPreset:
+    def create_filter_preset(self, name: str, filter_preset: ActiveFilterPresetDefinition) -> ProjectFilterPreset:
         uuid = ProjectFilterPreset._create_filter_preset(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             name=name,
             filter_preset=filter_preset,
         )
         return ProjectFilterPreset._get_filter_preset(
-            client=self._client._get_api_client(),
+            client=self._client._api_client,
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=uuid,
         )

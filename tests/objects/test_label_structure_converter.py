@@ -1,6 +1,4 @@
-"""
-All tests regarding converting from and to Encord dict to the label row.
-"""
+"""All tests regarding converting from and to Encord dict to the label row."""
 
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
@@ -34,10 +32,12 @@ from tests.objects.data.empty_image_group import (
     empty_image_group_labels,
     empty_image_group_ontology,
 )
+from tests.objects.data.html_text_labels import HTML_TEXT_LABELS
 from tests.objects.data.image_group import image_group_labels, image_group_ontology
 from tests.objects.data.ontology_with_many_dynamic_classifications import (
     ontology as ontology_with_many_dynamic_classifications,
 )
+from tests.objects.data.plain_text import PLAIN_TEXT_LABELS
 
 
 def ontology_from_dict(ontology_structure_dict: Dict):
@@ -48,7 +48,8 @@ def ontology_from_dict(ontology_structure_dict: Dict):
 
 def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], exclude_regex_paths: List[str] = None):
     """Basically a deep diff but with an normal assert after. `DeepDiff` to be able to exclude
-    regex paths, and `assert` to see an easily comparable diff with tools such as Pycharm."""
+    regex paths, and `assert` to see an easily comparable diff with tools such as Pycharm.
+    """
     if exclude_regex_paths is None:
         exclude_regex_paths = []
     if DeepDiff(
@@ -154,6 +155,40 @@ def test_serialise_audio_objects() -> None:
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         AUDIO_OBJECTS,
+        actual,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
+    )
+
+
+def test_serialise_html_text():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "plain_text"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(HTML_TEXT_LABELS)
+
+    actual = label_row.to_encord_dict()
+    deep_diff_enhanced(
+        HTML_TEXT_LABELS,
+        actual,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
+    )
+
+
+def test_serialise_plain_text():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["frames_per_second"] = 1000
+    label_row_metadata_dict["data_type"] = "plain_text"
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(PLAIN_TEXT_LABELS)
+
+    actual = label_row.to_encord_dict()
+    deep_diff_enhanced(
+        PLAIN_TEXT_LABELS,
         actual,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
@@ -339,9 +374,11 @@ def test_skeleton_template_coordinates():
     assert len(obj_instances) == 1
 
     obj_instance = obj_instances[0]
-    ann = obj_instance.get_annotations()[0]
-    assert ann.coordinates == skeleton_coordinates.expected_coordinates
+    annotation = obj_instance.get_annotations()[0]
+    assert annotation.coordinates == skeleton_coordinates.expected_coordinates
+
     label_dict = label_row.to_encord_dict()
-    label_dict_obj = list(skeleton_coordinates.labels["data_units"].values())[0]["labels"]["objects"][0]
-    origin_obj = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]
-    assert origin_obj["skeleton"] == label_dict_obj["skeleton"]
+    skeleton_dict = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]
+    expected_skeleton_dict = list(skeleton_coordinates.labels["data_units"].values())[0]["labels"]["objects"][0]
+
+    assert skeleton_dict["skeleton"] == expected_skeleton_dict["skeleton"]

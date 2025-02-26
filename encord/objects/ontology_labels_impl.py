@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Ontology Labels"
 slug: "sdk-ref-objects-ont-labels"
 hidden: false
@@ -22,7 +21,7 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.common.range_manager import RangeManager
-from encord.constants.enums import DataType
+from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.limits import (
@@ -40,7 +39,7 @@ from encord.objects.bundled_operations import (
     BundledWorkflowReopenPayload,
 )
 from encord.objects.classification import Classification
-from encord.objects.classification_instance import ClassificationInstance
+from encord.objects.classification_instance import ClassificationInstance, _verify_non_geometric_classifications_range
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
     DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
@@ -51,13 +50,18 @@ from encord.objects.coordinates import (
     BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
+    HtmlCoordinates,
     PointCoordinate,
     PolygonCoordinates,
+    PolygonCoordsToDict,
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
+    TextCoordinates,
+    Visibility,
 )
 from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.html_node import HtmlRange
 from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -79,8 +83,7 @@ OntologyClasses = Union[Object, Classification]
 
 
 class LabelRowV2:
-    """
-    This class represents a single label row. It corresponds to exactly one data row within a project and holds all
+    """This class represents a single label row. It corresponds to exactly one data row within a project and holds all
     the labels for that data row.
 
     You can access many metadata fields with this class directly. To read or write labels, you need to call
@@ -118,8 +121,7 @@ class LabelRowV2:
 
     @property
     def label_hash(self) -> Optional[str]:
-        """
-        Returns the hash of the label row.
+        """Returns the hash of the label row.
 
         Returns:
             Optional[str]: The label row hash or None if not set.
@@ -128,8 +130,7 @@ class LabelRowV2:
 
     @property
     def branch_name(self) -> str:
-        """
-        Returns the branch name of the label row.
+        """Returns the branch name of the label row.
 
         Returns:
             str: The branch name.
@@ -138,8 +139,7 @@ class LabelRowV2:
 
     @property
     def data_hash(self) -> str:
-        """
-        Returns the hash of the data row.
+        """Returns the hash of the data row.
 
         Returns:
             str: The data row hash.
@@ -148,8 +148,7 @@ class LabelRowV2:
 
     @property
     def dataset_hash(self) -> str:
-        """
-        Returns the hash of the dataset.
+        """Returns the hash of the dataset.
 
         Returns:
             str: The dataset hash.
@@ -158,8 +157,7 @@ class LabelRowV2:
 
     @property
     def dataset_title(self) -> str:
-        """
-        Returns the title of the dataset.
+        """Returns the title of the dataset.
 
         Returns:
             str: The dataset title.
@@ -168,8 +166,7 @@ class LabelRowV2:
 
     @property
     def data_title(self) -> str:
-        """
-        Returns the title of the data row.
+        """Returns the title of the data row.
 
         Returns:
             str: The data row title.
@@ -178,8 +175,7 @@ class LabelRowV2:
 
     @property
     def data_type(self) -> DataType:
-        """
-        Returns the data type of the label row.
+        """Returns the data type of the label row.
 
         Returns:
             DataType: The data type.
@@ -188,8 +184,7 @@ class LabelRowV2:
 
     @property
     def file_type(self) -> str | None:
-        """
-        Returns the file type of the data row.
+        """Returns the file type of the data row.
 
         Returns:
             str | None: The file type or None if not set.
@@ -198,8 +193,7 @@ class LabelRowV2:
 
     @property
     def client_metadata(self) -> dict | None:
-        """
-        Returns the client metadata associated with the label row.
+        """Returns the client metadata associated with the label row.
 
         Returns:
             dict | None: The client metadata or None if not set.
@@ -208,8 +202,7 @@ class LabelRowV2:
 
     @property
     def label_status(self) -> LabelStatus:
-        """
-        Returns the current labeling status for the label row.
+        """Returns the current labeling status for the label row.
 
         **Note**: This method is not supported for workflow-based projects. Please see our
         :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
@@ -230,8 +223,7 @@ class LabelRowV2:
 
     @property
     def annotation_task_status(self) -> AnnotationTaskStatus:
-        """
-        Returns the current annotation task status for the label row.
+        """Returns the current annotation task status for the label row.
 
         **Note**: This method is not supported for workflow-based projects. Please see our
         :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
@@ -254,8 +246,7 @@ class LabelRowV2:
 
     @property
     def workflow_graph_node(self) -> Optional[WorkflowGraphNode]:
-        """
-        Returns the workflow graph node associated with the label row.
+        """Returns the workflow graph node associated with the label row.
 
         Returns:
             Optional[WorkflowGraphNode]: The workflow graph node or None if not set.
@@ -264,8 +255,7 @@ class LabelRowV2:
 
     @property
     def is_shadow_data(self) -> bool:
-        """
-        Indicates if the label row is shadow data.
+        """Indicates if the label row is shadow data.
 
         Returns:
             bool: True if the label row is shadow data, False otherwise.
@@ -274,8 +264,7 @@ class LabelRowV2:
 
     @property
     def created_at(self) -> Optional[datetime]:
-        """
-        Returns the creation date of the label row.
+        """Returns the creation date of the label row.
 
         Returns:
             Optional[datetime]: The creation date or None if not yet created.
@@ -284,8 +273,7 @@ class LabelRowV2:
 
     @property
     def last_edited_at(self) -> Optional[datetime]:
-        """
-        Returns the last edited date of the label row.
+        """Returns the last edited date of the label row.
 
         Returns:
             Optional[datetime]: The last edited date or None if not yet edited.
@@ -294,8 +282,7 @@ class LabelRowV2:
 
     @property
     def number_of_frames(self) -> int:
-        """
-        Returns the number of frames in the label row.
+        """Returns the number of frames in the label row.
 
         Returns:
             int: The number of frames.
@@ -304,8 +291,7 @@ class LabelRowV2:
 
     @property
     def duration(self) -> Optional[float]:
-        """
-        Returns the duration of the video data type.
+        """Returns the duration of the video data type.
 
         Returns:
             Optional[float]: The duration or None if not applicable.
@@ -314,8 +300,7 @@ class LabelRowV2:
 
     @property
     def fps(self) -> Optional[float]:
-        """
-        Returns the frames per second (fps) of the video data type.
+        """Returns the frames per second (fps) of the video data type.
 
         Returns:
             Optional[float]: The fps or None if not applicable.
@@ -324,8 +309,7 @@ class LabelRowV2:
 
     @property
     def data_link(self) -> Optional[str]:
-        """
-        Returns the data link to the underlying object in either cloud storage or Encord storage. This will be `None`
+        """Returns the data link to the underlying object in either cloud storage or Encord storage. This will be `None`
         for DICOM series or image groups created without performance optimisations, as there is no single underlying
         file for these data types.
 
@@ -338,8 +322,7 @@ class LabelRowV2:
 
     @property
     def width(self) -> Optional[int]:
-        """
-        Returns the width of the image data type.
+        """Returns the width of the image data type.
 
         This is `None` for image groups without performance optimisation, as there is no single underlying width
         for this data type.
@@ -351,8 +334,7 @@ class LabelRowV2:
 
     @property
     def height(self) -> Optional[int]:
-        """
-        Returns the height of the image data type.
+        """Returns the height of the image data type.
 
         This is `None` for image groups without performance optimisation, as there is no single underlying height
         for this data type.
@@ -364,8 +346,7 @@ class LabelRowV2:
 
     @property
     def audio_codec(self) -> Optional[str]:
-        """
-        Returns the codec of the audio data type.
+        """Returns the codec of the audio data type.
 
         This only applies to audio data types, and returns None for all other data types.
 
@@ -376,8 +357,7 @@ class LabelRowV2:
 
     @property
     def audio_sample_rate(self) -> Optional[int]:
-        """
-        Returns the sample rate of the audio data type.
+        """Returns the sample rate of the audio data type.
 
         This only applies to audio data types, and returns None for all other data types.
 
@@ -388,8 +368,7 @@ class LabelRowV2:
 
     @property
     def audio_bit_depth(self) -> Optional[int]:
-        """
-        Returns the bit depth of the audio data type.
+        """Returns the bit depth of the audio data type.
 
         This only applies to audio data types, and returns None for all other data types.
 
@@ -400,8 +379,7 @@ class LabelRowV2:
 
     @property
     def audio_num_channels(self) -> Optional[int]:
-        """
-        Returns the number of channels of the audio data type.
+        """Returns the number of channels of the audio data type.
 
         This only applies to audio data types, and returns None for all other data types.
 
@@ -412,8 +390,7 @@ class LabelRowV2:
 
     @property
     def backing_item_uuid(self) -> Optional[UUID]:
-        """
-        Returns the unique identifier (UUID) for the backing storage item associated with this label row.
+        """Returns the unique identifier (UUID) for the backing storage item associated with this label row.
 
         While it is always included in server responses, it is marked as optional for backward compatibility with earlier versions.
 
@@ -425,8 +402,7 @@ class LabelRowV2:
 
     @property
     def priority(self) -> Optional[float]:
-        """
-        Returns the workflow priority for the task associated with the data unit.
+        """Returns the workflow priority for the task associated with the data unit.
 
         This property only works for workflow-based projects.
 
@@ -445,8 +421,7 @@ class LabelRowV2:
 
     @property
     def is_valid(self) -> bool:
-        """
-        Indicates if the labels are valid.
+        """Indicates if the labels are valid.
 
         For labels uploaded via the SDK, a check is run to ensure that the labels are valid.
         This property returns `True` if the labels have correct structure and match the project ontology.
@@ -468,8 +443,7 @@ class LabelRowV2:
 
     @property
     def is_labelling_initialised(self) -> bool:
-        """
-        Check if labelling is initialized.
+        """Check if labelling is initialized.
 
         Returns:
             bool: `True` if labelling is initialized, `False` otherwise.
@@ -493,8 +467,7 @@ class LabelRowV2:
         *,
         include_signed_url: bool = False,
     ) -> None:
-        """
-        Initialize labels from the Encord server.
+        """Initialize labels from the Encord server.
 
         This function downloads or exports labels stored on the Encord server and performs
         any other reading or writing operations. If you only want to inspect a subset of labels,
@@ -525,6 +498,12 @@ class LabelRowV2:
             raise LabelRowError(
                 "You are trying to re-initialise a label row that has already been initialised. This would overwrite "
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
+            )
+
+        if self.data_type == DataType.PDF:
+            raise LabelRowError(
+                "You are trying to initialise a label row for a PDF file. "
+                "The SDK does not yet support working with labels on PDF files."
             )
 
         if not self.label_hash:
@@ -560,8 +539,7 @@ class LabelRowV2:
             )
 
     def from_labels_dict(self, label_row_dict: dict) -> None:
-        """
-        Initialize the LabelRow from a label row dictionary.
+        """Initialize the LabelRow from a label row dictionary.
 
         This function also initializes the label row. It resets all the labels currently
         stored within this class.
@@ -584,8 +562,7 @@ class LabelRowV2:
         self._parse_labels_from_dict(label_row_dict)
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
-        """
-        Get the corresponding image hash for the frame number.
+        """Get the corresponding image hash for the frame number.
 
         Args:
             frame_number: The frame number.
@@ -604,8 +581,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.frame_to_image_hash.get(frame_number)
 
     def get_frame_number(self, image_hash: str) -> Optional[int]:
-        """
-        Get the corresponding frame number for the image hash.
+        """Get the corresponding frame number for the image hash.
 
         Args:
             image_hash: The image hash.
@@ -623,8 +599,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
     def save(self, bundle: Optional[Bundle] = None, validate_before_saving: bool = False) -> None:
-        """
-        Upload the created labels to the Encord server.
+        """Upload the created labels to the Encord server.
 
         This will overwrite any labels that someone else has created on the platform in the meantime.
 
@@ -646,8 +621,7 @@ class LabelRowV2:
 
     @property
     def metadata(self) -> Optional[DICOMSeriesMetadata]:
-        """
-        Get metadata for the given data type.
+        """Get metadata for the given data type.
 
         Returns:
             Optional[DICOMSeriesMetadata]: Metadata for the data type, or `None` if not supported.
@@ -660,8 +634,7 @@ class LabelRowV2:
         return self._metadata
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
-        """
-        Get a view of the specified frame.
+        """Get a view of the specified frame.
 
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
@@ -670,7 +643,6 @@ class LabelRowV2:
         Returns:
             FrameView: A view of the specified frame.
         """
-
         self._method_not_supported_for_audio()
 
         self._check_labelling_is_initalised()
@@ -702,8 +674,7 @@ class LabelRowV2:
         return images_data
 
     def get_frame_metadata(self, frame: Union[int, str] = 0) -> FrameViewMetadata:
-        """
-        Get metadata for a specific frame or image hash.
+        """Get metadata for a specific frame or image hash.
 
         Args:
             frame: The frame number or the image hash. Defaults to the first frame.
@@ -737,8 +708,7 @@ class LabelRowV2:
         return self.FrameViewMetadata(data_meta)
 
     def get_frames_metadata(self) -> List[FrameViewMetadata]:
-        """
-        Get metadata for all frames in the image group.
+        """Get metadata for all frames in the image group.
 
         Returns:
             List[FrameViewMetadata]: A list of metadata for each frame.
@@ -752,8 +722,7 @@ class LabelRowV2:
         return views
 
     def get_frame_views(self) -> List[FrameView]:
-        """
-        Get views for all frames.
+        """Get views for all frames.
 
         Returns:
             List[FrameView]: A list of frame views in order of available frames.
@@ -767,8 +736,7 @@ class LabelRowV2:
     def get_object_instances(
         self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
     ) -> List[ObjectInstance]:
-        """
-        Get all object instances that match the given filters.
+        """Get all object instances that match the given filters.
 
         Args:
             filter_ontology_object: Optionally filter by a specific ontology object.
@@ -811,8 +779,7 @@ class LabelRowV2:
         return ret
 
     def add_object_instance(self, object_instance: ObjectInstance, force: bool = True) -> None:
-        """
-        Add an object instance to the label row. If the object instance already exists, it overwrites the current instance.
+        """Add an object instance to the label row. If the object instance already exists, it overwrites the current instance.
 
         Args:
             object_instance: The object instance to add.
@@ -821,12 +788,24 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the object instance is already part of another LabelRowV2.
         """
-
         self._method_not_supported_for_audio(range_only=object_instance.is_range_only())
 
         self._check_labelling_is_initalised()
 
         object_instance.is_valid()
+
+        # We want to ensure that we are only adding the object_instance to a label_row
+        # IF AND ONLY IF the file type is text/html and the object_instance has range_html set
+        if self.file_type == "text/html" and object_instance.range_html is None:
+            raise LabelRowError(
+                "Unable to assign object instance without a html range to a html file. "
+                f"Please ensure the object instance exists on frame=0, and has coordinates of type {HtmlCoordinates}."
+            )
+        elif self.file_type != "text/html" and object_instance.range_html is not None:
+            raise LabelRowError(
+                "Unable to assign object instance with a html range to a non-html file. "
+                f"Please ensure the object instance does not have coordinates of type {HtmlCoordinates}."
+            )
 
         if object_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -846,13 +825,11 @@ class LabelRowV2:
         self._objects_map[object_hash] = object_instance
         object_instance._parent = self
 
-        if not object_instance.is_range_only():
-            frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
-            self._add_to_frame_to_hashes_map(object_instance, frames)
+        frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
+        self._add_to_frame_to_hashes_map(object_instance, frames)
 
     def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
-        """
-        Add a classification instance to the label row.
+        """Add a classification instance to the label row.
 
         Args:
             classification_instance: The classification instance to add.
@@ -866,9 +843,9 @@ class LabelRowV2:
         classification_instance.is_valid()
 
         # TODO: Need to update the docstring for this method, talk to Laverne.
-        if not classification_instance.is_range_only() and self.data_type == DataType.AUDIO:
+        if not classification_instance.is_range_only() and not is_geometric(self.data_type):
             raise LabelRowError(
-                "To add a ClassificationInstance object to an Audio LabelRow,"
+                f"To add a ClassificationInstance object to a label row where data_type = {self.data_type},"
                 "the ClassificationInstance object needs to be created with the "
                 "range_only property set to True."
                 "You can do ClassificationInstance(range_only=True) or "
@@ -890,10 +867,10 @@ class LabelRowV2:
             )
 
         """
-        Implementation here diverges because audio data will operate on ranges, whereas
+        Implementation here diverges because non-geometric data will operate on ranges, whereas
         everything else will operate on frames.
         """
-        if self.data_type == DataType.AUDIO:
+        if not is_geometric(self.data_type):
             self._add_classification_instance_for_range(
                 classification_instance=classification_instance,
                 force=force,
@@ -922,7 +899,7 @@ class LabelRowV2:
             self._classifications_to_frames[classification_instance.ontology_item].update(frames)
             self._add_to_frame_to_hashes_map(classification_instance, frames)
 
-    # This should only be used for Audio classification instances
+    # This should only be used for Non-geometric data
     def _add_classification_instance_for_range(
         self,
         classification_instance: ClassificationInstance,
@@ -930,6 +907,10 @@ class LabelRowV2:
     ):
         classification_hash = classification_instance.classification_hash
         ranges_to_add = classification_instance.range_list
+
+        if classification_instance.is_range_only():
+            _verify_non_geometric_classifications_range(ranges_to_add, self)
+
         already_present_ranges = self._is_classification_already_present_on_ranges(
             classification_instance.ontology_item, ranges_to_add
         )
@@ -951,8 +932,7 @@ class LabelRowV2:
         self._classifications_to_ranges[classification_instance.ontology_item].add_ranges(ranges_to_add)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
-        """
-        Remove a classification instance from a label row.
+        """Remove a classification instance from a label row.
 
         Args:
             classification_instance: The classification instance to remove.
@@ -962,7 +942,7 @@ class LabelRowV2:
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
 
-        if self.data_type == DataType.AUDIO:
+        if not is_geometric(self.data_type):
             range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
             ranges_to_remove = classification_instance.range_list
             range_manager.remove_ranges(ranges_to_remove)
@@ -988,8 +968,7 @@ class LabelRowV2:
     def get_classification_instances(
         self, filter_ontology_classification: Optional[Classification] = None, filter_frames: Optional[Frames] = None
     ) -> List[ClassificationInstance]:
-        """
-        Get all classification instances that match the given filters.
+        """Get all classification instances that match the given filters.
 
         Args:
             filter_ontology_classification: Optionally filter by a specific ontology classification.
@@ -1031,8 +1010,7 @@ class LabelRowV2:
         return ret
 
     def remove_object(self, object_instance: ObjectInstance):
-        """
-        Remove an object instance from a label row.
+        """Remove an object instance from a label row.
 
         Args:
             object_instance: The object instance to remove.
@@ -1047,8 +1025,7 @@ class LabelRowV2:
         object_instance._parent = None
 
     def to_encord_dict(self) -> Dict[str, Any]:
-        """
-        Convert the label row to a dictionary in Encord format.
+        """Convert the label row to a dictionary in Encord format.
 
         This is an internal helper function. Likely this should not be used by a user. To upload labels use the
         :meth:`.save()` function.
@@ -1081,8 +1058,7 @@ class LabelRowV2:
         return ret
 
     def workflow_reopen(self, bundle: Optional[Bundle] = None) -> None:
-        """
-        Return a label row to the first annotation stage for re-labeling.
+        """Return a label row to the first annotation stage for re-labeling.
 
         No data will be lost during this call. This method is only relevant for the projects that use the
         :ref:`Workflow <tutorials/workflows:Workflows>` feature, and will raise an error for pre-workflow projects.
@@ -1101,8 +1077,7 @@ class LabelRowV2:
         )
 
     def workflow_complete(self, bundle: Optional[Bundle] = None) -> None:
-        """
-        Move a label row to the final workflow node, marking it as 'Complete'.
+        """Move a label row to the final workflow node, marking it as 'Complete'.
 
         This method can be called only for labels for which :meth:`.initialise_labels()` was called at least once, and
         consequentially the "label_hash" field is not `None`. Labels need not be initialised every time the
@@ -1130,8 +1105,7 @@ class LabelRowV2:
         )
 
     def set_priority(self, priority: float, bundle: Optional[Bundle] = None) -> None:
-        """
-        Set priority for a task in a workflow project.
+        """Set priority for a task in a workflow project.
 
         Args:
             priority: Float value from 0.0 to 1.0, where 1.0 is the highest priority.
@@ -1150,8 +1124,7 @@ class LabelRowV2:
         )
 
     def get_validation_errors(self) -> List[str] | None:
-        """
-        Get validation errors for the label row.
+        """Get validation errors for the label row.
 
         Returns:
             List[str] | None: A list of error messages if the label row is invalid, otherwise `None`.
@@ -1162,9 +1135,7 @@ class LabelRowV2:
         return self._project_client.get_label_validation_errors(self.label_hash)
 
     class FrameViewMetadata:
-        """
-        Class to inspect metadata for a frame view.
-        """
+        """Class to inspect metadata for a frame view."""
 
         def __init__(self, images_data: LabelRowV2.LabelRowReadOnlyDataImagesDataEntry):
             self._image_data = images_data
@@ -1211,8 +1182,7 @@ class LabelRowV2:
 
         @property
         def image_hash(self) -> str:
-            """
-            Get the hash of the image.
+            """Get the hash of the image.
 
             Returns:
                 str: The image hash.
@@ -1221,8 +1191,7 @@ class LabelRowV2:
 
         @property
         def frame_number(self) -> int:
-            """
-            Get the frame number.
+            """Get the frame number.
 
             Returns:
                 int: The frame number.
@@ -1230,8 +1199,7 @@ class LabelRowV2:
             return self._image_data.index
 
     class FrameView:
-        """
-        This class can be used to inspect object or classification instances on a given frame,
+        """This class can be used to inspect object or classification instances on a given frame,
         or metadata such as image file size for a given frame.
         """
 
@@ -1244,8 +1212,7 @@ class LabelRowV2:
 
         @property
         def image_hash(self) -> str:
-            """
-            Get the image hash for the current frame.
+            """Get the image hash for the current frame.
 
             Returns:
                 str: The image hash.
@@ -1259,8 +1226,7 @@ class LabelRowV2:
 
         @property
         def image_title(self) -> str:
-            """
-            Get the image title for the current frame.
+            """Get the image title for the current frame.
 
             Returns:
                 str: The image title.
@@ -1274,8 +1240,7 @@ class LabelRowV2:
 
         @property
         def file_type(self) -> str:
-            """
-            Get the file type for the current frame.
+            """Get the file type for the current frame.
 
             Returns:
                 str: The file type.
@@ -1289,8 +1254,7 @@ class LabelRowV2:
 
         @property
         def frame(self) -> int:
-            """
-            Get the frame number.
+            """Get the frame number.
 
             Returns:
                 int: The frame number.
@@ -1299,8 +1263,7 @@ class LabelRowV2:
 
         @property
         def width(self) -> int:
-            """
-            Get the width of the image or image group.
+            """Get the width of the image or image group.
 
             Returns:
                 int: The width of the image or image group.
@@ -1317,8 +1280,7 @@ class LabelRowV2:
 
         @property
         def height(self) -> int:
-            """
-            Get the height of the image or image group.
+            """Get the height of the image or image group.
 
             Returns:
                 int: The height of the image or image group.
@@ -1335,8 +1297,7 @@ class LabelRowV2:
 
         @property
         def data_link(self) -> Optional[str]:
-            """
-            Get the data link for the current frame.
+            """Get the data link for the current frame.
 
             Returns:
                 Optional[str]: The data link, or `None` if not available.
@@ -1350,8 +1311,7 @@ class LabelRowV2:
 
         @property
         def metadata(self) -> Optional[DICOMSliceMetadata]:
-            """
-            Get annotation metadata for the current frame.
+            """Get annotation metadata for the current frame.
 
             Returns:
                 Optional[DICOMSliceMetadata]: The metadata for the frame, or `None` if not applicable.
@@ -1374,8 +1334,7 @@ class LabelRowV2:
             confidence: Optional[float] = None,
             manual_annotation: Optional[bool] = None,
         ) -> None:
-            """
-            Add an object instance to the current frame.
+            """Add an object instance to the current frame.
 
             Args:
                 object_instance: The object instance to add.
@@ -1425,8 +1384,7 @@ class LabelRowV2:
             last_edited_at: Optional[datetime] = None,
             last_edited_by: Optional[str] = None,
         ) -> None:
-            """
-            Add a classification instance to the current frame.
+            """Add a classification instance to the current frame.
 
             Args:
                 classification_instance: The classification instance to add.
@@ -1469,8 +1427,7 @@ class LabelRowV2:
                 self._label_row.add_classification_instance(classification_instance)
 
         def get_object_instances(self, filter_ontology_object: Optional[Object] = None) -> List[ObjectInstance]:
-            """
-            Get object instances for the current frame.
+            """Get object instances for the current frame.
 
             Args:
                 filter_ontology_object: Optionally filter by a specific ontology object.
@@ -1485,8 +1442,7 @@ class LabelRowV2:
         def get_classification_instances(
             self, filter_ontology_classification: Optional[Classification] = None
         ) -> List[ClassificationInstance]:
-            """
-            Get classification instances for the current frame.
+            """Get classification instances for the current frame.
 
             Args:
                 filter_ontology_classification: Optionally filter by a specific ontology classification.
@@ -1506,8 +1462,7 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class FrameLevelImageGroupData:
-        """
-        Data related to a specific frame in an image group.
+        """Data related to a specific frame in an image group.
 
         Attributes:
             image_hash: Hash of the image.
@@ -1529,8 +1484,7 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class LabelRowReadOnlyDataImagesDataEntry:
-        """
-        Read-only data entry for image data in a label row.
+        """Read-only data entry for image data in a label row.
 
         Attributes:
             index: Index of the image.
@@ -1550,8 +1504,7 @@ class LabelRowV2:
 
     @dataclass(frozen=True)
     class LabelRowReadOnlyData:
-        """
-        Read-only data for a label row.
+        """Read-only data for a label row.
 
         Attributes:
             label_hash: Optional hash for the label. `None` if not initialized for labeling.
@@ -1630,19 +1583,30 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if self.data_type == DataType.AUDIO:
-                annotation = obj.get_annotations()[0]
-                ret[obj.object_hash]["range"] = [[range.start, range.end] for range in obj.range_list]
-                ret[obj.object_hash]["createdBy"] = annotation.created_by
-                ret[obj.object_hash]["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                ret[obj.object_hash]["lastEditedBy"] = annotation.last_edited_by
-                ret[obj.object_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
-                ret[obj.object_hash]["manualAnnotation"] = annotation.manual_annotation
-                ret[obj.object_hash]["featureHash"] = obj.feature_hash
-                ret[obj.object_hash]["name"] = obj.ontology_item.name
-                ret[obj.object_hash]["color"] = obj.ontology_item.color
-                ret[obj.object_hash]["shape"] = obj.ontology_item.shape.value
-                ret[obj.object_hash]["value"] = _lower_snake_case(obj.ontology_item.name)
+            if not is_geometric(self.data_type):
+                # For non-frame entities, all annotations exist only on one frame
+                annotation = obj.get_annotation(0)
+                object_answer_dict = ret[obj.object_hash]
+                object_answer_dict["createdBy"] = annotation.created_by
+                object_answer_dict["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                object_answer_dict["lastEditedBy"] = annotation.last_edited_by
+                object_answer_dict["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                object_answer_dict["manualAnnotation"] = annotation.manual_annotation
+                object_answer_dict["featureHash"] = obj.feature_hash
+                object_answer_dict["name"] = obj.ontology_item.name
+                object_answer_dict["color"] = obj.ontology_item.color
+                object_answer_dict["shape"] = obj.ontology_item.shape.value
+                object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
+
+                if self.file_type == "text/html":
+                    if obj.range_html is None:
+                        raise LabelRowError("Html annotations should have range_html set within the TextCoordinates")
+                    object_answer_dict["range_html"] = [x.to_dict() for x in obj.range_html]
+                    object_answer_dict["range"] = []
+                else:
+                    if obj.range_list is None:
+                        raise LabelRowError("Non-geometric annotations should have range set within the Coordinates")
+                    object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
 
         return ret
 
@@ -1670,11 +1634,11 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if self.data_type == DataType.AUDIO:
+            if not is_geometric(self.data_type):
                 annotation = classification.get_annotations()[0]
-                ret[classification.classification_hash]["range"] = [
-                    [range.start, range.end] for range in classification.range_list
-                ]
+
+                # For non-geometric data, classifications apply to whole file
+                ret[classification.classification_hash]["range"] = []
                 ret[classification.classification_hash]["createdBy"] = annotation.created_by
                 ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
                     DATETIME_LONG_STRING_FORMAT
@@ -1744,24 +1708,40 @@ class LabelRowV2:
             ret["data_link"] = frame_level_data.data_link
 
         ret["data_type"] = frame_level_data.file_type
-
         ret["data_sequence"] = data_sequence
 
-        if self.data_type != DataType.AUDIO:
-            ret["width"] = frame_level_data.width
-            ret["height"] = frame_level_data.height
-
-        else:
+        if self.data_type == DataType.AUDIO:
             ret["audio_codec"] = self._label_row_read_only_data.audio_codec
             ret["audio_sample_rate"] = self._label_row_read_only_data.audio_sample_rate
             ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
             ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
+        elif self.data_type == DataType.PLAIN_TEXT or self.data_type == DataType.PDF:
+            pass
+        elif (
+            self.data_type == DataType.IMAGE
+            or self.data_type == DataType.NIFTI
+            or self.data_type == DataType.VIDEO
+            or self.data_type == DataType.IMG_GROUP
+            or self.data_type == DataType.DICOM
+            or self.data_type == DataType.DICOM_STUDY
+        ):
+            ret["width"] = frame_level_data.width
+            ret["height"] = frame_level_data.height
+        elif self.data_type == DataType.MISSING_DATA_TYPE:
+            raise LabelRowError("Label row is missing data type.")
+        else:
+            exhaustive_guard(self.data_type)
 
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
-        if self._label_row_read_only_data.duration is not None:
+        if self._label_row_read_only_data.duration is not None and self.data_type != DataType.PLAIN_TEXT:
             ret["data_duration"] = self._label_row_read_only_data.duration
-        if self._label_row_read_only_data.fps is not None and self.data_type != DataType.AUDIO:
+
+        if (
+            self._label_row_read_only_data.fps is not None
+            and self.data_type != DataType.AUDIO
+            and self.data_type != DataType.PLAIN_TEXT
+        ):
             ret["data_fps"] = self._label_row_read_only_data.fps
 
         return ret
@@ -1853,6 +1833,7 @@ class LabelRowV2:
             encord_object["rotatableBoundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, PolygonCoordinates):
             encord_object["polygon"] = coordinates.to_dict()
+            encord_object["polygons"] = coordinates.to_dict(PolygonCoordsToDict.multiple_polygons)
         elif isinstance(coordinates, PolylineCoordinates):
             encord_object["polyline"] = coordinates.to_dict()
         elif isinstance(coordinates, PointCoordinate):
@@ -1997,6 +1978,7 @@ class LabelRowV2:
         if data_type == DataType.VIDEO or data_type == DataType.IMAGE:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
             # Dimensions should be always there
             # But we have some older entries that don't have them
             # So setting them to None for now until the format is not guaranteed to be enforced
@@ -2006,12 +1988,15 @@ class LabelRowV2:
         elif data_type == DataType.DICOM or data_type == DataType.NIFTI:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
             data_link = None
+            file_type = dicom_dict["data_type"]
+
             height = dicom_dict["height"]
             width = dicom_dict["width"]
 
         elif data_type == DataType.AUDIO:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
             height = None
             width = None
             audio_codec = data_dict["audio_codec"]
@@ -2019,8 +2004,16 @@ class LabelRowV2:
             audio_num_channels = data_dict["audio_num_channels"]
             audio_bit_depth = data_dict["audio_bit_depth"]
 
+        elif data_type == DataType.PLAIN_TEXT:
+            data_dict = list(label_row_dict["data_units"].values())[0]
+            data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
+            height = None
+            width = None
+
         elif data_type == DataType.IMG_GROUP:
             data_link = None
+            file_type = None
             height = None
             width = None
 
@@ -2030,6 +2023,7 @@ class LabelRowV2:
         elif data_type == DataType.PLAIN_TEXT or data_type == DataType.PDF:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
             height = None
             width = None
 
@@ -2071,7 +2065,7 @@ class LabelRowV2:
             priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
             client_metadata=label_row_dict.get("client_metadata", self._label_row_read_only_data.client_metadata),
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
-            file_type=label_row_dict.get("file_type", None),
+            file_type=file_type,
             is_valid=bool(label_row_dict.get("is_valid", True)),
             backing_item_uuid=self.backing_item_uuid,
         )
@@ -2110,7 +2104,8 @@ class LabelRowV2:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
             elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
-                self._add_objects_instances_from_objects_without_frames(object_answers)
+                is_html = data_unit["data_type"] == "text/html"
+                self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
 
             else:
@@ -2141,14 +2136,21 @@ class LabelRowV2:
     def _add_objects_instances_from_objects_without_frames(
         self,
         object_answers: dict,
+        html: bool = False,
     ):
-        for object_answer in object_answers.values():
-            ranges: Ranges = []
-            for range_elem in object_answer["range"]:
-                ranges.append(Range(range_elem[0], range_elem[1]))
+        if html:
+            for object_answer in object_answers.values():
+                object_instance = self._create_new_html_object_instance(object_answer, object_answer["range_html"])
+                self.add_object_instance(object_instance)
 
-            object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges)
-            self.add_object_instance(object_instance)
+        else:
+            for object_answer in object_answers.values():
+                ranges: Ranges = []
+                for range_elem in object_answer["range"]:
+                    ranges.append(Range(range_elem[0], range_elem[1]))
+
+                object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges)
+                self.add_object_instance(object_instance)
 
     def _add_object_instances_from_objects(
         self,
@@ -2222,17 +2224,56 @@ class LabelRowV2:
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
 
         expected_shape: Shape
+        coordinates: Union[AudioCoordinates, TextCoordinates]
         if self._label_row_read_only_data.data_type == DataType.AUDIO:
             expected_shape = Shape.AUDIO
+            coordinates = AudioCoordinates(range=ranges)
+        elif self._label_row_read_only_data.data_type == DataType.PLAIN_TEXT:
+            expected_shape = Shape.TEXT
+            coordinates = TextCoordinates(range=ranges)
         else:
             unknown_data_type = self._label_row_read_only_data.data_type
             raise RuntimeError(f"Unexpected data type[{unknown_data_type}] for range based objects")
         if label_class.shape != expected_shape:
             raise LabelRowError("Unsupported object shape for data type")
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
+
         object_instance.set_for_frames(
-            AudioCoordinates(),
-            ranges,
+            coordinates,
+            frames=0,
+            created_at=object_frame_instance_info.created_at,
+            created_by=object_frame_instance_info.created_by,
+            confidence=object_frame_instance_info.confidence,
+            manual_annotation=object_frame_instance_info.manual_annotation,
+            last_edited_at=object_frame_instance_info.last_edited_at,
+            last_edited_by=object_frame_instance_info.last_edited_by,
+            reviews=object_frame_instance_info.reviews,
+            overwrite=True,
+            # Always overwrite during label row dict parsing, as older dicts known to have duplicates
+        )
+        answer_list = object_answer["classifications"]
+        object_instance.set_answer_from_list(answer_list)
+
+        return object_instance
+
+    def _create_new_html_object_instance(
+        self,
+        object_answer: dict,
+        range_html: dict,
+    ) -> ObjectInstance:
+        feature_hash = object_answer["featureHash"]
+        object_hash = object_answer["objectHash"]
+
+        label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Object)
+
+        frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
+        frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
+
+        object_instance = ObjectInstance(label_class, object_hash=object_hash)
+        object_instance.set_for_frames(
+            HtmlCoordinates(range=[HtmlRange.from_dict(x) for x in range_html]),
+            frames=0,
             created_at=object_frame_instance_info.created_at,
             created_by=object_frame_instance_info.created_by,
             confidence=object_frame_instance_info.confidence,
@@ -2277,16 +2318,27 @@ class LabelRowV2:
             return BoundingBoxCoordinates.from_dict(frame_object_label)
         if "rotatableBoundingBox" in frame_object_label:
             return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
-        elif "polygon" in frame_object_label:
+        elif "polygon" in frame_object_label or "polygons" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
         elif "point" in frame_object_label:
             return PointCoordinate.from_dict(frame_object_label)
         elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
+
+            def _with_visibility_enum(point: dict):
+                if point.get(Visibility.INVISIBLE.value):
+                    point["visibility"] = Visibility.INVISIBLE
+                elif point.get(Visibility.OCCLUDED.value):
+                    point["visibility"] = Visibility.OCCLUDED
+                elif point.get(Visibility.VISIBLE.value):
+                    point["visibility"] = Visibility.VISIBLE
+                return point
+
+            values = [_with_visibility_enum(pnt) for pnt in frame_object_label["skeleton"].values()]
             skeleton_frame_object_label = {
                 "name": frame_object_label["name"],
-                "values": list(frame_object_label["skeleton"].values()),
+                "values": values,
             }
             return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
         elif "bitmask" in frame_object_label:
@@ -2311,13 +2363,7 @@ class LabelRowV2:
         classification_answers: dict,
     ):
         for classification_answer in classification_answers.values():
-            ranges: Ranges = []
-            for range_elem in classification_answer["range"]:
-                ranges.append(Range(range_elem[0], range_elem[1]))
-
-            classification_instance = self._create_new_classification_instance_with_ranges(
-                classification_answer, ranges
-            )
+            classification_instance = self._create_new_classification_instance_with_ranges(classification_answer)
             self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
@@ -2374,9 +2420,7 @@ class LabelRowV2:
         return None
 
     # This is only to be used by non-frame modalities (e.g. Audio)
-    def _create_new_classification_instance_with_ranges(
-        self, classification_answer: dict, ranges: Ranges
-    ) -> ClassificationInstance:
+    def _create_new_classification_instance_with_ranges(self, classification_answer: dict) -> ClassificationInstance:
         feature_hash = classification_answer["featureHash"]
         classification_hash = classification_answer["classificationHash"]
 
@@ -2387,8 +2431,10 @@ class LabelRowV2:
         classification_instance = ClassificationInstance(
             label_class, classification_hash=classification_hash, range_only=True
         )
+
+        # For non-geometric data, the classification will always be treated as being on frame=0,
+        # which is the entire file
         classification_instance.set_for_frames(
-            ranges,
             created_at=range_view.created_at,
             created_by=range_view.created_by,
             confidence=range_view.confidence,

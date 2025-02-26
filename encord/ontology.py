@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Ontology"
 slug: "sdk-ref-ontology"
 hidden: false
@@ -10,7 +9,6 @@ category: "64e481b57b6027003f20aaa0"
 ---
 """
 
-import dataclasses
 import datetime
 from typing import Iterable, List, Optional, Union
 from uuid import UUID
@@ -26,8 +24,7 @@ from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRol
 
 
 class Ontology:
-    """
-    Access ontology related data and manipulate the ontology. Instantiate this class via
+    """Access ontology related data and manipulate the ontology. Instantiate this class via
     :meth:`encord.user_client.EncordUserClient.get_ontology()`
     """
 
@@ -37,16 +34,12 @@ class Ontology:
 
     @property
     def ontology_hash(self) -> str:
-        """
-        Get the ontology hash (i.e. the Ontology ID).
-        """
+        """Get the ontology hash (i.e. the Ontology ID)."""
         return self._ontology_instance.ontology_hash
 
     @property
     def title(self) -> str:
-        """
-        Get the title of the ontology.
-        """
+        """Get the title of the ontology."""
         return self._ontology_instance.title
 
     @title.setter
@@ -55,9 +48,7 @@ class Ontology:
 
     @property
     def description(self) -> str:
-        """
-        Get the description of the ontology.
-        """
+        """Get the description of the ontology."""
         return self._ontology_instance.description
 
     @description.setter
@@ -66,23 +57,17 @@ class Ontology:
 
     @property
     def created_at(self) -> datetime.datetime:
-        """
-        Get the time the ontology was created at.
-        """
+        """Get the time the ontology was created at."""
         return self._ontology_instance.created_at
 
     @property
     def last_edited_at(self) -> datetime.datetime:
-        """
-        Get the time the ontology was last edited at.
-        """
+        """Get the time the ontology was last edited at."""
         return self._ontology_instance.last_edited_at
 
     @property
     def structure(self) -> OntologyStructure:
-        """
-        Get the structure of the ontology.
-        """
+        """Get the structure of the ontology."""
         return self._ontology_instance.structure
 
     @property
@@ -90,16 +75,14 @@ class Ontology:
         return self._ontology_instance.user_role
 
     def refetch_data(self) -> None:
-        """
-        The Ontology class will only fetch its properties once. Use this function if you suspect the state of those
+        """The Ontology class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be dirty.
         """
-        self._ontology_instance = self._get_ontology()
+        cls = type(self)
+        self._ontology_instance = cls._fetch_ontology(self.api_client, self.ontology_hash)
 
     def save(self) -> None:
-        """
-        Sync local state to the server, if updates are made to structure, title or description fields
-        """
+        """Sync local state to the server, if updates are made to structure, title or description fields"""
         if self._ontology_instance:
             try:
                 structure_dict = self._ontology_instance.structure.to_dict()
@@ -118,27 +101,15 @@ class Ontology:
                 payload=payload,
             )
 
-    def _get_ontology(self) -> OrmOntology:
-        ontology_model = self.api_client.get(
-            f"/ontologies/{self._ontology_instance.ontology_hash}",
-            params=None,
-            result_type=OntologyWithUserRole,
-        )
-
-        return self._legacy_orm_from_api_payload(ontology_model)
-
     def list_groups(self) -> Iterable[OntologyGroup]:
-        """
-        List all groups that have access to a particular ontology.
-        """
+        """List all groups that have access to a particular ontology."""
         ontology_hash = convert_to_uuid(self.ontology_hash)
         page = self.api_client.get(f"ontologies/{ontology_hash}/groups", params=None, result_type=Page[OntologyGroup])
 
         yield from page.results
 
     def add_group(self, group_hash: Union[List[UUID], UUID], user_role: OntologyUserRole):
-        """
-        Add group to an ontology.
+        """Add group to an ontology.
 
         Args:
             group_hash: List of group hashes to be added.
@@ -159,8 +130,7 @@ class Ontology:
         )
 
     def remove_group(self, group_hash: Union[List[UUID], UUID]):
-        """
-        Remove group from ontology.
+        """Remove group from ontology.
 
         Args:
             group_hash: List of group hashes to be removed.
@@ -189,4 +159,17 @@ class Ontology:
         ontology_with_user_role: OntologyWithUserRole,
         api_client: ApiClient,
     ) -> "Ontology":
-        return Ontology(Ontology._legacy_orm_from_api_payload(ontology_with_user_role), api_client)
+        return Ontology(
+            Ontology._legacy_orm_from_api_payload(ontology_with_user_role),
+            api_client,
+        )
+
+    @classmethod
+    def _fetch_ontology(cls, api_client: ApiClient, ontology_hash: str) -> OrmOntology:
+        ontology_model = api_client.get(
+            f"/ontologies/{ontology_hash}",
+            params=None,
+            result_type=OntologyWithUserRole,
+        )
+
+        return cls._legacy_orm_from_api_payload(ontology_model)

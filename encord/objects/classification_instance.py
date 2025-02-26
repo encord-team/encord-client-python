@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Classification Instance"
 slug: "sdk-ref-objects-classification-instance"
 hidden: false
@@ -31,7 +30,7 @@ from typing import (
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
-from encord.constants.enums import DataType
+from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer, ValueType, _get_static_answer_map
 from encord.objects.attributes import (
@@ -53,6 +52,17 @@ from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2
+
+
+# For Audio and Text files, classifications can only be applied to Range(start=0, end=0)
+# Because we treat the entire file as being on one frame (for classifications, its different for objects)
+def _verify_non_geometric_classifications_range(ranges_to_add: Ranges, label_row: Optional[LabelRowV2]) -> None:
+    is_range_only_on_frame_0 = len(ranges_to_add) == 1 and ranges_to_add[0].start == 0 and ranges_to_add[0].end == 0
+    if label_row is not None and not is_geometric(label_row.data_type) and not is_range_only_on_frame_0:
+        raise LabelRowError(
+            "For audio files and text files, classifications can only be attached to frame=0 "
+            "You may use `ClassificationInstance.set_for_frames(frames=Range(start=0, end=0))`."
+        )
 
 
 class ClassificationInstance:
@@ -104,6 +114,9 @@ class ClassificationInstance:
     def _last_frame(self) -> Union[int, float]:
         if self._parent is None or self._parent.data_type is DataType.DICOM:
             return float("inf")
+        elif self._parent is not None and not is_geometric(self._parent.data_type):
+            # For audio and text files, the entire file is treated as one frame
+            return 1
         else:
             return self._parent.number_of_frames
 
@@ -139,7 +152,11 @@ class ClassificationInstance:
         reviews: Optional[List[dict]],
     ):
         new_range_manager = RangeManager(frame_class=frames)
-        conflicting_ranges = self._is_classification_already_present_on_range(new_range_manager.get_ranges())
+        ranges_to_add = new_range_manager.get_ranges()
+
+        _verify_non_geometric_classifications_range(ranges_to_add, self._parent)
+
+        conflicting_ranges = self._is_classification_already_present_on_range(ranges_to_add)
         if conflicting_ranges and not overwrite:
             raise LabelRowError(
                 f"The classification '{self.classification_hash}' already exists "
@@ -147,14 +164,9 @@ class ClassificationInstance:
                 f"Set 'overwrite' parameter to True to override."
             )
 
-        ranges_to_add = new_range_manager.get_ranges()
-        for range_to_add in ranges_to_add:
-            self._check_within_range(range_to_add.end)
-
         """
-        At this point, this classification instance operates on ranges, NOT on frames.
-        We therefore leave only FRAME 0 in the map.The frame_data for FRAME 0 will be
-        treated as the data for all "frames" in this classification instance.
+        For non-geometric files, the frame_data for FRAME 0 will be
+        treated as the data for the entire classification instance.
         """
         self._set_frame_and_frame_data(
             frame=0,
@@ -187,32 +199,22 @@ class ClassificationInstance:
         last_edited_by: Optional[str] = None,
         reviews: Optional[List[dict]] = None,
     ) -> None:
-        """
-        Places the classification onto the specified frame. If the classification already exists on the frame and
+        """Places the classification onto the specified frame. If the classification already exists on the frame and
         overwrite is set to `True`, the currently specified values will be overwritten.
 
         Args:
-            frames:
-                The frame to add the classification instance to. Defaulting to the first frame for convenience.
-            overwrite:
-                If `True`, overwrite existing data for the given frames. This will not reset all the
+            frames: The frame to add the classification instance to. Defaulting to the first frame for convenience.
+            overwrite: If `True`, overwrite existing data for the given frames. This will not reset all the
                 non-specified values. If `False` and data already exists for the given frames,
                 raises an error.
-            created_at:
-                Optionally specify the creation time of the classification instance on this frame. Defaults to `datetime.now()`.
-            created_by:
-                Optionally specify the creator of the classification instance on this frame. Defaults to the current SDK user.
-            last_edited_at:
-                Optionally specify the last edit time of the classification instance on this frame. Defaults to `datetime.now()`.
-            last_edited_by:
-                Optionally specify the last editor of the classification instance on this frame. Defaults to the current SDK
+            created_at: Optionally specify the creation time of the classification instance on this frame. Defaults to `datetime.now()`.
+            created_by: Optionally specify the creator of the classification instance on this frame. Defaults to the current SDK user.
+            last_edited_at: Optionally specify the last edit time of the classification instance on this frame. Defaults to `datetime.now()`.
+            last_edited_by: Optionally specify the last editor of the classification instance on this frame. Defaults to the current SDK
                 user.
-            confidence:
-                Optionally specify the confidence of the classification instance on this frame. Defaults to `1.0`.
-            manual_annotation:
-                Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
-            reviews:
-                Should only be set by internal functions.
+            confidence: Optionally specify the confidence of the classification instance on this frame. Defaults to `1.0`.
+            manual_annotation: Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
+            reviews: Should only be set by internal functions.
         """
         if created_at is None:
             created_at = datetime.now()
@@ -283,12 +285,10 @@ class ClassificationInstance:
             self._parent._add_to_frame_to_hashes_map(self, frames_list)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
+        """Args:
+        frame: Either the frame number or the image hash if the data type is an image or image group.
+            Defaults to the first frame.
         """
-        Args:
-            frame: Either the frame number or the image hash if the data type is an image or image group.
-                Defaults to the first frame.
-        """
-
         if self._range_only and frame != 0:
             raise LabelRowError(
                 "This Classification Instance only works on ranges, technically only has one 'frame'"
@@ -335,9 +335,8 @@ class ClassificationInstance:
                 self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
 
     def get_annotations(self) -> List[Annotation]:
-        """
-        Returns:
-            A list of `ClassificationInstance.Annotation` in order of available frames.
+        """Returns:
+        A list of `ClassificationInstance.Annotation` in order of available frames.
         """
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
 
@@ -351,8 +350,7 @@ class ClassificationInstance:
         attribute: Optional[Attribute] = None,
         overwrite: bool = False,
     ) -> None:
-        """
-        Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
+        """Set the answer for a given ontology Attribute. This is the equivalent of e.g. selecting a checkbox in the
         UI after adding a ClassificationInstance. There is only one answer per ClassificationInstance per Attribute.
 
         Args:
@@ -385,15 +383,13 @@ class ClassificationInstance:
         static_answer.set(answer)
 
     def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
-        """
-        This is a low level helper function and should not be used directly.
+        """This is a low level helper function and should not be used directly.
 
         Sets the answer for the classification from a dictionary.
 
         Args:
             answers_list: The list to set the answer from.
         """
-
         for answer_dict in answers_list:
             attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_classification.attributes)
             if attribute is None:
@@ -428,8 +424,7 @@ class ClassificationInstance:
                 raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
     def get_answer(self, attribute: Optional[Attribute] = None) -> Union[str, Option, Iterable[Option], None]:
-        """
-        Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
+        """Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
 
         For the ChecklistAttribute, it returns None if and only if
         the attribute is nested and the parent is unselected. Otherwise, if not yet answered it will return an empty
@@ -452,8 +447,7 @@ class ClassificationInstance:
         return static_answer.get()
 
     def delete_answer(self, attribute: Optional[Attribute] = None) -> None:
-        """
-        This resets the answer of an attribute as if it was never set.
+        """This resets the answer of an attribute as if it was never set.
 
         Args:
             attribute: The ontology attribute to delete the answer for. If not provided, the first level attribute is
@@ -468,8 +462,7 @@ class ClassificationInstance:
         static_answer.unset()
 
     def copy(self) -> ClassificationInstance:
-        """
-        Creates an exact copy of this ClassificationInstance but with a new classification hash and without being
+        """Creates an exact copy of this ClassificationInstance but with a new classification hash and without being
         associated to any LabelRowV2. This is useful if you want to add the semantically same
         ClassificationInstance to multiple `LabelRowV2`s.
         """
@@ -483,8 +476,7 @@ class ClassificationInstance:
         return list(self._static_answer_map.values())
 
     class Annotation:
-        """
-        This class can be used to set or get data for a specific annotation (i.e. the ClassificationInstance for a given
+        """This class can be used to set or get data for a specific annotation (i.e. the ClassificationInstance for a given
         frame number).
         """
 
@@ -513,9 +505,7 @@ class ClassificationInstance:
 
         @created_by.setter
         def created_by(self, created_by: Optional[str]) -> None:
-            """
-            Set the created_by field with a user email or None if it should default to the current user of the SDK.
-            """
+            """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
             self._check_if_frame_view_valid()
             if created_by is not None:
                 check_email(created_by)
@@ -538,9 +528,7 @@ class ClassificationInstance:
 
         @last_edited_by.setter
         def last_edited_by(self, last_edited_by: Optional[str]) -> None:
-            """
-            Set the last_edited_by field with a user email or None if it should default to the current user of the SDK.
-            """
+            """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
             self._check_if_frame_view_valid()
             if last_edited_by is not None:
                 check_email(last_edited_by)
@@ -568,9 +556,7 @@ class ClassificationInstance:
 
         @property
         def reviews(self) -> Optional[List[dict]]:
-            """
-            A read only property about the reviews that happened for this object on this frame.
-            """
+            """A read only property about the reviews that happened for this object on this frame."""
             self._check_if_frame_view_valid()
             return self._get_object_frame_instance_data().reviews
 
@@ -685,7 +671,9 @@ class ClassificationInstance:
     def _check_within_range(self, frame: int) -> None:
         if frame < 0 or frame >= self._last_frame:
             raise LabelRowError(
-                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
+                f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`. "
+                f"Note: for non-geometric data (e.g. {DataType.AUDIO} and {DataType.PLAIN_TEXT}), "
+                f"the entire file has only 1 frame."
             )
 
     def _is_classification_already_present(self, frames: Iterable[int]) -> Set[int]:

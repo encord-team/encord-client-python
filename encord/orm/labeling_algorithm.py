@@ -4,8 +4,7 @@ from encord.orm import base_orm
 
 
 class LabelingAlgorithm(base_orm.BaseORM):
-    """
-    Labeling algorithm base ORM.
+    """Labeling algorithm base ORM.
 
     ORM:
 
@@ -23,8 +22,7 @@ class LabelingAlgorithm(base_orm.BaseORM):
 
 
 class ObjectInterpolationParams(base_orm.BaseORM):
-    """
-    Labeling algorithm parameters for interpolation algorithm
+    """Labeling algorithm parameters for interpolation algorithm
 
     ORM:
 
@@ -42,8 +40,7 @@ class ObjectInterpolationParams(base_orm.BaseORM):
 
 
 class BoundingBoxFittingParams(base_orm.BaseORM):
-    """
-    Labeling algorithm parameters for bounding box fitting algorithm
+    """Labeling algorithm parameters for bounding box fitting algorithm
 
     ORM:
 

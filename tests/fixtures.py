@@ -51,6 +51,7 @@ def project(
         created_at=datetime.now(),
         last_edited_at=datetime.now(),
         ontology_hash="dummy-ontology-hash",
+        editor_ontology=ONTOLOGY_BLURB,
         workflow=None,
     )
 

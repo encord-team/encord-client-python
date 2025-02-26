@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Enums"
 slug: "sdk-ref-enums"
 hidden: false
@@ -45,3 +44,17 @@ class DataType(StringEnum):
 
     def to_upper_case_string(self) -> str:
         return self.value.upper()
+
+
+GEOMETRIC_TYPES = {
+    DataType.VIDEO,
+    DataType.IMAGE,
+    DataType.IMG_GROUP,
+    DataType.DICOM,
+    DataType.DICOM_STUDY,
+    DataType.NIFTI,
+}
+
+
+def is_geometric(data_type: DataType) -> bool:
+    return data_type in GEOMETRIC_TYPES

@@ -7,15 +7,16 @@ from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
+from encord.exceptions import WrongProjectTypeError
 from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import Workflow
+from encord.utilities.project_user import ProjectUserRole
 
 
 class Project(base_orm.BaseORM):
-    """
-    DEPRECATED - prefer using the `encord.project.Project` class instead.
+    """DEPRECATED - prefer using the `encord.project.Project` class instead.
 
     A project defines a label ontology and is a collection of datasets and label rows.
 
@@ -73,8 +74,7 @@ class Project(base_orm.BaseORM):
     NON_UPDATABLE_FIELDS = {"editor_ontology", "datasets", "label_rows"}
 
     def get_labels_list(self) -> List[Optional[str]]:
-        """
-        Returns a list of all optional label row IDs (label_hash uid) in a project. If no `label_hash` is found,
+        """Returns a list of all optional label row IDs (label_hash uid) in a project. If no `label_hash` is found,
         a `None` value is appended. This can be useful for working with fetching additional label row data via
         :meth:`encord.project.Project.get_label_rows` for example.
 
@@ -91,7 +91,7 @@ class Project(base_orm.BaseORM):
 
                 label_rows = project.get_label_rows(created_labels_list, get_signed_url=False)
         """
-        labels = self.to_dic().get("label_rows", [])
+        labels = self.label_rows() or []
         return [label.get("label_hash") for label in labels]
 
     @property
@@ -136,7 +136,13 @@ class Project(base_orm.BaseORM):
 
     @property
     def workflow_manager_uuid(self) -> UUID:
-        return self["workflow_manager_uuid"]
+        """Accessing this property will raise a `WrongProjectTypeError` if the project is not a workflow project."""
+        try:
+            return self["workflow_manager_uuid"]
+        except KeyError as e:
+            raise WrongProjectTypeError(
+                "This project is not a workflow project, workflow_manager_uuid is not available."
+            ) from e
 
 
 class ProjectCopy:
@@ -268,8 +274,7 @@ Currently one of:
 
 
 class ReviewMode(str, Enum):
-    """
-    UNLABELLED:
+    """UNLABELLED:
         The labels are added to the images. However, the one person must still go over
             all of the labels before submitting them for review.
     LABELLED:
@@ -302,12 +307,15 @@ class ProjectDTO(BaseDTO):
     created_at: datetime.datetime
     last_edited_at: datetime.datetime
     ontology_hash: str
+    editor_ontology: Dict[str, Any]
+    user_role: Optional[ProjectUserRole] = None
+    source_projects: Optional[List[str]] = None
+    workflow_manager_uuid: Optional[UUID] = None
     workflow: Optional[Workflow] = None
 
 
 class CvatReviewMode(CamelStrEnum):
-    """
-    UNLABELLED:
+    """UNLABELLED:
         The labels are added to the images. However, the one person must still go over
             all the labels before submitting them for review.
     LABELLED:
@@ -348,8 +356,7 @@ class CvatImportGetResultLongPollingStatus(str, Enum):
 
 
 class CvatImportGetResultResponse(BaseDTO):
-    """
-    Response model for CVAT import operation status.
+    """Response model for CVAT import operation status.
 
     Attributes:
         status (CvatImportGetResultLongPollingStatus): Import status ("DONE", "ERROR", "PENDING")
@@ -360,3 +367,17 @@ class CvatImportGetResultResponse(BaseDTO):
     status: CvatImportGetResultLongPollingStatus
     project_uuid: Optional[UUID] = None
     issues: Optional[Dict] = None
+
+
+class ProjectFilterParams(BaseDTO):
+    """Filter parameters for the /v2/public/projects endpoint"""
+
+    title_eq: Optional[str] = None
+    title_like: Optional[str] = None
+    desc_eq: Optional[str] = None
+    desc_like: Optional[str] = None
+    created_before: Optional[Union[str, datetime.datetime]] = None
+    created_after: Optional[Union[str, datetime.datetime]] = None
+    edited_before: Optional[Union[str, datetime.datetime]] = None
+    edited_after: Optional[Union[str, datetime.datetime]] = None
+    include_org_access: bool = False

@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Configs"
 slug: "sdk-ref-configs"
 hidden: false
@@ -29,6 +28,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat,
 from requests import PreparedRequest
 
 from encord._version import __version__ as encord_version
+from encord.common.utils import validate_user_agent_suffix
 from encord.exceptions import ResourceNotFoundError
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
@@ -50,8 +50,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseConfig(ABC):
-    """
-    Abstract base class for configuration.
+    """Abstract base class for configuration.
 
     Args:
         endpoint (str): The API endpoint URL.
@@ -75,8 +74,7 @@ class BaseConfig(ABC):
 
     @abstractmethod
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for a request.
+        """Define headers for a request.
 
         Args:
             resource_id (Optional[str]): The resource ID.
@@ -90,8 +88,7 @@ class BaseConfig(ABC):
 
     @abstractmethod
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for a request (v2).
+        """Define headers for a request (v2).
 
         Args:
             request (PreparedRequest): The prepared request.
@@ -103,8 +100,7 @@ class BaseConfig(ABC):
 
 
 class UserConfig(BaseConfig):
-    """
-    Configuration for user-specific requests, redirecting to the "/public/user" endpoint.
+    """Configuration for user-specific requests, redirecting to the "/public/user" endpoint.
 
     Args:
         config (Config): The base configuration.
@@ -119,8 +115,7 @@ class UserConfig(BaseConfig):
 
     @property
     def domain(self) -> str:
-        """
-        Get the domain from the base configuration.
+        """Get the domain from the base configuration.
 
         Returns:
             str: The domain.
@@ -128,8 +123,7 @@ class UserConfig(BaseConfig):
         return self.config.domain
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for a user-specific request.
+        """Define headers for a user-specific request.
 
         Args:
             resource_id (Optional[str]): The resource ID.
@@ -142,8 +136,7 @@ class UserConfig(BaseConfig):
         return self.config.define_headers(resource_id, resource_type, data)
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for a user-specific request (v2).
+        """Define headers for a user-specific request (v2).
 
         Args:
             request (PreparedRequest): The prepared request.
@@ -155,8 +148,7 @@ class UserConfig(BaseConfig):
 
 
 class Config(BaseConfig):
-    """
-    Configuration defining endpoint, project ID, API key, and timeouts.
+    """Configuration defining endpoint, project ID, API key, and timeouts.
 
     Args:
         web_file_path (str): The web file path for the endpoint.
@@ -172,17 +164,21 @@ class Config(BaseConfig):
         web_file_path: str = ENCORD_PUBLIC_PATH,
         domain: Optional[str] = None,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        user_agent_suffix: Optional[str] = None,
     ):
         if domain is None:
             raise RuntimeError("`domain` must be specified")
 
         self.domain = domain
+        self.user_agent_suffix = validate_user_agent_suffix(user_agent_suffix) if user_agent_suffix else None
         endpoint = domain + web_file_path
         super().__init__(endpoint, requests_settings=requests_settings)
 
-    @staticmethod
-    def _user_agent() -> str:
-        return f"encord-sdk-python/{encord_version} python/{platform.python_version()} pydantic/{pydantic_version_str}"
+    def _user_agent(self) -> str:
+        base_agent_header = (
+            f"encord-sdk-python/{encord_version} python/{platform.python_version()} pydantic/{pydantic_version_str}"
+        )
+        return base_agent_header + " " + self.user_agent_suffix if self.user_agent_suffix else base_agent_header
 
     def _tracing_id(self) -> str:
         if self.requests_settings.trace_id_provider:
@@ -191,8 +187,7 @@ class Config(BaseConfig):
 
 
 def get_env_ssh_key() -> str:
-    """
-    Get the raw SSH key from environment variables.
+    """Get the raw SSH key from environment variables.
 
     Returns:
         str: The raw SSH key.
@@ -228,8 +223,7 @@ def get_env_ssh_key() -> str:
 
 
 class SshConfig(Config):
-    """
-    Configuration for SSH key-based authorization.
+    """Configuration for SSH key-based authorization.
 
     Args:
         private_key (Ed25519PrivateKey): The private SSH key.
@@ -247,12 +241,13 @@ class SshConfig(Config):
         private_key: Ed25519PrivateKey,
         domain: str = ENCORD_DOMAIN,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        user_agent_suffix: Optional[str] = None,
     ):
         self.private_key: Ed25519PrivateKey = private_key
         self.public_key: Ed25519PublicKey = private_key.public_key()
         self.public_key_hex: str = self.public_key.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
 
-        super().__init__(domain=domain, requests_settings=requests_settings)
+        super().__init__(domain=domain, requests_settings=requests_settings, user_agent_suffix=user_agent_suffix)
 
     @staticmethod
     def _get_v1_signature(data: str, private_key: Ed25519PrivateKey) -> bytes:
@@ -267,8 +262,7 @@ class SshConfig(Config):
         return f"{public_key_hex}:{signature.hex()}"
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for an SSH key-based request.
+        """Define headers for an SSH key-based request.
 
         Args:
             resource_id (Optional[str]): The resource ID.
@@ -291,8 +285,7 @@ class SshConfig(Config):
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for an SSH key-based request (v2).
+        """Define headers for an SSH key-based request (v2).
 
         Args:
             request (PreparedRequest): The prepared request.
@@ -312,8 +305,7 @@ class SshConfig(Config):
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
     ) -> SshConfig:
-        """
-        Instantiate a SshConfig object by the content of a private SSH key.
+        """Instantiate a SshConfig object by the content of a private SSH key.
 
         Args:
             ssh_private_key: The content of a private key file.
@@ -337,8 +329,7 @@ class SshConfig(Config):
 
 
 class BearerConfig(Config):
-    """
-    Configuration for bearer token-based authorization.
+    """Configuration for bearer token-based authorization.
 
     Args:
         token (str): The bearer token.
@@ -359,8 +350,7 @@ class BearerConfig(Config):
         super().__init__(domain=domain, requests_settings=requests_settings)
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
-        """
-        Define headers for a bearer token-based request.
+        """Define headers for a bearer token-based request.
 
         Args:
             resource_id (Optional[str]): The resource ID.
@@ -382,8 +372,7 @@ class BearerConfig(Config):
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
-        """
-        Define headers for a bearer token-based request (v2).
+        """Define headers for a bearer token-based request (v2).
 
         Args:
             request (PreparedRequest): The prepared request.
@@ -403,13 +392,11 @@ class BearerConfig(Config):
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         **kwargs,
     ) -> BearerConfig:
-        """
-        Instantiate a BearerConfig object using a bearer token.
+        """Instantiate a BearerConfig object using a bearer token.
 
         Args:
             token: The bearer token.
             requests_settings: The requests settings for all outgoing network requests.
-
         Returns:
             BearerConfig: The bearer token configuration.
         """

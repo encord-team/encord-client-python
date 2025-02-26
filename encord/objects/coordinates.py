@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Objects - Coordinates"
 slug: "sdk-ref-objects-coordinates"
 hidden: false
@@ -13,19 +12,21 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Flag, auto
+from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Type, Union
 
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
+from encord.objects.frames import Ranges
+from encord.objects.html_node import HtmlRange
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
 
 @dataclass(frozen=True)
 class BoundingBoxCoordinates:
-    """
-    Represents bounding box coordinates, where all values are percentages relative to the total image size.
+    """Represents bounding box coordinates, where all values are percentages relative to the total image size.
 
     Attributes:
         height (float): The height of the bounding box.
@@ -41,8 +42,7 @@ class BoundingBoxCoordinates:
 
     @staticmethod
     def from_dict(d: dict) -> BoundingBoxCoordinates:
-        """
-        Create a BoundingBoxCoordinates instance from a dictionary.
+        """Create a BoundingBoxCoordinates instance from a dictionary.
 
         Args:
             d (dict): A dictionary containing bounding box information.
@@ -59,8 +59,7 @@ class BoundingBoxCoordinates:
         )
 
     def to_dict(self) -> dict:
-        """
-        Convert the BoundingBoxCoordinates instance to a dictionary.
+        """Convert the BoundingBoxCoordinates instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the bounding box coordinates.
@@ -75,8 +74,7 @@ class BoundingBoxCoordinates:
 
 @dataclass(frozen=True)
 class RotatableBoundingBoxCoordinates:
-    """
-    Represents rotatable bounding box coordinates, where all values are percentages relative to the total image size.
+    """Represents rotatable bounding box coordinates, where all values are percentages relative to the total image size.
 
     Attributes:
         height (float): The height of the bounding box.
@@ -94,8 +92,7 @@ class RotatableBoundingBoxCoordinates:
 
     @staticmethod
     def from_dict(d: dict) -> RotatableBoundingBoxCoordinates:
-        """
-        Create a RotatableBoundingBoxCoordinates instance from a dictionary.
+        """Create a RotatableBoundingBoxCoordinates instance from a dictionary.
 
         Args:
             d (dict): A dictionary containing rotatable bounding box information.
@@ -113,8 +110,7 @@ class RotatableBoundingBoxCoordinates:
         )
 
     def to_dict(self) -> dict:
-        """
-        Convert the RotatableBoundingBoxCoordinates instance to a dictionary.
+        """Convert the RotatableBoundingBoxCoordinates instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the rotatable bounding box coordinates.
@@ -130,8 +126,7 @@ class RotatableBoundingBoxCoordinates:
 
 @dataclass(frozen=True)
 class PointCoordinate:
-    """
-    Represents a point coordinate, where all coordinates are a percentage relative to the total image size.
+    """Represents a point coordinate, where all coordinates are a percentage relative to the total image size.
 
     Attributes:
         x (float): The x-coordinate of the point.
@@ -143,8 +138,7 @@ class PointCoordinate:
 
     @staticmethod
     def from_dict(d: dict) -> PointCoordinate:
-        """
-        Create a PointCoordinate instance from a dictionary.
+        """Create a PointCoordinate instance from a dictionary.
 
         Args:
             d (dict): A dictionary containing point coordinate information.
@@ -159,8 +153,7 @@ class PointCoordinate:
         )
 
     def to_dict(self) -> dict:
-        """
-        Convert the PointCoordinate instance to a dictionary.
+        """Convert the PointCoordinate instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the point coordinate.
@@ -168,29 +161,60 @@ class PointCoordinate:
         return {"0": {"x": self.x, "y": self.y}}
 
 
-@dataclass(frozen=True)
+class PolygonCoordsToDict(str, Enum):
+    single_polygon = "single_polygon"
+    multiple_polygons = "multiple_polygons"
+
+
 class PolygonCoordinates:
-    """
-    Represents polygon coordinates as a list of point coordinates.
+    """Represents polygon coordinates"""
 
-    Attributes:
-        values (List[PointCoordinate]): A list of PointCoordinate objects defining the polygon.
-    """
+    def __init__(
+        self, values: list[PointCoordinate] | None = None, polygons: list[list[list[PointCoordinate]]] | None = None
+    ):
+        """
+        Args:
+            values (List[PointCoordinate]): A list of PointCoordinate objects defining the polygon.
+            polygons (List[List[List[PointCoordinate]]]): A list of polygons, where each polygon is a list of contours, where each contour is a list of points.
+        """
 
-    values: List[PointCoordinate]
+        if not values and not polygons:
+            raise LabelRowError("Either `values` or `polygons` must be provided")
+        elif values and not polygons:
+            self._values = values
+            self._polygons = [[list(values)]]
+        elif polygons and not values:
+            self._polygons = polygons
+            self._values = [point for point in self._polygons[0][0]]
+        elif polygons and values:
+            if polygons[0][0] != values:
+                raise LabelRowError("`values` and `polygons` are not consistent")
+            self._values = values
+            self._polygons = polygons
+
+    @property
+    def values(self) -> list[PointCoordinate]:
+        return self._values
+
+    @property
+    def polygons(self) -> list[list[list[PointCoordinate]]]:
+        return self._polygons
 
     @staticmethod
-    def from_dict(d: dict) -> PolygonCoordinates:
-        """
-        Create a PolygonCoordinates instance from a dictionary.
+    def from_dict(d: dict) -> "PolygonCoordinates":
+        """Create a PolygonCoordinates instance from a dictionary.
+
+        Supports both legacy format (single polygon with one contour) and new complex format.
 
         Args:
             d (dict): A dictionary containing polygon coordinates information.
+                Legacy format: {"polygon": {str(idx): {"x": x, "y": y}} or {"polygon": [{"x": x, "y": y}]}
+                New format: {"polygons": [[[{"x": x, "y": y}]]]}
 
         Returns:
             PolygonCoordinates: An instance of PolygonCoordinates.
         """
-        polygon_dict = d["polygon"]
+        polygon_dict = d.get("polygon")
         values: List[PointCoordinate] = []
 
         if isinstance(polygon_dict, dict):
@@ -198,6 +222,8 @@ class PolygonCoordinates:
             sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
         elif isinstance(polygon_dict, list):
             sorted_dict_values = list(polygon_dict)
+        elif not polygon_dict:  # Empty dict case
+            sorted_dict_values = []
         else:
             raise LabelRowError(f"Invalid format for polygon coordinates: {polygon_dict}")
 
@@ -208,22 +234,41 @@ class PolygonCoordinates:
             )
             values.append(point_coordinate)
 
-        return PolygonCoordinates(values=values)
+        # Parse new format if present
+        polygons = []
+        for polygon in d.get("polygons", []):
+            contours = [flat_to_pnt_coordinates(contour) for contour in polygon]
+            polygons.append(contours)
 
-    def to_dict(self) -> dict:
-        """
-        Convert the PolygonCoordinates instance to a dictionary.
+        return PolygonCoordinates(values=values, polygons=polygons)
+
+    def to_dict(
+        self, kind: PolygonCoordsToDict | str = PolygonCoordsToDict.single_polygon
+    ) -> dict | list[list[list[float]]]:
+        """Convert the PolygonCoordinates instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the polygon coordinates.
         """
-        return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
+        if kind == PolygonCoordsToDict.single_polygon:
+            return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self._values)}
+        elif kind == PolygonCoordsToDict.multiple_polygons:
+            return [[pnt_coordinates_to_flat(contour) for contour in polygon] for polygon in self._polygons]
+        else:
+            raise LabelRowError(f"Invalid argument: {kind}")
+
+
+def flat_to_pnt_coordinates(ring: list[float]) -> list[PointCoordinate]:
+    return [PointCoordinate(x=ring[idx], y=ring[idx + 1]) for idx in range(0, len(ring), 2)]
+
+
+def pnt_coordinates_to_flat(coordinates: list[PointCoordinate]) -> list[float]:
+    return [coord for point in coordinates for coord in [point.x, point.y]]
 
 
 @dataclass(frozen=True)
 class PolylineCoordinates:
-    """
-    Represents polyline coordinates as a list of point coordinates.
+    """Represents polyline coordinates as a list of point coordinates.
 
     Attributes:
         values (List[PointCoordinate]): A list of PointCoordinate objects defining the polyline.
@@ -233,8 +278,7 @@ class PolylineCoordinates:
 
     @staticmethod
     def from_dict(d: dict) -> PolylineCoordinates:
-        """
-        Create a PolylineCoordinates instance from a dictionary.
+        """Create a PolylineCoordinates instance from a dictionary.
 
         Args:
             d (dict): A dictionary containing polyline coordinates information.
@@ -263,8 +307,7 @@ class PolylineCoordinates:
         return PolylineCoordinates(values=values)
 
     def to_dict(self) -> dict:
-        """
-        Convert the PolylineCoordinates instance to a dictionary.
+        """Convert the PolylineCoordinates instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the polyline coordinates.
@@ -272,9 +315,8 @@ class PolylineCoordinates:
         return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
 
 
-class Visibility(Flag):
-    """
-    An enumeration to represent the visibility state of an item.
+class Visibility(CamelStrEnum):
+    """An enumeration to represent the visibility state of an item.
 
     Attributes:
         VISIBLE: The item is visible within the frame.
@@ -288,8 +330,7 @@ class Visibility(Flag):
 
 
 class SkeletonCoordinate(BaseDTO):
-    """
-    Represents a coordinate for a skeleton structure in an image.
+    """Represents a coordinate for a skeleton structure in an image.
 
     Attributes:
         x (float): The x-coordinate of the skeleton point.
@@ -312,8 +353,7 @@ class SkeletonCoordinate(BaseDTO):
 
 
 class SkeletonCoordinates(BaseDTO):
-    """
-    Represents a collection of skeleton coordinates.
+    """Represents a collection of skeleton coordinates.
 
     Attributes:
         values (List[SkeletonCoordinate]): A list of SkeletonCoordinate objects.
@@ -324,8 +364,7 @@ class SkeletonCoordinates(BaseDTO):
     name: str
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
-        """
-        Convert the SkeletonCoordinates instance to a dictionary.
+        """Convert the SkeletonCoordinates instance to a dictionary.
 
         Args:
             by_alias (bool): Whether to use alias for the field names.
@@ -338,11 +377,46 @@ class SkeletonCoordinates(BaseDTO):
 
 
 class AudioCoordinates(BaseDTO):
-    pass
+    """Represents coordinates for an audio file
+
+    Attributes:
+        range (Ranges): Ranges in milliseconds for audio files
+    """
+
+    range: Ranges
+
+    def __post_init__(self):
+        if len(self.range) == 0:
+            raise ValueError("Range list must contain at least one range.")
+
+
+class TextCoordinates(BaseDTO):
+    """Represents coordinates for a text file
+
+    Attributes:
+        range (Ranges): Ranges of chars for simple text files
+    """
+
+    range: Ranges
+
+
+class HtmlCoordinates(BaseDTO):
+    """Represents coordinates for a html file
+
+    Attributes:
+        range (List[HtmlRange]): A list of HtmlRange objects
+    """
+
+    range: List[HtmlRange]
+
+
+NON_GEOMETRIC_COORDINATES = {AudioCoordinates, TextCoordinates, HtmlCoordinates}
 
 
 Coordinates = Union[
     AudioCoordinates,
+    TextCoordinates,
+    HtmlCoordinates,
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
     PointCoordinate,
@@ -351,13 +425,15 @@ Coordinates = Union[
     SkeletonCoordinates,
     BitmaskCoordinates,
 ]
-ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, Type[Coordinates]] = {
-    Shape.BOUNDING_BOX: BoundingBoxCoordinates,
-    Shape.ROTATABLE_BOUNDING_BOX: RotatableBoundingBoxCoordinates,
-    Shape.POINT: PointCoordinate,
-    Shape.POLYGON: PolygonCoordinates,
-    Shape.POLYLINE: PolylineCoordinates,
-    Shape.SKELETON: SkeletonCoordinates,
-    Shape.BITMASK: BitmaskCoordinates,
-    Shape.AUDIO: AudioCoordinates,
+
+ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
+    Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
+    Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
+    Shape.POINT: [PointCoordinate],
+    Shape.POLYGON: [PolygonCoordinates],
+    Shape.POLYLINE: [PolylineCoordinates],
+    Shape.SKELETON: [SkeletonCoordinates],
+    Shape.BITMASK: [BitmaskCoordinates],
+    Shape.AUDIO: [AudioCoordinates],
+    Shape.TEXT: [TextCoordinates, HtmlCoordinates],
 }

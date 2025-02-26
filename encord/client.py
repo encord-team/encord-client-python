@@ -11,14 +11,13 @@ and obtaining project info:
     client = EncordClient.initialize('YourProjectID', 'YourAPIKey')
     client.get_project()
 
-    Returns:
+Returns:
         Project: A project record instance. See Project ORM for details.
 
 """
 
 from __future__ import annotations
 
-import base64
 import dataclasses
 import json
 import logging
@@ -36,14 +35,12 @@ import requests
 
 import encord.exceptions
 from encord.common.deprecated import deprecated
-from encord.configs import BearerConfig, Config, SshConfig
+from encord.configs import Config
 from encord.constants.enums import DataType
-from encord.constants.model import AutomationModels, Device
 from encord.constants.string_constants import (
     FITTED_BOUNDING_BOX,
     INTERPOLATION,
 )
-from encord.exceptions import EncordException
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
@@ -103,19 +100,6 @@ from encord.orm.labeling_algorithm import (
     LabelingAlgorithm,
     ObjectInterpolationParams,
 )
-from encord.orm.model import (
-    Model,
-    ModelConfiguration,
-    ModelInferenceParams,
-    ModelOperations,
-    ModelRow,
-    ModelTrainingWeights,
-    PublicModelTrainGetResultLongPollingStatus,
-    PublicModelTrainGetResultParams,
-    PublicModelTrainGetResultResponse,
-    PublicModelTrainStartPayload,
-    TrainingMetadata,
-)
 from encord.orm.project import (
     CopyDatasetAction,
     CopyDatasetOptions,
@@ -159,50 +143,35 @@ logger = logging.getLogger(__name__)
 
 
 class EncordClient:
-    """
-    Encord client. Allows you to query db items associated
+    """Encord client. Allows you to query db items associated
     with a project (e.g. label rows, datasets).
     """
 
-    def __init__(self, querier: Querier, config: Config, api_client: Optional[ApiClient] = None):
+    def __init__(self, querier: Querier, config: Config, api_client: ApiClient):
         self._querier = querier
         self._config = config
         self._api_client = api_client
 
-    def _get_api_client(self) -> ApiClient:
-        if not (isinstance(self._config, (SshConfig, BearerConfig))):
-            raise EncordException(
-                "This functionality requires private SSH key authentication. API keys are not supported."
-            )
-
-        if not self._api_client:
-            raise RuntimeError("ApiClient should exist when authenticated with SSH key.")
-
-        return self._api_client
-
+    @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:
         return [
             CloudIntegration(
                 id=str(x.integration_uuid),
                 title=x.title,
             )
-            for x in self._get_api_client()
-            .get(
+            for x in self._api_client.get(
                 "cloud-integrations",
                 params=None,
                 result_type=GetCloudIntegrationsResponse,
-            )
-            .result
+            ).result
         ]
 
     def get_bearer_token(self) -> BearerTokenResponse:
-        return self._get_api_client().get("user/bearer-token", None, result_type=BearerTokenResponse)
+        return self._api_client.get("user/bearer-token", None, result_type=BearerTokenResponse)
 
 
 class EncordClientDataset(EncordClient):
-    """
-    DEPRECATED - prefer using the :class:`encord.dataset.Dataset` instead
-    """
+    """DEPRECATED - prefer using the :class:`encord.dataset.Dataset` instead"""
 
     def __init__(
         self,
@@ -211,12 +180,14 @@ class EncordClientDataset(EncordClient):
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
         api_client: Optional[ApiClient] = None,
     ):
+        if api_client is None:
+            raise ValueError("api_client is None")
+
         super().__init__(querier, config, api_client)
         self._dataset_access_settings = dataset_access_settings
 
     def get_dataset(self) -> OrmDataset:
-        """
-        Retrieve dataset info (pointers to data, labels).
+        """Retrieve dataset info (pointers to data, labels).
 
         Returns:
             OrmDataset: A dataset record instance.
@@ -226,7 +197,6 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
-
         res = self._querier.basic_getter(
             OrmDataset,
             payload={
@@ -247,8 +217,7 @@ class EncordClientDataset(EncordClient):
         data_types: Optional[List[DataType]] = None,
         data_hashes: Optional[List[str]] = None,
     ) -> List[DataRow]:
-        """
-        Retrieve dataset rows (pointers to data, labels).
+        """Retrieve dataset rows (pointers to data, labels).
 
         Args:
             title_eq: optional exact title row filter
@@ -266,7 +235,6 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
-
         created_before = optional_datetime_to_iso_str("created_before", created_before)
         created_after = optional_datetime_to_iso_str("created_after", created_after)
 
@@ -297,27 +265,22 @@ class EncordClientDataset(EncordClient):
         self._dataset_access_settings = dataset_access_settings
 
     def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
-        """
-        This function is documented in :meth:`encord.project.Dataset.add_users`.
-        """
-
+        """This function is documented in :meth:`encord.project.Dataset.add_users`."""
         payload = {"user_emails": user_emails, "user_role": user_role}
         users = self._querier.basic_setter(DatasetUsers, self._querier.resource_id, payload=payload)
 
         return [DatasetUser.from_dict(user) for user in users]
 
     def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
-        return self._get_api_client().get(
-            f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup]
-        )
+        return self._api_client.get(f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup])
 
     def add_groups(self, dataset_hash: str, group_hash: List[uuid.UUID], user_role: DatasetUserRole) -> None:
         payload = AddDatasetGroupsPayload(group_hash_list=group_hash, user_role=user_role)
-        self._get_api_client().post(f"datasets/{dataset_hash}/groups", params=None, payload=payload, result_type=None)
+        self._api_client.post(f"datasets/{dataset_hash}/groups", params=None, payload=payload, result_type=None)
 
     def remove_groups(self, dataset_hash: uuid.UUID, group_hash: List[uuid.UUID]) -> None:
         params = RemoveGroupsParams(group_hash_list=group_hash)
-        self._get_api_client().delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
+        self._api_client.delete(f"datasets/{dataset_hash}/groups", params=params, result_type=None)
 
     def __add_data_to_dataset_get_result(
         self,
@@ -370,10 +333,7 @@ class EncordClientDataset(EncordClient):
         title: Optional[str] = None,
         folder_uuid: Optional[uuid.UUID] = None,
     ) -> Video:
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.upload_video`.
-        """
-
+        """This function is documented in :meth:`encord.dataset.Dataset.upload_video`."""
         signed_url = upload_to_signed_url_list(
             file_paths=[file_path],
             config=self._config,
@@ -436,10 +396,7 @@ class EncordClientDataset(EncordClient):
         create_video: bool = True,
         folder_uuid: Optional[uuid.UUID] = None,
     ) -> List[ImageGroup]:
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.create_image_group`.
-        """
-
+        """This function is documented in :meth:`encord.dataset.Dataset.create_image_group`."""
         signed_urls = upload_to_signed_url_list(
             file_paths=file_paths,
             config=self._config,
@@ -513,10 +470,7 @@ class EncordClientDataset(EncordClient):
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder_uuid: Optional[uuid.UUID] = None,
     ) -> Dict:
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.create_dicom_series`.
-        """
-
+        """This function is documented in :meth:`encord.dataset.Dataset.create_dicom_series`."""
         signed_urls = upload_to_signed_url_list(
             file_paths=file_paths,
             config=self._config,
@@ -582,10 +536,7 @@ class EncordClientDataset(EncordClient):
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
         folder_uuid: Optional[uuid.UUID] = None,
     ) -> Image:
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.upload_image`.
-        """
-
+        """This function is documented in :meth:`encord.dataset.Dataset.upload_image`."""
         signed_urls = upload_to_signed_url_list(
             file_paths=[file_path],
             config=self._config,
@@ -648,15 +599,13 @@ class EncordClientDataset(EncordClient):
         item_uuids: List[uuid.UUID],
         duplicates_behavior: DataLinkDuplicatesBehavior = DataLinkDuplicatesBehavior.SKIP,
     ) -> List[DataRow]:
-        """
-        Link storage items to the dataset, creating new data rows.
+        """Link storage items to the dataset, creating new data rows.
 
         Args:
             item_uuids: List of item UUIDs to link to the dataset
-            duplicates_behaviour: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also
+            duplicates_behavior: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also
                 :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`
         """
-
         data_row_dicts = self._querier.basic_setter(
             DatasetLinkItems,
             uid=self._querier.resource_id,
@@ -668,9 +617,7 @@ class EncordClientDataset(EncordClient):
         return DataRow.from_dict_list(data_row_dicts)
 
     def delete_data(self, data_hashes: Union[List[str], str]):
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.delete_data`.
-        """
+        """This function is documented in :meth:`encord.dataset.Dataset.delete_data`."""
         if isinstance(data_hashes, str):
             data_hashes = [data_hashes]
         self._querier.basic_delete(Video, uid=data_hashes)
@@ -681,9 +628,7 @@ class EncordClientDataset(EncordClient):
         private_files: Union[str, typing.Dict, Path, typing.TextIO],
         ignore_errors: bool = False,
     ) -> AddPrivateDataResponse:
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset`.
-        """
+        """This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset`."""
         upload_job_id = self.add_private_data_to_dataset_start(
             integration_id,
             private_files,
@@ -708,9 +653,7 @@ class EncordClientDataset(EncordClient):
         ignore_errors: bool = False,
         folder_uuid: Optional[uuid.UUID] = None,
     ) -> str:
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`.
-        """
+        """This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`."""
         if isinstance(private_files, dict):
             files = private_files
             file_name: Optional[str] = None
@@ -757,9 +700,7 @@ class EncordClientDataset(EncordClient):
         upload_job_id: str,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> DatasetDataLongPolling:
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_get_result`.
-        """
+        """This function is documented in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_get_result`."""
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()
 
@@ -826,31 +767,22 @@ class EncordClientDataset(EncordClient):
             return False
 
     def re_encode_data(self, data_hashes: List[str]):
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.re_encode_data`.
-        """
+        """This function is documented in :meth:`encord.dataset.Dataset.re_encode_data`."""
         payload = {"data_hash": data_hashes}
         return self._querier.basic_put(ReEncodeVideoTask, uid=None, payload=payload)
 
     def re_encode_data_status(self, job_id: int):
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.re_encode_data_status`.
-        """
+        """This function is documented in :meth:`encord.dataset.Dataset.re_encode_data_status`."""
         return self._querier.basic_getter(ReEncodeVideoTask, uid=job_id)
 
     def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
-        """
-        This function is documented in :meth:`encord.dataset.Dataset.run_ocr`.
-        """
-
+        """This function is documented in :meth:`encord.dataset.Dataset.run_ocr`."""
         payload = {"image_group_data_hash": image_group_id}
         return self._querier.get_multiple(ImageGroupOCR, payload=payload)
 
 
 class EncordClientProject(EncordClient):
-    """
-    DEPRECATED - prefer using the :class:`encord.project.Project` instead
-    """
+    """DEPRECATED - prefer using the :class:`encord.project.Project` instead"""
 
     @property
     def project_hash(self) -> str:
@@ -858,8 +790,7 @@ class EncordClientProject(EncordClient):
         return self._querier.resource_id  # type: ignore[attr-defined]
 
     def get_project(self, include_labels_metadata=True) -> OrmProject:
-        """
-        Retrieve project info (pointers to data, labels).
+        """Retrieve project info (pointers to data, labels).
 
         Args:
             include_labels_metadata: if false, label row metadata information will not be returned.
@@ -877,11 +808,10 @@ class EncordClientProject(EncordClient):
         )
 
     def get_project_v2(self) -> ProjectOrmV2:
-        """
-        This is an internal method, do not use it directly.
+        """This is an internal method, do not use it directly.
         Use :meth:`UserClient.get_project` instead.
         """
-        return self._get_api_client().get(f"/projects/{self.project_hash}", params=None, result_type=ProjectOrmV2)
+        return self._api_client.get(f"/projects/{self.project_hash}", params=None, result_type=ProjectOrmV2)
 
     def list_label_rows(
         self,
@@ -903,10 +833,7 @@ class EncordClientProject(EncordClient):
         include_all_label_branches: bool = False,
         branch_name: Optional[str] = None,
     ) -> List[LabelRowMetadata]:
-        """
-        This function is documented in :meth:`encord.project.Project.list_label_rows`.
-        """
-
+        """This function is documented in :meth:`encord.project.Project.list_label_rows`."""
         data_hashes = [str(data_hash) for data_hash in data_hashes] if data_hashes is not None else None
         label_hashes = [str(label_hash) for label_hash in label_hashes] if label_hashes is not None else None
 
@@ -937,36 +864,29 @@ class EncordClientProject(EncordClient):
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
 
     def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
-        """
-        This function is documented in :meth:`encord.project.Project.set_label_status`.
-        """
+        """This function is documented in :meth:`encord.project.Project.set_label_status`."""
         payload = {
             "label_status": label_status.value,
         }
         return self._querier.basic_setter(LabelStatus, label_hash, payload)
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
-        """
-        This function is documented in :meth:`encord.project.Project.add_users`.
-        """
-
+        """This function is documented in :meth:`encord.project.Project.add_users`."""
         payload = {"user_emails": user_emails, "user_role": user_role}
         users = self._querier.basic_setter(ProjectUsers, self._querier.resource_id, payload=payload)
 
         return [ProjectUser.from_dict(user) for user in users]
 
     def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
-        return self._get_api_client().get(
-            f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup]
-        )
+        return self._api_client.get(f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])
 
     def add_groups(self, project_hash: uuid.UUID, group_hash: List[uuid.UUID], user_role: ProjectUserRole) -> None:
         payload = AddProjectGroupsPayload(group_hash_list=group_hash, user_role=user_role)
-        self._get_api_client().post(f"projects/{project_hash}/groups", params=None, payload=payload, result_type=None)
+        self._api_client.post(f"projects/{project_hash}/groups", params=None, payload=payload, result_type=None)
 
     def remove_groups(self, group_hash: List[uuid.UUID]) -> None:
         params = RemoveGroupsParams(group_hash_list=group_hash)
-        self._get_api_client().delete(f"projects/{self.project_hash}/groups", params=params, result_type=None)
+        self._api_client.delete(f"projects/{self.project_hash}/groups", params=params, result_type=None)
 
     def copy_project(
         self,
@@ -978,9 +898,7 @@ class EncordClientProject(EncordClient):
         new_title: Optional[str] = None,
         new_description: Optional[str] = None,
     ) -> str:
-        """
-        This function is documented in :meth:`encord.project.Project.copy_project`.
-        """
+        """This function is documented in :meth:`encord.project.Project.copy_project`."""
         payload = CopyProjectPayload()
         payload.project_copy_metadata = CopyProjectPayload._ProjectCopyMetadata(new_title)
         payload.copy_labels_options = CopyProjectPayload._CopyLabelsOptions()
@@ -1020,9 +938,7 @@ class EncordClientProject(EncordClient):
         include_reviews: bool = False,
         include_export_history: bool = False,
     ) -> LabelRow:
-        """
-        This function is documented in :meth:`encord.project.Project.get_label_row`.
-        """
+        """This function is documented in :meth:`encord.project.Project.get_label_row`."""
         payload = {
             "get_signed_url": get_signed_url,
             "multi_request": False,
@@ -1044,9 +960,7 @@ class EncordClientProject(EncordClient):
         include_reviews: bool = False,
         include_export_history: bool = False,
     ) -> List[LabelRow]:
-        """
-        This function is documented in :meth:`encord.project.Project.get_label_rows`.
-        """
+        """This function is documented in :meth:`encord.project.Project.get_label_rows`."""
         payload = {
             "get_signed_url": get_signed_url,
             "multi_request": True,
@@ -1059,23 +973,21 @@ class EncordClientProject(EncordClient):
         return self._querier.get_multiple(LabelRow, uids, payload=payload, retryable=True)
 
     def save_label_row(self, uid, label, validate_before_saving: bool = False):
-        """
-        This function is documented in :meth:`encord.project.Project.save_label_row`.
-        """
+        """This function is documented in :meth:`encord.project.Project.save_label_row`."""
         label = LabelRow(label)
         if validate_before_saving:
             label["validate_before_saving"] = True
         return self._querier.basic_setter(LabelRow, uid, payload=label, retryable=True)
 
     def save_label_rows(self, uids: List[str], payload: List[LabelRow], validate_before_saving: bool = False):
-        """
-        This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
+        """This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
         Saves multiple label rows. See :meth:`.save_label_row`
 
         Args:
             uids: list of label hashes
             payload: list of LabelRow objects
+            validate_before_saving: ????
 
         Returns:
             None
@@ -1088,22 +1000,20 @@ class EncordClientProject(EncordClient):
         return self._querier.basic_setter(LabelRow, uid=uids, payload=multirequest_payload, retryable=True)
 
     def create_label_row(self, uid, *, get_signed_url=False) -> LabelRow:
-        """
-        This function is documented in :meth:`encord.project.Project.create_label_row`.
-        """
+        """This function is documented in :meth:`encord.project.Project.create_label_row`."""
         return self._querier.basic_put(LabelRow, uid=uid, payload={"get_signed_url": get_signed_url})
 
     def create_label_rows(
-        self, uids: List[str], *, get_signed_url=False, branch_name: Optional[str] = None
+        self, uids: List[str], *, get_signed_url: bool = False, branch_name: Optional[str] = None
     ) -> List[LabelRow]:
-        """
-        This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
+        """This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
 
         Create multiple label rows. See :meth:`.create_label_row`
 
         Args:
             uids: list of data uids where label_status is NOT_LABELLED.
-
+            get_signed_url: bool whether to fetch the signed url for the internal label row
+            branch_name: Optional[str] which branch name against which to create the label row
         Returns:
             List[LabelRow]: A list of created label rows
         """
@@ -1114,31 +1024,24 @@ class EncordClientProject(EncordClient):
         )
 
     def submit_label_row_for_review(self, uid):
-        """
-        This function is documented in :meth:`encord.project.Project.submit_label_row_for_review`.
-        """
+        """This function is documented in :meth:`encord.project.Project.submit_label_row_for_review`."""
         return self._querier.basic_put(Review, uid=uid, payload=None)
 
     def add_datasets(self, dataset_hashes: List[str]) -> bool:
-        """
-        This function is documented in :meth:`encord.project.Project.add_datasets`.
-        """
+        """This function is documented in :meth:`encord.project.Project.add_datasets`."""
         payload = {"dataset_hashes": dataset_hashes}
         return self._querier.basic_setter(ProjectDataset, uid=None, payload=payload)
 
     def remove_datasets(self, dataset_hashes: List[str]) -> bool:
-        """
-        This function is documented in :meth:`encord.project.Project.remove_datasets`.
-        """
+        """This function is documented in :meth:`encord.project.Project.remove_datasets`."""
         return self._querier.basic_delete(ProjectDataset, uid=dataset_hashes)
 
     def list_project_datasets(self, project_hash: UUID) -> Iterable[ProjectDataset]:
-        return (
-            self._get_api_client()
-            .get(f"projects/{project_hash}/datasets", params=None, result_type=Page[ProjectDataset])
-            .results
-        )
+        return self._api_client.get(
+            f"projects/{project_hash}/datasets", params=None, result_type=Page[ProjectDataset]
+        ).results
 
+    @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def get_project_ontology(self) -> LegacyOntology:
         project = self.get_project()
         ontology = project["editor_ontology"]
@@ -1146,9 +1049,7 @@ class EncordClientProject(EncordClient):
 
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
-        """
-        This function is documented in :meth:`encord.project.Project.add_object`.
-        """
+        """This function is documented in :meth:`encord.project.Project.add_object`."""
         if not name:
             raise ValueError("Ontology object name is empty")
 
@@ -1164,9 +1065,7 @@ class EncordClientProject(EncordClient):
         required: bool,
         options: Optional[Iterable[str]] = None,
     ):
-        """
-        This function is documented in :meth:`encord.project.Project.add_classification`.
-        """
+        """This function is documented in :meth:`encord.project.Project.add_classification`."""
         if not name:
             raise ValueError("Ontology classification name is empty")
 
@@ -1174,276 +1073,12 @@ class EncordClientProject(EncordClient):
         ontology.add_classification(name, classification_type, required, options)
         return self.__set_project_ontology(ontology)
 
-    def list_models(self) -> List[ModelConfiguration]:
-        """
-        This function is documented in :meth:`encord.project.Project.list_models`.
-        """
-        return self._querier.get_multiple(ModelConfiguration)
-
-    def get_training_metadata(
-        self,
-        model_iteration_uids: Iterable[str],
-        get_created_at: bool = False,
-        get_training_final_loss: bool = False,
-        get_model_training_labels: bool = False,
-    ) -> List[TrainingMetadata]:
-        """
-        This function is documented in :meth:`encord.project.Project.get_training_metadata`.
-        """
-        payload = {
-            "model_iteration_uids": list(model_iteration_uids),
-            "get_created_at": get_created_at,
-            "get_training_final_loss": get_training_final_loss,
-            "get_model_training_labels": get_model_training_labels,
-        }
-        return self._querier.get_multiple(TrainingMetadata, payload=payload)
-
-    def create_model_row(
-        self,
-        title: str,
-        description: str,
-        features: List[str],
-        model: Union[AutomationModels, str],
-    ) -> str:
-        """
-        This function is documented in :meth:`encord.project.Project.create_model_row`.
-        """
-        if title is None:
-            raise encord.exceptions.EncordException(message="You must set a title to create a model row.")
-
-        if features is None:
-            raise encord.exceptions.EncordException(
-                message="You must pass a list of feature uid's (hashes) to create a model row."
-            )
-
-        if isinstance(model, AutomationModels):
-            model = model.value
-
-        elif model is None or not AutomationModels.has_value(model):  # Backward compatibility with string options
-            raise encord.exceptions.EncordException(
-                message="You must pass a model from the `encord.constants.model.AutomationModels` Enum to create a "
-                "model row."
-            )
-
-        model_row = ModelRow(
-            {
-                "title": title,
-                "description": description,
-                "features": features,
-                "model": model,
-            }
-        )
-
-        model_payload = Model(
-            {
-                "model_operation": ModelOperations.CREATE.value,
-                "model_parameters": model_row,
-            }
-        )
-
-        return self._querier.basic_put(Model, None, payload=model_payload)
-
-    def model_delete(self, uid: str) -> bool:
-        """
-        This function is documented in :meth:`encord.project.Project.model_delete`.
-        """
-
-        return self._querier.basic_delete(Model, uid=uid)
-
-    def model_inference(
-        self,
-        uid: str,
-        file_paths: Optional[List[str]] = None,
-        base64_strings: Optional[List[bytes]] = None,
-        conf_thresh: float = 0.6,
-        iou_thresh: float = 0.3,
-        device: Device = Device.CUDA,
-        detection_frame_range: Optional[List[int]] = None,
-        allocation_enabled: bool = False,
-        data_hashes: Optional[List[str]] = None,
-        rdp_thresh: float = 0.005,
-    ):
-        """
-        This function is documented in :meth:`encord.project.Project.model_inference`.
-        """
-        if (file_paths is None and base64_strings is None and data_hashes is None) or (
-            file_paths is not None
-            and len(file_paths) > 0
-            and base64_strings is not None
-            and len(base64_strings) > 0
-            and data_hashes is not None
-            and len(data_hashes) > 0
-        ):
-            raise encord.exceptions.EncordException(
-                message="To run model inference, you must pass either a list of files or base64 strings or list of"
-                " data hash."
-            )
-
-        if detection_frame_range is None:
-            detection_frame_range = []
-
-        files = []
-        if file_paths is not None:
-            for file_path in file_paths:
-                file = open(file_path, "rb").read()
-                files.append(
-                    {
-                        "uid": file_path,  # Add file path as inference identifier
-                        "base64_str": base64.b64encode(file).decode("utf-8"),  # File to base64 string
-                    }
-                )
-
-        elif base64_strings is not None:
-            for base64_string in base64_strings:
-                files.append(
-                    {
-                        "uid": str(uuid.uuid4()),  # Add uuid as inference identifier
-                        "base64_str": base64_string.decode("utf-8"),  # base64 string to utf-8
-                    }
-                )
-
-        inference_params = ModelInferenceParams(
-            {
-                "files": files,
-                "conf_thresh": conf_thresh,
-                "iou_thresh": iou_thresh,
-                "device": _device_to_string(device),
-                "detection_frame_range": detection_frame_range,
-                "allocation_enabled": allocation_enabled,
-                "data_hashes": data_hashes,
-                "rdp_thresh": rdp_thresh,
-            }
-        )
-
-        model = Model(
-            {
-                "model_operation": ModelOperations.INFERENCE.value,
-                "model_parameters": inference_params,
-            }
-        )
-
-        return self._querier.basic_setter(Model, uid, payload=model)
-
-    def model_train_start(
-        self,
-        model_hash: Union[str, UUID],
-        label_rows: List[Union[str, UUID]],
-        epochs: int,
-        weights: ModelTrainingWeights,
-        batch_size: int = 24,
-        device: Device = Device.CUDA,
-    ) -> UUID:
-        """
-        This function is documented in :meth:`encord.project.Project.model_train_start`.
-        """
-
-        if not label_rows:
-            raise encord.exceptions.EncordException(
-                message="You must pass a list of label row uid's (hashes) to train a model."
-            )
-
-        if not epochs:
-            raise encord.exceptions.EncordException(message="You must set number of epochs to train a model.")
-
-        if not batch_size:
-            raise encord.exceptions.EncordException(message="You must set a batch size to train a model.")
-
-        if weights is None or not isinstance(weights, ModelTrainingWeights):
-            raise encord.exceptions.EncordException(
-                message="You must pass weights from the `encord.constants.model_weights` module to train a model."
-            )
-
-        training_hash = self._get_api_client().post(
-            f"ml-models/{model_hash}/training",
-            params=None,
-            payload=PublicModelTrainStartPayload(
-                label_rows=[x if isinstance(x, UUID) else UUID(x) for x in label_rows],
-                epochs=epochs,
-                batch_size=batch_size,
-                model=weights.model,
-                training_weights_link=weights.training_weights_link,
-                device=_device_to_string(device),
-            ),
-            result_type=UUID,
-        )
-
-        logger.info(f"model_train job started with training_hash={training_hash}.")
-        logger.info("SDK process can be terminated, this will not affect successful job execution.")
-        logger.info("You can follow the progress in the SDK using model_train_get_result method.")
-        logger.info("You can also follow the progress in the web app via notifications.")
-
-        return training_hash
-
-    def model_train_get_result(
-        self,
-        model_hash: Union[str, UUID],
-        training_hash: Union[str, UUID],
-        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
-    ) -> dict:
-        """
-        This function is documented in :meth:`encord.project.Project.model_train_get_result`.
-        """
-
-        failed_requests_count = 0
-        polling_start_timestamp = time.perf_counter()
-
-        while True:
-            try:
-                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
-                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
-
-                logger.info(f"__model_train_get_result started polling call {polling_elapsed_seconds=}")
-                tmp_res = self._get_api_client().get(
-                    f"ml-models/{model_hash}/{training_hash}/training",
-                    params=PublicModelTrainGetResultParams(
-                        timeout_seconds=min(
-                            polling_available_seconds,
-                            LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
-                        ),
-                    ),
-                    result_type=PublicModelTrainGetResultResponse,
-                )
-
-                if tmp_res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
-                    logger.info(f"model_train job completed with training_hash={training_hash}.")
-
-                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
-                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
-
-                if polling_available_seconds == 0 or tmp_res.status in [
-                    PublicModelTrainGetResultLongPollingStatus.DONE,
-                    PublicModelTrainGetResultLongPollingStatus.ERROR,
-                ]:
-                    res = tmp_res
-                    break
-
-                failed_requests_count = 0
-            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
-                failed_requests_count += 1
-
-                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
-                    raise
-
-                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
-
-        if res.status == PublicModelTrainGetResultLongPollingStatus.DONE:
-            if res.result is None:
-                raise ValueError(f"{res.status=}, res.result should not be None with DONE status")
-
-            return res.result.dict()
-        elif res.status == PublicModelTrainGetResultLongPollingStatus.ERROR:
-            raise encord.exceptions.EncordException(f"model_train error occurred, {model_hash=}, {training_hash=}")
-        else:
-            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
-
     def object_interpolation(
         self,
         key_frames,
         objects_to_interpolate,
     ):
-        """
-        This function is documented in :meth:`encord.project.Project.object_interpolation`.
-        """
+        """This function is documented in :meth:`encord.project.Project.object_interpolation`."""
         if len(key_frames) == 0 or len(objects_to_interpolate) == 0:
             raise encord.exceptions.EncordException(
                 message="To run object interpolation, you must pass key frames and objects to interpolate.."
@@ -1470,9 +1105,7 @@ class EncordClientProject(EncordClient):
         frames: dict,
         video: dict,
     ):
-        """
-        This function is documented in :meth:`encord.project.Project.fitted_bounding_boxes`.
-        """
+        """This function is documented in :meth:`encord.project.Project.fitted_bounding_boxes`."""
         if len(frames) == 0 or len(video) == 0:
             raise encord.exceptions.EncordException(
                 message="To run fitting, you must pass frames and video to run bounding box fitting on.."
@@ -1495,9 +1128,7 @@ class EncordClientProject(EncordClient):
         return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
 
     def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
-        """
-        This function is documented in :meth:`encord.project.Project.get_data`.
-        """
+        """This function is documented in :meth:`encord.project.Project.get_data`."""
         uid = {"data_hash": data_hash, "get_signed_url": get_signed_url}
 
         dataset_data: DatasetData = self._querier.basic_getter(DatasetData, uid=uid)
@@ -1525,9 +1156,7 @@ class EncordClientProject(EncordClient):
         before: Optional[datetime] = None,
         user_email: Optional[str] = None,
     ) -> List[LabelLog]:
-        """
-        This function is documented in :meth:`encord.project.Project.get_label_logs`.
-        """
+        """This function is documented in :meth:`encord.project.Project.get_label_logs`."""
         if after is not None:
             if from_unix_seconds is not None:
                 raise ValueError("Only one of 'from_unix_seconds' and 'after' parameters should be specified")
@@ -1551,8 +1180,7 @@ class EncordClientProject(EncordClient):
         return self._querier.get_multiple(LabelLog, payload=payload.to_dict(by_alias=False))
 
     def __set_project_ontology(self, ontology: LegacyOntology) -> bool:
-        """
-        Save updated project ontology
+        """Save updated project ontology
         Args:
             ontology: the updated project ontology
 
@@ -1563,9 +1191,7 @@ class EncordClientProject(EncordClient):
         return self._querier.basic_setter(OrmProject, uid=None, payload=payload)
 
     def workflow_reopen(self, label_hashes: List[str]) -> None:
-        """
-        This function is documented in :meth:`encord.objects.LabelRowV2.workflow_reopen`.
-        """
+        """This function is documented in :meth:`encord.objects.LabelRowV2.workflow_reopen`."""
         self._querier.basic_setter(
             LabelWorkflowGraphNode,
             label_hashes,
@@ -1573,9 +1199,7 @@ class EncordClientProject(EncordClient):
         )
 
     def workflow_complete(self, label_hashes: List[str]) -> None:
-        """
-        This function is documented in :meth:`encord.objects.LabelRowV2.workflow_complete`.
-        """
+        """This function is documented in :meth:`encord.objects.LabelRowV2.workflow_complete`."""
         self._querier.basic_setter(
             LabelWorkflowGraphNode,
             label_hashes,
@@ -1583,7 +1207,7 @@ class EncordClientProject(EncordClient):
         )
 
     def workflow_set_priority(self, priorities: List[Tuple[str, float]]) -> None:
-        self._get_api_client().post(
+        self._api_client.post(
             f"projects/{self.project_hash}/priorities",
             params=None,
             payload=TaskPriorityParams(priorities=priorities),
@@ -1591,12 +1215,12 @@ class EncordClientProject(EncordClient):
         )
 
     def get_collaborator_timers(self, params: CollaboratorTimerParams) -> Iterable[CollaboratorTimer]:
-        yield from self._get_api_client().get_paged_iterator(
+        yield from self._api_client.get_paged_iterator(
             "analytics/collaborators/timers", params=params, result_type=CollaboratorTimer
         )
 
     def get_label_validation_errors(self, label_hash: str) -> List[str]:
-        errors = self._get_api_client().get(
+        errors = self._api_client.get(
             f"projects/{self.project_hash}/labels/{label_hash}/validation-state",
             params=None,
             result_type=LabelValidationState,
@@ -1608,7 +1232,7 @@ class EncordClientProject(EncordClient):
         return errors.errors or []
 
     def active_import(self, project_mode: ActiveProjectMode, video_sampling_rate: Optional[float] = None) -> None:
-        self._get_api_client().post(
+        self._api_client.post(
             f"active/{self.project_hash}/import",
             params=None,
             payload=ActiveProjectImportPayload(project_mode=project_mode, video_sampling_rate=video_sampling_rate),
@@ -1617,22 +1241,13 @@ class EncordClientProject(EncordClient):
         logger.info("Import initiated in Active, please check the app to see progress")
 
     def active_sync(self) -> None:
-        self._get_api_client().post(
+        self._api_client.post(
             f"active/{self.project_hash}/sync",
             params=None,
             payload=None,
             result_type=None,
         )
         logger.info("Sync initiated in Active, please check the app to see progress")
-
-
-def _device_to_string(device: Device) -> str:
-    if not isinstance(device, Device):
-        if device is None or not Device.has_value(device):  # Backward compatibility with string options
-            raise EncordException(message="You must pass a device from the `from encord.constants.model.Device` enum.")
-        return cast(str, device)
-
-    return device.value
 
 
 CordClientProject = EncordClientProject

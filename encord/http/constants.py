@@ -1,5 +1,4 @@
-"""
----
+"""---
 title: "Constants"
 slug: "sdk-ref-constants"
 hidden: false
@@ -24,9 +23,7 @@ DEFAULT_CONNECT_TIMEOUT = 180  # In seconds
 
 @dataclass
 class RequestsSettings:
-    """
-    The settings for all outgoing network requests. These apply for each individual request.
-    """
+    """The settings for all outgoing network requests. These apply for each individual request."""
 
     max_retries: int = DEFAULT_MAX_RETRIES
     """Number of allowed retries when a request is sent. It only affects idempotent retryable requests."""
