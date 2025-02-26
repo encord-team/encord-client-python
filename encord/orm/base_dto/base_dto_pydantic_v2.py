@@ -6,12 +6,10 @@ from typing import Any, Callable, Dict, Literal, Type, TypeVar, get_origin
 from pydantic import (  # type: ignore[attr-defined]
     BaseModel,
     ConfigDict,  # type: ignore[attr-defined]
-    Discriminator,
     Extra,
     Field,
     PrivateAttr,
     RootModel,  # type: ignore[attr-defined]
-    Tag,
     ValidationError,
     field_validator,
     model_validator,

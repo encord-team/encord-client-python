@@ -1,7 +1,13 @@
 from typing import Any, Dict
+from unittest.mock import MagicMock
+from uuid import uuid4
+
+import pytest
 
 from encord.orm.workflow import WorkflowAgentNode, WorkflowDTO
 from encord.workflow import Workflow
+from encord.workflow.stages.agent import AgentStage
+from encord.workflow.stages.review import ReviewStage
 
 raw_agent_workflow: Dict[str, Any] = {
     "stages": [
@@ -31,11 +37,20 @@ def test_project_workflow_get_stage(workflow: Workflow) -> None:
     assert workflow.get_stage(uuid=review_stage_uuid).title == "Review 1"
     assert workflow.get_stage(uuid=str(review_stage_uuid)).title == "Review 1"
     assert workflow.get_stage(name="Review 1").uuid == review_stage_uuid
+    assert isinstance(workflow.get_stage(name="Review 1"), ReviewStage)
+    with pytest.raises(ValueError):
+        workflow.get_stage(name="NAME NOT FOUND")
+    with pytest.raises(ValueError):
+        workflow.get_stage(uuid=uuid4())
 
 
 def test_agent_project_with_pathway_serialisation_deserialisation() -> None:
-    workflow = WorkflowDTO.from_dict(raw_agent_workflow)
-    assert workflow.stages
-    agent_stage = workflow.stages[0]
+    workflow_dto = WorkflowDTO.from_dict(raw_agent_workflow)
+    assert workflow_dto.stages
+    agent_stage = workflow_dto.stages[0]
     assert isinstance(agent_stage, WorkflowAgentNode)
+    assert agent_stage.pathways
+    workflow_obj = Workflow(MagicMock(), uuid4(), workflow_orm=workflow_dto)
+    agent_stage = workflow_obj.get_stage(name="Pre-labeler")
+    assert isinstance(agent_stage, AgentStage)
     assert agent_stage.pathways
