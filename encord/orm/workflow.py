@@ -69,14 +69,6 @@ class WorkflowAgentNode(BaseWorkflowNode):
 
     pathways: List[AgentNodePathway]
 
-    # def _get_discriminator_value(model: Any) -> str:
-    # stage_type = model.stage_type if isinstance(model, BaseWorkflowNode) else model["stageType"]
-
-
-#     if stage_type == WorkflowStageType.AGENT:
-#         return "AGENT"
-#     return "GENERIC"
-
 
 class WorkflowDTO(BaseDTO):
     stages: List[Union[WorkflowAgentNode, WorkflowNode]]
