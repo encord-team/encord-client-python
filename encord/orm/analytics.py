@@ -52,7 +52,6 @@ class TimeSpent(BaseDTO):
     period_start_time: datetime
     period_end_time: datetime
     time_spent_seconds: int
-
     user_email: str
     project_user_role: ProjectUserRole
     data_uuid: UUID
