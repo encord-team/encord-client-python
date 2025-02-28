@@ -846,12 +846,9 @@ class Project:
     ) -> Iterable[CollaboratorTimer]:
         """**DEPRECATED** - Use `list_time_spent`. `list_time_spent` provides more comprehensive and accurate information.
 
-        Provides information about time spent by each collaborator who has worked on the project within a specified
-        range of dates.
+        Provides information about time spent by each collaborator who has worked on the project within a specified range of dates.
 
         This endpoint is deprecated and retrieves collaborator timers from the Legacy Performance Dashboards, not the Upgraded Analytics Dashboard.
-
-        If you want to access the new Analytics Dashboards using the API or SDK contact your Encord team.
 
         Args:
             after: The beginning of the period of interest.
