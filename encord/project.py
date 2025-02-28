@@ -843,7 +843,9 @@ class Project:
         before: Optional[datetime.datetime] = None,
         group_by_data_unit: bool = True,
     ) -> Iterable[CollaboratorTimer]:
-        """Provides information about time spent by each collaborator who has worked on the project within a specified
+        """**DEPRICATED** - Use `list_time_spent`. `list_time_spent` provides more comprehensive and accurate information.
+        
+        Provides information about time spent by each collaborator who has worked on the project within a specified
         range of dates.
 
         This endpoint is deprecated and retrieves collaborator timers from the Legacy Performance Dashboards, not the Upgraded Analytics Dashboard.
