@@ -845,7 +845,7 @@ class Project:
         group_by_data_unit: bool = True,
     ) -> Iterable[CollaboratorTimer]:
         """**DEPRECATED** - Use `list_time_spent`. `list_time_spent` provides more comprehensive and accurate information.
-        
+
         Provides information about time spent by each collaborator who has worked on the project within a specified
         range of dates.
 
