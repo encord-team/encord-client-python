@@ -837,14 +837,15 @@ class Project:
         """
         return Bundle(bundle_size=bundle_size)
 
+    @deprecated(version="0.1.157", alternative=".list_time_spent")
     def list_collaborator_timers(
         self,
         after: datetime.datetime,
         before: Optional[datetime.datetime] = None,
         group_by_data_unit: bool = True,
     ) -> Iterable[CollaboratorTimer]:
-        """**DEPRICATED** - Use `list_time_spent`. `list_time_spent` provides more comprehensive and accurate information.
-
+        """**DEPRECATED** - Use `list_time_spent`. `list_time_spent` provides more comprehensive and accurate information.
+        
         Provides information about time spent by each collaborator who has worked on the project within a specified
         range of dates.
 
