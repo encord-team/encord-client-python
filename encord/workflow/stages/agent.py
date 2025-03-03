@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
@@ -70,7 +71,16 @@ class _AgentTasksQueryParams(TasksQueryParams):
     statuses: Optional[List[AgentTaskStatus]] = None
 
 
+@dataclass(frozen=True)
+class AgentPathway:
+    uuid: UUID
+    name: str
+    destination_uuid: UUID
+
+
+@dataclass(frozen=True)
 class AgentStage(WorkflowStageBase):
+    pathways: list[AgentPathway]
     stage_type: Literal[WorkflowStageType.AGENT] = WorkflowStageType.AGENT
 
     """

@@ -11,7 +11,7 @@ from encord.exceptions import WrongProjectTypeError
 from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
-from encord.orm.workflow import Workflow
+from encord.orm.workflow import WorkflowDTO
 from encord.utilities.project_user import ProjectUserRole
 
 
@@ -311,7 +311,7 @@ class ProjectDTO(BaseDTO):
     user_role: Optional[ProjectUserRole] = None
     source_projects: Optional[List[str]] = None
     workflow_manager_uuid: Optional[UUID] = None
-    workflow: Optional[Workflow] = None
+    workflow: Optional[WorkflowDTO] = None
 
 
 class CvatReviewMode(CamelStrEnum):
