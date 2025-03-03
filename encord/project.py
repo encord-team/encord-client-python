@@ -837,18 +837,18 @@ class Project:
         """
         return Bundle(bundle_size=bundle_size)
 
+    @deprecated(version="0.1.157", alternative=".list_time_spent")
     def list_collaborator_timers(
         self,
         after: datetime.datetime,
         before: Optional[datetime.datetime] = None,
         group_by_data_unit: bool = True,
     ) -> Iterable[CollaboratorTimer]:
-        """Provides information about time spent by each collaborator who has worked on the project within a specified
-        range of dates.
+        """**DEPRECATED** - Use `list_time_spent`. `list_time_spent` provides more comprehensive and accurate information.
+
+        Provides information about time spent by each collaborator who has worked on the project within a specified range of dates.
 
         This endpoint is deprecated and retrieves collaborator timers from the Legacy Performance Dashboards, not the Upgraded Analytics Dashboard.
-
-        If you want to access the new Analytics Dashboards using the API or SDK contact your Encord team.
 
         Args:
             after: The beginning of the period of interest.
