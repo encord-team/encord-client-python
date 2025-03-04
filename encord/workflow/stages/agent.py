@@ -22,7 +22,7 @@ class AgentTaskStatus(str, Enum):
 
 class _ActionPathway(WorkflowAction):
     action: Literal["PATHWAY_ACTION"] = "PATHWAY_ACTION"
-    pathway_uuid: Optional[str] = None
+    pathway_uuid: Optional[Union[str, UUID]] = None
     pathway_name: Optional[str] = None
 
 
@@ -50,7 +50,11 @@ class AgentTask(WorkflowTask):
     """
 
     def proceed(
-        self, pathway_name: str | None = None, pathway_uuid: str | None = None, *, bundle: Optional[Bundle] = None
+        self,
+        pathway_name: str | None = None,
+        pathway_uuid: UUID | str | None = None,
+        *,
+        bundle: Optional[Bundle] = None,
     ) -> None:
         if not pathway_name and not pathway_uuid:
             raise ValueError("Either `pathway_name` or `pathway_uuid` parameter must be provided.")
@@ -58,7 +62,11 @@ class AgentTask(WorkflowTask):
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
             stage_uuid,
-            _ActionPathway(task_uuid=self.uuid, pathway_name=pathway_name, pathway_uuid=pathway_uuid),
+            _ActionPathway(
+                task_uuid=self.uuid,
+                pathway_name=pathway_name,
+                pathway_uuid=pathway_uuid,
+            ),
             bundle=bundle,
         )
 
