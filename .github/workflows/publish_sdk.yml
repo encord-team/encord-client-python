@@ -16,7 +16,7 @@ concurrency:
 jobs:
   publish-sdk:
     name: Publish SDK
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
 
   send-slack-notification:
     name: Send notification
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [ publish-sdk ]
     if: always()
     env:
