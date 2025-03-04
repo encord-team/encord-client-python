@@ -55,7 +55,7 @@ jobs:
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.9.10
+          python-version: 3.9.12
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P1 }}
 
   unit-tests-python-3-10:
@@ -68,7 +68,7 @@ jobs:
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.10.2
+          python-version: 3.10.4
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P1 }}
 
   unit-tests-python-3-11:
@@ -121,7 +121,7 @@ jobs:
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.9.10
+          python-version: 3.9.12
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P2 }}
 
@@ -135,7 +135,7 @@ jobs:
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.10.2
+          python-version: 3.10.4
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P2 }}
 
