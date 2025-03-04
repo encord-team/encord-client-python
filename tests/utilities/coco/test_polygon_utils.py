@@ -45,7 +45,7 @@ def test_find_contours_multipolygons(two_disjoint_polygons: np.ndarray) -> None:
 def test_rle_to_polygons_coordinates(polygon_with_hole: np.ndarray) -> None:
     counts = serialise_bitmask(polygon_with_hole.tobytes())
     res = rle_to_polygons_coordinates(counts=counts, height=100, width=100)
-    assert isinstance(res.polygons, PolygonCoordinates)
+    assert isinstance(res, PolygonCoordinates)
     assert res.polygons == [
         [
             [

@@ -41,7 +41,7 @@ runs:
 
       - name: Install dependencies
         if: steps.cached-poetry.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction
+        run: poetry install --extras "coco" --no-interaction
         shell: bash
 
       - name: Override pydantic version

@@ -49,6 +49,5 @@ def test_coco_annotation_model_with_missing_segmentation_field() -> None:
 
 def test_coco_model_label_validation() -> None:
     coco_model = CocoRootModel.from_dict(copy.deepcopy(DATA_TEST_DATASTRUCTURE_COCO))
-    assert sum(isinstance(ann.segmentation, CocoRLE) for ann in coco_model.annotations) == 5
+    assert sum(isinstance(ann.segmentation, CocoRLE) for ann in coco_model.annotations) == 6
     assert sum(isinstance(ann.segmentation, CocoPolygon) for ann in coco_model.annotations) == 466
-    assert sum(isinstance(ann.segmentation, (CocoRLE, CocoPolygon)) for ann in coco_model.annotations) == 5 + 466

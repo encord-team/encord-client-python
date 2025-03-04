@@ -2,6 +2,7 @@ import logging
 from typing import (
     Dict,
     Optional,
+    Union,
 )
 
 from encord.objects.bitmask import BitmaskCoordinates
@@ -111,7 +112,7 @@ def coco_annotation_to_encord_coordinates(
     shape: Shape,
     width: int,
     height: int,
-) -> PolygonCoordinates | BoundingBoxCoordinates | BitmaskCoordinates:
+) -> Union[PolygonCoordinates, BoundingBoxCoordinates, BitmaskCoordinates]:
     if shape == Shape.BOUNDING_BOX:
         return coco_annotation.bbox.to_encord(img_w=width, img_h=height)
     elif shape == Shape.BITMASK:
