@@ -916,7 +916,7 @@ files = [
 name = "opencv-python"
 version = "4.11.0.86"
 description = "Wrapper package for OpenCV python bindings."
-optional = true
+optional = false
 python-versions = ">=3.6"
 files = [
     {file = "opencv-python-4.11.0.86.tar.gz", hash = "sha256:03d60ccae62304860d232272e4a4fda93c39d595780cb40b161b310244b736a4"},
@@ -1797,4 +1797,4 @@ coco = ["numpy", "numpy", "opencv-python", "pycocotools", "shapely"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "ec2daef2ed78432aad055d99e7239ed8cc7a1e99ffe03847b83e737fda8e87e8"
+content-hash = "1a3740db52621fe263c55e242b6c555ef142cca40ece404e49b249c8e1c89fad"

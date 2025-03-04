@@ -51,6 +51,7 @@ numpy = [
     {version = "^1.24", python = "<3.12"},
     {version = "^1.26", python = ">=3.12"}
 ]
+opencv-python = {version = "^4.11.0.86"}
 ruff = "^0.8.6"
 
 [build-system]
