@@ -51,8 +51,8 @@ class AgentTask(WorkflowTask):
 
     def proceed(
         self,
-        pathway_name: str | None = None,
-        pathway_uuid: UUID | str | None = None,
+        pathway_name: Optional[str] = None,
+        pathway_uuid: Optional[Union[UUID, str]] = None,
         *,
         bundle: Optional[Bundle] = None,
     ) -> None:
