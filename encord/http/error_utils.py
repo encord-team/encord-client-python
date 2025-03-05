@@ -1,3 +1,5 @@
+from typing import Any
+
 from encord.exceptions import (
     AnswerDictionaryError,
     AuthenticationError,
@@ -23,6 +25,7 @@ from encord.exceptions import (
     UploadOperationNotSupportedError,
     WrongProjectTypeError,
 )
+from encord.http.common import RequestContext
 
 # Error messages
 AUTHENTICATION_ERROR = ["AUTHENTICATION_ERROR"]
@@ -50,7 +53,7 @@ MULTI_LABEL_LIMIT_ERROR = ["MULTI_LABEL_LIMIT_ERROR"]
 WRONG_PROJECT_TYPE_ERROR = ["WRONG_PROJECT_TYPE_ERROR"]
 
 
-def check_error_response(response, context=None, payload=None):
+def check_error_response(response: Any, context: RequestContext, payload: Any, domain: str):
     """Checks server response.
     Called if HTTP response status code is an error response.
     """
@@ -143,7 +146,7 @@ def check_error_response(response, context=None, payload=None):
 
     if response == SSH_KEY_NOT_FOUND_ERROR:
         raise SshKeyNotFound(
-            "The used SSH key does not exist on the Encord platform. Please add this SSH key to your user profile.",
+            f"The used SSH key does not exist on the Encord platform at domain {domain}. Please add this SSH key to your user profile.",
             context=context,
         )
 

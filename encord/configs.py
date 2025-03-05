@@ -64,11 +64,12 @@ class BaseConfig(ABC):
         requests_settings (RequestsSettings): Settings for HTTP requests.
     """
 
-    def __init__(self, endpoint: str, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS):
+    def __init__(self, endpoint: str, domain: str, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS):
         self.read_timeout: int = requests_settings.read_timeout
         self.write_timeout: int = requests_settings.write_timeout
         self.connect_timeout: int = requests_settings.connect_timeout
 
+        self.domain = domain
         self.endpoint: str = endpoint
         self.requests_settings = requests_settings
 
@@ -111,16 +112,11 @@ class UserConfig(BaseConfig):
 
     def __init__(self, config: Config):
         self.config = config
-        super().__init__(endpoint=config.domain + ENCORD_PUBLIC_USER_PATH, requests_settings=config.requests_settings)
-
-    @property
-    def domain(self) -> str:
-        """Get the domain from the base configuration.
-
-        Returns:
-            str: The domain.
-        """
-        return self.config.domain
+        super().__init__(
+            endpoint=config.domain + ENCORD_PUBLIC_USER_PATH,
+            domain=config.domain,
+            requests_settings=config.requests_settings,
+        )
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         """Define headers for a user-specific request.
@@ -169,10 +165,9 @@ class Config(BaseConfig):
         if domain is None:
             raise RuntimeError("`domain` must be specified")
 
-        self.domain = domain
-        self.user_agent_suffix = validate_user_agent_suffix(user_agent_suffix) if user_agent_suffix else None
         endpoint = domain + web_file_path
-        super().__init__(endpoint, requests_settings=requests_settings)
+        super().__init__(endpoint, domain=domain, requests_settings=requests_settings)
+        self.user_agent_suffix = validate_user_agent_suffix(user_agent_suffix) if user_agent_suffix else None
 
     def _user_agent(self) -> str:
         base_agent_header = (
@@ -216,7 +211,7 @@ def get_env_ssh_key() -> str:
 
     if raw_ssh_key == "":
         raise ResourceNotFoundError(
-            f"Environment variable {_ENCORD_SSH_KEY} found but is empty. " f"Failed to load private ssh key."
+            f"Environment variable {_ENCORD_SSH_KEY} found but is empty. Failed to load private ssh key."
         )
 
     return raw_ssh_key

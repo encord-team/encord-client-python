@@ -201,7 +201,7 @@ class Querier:
         if res_json.get("status") != requests.codes.ok:
             response = res_json.get("response")
             extra_payload = res_json.get("payload")
-            check_error_response(response, context, extra_payload)
+            check_error_response(response, context, extra_payload, self._config.domain)
 
         return res_json.get("response"), context
 
