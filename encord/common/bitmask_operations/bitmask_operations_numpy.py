@@ -12,6 +12,11 @@ def _mask_to_rle(mask: bytes) -> List[int]:
     changes = np.diff(mask_buffer, prepend=mask_buffer[0], append=mask_buffer[-1])
     change_indices = np.flatnonzero(changes != 0)
     run_lengths = np.diff(np.concatenate(([0], change_indices, [len(mask_buffer)])))
+
+    # note that the odd counts are always the numbers of zeros
+    if mask_buffer[0] == True:
+        run_lengths = np.concatenate(([0], run_lengths))
+
     return run_lengths.tolist()
 
 

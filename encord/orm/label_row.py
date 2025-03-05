@@ -281,6 +281,7 @@ class LabelRowMetadata(Formatter):
     audio_bit_depth: Optional[int]
     audio_num_channels: Optional[int]
 
+    task_uuid: Optional[UUID] = None
     priority: Optional[float] = None
     """Only available for not complete tasks"""
     client_metadata: Optional[dict] = None
@@ -329,6 +330,7 @@ class LabelRowMetadata(Formatter):
             audio_sample_rate=json_dict.get("audio_sample_rate", None),
             height=json_dict.get("height"),
             width=json_dict.get("width"),
+            task_uuid=json_dict.get("task_uuid"),
             priority=json_dict.get("priority"),
             client_metadata=json_dict.get("client_metadata", None),
             images_data=json_dict.get("images_data", None),
@@ -417,6 +419,7 @@ class LabelRowMetadataDTO(BaseDTO):
     audio_bit_depth: Optional[int]
     audio_num_channels: Optional[int]
 
+    task_uuid: Optional[UUID] = None
     priority: Optional[float] = None
     """Only available for not complete tasks"""
     client_metadata: Optional[Dict[str, Any]] = None
@@ -452,6 +455,7 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         frames_per_second=label_row_metadata_dto.frames_per_second,
         height=label_row_metadata_dto.height,
         width=label_row_metadata_dto.width,
+        task_uuid=label_row_metadata_dto.task_uuid,
         priority=label_row_metadata_dto.priority,
         client_metadata=label_row_metadata_dto.client_metadata,
         images_data=label_row_metadata_dto.images_data,

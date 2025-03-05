@@ -1,10 +1,11 @@
 import numpy as np
 
-from encord.common.bitmask_operations import (
+from encord.common.bitmask_operations.bitmask_operations import (
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,
     _string_to_rle,
+    serialise_bitmask,
     transpose_bytearray,
 )
 from encord.objects.bitmask import (
@@ -86,3 +87,20 @@ def test_transpose_bytearray():
     expected = b"\x00\x00\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00"
     ans = transpose_bytearray(mask, shape)
     assert ans == expected
+
+
+def test_serialise_bitmask_starting_with_true():
+    mask = np.array(
+        [
+            [True, True, True],
+            [False, False, False],
+        ]
+    )
+    shape = mask.shape
+    rle_string = serialise_bitmask(mask.tobytes())
+    mask_encoded = BitmaskCoordinates.EncodedBitmask(
+        top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string
+    )
+    mask_decoded = BitmaskCoordinates(mask_encoded).to_numpy_array()
+
+    assert np.array_equal(mask, mask_decoded)

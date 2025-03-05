@@ -26,7 +26,7 @@ from encord.orm.filter_preset import ProjectFilterPreset as OrmProjectFilterPres
 
 class FilterPreset:
     """Represents preset in Index.
-    Preset is a group of filters persisted which can be re-used for faster data curation.
+    Preset is a group of filters persisted which can be reused for faster data curation.
     """
 
     def __init__(self, client: ApiClient, orm_preset: OrmFilterPreset):

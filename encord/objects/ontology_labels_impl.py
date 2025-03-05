@@ -53,6 +53,7 @@ from encord.objects.coordinates import (
     HtmlCoordinates,
     PointCoordinate,
     PolygonCoordinates,
+    PolygonCoordsToDict,
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
@@ -400,6 +401,23 @@ class LabelRowV2:
         return self._label_row_read_only_data.backing_item_uuid
 
     @property
+    def task_uuid(self) -> Optional[UUID]:
+        """Returns the workflow task uuids for the task associated with the data unit.
+
+        This property only works for workflow-based projects.
+
+        Returns:
+            Optional[UUID]: The workflow task uuid or None if not applicable.
+
+        Raises:
+            WrongProjectTypeError: If used with non-workflow-based projects.
+        """
+        if not self.__is_tms2_project:
+            raise WrongProjectTypeError('"task_uuid" property only works with workflow-based projects.')
+
+        return self._label_row_read_only_data.task_uuid
+
+    @property
     def priority(self) -> Optional[float]:
         """Returns the workflow priority for the task associated with the data unit.
 
@@ -497,6 +515,12 @@ class LabelRowV2:
             raise LabelRowError(
                 "You are trying to re-initialise a label row that has already been initialised. This would overwrite "
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
+            )
+
+        if self.data_type == DataType.PDF:
+            raise LabelRowError(
+                "You are trying to initialise a label row for a PDF file. "
+                "The SDK does not yet support working with labels on PDF files."
             )
 
         if not self.label_hash:
@@ -1522,6 +1546,7 @@ class LabelRowV2:
             width: Optional width of the data.
             height: Optional height of the data.
             data_link: Optional link to additional data.
+            task_uuid: Optional task uuid of the data.
             priority: Optional priority of the data.
             file_type: Optional file type of the data.
             client_metadata: Optional metadata provided by the client.
@@ -1556,6 +1581,7 @@ class LabelRowV2:
         width: Optional[int]
         height: Optional[int]
         data_link: Optional[str]
+        task_uuid: Optional[UUID]
         priority: Optional[float]
         file_type: Optional[str]
         client_metadata: Optional[Dict[str, Any]]
@@ -1826,6 +1852,7 @@ class LabelRowV2:
             encord_object["rotatableBoundingBox"] = coordinates.to_dict()
         elif isinstance(coordinates, PolygonCoordinates):
             encord_object["polygon"] = coordinates.to_dict()
+            encord_object["polygons"] = coordinates.to_dict(PolygonCoordsToDict.multiple_polygons)
         elif isinstance(coordinates, PolylineCoordinates):
             encord_object["polyline"] = coordinates.to_dict()
         elif isinstance(coordinates, PointCoordinate):
@@ -1946,6 +1973,7 @@ class LabelRowV2:
             audio_bit_depth=label_row_metadata.audio_bit_depth,
             width=label_row_metadata.width,
             height=label_row_metadata.height,
+            task_uuid=label_row_metadata.task_uuid,
             priority=label_row_metadata.priority,
             images_data=None
             if label_row_metadata.images_data is None
@@ -2054,6 +2082,7 @@ class LabelRowV2:
             audio_sample_rate=audio_sample_rate,
             audio_num_channels=audio_num_channels,
             audio_bit_depth=audio_bit_depth,
+            task_uuid=label_row_dict.get("task_uuid", self._label_row_read_only_data.task_uuid),
             priority=label_row_dict.get("priority", self._label_row_read_only_data.priority),
             client_metadata=label_row_dict.get("client_metadata", self._label_row_read_only_data.client_metadata),
             images_data=label_row_dict.get("images_data", self._label_row_read_only_data.images_data),
@@ -2310,7 +2339,7 @@ class LabelRowV2:
             return BoundingBoxCoordinates.from_dict(frame_object_label)
         if "rotatableBoundingBox" in frame_object_label:
             return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
-        elif "polygon" in frame_object_label:
+        elif "polygon" in frame_object_label or "polygons" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
         elif "point" in frame_object_label:
             return PointCoordinate.from_dict(frame_object_label)

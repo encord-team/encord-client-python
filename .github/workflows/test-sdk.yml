@@ -34,7 +34,7 @@ concurrency:
 jobs:
   unit-tests-python-3-8:
     name: Run unit tests for Python 3.8
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -47,7 +47,7 @@ jobs:
 
   unit-tests-python-3-9:
     name: Run unit tests for Python 3.9
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -55,12 +55,12 @@ jobs:
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.9.10
+          python-version: 3.9.12
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P1 }}
 
   unit-tests-python-3-10:
     name: Run unit tests for Python 3.10
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -68,12 +68,12 @@ jobs:
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.10.2
+          python-version: 3.10.4
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P1 }}
 
   unit-tests-python-3-11:
     name: Run unit tests for Python 3.11
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
 
   unit-tests-python-3-12:
     name: Run unit tests for Python 3.12
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -99,7 +99,7 @@ jobs:
 
   unit-tests-python-3-8-pydantic-2:
     name: Run unit tests for Python 3.8 with Pydantic 2.x
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -113,7 +113,7 @@ jobs:
 
   unit-tests-python-3-9-pydantic-2:
     name: Run unit tests for Python 3.9 with Pydantic 2.x
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -121,13 +121,13 @@ jobs:
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.9.10
+          python-version: 3.9.12
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P2 }}
 
   unit-tests-python-3-10-pydantic-2:
     name: Run unit tests for Python 3.10 with Pydantic 2.x
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -135,13 +135,13 @@ jobs:
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.10.2
+          python-version: 3.10.4
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P2 }}
 
   unit-tests-python-3-11-pydantic-2:
     name: Run unit tests for Python 3.11 with Pydantic 2.x
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -155,7 +155,7 @@ jobs:
 
   unit-tests-python-3-12-pydantic-2:
     name: Run unit tests for Python 3.12 with Pydantic 2.x
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -169,7 +169,7 @@ jobs:
 
   integration-tests-python-3-11:
     name: Run integration tests for Python 3.11
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -196,7 +196,7 @@ jobs:
 
   publish-test-reports:
       name: Publish test reports
-      runs-on: ubuntu-20.04
+      runs-on: ubuntu-24.04
       needs: [
         unit-tests-python-3-8,
         unit-tests-python-3-9,
@@ -269,7 +269,7 @@ jobs:
 
   send-slack-notification:
     name: Send notification
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: [ publish-test-reports ]
     if: always()
     env:
