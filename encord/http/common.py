@@ -11,3 +11,4 @@ HEADER_CLOUD_TRACE_CONTEXT = "X-Cloud-Trace-Context"
 class RequestContext(ExceptionContext):
     trace_id: Optional[str] = None
     span_id: Optional[str] = None
+    domain: Optional[str] = None

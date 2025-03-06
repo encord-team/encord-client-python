@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import re
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Type, TypeVar, Union
 
@@ -140,18 +141,21 @@ class Querier:
         else:
             raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
 
-    @staticmethod
-    def _exception_context(request: requests.PreparedRequest) -> RequestContext:
+    def _exception_context(self, request: requests.PreparedRequest) -> RequestContext:
+        try:
+            domain: Optional[str] = _domain_from_endpoint(self._config.endpoint)
+        except Exception:
+            domain = None
         try:
             x_cloud_trace_context = request.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
             if x_cloud_trace_context is None:
-                return RequestContext()
+                return RequestContext(domain=domain)
 
             x_cloud_trace_context = x_cloud_trace_context.split(";")[0]
             trace_id, span_id = (x_cloud_trace_context.split("/") + [None, None])[:2]
-            return RequestContext(trace_id=trace_id, span_id=span_id)
+            return RequestContext(trace_id=trace_id, span_id=span_id, domain=domain)
         except Exception:
-            return RequestContext()
+            return RequestContext(domain=domain)
 
     def _request(
         self, method: QueryMethods, db_object_type: Type[T], uid: UIDType, timeout: int, payload: PayloadType = None
@@ -225,3 +229,7 @@ def create_new_session(
         session.mount("https://", HTTPAdapter(max_retries=retry_policy))
 
         yield session
+
+
+def _domain_from_endpoint(endpoint: str) -> str:
+    return re.sub(r"(https?://[^/]+/).*", r"\1", endpoint)

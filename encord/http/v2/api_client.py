@@ -30,18 +30,17 @@ class ApiClient:
         self._base_path = "v2/public/"
         self._bound_callbacks: Dict[Callable, Callable] = {}
 
-    @staticmethod
-    def _exception_context(request: requests.PreparedRequest) -> RequestContext:
+    def _exception_context(self, request: requests.PreparedRequest) -> RequestContext:
         try:
             x_cloud_trace_context = request.headers.get(HEADER_CLOUD_TRACE_CONTEXT)
             if x_cloud_trace_context is None:
-                return RequestContext()
+                return RequestContext(domain=self._domain)
 
             x_cloud_trace_context = x_cloud_trace_context.split(";")[0]
             trace_id, span_id = (x_cloud_trace_context.split("/") + [None, None])[:2]
-            return RequestContext(trace_id=trace_id, span_id=span_id)
+            return RequestContext(trace_id=trace_id, span_id=span_id, domain=self._domain)
         except Exception:
-            return RequestContext()
+            return RequestContext(domain=self._domain)
 
     def _build_url(self, path: str) -> str:
         if path.startswith("/"):
