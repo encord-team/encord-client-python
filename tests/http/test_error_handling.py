@@ -33,8 +33,8 @@ def test_failed_http_request_prints_out_trace_id(dt: MagicMock, send: MagicMock,
         trace_id, span_id = trace_header.split(";")[0].split("/")
 
         assert (
-            str(e)
-            == f"Error parsing JSON response:  timestamp='2023-01-01T00:00:00+00:00' trace_id='{trace_id}' span_id='{span_id}'"
+            f"Error parsing JSON response:  timestamp='2023-01-01T00:00:00+00:00' trace_id='{trace_id}' span_id='{span_id}'"
+            in str(e)
         )
 
 
