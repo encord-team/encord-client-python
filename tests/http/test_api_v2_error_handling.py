@@ -3,11 +3,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 from requests import Response, Session
 
-from encord.configs import SshConfig
+from encord.configs import ENCORD_DOMAIN, SshConfig
 from encord.exceptions import (
     AuthenticationError,
     AuthorisationError,
+    EncordException,
+    InvalidArgumentsError,
     ResourceNotFoundError,
+    SshKeyNotFound,
     UnknownException,
 )
 from encord.http.v2.api_client import ApiClient
@@ -68,3 +71,14 @@ def test_response_mapping_status_codes_to_exception_type_unknown(send: MagicMock
 
     with pytest.raises(UnknownException):
         api_client.get("/", params=None, result_type=CollaboratorTimer)
+
+
+@patch.object(Session, "send")
+def test_response_error_message_including_domain(send: MagicMock, api_client: ApiClient):
+    res = Response()
+    res.status_code = 400
+    send.return_value = res
+
+    with pytest.raises(EncordException) as e_info:
+        api_client.get("/", params=None, result_type=CollaboratorTimer)
+    assert ENCORD_DOMAIN in str(e_info.value)

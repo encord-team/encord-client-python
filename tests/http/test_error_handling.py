@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from requests import Response, Session
 
-from encord.configs import SshConfig
-from encord.exceptions import EncordException
+from encord.configs import ENCORD_DOMAIN, SshConfig
+from encord.exceptions import EncordException, SshKeyNotFound
 from encord.http.querier import HEADER_CLOUD_TRACE_CONTEXT, Querier
 from tests.fixtures import PRIVATE_KEY
 
@@ -36,3 +36,15 @@ def test_failed_http_request_prints_out_trace_id(dt: MagicMock, send: MagicMock,
             str(e)
             == f"Error parsing JSON response:  timestamp='2023-01-01T00:00:00+00:00' trace_id='{trace_id}' span_id='{span_id}'"
         )
+
+
+@patch.object(Session, "send")
+def test_response_error_message_including_domain(send: MagicMock, querier: Querier):
+    res = Response()
+    res.status_code = 400
+    res._content = b'{"status":400,"response":["SSH_KEY_NOT_FOUND_ERROR"],"payload":"Your used SSH key does not exist. Please add this SSH key to your user profile."}'
+    send.return_value = res
+
+    with pytest.raises(SshKeyNotFound) as e_info:
+        querier.basic_getter(object)
+    assert ENCORD_DOMAIN in str(e_info.value)
