@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 from encord.exceptions import (
     AnswerDictionaryError,
     AuthenticationError,
@@ -23,6 +25,7 @@ from encord.exceptions import (
     UploadOperationNotSupportedError,
     WrongProjectTypeError,
 )
+from encord.http.common import RequestContext
 
 # Error messages
 AUTHENTICATION_ERROR = ["AUTHENTICATION_ERROR"]
@@ -50,7 +53,7 @@ MULTI_LABEL_LIMIT_ERROR = ["MULTI_LABEL_LIMIT_ERROR"]
 WRONG_PROJECT_TYPE_ERROR = ["WRONG_PROJECT_TYPE_ERROR"]
 
 
-def check_error_response(response, context=None, payload=None):
+def check_error_response(response, context: Optional[RequestContext] = None, payload: Any = None):
     """Checks server response.
     Called if HTTP response status code is an error response.
     """
