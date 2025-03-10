@@ -104,3 +104,16 @@ def test_serialise_bitmask_starting_with_true():
     mask_decoded = BitmaskCoordinates(mask_encoded).to_numpy_array()
 
     assert np.array_equal(mask, mask_decoded)
+
+
+def test_serialise_bitmask_empty():
+    mask = np.array([[]], dtype=bool)
+    shape = mask.shape
+
+    rle_string = serialise_bitmask(mask.tobytes())
+    mask_encoded = BitmaskCoordinates.EncodedBitmask(
+        top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string
+    )
+    mask_decoded = BitmaskCoordinates(mask_encoded).to_numpy_array()
+
+    assert np.array_equal(mask, mask_decoded)  # Mask is inverted and the test fails.
