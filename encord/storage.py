@@ -926,6 +926,8 @@ class StorageFolder:
     ) -> Iterable["StorageItem"]:
         """Recursively search for storage items, starting from this folder.
 
+        Warning: This method is slow. We recommend using `storage_folder.list_items` instead.
+
         Args:
             search (Optional[str]): Search string to filter items by name.
             is_in_dataset (Optional[bool]): Filter items by whether they are linked to any dataset. `True` and `False` select
