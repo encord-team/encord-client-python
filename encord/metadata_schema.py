@@ -41,9 +41,19 @@ class _ClientMetadataSchemaTypeEnum(BaseModel):
     values: Sequence[str] = Field([], min_length=1, max_length=256)
 
 
+class _ClientMetadataSchemaTypeEmbeddingApi(BaseModel):
+    url: str
+    client_only: bool = True
+    embed_b64_image: bool = True
+    embed_text: bool = True
+
+
 class _ClientMetadataSchemaTypeEmbedding(BaseModel):
     ty: Literal["embedding"] = "embedding"
     size: int = Field(gt=0, le=4096)
+
+    # For user-defined text/image similarity search
+    api: _ClientMetadataSchemaTypeEmbeddingApi | None = None
 
 
 class _ClientMetadataSchemaTypeText(BaseModel):
@@ -214,13 +224,14 @@ class MetadataSchema:
             )
             self._dirty = False
 
-    def add_embedding(self, k: str, *, size: int) -> None:
+    def add_embedding(self, k: str, *, size: int, url: str | None = None) -> None:
         """Adds a new embedding to the metadata schema.
 
         **Parameters:**
 
         - k : str: The key under which the embedding will be stored in the schema.
         - size : int: The size of the embedding.
+        - url : str: The url for the schema endpoint for image/text search if supported.
 
         **Raises:**
 
@@ -229,7 +240,12 @@ class MetadataSchema:
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
         _assert_valid_metadata_key(k)
-        self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEmbedding(size=size))
+        embedding_api = None
+        if url is not None:
+            embedding_api = _ClientMetadataSchemaTypeEmbeddingApi(url=url)
+        self._schema[k] = _ClientMetadataSchemaOption(
+            root=_ClientMetadataSchemaTypeEmbedding(size=size, api=embedding_api)
+        )
         self._dirty = True
 
     def add_enum(self, k: str, *, values: Sequence[str]) -> None:
