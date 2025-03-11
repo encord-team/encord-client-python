@@ -1242,7 +1242,7 @@ class EncordUserClient:
             sign_url: If `True`, pre-fetch a signed URLs for the items (otherwise the URLs will be signed on demand).
 
         Returns:
-            A list of storage items. See :class:`encord.storage.StorageItem` for details.
+            A list of storage items. See :class:`encord.storage.StorageItem` for details. Items will be in the same order as `item_uuids` in the request
 
         Raises:
             ValueError: If any of the item uuids is a badly formed UUID.
