@@ -58,6 +58,8 @@ def _rle_to_string(rle: Sequence[int]) -> str:
 
 def _mask_to_rle(mask: bytes) -> List[int]:
     """COCO-compatible raw bitmask to COCO-compatible RLE"""
+    if len(mask) == 0:
+        return []
     raw_rle = [len(list(group)) for _, group in groupby(mask)]
     # note that the odd counts are always the numbers of zeros
     if mask[0] == 1:
