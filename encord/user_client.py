@@ -1344,6 +1344,8 @@ class EncordUserClient:
     ) -> Iterable[StorageItem]:
         """Recursively search for storage items, starting from the root level.
 
+        Warning: This method is slow. We recommend using `storage_folder.list_items` instead.
+
         Args:
             search: Search string to filter items by name.
             is_in_dataset: Filter items by whether they are linked to any dataset. `True` and `False` select
