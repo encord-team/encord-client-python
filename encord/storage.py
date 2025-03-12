@@ -13,6 +13,7 @@ import json
 import logging
 import mimetypes
 import os
+import tempfile
 import time
 from datetime import datetime
 from math import ceil
@@ -705,7 +706,8 @@ class StorageFolder:
 
     def upload_text(
         self,
-        file_path: Union[Path, str],
+        file_path: Optional[Union[Path, str]] = None,
+        text_contents: Optional[str] = None,
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         text_metadata: Optional[orm_storage.CustomerProvidedTextMetadata] = None,
@@ -715,6 +717,7 @@ class StorageFolder:
 
         Args:
             file_path: File path of the text file. For example: '/home/user/data/report.txt'
+            text_contents: Text contents to be uploaded. For example: 'The quick brown fox jumps over the lazy dog'
             title: The item title. If unspecified, the file name is used as the title.
             client_metadata: Optional custom metadata to be associated with the text file. Should be a dictionary that is JSON-serializable.
             text_metadata: Optional media metadata for a text file. The Encord platform uses the specified values instead of scanning the files.
@@ -734,15 +737,21 @@ class StorageFolder:
         - file_size: int - Size of the text file in bytes.
         - mime_type: str - MIME type of the text file (for example: `application/json` or `text/plain`).
         """
-
+        if file_path and text_contents:
+            raise EncordException("We only support passing either the file_path or the text_contents. Can't pass both")
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.PLAIN_TEXT, count=1, frames_subfolder_name=None
         )
         if len(upload_url_info) != 1:
             raise EncordException("Can't access upload location")
 
-        title = self._guess_title(title, file_path)
+        title = self._guess_title(title, file_path, text_contents)
 
+        if text_contents:
+            with tempfile.NamedTemporaryFile(suffix=".txt") as f:
+                f.write(text_contents.encode())
+                f.flush()
+                file_path = f
         self._upload_local_file(
             file_path,
             title,
@@ -1374,13 +1383,22 @@ class StorageFolder:
 
         return urls.results
 
-    def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str:
+    def _guess_title(
+        self, title: Optional[str], file_path: Optional[Union[Path, str]], text_contents: Optional[str] = None
+    ) -> str:
         if title:
             return title
-
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
-        return file_path.name
+        if not file_path and not text_contents:
+            raise ValueError("Require at least one of file_path, text_contents")
+        if file_path and text_contents:
+            raise ValueError("Require at most one of file_path, text_contents")
+        if file_path:
+            if isinstance(file_path, str):
+                file_path = Path(file_path)
+            return file_path.name
+        else:
+            assert text_contents
+            return text_contents[:10]
 
     def _get_content_type(self, file_path: Union[Path, str], item_type: StorageItemType) -> str:
         if item_type == StorageItemType.IMAGE:
