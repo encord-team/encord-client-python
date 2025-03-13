@@ -216,7 +216,7 @@ def get_env_ssh_key() -> str:
 
     if raw_ssh_key == "":
         raise ResourceNotFoundError(
-            f"Environment variable {_ENCORD_SSH_KEY} found but is empty. " f"Failed to load private ssh key."
+            f"Environment variable {_ENCORD_SSH_KEY} found but is empty. Failed to load private ssh key."
         )
 
     return raw_ssh_key
@@ -345,9 +345,10 @@ class BearerConfig(Config):
         token: str,
         domain: str = ENCORD_DOMAIN,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        user_agent_suffix: Optional[str] = None,
     ):
         self.token = token
-        super().__init__(domain=domain, requests_settings=requests_settings)
+        super().__init__(domain=domain, requests_settings=requests_settings, user_agent_suffix=user_agent_suffix)
 
     def define_headers(self, resource_id: Optional[str], resource_type: Optional[str], data: str) -> Dict[str, Any]:
         """Define headers for a bearer token-based request.

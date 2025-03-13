@@ -200,6 +200,22 @@ def test_v1_public_user_resource_when_initialised_with_bearer_auth(mock_send, be
 
 
 @patch.object(Session, "send")
+def test_v1_public_user_resource_when_initialised_with_bearer_auth_can_pass_auth_agent_suffix(mock_send, bearer_token):
+    mock_send.side_effect = make_side_effects()
+
+    user_client = EncordUserClient.create_with_bearer_token(bearer_token, user_agent_suffix="suffix")
+    user_client.get_projects()
+
+    assert mock_send.call_count == 1
+    for mock_call in mock_send.call_args_list:
+        # Expect call to have correct resource type and id, and correct bearer auth
+        request = mock_call.args[0]
+        assert request.path_url == "/public/user"
+        assert request.headers["Authorization"] == f"Bearer {bearer_token}"
+        assert "suffix" in request.headers["User-Agent"]
+
+
+@patch.object(Session, "send")
 def test_v2_api_when_initialised_with_ssh_key(mock_send, bearer_token):
     mock_send.side_effect = make_side_effects()
 
