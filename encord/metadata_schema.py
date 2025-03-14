@@ -1,6 +1,7 @@
 import json
 from enum import Enum
 from typing import Dict, Literal, Sequence, Union
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
@@ -43,6 +44,7 @@ class _ClientMetadataSchemaTypeEnum(BaseModel):
 
 class _ClientMetadataSchemaTypeEmbeddingApi(BaseModel):
     url: str
+    url_auth: UUID | None = None
     client_only: bool = True
     embed_b64_image: bool = True
     embed_text: bool = True
