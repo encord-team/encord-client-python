@@ -44,7 +44,7 @@ class _ClientMetadataSchemaTypeEnum(BaseModel):
 
 class _ClientMetadataSchemaTypeEmbeddingApi(BaseModel):
     url: str
-    url_auth: UUID | None = None
+    auth_integration_secret: UUID | None = None
     client_only: bool = True
     embed_b64_image: bool = True
     embed_text: bool = True
