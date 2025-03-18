@@ -517,12 +517,6 @@ class LabelRowV2:
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
-        if self.data_type == DataType.PDF:
-            raise LabelRowError(
-                "You are trying to initialise a label row for a PDF file. "
-                "The SDK does not yet support working with labels on PDF files."
-            )
-
         if not self.label_hash:
             # If label_hash is None, it means we need to explicitly create the label row first
             bundled_operation(
@@ -2108,7 +2102,12 @@ class LabelRowV2:
                 )
                 self._add_objects_answers(object_answers)
 
-            elif data_type == DataType.VIDEO or data_type == DataType.DICOM or data_type == DataType.NIFTI:
+            elif (
+                data_type == DataType.VIDEO
+                or data_type == DataType.DICOM
+                or data_type == DataType.NIFTI
+                or data_type == DataType.PDF
+            ):
                 for frame, frame_data in data_unit["labels"].items():
                     frame_num = int(frame)
                     self._add_object_instances_from_objects(frame_data["objects"], frame_num)
@@ -2124,7 +2123,7 @@ class LabelRowV2:
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
-            elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
+            elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
                 is_html = data_unit["data_type"] == "text/html"
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
