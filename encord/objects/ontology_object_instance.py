@@ -942,7 +942,7 @@ def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, par
     elif isinstance(coordinates, HtmlCoordinates):
         if parent is not None and parent.file_type != "text/html":
             raise LabelRowError(
-                "For non-html labels, ensure the `range` property " "is set when instantiating the TextCoordinates."
+                "For non-html labels, ensure the `range` property is set when instantiating the TextCoordinates."
             )
 
 

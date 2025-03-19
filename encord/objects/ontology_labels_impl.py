@@ -1699,10 +1699,11 @@ class LabelRowV2:
             or data_type == DataType.DICOM
             or data_type == DataType.IMAGE
             or data_type == DataType.NIFTI
+            or data_type == DataType.PDF
         ):
             data_sequence = frame_level_data.frame_number
 
-        elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT or data_type == DataType.PDF:
+        elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
             data_sequence = 0
 
         elif data_type == DataType.DICOM_STUDY:
@@ -1728,8 +1729,12 @@ class LabelRowV2:
             ret["audio_sample_rate"] = self._label_row_read_only_data.audio_sample_rate
             ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
             ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
-        elif self.data_type == DataType.PLAIN_TEXT or self.data_type == DataType.PDF:
+        elif self.data_type == DataType.PLAIN_TEXT:
             pass
+        elif self.data_type == DataType.PDF:
+            ret["height"] = 0
+            ret["width"] = 0
+            ret["data_fps"] = 0
         elif (
             self.data_type == DataType.IMAGE
             or self.data_type == DataType.NIFTI
@@ -1767,11 +1772,16 @@ class LabelRowV2:
             frame = frame_level_data.frame_number
             ret.update(self._to_encord_label(frame))
 
-        elif data_type == DataType.VIDEO or data_type == DataType.DICOM or data_type == DataType.NIFTI:
+        elif (
+            data_type == DataType.VIDEO
+            or data_type == DataType.DICOM
+            or data_type == DataType.NIFTI
+            or data_type == DataType.PDF
+        ):
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
 
-        elif data_type == DataType.AUDIO or data_type == DataType.PDF or data_type == DataType.PLAIN_TEXT:
+        elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
             return {}
 
         elif data_type == DataType.DICOM_STUDY:
