@@ -1,7 +1,4 @@
 # Import dependencies
-from pathlib import Path
-from typing import Dict, List
-
 from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import TextCoordinates
@@ -50,7 +47,7 @@ english_correction_text_attribute = english_correction_option.get_child_by_title
 chinese_correction_text_attribute = ontology_structure.get_child_by_title(type_=TextAttribute, title="更正")
 
 # Mapping of text files to multiple text regions with manual corrections
-text_annotations: Dict[str, List[Dict]] = {
+text_annotations= {
     "Paradise Lost.txt": [
         {
             "label_ref": "text_region_001",
@@ -81,18 +78,37 @@ text_annotations: Dict[str, List[Dict]] = {
     ],
 }
 
-# Iterate over each data unit and apply multiple labels
+BUNDLE_SIZE = 100
+
+# Cache label rows after initialization
+label_row_map = {}
+
+# First initialize label rows in a bundle
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for data_title in text_annotations.keys():
+        label_rows = project.list_label_rows_v2(data_title_eq=data_title)
+        if not label_rows:
+            print(f"Skipping: No label row found for {data_title}")
+            continue
+
+        label_row = label_rows[0]
+        label_row.initialise_labels(bundle=bundle)
+
+        # Cache the initialized label row for further use
+        label_row_map[data_title] = label_row
+
+# Apply annotations
+label_rows_to_save = []
+
 for data_title, annotations in text_annotations.items():
-    label_rows = project.list_label_rows_v2(data_title_eq=data_title)
-    if not label_rows:
-        print(f"Skipping: No label row found for {data_title}")
+    label_row = label_row_map.get(data_title)
+
+    if not label_row:
+        print(f"Skipping: No initialized label row found for {data_title}")
         continue
 
-    label_row = label_rows[0]
-    label_row.initialise_labels()
-
     for annotation in annotations:
-        selected_languages = annotation.get("languages", "").split(", ")  # Extract languages
+        selected_languages = annotation.get("languages", "").split(", ")
 
         # Create Object Instance for English corrections if applicable
         if any(lang in ["en-ca", "en-gb", "en-us"] for lang in selected_languages):
@@ -103,7 +119,6 @@ for data_title, annotations in text_annotations.items():
             )
             english_instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
 
-            # Apply checklist options based on provided languages
             english_selected_options = [
                 option
                 for lang, option in {"en-ca": en_ca_option, "en-gb": en_gb_option, "en-us": en_us_option}.items()
@@ -127,7 +142,6 @@ for data_title, annotations in text_annotations.items():
             )
             chinese_instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
 
-            # Apply checklist options based on provided languages
             chinese_selected_options = [
                 option
                 for lang, option in {"zh-tw": zh_tw_option, "zh-hk": zh_hk_option}.items()
@@ -144,7 +158,12 @@ for data_title, annotations in text_annotations.items():
 
         print(f"Added text region {annotation['label_ref']} to {data_title}")
 
-    label_row.save()
-    print(f"Saved label row for {data_title}")
+    label_rows_to_save.append(label_row)
+
+# Save changes using a bundle
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for label_row in label_rows_to_save:
+        label_row.save(bundle=bundle)
+        print(f"Saved label row for {label_row.data_title}")
 
 print("Multiple labels with manually provided correction text applied successfully!")

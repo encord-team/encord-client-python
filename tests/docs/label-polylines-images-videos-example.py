@@ -65,7 +65,7 @@ other_branch_option_text_attribute = ontology_structure.get_child_by_title(
 
 # Dictionary of labels per data unit and per frame with branch type specified, including quality options
 video_image_frame_labels = {
-    "blueberries-001.jpg": {
+    "cherries-001.jpg": {
         0: {
             "label_ref": "branch_001",
             "coordinates": PolylineCoordinates(
@@ -80,7 +80,7 @@ video_image_frame_labels = {
             "fruiting_spur_quality_options": "Short length, High bud density",
         }
     },
-    "blueberries-010.jpg": {
+    "cherries-010.jpg": {
         0: [
             {
                 "label_ref": "branch_002",
@@ -123,7 +123,7 @@ video_image_frame_labels = {
             },
         ],
     },
-    "blueberries-ig": {
+    "cherries-ig": {
         0: {
             "label_ref": "branch_005",
             "coordinates": PolylineCoordinates(
@@ -179,7 +179,7 @@ video_image_frame_labels = {
             },
         ],
     },
-    "blueberries-is": {
+    "cherries-is": {
         0: {
             "label_ref": "branch_009",
             "coordinates": PolylineCoordinates(
@@ -235,7 +235,7 @@ video_image_frame_labels = {
             },
         ],
     },
-    "blueberries-vid-001.mp4": {
+    "cherries-vid-001.mp4": {
         103: [
             {
                 "label_ref": "branch_013",
@@ -362,14 +362,34 @@ video_image_frame_labels = {
     },
 }
 
+# Bundle size
+BUNDLE_SIZE = 100
 
-# Loop through each data unit (image, video, etc.)
+# Cache label rows after initialization
+label_row_map = {}
+
+# Step 1: Initialize all label rows using a bundle
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for data_unit in video_image_frame_labels.keys():
+        label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
+        if not label_rows:
+            print(f"Skipping: No label row found for {data_unit}")
+            continue
+
+        label_row = label_rows[0]
+        label_row.initialise_labels(bundle=bundle)
+        label_row_map[data_unit] = label_row  # Cache the initialized label row
+
+# Step 2: Process all frame coordinates and prepare label rows for saving
+label_rows_to_save = []
+
 for data_unit, frame_coordinates in video_image_frame_labels.items():
-    object_instances_by_label_ref = {}
+    label_row = label_row_map.get(data_unit)
+    if not label_row:
+        print(f"Skipping: No initialized label row found for {data_unit}")
+        continue
 
-    # Get the label row for the current data unit
-    label_row = project.list_label_rows_v2(data_title_eq=data_unit)[0]
-    label_row.initialise_labels()
+    object_instances_by_label_ref = {}
 
     for frame_number, items in frame_coordinates.items():
         if not isinstance(items, list):
@@ -385,6 +405,7 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                 checklist_attribute = None
                 quality_options = []
 
+                # Assign radio and checklist attributes based on branch type
                 if branch_type == "Fruiting spur":
                     polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=fruiting_spur_option)
                     checklist_attribute = fruiting_spur_checklist_attribute
@@ -406,7 +427,7 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                     )
                     quality_options = []
 
-                # Set checklist attributes
+                # Process checklist options
                 checklist_answers = []
                 for quality in quality_options:
                     option = None
@@ -454,14 +475,20 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
             else:
                 polyline_object_instance = object_instances_by_label_ref[label_ref]
 
+            # Assign coordinates for this frame
             polyline_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-    # Add object instances to label_row **only if they have frames assigned**
+    # Add object instances to the label row if they have frames assigned
     for polyline_object_instance in object_instances_by_label_ref.values():
-        if polyline_object_instance.get_annotation_frames():  # Ensures it has at least one frame
+        if polyline_object_instance.get_annotation_frames():
             label_row.add_object_instance(polyline_object_instance)
 
-    # Upload all labels for this data unit (video/image) to the server
-    label_row.save()
+    label_rows_to_save.append(label_row)
 
-print(" Labels with persimmon type radio buttons, checklist attributes, and text labels added for all data units.")
+# Step 3: Save all label rows using a bundle
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for label_row in label_rows_to_save:
+        label_row.save(bundle=bundle)
+        print(f"Saved label row for {label_row.data_title}")
+
+print("Labels with branch type radio buttons, checklist attributes, and text labels added for all data units.")

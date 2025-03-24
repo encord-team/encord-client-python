@@ -23,7 +23,7 @@ project: Project = user_client.get_project(PROJECT_HASH)
 ontology_structure = project.ontology_structure
 
 # Find a bounding box annotation object in the project ontology
-skeleton_ontology_object: Object = ontology_structure.get_child_by_title(title="strawberries", type_=Object)
+skeleton_ontology_object: Object = ontology_structure.get_child_by_title(title="Strawberries", type_=Object)
 
 skeleton_template: SkeletonTemplate = project.ontology_structure.skeleton_templates["Triangle"]
 
@@ -69,8 +69,9 @@ other_strawberry_option_text_attribute = ontology_structure.get_child_by_title(
 
 
 # Dictionary of labels per data unit and per frame with strawberry type specified, including quality options
+# Dictionary of labels per data unit and per frame with strawberry type specified, including quality options
 video_frame_labels = {
-    "strawberries-001.jpg": {
+    "cherries-001.jpg": {
         0: {
             "label_ref": "strawberry_001",
             "coordinates": SkeletonCoordinates(
@@ -91,7 +92,7 @@ video_frame_labels = {
             "albion_quality_options": "Plump, Juicy",
         }
     },
-    "strawberries-010.jpg": {
+    "cherries-010.jpg": {
         0: [
             {
                 "label_ref": "strawberry_002",
@@ -197,7 +198,7 @@ video_frame_labels = {
             },
         ],
     },
-    "strawberries-ig": {
+    "cherries-ig": {
         0: {
             "label_ref": "strawberry_005",
             "coordinates": SkeletonCoordinates(
@@ -322,7 +323,7 @@ video_frame_labels = {
             },
         ],
     },
-    "strawberries-is": {
+    "cherries-is": {
         0: {
             "label_ref": "strawberry_009",
             "coordinates": SkeletonCoordinates(
@@ -447,7 +448,7 @@ video_frame_labels = {
             },
         ],
     },
-    "strawberries-vid-001.mp4": {
+    "cherries-vid-001.mp4": {
         103: [
             {
                 "label_ref": "strawberry_013",
@@ -763,6 +764,8 @@ video_frame_labels = {
     },
 }
 
+# Bundle size
+BUNDLE_SIZE = 100
 
 # Loop through each data unit (image, video, etc.)
 for data_unit, frame_coordinates in video_frame_labels.items():
@@ -770,94 +773,98 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
     # Get the label row for the current data unit
     label_row = project.list_label_rows_v2(data_title_eq=data_unit)[0]
-    label_row.initialise_labels()
 
-    # Loop through the frames for the current data unit
-    for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  #  Multiple objects in the frame
-            items = [items]
+    # Initialize label row using bundle
+    with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+        # Ensure labels are initialized correctly
+        label_row.initialise_labels()
 
-        for item in items:
-            label_ref = item["label_ref"]
-            coord = item["coordinates"]
-            strawberry_type = item["strawberry_type"]
+        # Now we can proceed with processing each frame and assigning labels
+        for frame_number, items in frame_coordinates.items():
+            if not isinstance(items, list):  # Multiple objects in the frame
+                items = [items]
 
-            #  Check if label_ref already exists for reusability
-            if label_ref not in object_instances_by_label_ref:
-                skeleton_object_instance: ObjectInstance = skeleton_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = skeleton_object_instance  #  Store for reuse
-                checklist_attribute = None
+            for item in items:
+                label_ref = item["label_ref"]
+                coord = item["coordinates"]
+                strawberry_type = item["strawberry_type"]
 
-                # Set strawberry type attribute
-                if strawberry_type == "Albion":
-                    skeleton_object_instance.set_answer(attribute=strawberry_type_radio_attribute, answer=albion_option)
-                    checklist_attribute = albion_checklist_attribute
-                elif strawberry_type == "Redcoat":
-                    skeleton_object_instance.set_answer(
-                        attribute=strawberry_type_radio_attribute, answer=redcoat_option
-                    )
-                    checklist_attribute = redcoat_checklist_attribute
-                elif strawberry_type == "Sweet Kiss":
-                    skeleton_object_instance.set_answer(
-                        attribute=strawberry_type_radio_attribute, answer=sweet_kiss_option
-                    )
-                    checklist_attribute = sweet_kiss_checklist_attribute
-                elif strawberry_type == "Other strawberry type":
-                    skeleton_object_instance.set_answer(
-                        attribute=strawberry_type_radio_attribute, answer=other_strawberry_option
-                    )
-                    skeleton_object_instance.set_answer(
-                        attribute=other_strawberry_option_text_attribute, answer=item.get("Specify strawberry type", "")
-                    )
+                # Check if label_ref already exists for reusability
+                if label_ref not in object_instances_by_label_ref:
+                    skeleton_object_instance: ObjectInstance = skeleton_ontology_object.create_instance()
+                    object_instances_by_label_ref[label_ref] = skeleton_object_instance  # Store for reuse
+                    checklist_attribute = None
 
-                # Set checklist attributes
-                checklist_answers = []
-                quality_options = item.get(f"{strawberry_type.lower()}_quality_options", "").split(", ")
-
-                for quality in quality_options:
-                    if quality == "Plump":
-                        checklist_answers.append(
-                            albion_plump_option
-                            if strawberry_type == "Albion"
-                            else redcoat_plump_option
-                            if strawberry_type == "Redcoat"
-                            else sweet_kiss_plump_option
+                    # Set strawberry type attribute
+                    if strawberry_type == "Albion":
+                        skeleton_object_instance.set_answer(attribute=strawberry_type_radio_attribute, answer=albion_option)
+                        checklist_attribute = albion_checklist_attribute
+                    elif strawberry_type == "Redcoat":
+                        skeleton_object_instance.set_answer(
+                            attribute=strawberry_type_radio_attribute, answer=redcoat_option
                         )
-                    elif quality == "Juicy":
-                        checklist_answers.append(
-                            albion_juicy_option
-                            if strawberry_type == "Albion"
-                            else redcoat_juicy_option
-                            if strawberry_type == "Redcoat"
-                            else sweet_kiss_juicy_option
+                        checklist_attribute = redcoat_checklist_attribute
+                    elif strawberry_type == "Sweet Kiss":
+                        skeleton_object_instance.set_answer(
+                            attribute=strawberry_type_radio_attribute, answer=sweet_kiss_option
                         )
-                    elif quality == "Large":
-                        checklist_answers.append(
-                            albion_large_option
-                            if strawberry_type == "Albion"
-                            else redcoat_large_option
-                            if strawberry_type == "Redcoat"
-                            else sweet_kiss_large_option
+                        checklist_attribute = sweet_kiss_checklist_attribute
+                    elif strawberry_type == "Other strawberry type":
+                        skeleton_object_instance.set_answer(
+                            attribute=strawberry_type_radio_attribute, answer=other_strawberry_option
+                        )
+                        skeleton_object_instance.set_answer(
+                            attribute=other_strawberry_option_text_attribute, answer=item.get("Specify strawberry type", "")
                         )
 
-                if checklist_attribute and checklist_answers:
-                    skeleton_object_instance.set_answer(
-                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
-                    )
+                    # Set checklist attributes
+                    checklist_answers = []
+                    quality_options = item.get(f"{strawberry_type.lower()}_quality_options", "").split(", ")
 
-            else:
-                #  Reuse existing instance across frames
-                skeleton_object_instance = object_instances_by_label_ref[label_ref]
+                    for quality in quality_options:
+                        if quality == "Plump":
+                            checklist_answers.append(
+                                albion_plump_option
+                                if strawberry_type == "Albion"
+                                else redcoat_plump_option
+                                if strawberry_type == "Redcoat"
+                                else sweet_kiss_plump_option
+                            )
+                        elif quality == "Juicy":
+                            checklist_answers.append(
+                                albion_juicy_option
+                                if strawberry_type == "Albion"
+                                else redcoat_juicy_option
+                                if strawberry_type == "Redcoat"
+                                else sweet_kiss_juicy_option
+                            )
+                        elif quality == "Large":
+                            checklist_answers.append(
+                                albion_large_option
+                                if strawberry_type == "Albion"
+                                else redcoat_large_option
+                                if strawberry_type == "Redcoat"
+                                else sweet_kiss_large_option
+                            )
 
-            #  Assign the object to the frame and track it
-            skeleton_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
+                    if checklist_attribute and checklist_answers:
+                        skeleton_object_instance.set_answer(
+                            attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                        )
 
-    #  Add object instances to label_row **only if they have frames assigned**
-    for skeleton_object_instance in object_instances_by_label_ref.values():
-        if skeleton_object_instance.get_annotation_frames():  #  Ensures it has at least one frame
-            label_row.add_object_instance(skeleton_object_instance)
+                else:
+                    # Reuse existing instance across frames
+                    skeleton_object_instance = object_instances_by_label_ref[label_ref]
 
-    #  Upload all labels for this data unit (video/image) to the server
-    label_row.save()
+                # Assign the object to the frame and track it
+                skeleton_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-print(" Labels with strawberry type radio buttons, checklist attributes, and text labels added for all data units.")
+        # Add object instances to label_row **only if they have frames assigned**
+        for skeleton_object_instance in object_instances_by_label_ref.values():
+            if skeleton_object_instance.get_annotation_frames():  # Ensures it has at least one frame
+                label_row.add_object_instance(skeleton_object_instance)
+
+        # Save label row using the bundle
+        label_row.save(bundle=bundle)
+
+print("Labels with strawberry type radio buttons, checklist attributes, and text labels added for all data units.")

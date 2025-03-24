@@ -461,6 +461,8 @@ video_frame_labels = {
     },
 }
 
+# Bundle size
+BUNDLE_SIZE = 100
 
 # Loop through each data unit (image, video, etc.)
 for data_unit, frame_coordinates in video_frame_labels.items():
@@ -468,90 +470,92 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
     # Get the label row for the current data unit
     label_row = project.list_label_rows_v2(data_title_eq=data_unit)[0]
-    label_row.initialise_labels()
 
-    # Loop through the frames for the current data unit
-    for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  #  Multiple objects in the frame
-            items = [items]
+    # Initialize label row using bundle
+    with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+        label_row.initialise_labels()  # Ensure this is called before adding object instances
 
-        for item in items:
-            label_ref = item["label_ref"]
-            coord = item["coordinates"]
-            blueberry_type = item["blueberry_type"]
+        for frame_number, items in frame_coordinates.items():
+            if not isinstance(items, list):  # Multiple objects in the frame
+                items = [items]
 
-            #  Check if label_ref already exists for reusability
-            if label_ref not in object_instances_by_label_ref:
-                polygon_object_instance: ObjectInstance = polygon_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = polygon_object_instance  #  Store for reuse
-                checklist_attribute = None
+            for item in items:
+                label_ref = item["label_ref"]
+                coord = item["coordinates"]
+                blueberry_type = item["blueberry_type"]
 
-                # Set blueberry type attribute
-                if blueberry_type == "Bluegold":
-                    polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=bluegold_option)
-                    checklist_attribute = bluegold_checklist_attribute
-                elif blueberry_type == "Duke":
-                    polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=duke_option)
-                    checklist_attribute = duke_checklist_attribute
-                elif blueberry_type == "Blueray":
-                    polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=blueray_option)
-                    checklist_attribute = blueray_checklist_attribute
-                elif blueberry_type == "Other blueberry type":
-                    polygon_object_instance.set_answer(
-                        attribute=blueberry_type_radio_attribute, answer=other_blueberry_option
-                    )
-                    polygon_object_instance.set_answer(
-                        attribute=other_blueberry_option_text_attribute, answer=item.get("Specify blueberry type", "")
-                    )
+                # Check if label_ref already exists for reusability
+                if label_ref not in object_instances_by_label_ref:
+                    polygon_object_instance: ObjectInstance = polygon_ontology_object.create_instance()
+                    object_instances_by_label_ref[label_ref] = polygon_object_instance  # Store for reuse
+                    checklist_attribute = None
 
-                # Set checklist attributes
-                checklist_answers = []
-                quality_options = item.get(f"{blueberry_type.lower()}_quality_options", "").split(", ")
-
-                for quality in quality_options:
-                    if quality == "Plump":
-                        checklist_answers.append(
-                            bluegold_plump_option
-                            if blueberry_type == "Bluegold"
-                            else duke_plump_option
-                            if blueberry_type == "Duke"
-                            else blueray_plump_option
+                    # Set blueberry type attribute
+                    if blueberry_type == "Bluegold":
+                        polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=bluegold_option)
+                        checklist_attribute = bluegold_checklist_attribute
+                    elif blueberry_type == "Duke":
+                        polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=duke_option)
+                        checklist_attribute = duke_checklist_attribute
+                    elif blueberry_type == "Blueray":
+                        polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=blueray_option)
+                        checklist_attribute = blueray_checklist_attribute
+                    elif blueberry_type == "Other blueberry type":
+                        polygon_object_instance.set_answer(
+                            attribute=blueberry_type_radio_attribute, answer=other_blueberry_option
                         )
-                    elif quality == "Juicy":
-                        checklist_answers.append(
-                            bluegold_juicy_option
-                            if blueberry_type == "Bluegold"
-                            else duke_juicy_option
-                            if blueberry_type == "Duke"
-                            else blueray_juicy_option
-                        )
-                    elif quality == "Large":
-                        checklist_answers.append(
-                            bluegold_large_option
-                            if blueberry_type == "Bluegold"
-                            else duke_large_option
-                            if blueberry_type == "Duke"
-                            else blueray_large_option
+                        polygon_object_instance.set_answer(
+                            attribute=other_blueberry_option_text_attribute, answer=item.get("Specify blueberry type", "")
                         )
 
-                if checklist_attribute and checklist_answers:
-                    polygon_object_instance.set_answer(
-                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
-                    )
+                    # Set checklist attributes
+                    checklist_answers = []
+                    quality_options = item.get(f"{blueberry_type.lower()}_quality_options", "").split(", ")
 
-            else:
-                #  Reuse existing instance across frames
-                polygon_object_instance = object_instances_by_label_ref[label_ref]
+                    for quality in quality_options:
+                        if quality == "Plump":
+                            checklist_answers.append(
+                                bluegold_plump_option
+                                if blueberry_type == "Bluegold"
+                                else duke_plump_option
+                                if blueberry_type == "Duke"
+                                else blueray_plump_option
+                            )
+                        elif quality == "Juicy":
+                            checklist_answers.append(
+                                bluegold_juicy_option
+                                if blueberry_type == "Bluegold"
+                                else duke_juicy_option
+                                if blueberry_type == "Duke"
+                                else blueray_juicy_option
+                            )
+                        elif quality == "Large":
+                            checklist_answers.append(
+                                bluegold_large_option
+                                if blueberry_type == "Bluegold"
+                                else duke_large_option
+                                if blueberry_type == "Duke"
+                                else blueray_large_option
+                            )
 
-            #  Assign the object to the frame and track it
-            polygon_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
+                    if checklist_attribute and checklist_answers:
+                        polygon_object_instance.set_answer(
+                            attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                        )
 
-    #  Add object instances to label_row **only if they have frames assigned**
-    for polygon_object_instance in object_instances_by_label_ref.values():
-        if polygon_object_instance.get_annotation_frames():  #  Ensures it has at least one frame
-            label_row.add_object_instance(polygon_object_instance)
+                else:
+                    # Reuse existing instance across frames
+                    polygon_object_instance = object_instances_by_label_ref[label_ref]
 
-    #  Upload all labels for this data unit (video/image) to the server
-    label_row.save()
+                # Assign the object to the frame and track it
+                polygon_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-print(" Labels with blueberry type radio buttons, checklist attributes, and text labels added for all data units.")
+        # Add object instances to label_row **only if they have frames assigned**
+        for polygon_object_instance in object_instances_by_label_ref.values():
+            if polygon_object_instance.get_annotation_frames():  # Ensures it has at least one frame
+                label_row.add_object_instance(polygon_object_instance)
+
+        # Save label row using the bundle
+        label_row.save(bundle=bundle)
+
+print("Labels with blueberry type radio buttons, checklist attributes, and text labels added for all data units.")

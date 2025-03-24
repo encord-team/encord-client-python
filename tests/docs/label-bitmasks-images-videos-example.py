@@ -224,17 +224,40 @@ video_frame_labels = {
 }
 
 
-# Loop through each data unit (image, video, etc.)
+# Bundle size for batch operations
+BUNDLE_SIZE = 100
+
+# Cache initialized label rows
+label_row_map = {}
+
+# Step 1: Initialize all label rows in one bundle
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for data_unit in video_frame_labels.keys():
+        label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
+        if not label_rows:
+            print(f"Skipping: No label row found for {data_unit}")
+            continue
+
+        label_row = label_rows[0]
+        label_row.initialise_labels(bundle=bundle)
+
+        # Cache initialized label row
+        label_row_map[data_unit] = label_row
+
+# Step 2: Process the frames and object instances
+label_rows_to_save = []
+
 for data_unit, frame_coordinates in video_frame_labels.items():
+    label_row = label_row_map.get(data_unit)
+    if not label_row:
+        print(f"Skipping: No initialized label row found for {data_unit}")
+        continue
+
     object_instances_by_label_ref = {}
 
-    # Get the label row for the current data unit
-    label_row = project.list_label_rows_v2(data_title_eq=data_unit)[0]
-    label_row.initialise_labels()
-
-    # Loop through the frames for the current data unit
+    # Loop through each frame in the data unit
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  #  Multiple objects in the frame
+        if not isinstance(items, list):  # Ensure list even for single items
             items = [items]
 
         for item in items:
@@ -242,10 +265,10 @@ for data_unit, frame_coordinates in video_frame_labels.items():
             coord = item["coordinates"]
             apple_type = item["apple_type"]
 
-            #  Check if label_ref already exists for reusability
+            # Check if label_ref already exists for reuse
             if label_ref not in object_instances_by_label_ref:
                 bitmask_object_instance: ObjectInstance = bitmask_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = bitmask_object_instance  #  Store for reuse
+                object_instances_by_label_ref[label_ref] = bitmask_object_instance  # Store for reuse
                 checklist_attribute = None
 
                 # Set apple type attribute
@@ -264,7 +287,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                         attribute=other_apple_option_text_attribute, answer=item.get("Specify apple type", "")
                     )
 
-                # Set checklist attributes
+                # Set checklist answers based on quality options
                 checklist_answers = []
                 quality_options = item.get(f"{apple_type.lower()}_quality_options", "").split(", ")
 
@@ -300,18 +323,24 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     )
 
             else:
-                #  Reuse existing instance across frames
+                # Reuse existing instance across frames
                 bitmask_object_instance = object_instances_by_label_ref[label_ref]
 
-            #  Assign the object to the frame and track it
+            # Assign coordinates for this frame
             bitmask_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-    #  Add object instances to label_row **only if they have frames assigned**
+    # Add object instances to label_row if they have frames assigned
     for bitmask_object_instance in object_instances_by_label_ref.values():
-        if bitmask_object_instance.get_annotation_frames():  #  Ensures it has at least one frame
+        if bitmask_object_instance.get_annotation_frames():  # Ensures it has at least one frame
             label_row.add_object_instance(bitmask_object_instance)
 
-    #  Upload all labels for this data unit (video/image) to the server
-    label_row.save()
+    # Collect the label row for batch saving
+    label_rows_to_save.append(label_row)
 
-print(" Labels with apple type radio buttons, checklist attributes, and text labels added for all data units.")
+# Step 3: Save all label rows in one bundle
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for label_row in label_rows_to_save:
+        label_row.save(bundle=bundle)
+        print(f"Saved label row for {label_row.data_title}")
+
+print("Labels with apple type radio buttons, checklist attributes, and text labels added for all data units.")

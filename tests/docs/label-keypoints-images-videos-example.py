@@ -213,17 +213,40 @@ video_image_frame_labels = {
 }
 
 
-# Loop through each data unit (image, video, etc.)
-for data_unit, frame_coordinates in video_image_frame_labels.items():
-    object_instances_by_label_ref = {}
+# Bundle size
+BUNDLE_SIZE = 100
 
-    # Get the label row for the current data unit
-    label_row = project.list_label_rows_v2(data_title_eq=data_unit)[0]
-    label_row.initialise_labels()
+# Cache initialized label rows
+label_row_map = {}
+
+# Step 1: Initialize all label rows first in a bundle
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for data_unit in video_image_frame_labels.keys():
+        label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
+        if not label_rows:
+            print(f"Skipping: No label row found for {data_unit}")
+            continue
+
+        label_row = label_rows[0]
+        label_row.initialise_labels(bundle=bundle)
+
+        # Cache initialized label row
+        label_row_map[data_unit] = label_row
+
+# Step 2: Process the annotations and collect label rows to save
+label_rows_to_save = []
+
+for data_unit, frame_coordinates in video_image_frame_labels.items():
+    label_row = label_row_map.get(data_unit)
+    if not label_row:
+        print(f"Skipping: No initialized label row found for {data_unit}")
+        continue
+
+    object_instances_by_label_ref = {}
 
     # Loop through the frames for the current data unit
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  #  Multiple objects in the frame
+        if not isinstance(items, list):  # Single object or multiple objects
             items = [items]
 
         for item in items:
@@ -231,10 +254,10 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
             coord = item["coordinates"]
             floral_axis_type = item["floral_axis_type"]
 
-            #  Check if label_ref already exists for reusability
+            # Check if label_ref already exists for reusability
             if label_ref not in object_instances_by_label_ref:
                 keypoint_object_instance: ObjectInstance = keypoint_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = keypoint_object_instance  #  Store for reuse
+                object_instances_by_label_ref[label_ref] = keypoint_object_instance  # Store for reuse
                 checklist_attribute = None
 
                 # Set floral axis type attribute
@@ -283,18 +306,24 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                     )
 
             else:
-                #  Reuse existing instance across frames
+                # Reuse existing instance across frames
                 keypoint_object_instance = object_instances_by_label_ref[label_ref]
 
-            #  Assign the object to the frame and track it
+            # Assign the object to the frame and track it
             keypoint_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-    #  Add object instances to label_row **only if they have frames assigned**
+    # Add object instances to label_row **only if they have frames assigned**
     for keypoint_object_instance in object_instances_by_label_ref.values():
-        if keypoint_object_instance.get_annotation_frames():  #  Ensures it has at least one frame
+        if keypoint_object_instance.get_annotation_frames():  # Ensures it has at least one frame
             label_row.add_object_instance(keypoint_object_instance)
 
-    #  Upload all labels for this data unit (video/image) to the server
-    label_row.save()
+    # Collect this label row to be saved later
+    label_rows_to_save.append(label_row)
 
-print(" Labels with floral axis type radio buttons, checklist attributes, and text labels added for all data units.")
+# Step 3: Save all label rows using a bundle
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for label_row in label_rows_to_save:
+        label_row.save(bundle=bundle)
+        print(f"Saved label row for {label_row.data_title}")
+
+print("Labels with floral axis type radio buttons, checklist attributes, and text labels added for all data units.")
