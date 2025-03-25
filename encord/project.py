@@ -10,6 +10,7 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import datetime
+import logging
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
@@ -43,7 +44,14 @@ from encord.orm.label_row import (
     LabelStatus,
     ShadowDataState,
 )
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectDataset, ProjectDTO, ProjectType
+from encord.orm.project import (
+    ActivePredictionPayload,
+    CopyDatasetOptions,
+    CopyLabelsOptions,
+    ProjectDataset,
+    ProjectDTO,
+    ProjectType,
+)
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -52,6 +60,8 @@ from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
+
+logger = logging.getLogger(__name__)
 
 
 class Project:
@@ -1126,3 +1136,17 @@ class Project:
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=uuid,
         )
+
+    def analyze_prediction(self, label_branch_name: str) -> None:
+        """Analyse your predictions against a given label branch in Active
+
+        Args:
+            label_branch_name (str): Name of the label branch that we'll analyse
+        """
+        self._client._api_client.post(
+            path=f"active/{self.project_hash}/predictions",
+            params=None,
+            payload=ActivePredictionPayload(label_branch_name=label_branch_name),
+            result_type=None,
+        )
+        logger.info("Prediction import initiated in Active. Please check the platform to see the progress.")
