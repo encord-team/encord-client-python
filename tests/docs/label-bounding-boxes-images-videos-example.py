@@ -4,7 +4,8 @@ from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, R
 from encord.objects.coordinates import BoundingBoxCoordinates
 
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
-PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+# SSH_PATH = get_ssh_key() # replace it with ssh key
+PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 
 # Create user client using ssh key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
@@ -14,7 +15,7 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 )
 
 # Get project for which labels are to be added
-project: Project = user_client.get_project(PROJECT_HASH)
+project: Project = user_client.get_project(PROJECT_ID)
 
 # Create radio button attribute for cherry type
 ontology_structure = project.ontology_structure
