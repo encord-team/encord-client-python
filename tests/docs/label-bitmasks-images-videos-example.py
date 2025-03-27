@@ -1,79 +1,71 @@
 # Import dependencies
 import numpy as np
+import os
 
 from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import BitmaskCoordinates
 
-# First, we need to prepare the mask itself.
-# For simplicity, we'll mask the entire frame
-# Note, that the size of the mask must be identical to the size of the image/frame
-numpy_coordinates = np.ones((1080, 1920))
+# Prepare boolean mask with shape matching frame size
+numpy_coordinates = np.ones((1080, 1920)).astype(bool)
+assert numpy_coordinates.shape == (1080, 1920), "Mask dimensions must match 1080x1920"
 
-# we also need to make sure that the image/frame is in boolean format
-numpy_coordinates = numpy_coordinates.astype(bool)
-
+# Paths and identifiers
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+BUNDLE_SIZE = 100
 
-# Create user client using ssh key
+# Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     ssh_private_key_path=SSH_PATH,
     # For US platform users use "https://api.us.encord.com"
     domain="https://api.encord.com",
 )
 
-# Get project for which labels are to be added
+# Load project
 project: Project = user_client.get_project(PROJECT_HASH)
+assert project is not None, f"Project {PROJECT_HASH} could not be loaded"
 
-# Create radio button attribute for apple type
+# Ontology lookup with assertions
 ontology_structure = project.ontology_structure
+assert ontology_structure, "Ontology structure not found"
 
-# Find a bitmask annotation object in the project ontology
-bitmask_ontology_object: Object = ontology_structure.get_child_by_title(title="Apples", type_=Object)
+bitmask_ontology_object = ontology_structure.get_child_by_title(title="Apples", type_=Object)
+assert bitmask_ontology_object is not None, "Ontology object 'Apples' not found"
 
 apple_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
+assert apple_type_radio_attribute is not None, "Radio attribute 'Type?' not found"
 
-# Create options for the radio buttons
 sugar_bee_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Sugar Bee")
 granny_smith_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Granny Smith")
 honey_crisp_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Honey Crisp")
 other_apple_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Other apple type")
+assert all([sugar_bee_option, granny_smith_option, honey_crisp_option, other_apple_option]), "Missing radio options"
 
-# Create checklist attributes and options for each apple type
-# Sugar Bee Qualities
-sugar_bee_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Sugar Bee Qualities?"
-)
-sugar_bee_plump_option = sugar_bee_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
-sugar_bee_juicy_option = sugar_bee_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
-sugar_bee_large_option = sugar_bee_checklist_attribute.get_child_by_title(type_=Option, title="Large")
+# Helper for checklist + options
+def assert_checklist_and_options(title, *option_titles):
+    checklist = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title=title)
+    assert checklist, f"Checklist '{title}' not found"
+    options = [checklist.get_child_by_title(type_=Option, title=o) for o in option_titles]
+    assert all(options), f"Missing options in checklist '{title}'"
+    return (checklist, *options)
 
-# Granny Smith Qualities
-granny_smith_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Granny Smith Qualities?"
-)
-granny_smith_plump_option = granny_smith_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
-granny_smith_juicy_option = granny_smith_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
-granny_smith_large_option = granny_smith_checklist_attribute.get_child_by_title(type_=Option, title="Large")
+sugar_bee_checklist_attribute, sugar_bee_plump_option, sugar_bee_juicy_option, sugar_bee_large_option = \
+    assert_checklist_and_options("Sugar Bee Qualities?", "Plump", "Juicy", "Large")
 
-# Honey Crisp Qualities
-honey_crisp_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Honey Crisp Qualities?"
-)
-honey_crisp_plump_option = honey_crisp_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
-honey_crisp_juicy_option = honey_crisp_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
-honey_crisp_large_option = honey_crisp_checklist_attribute.get_child_by_title(type_=Option, title="Large")
+granny_smith_checklist_attribute, granny_smith_plump_option, granny_smith_juicy_option, granny_smith_large_option = \
+    assert_checklist_and_options("Granny Smith Qualities?", "Plump", "Juicy", "Large")
 
-# Other apple Types
+honey_crisp_checklist_attribute, honey_crisp_plump_option, honey_crisp_juicy_option, honey_crisp_large_option = \
+    assert_checklist_and_options("Honey Crisp Qualities?", "Plump", "Juicy", "Large")
+
 other_apple_option_text_attribute = ontology_structure.get_child_by_title(
     type_=TextAttribute, title="Specify apple type"
 )
+assert other_apple_option_text_attribute is not None, "TextAttribute 'Specify apple type' not found"
 
-
-# Dictionary of labels per data unit and per frame with apple type specified, including quality options
 video_frame_labels = {
-    "apples-001.jpg": {
+    "cherries-001.jpg": {
         0: {
             "label_ref": "apple_001",
             "coordinates": BitmaskCoordinates(numpy_coordinates),
@@ -81,7 +73,7 @@ video_frame_labels = {
             "sugar_bee_quality_options": "Plump, Juicy",
         }
     },
-    "apples-010.jpg": {
+    "cherries-010.jpg": {
         0: [
             {
                 "label_ref": "apple_002",
@@ -103,7 +95,7 @@ video_frame_labels = {
             },
         ],
     },
-    "apples-ig": {
+    "cherries-ig": {
         0: {
             "label_ref": "apple_005",
             "coordinates": BitmaskCoordinates(numpy_coordinates),
@@ -131,7 +123,7 @@ video_frame_labels = {
             },
         ],
     },
-    "apples-is": {
+    "cherries-is": {
         0: {
             "label_ref": "apple_009",
             "coordinates": BitmaskCoordinates(numpy_coordinates),
@@ -159,7 +151,7 @@ video_frame_labels = {
             },
         ],
     },
-    "apples-vid-001.mp4": {
+    "cherries-vid-001.mp4": {
         103: [
             {
                 "label_ref": "apple_013",
@@ -223,55 +215,48 @@ video_frame_labels = {
     },
 }
 
-
-# Bundle size for batch operations
-BUNDLE_SIZE = 100
-
 # Cache initialized label rows
 label_row_map = {}
 
-# Step 1: Initialize all label rows in one bundle
+# Step 1: Initialize all label rows
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for data_unit in video_frame_labels.keys():
         label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
+        assert isinstance(label_rows, list), f"Expected list of label rows for {data_unit}"
         if not label_rows:
             print(f"Skipping: No label row found for {data_unit}")
             continue
-
         label_row = label_rows[0]
         label_row.initialise_labels(bundle=bundle)
-
-        # Cache initialized label row
         label_row_map[data_unit] = label_row
 
-# Step 2: Process the frames and object instances
 label_rows_to_save = []
 
 for data_unit, frame_coordinates in video_frame_labels.items():
     label_row = label_row_map.get(data_unit)
     if not label_row:
-        print(f"Skipping: No initialized label row found for {data_unit}")
+        print(f"⚠️ Skipping: No initialized label row found for {data_unit}")
         continue
 
     object_instances_by_label_ref = {}
 
-    # Loop through each frame in the data unit
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  # Ensure list even for single items
+        if not isinstance(items, list):
             items = [items]
 
         for item in items:
             label_ref = item["label_ref"]
             coord = item["coordinates"]
             apple_type = item["apple_type"]
+            assert isinstance(coord, BitmaskCoordinates), f"Invalid coordinates for {label_ref}"
 
-            # Check if label_ref already exists for reuse
+            # Reuse instance if already created
             if label_ref not in object_instances_by_label_ref:
                 bitmask_object_instance: ObjectInstance = bitmask_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = bitmask_object_instance  # Store for reuse
+                object_instances_by_label_ref[label_ref] = bitmask_object_instance
                 checklist_attribute = None
 
-                # Set apple type attribute
+                # Set radio attribute (apple type)
                 if apple_type == "Sugar Bee":
                     bitmask_object_instance.set_answer(attribute=apple_type_radio_attribute, answer=sugar_bee_option)
                     checklist_attribute = sugar_bee_checklist_attribute
@@ -283,64 +268,60 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     checklist_attribute = honey_crisp_checklist_attribute
                 elif apple_type == "Other apple type":
                     bitmask_object_instance.set_answer(attribute=apple_type_radio_attribute, answer=other_apple_option)
-                    bitmask_object_instance.set_answer(
-                        attribute=other_apple_option_text_attribute, answer=item.get("Specify apple type", "")
-                    )
+                    text_value = item.get("Specify apple type", "").strip()
+                    assert text_value, f"Missing text answer for 'Other apple type' in {label_ref}"
+                    bitmask_object_instance.set_answer(attribute=other_apple_option_text_attribute, answer=text_value)
 
-                # Set checklist answers based on quality options
+                # Set checklist answers
                 checklist_answers = []
-                quality_options = item.get(f"{apple_type.lower()}_quality_options", "").split(", ")
+                quality_key = f"{apple_type.lower()}_quality_options"
+                quality_list = item.get(quality_key, "")
+                qualities = [q.strip() for q in quality_list.split(",") if q.strip()]
 
-                for quality in quality_options:
+                for quality in qualities:
                     if quality == "Plump":
                         checklist_answers.append(
-                            sugar_bee_plump_option
-                            if apple_type == "Sugar Bee"
-                            else granny_smith_plump_option
-                            if apple_type == "Granny Smith"
-                            else honey_crisp_plump_option
+                            sugar_bee_plump_option if apple_type == "Sugar Bee" else
+                            granny_smith_plump_option if apple_type == "Granny Smith" else
+                            honey_crisp_plump_option
                         )
                     elif quality == "Juicy":
                         checklist_answers.append(
-                            sugar_bee_juicy_option
-                            if apple_type == "Sugar Bee"
-                            else granny_smith_juicy_option
-                            if apple_type == "Granny Smith"
-                            else honey_crisp_juicy_option
+                            sugar_bee_juicy_option if apple_type == "Sugar Bee" else
+                            granny_smith_juicy_option if apple_type == "Granny Smith" else
+                            honey_crisp_juicy_option
                         )
                     elif quality == "Large":
                         checklist_answers.append(
-                            sugar_bee_large_option
-                            if apple_type == "Sugar Bee"
-                            else granny_smith_large_option
-                            if apple_type == "Granny Smith"
-                            else honey_crisp_large_option
+                            sugar_bee_large_option if apple_type == "Sugar Bee" else
+                            granny_smith_large_option if apple_type == "Granny Smith" else
+                            honey_crisp_large_option
                         )
 
                 if checklist_attribute and checklist_answers:
                     bitmask_object_instance.set_answer(
-                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
+                        attribute=checklist_attribute,
+                        answer=checklist_answers,
+                        overwrite=True
                     )
 
             else:
-                # Reuse existing instance across frames
                 bitmask_object_instance = object_instances_by_label_ref[label_ref]
 
             # Assign coordinates for this frame
             bitmask_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-    # Add object instances to label_row if they have frames assigned
+    # Add valid instances to label row
     for bitmask_object_instance in object_instances_by_label_ref.values():
-        if bitmask_object_instance.get_annotation_frames():  # Ensures it has at least one frame
-            label_row.add_object_instance(bitmask_object_instance)
+        assert bitmask_object_instance.get_annotation_frames(), \
+            f"No frames set for instance {bitmask_object_instance}"
+        label_row.add_object_instance(bitmask_object_instance)
 
-    # Collect the label row for batch saving
     label_rows_to_save.append(label_row)
 
-# Step 3: Save all label rows in one bundle
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for label_row in label_rows_to_save:
         label_row.save(bundle=bundle)
-        print(f"Saved label row for {label_row.data_title}")
+        print(f"Saved label row for: {label_row.data_title}")
 
-print("Labels with apple type radio buttons, checklist attributes, and text labels added for all data units.")
+print("\n🎉 Done! Labels with radio buttons, checklist attributes, and text answers have been added.")
