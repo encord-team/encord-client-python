@@ -6,24 +6,27 @@ import json
 
 # User input
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
-# SSH_PATH = get_ssh_key() # replace it with SSH key
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 DATA_UNIT = "cherries-is"
-OUTPUT_FILE_PATH = "/Users/laverne-encord/frame_range_output.json"  # Example: "frame_range_output.json"
-START_FRAME_NUMBER = 0  # Adjust as needed
-END_FRAME_NUMBER = 35  # Adjust as needed
-BUNDLE_SIZE = 100 # Adjust as needed
+OUTPUT_FILE_PATH = "/Users/laverne-encord/frame_range_output.json"
+START_FRAME_NUMBER = 0
+END_FRAME_NUMBER = 35
+BUNDLE_SIZE = 100
 
-# Instantiate Encord client
-user_client = EncordUserClient.create_with_ssh_private_key(
-    ssh_private_key_path=SSH_PATH
+# Create user client using SSH key
+user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
+    ssh_private_key_path=SSH_PATH,
+    # For US platform users use "https://api.us.encord.com"
+    domain="https://api.encord.com",
 )
 
 # Load the project
 project = user_client.get_project(PROJECT_ID)
+assert project is not None, f"Project with ID {PROJECT_ID} could not be loaded"
 
 # Get filtered label rows
 label_rows = project.list_label_rows_v2(data_title_eq=DATA_UNIT)
+assert label_rows, f"No label rows found for data unit: {DATA_UNIT}"
 
 # Initialize labels using bundles
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
@@ -55,8 +58,17 @@ for label_row in label_rows:
     }
 
     # Process object annotations
-    for object_instance in label_row.get_object_instances():
-        for annotation in object_instance.get_annotations():
+    object_instances = label_row.get_object_instances()
+    assert object_instances, f"No object instances found in label row {label_row.uid}"
+
+    for object_instance in object_instances:
+        annotations = object_instance.get_annotations()
+        assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
+
+        assert object_instance.ontology_item and object_instance.ontology_item.attributes, \
+            f"No attributes found for object {object_instance.object_hash}"
+
+        for annotation in annotations:
             if START_FRAME_NUMBER <= annotation.frame <= END_FRAME_NUMBER:
                 obj_info = {
                     "frame": annotation.frame,
@@ -79,12 +91,10 @@ for label_row in label_rows:
                 print("Ontology shape:", object_instance.ontology_item.shape)
                 print(f"Label location: {annotation.coordinates}")
 
-                # Add attributes
                 for attribute in object_instance.ontology_item.attributes:
                     attr_data = extract_attributes(attribute, object_instance)
                     obj_info["attributes"].append(attr_data)
 
-                    # Print attributes
                     print(f"Attribute name: {attr_data['attribute_name']}")
                     print(f"Attribute hash: {attr_data['attribute_hash']}")
                     print(f"Attribute answer: {attr_data['attribute_answer']}")
@@ -92,8 +102,14 @@ for label_row in label_rows:
                 row_data["objects"].append(obj_info)
 
     # Process classification annotations
-    for classification_instance in label_row.get_classification_instances():
-        for annotation in classification_instance.get_annotations():
+    classification_instances = label_row.get_classification_instances()
+    assert classification_instances is not None, f"No classification instances found in label row {label_row.uid}"
+
+    for classification_instance in classification_instances:
+        annotations = classification_instance.get_annotations()
+        assert annotations, f"No annotations found for classification instance {classification_instance.classification_hash}"
+
+        for annotation in annotations:
             if START_FRAME_NUMBER <= annotation.frame <= END_FRAME_NUMBER:
                 try:
                     answer = classification_instance.get_answer()
@@ -123,6 +139,8 @@ for label_row in label_rows:
     results.append(row_data)
 
 # Save to JSON
+assert OUTPUT_FILE_PATH.endswith(".json"), "Output file path must be a JSON file"
+
 with open(OUTPUT_FILE_PATH, "w") as f:
     json.dump(results, f, indent=4)
 
