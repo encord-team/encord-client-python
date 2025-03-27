@@ -8,7 +8,7 @@ import json
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with SSH key
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
-DATA_UNIT = "cherries-vid-001.mp4"
+DATA_UNIT = "cherries-is"
 OUTPUT_FILE_PATH = "/Users/laverne-encord/frame_range_output.json"  # Example: "frame_range_output.json"
 START_FRAME_NUMBER = 0  # Adjust as needed
 END_FRAME_NUMBER = 35  # Adjust as needed
