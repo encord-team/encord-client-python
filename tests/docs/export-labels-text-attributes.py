@@ -17,7 +17,6 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     # For US platform users use "https://api.us.encord.com"
     domain="https://api.encord.com",
 )
-assert user_client is not None, "Failed to create EncordUserClient"
 
 # Specify Project
 project = user_client.get_project(PROJECT_ID)
