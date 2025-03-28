@@ -3,6 +3,7 @@ from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import PointCoordinate, PolygonCoordinates
 
+# User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
 PROJECT_ID = "f8b81f75-d1d5-4cb8-895b-44db9957392e"
@@ -17,29 +18,52 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 
 # Get Project
 project: Project = user_client.get_project(PROJECT_ID)
+assert project is not None, f"Project with ID {PROJECT_ID} not found."
 ontology_structure = project.ontology_structure
+assert ontology_structure is not None, "Ontology structure not found in the project."
 
 # Get ontology object
 polygon_ontology_object: Object = ontology_structure.get_child_by_title(title="PDF PG", type_=Object)
+assert polygon_ontology_object is not None, "Polygon ontology object 'PDF PG' not found."
 
 # Define radio attribute for correction types
 correction_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Corrections PG")
+assert correction_radio_attribute is not None, "Radio attribute 'Corrections PG' not found."
+
 english_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="English corrections")
+assert english_correction_option is not None, "Option 'English corrections' not found under 'Corrections PG'."
+
 chinese_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="繁體中文修正")
+assert chinese_correction_option is not None, "Option '繁體中文修正' not found under 'Corrections PG'."
 
 # Define checklist attributes
 english_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="English")
+assert english_checklist_attribute is not None, "Checklist attribute 'English' not found."
+
 en_ca_option = english_checklist_attribute.get_child_by_title(type_=Option, title="en-ca")
+assert en_ca_option is not None, "Option 'en-ca' not found under 'English' checklist."
+
 en_gb_option = english_checklist_attribute.get_child_by_title(type_=Option, title="en-gb")
+assert en_gb_option is not None, "Option 'en-gb' not found under 'English' checklist."
+
 en_us_option = english_checklist_attribute.get_child_by_title(type_=Option, title="en-us")
+assert en_us_option is not None, "Option 'en-us' not found under 'English' checklist."
 
 chinese_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="繁體中文")
+assert chinese_checklist_attribute is not None, "Checklist attribute '繁體中文' not found."
+
 zh_tw_option = chinese_checklist_attribute.get_child_by_title(type_=Option, title="zh-tw")
+assert zh_tw_option is not None, "Option 'zh-tw' not found under '繁體中文' checklist."
+
 zh_hk_option = chinese_checklist_attribute.get_child_by_title(type_=Option, title="zh-hk")
+assert zh_hk_option is not None, "Option 'zh-hk' not found under '繁體中文' checklist."
 
 # Define text attributes
 english_correction_text_attribute = ontology_structure.get_child_by_title(type_=TextAttribute, title="Correction text")
+assert english_correction_text_attribute is not None, "Text attribute 'Correction text' not found."
+
 chinese_correction_text_attribute = ontology_structure.get_child_by_title(type_=TextAttribute, title="更正")
+assert chinese_correction_text_attribute is not None, "Text attribute '更正' not found."
 
 # Example label data (you can adjust this)
 pdf_labels = {

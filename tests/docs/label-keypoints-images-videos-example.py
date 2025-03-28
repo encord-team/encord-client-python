@@ -6,7 +6,9 @@ from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, R
 from encord.objects.coordinates import PointCoordinate
 
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+# SSH_PATH = get_ssh_key() # replace it with ssh key
 PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+BUNDLE_SIZE = 100
 
 # Create user client using ssh key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
@@ -235,9 +237,6 @@ video_image_frame_labels = {
     },
 }
 
-
-# Bundle size
-BUNDLE_SIZE = 100
 
 # Cache initialized label rows
 label_row_map = {}

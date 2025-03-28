@@ -7,6 +7,7 @@ from encord.objects.coordinates import PointCoordinate, PolylineCoordinates
 
 # User imput
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+# SSH_PATH = get_ssh_key() # replace it with ssh key
 PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 BUNDLE_SIZE = 100
 
