@@ -1731,10 +1731,6 @@ class LabelRowV2:
             ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
         elif self.data_type == DataType.PLAIN_TEXT:
             pass
-        elif self.data_type == DataType.PDF:
-            ret["height"] = 0
-            ret["width"] = 0
-            ret["data_fps"] = 0
         elif (
             self.data_type == DataType.IMAGE
             or self.data_type == DataType.NIFTI
@@ -1742,6 +1738,7 @@ class LabelRowV2:
             or self.data_type == DataType.IMG_GROUP
             or self.data_type == DataType.DICOM
             or self.data_type == DataType.DICOM_STUDY
+            or self.data_type == DataType.PDF
         ):
             ret["width"] = frame_level_data.width
             ret["height"] = frame_level_data.height
@@ -1759,6 +1756,7 @@ class LabelRowV2:
             self._label_row_read_only_data.fps is not None
             and self.data_type != DataType.AUDIO
             and self.data_type != DataType.PLAIN_TEXT
+            and self.data_type != DataType.PDF
         ):
             ret["data_fps"] = self._label_row_read_only_data.fps
 
