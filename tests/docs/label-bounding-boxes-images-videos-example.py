@@ -80,7 +80,7 @@ video_frame_labels = {
     "cherries-001.jpg": {
         0: {
             "label_ref": "cherry_001",
-            "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.1, top_left_y=0.1),
+            "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.0, top_left_y=0.0),
             "cherry_type": "Bing",
             "bing_quality_options": "Plump, Juicy",
         }
@@ -89,19 +89,19 @@ video_frame_labels = {
         0: [
             {
                 "label_ref": "cherry_002",
-                "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.1, top_left_y=0.1),
+                "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.0, top_left_y=0.0),
                 "cherry_type": "King",
                 "king_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "cherry_003",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.5, top_left_y=0.5),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.5, top_left_y=0.0),
                 "cherry_type": "Rainier",
                 "rainier_quality_options": "Plump",
             },
             {
                 "label_ref": "cherry_004",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.5, top_left_y=0.5),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.7, top_left_y=0.0),
                 "cherry_type": "Other cherry type",
                 "Specify cherry type": "Morello",
             },
@@ -110,26 +110,26 @@ video_frame_labels = {
     "cherries-ig": {
         0: {
             "label_ref": "cherry_005",
-            "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.1, top_left_y=0.1),
+            "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.0, top_left_y=0.0),
             "cherry_type": "Bing",
             "bing_quality_options": "Plump, Juicy",
         },
         2: [
             {
                 "label_ref": "cherry_006",
-                "coordinates": BoundingBoxCoordinates(height=0.1, width=0.2, top_left_x=0.3, top_left_y=0.2),
+                "coordinates": BoundingBoxCoordinates(height=0.1, width=0.2, top_left_x=0.5, top_left_y=0.0),
                 "cherry_type": "King",
                 "king_quality_options": "Large",
             },
             {
                 "label_ref": "cherry_007",
-                "coordinates": BoundingBoxCoordinates(height=0.1, width=0.2, top_left_x=0.4, top_left_y=0.5),
+                "coordinates": BoundingBoxCoordinates(height=0.1, width=0.2, top_left_x=0.0, top_left_y=0.5),
                 "cherry_type": "Rainier",
                 "rainier_quality_options": "Plump",
             },
             {
                 "label_ref": "cherry_008",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.5, top_left_y=0.5),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.8, top_left_y=0.0),
                 "cherry_type": "Other cherry type",
                 "Specify cherry type": "Queen Anne",
             },
@@ -138,26 +138,26 @@ video_frame_labels = {
     "cherries-is": {
         0: {
             "label_ref": "cherry_009",
-            "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.1, top_left_y=0.1),
+            "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.0, top_left_y=0.0),
             "cherry_type": "Bing",
             "bing_quality_options": "Plump",
         },
         3: [
             {
                 "label_ref": "cherry_010",
-                "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.1, top_left_y=0.1),
+                "coordinates": BoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.5, top_left_y=0.0),
                 "cherry_type": "King",
                 "king_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "cherry_011",
-                "coordinates": BoundingBoxCoordinates(height=0.3, width=0.3, top_left_x=0.2, top_left_y=0.2),
+                "coordinates": BoundingBoxCoordinates(height=0.3, width=0.3, top_left_x=0.0, top_left_y=0.5),
                 "cherry_type": "Rainier",
                 "rainier_quality_options": "Plump",
             },
             {
                 "label_ref": "cherry_012",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.5, top_left_y=0.5),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.9, top_left_y=0.0),
                 "cherry_type": "Other cherry type",
                 "Specify cherry type": "Lambert",
             },
@@ -167,19 +167,19 @@ video_frame_labels = {
         103: [
             {
                 "label_ref": "cherry_013",
-                "coordinates": BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.2, top_left_y=0.0),
+                "coordinates": BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.0, top_left_y=0.0),
                 "cherry_type": "Rainier",
                 "rainier_quality_options": "Plump",
             },
             {
                 "label_ref": "cherry_014",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.1, top_left_y=0.1),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.6, top_left_y=0.0),
                 "cherry_type": "Bing",
                 "bing_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "cherry_015",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.5, top_left_y=0.5),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.8, top_left_y=0.6),
                 "cherry_type": "Other cherry type",
                 "Specify cherry type": "Sweetheart",
             },
@@ -187,19 +187,19 @@ video_frame_labels = {
         104: [
             {
                 "label_ref": "cherry_016",
-                "coordinates": BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.2, top_left_y=0.2),
+                "coordinates": BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.0, top_left_y=0.0),
                 "cherry_type": "Rainier",
                 "rainier_quality_options": "Plump",
             },
             {
                 "label_ref": "cherry_014",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.1, top_left_y=0.1),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.6, top_left_y=0.0),
                 "cherry_type": "Bing",
                 "bing_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "cherry_017",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.5, top_left_y=0.5),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.8, top_left_y=0.6),
                 "cherry_type": "Other cherry type",
                 "Specify cherry type": "Sweetheart",
             },
@@ -207,19 +207,19 @@ video_frame_labels = {
         105: [
             {
                 "label_ref": "cherry_016",
-                "coordinates": BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.2, top_left_y=0.2),
+                "coordinates": BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.0, top_left_y=0.0),
                 "cherry_type": "Rainier",
                 "rainier_quality_options": "Plump",
             },
             {
                 "label_ref": "cherry_014",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.1, top_left_y=0.1),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.6, top_left_y=0.0),
                 "cherry_type": "Bing",
                 "bing_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "cherry_017",
-                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.5, top_left_y=0.5),
+                "coordinates": BoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.8, top_left_y=0.6),
                 "cherry_type": "Other cherry type",
                 "Specify cherry type": "Sweetheart",
             },
@@ -234,12 +234,16 @@ label_row_map = {}
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for data_unit in video_frame_labels.keys():
         label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
+        assert isinstance(label_rows, list), f"Expected list of label rows for '{data_unit}', got {type(label_rows)}"
+
         if not label_rows:
             print(f"Skipping: No label row found for {data_unit}")
             continue
 
         label_row = label_rows[0]
         label_row.initialise_labels(bundle=bundle)
+        assert label_row.ontology_structure is not None, f"Ontology not initialized for label row: {data_unit}"
+
         label_row_map[data_unit] = label_row  # Cache initialized label row for later use
 
 # Step 2: Process all frames/annotations and prepare label rows to save
@@ -255,7 +259,8 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
     # Loop through the frames for the current data unit
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  # Single or multiple objects in the frame
+        assert isinstance(frame_number, int), f"Frame number must be int, got {type(frame_number)}"
+        if not isinstance(items, list):
             items = [items]
 
         for item in items:
@@ -263,55 +268,61 @@ for data_unit, frame_coordinates in video_frame_labels.items():
             coord = item["coordinates"]
             cherry_type = item["cherry_type"]
 
+            assert cherry_type in {"Bing", "King", "Rainier", "Other cherry type"}, \
+                f"Unexpected cherry type '{cherry_type}' in data unit '{data_unit}'"
+
             # Check if label_ref already exists for reusability
             if label_ref not in object_instances_by_label_ref:
                 box_object_instance: ObjectInstance = box_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = box_object_instance  # Store for reuse
+                assert box_object_instance is not None, "Failed to create ObjectInstance"
+
+                object_instances_by_label_ref[label_ref] = box_object_instance
                 checklist_attribute = None
 
                 # Set cherry type attribute
                 if cherry_type == "Bing":
+                    assert bing_option is not None, "Missing 'bing_option'"
                     box_object_instance.set_answer(attribute=cherry_type_radio_attribute, answer=bing_option)
                     checklist_attribute = bing_checklist_attribute
                 elif cherry_type == "King":
+                    assert king_option is not None, "Missing 'king_option'"
                     box_object_instance.set_answer(attribute=cherry_type_radio_attribute, answer=king_option)
                     checklist_attribute = king_checklist_attribute
                 elif cherry_type == "Rainier":
+                    assert rainier_option is not None, "Missing 'rainier_option'"
                     box_object_instance.set_answer(attribute=cherry_type_radio_attribute, answer=rainier_option)
                     checklist_attribute = rainier_checklist_attribute
                 elif cherry_type == "Other cherry type":
+                    assert other_cherry_option is not None, "Missing 'other_cherry_option'"
                     box_object_instance.set_answer(attribute=cherry_type_radio_attribute, answer=other_cherry_option)
+                    text_answer = item.get("Specify cherry type", "")
+                    assert isinstance(text_answer, str), "'Specify cherry type' must be a string"
                     box_object_instance.set_answer(
-                        attribute=other_cherry_option_text_attribute, answer=item.get("Specify cherry type", "")
+                        attribute=other_cherry_option_text_attribute, answer=text_answer
                     )
 
                 # Set checklist attributes
                 checklist_answers = []
-                quality_options = item.get(f"{cherry_type.lower()}_quality_options", "").split(", ")
+                quality_key = f"{cherry_type.lower()}_quality_options"
+                quality_options = item.get(quality_key, "").split(", ")
 
                 for quality in quality_options:
                     if quality == "Plump":
                         checklist_answers.append(
-                            bing_plump_option
-                            if cherry_type == "Bing"
-                            else king_plump_option
-                            if cherry_type == "King"
+                            bing_plump_option if cherry_type == "Bing"
+                            else king_plump_option if cherry_type == "King"
                             else rainier_plump_option
                         )
                     elif quality == "Juicy":
                         checklist_answers.append(
-                            bing_juicy_option
-                            if cherry_type == "Bing"
-                            else king_juicy_option
-                            if cherry_type == "King"
+                            bing_juicy_option if cherry_type == "Bing"
+                            else king_juicy_option if cherry_type == "King"
                             else rainier_juicy_option
                         )
                     elif quality == "Large":
                         checklist_answers.append(
-                            bing_large_option
-                            if cherry_type == "Bing"
-                            else king_large_option
-                            if cherry_type == "King"
+                            bing_large_option if cherry_type == "Bing"
+                            else king_large_option if cherry_type == "King"
                             else rainier_large_option
                         )
 
@@ -329,6 +340,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
     # Add object instances to label_row **only if they have frames assigned**
     for box_object_instance in object_instances_by_label_ref.values():
+        assert isinstance(box_object_instance, ObjectInstance), "Expected ObjectInstance type"
         if box_object_instance.get_annotation_frames():  # Ensures it has at least one frame
             label_row.add_object_instance(box_object_instance)
 
@@ -337,6 +349,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 # Step 3: Save all label rows using a bundle
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for label_row in label_rows_to_save:
+        assert label_row is not None, "Trying to save a None label row"
         label_row.save(bundle=bundle)
         print(f"Saved label row for {label_row.data_title}")
 
