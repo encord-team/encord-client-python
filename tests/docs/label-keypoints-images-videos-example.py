@@ -65,7 +65,7 @@ video_image_frame_labels = {
     "blueberries-001.jpg": {
         0: {
             "label_ref": "floral_axis_001",
-            "coordinates": PointCoordinate(0.01, 0.02),
+            "coordinates": PointCoordinate(x=0.01, y=0.02),
             "floral_axis_type": "Pedicel",
             "pedicel_quality_options": "Robust, Healthy",
         }
@@ -74,19 +74,19 @@ video_image_frame_labels = {
         0: [
             {
                 "label_ref": "floral_axis_002",
-                "coordinates": PointCoordinate(0.03, 0.03),
+                "coordinates": PointCoordinate(x=0.03, y=0.03),
                 "floral_axis_type": "Peduncle",
                 "peduncle_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
                 "label_ref": "floral_axis_003",
-                "coordinates": PointCoordinate(0.05, 0.04),
+                "coordinates": PointCoordinate(x=0.05, y=0.04),
                 "floral_axis_type": "Peduncle",
                 "peduncle_quality_options": "Robust",
             },
             {
                 "label_ref": "floral_axis_004",
-                "coordinates": PointCoordinate(0.09, 0.03),
+                "coordinates": PointCoordinate(x=0.09, y=0.03),
                 "floral_axis_type": "Other floral axis type",
                 "Specify floral axis type": "Calyx",
             },
@@ -95,26 +95,26 @@ video_image_frame_labels = {
     "blueberries-ig": {
         0: {
             "label_ref": "floral_axis_005",
-            "coordinates": PointCoordinate(0.05, 0.02),
+            "coordinates": PointCoordinate(x=0.05, y=0.02),
             "floral_axis_type": "Pedicel",
             "pedicel_quality_options": "Robust, Healthy",
         },
         2: [
             {
                 "label_ref": "floral_axis_006",
-                "coordinates": PointCoordinate(0.03, 0.03),
+                "coordinates": PointCoordinate(x=0.03, y=0.03),
                 "floral_axis_type": "Pedicel",
                 "pedicel_quality_options": "Good Growth and Alignment",
             },
             {
                 "label_ref": "floral_axis_007",
-                "coordinates": PointCoordinate(0.04, 0.05),
+                "coordinates": PointCoordinate(x=0.04, y=0.05),
                 "floral_axis_type": "Pedicel",
                 "pedicel_quality_options": "Robust",
             },
             {
                 "label_ref": "floral_axis_008",
-                "coordinates": PointCoordinate(0.11, 0.02),
+                "coordinates": PointCoordinate(x=0.11, y=0.02),
                 "floral_axis_type": "Other floral axis type",
                 "Specify floral axis type": "Calyx",
             },
@@ -123,26 +123,26 @@ video_image_frame_labels = {
     "persimmons-is": {
         0: {
             "label_ref": "floral_axis_009",
-            "coordinates": PointCoordinate(0.01, 0.02),
+            "coordinates": PointCoordinate(x=0.01, y=0.02),
             "floral_axis_type": "Peduncle",
             "peduncle_quality_options": "Robust",
         },
         3: [
             {
                 "label_ref": "floral_axis_010",
-                "coordinates": PointCoordinate(0.03, 0.03),
+                "coordinates": PointCoordinate(x=0.03, y=0.03),
                 "floral_axis_type": "Peduncle",
                 "peduncle_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
                 "label_ref": "floral_axis_011",
-                "coordinates": PointCoordinate(0.08, 0.05),
+                "coordinates": PointCoordinate(x=0.08, y=0.05),
                 "floral_axis_type": "Peduncle",
                 "peduncle_quality_options": "Robust",
             },
             {
                 "label_ref": "floral_axis_012",
-                "coordinates": PointCoordinate(0.11, 0.02),
+                "coordinates": PointCoordinate(x=0.11, y=0.02),
                 "floral_axis_type": "Other floral axis type",
                 "Specify floral axis type": "Calyx",
             },
@@ -152,19 +152,19 @@ video_image_frame_labels = {
         103: [
             {
                 "label_ref": "floral_axis_013",
-                "coordinates": PointCoordinate(0.02, 0.01),
+                "coordinates": PointCoordinate(x=0.02, y=0.01),
                 "floral_axis_type": "Pedicel",
                 "pedicel_quality_options": "Robust",
             },
             {
                 "label_ref": "floral_axis_014",
-                "coordinates": PointCoordinate(0.06, 0.06),
+                "coordinates": PointCoordinate(x=0.06, y=0.06),
                 "floral_axis_type": "Pedicel",
                 "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
                 "label_ref": "floral_axis_015",
-                "coordinates": PointCoordinate(0.10, 0.01),
+                "coordinates": PointCoordinate(x=0.10, y=0.01),
                 "floral_axis_type": "Other floral axis type",
                 "Specify floral axis type": "Calyx",
             },
@@ -172,19 +172,19 @@ video_image_frame_labels = {
         104: [
             {
                 "label_ref": "floral_axis_016",
-                "coordinates": PointCoordinate(0.04, 0.01),
+                "coordinates": PointCoordinate(x=0.04, y=0.01),
                 "floral_axis_type": "Pedicel",
                 "pedicel_quality_options": "Robust",
             },
             {
                 "label_ref": "floral_axis_014",
-                "coordinates": PointCoordinate(0.08, 0.05),
+                "coordinates": PointCoordinate(x=0.08, y=0.05),
                 "floral_axis_type": "Pedicel",
                 "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
                 "label_ref": "floral_axis_017",
-                "coordinates": PointCoordinate(0.11, 0.02),
+                "coordinates": PointCoordinate(x=0.11, y=0.02),
                 "floral_axis_type": "Other floral axis type",
                 "Specify floral axis type": "Calyx",
             },
@@ -192,19 +192,19 @@ video_image_frame_labels = {
         105: [
             {
                 "label_ref": "floral_axis_016",
-                "coordinates": PointCoordinate(0.05, 0.02),
+                "coordinates": PointCoordinate(x=0.05, y=0.02),
                 "floral_axis_type": "Pedicel",
                 "pedicel_quality_options": "Robust",
             },
             {
                 "label_ref": "floral_axis_014",
-                "coordinates": PointCoordinate(0.07, 0.04),
+                "coordinates": PointCoordinate(x=0.07, y=0.04),
                 "floral_axis_type": "Pedicel",
                 "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
                 "label_ref": "floral_axis_017",
-                "coordinates": PointCoordinate(0.09, 0.03),
+                "coordinates": PointCoordinate(x=0.09, y=0.03),
                 "floral_axis_type": "Other floral axis type",
                 "Specify floral axis type": "Calyx",
             },
@@ -219,21 +219,23 @@ BUNDLE_SIZE = 100
 # Cache initialized label rows
 label_row_map = {}
 
-# Step 1: Initialize all label rows first in a bundle
+# Step 1: Initialize all label rows using a bundle
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for data_unit in video_image_frame_labels.keys():
         label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
+        assert isinstance(label_rows, list), f"Expected list of label rows for '{data_unit}', got {type(label_rows)}"
+
         if not label_rows:
             print(f"Skipping: No label row found for {data_unit}")
             continue
 
         label_row = label_rows[0]
         label_row.initialise_labels(bundle=bundle)
+        assert label_row.ontology_structure is not None, f"Ontology not initialized for label row: {data_unit}"
 
-        # Cache initialized label row
-        label_row_map[data_unit] = label_row
+        label_row_map[data_unit] = label_row  # Cache initialized label row for later use
 
-# Step 2: Process the annotations and collect label rows to save
+# Step 2: Process all frames/annotations and prepare label rows to save
 label_rows_to_save = []
 
 for data_unit, frame_coordinates in video_image_frame_labels.items():
@@ -246,7 +248,8 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
 
     # Loop through the frames for the current data unit
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  # Single object or multiple objects
+        assert isinstance(frame_number, int), f"Frame number must be int, got {type(frame_number)}"
+        if not isinstance(items, list):
             items = [items]
 
         for item in items:
@@ -254,35 +257,46 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
             coord = item["coordinates"]
             floral_axis_type = item["floral_axis_type"]
 
+            assert floral_axis_type in {"Pedicel", "Peduncle", "Other floral axis type"}, \
+                f"Unexpected floral axis type '{floral_axis_type}' in data unit '{data_unit}'"
+
             # Check if label_ref already exists for reusability
             if label_ref not in object_instances_by_label_ref:
                 keypoint_object_instance: ObjectInstance = keypoint_ontology_object.create_instance()
-                object_instances_by_label_ref[label_ref] = keypoint_object_instance  # Store for reuse
+                assert keypoint_object_instance is not None, "Failed to create ObjectInstance"
+
+                object_instances_by_label_ref[label_ref] = keypoint_object_instance
                 checklist_attribute = None
 
                 # Set floral axis type attribute
                 if floral_axis_type == "Pedicel":
+                    assert pedicel_option is not None, "Missing 'pedicel_option'"
                     keypoint_object_instance.set_answer(
                         attribute=floral_axis_type_radio_attribute, answer=pedicel_option
                     )
                     checklist_attribute = pedicel_checklist_attribute
                 elif floral_axis_type == "Peduncle":
+                    assert peduncle_option is not None, "Missing 'peduncle_option'"
                     keypoint_object_instance.set_answer(
                         attribute=floral_axis_type_radio_attribute, answer=peduncle_option
                     )
                     checklist_attribute = peduncle_checklist_attribute
                 elif floral_axis_type == "Other floral axis type":
+                    assert other_floral_axis_option is not None, "Missing 'other_floral_axis_option'"
                     keypoint_object_instance.set_answer(
                         attribute=floral_axis_type_radio_attribute, answer=other_floral_axis_option
                     )
+                    text_answer = item.get("Specify floral axis type", "")
+                    assert isinstance(text_answer, str), "'Specify floral axis type' must be a string"
                     keypoint_object_instance.set_answer(
                         attribute=other_floral_axis_option_text_attribute,
-                        answer=item.get("Specify floral axis type", ""),
+                        answer=text_answer,
                     )
 
                 # Set checklist attributes
                 checklist_answers = []
-                quality_options = item.get(f"{floral_axis_type.lower()}_quality_options", "").split(", ")
+                quality_key = f"{floral_axis_type.lower()}_quality_options"
+                quality_options = item.get(quality_key, "").split(", ")
 
                 for quality in quality_options:
                     if quality == "Robust":
@@ -304,7 +318,6 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                     keypoint_object_instance.set_answer(
                         attribute=checklist_attribute, answer=checklist_answers, overwrite=True
                     )
-
             else:
                 # Reuse existing instance across frames
                 keypoint_object_instance = object_instances_by_label_ref[label_ref]
@@ -314,15 +327,16 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
 
     # Add object instances to label_row **only if they have frames assigned**
     for keypoint_object_instance in object_instances_by_label_ref.values():
-        if keypoint_object_instance.get_annotation_frames():  # Ensures it has at least one frame
+        assert isinstance(keypoint_object_instance, ObjectInstance), "Expected ObjectInstance type"
+        if keypoint_object_instance.get_annotation_frames():
             label_row.add_object_instance(keypoint_object_instance)
 
-    # Collect this label row to be saved later
     label_rows_to_save.append(label_row)
 
 # Step 3: Save all label rows using a bundle
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for label_row in label_rows_to_save:
+        assert label_row is not None, "Trying to save a None label row"
         label_row.save(bundle=bundle)
         print(f"Saved label row for {label_row.data_title}")
 
