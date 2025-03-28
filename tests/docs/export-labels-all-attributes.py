@@ -1,8 +1,9 @@
-from collections.abc import Iterable
-from encord import EncordUserClient
-from encord.objects.attributes import Attribute, TextAttribute, RadioAttribute, ChecklistAttribute
-from encord.objects import ObjectInstance
 import json
+from collections.abc import Iterable
+
+from encord import EncordUserClient
+from encord.objects import ObjectInstance
+from encord.objects.attributes import Attribute, ChecklistAttribute, RadioAttribute, TextAttribute
 
 # User input
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
@@ -34,6 +35,7 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
 # Container for structured results
 results = []
 
+
 # Function to collect and print attributes
 def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectInstance, frame_number: int):
     attr_data = {
@@ -41,7 +43,7 @@ def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectIn
         "attribute_name": attribute.title,
         "attribute_hash": attribute.feature_node_hash,
         "attribute_type": None,
-        "answers": []
+        "answers": [],
     }
 
     if isinstance(attribute, TextAttribute):
@@ -53,13 +55,9 @@ def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectIn
         attr_data["attribute_type"] = "RadioAttribute"
         answer = object_instance.get_answer(attribute)
         if answer:
-            answer_data = {
-                "title": answer.title,
-                "hash": answer.feature_node_hash,
-                "nested_attributes": []
-            }
+            answer_data = {"title": answer.title, "hash": answer.feature_node_hash, "nested_attributes": []}
 
-            if hasattr(answer, 'attributes') and answer.attributes:
+            if hasattr(answer, "attributes") and answer.attributes:
                 for nested_attribute in answer.attributes:
                     nested_result = extract_and_print_attributes(nested_attribute, object_instance, frame_number)
                     if nested_result:
@@ -76,10 +74,7 @@ def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectIn
             if not isinstance(answers, Iterable):
                 answers = [answers]
             for answer in answers:
-                attr_data["answers"].append({
-                    "title": answer.title,
-                    "hash": answer.feature_node_hash
-                })
+                attr_data["answers"].append({"title": answer.title, "hash": answer.feature_node_hash})
         else:
             attr_data["answers"].append({"note": "No attribute answer"})
 
@@ -99,6 +94,7 @@ def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectIn
 
     return attr_data
 
+
 # Process all label rows
 for label_row in label_rows:
     object_instances = label_row.get_object_instances()
@@ -108,8 +104,9 @@ for label_row in label_rows:
         annotations = object_instance.get_annotations()
         assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
 
-        assert object_instance.ontology_item and object_instance.ontology_item.attributes, \
-            f"No attributes found for object {object_instance.object_hash}"
+        assert (
+            object_instance.ontology_item and object_instance.ontology_item.attributes
+        ), f"No attributes found for object {object_instance.object_hash}"
 
         for annotation in annotations:
             for attribute in object_instance.ontology_item.attributes:

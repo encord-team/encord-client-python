@@ -797,7 +797,9 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
                     # Set strawberry type attribute
                     if strawberry_type == "Albion":
-                        skeleton_object_instance.set_answer(attribute=strawberry_type_radio_attribute, answer=albion_option)
+                        skeleton_object_instance.set_answer(
+                            attribute=strawberry_type_radio_attribute, answer=albion_option
+                        )
                         checklist_attribute = albion_checklist_attribute
                     elif strawberry_type == "Redcoat":
                         skeleton_object_instance.set_answer(
@@ -814,7 +816,8 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                             attribute=strawberry_type_radio_attribute, answer=other_strawberry_option
                         )
                         skeleton_object_instance.set_answer(
-                            attribute=other_strawberry_option_text_attribute, answer=item.get("Specify strawberry type", "")
+                            attribute=other_strawberry_option_text_attribute,
+                            answer=item.get("Specify strawberry type", ""),
                         )
 
                     # Set checklist attributes

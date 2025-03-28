@@ -47,7 +47,7 @@ english_correction_text_attribute = english_correction_option.get_child_by_title
 chinese_correction_text_attribute = ontology_structure.get_child_by_title(type_=TextAttribute, title="更正")
 
 # Mapping of text files to multiple text regions with manual corrections
-text_annotations= {
+text_annotations = {
     "Paradise Lost.txt": [
         {
             "label_ref": "text_region_001",

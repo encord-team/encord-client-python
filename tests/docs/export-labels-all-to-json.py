@@ -1,7 +1,8 @@
 # Import dependencies
-from encord import EncordUserClient
 import json
 import os
+
+from encord import EncordUserClient
 
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"

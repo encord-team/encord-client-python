@@ -1,7 +1,7 @@
 # Import dependencies
 from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
-from encord.objects.coordinates import PolygonCoordinates, PointCoordinate
+from encord.objects.coordinates import PointCoordinate, PolygonCoordinates
 
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
@@ -47,28 +47,30 @@ pdf_labels = {
         # Specify the page number in the PDF. In the example below, page number 103 is labeled
         103: {
             "label_ref": "pdf_label_001",
-            "coordinates": PolygonCoordinates(polygons=[
-                [
-                    # First rectangle
+            "coordinates": PolygonCoordinates(
+                polygons=[
                     [
-                        PointCoordinate(0.1, 0.1),
-                        PointCoordinate(0.4, 0.1),
-                        PointCoordinate(0.4, 0.3),
-                        PointCoordinate(0.1, 0.3),
-                        PointCoordinate(0.1, 0.1)  # Close the polygon
-                    ]
-                ],
-                [
-                    # Second rectangle
+                        # First rectangle
+                        [
+                            PointCoordinate(0.1, 0.1),
+                            PointCoordinate(0.4, 0.1),
+                            PointCoordinate(0.4, 0.3),
+                            PointCoordinate(0.1, 0.3),
+                            PointCoordinate(0.1, 0.1),  # Close the polygon
+                        ]
+                    ],
                     [
-                        PointCoordinate(0.5, 0.5),
-                        PointCoordinate(0.7, 0.5),
-                        PointCoordinate(0.7, 0.7),
-                        PointCoordinate(0.5, 0.7),
-                        PointCoordinate(0.5, 0.5)  # Close the polygon
-                    ]
-                ],
-            ]),
+                        # Second rectangle
+                        [
+                            PointCoordinate(0.5, 0.5),
+                            PointCoordinate(0.7, 0.5),
+                            PointCoordinate(0.7, 0.7),
+                            PointCoordinate(0.5, 0.7),
+                            PointCoordinate(0.5, 0.5),  # Close the polygon
+                        ]
+                    ],
+                ]
+            ),
             "correction_type": "English corrections",
             "checklist_options": "en-ca, en-gb",
             "text_correction": "Fixed typo in English text.",
@@ -78,33 +80,35 @@ pdf_labels = {
         # Specify the page number in the PDF. In the example below, page number 17 is labeled
         17: {
             "label_ref": "pdf_label_002",
-            "coordinates": PolygonCoordinates(polygons=[
-                [
-                    # First rectangle
+            "coordinates": PolygonCoordinates(
+                polygons=[
                     [
-                        PointCoordinate(0.2, 0.2),
-                        PointCoordinate(0.5, 0.2),
-                        PointCoordinate(0.5, 0.4),
-                        PointCoordinate(0.2, 0.4),
-                        PointCoordinate(0.2, 0.2)  # Close the polygon
-                    ]
-                ],
-                [
-                    # Second rectangle
+                        # First rectangle
+                        [
+                            PointCoordinate(0.2, 0.2),
+                            PointCoordinate(0.5, 0.2),
+                            PointCoordinate(0.5, 0.4),
+                            PointCoordinate(0.2, 0.4),
+                            PointCoordinate(0.2, 0.2),  # Close the polygon
+                        ]
+                    ],
                     [
-                        PointCoordinate(0.6, 0.6),
-                        PointCoordinate(0.8, 0.6),
-                        PointCoordinate(0.8, 0.8),
-                        PointCoordinate(0.6, 0.8),
-                        PointCoordinate(0.6, 0.6)  # Close the polygon
-                    ]
-                ],
-            ]),
+                        # Second rectangle
+                        [
+                            PointCoordinate(0.6, 0.6),
+                            PointCoordinate(0.8, 0.6),
+                            PointCoordinate(0.8, 0.8),
+                            PointCoordinate(0.6, 0.8),
+                            PointCoordinate(0.6, 0.6),  # Close the polygon
+                        ]
+                    ],
+                ]
+            ),
             "correction_type": "繁體中文修正",
             "checklist_options": "zh-tw",
             "text_correction": "修正了中文繁體的標點符號。",
         }
-    }
+    },
 }
 
 # === Step 1: Initialize all label rows in a single bundle ===
@@ -147,7 +151,10 @@ for data_unit, frame_coordinates in pdf_labels.items():
             text_correction = item.get("text_correction", "")
 
             # Basic checks
-            assert correction_type in ["English corrections", "繁體中文修正"], f"[ASSERT] Unknown correction type: {correction_type}"
+            assert correction_type in [
+                "English corrections",
+                "繁體中文修正",
+            ], f"[ASSERT] Unknown correction type: {correction_type}"
 
             if label_ref not in object_instances_by_label_ref:
                 polygon_object_instance: ObjectInstance = polygon_ontology_object.create_instance()
@@ -157,7 +164,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                 # Set radio attribute
                 if correction_type == "English corrections":
                     assert english_correction_option is not None, "[ASSERT] english_correction_option not defined"
-                    polygon_object_instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
+                    polygon_object_instance.set_answer(
+                        attribute=correction_radio_attribute, answer=english_correction_option
+                    )
 
                     checklist_answers = []
                     for option in [opt.strip() for opt in checklist_options_str.split(",")]:
@@ -171,7 +180,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                             raise AssertionError(f"[ASSERT] Unknown English checklist option: {option}")
 
                     if checklist_answers:
-                        assert english_checklist_attribute is not None, "[ASSERT] english_checklist_attribute not defined"
+                        assert (
+                            english_checklist_attribute is not None
+                        ), "[ASSERT] english_checklist_attribute not defined"
                         polygon_object_instance.set_answer(
                             attribute=english_checklist_attribute,
                             answer=checklist_answers,
@@ -179,12 +190,18 @@ for data_unit, frame_coordinates in pdf_labels.items():
                         )
 
                     if text_correction:
-                        assert english_correction_text_attribute is not None, "[ASSERT] english_correction_text_attribute not defined"
-                        polygon_object_instance.set_answer(attribute=english_correction_text_attribute, answer=text_correction)
+                        assert (
+                            english_correction_text_attribute is not None
+                        ), "[ASSERT] english_correction_text_attribute not defined"
+                        polygon_object_instance.set_answer(
+                            attribute=english_correction_text_attribute, answer=text_correction
+                        )
 
                 elif correction_type == "繁體中文修正":
                     assert chinese_correction_option is not None, "[ASSERT] chinese_correction_option not defined"
-                    polygon_object_instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
+                    polygon_object_instance.set_answer(
+                        attribute=correction_radio_attribute, answer=chinese_correction_option
+                    )
 
                     checklist_answers = []
                     for option in [opt.strip() for opt in checklist_options_str.split(",")]:
@@ -196,7 +213,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                             raise AssertionError(f"[ASSERT] Unknown Chinese checklist option: {option}")
 
                     if checklist_answers:
-                        assert chinese_checklist_attribute is not None, "[ASSERT] chinese_checklist_attribute not defined"
+                        assert (
+                            chinese_checklist_attribute is not None
+                        ), "[ASSERT] chinese_checklist_attribute not defined"
                         polygon_object_instance.set_answer(
                             attribute=chinese_checklist_attribute,
                             answer=checklist_answers,
@@ -204,8 +223,12 @@ for data_unit, frame_coordinates in pdf_labels.items():
                         )
 
                     if text_correction:
-                        assert chinese_correction_text_attribute is not None, "[ASSERT] chinese_correction_text_attribute not defined"
-                        polygon_object_instance.set_answer(attribute=chinese_correction_text_attribute, answer=text_correction)
+                        assert (
+                            chinese_correction_text_attribute is not None
+                        ), "[ASSERT] chinese_correction_text_attribute not defined"
+                        polygon_object_instance.set_answer(
+                            attribute=chinese_correction_text_attribute, answer=text_correction
+                        )
 
             else:
                 polygon_object_instance = object_instances_by_label_ref[label_ref]

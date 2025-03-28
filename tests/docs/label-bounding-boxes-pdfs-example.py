@@ -29,7 +29,9 @@ assert correction_radio_attribute is not None, "Radio attribute 'Corrections BB'
 
 english_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="English corrections")
 chinese_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="繁體中文修正")
-assert all([english_correction_option, chinese_correction_option]), "One or more correction type options missing in radio attribute."
+assert all(
+    [english_correction_option, chinese_correction_option]
+), "One or more correction type options missing in radio attribute."
 
 # Define checklist attributes
 english_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="English")
@@ -75,7 +77,7 @@ pdf_labels = {
             "checklist_options": "zh-tw",
             "text_correction": "修正了中文繁體的標點符號。",
         }
-    }
+    },
 }
 
 # === Step 1: Initialize all label rows using a bundle ===
@@ -124,7 +126,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
 
                 if correction_type == "English corrections":
                     assert english_correction_option is not None, "[ASSERT] english_correction_option not defined"
-                    box_object_instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
+                    box_object_instance.set_answer(
+                        attribute=correction_radio_attribute, answer=english_correction_option
+                    )
 
                     checklist_answers = []
                     for option in [opt.strip() for opt in checklist_options_str.split(",")]:
@@ -138,7 +142,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                             raise AssertionError(f"[ASSERT] Unknown English checklist option: {option}")
 
                     if checklist_answers:
-                        assert english_checklist_attribute is not None, "[ASSERT] english_checklist_attribute not defined"
+                        assert (
+                            english_checklist_attribute is not None
+                        ), "[ASSERT] english_checklist_attribute not defined"
                         box_object_instance.set_answer(
                             attribute=english_checklist_attribute,
                             answer=checklist_answers,
@@ -146,12 +152,18 @@ for data_unit, frame_coordinates in pdf_labels.items():
                         )
 
                     if text_correction:
-                        assert english_correction_text_attribute is not None, "[ASSERT] english_correction_text_attribute not defined"
-                        box_object_instance.set_answer(attribute=english_correction_text_attribute, answer=text_correction)
+                        assert (
+                            english_correction_text_attribute is not None
+                        ), "[ASSERT] english_correction_text_attribute not defined"
+                        box_object_instance.set_answer(
+                            attribute=english_correction_text_attribute, answer=text_correction
+                        )
 
                 elif correction_type == "繁體中文修正":
                     assert chinese_correction_option is not None, "[ASSERT] chinese_correction_option not defined"
-                    box_object_instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
+                    box_object_instance.set_answer(
+                        attribute=correction_radio_attribute, answer=chinese_correction_option
+                    )
 
                     checklist_answers = []
                     for option in [opt.strip() for opt in checklist_options_str.split(",")]:
@@ -163,7 +175,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                             raise AssertionError(f"[ASSERT] Unknown Chinese checklist option: {option}")
 
                     if checklist_answers:
-                        assert chinese_checklist_attribute is not None, "[ASSERT] chinese_checklist_attribute not defined"
+                        assert (
+                            chinese_checklist_attribute is not None
+                        ), "[ASSERT] chinese_checklist_attribute not defined"
                         box_object_instance.set_answer(
                             attribute=chinese_checklist_attribute,
                             answer=checklist_answers,
@@ -171,8 +185,12 @@ for data_unit, frame_coordinates in pdf_labels.items():
                         )
 
                     if text_correction:
-                        assert chinese_correction_text_attribute is not None, "[ASSERT] chinese_correction_text_attribute not defined"
-                        box_object_instance.set_answer(attribute=chinese_correction_text_attribute, answer=text_correction)
+                        assert (
+                            chinese_correction_text_attribute is not None
+                        ), "[ASSERT] chinese_correction_text_attribute not defined"
+                        box_object_instance.set_answer(
+                            attribute=chinese_correction_text_attribute, answer=text_correction
+                        )
 
             else:
                 # Reuse existing instance

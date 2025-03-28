@@ -1,9 +1,10 @@
 # Import dependencies
-from encord import EncordUserClient
-from encord.objects.attributes import Attribute, RadioAttribute
-from encord.objects import ObjectInstance
 import json
 import os
+
+from encord import EncordUserClient
+from encord.objects import ObjectInstance
+from encord.objects.attributes import Attribute, RadioAttribute
 
 # User input
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
@@ -34,6 +35,7 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
 # Prepare data structure to collect all results
 output_data = []
 
+
 # Function to extract info from RadioAttribute (recursively if nested)
 def extract_attributes(attribute: Attribute, object_instance: ObjectInstance, frame_number: int):
     frame_data = []
@@ -53,10 +55,10 @@ def extract_attributes(attribute: Attribute, object_instance: ObjectInstance, fr
                 "attribute_hash": attribute.feature_node_hash,
                 "answer_title": answer.title,
                 "answer_hash": answer.feature_node_hash,
-                "nested_attributes": []
+                "nested_attributes": [],
             }
 
-            if hasattr(answer, 'attributes') and answer.attributes:
+            if hasattr(answer, "attributes") and answer.attributes:
                 for nested_attribute in answer.attributes:
                     nested_data = extract_attributes(nested_attribute, object_instance, frame_number)
                     if nested_data:
@@ -65,6 +67,7 @@ def extract_attributes(attribute: Attribute, object_instance: ObjectInstance, fr
             frame_data.append(answer_data)
 
     return frame_data
+
 
 # Loop through label rows and extract attribute data
 for label_row in label_rows:
@@ -76,8 +79,9 @@ for label_row in label_rows:
         assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
 
         ontology_item = object_instance.ontology_item
-        assert ontology_item and ontology_item.attributes, \
-            f"No ontology item or attributes found for object {object_instance.object_hash}"
+        assert (
+            ontology_item and ontology_item.attributes
+        ), f"No ontology item or attributes found for object {object_instance.object_hash}"
 
         for annotation in annotations:
             for attribute in ontology_item.attributes:

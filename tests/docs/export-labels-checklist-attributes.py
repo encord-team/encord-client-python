@@ -1,9 +1,10 @@
 # Import dependencies
-from encord import EncordUserClient
-from encord.objects.attributes import Attribute, ChecklistAttribute
-from encord.objects import ObjectInstance
 import json
 import os
+
+from encord import EncordUserClient
+from encord.objects import ObjectInstance
+from encord.objects.attributes import Attribute, ChecklistAttribute
 
 # User input
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
@@ -31,6 +32,7 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for label_row in label_rows:
         label_row.initialise_labels(bundle=bundle)
 
+
 # Function to extract checklist attributes in structured format
 def extract_attributes(attribute: Attribute, object_instance: ObjectInstance, frame_number: int):
     if isinstance(attribute, ChecklistAttribute):
@@ -47,10 +49,12 @@ def extract_attributes(attribute: Attribute, object_instance: ObjectInstance, fr
                     "title": answer.title,
                     "hash": answer.feature_node_hash,
                 }
-                for answer in attribute_answers if answer
-            ]
+                for answer in attribute_answers
+                if answer
+            ],
         }
     return None
+
 
 # Collect data for saving
 results = []
@@ -65,8 +69,9 @@ for label_row in label_rows:
         assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
 
         ontology_item = object_instance.ontology_item
-        assert ontology_item and ontology_item.attributes, \
-            f"No ontology item or attributes found for object {object_instance.object_hash}"
+        assert (
+            ontology_item and ontology_item.attributes
+        ), f"No ontology item or attributes found for object {object_instance.object_hash}"
 
         for annotation in annotations:
             for attribute in ontology_item.attributes:

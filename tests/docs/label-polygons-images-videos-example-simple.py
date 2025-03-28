@@ -34,7 +34,9 @@ other_blueberry_option = blueberry_type_radio_attribute.get_child_by_title(type_
 
 # Create checklist attributes and options for each blueberry type
 # Bluegold Qualities
-bluegold_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Bluegold Qualities?")
+bluegold_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Bluegold Qualities?"
+)
 bluegold_plump_option = bluegold_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 bluegold_juicy_option = bluegold_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 bluegold_large_option = bluegold_checklist_attribute.get_child_by_title(type_=Option, title="Large")
@@ -46,7 +48,9 @@ duke_juicy_option = duke_checklist_attribute.get_child_by_title(type_=Option, ti
 duke_large_option = duke_checklist_attribute.get_child_by_title(type_=Option, title="Large")
 
 # Blueray Qualities
-blueray_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Blueray Qualities?")
+blueray_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Blueray Qualities?"
+)
 blueray_plump_option = blueray_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 blueray_juicy_option = blueray_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 blueray_large_option = blueray_checklist_attribute.get_child_by_title(type_=Option, title="Large")
@@ -62,18 +66,18 @@ video_frame_labels = {
     "cherries-001.jpg": {
         0: {
             "label_ref": "blueberry_001",
-            "coordinates": PolygonCoordinates(polygons=
-                [
-                [
-                [
-                    PointCoordinate(0.01, 0.02),
-                    PointCoordinate(0.03, 0.03),
-                    PointCoordinate(0.05, 0.02),
-                    PointCoordinate(0.04, 0.01),
-                    PointCoordinate(0.02, 0.01),
+            "coordinates": PolygonCoordinates(
+                polygons=[
+                    [
+                        [
+                            PointCoordinate(0.01, 0.02),
+                            PointCoordinate(0.03, 0.03),
+                            PointCoordinate(0.05, 0.02),
+                            PointCoordinate(0.04, 0.01),
+                            PointCoordinate(0.02, 0.01),
+                        ]
+                    ]
                 ]
-            ]
-            ]
             ),
             "blueberry_type": "Bluegold",
             "bluegold_quality_options": "Plump, Juicy",
@@ -83,33 +87,35 @@ video_frame_labels = {
         0: [
             {
                 "label_ref": "blueberry_002",
-                "coordinates": PolygonCoordinates(polygons=[[
-                    [
-                        PointCoordinate(0.01, 0.02),
-                        PointCoordinate(0.03, 0.03),
-                        PointCoordinate(0.05, 0.02),
-                        PointCoordinate(0.04, 0.01),
-                        PointCoordinate(0.02, 0.01),
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.01, 0.02),
+                                PointCoordinate(0.03, 0.03),
+                                PointCoordinate(0.05, 0.02),
+                                PointCoordinate(0.04, 0.01),
+                                PointCoordinate(0.02, 0.01),
+                            ]
+                        ]
                     ]
-                ]
-                ]
                 ),
                 "blueberry_type": "Duke",
                 "duke_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "blueberry_003",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.04, 0.05),
-                        PointCoordinate(0.06, 0.06),
-                        PointCoordinate(0.08, 0.05),
-                        PointCoordinate(0.07, 0.04),
-                        PointCoordinate(0.05, 0.04),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.04, 0.05),
+                                PointCoordinate(0.06, 0.06),
+                                PointCoordinate(0.08, 0.05),
+                                PointCoordinate(0.07, 0.04),
+                                PointCoordinate(0.05, 0.04),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Blueray",
@@ -117,17 +123,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_004",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.07, 0.02),
-                        PointCoordinate(0.09, 0.03),
-                        PointCoordinate(0.11, 0.02),
-                        PointCoordinate(0.10, 0.01),
-                        PointCoordinate(0.08, 0.01),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.07, 0.02),
+                                PointCoordinate(0.09, 0.03),
+                                PointCoordinate(0.11, 0.02),
+                                PointCoordinate(0.10, 0.01),
+                                PointCoordinate(0.08, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Other blueberry type",
@@ -138,17 +144,17 @@ video_frame_labels = {
     "cherries-ig": {
         0: {
             "label_ref": "blueberry_005",
-            "coordinates": PolygonCoordinates(polygons=
-                [
-                [
-                [
-                    PointCoordinate(0.01, 0.02),
-                    PointCoordinate(0.03, 0.03),
-                    PointCoordinate(0.05, 0.02),
-                    PointCoordinate(0.04, 0.01),
-                    PointCoordinate(0.02, 0.01),
-                ]
-                ]
+            "coordinates": PolygonCoordinates(
+                polygons=[
+                    [
+                        [
+                            PointCoordinate(0.01, 0.02),
+                            PointCoordinate(0.03, 0.03),
+                            PointCoordinate(0.05, 0.02),
+                            PointCoordinate(0.04, 0.01),
+                            PointCoordinate(0.02, 0.01),
+                        ]
+                    ]
                 ]
             ),
             "blueberry_type": "Bluegold",
@@ -157,17 +163,17 @@ video_frame_labels = {
         2: [
             {
                 "label_ref": "blueberry_006",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.01, 0.02),
-                        PointCoordinate(0.03, 0.03),
-                        PointCoordinate(0.05, 0.02),
-                        PointCoordinate(0.04, 0.01),
-                        PointCoordinate(0.02, 0.01),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.01, 0.02),
+                                PointCoordinate(0.03, 0.03),
+                                PointCoordinate(0.05, 0.02),
+                                PointCoordinate(0.04, 0.01),
+                                PointCoordinate(0.02, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Duke",
@@ -175,17 +181,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_007",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.04, 0.05),
-                        PointCoordinate(0.06, 0.06),
-                        PointCoordinate(0.08, 0.05),
-                        PointCoordinate(0.07, 0.04),
-                        PointCoordinate(0.05, 0.04),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.04, 0.05),
+                                PointCoordinate(0.06, 0.06),
+                                PointCoordinate(0.08, 0.05),
+                                PointCoordinate(0.07, 0.04),
+                                PointCoordinate(0.05, 0.04),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Blueray",
@@ -193,17 +199,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_008",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.07, 0.02),
-                        PointCoordinate(0.09, 0.03),
-                        PointCoordinate(0.11, 0.02),
-                        PointCoordinate(0.10, 0.01),
-                        PointCoordinate(0.08, 0.01),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.07, 0.02),
+                                PointCoordinate(0.09, 0.03),
+                                PointCoordinate(0.11, 0.02),
+                                PointCoordinate(0.10, 0.01),
+                                PointCoordinate(0.08, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Other blueberry type",
@@ -214,18 +220,18 @@ video_frame_labels = {
     "cherries-is": {
         0: {
             "label_ref": "blueberry_009",
-            "coordinates": PolygonCoordinates(polygons=
+            "coordinates": PolygonCoordinates(
+                polygons=[
                     [
-                    [
-                [
-                    PointCoordinate(0.01, 0.02),
-                    PointCoordinate(0.03, 0.03),
-                    PointCoordinate(0.05, 0.02),
-                    PointCoordinate(0.04, 0.01),
-                    PointCoordinate(0.02, 0.01),
+                        [
+                            PointCoordinate(0.01, 0.02),
+                            PointCoordinate(0.03, 0.03),
+                            PointCoordinate(0.05, 0.02),
+                            PointCoordinate(0.04, 0.01),
+                            PointCoordinate(0.02, 0.01),
+                        ]
+                    ]
                 ]
-                    ]
-                    ]
             ),
             "blueberry_type": "Bluegold",
             "bluegold_quality_options": "Plump",
@@ -233,17 +239,17 @@ video_frame_labels = {
         3: [
             {
                 "label_ref": "blueberry_010",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.01, 0.02),
-                        PointCoordinate(0.03, 0.03),
-                        PointCoordinate(0.05, 0.02),
-                        PointCoordinate(0.04, 0.01),
-                        PointCoordinate(0.02, 0.01),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.01, 0.02),
+                                PointCoordinate(0.03, 0.03),
+                                PointCoordinate(0.05, 0.02),
+                                PointCoordinate(0.04, 0.01),
+                                PointCoordinate(0.02, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Duke",
@@ -251,17 +257,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_011",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.04, 0.05),
-                        PointCoordinate(0.06, 0.06),
-                        PointCoordinate(0.08, 0.05),
-                        PointCoordinate(0.07, 0.04),
-                        PointCoordinate(0.05, 0.04),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.04, 0.05),
+                                PointCoordinate(0.06, 0.06),
+                                PointCoordinate(0.08, 0.05),
+                                PointCoordinate(0.07, 0.04),
+                                PointCoordinate(0.05, 0.04),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Blueray",
@@ -270,17 +276,16 @@ video_frame_labels = {
             {
                 "label_ref": "blueberry_012",
                 "coordinates": PolygonCoordinates(
-                    polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.07, 0.02),
-                        PointCoordinate(0.09, 0.03),
-                        PointCoordinate(0.11, 0.02),
-                        PointCoordinate(0.10, 0.01),
-                        PointCoordinate(0.08, 0.01),
-                    ]
-                    ]
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.07, 0.02),
+                                PointCoordinate(0.09, 0.03),
+                                PointCoordinate(0.11, 0.02),
+                                PointCoordinate(0.10, 0.01),
+                                PointCoordinate(0.08, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Other blueberry type",
@@ -292,18 +297,17 @@ video_frame_labels = {
         103: [
             {
                 "label_ref": "blueberry_013",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    
-                    [
-                        PointCoordinate(0.01, 0.02),
-                        PointCoordinate(0.03, 0.03),
-                        PointCoordinate(0.05, 0.02),
-                        PointCoordinate(0.04, 0.01),
-                        PointCoordinate(0.02, 0.01),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.01, 0.02),
+                                PointCoordinate(0.03, 0.03),
+                                PointCoordinate(0.05, 0.02),
+                                PointCoordinate(0.04, 0.01),
+                                PointCoordinate(0.02, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Blueray",
@@ -311,17 +315,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_014",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.04, 0.05),
-                        PointCoordinate(0.06, 0.06),
-                        PointCoordinate(0.08, 0.05),
-                        PointCoordinate(0.07, 0.04),
-                        PointCoordinate(0.05, 0.04),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.04, 0.05),
+                                PointCoordinate(0.06, 0.06),
+                                PointCoordinate(0.08, 0.05),
+                                PointCoordinate(0.07, 0.04),
+                                PointCoordinate(0.05, 0.04),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Bluegold",
@@ -329,17 +333,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_015",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.07, 0.02),
-                        PointCoordinate(0.09, 0.03),
-                        PointCoordinate(0.11, 0.02),
-                        PointCoordinate(0.10, 0.01),
-                        PointCoordinate(0.08, 0.01),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.07, 0.02),
+                                PointCoordinate(0.09, 0.03),
+                                PointCoordinate(0.11, 0.02),
+                                PointCoordinate(0.10, 0.01),
+                                PointCoordinate(0.08, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Other blueberry type",
@@ -349,17 +353,17 @@ video_frame_labels = {
         104: [
             {
                 "label_ref": "blueberry_016",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.01, 0.02),
-                        PointCoordinate(0.03, 0.03),
-                        PointCoordinate(0.05, 0.02),
-                        PointCoordinate(0.04, 0.01),
-                        PointCoordinate(0.02, 0.01),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.01, 0.02),
+                                PointCoordinate(0.03, 0.03),
+                                PointCoordinate(0.05, 0.02),
+                                PointCoordinate(0.04, 0.01),
+                                PointCoordinate(0.02, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Blueray",
@@ -367,17 +371,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_014",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.041, 0.052),
-                        PointCoordinate(0.061, 0.062),
-                        PointCoordinate(0.081, 0.052),
-                        PointCoordinate(0.071, 0.042),
-                        PointCoordinate(0.051, 0.042),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.041, 0.052),
+                                PointCoordinate(0.061, 0.062),
+                                PointCoordinate(0.081, 0.052),
+                                PointCoordinate(0.071, 0.042),
+                                PointCoordinate(0.051, 0.042),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Bluegold",
@@ -385,17 +389,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_017",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.07, 0.02),
-                        PointCoordinate(0.09, 0.03),
-                        PointCoordinate(0.11, 0.02),
-                        PointCoordinate(0.10, 0.01),
-                        PointCoordinate(0.08, 0.01),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.07, 0.02),
+                                PointCoordinate(0.09, 0.03),
+                                PointCoordinate(0.11, 0.02),
+                                PointCoordinate(0.10, 0.01),
+                                PointCoordinate(0.08, 0.01),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Other blueberry type",
@@ -405,17 +409,17 @@ video_frame_labels = {
         105: [
             {
                 "label_ref": "blueberry_016",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.011, 0.022),
-                        PointCoordinate(0.031, 0.032),
-                        PointCoordinate(0.051, 0.022),
-                        PointCoordinate(0.041, 0.012),
-                        PointCoordinate(0.021, 0.012),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.011, 0.022),
+                                PointCoordinate(0.031, 0.032),
+                                PointCoordinate(0.051, 0.022),
+                                PointCoordinate(0.041, 0.012),
+                                PointCoordinate(0.021, 0.012),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Blueray",
@@ -423,17 +427,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_014",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.043, 0.055),
-                        PointCoordinate(0.063, 0.065),
-                        PointCoordinate(0.083, 0.055),
-                        PointCoordinate(0.073, 0.045),
-                        PointCoordinate(0.053, 0.045),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.043, 0.055),
+                                PointCoordinate(0.063, 0.065),
+                                PointCoordinate(0.083, 0.055),
+                                PointCoordinate(0.073, 0.045),
+                                PointCoordinate(0.053, 0.045),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Bluegold",
@@ -441,17 +445,17 @@ video_frame_labels = {
             },
             {
                 "label_ref": "blueberry_017",
-                "coordinates": PolygonCoordinates(polygons=
-                    [
-                    [
-                    [
-                        PointCoordinate(0.071, 0.022),
-                        PointCoordinate(0.091, 0.032),
-                        PointCoordinate(0.111, 0.022),
-                        PointCoordinate(0.101, 0.012),
-                        PointCoordinate(0.081, 0.012),
-                    ]
-                    ]
+                "coordinates": PolygonCoordinates(
+                    polygons=[
+                        [
+                            [
+                                PointCoordinate(0.071, 0.022),
+                                PointCoordinate(0.091, 0.032),
+                                PointCoordinate(0.111, 0.022),
+                                PointCoordinate(0.101, 0.012),
+                                PointCoordinate(0.081, 0.012),
+                            ]
+                        ]
                     ]
                 ),
                 "blueberry_type": "Other blueberry type",
@@ -492,20 +496,25 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
                     # Set blueberry type attribute
                     if blueberry_type == "Bluegold":
-                        polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=bluegold_option)
+                        polygon_object_instance.set_answer(
+                            attribute=blueberry_type_radio_attribute, answer=bluegold_option
+                        )
                         checklist_attribute = bluegold_checklist_attribute
                     elif blueberry_type == "Duke":
                         polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=duke_option)
                         checklist_attribute = duke_checklist_attribute
                     elif blueberry_type == "Blueray":
-                        polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=blueray_option)
+                        polygon_object_instance.set_answer(
+                            attribute=blueberry_type_radio_attribute, answer=blueray_option
+                        )
                         checklist_attribute = blueray_checklist_attribute
                     elif blueberry_type == "Other blueberry type":
                         polygon_object_instance.set_answer(
                             attribute=blueberry_type_radio_attribute, answer=other_blueberry_option
                         )
                         polygon_object_instance.set_answer(
-                            attribute=other_blueberry_option_text_attribute, answer=item.get("Specify blueberry type", "")
+                            attribute=other_blueberry_option_text_attribute,
+                            answer=item.get("Specify blueberry type", ""),
                         )
 
                     # Set checklist attributes

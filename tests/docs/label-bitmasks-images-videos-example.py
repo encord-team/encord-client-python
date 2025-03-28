@@ -1,6 +1,7 @@
 # Import dependencies
-import numpy as np
 import os
+
+import numpy as np
 
 from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
@@ -42,6 +43,7 @@ honey_crisp_option = apple_type_radio_attribute.get_child_by_title(type_=Option,
 other_apple_option = apple_type_radio_attribute.get_child_by_title(type_=Option, title="Other apple type")
 assert all([sugar_bee_option, granny_smith_option, honey_crisp_option, other_apple_option]), "Missing radio options"
 
+
 # Helper for checklist + options
 def assert_checklist_and_options(title, *option_titles):
     checklist = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title=title)
@@ -50,14 +52,18 @@ def assert_checklist_and_options(title, *option_titles):
     assert all(options), f"Missing options in checklist '{title}'"
     return (checklist, *options)
 
-sugar_bee_checklist_attribute, sugar_bee_plump_option, sugar_bee_juicy_option, sugar_bee_large_option = \
+
+sugar_bee_checklist_attribute, sugar_bee_plump_option, sugar_bee_juicy_option, sugar_bee_large_option = (
     assert_checklist_and_options("Sugar Bee Qualities?", "Plump", "Juicy", "Large")
+)
 
-granny_smith_checklist_attribute, granny_smith_plump_option, granny_smith_juicy_option, granny_smith_large_option = \
+granny_smith_checklist_attribute, granny_smith_plump_option, granny_smith_juicy_option, granny_smith_large_option = (
     assert_checklist_and_options("Granny Smith Qualities?", "Plump", "Juicy", "Large")
+)
 
-honey_crisp_checklist_attribute, honey_crisp_plump_option, honey_crisp_juicy_option, honey_crisp_large_option = \
+honey_crisp_checklist_attribute, honey_crisp_plump_option, honey_crisp_juicy_option, honey_crisp_large_option = (
     assert_checklist_and_options("Honey Crisp Qualities?", "Plump", "Juicy", "Large")
+)
 
 other_apple_option_text_attribute = ontology_structure.get_child_by_title(
     type_=TextAttribute, title="Specify apple type"
@@ -281,28 +287,32 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                 for quality in qualities:
                     if quality == "Plump":
                         checklist_answers.append(
-                            sugar_bee_plump_option if apple_type == "Sugar Bee" else
-                            granny_smith_plump_option if apple_type == "Granny Smith" else
-                            honey_crisp_plump_option
+                            sugar_bee_plump_option
+                            if apple_type == "Sugar Bee"
+                            else granny_smith_plump_option
+                            if apple_type == "Granny Smith"
+                            else honey_crisp_plump_option
                         )
                     elif quality == "Juicy":
                         checklist_answers.append(
-                            sugar_bee_juicy_option if apple_type == "Sugar Bee" else
-                            granny_smith_juicy_option if apple_type == "Granny Smith" else
-                            honey_crisp_juicy_option
+                            sugar_bee_juicy_option
+                            if apple_type == "Sugar Bee"
+                            else granny_smith_juicy_option
+                            if apple_type == "Granny Smith"
+                            else honey_crisp_juicy_option
                         )
                     elif quality == "Large":
                         checklist_answers.append(
-                            sugar_bee_large_option if apple_type == "Sugar Bee" else
-                            granny_smith_large_option if apple_type == "Granny Smith" else
-                            honey_crisp_large_option
+                            sugar_bee_large_option
+                            if apple_type == "Sugar Bee"
+                            else granny_smith_large_option
+                            if apple_type == "Granny Smith"
+                            else honey_crisp_large_option
                         )
 
                 if checklist_attribute and checklist_answers:
                     bitmask_object_instance.set_answer(
-                        attribute=checklist_attribute,
-                        answer=checklist_answers,
-                        overwrite=True
+                        attribute=checklist_attribute, answer=checklist_answers, overwrite=True
                     )
 
             else:
@@ -313,8 +323,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
     # Add valid instances to label row
     for bitmask_object_instance in object_instances_by_label_ref.values():
-        assert bitmask_object_instance.get_annotation_frames(), \
-            f"No frames set for instance {bitmask_object_instance}"
+        assert bitmask_object_instance.get_annotation_frames(), f"No frames set for instance {bitmask_object_instance}"
         label_row.add_object_instance(bitmask_object_instance)
 
     label_rows_to_save.append(label_row)

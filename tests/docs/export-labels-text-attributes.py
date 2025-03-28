@@ -1,8 +1,9 @@
 # Import dependencies
-from encord import EncordUserClient
-from encord.objects.attributes import Attribute, TextAttribute
-from encord.objects import ObjectInstance
 import json
+
+from encord import EncordUserClient
+from encord.objects import ObjectInstance
+from encord.objects.attributes import Attribute, TextAttribute
 
 # User input
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
@@ -31,6 +32,7 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for label_row in label_rows:
         label_row.initialise_labels(bundle=bundle)
 
+
 # Function to extract text attributes and store in structured format
 def extract_text_attributes(attribute: Attribute, object_instance: ObjectInstance, frame_number: int):
     if isinstance(attribute, TextAttribute):
@@ -42,6 +44,7 @@ def extract_text_attributes(attribute: Attribute, object_instance: ObjectInstanc
             "text_answer": text_answer,
         }
     return None
+
 
 # Collect results for saving
 results = []
@@ -56,8 +59,9 @@ for label_row in label_rows:
         assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
 
         ontology_item = object_instance.ontology_item
-        assert ontology_item and ontology_item.attributes, \
-            f"Missing ontology item or attributes for object {object_instance.object_hash}"
+        assert (
+            ontology_item and ontology_item.attributes
+        ), f"Missing ontology item or attributes for object {object_instance.object_hash}"
 
         for annotation in annotations:
             for attribute in ontology_item.attributes:

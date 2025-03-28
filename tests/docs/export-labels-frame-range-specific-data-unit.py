@@ -1,8 +1,9 @@
 # Import dependencies
-from encord import EncordUserClient
-from encord.objects.attributes import Attribute
-from encord.objects import ObjectInstance
 import json
+
+from encord import EncordUserClient
+from encord.objects import ObjectInstance
+from encord.objects.attributes import Attribute
 
 # User input
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
@@ -33,6 +34,7 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for label_row in label_rows:
         label_row.initialise_labels(bundle=bundle)
 
+
 # Function to extract attributes in a structured format
 def extract_attributes(attribute: Attribute, object_instance: ObjectInstance):
     try:
@@ -42,8 +44,9 @@ def extract_attributes(attribute: Attribute, object_instance: ObjectInstance):
     return {
         "attribute_name": attribute.title,
         "attribute_hash": attribute.feature_node_hash,
-        "attribute_answer": str(answer)
+        "attribute_answer": str(answer),
     }
+
 
 # Result collection
 results = []
@@ -54,7 +57,7 @@ for label_row in label_rows:
         "label_row_hash": label_row.label_hash,
         "data_title": label_row.data_title,
         "objects": [],
-        "classifications": []
+        "classifications": [],
     }
 
     # Process object annotations
@@ -65,8 +68,9 @@ for label_row in label_rows:
         annotations = object_instance.get_annotations()
         assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
 
-        assert object_instance.ontology_item and object_instance.ontology_item.attributes, \
-            f"No attributes found for object {object_instance.object_hash}"
+        assert (
+            object_instance.ontology_item and object_instance.ontology_item.attributes
+        ), f"No attributes found for object {object_instance.object_hash}"
 
         for annotation in annotations:
             if START_FRAME_NUMBER <= annotation.frame <= END_FRAME_NUMBER:
@@ -79,7 +83,7 @@ for label_row in label_rows:
                     "color": object_instance.ontology_item.color,
                     "shape": object_instance.ontology_item.shape,
                     "label_location": str(annotation.coordinates),
-                    "attributes": []
+                    "attributes": [],
                 }
 
                 print("Frame:", annotation.frame)
@@ -107,7 +111,9 @@ for label_row in label_rows:
 
     for classification_instance in classification_instances:
         annotations = classification_instance.get_annotations()
-        assert annotations, f"No annotations found for classification instance {classification_instance.classification_hash}"
+        assert (
+            annotations
+        ), f"No annotations found for classification instance {classification_instance.classification_hash}"
 
         for annotation in annotations:
             if START_FRAME_NUMBER <= annotation.frame <= END_FRAME_NUMBER:
@@ -125,7 +131,7 @@ for label_row in label_rows:
                     "classification_name": classification_instance.classification_name,
                     "feature_hash": classification_instance.feature_hash,
                     "value": answer_value,
-                    "answer_hash": answer_hash
+                    "answer_hash": answer_hash,
                 }
 
                 print("Classification hash:", classification_info["classification_hash"])

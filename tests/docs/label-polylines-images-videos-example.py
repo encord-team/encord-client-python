@@ -37,7 +37,9 @@ other_branch_option = branch_type_radio_attribute.get_child_by_title(type_=Optio
 fruiting_spur_checklist_attribute = ontology_structure.get_child_by_title(
     type_=ChecklistAttribute, title="Fruiting spur Qualities?"
 )
-fruiting_spur_short_length_option = fruiting_spur_checklist_attribute.get_child_by_title(type_=Option, title="Short length")
+fruiting_spur_short_length_option = fruiting_spur_checklist_attribute.get_child_by_title(
+    type_=Option, title="Short length"
+)
 fruiting_spur_high_bud_density_option = fruiting_spur_checklist_attribute.get_child_by_title(
     type_=Option, title="High bud density"
 )
@@ -54,7 +56,9 @@ side_shoot_checklist_attribute = ontology_structure.get_child_by_title(
     type_=ChecklistAttribute, title="Side shoot Qualities?"
 )
 side_shoot_short_length_option = side_shoot_checklist_attribute.get_child_by_title(type_=Option, title="Short length")
-side_shoot_high_bud_density_option = side_shoot_checklist_attribute.get_child_by_title(type_=Option, title="High bud density")
+side_shoot_high_bud_density_option = side_shoot_checklist_attribute.get_child_by_title(
+    type_=Option, title="High bud density"
+)
 side_shoot_healthy_option = side_shoot_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
 
 # Other branch Types
@@ -407,7 +411,9 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
 
                 # Assign radio and checklist attributes based on branch type
                 if branch_type == "Fruiting spur":
-                    polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=fruiting_spur_option)
+                    polyline_object_instance.set_answer(
+                        attribute=branch_type_radio_attribute, answer=fruiting_spur_option
+                    )
                     checklist_attribute = fruiting_spur_checklist_attribute
                     quality_options = item.get("fruiting_spur_quality_options", "").split(", ")
                 elif branch_type == "Sucker":
@@ -417,7 +423,7 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                 elif branch_type == "Side shoot":
                     polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=side_shoot_option)
                     checklist_attribute = side_shoot_checklist_attribute
-                    quality_options = item.get("side_shoot_quality_options", "").split(", ") 
+                    quality_options = item.get("side_shoot_quality_options", "").split(", ")
                 elif branch_type == "Other branch type":
                     polyline_object_instance.set_answer(
                         attribute=branch_type_radio_attribute, answer=other_branch_option

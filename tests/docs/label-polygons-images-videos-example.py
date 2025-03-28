@@ -411,20 +411,25 @@ for data_unit, frame_coordinates in video_frame_labels.items():
 
                     # Set blueberry type attribute
                     if blueberry_type == "Bluegold":
-                        polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=bluegold_option)
+                        polygon_object_instance.set_answer(
+                            attribute=blueberry_type_radio_attribute, answer=bluegold_option
+                        )
                         checklist_attribute = bluegold_checklist_attribute
                     elif blueberry_type == "Duke":
                         polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=duke_option)
                         checklist_attribute = duke_checklist_attribute
                     elif blueberry_type == "Blueray":
-                        polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=blueray_option)
+                        polygon_object_instance.set_answer(
+                            attribute=blueberry_type_radio_attribute, answer=blueray_option
+                        )
                         checklist_attribute = blueray_checklist_attribute
                     elif blueberry_type == "Other blueberry type":
                         polygon_object_instance.set_answer(
                             attribute=blueberry_type_radio_attribute, answer=other_blueberry_option
                         )
                         polygon_object_instance.set_answer(
-                            attribute=other_blueberry_option_text_attribute, answer=item.get("Specify blueberry type", "")
+                            attribute=other_blueberry_option_text_attribute,
+                            answer=item.get("Specify blueberry type", ""),
                         )
 
                     # Set checklist attributes
