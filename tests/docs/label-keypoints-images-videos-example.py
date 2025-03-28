@@ -17,48 +17,71 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 
 # Get project for which labels are to be added
 project: Project = user_client.get_project(PROJECT_HASH)
+assert project is not None, "Project not found — check PROJECT_HASH"
 
-# Create radio button attribute for floral axis type
+# Get ontology structure
 ontology_structure = project.ontology_structure
+assert ontology_structure is not None, "Ontology structure is missing in the project"
 
-# Find a bounding box annotation object in the project ontology
+# Get keypoint object for floral axis
 keypoint_ontology_object: Object = ontology_structure.get_child_by_title(title="Floral axis", type_=Object)
+assert keypoint_ontology_object is not None, "Keypoint object 'Floral axis' not found in ontology"
 
+# Get radio attribute for floral axis type
 floral_axis_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
+assert floral_axis_type_radio_attribute is not None, "Radio attribute 'Type?' not found"
 
-# Create options for the radio buttons
+# Get radio options
 pedicel_option = floral_axis_type_radio_attribute.get_child_by_title(type_=Option, title="Pedicel")
+assert pedicel_option is not None, "Option 'Pedicel' not found under radio attribute 'Type?'"
+
 peduncle_option = floral_axis_type_radio_attribute.get_child_by_title(type_=Option, title="Peduncle")
+assert peduncle_option is not None, "Option 'Peduncle' not found under radio attribute 'Type?'"
+
 other_floral_axis_option = floral_axis_type_radio_attribute.get_child_by_title(
     type_=Option, title="Other floral axis type"
 )
+assert other_floral_axis_option is not None, "Option 'Other floral axis type' not found under radio attribute 'Type?'"
 
-# Create checklist attributes and options for each floral axis type
-
-# Pedicel Qualities
+# Get checklist attributes and options for Pedicel
 pedicel_checklist_attribute = ontology_structure.get_child_by_title(
     type_=ChecklistAttribute, title="Pedicel Qualities?"
 )
+assert pedicel_checklist_attribute is not None, "Checklist attribute 'Pedicel Qualities?' not found"
+
 pedicel_robust_option = pedicel_checklist_attribute.get_child_by_title(type_=Option, title="Robust")
+assert pedicel_robust_option is not None, "Option 'Robust' not found under 'Pedicel Qualities?'"
+
 pedicel_healthy_option = pedicel_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
+assert pedicel_healthy_option is not None, "Option 'Healthy' not found under 'Pedicel Qualities?'"
+
 pedicel_growth_alignment_option = pedicel_checklist_attribute.get_child_by_title(
     type_=Option, title="Good Growth and Alignment"
 )
+assert pedicel_growth_alignment_option is not None, "Option 'Good Growth and Alignment' not found under 'Pedicel Qualities?'"
 
-# Peduncle Qualities
+# Get checklist attributes and options for Peduncle
 peduncle_checklist_attribute = ontology_structure.get_child_by_title(
     type_=ChecklistAttribute, title="Peduncle Qualities?"
 )
+assert peduncle_checklist_attribute is not None, "Checklist attribute 'Peduncle Qualities?' not found"
+
 peduncle_robust_option = peduncle_checklist_attribute.get_child_by_title(type_=Option, title="Robust")
+assert peduncle_robust_option is not None, "Option 'Robust' not found under 'Peduncle Qualities?'"
+
 peduncle_healthy_option = peduncle_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
+assert peduncle_healthy_option is not None, "Option 'Healthy' not found under 'Peduncle Qualities?'"
+
 peduncle_growth_alignment_option = peduncle_checklist_attribute.get_child_by_title(
     type_=Option, title="Good Growth and Alignment"
 )
+assert peduncle_growth_alignment_option is not None, "Option 'Good Growth and Alignment' not found under 'Peduncle Qualities?'"
 
-# Other floral axis Types
+# Get text attribute for specifying other floral axis types
 other_floral_axis_option_text_attribute = ontology_structure.get_child_by_title(
     type_=TextAttribute, title="Specify floral axis type"
 )
+assert other_floral_axis_option_text_attribute is not None, "Text attribute 'Specify floral axis type' not found"
 
 # Dictionary of labels per data unit and per frame with floral axis type specified, including quality options
 video_image_frame_labels = {
