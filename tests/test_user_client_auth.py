@@ -16,7 +16,7 @@ from encord.configs import SshConfig
 from encord.http.v2.payloads import Page
 from encord.orm.analytics import CollaboratorTimer
 from encord.orm.project import Project as OrmProject
-from encord.orm.project import ProjectDTO, ProjectType
+from encord.orm.project import ProjectDTO, ProjectStatus, ProjectType
 from encord.user_client import EncordUserClient
 from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
 from tests.fixtures import PRIVATE_KEY_PEM
@@ -51,6 +51,7 @@ project_orm = OrmProject({"project_hash": PROJECT_HASH, "ontology_hash": DATASET
 project_dto = ProjectDTO(
     project_hash=uuid.uuid4(),
     project_type=ProjectType.MANUAL_QA,
+    status=ProjectStatus.IN_PROGRESS,
     title="Dummy project",
     description="",
     created_at=datetime.now(),
