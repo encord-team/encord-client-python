@@ -79,9 +79,6 @@ pdf_labels = {
 }
 
 
-# Define bundle size
-BUNDLE_SIZE = 100
-
 # Cache initialized label rows
 label_row_map = {}
 
