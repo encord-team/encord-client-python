@@ -167,6 +167,13 @@ class ProjectType(str, Enum):
     WORKFLOW = "workflow"
     MANUAL_QA = "manual_qa"
 
+class ProjectStatus(str, Enum):
+    NOT_STARTED = "notStarted"
+    IN_PROGRESS = "inProgress"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
 
 class ProjectCopyOptions(str, Enum):
     COLLABORATORS = "collaborators"
@@ -302,6 +309,7 @@ class TaskPriorityParams(BaseDTO):
 class ProjectDTO(BaseDTO):
     project_hash: UUID
     project_type: ProjectType
+    status: ProjectStatus
     title: str
     description: str
     created_at: datetime.datetime
