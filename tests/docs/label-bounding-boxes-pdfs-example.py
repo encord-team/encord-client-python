@@ -5,7 +5,7 @@ from encord.objects.coordinates import BoundingBoxCoordinates
 
 SSH_PATH = "/Users/laverne-encord/staging-sdk-ssh-key-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
-PROJECT_ID = "12f1ebfb-bfdc-4682-a82b-bc20e5e01416"
+PROJECT_ID = "f8b81f75-d1d5-4cb8-895b-44db9957392e"
 BUNDLE_SIZE = 100
 
 # Create user client
@@ -78,110 +78,116 @@ pdf_labels = {
     }
 }
 
+# === Step 1: Initialize all label rows using a bundle ===
 
-# Cache initialized label rows
 label_row_map = {}
 
-# Step 1: Initialize all label rows using a bundle
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for data_unit in pdf_labels.keys():
         label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
+        assert isinstance(label_rows, list), f"[ASSERT] Expected a list of label rows for {data_unit}"
         if not label_rows:
-            print(f"Skipping: No label row found for {data_unit}")
+            print(f"[SKIP] No label row found for {data_unit}")
             continue
 
         label_row = label_rows[0]
-        label_row.initialise_labels(bundle=bundle)
-        label_row_map[data_unit] = label_row  # Cache initialized label row for later use
+        try:
+            label_row.initialise_labels(bundle=bundle)
+            label_row_map[data_unit] = label_row
+            print(f"[INIT] Initialized label row for: {data_unit}")
+        except Exception as e:
+            raise AssertionError(f"[ASSERT] Failed to initialize label row for {data_unit}: {e}")
 
-# Step 2: Process all frames/annotations and prepare label rows to save
-label_rows_to_save = []
+# === Step 2: Process all frames/annotations and prepare label rows to save ===
 
 for data_unit, frame_coordinates in pdf_labels.items():
     label_row = label_row_map.get(data_unit)
-    if not label_row:
-        print(f"Skipping: No initialized label row found for {data_unit}")
-        continue
+    assert label_row is not None, f"[ASSERT] Missing initialized label row for {data_unit}"
 
     object_instances_by_label_ref = {}
 
-    # Loop through the frames for the current data unit
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):  # Single or multiple objects in the frame
+        if not isinstance(items, list):  # Handle single vs list
             items = [items]
 
-            for item in items:
-                label_ref = item["label_ref"]
-                coord = item["coordinates"]
-                correction_type = item["correction_type"]
-                checklist_options_str = item.get("checklist_options", "")
-                text_correction = item.get("text_correction", "")
+        for item in items:
+            label_ref = item["label_ref"]
+            coord = item["coordinates"]
+            correction_type = item["correction_type"]
+            checklist_options_str = item.get("checklist_options", "")
+            text_correction = item.get("text_correction", "")
 
-                # Check if label_ref already exists for reusability
-                if label_ref not in object_instances_by_label_ref:
-                    box_object_instance: ObjectInstance = box_ontology_object.create_instance()
-                    object_instances_by_label_ref[label_ref] = box_object_instance  # Store for reuse
+            if label_ref not in object_instances_by_label_ref:
+                box_object_instance: ObjectInstance = box_ontology_object.create_instance()
+                assert box_object_instance is not None, f"[ASSERT] Failed to create ObjectInstance for {label_ref}"
+                object_instances_by_label_ref[label_ref] = box_object_instance
 
-                    # Set correction type (radio attribute)
-                    if correction_type == "English corrections":
-                        box_object_instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
+                if correction_type == "English corrections":
+                    assert english_correction_option is not None, "[ASSERT] english_correction_option not defined"
+                    box_object_instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
 
-                        # Set checklist options for English
-                        checklist_answers = []
-                        for option in [opt.strip() for opt in checklist_options_str.split(",")]:
-                            if option == "en-ca":
-                                checklist_answers.append(en_ca_option)
-                            elif option == "en-gb":
-                                checklist_answers.append(en_gb_option)
-                            elif option == "en-us":
-                                checklist_answers.append(en_us_option)
+                    checklist_answers = []
+                    for option in [opt.strip() for opt in checklist_options_str.split(",")]:
+                        if option == "en-ca":
+                            checklist_answers.append(en_ca_option)
+                        elif option == "en-gb":
+                            checklist_answers.append(en_gb_option)
+                        elif option == "en-us":
+                            checklist_answers.append(en_us_option)
+                        else:
+                            raise AssertionError(f"[ASSERT] Unknown English checklist option: {option}")
 
-                        if checklist_answers:
-                            box_object_instance.set_answer(
-                                attribute=english_checklist_attribute,
-                                answer=checklist_answers,
-                                overwrite=True,
-                            )
+                    if checklist_answers:
+                        assert english_checklist_attribute is not None, "[ASSERT] english_checklist_attribute not defined"
+                        box_object_instance.set_answer(
+                            attribute=english_checklist_attribute,
+                            answer=checklist_answers,
+                            overwrite=True,
+                        )
 
-                        # Set text correction
-                        if text_correction:
-                            box_object_instance.set_answer(attribute=english_correction_text_attribute, answer=text_correction)
+                    if text_correction:
+                        assert english_correction_text_attribute is not None, "[ASSERT] english_correction_text_attribute not defined"
+                        box_object_instance.set_answer(attribute=english_correction_text_attribute, answer=text_correction)
 
-                    elif correction_type == "繁體中文修正":
-                        box_object_instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
+                elif correction_type == "繁體中文修正":
+                    assert chinese_correction_option is not None, "[ASSERT] chinese_correction_option not defined"
+                    box_object_instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
 
-                        # Set checklist options for Chinese
-                        checklist_answers = []
-                        for option in [opt.strip() for opt in checklist_options_str.split(",")]:
-                            if option == "zh-tw":
-                                checklist_answers.append(zh_tw_option)
-                            elif option == "zh-hk":
-                                checklist_answers.append(zh_hk_option)
+                    checklist_answers = []
+                    for option in [opt.strip() for opt in checklist_options_str.split(",")]:
+                        if option == "zh-tw":
+                            checklist_answers.append(zh_tw_option)
+                        elif option == "zh-hk":
+                            checklist_answers.append(zh_hk_option)
+                        else:
+                            raise AssertionError(f"[ASSERT] Unknown Chinese checklist option: {option}")
 
-                        if checklist_answers:
-                            box_object_instance.set_answer(
-                                attribute=chinese_checklist_attribute,
-                                answer=checklist_answers,
-                                overwrite=True,
-                            )
+                    if checklist_answers:
+                        assert chinese_checklist_attribute is not None, "[ASSERT] chinese_checklist_attribute not defined"
+                        box_object_instance.set_answer(
+                            attribute=chinese_checklist_attribute,
+                            answer=checklist_answers,
+                            overwrite=True,
+                        )
 
-                        # Set text correction
-                        if text_correction:
-                            box_object_instance.set_answer(attribute=chinese_correction_text_attribute, answer=text_correction)
+                    if text_correction:
+                        assert chinese_correction_text_attribute is not None, "[ASSERT] chinese_correction_text_attribute not defined"
+                        box_object_instance.set_answer(attribute=chinese_correction_text_attribute, answer=text_correction)
 
-                else:
-                    # Reuse existing instance across pages/frames
-                    box_object_instance = object_instances_by_label_ref[label_ref]
+            else:
+                # Reuse existing instance
+                box_object_instance = object_instances_by_label_ref[label_ref]
 
-                # Assign the object to the page/frame and track it
-                box_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
+            box_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-        # Add object instances to label_row **only if they have pages/frames assigned**
-        for box_object_instance in object_instances_by_label_ref.values():
-            if box_object_instance.get_annotation_frames():  # Ensures it has at least one page/frame
-                label_row.add_object_instance(box_object_instance)
+    for box_object_instance in object_instances_by_label_ref.values():
+        assert box_object_instance.get_annotation_frames(), "[ASSERT] Object instance has no frames assigned"
+        label_row.add_object_instance(box_object_instance)
 
-        # Save label row using the bundle
-        label_row.save(bundle=bundle)
+    try:
+        label_row.save()
+        print(f"[SAVE] Label row saved for {data_unit}")
+    except Exception as e:
+        raise AssertionError(f"[ASSERT] Failed to save label row for {data_unit}: {e}")
 
-print("Labels with English and Mandarin corrections have been added for all data units.")
+print("\n[COMPLETE] Labels with English and Mandarin corrections have been added for all data units.")

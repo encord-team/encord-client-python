@@ -3,9 +3,10 @@ from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import PolygonCoordinates, PointCoordinate
 
-# SSH and Project details
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "12f1ebfb-bfdc-4682-a82b-bc20e5e01416"
+# SSH_PATH = get_ssh_key() # replace it with ssh key
+PROJECT_ID = "f8b81f75-d1d5-4cb8-895b-44db9957392e"
+BUNDLE_SIZE = 100
 
 # Create user client
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
@@ -106,97 +107,119 @@ pdf_labels = {
     }
 }
 
-# Bundle size
-BUNDLE_SIZE = 100
+# === Step 1: Initialize all label rows in a single bundle ===
 
-# Loop through each data unit
+label_row_map = {}
+
+with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
+    for data_unit in pdf_labels.keys():
+        label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
+        assert isinstance(label_rows, list), f"[ASSERT] Expected a list of label rows for {data_unit}"
+        if not label_rows:
+            print(f"[SKIP] No label row found for: {data_unit}")
+            continue
+
+        label_row = label_rows[0]
+        try:
+            label_row.initialise_labels(bundle=bundle)
+            label_row_map[data_unit] = label_row
+            print(f"[INIT] Initialized label row for: {data_unit}")
+        except Exception as e:
+            raise AssertionError(f"[ASSERT] Failed to initialize label row for {data_unit}: {e}")
+
+# === Step 2: Apply annotations to each label row ===
+
 for data_unit, frame_coordinates in pdf_labels.items():
+    label_row = label_row_map.get(data_unit)
+    assert label_row is not None, f"[ASSERT] Missing initialized label row for {data_unit}"
+
     object_instances_by_label_ref = {}
 
-    # Get the label row for the current data unit
-    label_row = project.list_label_rows_v2(data_title_eq=data_unit)[0]
+    for frame_number, items in frame_coordinates.items():
+        if not isinstance(items, list):
+            items = [items]
 
-    # Initialize the labels using bundle
-    with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
-        label_row.initialise_labels(bundle=bundle)
+        for item in items:
+            label_ref = item["label_ref"]
+            coord = item["coordinates"]
+            correction_type = item["correction_type"]
+            checklist_options_str = item.get("checklist_options", "")
+            text_correction = item.get("text_correction", "")
 
-        # Loop through the pages/frames for the current data unit
-        for frame_number, items in frame_coordinates.items():
-            if not isinstance(items, list):  # Single or multiple objects
-                items = [items]
+            # Basic checks
+            assert correction_type in ["English corrections", "繁體中文修正"], f"[ASSERT] Unknown correction type: {correction_type}"
 
-            for item in items:
-                label_ref = item["label_ref"]
-                coord = item["coordinates"]
-                correction_type = item["correction_type"]
-                checklist_options_str = item.get("checklist_options", "")
-                text_correction = item.get("text_correction", "")
+            if label_ref not in object_instances_by_label_ref:
+                polygon_object_instance: ObjectInstance = polygon_ontology_object.create_instance()
+                assert polygon_object_instance is not None, f"[ASSERT] Failed to create ObjectInstance for {label_ref}"
+                object_instances_by_label_ref[label_ref] = polygon_object_instance
 
-                # Check if label_ref already exists for reusability
-                if label_ref not in object_instances_by_label_ref:
-                    polygon_object_instance: ObjectInstance = polygon_ontology_object.create_instance()
-                    object_instances_by_label_ref[label_ref] = polygon_object_instance  # Store for reuse
+                # Set radio attribute
+                if correction_type == "English corrections":
+                    assert english_correction_option is not None, "[ASSERT] english_correction_option not defined"
+                    polygon_object_instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
 
-                    # Set correction type (radio attribute)
-                    if correction_type == "English corrections":
-                        polygon_object_instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
+                    checklist_answers = []
+                    for option in [opt.strip() for opt in checklist_options_str.split(",")]:
+                        if option == "en-ca":
+                            checklist_answers.append(en_ca_option)
+                        elif option == "en-gb":
+                            checklist_answers.append(en_gb_option)
+                        elif option == "en-us":
+                            checklist_answers.append(en_us_option)
+                        else:
+                            raise AssertionError(f"[ASSERT] Unknown English checklist option: {option}")
 
-                        # Set checklist options for English
-                        checklist_answers = []
-                        for option in [opt.strip() for opt in checklist_options_str.split(",")]:
-                            if option == "en-ca":
-                                checklist_answers.append(en_ca_option)
-                            elif option == "en-gb":
-                                checklist_answers.append(en_gb_option)
-                            elif option == "en-us":
-                                checklist_answers.append(en_us_option)
+                    if checklist_answers:
+                        assert english_checklist_attribute is not None, "[ASSERT] english_checklist_attribute not defined"
+                        polygon_object_instance.set_answer(
+                            attribute=english_checklist_attribute,
+                            answer=checklist_answers,
+                            overwrite=True,
+                        )
 
-                        if checklist_answers:
-                            polygon_object_instance.set_answer(
-                                attribute=english_checklist_attribute,
-                                answer=checklist_answers,
-                                overwrite=True,
-                            )
+                    if text_correction:
+                        assert english_correction_text_attribute is not None, "[ASSERT] english_correction_text_attribute not defined"
+                        polygon_object_instance.set_answer(attribute=english_correction_text_attribute, answer=text_correction)
 
-                        # Set text correction
-                        if text_correction:
-                            polygon_object_instance.set_answer(attribute=english_correction_text_attribute, answer=text_correction)
+                elif correction_type == "繁體中文修正":
+                    assert chinese_correction_option is not None, "[ASSERT] chinese_correction_option not defined"
+                    polygon_object_instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
 
-                    elif correction_type == "繁體中文修正":
-                        polygon_object_instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
+                    checklist_answers = []
+                    for option in [opt.strip() for opt in checklist_options_str.split(",")]:
+                        if option == "zh-tw":
+                            checklist_answers.append(zh_tw_option)
+                        elif option == "zh-hk":
+                            checklist_answers.append(zh_hk_option)
+                        else:
+                            raise AssertionError(f"[ASSERT] Unknown Chinese checklist option: {option}")
 
-                        # Set checklist options for Chinese
-                        checklist_answers = []
-                        for option in [opt.strip() for opt in checklist_options_str.split(",")]:
-                            if option == "zh-tw":
-                                checklist_answers.append(zh_tw_option)
-                            elif option == "zh-hk":
-                                checklist_answers.append(zh_hk_option)
+                    if checklist_answers:
+                        assert chinese_checklist_attribute is not None, "[ASSERT] chinese_checklist_attribute not defined"
+                        polygon_object_instance.set_answer(
+                            attribute=chinese_checklist_attribute,
+                            answer=checklist_answers,
+                            overwrite=True,
+                        )
 
-                        if checklist_answers:
-                            polygon_object_instance.set_answer(
-                                attribute=chinese_checklist_attribute,
-                                answer=checklist_answers,
-                                overwrite=True,
-                            )
+                    if text_correction:
+                        assert chinese_correction_text_attribute is not None, "[ASSERT] chinese_correction_text_attribute not defined"
+                        polygon_object_instance.set_answer(attribute=chinese_correction_text_attribute, answer=text_correction)
 
-                        # Set text correction
-                        if text_correction:
-                            polygon_object_instance.set_answer(attribute=chinese_correction_text_attribute, answer=text_correction)
+            else:
+                polygon_object_instance = object_instances_by_label_ref[label_ref]
 
-                else:
-                    # Reuse existing instance across pages/frames
-                    polygon_object_instance = object_instances_by_label_ref[label_ref]
+            polygon_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
 
-                # Assign the object to the page/frame and track it
-                polygon_object_instance.set_for_frames(coordinates=coord, frames=frame_number)
+    for polygon_object_instance in object_instances_by_label_ref.values():
+        assert polygon_object_instance.get_annotation_frames(), "[ASSERT] Object instance has no frames assigned"
+        label_row.add_object_instance(polygon_object_instance)
 
-        # Add object instances to label_row **only if they have pages/frames assigned**
-        for polygon_object_instance in object_instances_by_label_ref.values():
-            if polygon_object_instance.get_annotation_frames():  # Ensures it has at least one page/frame
-                label_row.add_object_instance(polygon_object_instance)
+    try:
+        label_row.save()
+        print(f"[SAVE] Label row saved for {data_unit}")
+    except Exception as e:
+        raise AssertionError(f"[ASSERT] Failed to save label row for {data_unit}: {e}")
 
-        # Save label row using the bundle
-        label_row.save(bundle=bundle)
-
-print("Labels with English and Mandarin corrections have been added for all data units.")
+print("\n[COMPLETE] Labels with English and Mandarin corrections have been added for all data units.")
