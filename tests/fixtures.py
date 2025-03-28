@@ -10,7 +10,7 @@ from encord import EncordUserClient, Project
 from encord.client import EncordClientProject
 from encord.ontology import Ontology
 from encord.orm.ontology import Ontology as OrmOntology
-from encord.orm.project import ProjectDTO, ProjectType
+from encord.orm.project import ProjectDTO, ProjectStatus, ProjectType
 from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
 PRIVATE_KEY = Ed25519PrivateKey.generate()
@@ -46,6 +46,7 @@ def project(
     client_project_mock.return_value = ProjectDTO(
         project_hash=uuid.uuid4(),
         project_type=ProjectType.MANUAL_QA,
+        status=ProjectStatus.IN_PROGRESS,
         title="Dummy project",
         description="",
         created_at=datetime.now(),
