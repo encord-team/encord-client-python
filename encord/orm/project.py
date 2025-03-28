@@ -167,6 +167,7 @@ class ProjectType(str, Enum):
     WORKFLOW = "workflow"
     MANUAL_QA = "manual_qa"
 
+
 class ProjectStatus(str, Enum):
     NOT_STARTED = "notStarted"
     IN_PROGRESS = "inProgress"
