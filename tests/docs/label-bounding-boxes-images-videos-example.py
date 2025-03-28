@@ -6,6 +6,7 @@ from encord.objects.coordinates import BoundingBoxCoordinates
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+BUNDLE_SIZE = 100
 
 # Create user client using ssh key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
@@ -22,8 +23,10 @@ ontology_structure = project.ontology_structure
 
 # Find a bounding box annotation object in the project ontology
 box_ontology_object: Object = ontology_structure.get_child_by_title(title="Cherries", type_=Object)
+assert box_ontology_object is not None, "Bounding box object 'Cherries' not found in ontology."
 
 cherry_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
+assert cherry_type_radio_attribute is not None, "Radio attribute 'Type?' not found in ontology."
 
 # Create options for the radio buttons
 bing_option = cherry_type_radio_attribute.get_child_by_title(type_=Option, title="Bing")
@@ -31,32 +34,42 @@ king_option = cherry_type_radio_attribute.get_child_by_title(type_=Option, title
 rainier_option = cherry_type_radio_attribute.get_child_by_title(type_=Option, title="Rainier")
 other_cherry_option = cherry_type_radio_attribute.get_child_by_title(type_=Option, title="Other cherry type")
 
-# Create checklist attributes and options for each cherry type
+assert all([bing_option, king_option, rainier_option, other_cherry_option]), "One or more cherry type options are missing."
+
 # Bing Qualities
 bing_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Bing Qualities?")
+assert bing_checklist_attribute is not None, "Checklist attribute 'Bing Qualities?' not found."
+
 bing_plump_option = bing_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 bing_juicy_option = bing_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 bing_large_option = bing_checklist_attribute.get_child_by_title(type_=Option, title="Large")
+assert all([bing_plump_option, bing_juicy_option, bing_large_option]), "One or more Bing quality options are missing."
 
 # King Qualities
 king_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="King Qualities?")
+assert king_checklist_attribute is not None, "Checklist attribute 'King Qualities?' not found."
+
 king_plump_option = king_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 king_juicy_option = king_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 king_large_option = king_checklist_attribute.get_child_by_title(type_=Option, title="Large")
+assert all([king_plump_option, king_juicy_option, king_large_option]), "One or more King quality options are missing."
 
 # Rainier Qualities
 rainier_checklist_attribute = ontology_structure.get_child_by_title(
     type_=ChecklistAttribute, title="Rainier Qualities?"
 )
+assert rainier_checklist_attribute is not None, "Checklist attribute 'Rainier Qualities?' not found."
+
 rainier_plump_option = rainier_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 rainier_juicy_option = rainier_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 rainier_large_option = rainier_checklist_attribute.get_child_by_title(type_=Option, title="Large")
+assert all([rainier_plump_option, rainier_juicy_option, rainier_large_option]), "One or more Rainier quality options are missing."
 
 # Other Cherry Types
 other_cherry_option_text_attribute = ontology_structure.get_child_by_title(
     type_=TextAttribute, title="Specify cherry type"
 )
-
+assert other_cherry_option_text_attribute is not None, "Text attribute 'Specify cherry type' not found in ontology."
 
 # Dictionary of labels per data unit and per frame with cherry type specified, including quality options
 video_frame_labels = {
@@ -209,10 +222,6 @@ video_frame_labels = {
         ],
     },
 }
-
-
-# Define bundle size
-BUNDLE_SIZE = 100
 
 # Cache initialized label rows
 label_row_map = {}
