@@ -530,7 +530,10 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                 blueberry_type = item["blueberry_type"]
 
                 assert blueberry_type in {
-                    "Bluegold", "Duke", "Blueray", "Other blueberry type"
+                    "Bluegold",
+                    "Duke",
+                    "Blueray",
+                    "Other blueberry type",
                 }, f"Unexpected blueberry type '{blueberry_type}' in data unit '{data_unit}'"
 
                 if label_ref not in object_instances_by_label_ref:
@@ -549,9 +552,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                         checklist_attribute = bluegold_checklist_attribute
                     elif blueberry_type == "Duke":
                         assert duke_option is not None, "Missing 'duke_option'"
-                        polygon_object_instance.set_answer(
-                            attribute=blueberry_type_radio_attribute, answer=duke_option
-                        )
+                        polygon_object_instance.set_answer(attribute=blueberry_type_radio_attribute, answer=duke_option)
                         checklist_attribute = duke_checklist_attribute
                     elif blueberry_type == "Blueray":
                         assert blueray_option is not None, "Missing 'blueray_option'"
@@ -580,31 +581,41 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                         option = None
                         if quality == "Plump":
                             option = (
-                                bluegold_plump_option if blueberry_type == "Bluegold"
-                                else duke_plump_option if blueberry_type == "Duke"
-                                else blueray_plump_option if blueberry_type == "Blueray"
+                                bluegold_plump_option
+                                if blueberry_type == "Bluegold"
+                                else duke_plump_option
+                                if blueberry_type == "Duke"
+                                else blueray_plump_option
+                                if blueberry_type == "Blueray"
                                 else None
                             )
                         elif quality == "Juicy":
                             option = (
-                                bluegold_juicy_option if blueberry_type == "Bluegold"
-                                else duke_juicy_option if blueberry_type == "Duke"
-                                else blueray_juicy_option if blueberry_type == "Blueray"
+                                bluegold_juicy_option
+                                if blueberry_type == "Bluegold"
+                                else duke_juicy_option
+                                if blueberry_type == "Duke"
+                                else blueray_juicy_option
+                                if blueberry_type == "Blueray"
                                 else None
                             )
                         elif quality == "Large":
                             option = (
-                                bluegold_large_option if blueberry_type == "Bluegold"
-                                else duke_large_option if blueberry_type == "Duke"
-                                else blueray_large_option if blueberry_type == "Blueray"
+                                bluegold_large_option
+                                if blueberry_type == "Bluegold"
+                                else duke_large_option
+                                if blueberry_type == "Duke"
+                                else blueray_large_option
+                                if blueberry_type == "Blueray"
                                 else None
                             )
 
                         if option:
                             checklist_answers.append(option)
                         else:
-                            assert blueberry_type == "Other blueberry type", \
-                                f"Invalid quality '{quality}' for type '{blueberry_type}'"
+                            assert (
+                                blueberry_type == "Other blueberry type"
+                            ), f"Invalid quality '{quality}' for type '{blueberry_type}'"
 
                     if checklist_attribute and checklist_answers:
                         polygon_object_instance.set_answer(

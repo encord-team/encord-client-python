@@ -32,7 +32,9 @@ correction_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAt
 assert correction_radio_attribute is not None, "Radio attribute 'Corrections' not found."
 
 english_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="English corrections")
-assert english_correction_option is not None, "Option 'English corrections' not found under 'Corrections' radio attribute."
+assert (
+    english_correction_option is not None
+), "Option 'English corrections' not found under 'Corrections' radio attribute."
 
 chinese_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="繁體中文修正")
 assert chinese_correction_option is not None, "Option '繁體中文修正' not found under 'Corrections' radio attribute."
@@ -63,7 +65,9 @@ assert zh_hk_option is not None, "Option 'zh-hk' not found under '繁體中文' 
 english_correction_text_attribute = english_correction_option.get_child_by_title(
     type_=TextAttribute, title="Correction text"
 )
-assert english_correction_text_attribute is not None, "Text attribute 'Correction text' not found under 'English corrections' option."
+assert (
+    english_correction_text_attribute is not None
+), "Text attribute 'Correction text' not found under 'English corrections' option."
 
 chinese_correction_text_attribute = ontology_structure.get_child_by_title(type_=TextAttribute, title="更正")
 assert chinese_correction_text_attribute is not None, "Text attribute '更正' not found."
@@ -101,7 +105,6 @@ text_annotations = {
 }
 
 
-
 # Cache label rows after initialization
 label_row_map = {}
 
@@ -110,7 +113,7 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for data_title in text_annotations.keys():
         label_rows = project.list_label_rows_v2(data_title_eq=data_title)
         assert label_rows is not None, f"Error: label rows retrieval failed for {data_title}."
-        
+
         if not label_rows:
             print(f"Skipping: No label row found for {data_title}")
             continue
@@ -131,29 +134,41 @@ for data_title, annotations in text_annotations.items():
 
     for annotation in annotations:
         selected_languages = annotation.get("languages", "").split(", ")
-        assert selected_languages, f"Error: No languages specified for annotation with label_ref {annotation['label_ref']}."
+        assert (
+            selected_languages
+        ), f"Error: No languages specified for annotation with label_ref {annotation['label_ref']}."
 
         # Create Object Instance for English corrections if applicable
         if any(lang in ["en-ca", "en-gb", "en-us"] for lang in selected_languages):
             english_instance: ObjectInstance = text_object.create_instance()
-            assert english_instance is not None, f"Error: Failed to create ObjectInstance for English corrections for {annotation['label_ref']}."
-            
+            assert (
+                english_instance is not None
+            ), f"Error: Failed to create ObjectInstance for English corrections for {annotation['label_ref']}."
+
             english_instance.set_for_frames(
                 frames=0,
                 coordinates=TextCoordinates(range=[annotation["coordinates"]]),
             )
-            assert english_instance.frames == 0, f"Error: Frames not correctly set for English instance of {annotation['label_ref']}."
-            assert english_instance.coordinates.range == [annotation["coordinates"]], f"Error: Coordinates not correctly set for English instance of {annotation['label_ref']}."
+            assert (
+                english_instance.frames == 0
+            ), f"Error: Frames not correctly set for English instance of {annotation['label_ref']}."
+            assert english_instance.coordinates.range == [
+                annotation["coordinates"]
+            ], f"Error: Coordinates not correctly set for English instance of {annotation['label_ref']}."
 
             english_instance.set_answer(attribute=correction_radio_attribute, answer=english_correction_option)
-            assert english_instance.get_answer(correction_radio_attribute) == english_correction_option, "Error: English correction option not set correctly."
+            assert (
+                english_instance.get_answer(correction_radio_attribute) == english_correction_option
+            ), "Error: English correction option not set correctly."
 
             english_selected_options = [
                 option
                 for lang, option in {"en-ca": en_ca_option, "en-gb": en_gb_option, "en-us": en_us_option}.items()
                 if lang in selected_languages
             ]
-            assert english_selected_options, f"Error: No options selected for English corrections for {annotation['label_ref']}."
+            assert (
+                english_selected_options
+            ), f"Error: No options selected for English corrections for {annotation['label_ref']}."
 
             if english_checklist_attribute and english_selected_options:
                 english_instance.set_answer(attribute=english_checklist_attribute, answer=english_selected_options)
@@ -166,24 +181,34 @@ for data_title, annotations in text_annotations.items():
         # Create Object Instance for Chinese corrections if applicable
         if any(lang in ["zh-tw", "zh-hk"] for lang in selected_languages):
             chinese_instance: ObjectInstance = text_object.create_instance()
-            assert chinese_instance is not None, f"Error: Failed to create ObjectInstance for Chinese corrections for {annotation['label_ref']}."
-            
+            assert (
+                chinese_instance is not None
+            ), f"Error: Failed to create ObjectInstance for Chinese corrections for {annotation['label_ref']}."
+
             chinese_instance.set_for_frames(
                 frames=0,
                 coordinates=TextCoordinates(range=[annotation["coordinates"]]),
             )
-            assert chinese_instance.frames == 0, f"Error: Frames not correctly set for Chinese instance of {annotation['label_ref']}."
-            assert chinese_instance.coordinates.range == [annotation["coordinates"]], f"Error: Coordinates not correctly set for Chinese instance of {annotation['label_ref']}."
+            assert (
+                chinese_instance.frames == 0
+            ), f"Error: Frames not correctly set for Chinese instance of {annotation['label_ref']}."
+            assert chinese_instance.coordinates.range == [
+                annotation["coordinates"]
+            ], f"Error: Coordinates not correctly set for Chinese instance of {annotation['label_ref']}."
 
             chinese_instance.set_answer(attribute=correction_radio_attribute, answer=chinese_correction_option)
-            assert chinese_instance.get_answer(correction_radio_attribute) == chinese_correction_option, "Error: Chinese correction option not set correctly."
+            assert (
+                chinese_instance.get_answer(correction_radio_attribute) == chinese_correction_option
+            ), "Error: Chinese correction option not set correctly."
 
             chinese_selected_options = [
                 option
                 for lang, option in {"zh-tw": zh_tw_option, "zh-hk": zh_hk_option}.items()
                 if lang in selected_languages
             ]
-            assert chinese_selected_options, f"Error: No options selected for Chinese corrections for {annotation['label_ref']}."
+            assert (
+                chinese_selected_options
+            ), f"Error: No options selected for Chinese corrections for {annotation['label_ref']}."
 
             if chinese_checklist_attribute and chinese_selected_options:
                 chinese_instance.set_answer(attribute=chinese_checklist_attribute, answer=chinese_selected_options)

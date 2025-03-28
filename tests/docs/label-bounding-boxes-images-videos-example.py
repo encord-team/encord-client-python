@@ -268,8 +268,12 @@ for data_unit, frame_coordinates in video_frame_labels.items():
             coord = item["coordinates"]
             cherry_type = item["cherry_type"]
 
-            assert cherry_type in {"Bing", "King", "Rainier", "Other cherry type"}, \
-                f"Unexpected cherry type '{cherry_type}' in data unit '{data_unit}'"
+            assert cherry_type in {
+                "Bing",
+                "King",
+                "Rainier",
+                "Other cherry type",
+            }, f"Unexpected cherry type '{cherry_type}' in data unit '{data_unit}'"
 
             # Check if label_ref already exists for reusability
             if label_ref not in object_instances_by_label_ref:
@@ -297,9 +301,7 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     box_object_instance.set_answer(attribute=cherry_type_radio_attribute, answer=other_cherry_option)
                     text_answer = item.get("Specify cherry type", "")
                     assert isinstance(text_answer, str), "'Specify cherry type' must be a string"
-                    box_object_instance.set_answer(
-                        attribute=other_cherry_option_text_attribute, answer=text_answer
-                    )
+                    box_object_instance.set_answer(attribute=other_cherry_option_text_attribute, answer=text_answer)
 
                 # Set checklist attributes
                 checklist_answers = []
@@ -309,20 +311,26 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                 for quality in quality_options:
                     if quality == "Plump":
                         checklist_answers.append(
-                            bing_plump_option if cherry_type == "Bing"
-                            else king_plump_option if cherry_type == "King"
+                            bing_plump_option
+                            if cherry_type == "Bing"
+                            else king_plump_option
+                            if cherry_type == "King"
                             else rainier_plump_option
                         )
                     elif quality == "Juicy":
                         checklist_answers.append(
-                            bing_juicy_option if cherry_type == "Bing"
-                            else king_juicy_option if cherry_type == "King"
+                            bing_juicy_option
+                            if cherry_type == "Bing"
+                            else king_juicy_option
+                            if cherry_type == "King"
                             else rainier_juicy_option
                         )
                     elif quality == "Large":
                         checklist_answers.append(
-                            bing_large_option if cherry_type == "Bing"
-                            else king_large_option if cherry_type == "King"
+                            bing_large_option
+                            if cherry_type == "Bing"
+                            else king_large_option
+                            if cherry_type == "King"
                             else rainier_large_option
                         )
 

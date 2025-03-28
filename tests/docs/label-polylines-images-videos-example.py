@@ -61,17 +61,15 @@ assert fruiting_spur_short_length_option is not None, "Option 'Short length' not
 fruiting_spur_high_bud_density_option = fruiting_spur_checklist_attribute.get_child_by_title(
     type_=Option, title="High bud density"
 )
-assert fruiting_spur_high_bud_density_option is not None, "Option 'High bud density' not found under 'Fruiting spur Qualities?'"
+assert (
+    fruiting_spur_high_bud_density_option is not None
+), "Option 'High bud density' not found under 'Fruiting spur Qualities?'"
 
-fruiting_spur_healthy_option = fruiting_spur_checklist_attribute.get_child_by_title(
-    type_=Option, title="Healthy"
-)
+fruiting_spur_healthy_option = fruiting_spur_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
 assert fruiting_spur_healthy_option is not None, "Option 'Healthy' not found under 'Fruiting spur Qualities?'"
 
 # Sucker Qualities
-sucker_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Sucker Qualities?"
-)
+sucker_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Sucker Qualities?")
 assert sucker_checklist_attribute is not None, "Checklist attribute 'Sucker Qualities?' not found"
 
 sucker_short_length_option = sucker_checklist_attribute.get_child_by_title(type_=Option, title="Short length")
@@ -89,15 +87,15 @@ side_shoot_checklist_attribute = ontology_structure.get_child_by_title(
 )
 assert side_shoot_checklist_attribute is not None, "Checklist attribute 'Side shoot Qualities?' not found"
 
-side_shoot_short_length_option = side_shoot_checklist_attribute.get_child_by_title(
-    type_=Option, title="Short length"
-)
+side_shoot_short_length_option = side_shoot_checklist_attribute.get_child_by_title(type_=Option, title="Short length")
 assert side_shoot_short_length_option is not None, "Option 'Short length' not found under 'Side shoot Qualities?'"
 
 side_shoot_high_bud_density_option = side_shoot_checklist_attribute.get_child_by_title(
     type_=Option, title="High bud density"
 )
-assert side_shoot_high_bud_density_option is not None, "Option 'High bud density' not found under 'Side shoot Qualities?'"
+assert (
+    side_shoot_high_bud_density_option is not None
+), "Option 'High bud density' not found under 'Side shoot Qualities?'"
 
 side_shoot_healthy_option = side_shoot_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
 assert side_shoot_healthy_option is not None, "Option 'Healthy' not found under 'Side shoot Qualities?'"
@@ -447,7 +445,10 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
             branch_type = item["branch_type"]
 
             assert branch_type in {
-                "Fruiting spur", "Sucker", "Side shoot", "Other branch type"
+                "Fruiting spur",
+                "Sucker",
+                "Side shoot",
+                "Other branch type",
             }, f"Unexpected branch type '{branch_type}' in {data_unit}"
 
             if label_ref not in object_instances_by_label_ref:
@@ -524,7 +525,9 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                     if option:
                         checklist_answers.append(option)
                     else:
-                        assert branch_type == "Other branch type", f"Invalid quality '{quality}' for branch type '{branch_type}'"
+                        assert (
+                            branch_type == "Other branch type"
+                        ), f"Invalid quality '{quality}' for branch type '{branch_type}'"
 
                 if checklist_attribute and checklist_answers:
                     polyline_object_instance.set_answer(

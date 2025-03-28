@@ -1,5 +1,6 @@
 # Import dependencies
 from pathlib import Path
+
 from encord import EncordUserClient
 from encord.objects import Classification, Option
 
@@ -23,36 +24,16 @@ data_unit_configs = [
     {
         "title": "anne-of-green-gables.pdf",
         "classifications": [
-            {
-                "name": "Accuracy",
-                "type": "radio",
-                "option": "5",
-                "frame_range": (10, 20)
-            },
-            {
-                "name": "Doc qualities",
-                "type": "checklist",
-                "options": ["Clarity", "Engaging"],
-                "frame_range": (15, 25)
-            }
-        ]
+            {"name": "Accuracy", "type": "radio", "option": "5", "frame_range": (10, 20)},
+            {"name": "Doc qualities", "type": "checklist", "options": ["Clarity", "Engaging"], "frame_range": (15, 25)},
+        ],
     },
     {
         "title": "the-legend-of-sleepy-hollow.pdf",
         "classifications": [
-            {
-                "name": "Accuracy",
-                "type": "radio",
-                "option": "3",
-                "frame_range": (5, 15)
-            },
-            {
-                "name": "Edit",
-                "type": "text",
-                "text": "Needs more context",
-                "frame_range": (3, 10)
-            }
-        ]
+            {"name": "Accuracy", "type": "radio", "option": "3", "frame_range": (5, 15)},
+            {"name": "Edit", "type": "text", "text": "Needs more context", "frame_range": (3, 10)},
+        ],
     },
     {
         "title": "the-iliad.pdf",
@@ -61,10 +42,10 @@ data_unit_configs = [
                 "name": "Doc qualities",
                 "type": "checklist",
                 "options": ["Logical structure", "Audience focused"],
-                "frame_range": (30, 40)
+                "frame_range": (30, 40),
             }
-        ]
-    }
+        ],
+    },
 ]
 
 # Lookup map for quicker saving later
@@ -73,11 +54,11 @@ label_row_map = {}
 # Step 1: Fetch and initialize label rows in a bundle
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as init_bundle:
     for config in data_unit_configs:
-        label_rows = project.list_label_rows_v2(
-            data_title_eq=config["title"]
-        )
+        label_rows = project.list_label_rows_v2(data_title_eq=config["title"])
 
-        assert isinstance(label_rows, list), f"Expected a list of label rows for '{config['title']}', got {type(label_rows)}"
+        assert isinstance(
+            label_rows, list
+        ), f"Expected a list of label rows for '{config['title']}', got {type(label_rows)}"
 
         if not label_rows:
             print(f"No label row found for {config['title']}, skipping...")
@@ -101,46 +82,47 @@ for config in data_unit_configs:
 
         for classification_config in config["classifications"]:
             classification = ontology_structure.get_child_by_title(
-                title=classification_config["name"],
-                type_=Classification
+                title=classification_config["name"], type_=Classification
             )
-            assert classification is not None, f"Classification '{classification_config['name']}' not found in ontology for '{config['title']}'"
+            assert (
+                classification is not None
+            ), f"Classification '{classification_config['name']}' not found in ontology for '{config['title']}'"
 
             classification_instance = classification.create_instance()
 
             if classification_config["type"] == "radio":
-                option = classification.get_child_by_title(
-                    title=classification_config["option"],
-                    type_=Option
-                )
-                assert option is not None, f"Radio option '{classification_config['option']}' not found in classification '{classification_config['name']}'"
+                option = classification.get_child_by_title(title=classification_config["option"], type_=Option)
+                assert (
+                    option is not None
+                ), f"Radio option '{classification_config['option']}' not found in classification '{classification_config['name']}'"
                 classification_instance.set_answer(option)
 
             elif classification_config["type"] == "checklist":
                 options = []
                 for opt_title in classification_config["options"]:
                     option = classification.get_child_by_title(title=opt_title, type_=Option)
-                    assert option is not None, f"Checklist option '{opt_title}' not found in classification '{classification_config['name']}'"
+                    assert (
+                        option is not None
+                    ), f"Checklist option '{opt_title}' not found in classification '{classification_config['name']}'"
                     options.append(option)
                 classification_instance.set_answer(options)
 
             elif classification_config["type"] == "text":
-                assert "text" in classification_config, f"Missing 'text' field in text classification for '{config['title']}'"
+                assert (
+                    "text" in classification_config
+                ), f"Missing 'text' field in text classification for '{config['title']}'"
                 classification_instance.set_answer(answer=classification_config["text"])
 
             else:
                 raise ValueError(f"Unsupported classification type: {classification_config['type']}")
 
             start_frame, end_frame = classification_config["frame_range"]
-            assert isinstance(start_frame, int) and isinstance(end_frame, int) and start_frame <= end_frame, \
-                f"Invalid frame range {classification_config['frame_range']} for '{config['title']}'"
+            assert (
+                isinstance(start_frame, int) and isinstance(end_frame, int) and start_frame <= end_frame
+            ), f"Invalid frame range {classification_config['frame_range']} for '{config['title']}'"
 
             for frame in range(start_frame, end_frame + 1):
-                classification_instance.set_for_frames(
-                    frames=frame,
-                    manual_annotation=True,
-                    confidence=1.0
-                )
+                classification_instance.set_for_frames(frames=frame, manual_annotation=True, confidence=1.0)
 
             label_row.add_classification_instance(classification_instance)
 

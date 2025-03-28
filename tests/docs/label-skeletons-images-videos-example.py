@@ -73,7 +73,9 @@ albion_large_option = albion_checklist_attribute.get_child_by_title(type_=Option
 assert albion_large_option is not None, "Option 'Large' not found under 'Albion Qualities?'"
 
 # Redcoat Qualities
-redcoat_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Redcoat Qualities?")
+redcoat_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Redcoat Qualities?"
+)
 assert redcoat_checklist_attribute is not None, "Checklist attribute 'Redcoat Qualities?' not found"
 
 redcoat_plump_option = redcoat_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
@@ -86,7 +88,9 @@ redcoat_large_option = redcoat_checklist_attribute.get_child_by_title(type_=Opti
 assert redcoat_large_option is not None, "Option 'Large' not found under 'Redcoat Qualities?'"
 
 # Sweet Kiss Qualities
-sweet_kiss_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Sweet Kiss Qualities?")
+sweet_kiss_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Sweet Kiss Qualities?"
+)
 assert sweet_kiss_checklist_attribute is not None, "Checklist attribute 'Sweet Kiss Qualities?' not found"
 
 sweet_kiss_plump_option = sweet_kiss_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
@@ -828,7 +832,10 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                 strawberry_type = item["strawberry_type"]
 
                 assert strawberry_type in {
-                    "Albion", "Redcoat", "Sweet Kiss", "Other strawberry type"
+                    "Albion",
+                    "Redcoat",
+                    "Sweet Kiss",
+                    "Other strawberry type",
                 }, f"Unexpected strawberry type '{strawberry_type}' in data unit '{data_unit}'"
 
                 if label_ref not in object_instances_by_label_ref:
@@ -878,31 +885,41 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                         option = None
                         if quality == "Plump":
                             option = (
-                                albion_plump_option if strawberry_type == "Albion"
-                                else redcoat_plump_option if strawberry_type == "Redcoat"
-                                else sweet_kiss_plump_option if strawberry_type == "Sweet Kiss"
+                                albion_plump_option
+                                if strawberry_type == "Albion"
+                                else redcoat_plump_option
+                                if strawberry_type == "Redcoat"
+                                else sweet_kiss_plump_option
+                                if strawberry_type == "Sweet Kiss"
                                 else None
                             )
                         elif quality == "Juicy":
                             option = (
-                                albion_juicy_option if strawberry_type == "Albion"
-                                else redcoat_juicy_option if strawberry_type == "Redcoat"
-                                else sweet_kiss_juicy_option if strawberry_type == "Sweet Kiss"
+                                albion_juicy_option
+                                if strawberry_type == "Albion"
+                                else redcoat_juicy_option
+                                if strawberry_type == "Redcoat"
+                                else sweet_kiss_juicy_option
+                                if strawberry_type == "Sweet Kiss"
                                 else None
                             )
                         elif quality == "Large":
                             option = (
-                                albion_large_option if strawberry_type == "Albion"
-                                else redcoat_large_option if strawberry_type == "Redcoat"
-                                else sweet_kiss_large_option if strawberry_type == "Sweet Kiss"
+                                albion_large_option
+                                if strawberry_type == "Albion"
+                                else redcoat_large_option
+                                if strawberry_type == "Redcoat"
+                                else sweet_kiss_large_option
+                                if strawberry_type == "Sweet Kiss"
                                 else None
                             )
 
                         if option:
                             checklist_answers.append(option)
                         else:
-                            assert strawberry_type == "Other strawberry type", \
-                                f"Invalid quality '{quality}' for strawberry type '{strawberry_type}'"
+                            assert (
+                                strawberry_type == "Other strawberry type"
+                            ), f"Invalid quality '{quality}' for strawberry type '{strawberry_type}'"
 
                     if checklist_attribute and checklist_answers:
                         skeleton_object_instance.set_answer(

@@ -98,86 +98,110 @@ video_frame_labels = {
     "cherries-001.jpg": {
         0: {
             "label_ref": "persimmon_001",
-            "coordinates": RotatableBoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.55, theta=23),
-            "persimmon_type": 'Rojo Brilliante',
-            "rjb_quality_options": 'Plump, Juicy',
+            "coordinates": RotatableBoundingBoxCoordinates(
+                height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.55, theta=23
+            ),
+            "persimmon_type": "Rojo Brilliante",
+            "rjb_quality_options": "Plump, Juicy",
         },
     },
     "cherries-010.jpg": {
         0: [
             {
                 "label_ref": "persimmon_002",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.55, theta=23),
-                "persimmon_type": 'Fuyu',
-                "fuyu_quality_options": 'Plump, Juicy, Large',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.55, theta=23
+                ),
+                "persimmon_type": "Fuyu",
+                "fuyu_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "persimmon_003",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.2, top_left_y=0.2, theta=25),
-                "persimmon_type": 'Rojo Brilliante',
-                "rjb_quality_options": 'Plump',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.1, top_left_x=0.2, top_left_y=0.2, theta=25
+                ),
+                "persimmon_type": "Rojo Brilliante",
+                "rjb_quality_options": "Plump",
             },
             {
                 "label_ref": "persimmon_004",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.3, top_left_y=0.3, theta=27),
-                "persimmon_type": 'Other persimmon type',
-                "Specify persimmon type": 'Triumph',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.1, top_left_x=0.3, top_left_y=0.3, theta=27
+                ),
+                "persimmon_type": "Other persimmon type",
+                "Specify persimmon type": "Triumph",
             },
         ],
     },
     "cherries-ig": {
         0: {
             "label_ref": "persimmon_005",
-            "coordinates": RotatableBoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.55, theta=23),
-            "persimmon_type": 'Hachiya',
-            "hachiya_quality_options": 'Plump, Juicy',
+            "coordinates": RotatableBoundingBoxCoordinates(
+                height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.55, theta=23
+            ),
+            "persimmon_type": "Hachiya",
+            "hachiya_quality_options": "Plump, Juicy",
         },
         2: [
             {
                 "label_ref": "persimmon_006",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.1, width=0.2, top_left_x=0.2, top_left_y=0.2, theta=23),
-                "persimmon_type": 'Fuyu',
-                "fuyu_quality_options": 'Large',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.1, width=0.2, top_left_x=0.2, top_left_y=0.2, theta=23
+                ),
+                "persimmon_type": "Fuyu",
+                "fuyu_quality_options": "Large",
             },
             {
                 "label_ref": "persimmon_007",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.1, width=0.2, top_left_x=0.4, top_left_y=0.2, theta=127),
-                "persimmon_type": 'Rojo Brilliante',
-                "rjb_quality_options": 'Plump',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.1, width=0.2, top_left_x=0.4, top_left_y=0.2, theta=127
+                ),
+                "persimmon_type": "Rojo Brilliante",
+                "rjb_quality_options": "Plump",
             },
             {
                 "label_ref": "persimmon_008",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.6, top_left_y=0.3, theta=137),
-                "persimmon_type": 'Other persimmon type',
-                "Specify persimmon type": 'Hiro',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.1, top_left_x=0.6, top_left_y=0.3, theta=137
+                ),
+                "persimmon_type": "Other persimmon type",
+                "Specify persimmon type": "Hiro",
             },
         ],
     },
     "cherries-is": {
         0: {
             "label_ref": "persimmon_009",
-            "coordinates": RotatableBoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.55, theta=23),
-            "persimmon_type": 'Hachiya',
-            "hachiya_quality_options": 'Plump',
+            "coordinates": RotatableBoundingBoxCoordinates(
+                height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.55, theta=23
+            ),
+            "persimmon_type": "Hachiya",
+            "hachiya_quality_options": "Plump",
         },
         3: [
             {
                 "label_ref": "persimmon_010",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.05, theta=23),
-                "persimmon_type": 'Fuyu',
-                "fuyu_quality_options": 'Plump, Juicy, Large',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.4, width=0.4, top_left_x=0.05, top_left_y=0.05, theta=23
+                ),
+                "persimmon_type": "Fuyu",
+                "fuyu_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "persimmon_011",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.3, width=0.3, top_left_x=0.5, top_left_y=0.05, theta=23),
-                "persimmon_type": 'Rojo Brilliante',
-                "rjb_quality_options": 'Plump, Juicy',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.3, width=0.3, top_left_x=0.5, top_left_y=0.05, theta=23
+                ),
+                "persimmon_type": "Rojo Brilliante",
+                "rjb_quality_options": "Plump, Juicy",
             },
             {
                 "label_ref": "persimmon_012",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.7, top_left_y=0.05, theta=23),
-                "persimmon_type": 'Other persimmon type',
-                "Specify persimmon type": 'Maru',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.1, top_left_x=0.7, top_left_y=0.05, theta=23
+                ),
+                "persimmon_type": "Other persimmon type",
+                "Specify persimmon type": "Maru",
             },
         ],
     },
@@ -185,61 +209,79 @@ video_frame_labels = {
         103: [
             {
                 "label_ref": "persimmon_013",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.05, top_left_y=0.55, theta=23),
-                "persimmon_type": 'Rojo Brilliante',
-                "rjb_quality_options": 'Plump',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.5, width=0.5, top_left_x=0.05, top_left_y=0.55, theta=23
+                ),
+                "persimmon_type": "Rojo Brilliante",
+                "rjb_quality_options": "Plump",
             },
             {
                 "label_ref": "persimmon_014",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.3, top_left_y=0.2, theta=23),
-                "persimmon_type": 'Hachiya',
-                "hachiya_quality_options": 'Plump, Juicy, Large',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.2, top_left_x=0.3, top_left_y=0.2, theta=23
+                ),
+                "persimmon_type": "Hachiya",
+                "hachiya_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "persimmon_015",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.6, top_left_y=0.2, theta=23),
-                "persimmon_type": 'Other persimmon type',
-                "Specify persimmon type": 'Triumph',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.1, top_left_x=0.6, top_left_y=0.2, theta=23
+                ),
+                "persimmon_type": "Other persimmon type",
+                "Specify persimmon type": "Triumph",
             },
         ],
         104: [
             {
                 "label_ref": "persimmon_016",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.05, top_left_y=0.55, theta=23),
-                "persimmon_type": 'Rojo Brilliante',
-                "rjb_quality_options": 'Plump',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.5, width=0.5, top_left_x=0.05, top_left_y=0.55, theta=23
+                ),
+                "persimmon_type": "Rojo Brilliante",
+                "rjb_quality_options": "Plump",
             },
             {
                 "label_ref": "persimmon_014",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.3, top_left_y=0.2, theta=23),
-                "persimmon_type": 'Hachiya',
-                "hachiya_quality_options": 'Plump, Juicy, Large',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.2, top_left_x=0.3, top_left_y=0.2, theta=23
+                ),
+                "persimmon_type": "Hachiya",
+                "hachiya_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "persimmon_017",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.6, top_left_y=0.2, theta=23),
-                "persimmon_type": 'Other persimmon type',
-                "Specify persimmon type": 'Hiro',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.1, top_left_x=0.6, top_left_y=0.2, theta=23
+                ),
+                "persimmon_type": "Other persimmon type",
+                "Specify persimmon type": "Hiro",
             },
         ],
         105: [
             {
                 "label_ref": "persimmon_016",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.05, top_left_y=0.55, theta=23),
-                "persimmon_type": 'Rojo Brilliante',
-                "rjb_quality_options": 'Plump',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.5, width=0.5, top_left_x=0.05, top_left_y=0.55, theta=23
+                ),
+                "persimmon_type": "Rojo Brilliante",
+                "rjb_quality_options": "Plump",
             },
             {
                 "label_ref": "persimmon_014",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.2, top_left_x=0.3, top_left_y=0.2, theta=23),
-                "persimmon_type": 'Hachiya',
-                "hachiya_quality_options": 'Plump, Juicy, Large',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.2, top_left_x=0.3, top_left_y=0.2, theta=23
+                ),
+                "persimmon_type": "Hachiya",
+                "hachiya_quality_options": "Plump, Juicy, Large",
             },
             {
                 "label_ref": "persimmon_017",
-                "coordinates": RotatableBoundingBoxCoordinates(height=0.2, width=0.1, top_left_x=0.6, top_left_y=0.2, theta=23),
-                "persimmon_type": 'Other persimmon type',
-                "Specify persimmon type": 'Maru',
+                "coordinates": RotatableBoundingBoxCoordinates(
+                    height=0.2, width=0.1, top_left_x=0.6, top_left_y=0.2, theta=23
+                ),
+                "persimmon_type": "Other persimmon type",
+                "Specify persimmon type": "Maru",
             },
         ],
     },
@@ -284,7 +326,10 @@ for data_unit, frame_coordinates in video_frame_labels.items():
             persimmon_type = item["persimmon_type"]
 
             assert persimmon_type in {
-                "Hachiya", "Fuyu", "Rojo Brilliante", "Other persimmon type"
+                "Hachiya",
+                "Fuyu",
+                "Rojo Brilliante",
+                "Other persimmon type",
             }, f"Unexpected persimmon type '{persimmon_type}' in {data_unit}"
 
             if label_ref not in object_instances_by_label_ref:
@@ -328,31 +373,41 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     option = None
                     if quality == "Plump":
                         option = (
-                            hachiya_plump_option if persimmon_type == "Hachiya"
-                            else fuyu_plump_option if persimmon_type == "Fuyu"
-                            else rjb_plump_option if persimmon_type == "Rojo Brilliante"
+                            hachiya_plump_option
+                            if persimmon_type == "Hachiya"
+                            else fuyu_plump_option
+                            if persimmon_type == "Fuyu"
+                            else rjb_plump_option
+                            if persimmon_type == "Rojo Brilliante"
                             else None
                         )
                     elif quality == "Juicy":
                         option = (
-                            hachiya_juicy_option if persimmon_type == "Hachiya"
-                            else fuyu_juicy_option if persimmon_type == "Fuyu"
-                            else rjb_juicy_option if persimmon_type == "Rojo Brilliante"
+                            hachiya_juicy_option
+                            if persimmon_type == "Hachiya"
+                            else fuyu_juicy_option
+                            if persimmon_type == "Fuyu"
+                            else rjb_juicy_option
+                            if persimmon_type == "Rojo Brilliante"
                             else None
                         )
                     elif quality == "Large":
                         option = (
-                            hachiya_large_option if persimmon_type == "Hachiya"
-                            else fuyu_large_option if persimmon_type == "Fuyu"
-                            else rjb_large_option if persimmon_type == "Rojo Brilliante"
+                            hachiya_large_option
+                            if persimmon_type == "Hachiya"
+                            else fuyu_large_option
+                            if persimmon_type == "Fuyu"
+                            else rjb_large_option
+                            if persimmon_type == "Rojo Brilliante"
                             else None
                         )
 
                     if option:
                         checklist_answers.append(option)
                     else:
-                        assert persimmon_type == "Other persimmon type", \
-                            f"Invalid quality '{quality}' for persimmon type '{persimmon_type}'"
+                        assert (
+                            persimmon_type == "Other persimmon type"
+                        ), f"Invalid quality '{quality}' for persimmon type '{persimmon_type}'"
 
                 if checklist_attribute and checklist_answers:
                     rbbox_object_instance.set_answer(
