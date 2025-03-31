@@ -1,3 +1,7 @@
+"""
+Code Block Name: Bounding Boxes Images/Videos
+"""
+
 # Import dependencies
 from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute

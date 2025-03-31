@@ -1,3 +1,7 @@
+"""
+Code Block Name: Polylines Images/Videos
+"""
+
 # Import dependencies
 from pathlib import Path
 
