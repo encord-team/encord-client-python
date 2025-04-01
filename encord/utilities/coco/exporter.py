@@ -303,7 +303,7 @@ class CocoExporter:
     ) -> Dict[str, Any]:
         image_id = len(self._data_hash_to_image_id_map)
         # ideally this should be verify_arg, but currently we can't be sure that the metadata is on every frame
-        metadata = dicom_label.get("metadata")
+        metadata = DicomAnnotationData(**dicom_label["metadata"]) if "metadata" in dicom_label else None
         self._data_hash_to_image_id_map[(data_hash, frame)] = image_id
         if metadata:
             file_name = f"dicom/{data_hash}/{metadata.dicom_instance_uid}"
