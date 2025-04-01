@@ -27,6 +27,13 @@ from encord.objects.ontology_structure import OntologyStructure
 
 logger = logging.getLogger(__name__)
 
+PDF_MIME_TYPES = ["application/pdf"]
+TEXT_MIME_TYPES = ["application/json", "application/xml", "text/plain", "text/html", "text/xml"]
+DICOM_MIME_TYPE = "application/dicom"
+NIFTI1_MIME_TYPE = "application/nifti1"
+NIFTI2_MIME_TYPE = "application/nifti2"
+NIFTI_MIME_TYPES = {NIFTI1_MIME_TYPE, NIFTI2_MIME_TYPE}
+
 
 @dataclass(frozen=True)
 class DicomAnnotationData:
@@ -167,6 +174,9 @@ class CocoExporter:
         """This does not translate classifications as they are not part of the Coco spec."""
         categories = []
         for object_ in self._ontology.objects:
+            # skip special object types
+            if object_.shape in (Shape.AUDIO, Shape.TEXT):
+                continue
             categories.append(self.get_category(object_))
 
         return categories
@@ -207,10 +217,19 @@ class CocoExporter:
         images = []
 
         for labels in self._labels_list:
+            cord_data_type = labels["data_type"]  # This is set to FileType Enum
             for data_unit in labels["data_units"].values():
                 data_type = data_unit["data_type"]
                 if "application/dicom" in data_type:
                     images.extend(self.get_dicom(data_unit))
+                elif data_type in NIFTI_MIME_TYPES:
+                    images.extend(self.get_nifti(data_unit))
+                elif data_type in PDF_MIME_TYPES:
+                    continue
+                elif data_type in TEXT_MIME_TYPES:
+                    continue
+                elif cord_data_type.upper() == "AUDIO":
+                    continue
                 elif "video" not in data_type:
                     images.append(self.get_image(data_unit))
                 else:
@@ -224,6 +243,18 @@ class CocoExporter:
                 int(key), data_unit["data_hash"], data_unit["width"], data_unit["height"], label
             )
             for key, label in data_unit["labels"].items()
+        ]
+
+    def get_nifti(self, data_unit: dict) -> List:
+        return [
+            self._nifti_label_to_coco_image(
+                data_unit["data_hash"],
+                data_unit["data_link"],
+                data_unit["height"],
+                data_unit["width"],
+                int(key),
+            )
+            for key in data_unit["labels"].keys()
         ]
 
     def get_image(self, data_unit: Dict[str, Any]) -> Dict[str, Any]:
@@ -295,6 +326,37 @@ class CocoExporter:
                 "width": series_width,
             }
 
+    def _nifti_label_to_coco_image(
+        self,
+        data_hash: str,
+        coco_url: str,
+        height: int,
+        width: int,
+        frame_num: int,
+    ) -> Dict[str, Any]:
+        image_id = len(self._data_hash_to_image_id_map)
+        self._data_hash_to_image_id_map[(data_hash, frame_num)] = image_id
+
+        return {
+            "coco_url": coco_url,
+            "id": image_id,
+            "file_name": f"nifti/{data_hash}/{frame_num}",
+            "height": height,
+            "width": width,
+        }
+
+    def get_pdf_coco_image(self, data_hash: str, coco_url: str, frame_num: int) -> Dict[str, Any]:
+        page_id = len(self._data_hash_to_image_id_map)
+        self._data_hash_to_image_id_map[(data_hash, frame_num)] = page_id
+
+        return {
+            "coco_url": coco_url,
+            "id": page_id,
+            "file_name": f"pdfs/{data_hash}/{frame_num}",
+            "height": 0,
+            "width": 0,
+        }
+
     def get_video_image(
         self,
         data_hash: str,
@@ -323,13 +385,17 @@ class CocoExporter:
         for labels in self._labels_list:
             object_answers = labels["object_answers"]
             object_actions = labels["object_actions"]
+            cord_data_type = labels["data_type"]  # This is set to FileType Enum
 
             for data_unit in labels["data_units"].values():
                 data_hash = data_unit["data_hash"]
+                data_type = data_unit["data_type"]
 
-                if "video" in data_unit["data_type"]:
-                    if not self._include_videos:
-                        continue
+                is_video = "video" in data_type
+                if is_video and not self._include_videos:
+                    continue
+
+                if is_video or data_type == DICOM_MIME_TYPE or data_type in NIFTI_MIME_TYPES:
                     for frame_num, frame_item in data_unit["labels"].items():
                         image_id = self.get_image_id(data_hash, int(frame_num))
                         objects = frame_item["objects"]
@@ -341,21 +407,12 @@ class CocoExporter:
                                 object_actions,
                             )
                         )
-
-                elif "application/dicom" in data_unit["data_type"]:
-                    # copy pasta:
-                    for frame_num, frame_item in data_unit["labels"].items():
-                        image_id = self.get_image_id(data_hash, int(frame_num))
-                        objects = frame_item["objects"]
-                        annotations.extend(
-                            self.get_annotations(
-                                objects,
-                                image_id,
-                                object_answers,
-                                object_actions,
-                            )
-                        )
-
+                elif data_type in PDF_MIME_TYPES:
+                    continue
+                elif data_type in TEXT_MIME_TYPES:
+                    continue
+                elif cord_data_type.upper() == "AUDIO":
+                    continue
                 else:
                     image_id = self.get_image_id(data_hash)
                     objects = data_unit["labels"].get("objects") or []
