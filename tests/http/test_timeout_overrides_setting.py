@@ -29,6 +29,7 @@ def stub_responses(*args, **kwargs) -> MagicMock:
         response = {
             "project_hash": PROJECT_HASH,
             "project_type": "manual_qa",
+            "status": "inProgress",
             "title": "Test project",
             "description": "",
             "created_at": "2024-01-01 11:11:11",
