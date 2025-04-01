@@ -10,6 +10,7 @@ except ImportError as e:
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
+from enum import Enum
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
@@ -34,6 +35,13 @@ class DicomAnnotationData:
     file_uri: str
     width: int
     height: int
+
+
+# See https://cocodataset.org/#format-data, section 2. Keypoint Detection
+class KeyPointVisibility(Enum):
+    NOT_LABELED = 0
+    NOT_VISIBLE = 1
+    VISIBLE = 2
 
 
 class CocoAnnotation(BaseModel):
@@ -716,7 +724,7 @@ class CocoExporter:
         w, h = 0, 0
         area = 0
         segmentation = [[x, y]]
-        keypoints = [x, y, 2]
+        keypoints = [x, y, KeyPointVisibility.VISIBLE.value]
         num_keypoints = 1
 
         bbox = (x, y, w, h)
@@ -760,7 +768,7 @@ class CocoExporter:
             keypoints += [
                 point["x"] * size.width,
                 point["y"] * size.height,
-                2,
+                self.get_skeleton_point_visibility(point).value,
             ]
 
         num_keypoints = len(keypoints) // 3
@@ -795,6 +803,14 @@ class CocoExporter:
             classifications=classifications,
             manual_annotation=manual_annotation,
         )
+
+    def get_skeleton_point_visibility(self, point: dict) -> KeyPointVisibility:
+        if point.get("invisible") is True:
+            return KeyPointVisibility.NOT_LABELED
+        elif point.get("occluded") is True:
+            return KeyPointVisibility.NOT_VISIBLE
+        else:
+            return KeyPointVisibility.VISIBLE
 
     def get_flat_classifications(
         self, object_: Dict, image_id: int, object_answers: Dict, object_actions: Dict
