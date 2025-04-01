@@ -91,18 +91,21 @@ class Size:
     height: int
 
 
-def get_polygon_from_dict(
-    polygon_dict: Dict[str, Any],
+def get_polygon_from_dict_or_list(
+    polygon_dict: Union[Dict[str, Any], List],
     w: int,
     h: int,
 ) -> List[Tuple[float, float]]:
-    return [
-        (
-            polygon_dict[str(i)]["x"] * w,
-            polygon_dict[str(i)]["y"] * h,
-        )
-        for i in range(len(polygon_dict))
-    ]
+    if isinstance(polygon_dict, list):
+        return [(point["x"] * w, point["y"] * h) for point in polygon_dict]
+    else:
+        return [
+            (
+                polygon_dict[str(i)]["x"] * w,
+                polygon_dict[str(i)]["y"] * h,
+            )
+            for i in range(len(polygon_dict))
+        ]
 
 
 class CocoExporter:
@@ -549,7 +552,7 @@ class CocoExporter:
         object_answers: Dict,
         object_actions: Dict,
     ) -> CocoAnnotation:
-        polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
+        polygon = get_polygon_from_dict_or_list(object_["polygon"], size.width, size.height)
         segmentation = [list(chain(*polygon))]
         _polygon = Polygon(polygon)
         area: float = _polygon.area
@@ -593,7 +596,7 @@ class CocoExporter:
         object_actions: Dict,
     ) -> CocoAnnotation:
         """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
-        polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
+        polygon = get_polygon_from_dict_or_list(object_["polyline"], size.width, size.height)
         polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
         segmentation = [polyline_coordinate]
         area = 0
