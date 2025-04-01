@@ -948,7 +948,7 @@ class CocoExporter:
         if self._id_and_object_hash_to_answers_map is not None:
             return self._id_and_object_hash_to_answers_map
 
-        ret: Dict[Tuple[int, str], Dict[str, Any]] = defaultdict(Dict)
+        ret: Dict[Tuple[int, str], Dict[str, Any]] = defaultdict(dict)
         feature_hash_to_attribute_map = self.get_feature_hash_to_flat_object_attribute_map()
         for object_hash, payload in object_actions.items():
             for action in payload["actions"]:
