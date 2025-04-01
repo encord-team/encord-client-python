@@ -441,7 +441,11 @@ class CocoExporter:
 
             for image_data in self._coco_json["images"]:
                 if image_data["id"] == image_id:
-                    size = Size(width=image_data["width"], height=image_data["height"])
+                    # Ensure a size of 1 for non-geometric data types
+                    size = Size(
+                        width=max(1, image_data["width"]),
+                        height=max(1, image_data["height"]),
+                    )
 
             if shape == Shape.BOUNDING_BOX.value:
                 annotations.append(
