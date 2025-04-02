@@ -43,11 +43,13 @@ class _ClientMetadataSchemaTypeEnum(BaseModel):
 
 
 class _ClientMetadataSchemaTypeEmbeddingApi(BaseModel):
-    url: str
+    # FIXME: remove unsupported field layouts once finalised.
+    url: str | None = None
+    path: str | None = None
     auth_integration_secret: UUID | None = None
-    client_only: bool = True
-    embed_b64_image: bool = True
-    embed_text: bool = True
+    client_only: bool | None = None
+    embed_b64_image: bool | None = None
+    embed_text: bool | None = None
 
 
 class _ClientMetadataSchemaTypeEmbedding(BaseModel):
@@ -226,7 +228,7 @@ class MetadataSchema:
             )
             self._dirty = False
 
-    def add_embedding(self, k: str, *, size: int, url: str | None = None) -> None:
+    def add_embedding(self, k: str, *, size: int) -> None:
         """Adds a new embedding to the metadata schema.
 
         **Parameters:**
@@ -243,8 +245,7 @@ class MetadataSchema:
             raise MetadataSchemaError(f"{k} is already defined")
         _assert_valid_metadata_key(k)
         embedding_api = None
-        if url is not None:
-            embedding_api = _ClientMetadataSchemaTypeEmbeddingApi(url=url)
+        # FIXME: optionally define once path is finalised.
         self._schema[k] = _ClientMetadataSchemaOption(
             root=_ClientMetadataSchemaTypeEmbedding(size=size, api=embedding_api)
         )
