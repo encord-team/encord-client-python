@@ -14,10 +14,11 @@ from enum import Enum
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import cv2
 import numpy as np
 from pycocotools import mask as cocomask
 from pydantic import BaseModel
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 
 from encord.exceptions import EncordException
 from encord.objects.attributes import Attribute
@@ -26,6 +27,10 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
 
 logger = logging.getLogger(__name__)
+
+ShapelyPolygonRing = Tuple[Tuple[float, float], ...]
+ShapelyPolygonHoles = List[ShapelyPolygonRing]
+ShapelyPolygon = Union[Tuple[ShapelyPolygonRing,], Tuple[ShapelyPolygonRing, ShapelyPolygonHoles]]
 
 PDF_MIME_TYPES = ["application/pdf"]
 TEXT_MIME_TYPES = ["application/json", "application/xml", "text/plain", "text/html", "text/xml"]
@@ -96,23 +101,6 @@ class CocoAnnotation(BaseModel):
 class Size:
     width: int
     height: int
-
-
-def get_polygon_from_dict_or_list(
-    polygon_dict: Union[Dict[str, Any], List],
-    w: int,
-    h: int,
-) -> List[Tuple[float, float]]:
-    if isinstance(polygon_dict, list):
-        return [(point["x"] * w, point["y"] * h) for point in polygon_dict]
-    else:
-        return [
-            (
-                polygon_dict[str(i)]["x"] * w,
-                polygon_dict[str(i)]["y"] * h,
-            )
-            for i in range(len(polygon_dict))
-        ]
 
 
 class CocoExporter:
@@ -613,16 +601,38 @@ class CocoExporter:
         object_answers: Dict,
         object_actions: Dict,
     ) -> CocoAnnotation:
-        polygon = get_polygon_from_dict_or_list(object_["polygon"], size.width, size.height)
-        segmentation = [list(chain(*polygon))]
-        _polygon = Polygon(polygon)
-        area: float = _polygon.area
-        x, y, x_max, y_max = _polygon.bounds
-        w, h = x_max - x, y_max - y
-
-        bbox = (x, y, w, h)
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
+
+        is_multipolygon = (
+            # Check if the object contains the new [complex] 'polygons' field
+            object_.get("polygons")
+            and (
+                # A multipolygon is either:
+                # - More than one polygon present
+                len(object_["polygons"]) > 1
+                or
+                # - A single polygon that contains holes (more than one contour)
+                len(object_["polygons"][0]) > 1
+            )
+        )
+        # Since COCO format doesn't support multipolygons, we must RLE encode complex polygons.
+        if is_multipolygon:
+            is_crowd = 1
+            multipolygon = MultiPolygon(
+                self.get_multipolygon_from_polygons(object_["polygons"], size.width, size.height)
+            )
+            segmentation = self.get_rle_segmentation_from_multipolygon(multipolygon, size.width, size.height)
+            bbox = tuple(cocomask.toBbox(segmentation))
+            area = float(cocomask.area(segmentation))
+        else:
+            polygon = self.get_polygon_from_dict_or_list(object_["polygon"], size.width, size.height)
+            _polygon = Polygon(polygon)
+            segmentation = [list(chain(*polygon))]
+            area: float = _polygon.area
+            x, y, x_max, y_max = _polygon.bounds
+            w, h = x_max - x, y_max - y
+            bbox = (x, y, w, h)
 
         classifications = self.get_flat_classifications(
             object_,
@@ -648,6 +658,71 @@ class CocoExporter:
             manual_annotation=manual_annotation,
         )
 
+    def get_polygon_from_dict_or_list(
+        self,
+        polygon_dict: Union[Dict[str, Any], List],
+        w: int,
+        h: int,
+    ) -> List[Tuple[float, float]]:
+        if isinstance(polygon_dict, list):
+            return [(point["x"] * w, point["y"] * h) for point in polygon_dict]
+        else:
+            return [
+                (
+                    polygon_dict[str(i)]["x"] * w,
+                    polygon_dict[str(i)]["y"] * h,
+                )
+                for i in range(len(polygon_dict))
+            ]
+
+    def convert_point_list_to_tuples(
+        self,
+        points_list: List[float],
+        w: int,
+        h: int,
+    ) -> ShapelyPolygonRing:
+        it = iter(points_list)
+
+        return tuple([(t[0] * w, t[1] * h) for t in zip(it, it)])
+
+    def convert_polygon_points_list_to_polygon(
+        self,
+        polygon_points_list: List[List[float]],
+        w: int,
+        h: int,
+    ) -> ShapelyPolygon:
+        [ring, *holes] = polygon_points_list
+
+        polygon_ring = self.convert_point_list_to_tuples(ring, w, h)
+
+        if len(holes) > 0:
+            return (polygon_ring, [self.convert_point_list_to_tuples(hole, w, h) for hole in holes])
+        else:
+            return (polygon_ring,)
+
+    def get_rle_segmentation_from_multipolygon(self, multipolygon: MultiPolygon, w: int, h: int):  # type: ignore[no-untyped-def]
+        mask = np.zeros((h, w), dtype=np.uint8)
+        for polygon in sorted(multipolygon.geoms, key=lambda p: p.area, reverse=True):
+            exterior = np.array(polygon.exterior.coords).astype(np.int32)
+            cv2.fillPoly(mask, [exterior], color=(255, 255, 255))
+            for interior in polygon.interiors:
+                cv2.fillPoly(mask, [np.array(interior.coords).astype(np.int32)], color=(0, 0, 0))
+
+        # Obtain the COCO compatible RLE string (convert from row-major to column-major order)
+        segmentation = cocomask.encode(np.asfortranarray(mask))
+        # Convert RLE string from bytes (which is not a JSON serializable type) to a string format
+        segmentation["counts"] = segmentation["counts"].decode("ascii")
+
+        return segmentation
+
+    def get_multipolygon_from_polygons(
+        self,
+        polygons: List[List[List[float]]],
+        w: int,
+        h: int,
+    ) -> List[ShapelyPolygon]:
+        return [self.convert_polygon_points_list_to_polygon(polygon, w, h) for polygon in polygons]
+
     def get_polyline(
         self,
         object_: Dict,
@@ -657,7 +732,7 @@ class CocoExporter:
         object_actions: Dict,
     ) -> CocoAnnotation:
         """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
-        polygon = get_polygon_from_dict_or_list(object_["polyline"], size.width, size.height)
+        polygon = self.get_polygon_from_dict_or_list(object_["polyline"], size.width, size.height)
         polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
         segmentation = [polyline_coordinate]
         area = 0
