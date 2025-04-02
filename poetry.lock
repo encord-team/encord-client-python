@@ -1558,7 +1558,7 @@ files = [
 name = "shapely"
 version = "2.0.7"
 description = "Manipulation and analysis of geometric objects"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "shapely-2.0.7-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:33fb10e50b16113714ae40adccf7670379e9ccf5b7a41d0002046ba2b8f0f691"},
@@ -1797,4 +1797,4 @@ coco = ["numpy", "numpy", "opencv-python", "pycocotools", "shapely"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "1a3740db52621fe263c55e242b6c555ef142cca40ece404e49b249c8e1c89fad"
+content-hash = "74332515026ae0e345b6dace05b2950af8c732c59d8c08dcae46b9b4101c1fc5"

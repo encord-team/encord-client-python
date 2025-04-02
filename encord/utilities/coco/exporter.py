@@ -629,7 +629,7 @@ class CocoExporter:
             polygon = self.get_polygon_from_dict_or_list(object_["polygon"], size.width, size.height)
             _polygon = Polygon(polygon)
             segmentation = [list(chain(*polygon))]
-            area: float = _polygon.area
+            area = _polygon.area
             x, y, x_max, y_max = _polygon.bounds
             w, h = x_max - x, y_max - y
             bbox = (x, y, w, h)
@@ -703,10 +703,11 @@ class CocoExporter:
     def get_rle_segmentation_from_multipolygon(self, multipolygon: MultiPolygon, w: int, h: int):  # type: ignore[no-untyped-def]
         mask = np.zeros((h, w), dtype=np.uint8)
         for polygon in sorted(multipolygon.geoms, key=lambda p: p.area, reverse=True):
-            exterior = np.array(polygon.exterior.coords).astype(np.int32)
-            cv2.fillPoly(mask, [exterior], color=(255, 255, 255))
+            # mypy being silly -- List item 0 has incompatible type "ndarray[Any, dtype[signedinteger[_32Bit]]]"; expected "Mat"
+            exterior = np.array(polygon.exterior.coords, dtype=np.int32)
+            cv2.fillPoly(mask, [exterior], color=(255, 255, 255))  # type: ignore[list-item]
             for interior in polygon.interiors:
-                cv2.fillPoly(mask, [np.array(interior.coords).astype(np.int32)], color=(0, 0, 0))
+                cv2.fillPoly(mask, [np.array(interior.coords, dtype=np.int32)], color=(0, 0, 0))  # type: ignore[list-item]
 
         # Obtain the COCO compatible RLE string (convert from row-major to column-major order)
         segmentation = cocomask.encode(np.asfortranarray(mask))
