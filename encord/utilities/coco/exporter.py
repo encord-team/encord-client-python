@@ -1,9 +1,10 @@
 try:
+    import cv2
     import pycocotools
     import shapely
 except ImportError as e:
     raise ImportError(
-        "The 'pycocotools' and 'shapely' packages are required for the COCO export. "
+        "The 'opencv-python', 'pycocotools' and 'shapely' packages are required for the COCO export. "
         "Install them with: `pip install encord[coco]`"
     ) from e
 
@@ -14,7 +15,6 @@ from enum import Enum
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-import cv2
 import numpy as np
 from pycocotools import mask as cocomask
 from pydantic import BaseModel
