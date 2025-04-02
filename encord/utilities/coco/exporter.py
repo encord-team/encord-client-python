@@ -1,22 +1,24 @@
 try:
+    import cv2
     import pycocotools
     import shapely
 except ImportError as e:
     raise ImportError(
-        "The 'pycocotools' and 'shapely' packages are required for the COCO export. "
+        "The 'opencv-python', 'pycocotools' and 'shapely' packages are required for the COCO export. "
         "Install them with: `pip install encord[coco]`"
     ) from e
 
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
+from enum import Enum
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 from pycocotools import mask as cocomask
 from pydantic import BaseModel
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 
 from encord.exceptions import EncordException
 from encord.objects.attributes import Attribute
@@ -26,6 +28,17 @@ from encord.objects.ontology_structure import OntologyStructure
 
 logger = logging.getLogger(__name__)
 
+ShapelyPolygonRing = Tuple[Tuple[float, float], ...]
+ShapelyPolygonHoles = List[ShapelyPolygonRing]
+ShapelyPolygon = Union[Tuple[ShapelyPolygonRing,], Tuple[ShapelyPolygonRing, ShapelyPolygonHoles]]
+
+PDF_MIME_TYPES = ["application/pdf"]
+TEXT_MIME_TYPES = ["application/json", "application/xml", "text/plain", "text/html", "text/xml"]
+DICOM_MIME_TYPE = "application/dicom"
+NIFTI1_MIME_TYPE = "application/nifti1"
+NIFTI2_MIME_TYPE = "application/nifti2"
+NIFTI_MIME_TYPES = {NIFTI1_MIME_TYPE, NIFTI2_MIME_TYPE}
+
 
 @dataclass(frozen=True)
 class DicomAnnotationData:
@@ -34,6 +47,13 @@ class DicomAnnotationData:
     file_uri: str
     width: int
     height: int
+
+
+# See https://cocodataset.org/#format-data, section 2. Keypoint Detection
+class KeyPointVisibility(Enum):
+    NOT_LABELED = 0
+    NOT_VISIBLE = 1
+    VISIBLE = 2
 
 
 class CocoAnnotation(BaseModel):
@@ -81,20 +101,6 @@ class CocoAnnotation(BaseModel):
 class Size:
     width: int
     height: int
-
-
-def get_polygon_from_dict(
-    polygon_dict: Dict[str, Any],
-    w: int,
-    h: int,
-) -> List[Tuple[float, float]]:
-    return [
-        (
-            polygon_dict[str(i)]["x"] * w,
-            polygon_dict[str(i)]["y"] * h,
-        )
-        for i in range(len(polygon_dict))
-    ]
 
 
 class CocoExporter:
@@ -156,6 +162,9 @@ class CocoExporter:
         """This does not translate classifications as they are not part of the Coco spec."""
         categories = []
         for object_ in self._ontology.objects:
+            # skip special object types
+            if object_.shape in (Shape.AUDIO, Shape.TEXT):
+                continue
             categories.append(self.get_category(object_))
 
         return categories
@@ -196,10 +205,19 @@ class CocoExporter:
         images = []
 
         for labels in self._labels_list:
+            cord_data_type = labels["data_type"]  # This is set to FileType Enum
             for data_unit in labels["data_units"].values():
                 data_type = data_unit["data_type"]
                 if "application/dicom" in data_type:
                     images.extend(self.get_dicom(data_unit))
+                elif data_type in NIFTI_MIME_TYPES:
+                    images.extend(self.get_nifti(data_unit))
+                elif data_type in PDF_MIME_TYPES:
+                    continue
+                elif data_type in TEXT_MIME_TYPES:
+                    continue
+                elif cord_data_type.upper() == "AUDIO":
+                    continue
                 elif "video" not in data_type:
                     images.append(self.get_image(data_unit))
                 else:
@@ -213,6 +231,18 @@ class CocoExporter:
                 int(key), data_unit["data_hash"], data_unit["width"], data_unit["height"], label
             )
             for key, label in data_unit["labels"].items()
+        ]
+
+    def get_nifti(self, data_unit: dict) -> List:
+        return [
+            self._nifti_label_to_coco_image(
+                data_unit["data_hash"],
+                data_unit["data_link"],
+                data_unit["height"],
+                data_unit["width"],
+                int(key),
+            )
+            for key in data_unit["labels"].keys()
         ]
 
     def get_image(self, data_unit: Dict[str, Any]) -> Dict[str, Any]:
@@ -261,7 +291,7 @@ class CocoExporter:
     ) -> Dict[str, Any]:
         image_id = len(self._data_hash_to_image_id_map)
         # ideally this should be verify_arg, but currently we can't be sure that the metadata is on every frame
-        metadata = dicom_label.get("metadata")
+        metadata = DicomAnnotationData(**dicom_label["metadata"]) if "metadata" in dicom_label else None
         self._data_hash_to_image_id_map[(data_hash, frame)] = image_id
         if metadata:
             file_name = f"dicom/{data_hash}/{metadata.dicom_instance_uid}"
@@ -283,6 +313,37 @@ class CocoExporter:
                 "height": series_height,
                 "width": series_width,
             }
+
+    def _nifti_label_to_coco_image(
+        self,
+        data_hash: str,
+        coco_url: str,
+        height: int,
+        width: int,
+        frame_num: int,
+    ) -> Dict[str, Any]:
+        image_id = len(self._data_hash_to_image_id_map)
+        self._data_hash_to_image_id_map[(data_hash, frame_num)] = image_id
+
+        return {
+            "coco_url": coco_url,
+            "id": image_id,
+            "file_name": f"nifti/{data_hash}/{frame_num}",
+            "height": height,
+            "width": width,
+        }
+
+    def get_pdf_coco_image(self, data_hash: str, coco_url: str, frame_num: int) -> Dict[str, Any]:
+        page_id = len(self._data_hash_to_image_id_map)
+        self._data_hash_to_image_id_map[(data_hash, frame_num)] = page_id
+
+        return {
+            "coco_url": coco_url,
+            "id": page_id,
+            "file_name": f"pdfs/{data_hash}/{frame_num}",
+            "height": 0,
+            "width": 0,
+        }
 
     def get_video_image(
         self,
@@ -312,13 +373,17 @@ class CocoExporter:
         for labels in self._labels_list:
             object_answers = labels["object_answers"]
             object_actions = labels["object_actions"]
+            cord_data_type = labels["data_type"]  # This is set to FileType Enum
 
             for data_unit in labels["data_units"].values():
                 data_hash = data_unit["data_hash"]
+                data_type = data_unit["data_type"]
 
-                if "video" in data_unit["data_type"]:
-                    if not self._include_videos:
-                        continue
+                is_video = "video" in data_type
+                if is_video and not self._include_videos:
+                    continue
+
+                if is_video or data_type == DICOM_MIME_TYPE or data_type in NIFTI_MIME_TYPES:
                     for frame_num, frame_item in data_unit["labels"].items():
                         image_id = self.get_image_id(data_hash, int(frame_num))
                         objects = frame_item["objects"]
@@ -330,21 +395,12 @@ class CocoExporter:
                                 object_actions,
                             )
                         )
-
-                elif "application/dicom" in data_unit["data_type"]:
-                    # copy pasta:
-                    for frame_num, frame_item in data_unit["labels"].items():
-                        image_id = self.get_image_id(data_hash, int(frame_num))
-                        objects = frame_item["objects"]
-                        annotations.extend(
-                            self.get_annotations(
-                                objects,
-                                image_id,
-                                object_answers,
-                                object_actions,
-                            )
-                        )
-
+                elif data_type in PDF_MIME_TYPES:
+                    continue
+                elif data_type in TEXT_MIME_TYPES:
+                    continue
+                elif cord_data_type.upper() == "AUDIO":
+                    continue
                 else:
                     image_id = self.get_image_id(data_hash)
                     objects = data_unit["labels"].get("objects") or []
@@ -373,7 +429,11 @@ class CocoExporter:
 
             for image_data in self._coco_json["images"]:
                 if image_data["id"] == image_id:
-                    size = Size(width=image_data["width"], height=image_data["height"])
+                    # Ensure a size of 1 for non-geometric data types
+                    size = Size(
+                        width=max(1, image_data["width"]),
+                        height=max(1, image_data["height"]),
+                    )
 
             if shape == Shape.BOUNDING_BOX.value:
                 annotations.append(
@@ -541,16 +601,38 @@ class CocoExporter:
         object_answers: Dict,
         object_actions: Dict,
     ) -> CocoAnnotation:
-        polygon = get_polygon_from_dict(object_["polygon"], size.width, size.height)
-        segmentation = [list(chain(*polygon))]
-        _polygon = Polygon(polygon)
-        area: float = _polygon.area
-        x, y, x_max, y_max = _polygon.bounds
-        w, h = x_max - x, y_max - y
-
-        bbox = (x, y, w, h)
         category_id = self.get_category_id(object_)
         id_, is_crowd, track_id, encord_track_uuid, manual_annotation = self.get_coco_annotation_default_fields(object_)
+
+        is_multipolygon = (
+            # Check if the object contains the new [complex] 'polygons' field
+            object_.get("polygons")
+            and (
+                # A multipolygon is either:
+                # - More than one polygon present
+                len(object_["polygons"]) > 1
+                or
+                # - A single polygon that contains holes (more than one contour)
+                len(object_["polygons"][0]) > 1
+            )
+        )
+        # Since COCO format doesn't support multipolygons, we must RLE encode complex polygons.
+        if is_multipolygon:
+            is_crowd = 1
+            multipolygon = MultiPolygon(
+                self.get_multipolygon_from_polygons(object_["polygons"], size.width, size.height)
+            )
+            segmentation = self.get_rle_segmentation_from_multipolygon(multipolygon, size.width, size.height)
+            bbox = tuple(cocomask.toBbox(segmentation))
+            area = float(cocomask.area(segmentation))
+        else:
+            polygon = self.get_polygon_from_dict_or_list(object_["polygon"], size.width, size.height)
+            _polygon = Polygon(polygon)
+            segmentation = [list(chain(*polygon))]
+            area = _polygon.area
+            x, y, x_max, y_max = _polygon.bounds
+            w, h = x_max - x, y_max - y
+            bbox = (x, y, w, h)
 
         classifications = self.get_flat_classifications(
             object_,
@@ -576,6 +658,72 @@ class CocoExporter:
             manual_annotation=manual_annotation,
         )
 
+    def get_polygon_from_dict_or_list(
+        self,
+        polygon_dict: Union[Dict[str, Any], List],
+        w: int,
+        h: int,
+    ) -> List[Tuple[float, float]]:
+        if isinstance(polygon_dict, list):
+            return [(point["x"] * w, point["y"] * h) for point in polygon_dict]
+        else:
+            return [
+                (
+                    polygon_dict[str(i)]["x"] * w,
+                    polygon_dict[str(i)]["y"] * h,
+                )
+                for i in range(len(polygon_dict))
+            ]
+
+    def convert_point_list_to_tuples(
+        self,
+        points_list: List[float],
+        w: int,
+        h: int,
+    ) -> ShapelyPolygonRing:
+        it = iter(points_list)
+
+        return tuple([(t[0] * w, t[1] * h) for t in zip(it, it)])
+
+    def convert_polygon_points_list_to_polygon(
+        self,
+        polygon_points_list: List[List[float]],
+        w: int,
+        h: int,
+    ) -> ShapelyPolygon:
+        [ring, *holes] = polygon_points_list
+
+        polygon_ring = self.convert_point_list_to_tuples(ring, w, h)
+
+        if len(holes) > 0:
+            return (polygon_ring, [self.convert_point_list_to_tuples(hole, w, h) for hole in holes])
+        else:
+            return (polygon_ring,)
+
+    def get_rle_segmentation_from_multipolygon(self, multipolygon: MultiPolygon, w: int, h: int):  # type: ignore[no-untyped-def]
+        mask = np.zeros((h, w), dtype=np.uint8)
+        for polygon in sorted(multipolygon.geoms, key=lambda p: p.area, reverse=True):
+            # mypy being silly -- List item 0 has incompatible type "ndarray[Any, dtype[signedinteger[_32Bit]]]"; expected "Mat"
+            exterior = np.array(polygon.exterior.coords, dtype=np.int32)
+            cv2.fillPoly(mask, [exterior], color=(255, 255, 255))  # type: ignore[list-item]
+            for interior in polygon.interiors:
+                cv2.fillPoly(mask, [np.array(interior.coords, dtype=np.int32)], color=(0, 0, 0))  # type: ignore[list-item]
+
+        # Obtain the COCO compatible RLE string (convert from row-major to column-major order)
+        segmentation = cocomask.encode(np.asfortranarray(mask))
+        # Convert RLE string from bytes (which is not a JSON serializable type) to a string format
+        segmentation["counts"] = segmentation["counts"].decode("ascii")
+
+        return segmentation
+
+    def get_multipolygon_from_polygons(
+        self,
+        polygons: List[List[List[float]]],
+        w: int,
+        h: int,
+    ) -> List[ShapelyPolygon]:
+        return [self.convert_polygon_points_list_to_polygon(polygon, w, h) for polygon in polygons]
+
     def get_polyline(
         self,
         object_: Dict,
@@ -585,7 +733,7 @@ class CocoExporter:
         object_actions: Dict,
     ) -> CocoAnnotation:
         """Polylines are technically not supported in COCO, but here we use a trick to allow a representation."""
-        polygon = get_polygon_from_dict(object_["polyline"], size.width, size.height)
+        polygon = self.get_polygon_from_dict_or_list(object_["polyline"], size.width, size.height)
         polyline_coordinate = self.join_polyline_from_polygon(list(chain(*polygon)))
         segmentation = [polyline_coordinate]
         area = 0
@@ -716,7 +864,7 @@ class CocoExporter:
         w, h = 0, 0
         area = 0
         segmentation = [[x, y]]
-        keypoints = [x, y, 2]
+        keypoints = [x, y, KeyPointVisibility.VISIBLE.value]
         num_keypoints = 1
 
         bbox = (x, y, w, h)
@@ -760,7 +908,7 @@ class CocoExporter:
             keypoints += [
                 point["x"] * size.width,
                 point["y"] * size.height,
-                2,
+                self.get_skeleton_point_visibility(point).value,
             ]
 
         num_keypoints = len(keypoints) // 3
@@ -795,6 +943,14 @@ class CocoExporter:
             classifications=classifications,
             manual_annotation=manual_annotation,
         )
+
+    def get_skeleton_point_visibility(self, point: dict) -> KeyPointVisibility:
+        if point.get("invisible") is True:
+            return KeyPointVisibility.NOT_LABELED
+        elif point.get("occluded") is True:
+            return KeyPointVisibility.NOT_VISIBLE
+        else:
+            return KeyPointVisibility.VISIBLE
 
     def get_flat_classifications(
         self, object_: Dict, image_id: int, object_answers: Dict, object_actions: Dict
@@ -868,7 +1024,7 @@ class CocoExporter:
         if self._id_and_object_hash_to_answers_map is not None:
             return self._id_and_object_hash_to_answers_map
 
-        ret: Dict[Tuple[int, str], Dict[str, Any]] = defaultdict(Dict)
+        ret: Dict[Tuple[int, str], Dict[str, Any]] = defaultdict(dict)
         feature_hash_to_attribute_map = self.get_feature_hash_to_flat_object_attribute_map()
         for object_hash, payload in object_actions.items():
             for action in payload["actions"]:
