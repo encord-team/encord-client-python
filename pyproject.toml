@@ -53,6 +53,7 @@ numpy = [
 ]
 opencv-python = {version = "^4.11.0.86"}
 shapely = {version = "^2.0.4"}
+pycocotools = {version = "^2.0.7"}
 ruff = "^0.8.6"
 
 [build-system]
