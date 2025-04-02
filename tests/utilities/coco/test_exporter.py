@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, Dict, List
 
 import pytest
 from deepdiff import DeepDiff
@@ -33,8 +33,8 @@ def test_coco_exporter_extra_complex_nested_ontology_all_data_types(coco_exporte
 def test_get_polygon_from_dict_or_list(coco_exporter: CocoExporter) -> None:
     w, h = 100, 100
 
-    polygon_list: list = [{"x": 1, "y": 2}, {"x": 2, "y": 3}]
-    polygon_dict: dict = {str(i): point for i, point in enumerate(polygon_list)}
+    polygon_list: List = [{"x": 1, "y": 2}, {"x": 2, "y": 3}]
+    polygon_dict: Dict = {str(i): point for i, point in enumerate(polygon_list)}
 
     expected = [(100, 200), (200, 300)]
 
@@ -90,7 +90,7 @@ def test_get_multipolygon_from_list(coco_exporter: CocoExporter) -> None:
 def test_get_rle_segmentation_from_multipolygon(
     coco_exporter: CocoExporter,
     polygons,
-    expected_segmentation: dict[str, Any],
+    expected_segmentation: Dict[str, Any],
 ) -> None:
     w, h = 4032, 3024
 
