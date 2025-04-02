@@ -1,6 +1,6 @@
 import json
 from enum import Enum
-from typing import Dict, Literal, Sequence, Union
+from typing import Dict, Literal, Optional, Sequence, Union
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -44,12 +44,12 @@ class _ClientMetadataSchemaTypeEnum(BaseModel):
 
 class _ClientMetadataSchemaTypeEmbeddingApi(BaseModel):
     # FIXME: remove unsupported field layouts once finalised.
-    url: str | None = None
-    path: str | None = None
-    auth_integration_secret: UUID | None = None
-    client_only: bool | None = None
-    embed_b64_image: bool | None = None
-    embed_text: bool | None = None
+    url: Optional[str] = None
+    path: Optional[str] = None
+    auth_integration_secret: Optional[UUID] = None
+    client_only: Optional[bool] = None
+    embed_b64_image: Optional[bool] = None
+    embed_text: Optional[bool] = None
 
 
 class _ClientMetadataSchemaTypeEmbedding(BaseModel):
