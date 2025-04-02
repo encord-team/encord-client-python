@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Type, Union
 
+from docs.source.code_examples.labels_v2 import object_instance
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
@@ -188,9 +189,13 @@ class PolygonCoordinates:
             self._values = [point for point in self._polygons[0][0]]
         elif polygons and values:
             if polygons[0][0] != values:
-                raise LabelRowError("`values` and `polygons` are not consistent")
-            self._values = values
-            self._polygons = polygons
+                # lets just default to polygons values
+                self._polygons = polygons
+                self._values = [point for point in self._polygons[0][0]]
+                logger.info("`values` and `polygons` are not consistent, defaulting to polygons value")
+            else:
+                self._values = values
+                self._polygons = polygons
 
     @property
     def values(self) -> list[PointCoordinate]:
