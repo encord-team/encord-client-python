@@ -189,9 +189,9 @@ class PolygonCoordinates:
             self._values = [point for point in self._polygons[0][0]]
         elif polygons and values:
             if polygons[0][0] != values:
-                # lets just default to polygons values
+                # TODO: When removing Polygon from the DB & all backfilling has been completed, remove this code
                 self._polygons = polygons
-                self._values = [point for point in self._polygons[0][0]]
+                self._values = [point for point in self._polygons[0][0]] # We default to polygons values
                 logger.warning("`values` and `polygons` are not consistent, defaulting to polygons value")
             else:
                 self._values = values
