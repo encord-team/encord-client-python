@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Type, Union
-
+import logging
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
@@ -23,6 +23,7 @@ from encord.objects.html_node import HtmlRange
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
+logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class BoundingBoxCoordinates:
@@ -177,7 +178,6 @@ class PolygonCoordinates:
             values (List[PointCoordinate]): A list of PointCoordinate objects defining the polygon.
             polygons (List[List[List[PointCoordinate]]]): A list of polygons, where each polygon is a list of contours, where each contour is a list of points.
         """
-
         if not values and not polygons:
             raise LabelRowError("Either `values` or `polygons` must be provided")
         elif values and not polygons:
@@ -191,7 +191,7 @@ class PolygonCoordinates:
                 # lets just default to polygons values
                 self._polygons = polygons
                 self._values = [point for point in self._polygons[0][0]]
-                logger.info("`values` and `polygons` are not consistent, defaulting to polygons value")
+                logger.warning("`values` and `polygons` are not consistent, defaulting to polygons value")
             else:
                 self._values = values
                 self._polygons = polygons
