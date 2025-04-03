@@ -11,10 +11,10 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Type, Union
-import logging
 
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
@@ -25,6 +25,7 @@ from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class BoundingBoxCoordinates:
@@ -191,7 +192,7 @@ class PolygonCoordinates:
             if polygons[0][0] != values:
                 # TODO: When removing Polygon from the DB & all backfilling has been completed, remove this code
                 self._polygons = polygons
-                self._values = [point for point in self._polygons[0][0]] # We default to polygons values
+                self._values = [point for point in self._polygons[0][0]]  # We default to polygons values
                 logger.warning("`values` and `polygons` are not consistent, defaulting to polygons value")
             else:
                 self._values = values

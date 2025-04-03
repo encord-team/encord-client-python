@@ -1,3 +1,4 @@
+import logging
 from copy import copy
 
 import pytest
@@ -5,7 +6,7 @@ import pytest
 from encord.exceptions import LabelRowError
 from encord.objects import Shape
 from encord.objects.coordinates import ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS, PointCoordinate, PolygonCoordinates
-import logging
+
 
 def test_acceptable_coordinates_for_ontology_items() -> None:
     all_mappings = copy(ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS)
@@ -34,11 +35,8 @@ def test_polygon_coordinates(caplog):
     ]  # only contains the first polygon, second is ignored
 
     # inconsistent values being provided should log a warning & set to polygons value
-    caplog.set_level(logging.WARNING) # Set the log level to capture warnings
-    c3 = PolygonCoordinates(
-        values=[PointCoordinate(x=0, y=0)],
-        polygons=[[[PointCoordinate(x=1, y=1)]]]
-    )
+    caplog.set_level(logging.WARNING)  # Set the log level to capture warnings
+    c3 = PolygonCoordinates(values=[PointCoordinate(x=0, y=0)], polygons=[[[PointCoordinate(x=1, y=1)]]])
     assert "`values` and `polygons` are not consistent, defaulting to polygons value" in caplog.text
     # Assert that the values are now equal based on polygons value
     assert c3.values == [PointCoordinate(x=1, y=1)]
