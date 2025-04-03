@@ -43,7 +43,14 @@ from encord.orm.label_row import (
     LabelStatus,
     ShadowDataState,
 )
-from encord.orm.project import CopyDatasetOptions, CopyLabelsOptions, ProjectDataset, ProjectDTO, ProjectType
+from encord.orm.project import (
+    CopyDatasetOptions,
+    CopyLabelsOptions,
+    ProjectDataset,
+    ProjectDTO,
+    ProjectStatus,
+    ProjectType,
+)
 from encord.orm.project import Project as OrmProject
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
@@ -77,6 +84,11 @@ class Project:
         """Get the project hash (i.e. the Project ID)."""
         # Keeping the interface backward compatible, so converting UUID to str for now
         return str(self._project_instance.project_hash)
+
+    @property
+    def status(self) -> ProjectStatus:
+        """Get the status of the project."""
+        return self._project_instance.status
 
     @property
     def title(self) -> str:
