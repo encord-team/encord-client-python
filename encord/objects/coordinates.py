@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Type, Union
 import logging
+
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
