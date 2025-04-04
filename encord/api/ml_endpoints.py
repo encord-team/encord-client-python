@@ -83,7 +83,7 @@ def _api_ml_delete_model(
     *,
     client: ApiClient,
 ) -> None:
-    return client._request(
+    client._request(
         Request(
             method="delete",
             url=f"{client._domain}/v2/public/ml-models/{model_uuid}",
@@ -183,7 +183,7 @@ def _api_ml_delete_training_iteration(
     *,
     client: ApiClient,
 ) -> None:
-    return client._request(
+    client._request(
         Request(
             method="delete",
             url=f"{client._domain}/v2/public/ml-models/{model_uuid}/iterations/{training_uuid}",
@@ -245,7 +245,7 @@ def _api_project_delete_model_attachment(
     *,
     client: ApiClient,
 ) -> None:
-    return client._request(
+    client._request(
         Request(
             method="delete",
             url=f"{client._domain}/v2/public/projects/{project_uuid}/models-attachments/{project_model_uuid}",

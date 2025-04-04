@@ -333,6 +333,7 @@ class StorageFolder:
                 force_full_reencoding=force_full_reencoding,
             ),
             result_type=UUID,
+            allow_retries=False,
         )
 
     def get_re_encoding_status(self, process_hash: UUID) -> ReencodeVideoItemsResponse:
@@ -1305,6 +1306,7 @@ class StorageFolder:
             params=None,
             payload=payload,
             result_type=UUID,
+            allow_retries=False,
         )
 
         logger.info(f"add_data_to_folder job started with upload_job_id={upload_job_id}.")
@@ -1451,7 +1453,11 @@ class StorageFolder:
             client_metadata=json.dumps(client_metadata) if client_metadata is not None else None,
         )
         folder_orm = api_client.post(
-            "storage/folders", params=None, payload=payload, result_type=orm_storage.StorageFolder
+            "storage/folders",
+            params=None,
+            payload=payload,
+            result_type=orm_storage.StorageFolder,
+            allow_retries=False,
         )
         return StorageFolder(api_client, folder_orm)
 

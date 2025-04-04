@@ -6,6 +6,7 @@ from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, Typ
 from urllib.parse import urljoin
 
 import requests
+from numpy.core.multiarray import result_type
 from pydantic import BaseModel
 from requests import PreparedRequest, Response
 
@@ -107,24 +108,56 @@ class ApiClient:
     def post(
         self,
         path: str,
+        *,
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
         result_type: Optional[Type[T]],
+        allow_retries: bool = True,
     ) -> T:
-        return self._request_with_payload("POST", path, params, payload, result_type)
+        return self._request_with_payload(
+            "POST",
+            path,
+            params=params,
+            payload=payload,
+            result_type=result_type,
+            allow_retries=allow_retries,
+        )
 
     def put(
         self,
         path: str,
+        *,
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
+        allow_retries: bool = True,
     ) -> None:
-        self._request_with_payload("PUT", path, params, payload, None, allow_none=True)
+        self._request_with_payload(
+            "PUT",
+            path,
+            params=params,
+            payload=payload,
+            result_type=None,
+            allow_none=True,
+            allow_retries=allow_retries,
+        )
 
     def patch(
-        self, path: str, params: Optional[BaseDTO], payload: Optional[BaseDTO], result_type: Optional[Type[T]]
+        self,
+        path: str,
+        *,
+        params: Optional[BaseDTO],
+        payload: Optional[BaseDTO],
+        result_type: Optional[Type[T]],
+        allow_retries: bool = True,
     ) -> T:
-        return self._request_with_payload("PATCH", path, params, payload, result_type)
+        return self._request_with_payload(
+            "PATCH",
+            path,
+            params=params,
+            payload=payload,
+            result_type=result_type,
+            allow_retries=allow_retries,
+        )
 
     def _serialise_payload(self, payload: Union[BaseDTO, Sequence[BaseDTO], None]) -> Union[List[Dict], Dict, None]:
         if isinstance(payload, list):
@@ -146,10 +179,12 @@ class ApiClient:
         self,
         method: str,
         path: str,
+        *,
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
         result_type: Optional[Type[T]],
         allow_none: bool = False,
+        allow_retries: bool = True,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
         payload_serialised = self._serialise_payload(payload)
@@ -161,7 +196,12 @@ class ApiClient:
             json=payload_serialised,
         ).prepare()
 
-        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
+        return self._request(
+            req,
+            result_type=result_type,
+            allow_none=allow_none,
+            allow_retries=allow_retries,
+        )  # type: ignore
 
     def _request_without_payload(
         self,
@@ -169,23 +209,37 @@ class ApiClient:
         path: str,
         params: Optional[BaseDTO],
         result_type: Optional[Type[T]],
+        *,
         allow_none: bool = False,
+        allow_retries: bool = True,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
 
         req = requests.Request(method=method, url=self._build_url(path), params=params_dict).prepare()
 
-        return self._request(req, result_type=result_type, allow_none=allow_none)  # type: ignore
+        return self._request(
+            req,
+            result_type=result_type,
+            allow_none=allow_none,
+            allow_retries=allow_retries,
+        )  # type: ignore
 
-    def _request(self, req: PreparedRequest, result_type: Optional[Type[T]], allow_none: bool = False):
+    def _request(
+        self,
+        req: PreparedRequest,
+        *,
+        result_type: Optional[Type[T]],
+        allow_none: bool = False,
+        allow_retries: bool = True,
+    ) -> T:
         req = self._config.define_headers_v2(req)
 
         timeouts = (self._config.connect_timeout, self._config.read_timeout)
         req_settings = self._config.requests_settings
         with create_new_session(
-            max_retries=req_settings.max_retries,
+            max_retries=req_settings.max_retries if allow_retries else 0,
             backoff_factor=req_settings.backoff_factor,
-            connect_retries=req_settings.connection_retries,
+            connect_retries=req_settings.connection_retries,  # we still allow connection retries
         ) as session:
             context = self._exception_context(req)
 
@@ -201,23 +255,29 @@ class ApiClient:
                 self._handle_error(res, context)
 
             if res.status_code == HTTPStatus.NO_CONTENT:
-                return None
-
+                if result_type is None or allow_none:
+                    return None  # type: ignore[return-value,unused-ignore]
+                else:
+                    raise RequestException(
+                        f"Unexpected {res.status_code} response from {req.method=} {req.url=} with no content"
+                        ", expected content",
+                        context=context,
+                    )
             try:
                 res_json = res.json()
             except Exception as e:
                 raise RequestException(f"Error parsing JSON response: {res.text}", context=context) from e
 
             if result_type is None or (res_json is None and allow_none):
-                return None
+                return None  # type: ignore[return-value,unused-ignore]
             if result_type is int:
-                return int(res_json)
+                return int(res_json)  # type: ignore[return-value,unused-ignore]
             elif result_type is str:
-                return str(res_json)
+                return str(res_json)  # type: ignore[return-value,unused-ignore]
             elif result_type is uuid.UUID:
-                return uuid.UUID(res_json)
+                return uuid.UUID(res_json)  # type: ignore[return-value,unused-ignore]
             elif issubclass(result_type, BaseDTOInterface):
-                return result_type.from_dict(res_json)
+                return result_type.from_dict(res_json)  # type: ignore[return-value,unused-ignore]
             elif issubclass(result_type, BaseModel):
                 # use new pydantic v2 function if it exists, otherwise use fallback
                 if hasattr(result_type, "model_validate"):

@@ -457,6 +457,7 @@ class ProjectCollection:
             params=params,
             payload=payload,
             result_type=UUID,
+            allow_retries=False,
         )
 
     def update_collection(self, name: Optional[str] = None, description: Optional[str] = None) -> None:

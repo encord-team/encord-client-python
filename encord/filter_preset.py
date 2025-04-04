@@ -141,6 +141,7 @@ class FilterPreset:
             payload=payload,
             params=CreatePresetParams(),
             result_type=UUID,
+            allow_retries=False,
         )
 
     def get_filter_preset_json(self) -> IndexFilterPresetDefinition:
@@ -311,5 +312,11 @@ class ProjectFilterPreset:
         if not filter_preset.local_filters and not filter_preset.global_filters:
             raise EncordException("We require there to be a non-zero number of filters in a preset for creation")
         payload = ActiveCreatePresetPayload(name=name, filter_preset_json=filter_preset.to_dict())
-        orm_resp = client.post(f"active/{project_uuid}/presets", params=None, payload=payload, result_type=UUID)
+        orm_resp = client.post(
+            f"active/{project_uuid}/presets",
+            params=None,
+            payload=payload,
+            result_type=UUID,
+            allow_retries=False,
+        )
         return orm_resp
