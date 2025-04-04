@@ -330,7 +330,7 @@ class LabelRowMetadata(Formatter):
             audio_sample_rate=json_dict.get("audio_sample_rate", None),
             height=json_dict.get("height"),
             width=json_dict.get("width"),
-            task_uuid=json_dict.get("task_uuid"),
+            task_uuid=UUID(json_dict["task_uuid"]) if "task_uuid" in json_dict else None,
             priority=json_dict.get("priority"),
             client_metadata=json_dict.get("client_metadata", None),
             images_data=json_dict.get("images_data", None),
