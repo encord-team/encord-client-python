@@ -174,4 +174,5 @@ def _migrate_items_bundle(
                 skip_missing=single_call_items_list[0].skip_missing,
             ),
             result_type=None,
+            allow_retries=False,
         )

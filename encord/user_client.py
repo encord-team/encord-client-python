@@ -228,6 +228,7 @@ class EncordUserClient:
                 legacy_call=legacy_call,
             ),
             result_type=CreateDatasetResponseV2,
+            allow_retries=False,
         )
 
         return CreateDatasetResponse(
@@ -628,6 +629,7 @@ class EncordUserClient:
             ),
             params=None,
             result_type=UUID,
+            allow_retries=False,
         )
 
         return cvat_import_uuid
@@ -944,7 +946,13 @@ class EncordUserClient:
             editor=structure_dict,
         )
 
-        ontology = self._api_client.post("ontologies", payload=payload, params=None, result_type=OntologyWithUserRole)
+        ontology = self._api_client.post(
+            "ontologies",
+            payload=payload,
+            params=None,
+            result_type=OntologyWithUserRole,
+            allow_retries=False,
+        )
 
         return Ontology._from_api_payload(ontology, self._api_client)
 
@@ -1039,6 +1047,7 @@ class EncordUserClient:
             ),
             params=None,
             result_type=UUID,
+            allow_retries=False,
         )
 
         return dicom_deid_uuid
