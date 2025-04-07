@@ -275,6 +275,9 @@ class Project:
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """Add users to the project.
 
+        If the user was already added, this operation will succeed but the `user_role` will be unchanged. The existing
+        `user_role` will be reflected in the `DatasetUser` instance.
+
         Args:
             user_emails: List of user emails to be added.
             user_role: The user role to assign to all users.
