@@ -306,7 +306,6 @@ class LabelRowMetadata(Formatter):
             if json_dict.get("annotation_task_status", None) is not None
             else None
         )
-
         return LabelRowMetadata(
             label_hash=json_dict.get("label_hash", None),
             created_at=created_at,
@@ -330,7 +329,7 @@ class LabelRowMetadata(Formatter):
             audio_sample_rate=json_dict.get("audio_sample_rate", None),
             height=json_dict.get("height"),
             width=json_dict.get("width"),
-            task_uuid=UUID(json_dict["task_uuid"]) if "task_uuid" in json_dict else None,
+            task_uuid=UUID(json_dict["task_uuid"]) if json_dict.get("task_uuid", None) is not None else None,
             priority=json_dict.get("priority"),
             client_metadata=json_dict.get("client_metadata", None),
             images_data=json_dict.get("images_data", None),
@@ -338,7 +337,7 @@ class LabelRowMetadata(Formatter):
             is_valid=bool(json_dict.get("is_valid", True)),
             branch_name=json_dict["branch_name"],
             backing_item_uuid=UUID(json_dict["backing_item_uuid"])
-            if json_dict.get("backing_item_uuid", None) is not None
+            if json_dict.get("backing_item_uuid") is not None
             else None,
         )
 
