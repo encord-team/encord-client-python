@@ -1,6 +1,7 @@
 LABEL_ROW_METADATA_BLURB = [
     {
         "label_hash": "44e1bdfb-3c45-4edb-8a71-a969f22fd632",
+        "task_uuid": "ec176f56-6156-400d-97a2-68e8707e89a1",
         "branch_name": "main",
         "label_status": "LABEL_IN_PROGRESS",
         "created_at": "2023-03-21T09:58:08.472959",
@@ -25,6 +26,7 @@ LABEL_ROW_METADATA_BLURB = [
     },
     {
         "label_hash": "2321fd7d-99cd-4d85-b371-9a9f59cf79a7",
+        "task_uuid": "ec176f56-6156-400d-97a2-68e8707e89a2",
         "branch_name": "main",
         "label_status": "LABEL_IN_PROGRESS",
         "created_at": "2023-03-21T10:25:48.821571",
@@ -49,6 +51,7 @@ LABEL_ROW_METADATA_BLURB = [
     },
     {
         "label_hash": "f6dcda1a-8e0a-45b2-a3c5-d7ebfe93ad8a",
+        "task_uuid": "ec176f56-6156-400d-97a2-68e8707e89a3",
         "branch_name": "main",
         "label_status": "LABEL_IN_PROGRESS",
         "created_at": "2023-03-21T12:02:42.287150",
