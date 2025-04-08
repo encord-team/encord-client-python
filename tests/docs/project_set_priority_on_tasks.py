@@ -22,9 +22,8 @@ project = user_client.get_project(PROJECT_ID)
 
 # Create a bundle
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
-
-# Set the priority of all tasks in the project to 88
-  for label_row in project.list_label_rows_v2():
-    label_row.set_priority(0.88, bundle=bundle)
+    # Set the priority of all tasks in the project to 88
+    for label_row in project.list_label_rows_v2():
+        label_row.set_priority(0.88, bundle=bundle)
 
 print("All task priorities changed.")

@@ -12,7 +12,7 @@ from pathlib import Path
 def get_destination_projects(user_client: EncordUserClient, source_project: Project, n_target_projects: int) -> List[Project]:
     dest_project_ids = []
     for idx in range(n_target_projects):
-        target_title = source_project.title + f" slice {idx + 1}" 
+        target_title = source_project.title + f" slice {idx + 1}"
         if found_projects := user_client.get_projects(title_eq=target_title):
             if len(found_projects) > 1:
                 print(f"A few projects with name {target_title} found. Can't proceed, as target name should be unique.")

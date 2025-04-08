@@ -29,7 +29,7 @@ stage = project.workflow.get_stage(name=WORKFLOW_STAGE_NAME, type_=WORKFLOW_STAG
 # Create a bundle and move tasks
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
     for task in stage.get_tasks():
-        # The task is submitted as the user who is currently assigned to the task. 
+        # The task is submitted as the user who is currently assigned to the task.
         # With retain_assignee=True an error occurs if there are tasks without an assignee.
         task.submit(retain_assignee=True, bundle=bundle)
         print(f"Task: {task}")

@@ -2,18 +2,18 @@
 Code Block Name: Automatic Interpolation
 """
 
-# Import dependencies 
+# Import dependencies
 from encord import EncordUserClient
 from encord.objects import LabelRowV2
-from encord.objects.coordinates import PolygonCoordinates, PointCoordinate
+from encord.objects.coordinates import PointCoordinate, PolygonCoordinates
 
 # User input
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 PROJECT_ID = "f7890e41-6de8-4e66-be06-9fbe182df457"
 DATA_UNIT_TITLE = "cherries-vid-001.mp4"
-DATA_UNIT_ID = "1041da61-d63c-4489-9001-4a56fe37f1f3" # The data_hash for the data unit
-LABEL_ROW_ID = "6e9a3f80-0663-4af4-9143-bc1328a15735" # The label_hash for the data unit
-LABEL_ID = "noQksGhW" # The objectHash for the label
+DATA_UNIT_ID = "1041da61-d63c-4489-9001-4a56fe37f1f3"  # The data_hash for the data unit
+LABEL_ROW_ID = "6e9a3f80-0663-4af4-9143-bc1328a15735"  # The label_hash for the data unit
+LABEL_ID = "noQksGhW"  # The objectHash for the label
 
 # Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(

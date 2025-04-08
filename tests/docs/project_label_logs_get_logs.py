@@ -2,7 +2,7 @@
 Code Block Name: View label logs
 """
 
-# Import dependencies 
+# Import dependencies
 from encord import EncordUserClient
 
 # User input
@@ -22,11 +22,11 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 project = user_client.get_project(PROJECT_ID)
 
 # Check if the method get_label_logs exists in project
-if hasattr(project, 'get_label_logs'):
+if hasattr(project, "get_label_logs"):
     try:
         # Fetch the logs for the given DATA_UNIT_ID
         logs = project.get_label_logs(data_hash=DATA_UNIT_ID)
-        
+
         # Check if logs were returned
         if logs:
             for log in logs:

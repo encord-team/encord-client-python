@@ -10,11 +10,12 @@ from typing import cast
 import cv2
 import numpy as np
 import typer
+from tqdm import tqdm, trange
+from typing_extensions import Annotated
+
 from encord import EncordUserClient, Project
 from encord.objects import LabelRowV2, Object, Shape
 from encord.objects.coordinates import BitmaskCoordinates, PolygonCoordinates
-from tqdm import tqdm, trange
-from typing_extensions import Annotated
 
 MAX_NUM_EXECUTION_ATTEMPTS = 10
 

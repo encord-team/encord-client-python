@@ -3,6 +3,7 @@ Code Block Name: All labels all branches
 """
 
 import json
+
 from encord import EncordUserClient
 
 # User input
@@ -38,7 +39,7 @@ for label_row in label_rows:
         "title": label_row.data_title,
         "branch": label_row.branch_name,
         "objects": [],
-        "classifications": []
+        "classifications": [],
     }
 
     # Collect object instances
@@ -54,12 +55,12 @@ for label_row in label_rows:
                 "attributes": [
                     {"name": attribute.name, "value": attribute.value}
                     for attribute in object_instance.ontology_item.attributes
-                ]
+                ],
             },
             "annotations": [
                 {"frame": annotation.frame, "coordinates": annotation.coordinates}
                 for annotation in object_instance.get_annotations()
-            ]
+            ],
         }
         label_row_data["objects"].append(object_data)
 
@@ -71,11 +72,9 @@ for label_row in label_rows:
             "feature_hash": classification_instance.feature_hash,
             "classification_answer": {
                 "value": classification_instance.get_answer().value,
-                "hash": classification_instance.get_answer().feature_node_hash
+                "hash": classification_instance.get_answer().feature_node_hash,
             },
-            "annotations": [
-                {"frame": annotation.frame} for annotation in classification_instance.get_annotations()
-            ]
+            "annotations": [{"frame": annotation.frame} for annotation in classification_instance.get_annotations()],
         }
         label_row_data["classifications"].append(classification_data)
 

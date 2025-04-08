@@ -8,11 +8,12 @@ from pathlib import Path
 from typing import cast
 
 import typer
+from tqdm import tqdm, trange
+from typing_extensions import Annotated
+
 from encord import EncordUserClient, Project
 from encord.objects import LabelRowV2, Object, Shape
 from encord.objects.coordinates import BoundingBoxCoordinates, PolygonCoordinates
-from tqdm import tqdm, trange
-from typing_extensions import Annotated
 
 MAX_NUM_EXECUTION_ATTEMPTS = 10
 

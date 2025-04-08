@@ -2,7 +2,7 @@
 Code Block Name: View Project details
 """
 
-# Import dependencies 
+# Import dependencies
 from encord import EncordUserClient
 
 # User input
@@ -26,4 +26,3 @@ print(f"Created at: {project.created_at}")
 print(f"Ontology ID: {project.ontology_hash}")
 print(f"Datasets: {project.list_datasets()}")
 print(f"Workflow: {project.workflow.stages}")
-

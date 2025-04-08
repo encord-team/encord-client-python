@@ -22,9 +22,9 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 
 # Create a project
 project = user_client.create_project(
-    project_title= PROJECT_TITLE,
-    dataset_hashes= [DATASET_ID_01, DATASET_ID_02, DATASET_ID_03],
-    workflow_template_hash= WORKFLOW_TEMPLATE_ID
+    project_title=PROJECT_TITLE,
+    dataset_hashes=[DATASET_ID_01, DATASET_ID_02, DATASET_ID_03],
+    workflow_template_hash=WORKFLOW_TEMPLATE_ID,
 )
 
 # Prints the Project ID of the Project you just created

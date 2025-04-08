@@ -3,6 +3,7 @@ Code Block Name: Reopen and list all tasks
 """
 
 import json
+
 from encord.user_client import EncordUserClient
 
 # User input
@@ -29,13 +30,10 @@ with project.create_bundle() as bundle:
     for label_row in project.list_label_rows_v2():
         label_row.workflow_reopen(bundle=bundle)
         # Append the label row data to output_data
-        output_data.append({
-            'label_row_id': label_row.label_hash,
-            'data': label_row.data_title
-        })
+        output_data.append({"label_row_id": label_row.label_hash, "data": label_row.data_title})
 
 # Save output data to JSON file
-with open(OUTPUT_FILE_PATH, 'w') as json_file:
+with open(OUTPUT_FILE_PATH, "w") as json_file:
     json.dump(output_data, json_file, indent=4)
 
 print(f"Data successfully saved to {OUTPUT_FILE_PATH}")

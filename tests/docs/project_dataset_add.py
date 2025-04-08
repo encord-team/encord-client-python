@@ -25,7 +25,7 @@ add_these_datasets = project.add_datasets(
     [
         DATASET_ID_01,
         DATASET_ID_02,
-        DATASET_ID_03
+        DATASET_ID_03,
         # ...
     ]
 )

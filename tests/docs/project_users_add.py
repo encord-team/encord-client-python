@@ -9,9 +9,9 @@ from encord.utilities.project_user import ProjectUserRole
 # User input
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 PROJECT_ID = "f7890e41-6de8-4e66-be06-9fbe182df457"
-USER_01 = "example-user-01@encord.com" # Email addres for user you want to add to Project
-USER_02 = "example-user-02@encord.com" # Email addres for user you want to add to Project
-USER_03 = "exmaple-user-02@encord.com" # Email addres for user you want to add to Project
+USER_01 = "example-user-01@encord.com"  # Email addres for user you want to add to Project
+USER_02 = "example-user-02@encord.com"  # Email addres for user you want to add to Project
+USER_03 = "exmaple-user-02@encord.com"  # Email addres for user you want to add to Project
 
 # Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
