@@ -1,3 +1,8 @@
+"""
+Code Block Name: All attributes
+"""
+
+# Import dependencies
 import json
 from collections.abc import Iterable
 

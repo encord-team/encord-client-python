@@ -1,3 +1,7 @@
+"""
+Code Block Name: Checklist attributes
+"""
+
 # Import dependencies
 import json
 import os

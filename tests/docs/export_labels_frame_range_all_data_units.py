@@ -1,3 +1,7 @@
+"""
+Code Block Name: Frame range for all tasks
+"""
+
 # Import dependencies
 import json
 from collections.abc import Iterable

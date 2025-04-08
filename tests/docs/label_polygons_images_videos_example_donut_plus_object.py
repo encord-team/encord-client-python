@@ -11,7 +11,7 @@ from encord.objects.coordinates import PointCoordinate, PolygonCoordinates
 
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
-PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+PROJECT_HASH = "4b8756eb-eecb-415f-a212-4fb57c95b218"
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key

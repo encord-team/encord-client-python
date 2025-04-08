@@ -1,3 +1,7 @@
+"""
+Code Block Name: Text attributes
+"""
+
 # Import dependencies
 import json
 
