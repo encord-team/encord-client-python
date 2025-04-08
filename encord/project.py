@@ -276,7 +276,7 @@ class Project:
         """Add users to the project.
 
         If the user already exists in the Project, this operation succeeds but the `user_role` remains unchanged. The existing
-        `user_role` will be reflected in the `DatasetUser` instance.
+        `user_role` is reflected in the `DatasetUser` instance.
 
         Args:
             user_emails: List of user emails to be added.
