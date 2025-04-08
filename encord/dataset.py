@@ -169,8 +169,9 @@ class Dataset:
     def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
         """Add users to the dataset.
 
-        If the user was already added, this operation will succeed but the `user_role` will be unchanged. The existing
-        `user_role` will be reflected in the `DatasetUser` instance.
+
+        If the user already exists in the Dataset, this operation succeeds but the `user_role` remains unchanged. The
+        existing `user_role` is reflected in the `DatasetUser` instance returned.
 
         Args:
             user_emails: List of user emails to be added.
