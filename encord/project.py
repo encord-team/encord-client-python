@@ -275,6 +275,9 @@ class Project:
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """Add users to the project.
 
+        If the user already exists in the Project, this operation succeeds but the `user_role` remains unchanged. The
+        existing `user_role` is reflected in the `ProjectUser` instance returned.
+
         Args:
             user_emails: List of user emails to be added.
             user_role: The user role to assign to all users.
