@@ -12,7 +12,7 @@ from encord.objects.coordinates import PointCoordinate, PolylineCoordinates
 # User imput
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
-PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key
@@ -23,8 +23,8 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 )
 
 # Get project for which labels are to be added
-project: Project = user_client.get_project(PROJECT_HASH)
-assert project is not None, "Project not found — check PROJECT_HASH"
+project: Project = user_client.get_project(PROJECT_ID)
+assert project is not None, "Project not found — check PROJECT_ID"
 
 # Get ontology structure
 ontology_structure = project.ontology_structure

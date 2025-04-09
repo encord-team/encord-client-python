@@ -17,7 +17,7 @@ assert numpy_coordinates.shape == (1080, 1920), "Mask dimensions must match 1080
 
 # Paths and identifiers
 SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
-PROJECT_HASH = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 BUNDLE_SIZE = 100
 
 # Create user client using SSH key
@@ -28,8 +28,8 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 )
 
 # Load project
-project: Project = user_client.get_project(PROJECT_HASH)
-assert project is not None, f"Project {PROJECT_HASH} could not be loaded"
+project: Project = user_client.get_project(PROJECT_ID)
+assert project is not None, f"Project {PROJECT_ID} could not be loaded"
 
 # Ontology lookup with assertions
 ontology_structure = project.ontology_structure

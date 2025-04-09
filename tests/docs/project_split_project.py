@@ -8,6 +8,14 @@ from encord import EncordUserClient, Project
 from encord.objects import LabelRowV2
 from pathlib import Path
 
+
+# User input
+SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+PROJECT_ID = "f8b81f75-d1d5-4cb8-895b-44db9957392e"
+PROJECT_SIZE = 50 # Specify the size Project first project
+START_NUMBER = 100 # Specify the start number of the second project
+
+
 # Prepare target Projects
 def get_destination_projects(user_client: EncordUserClient, source_project: Project, n_target_projects: int) -> List[Project]:
     dest_project_ids = []
@@ -36,7 +44,7 @@ def get_destination_label_row(destination_project: Project, data_hash: str) -> L
     return result[0]
 
 # The main function. Substitute your variables here
-def main(ssh_key: Path = "<private_key_path>", source_project: str = "<project_hash>", target_project_size: int = <project_size>, continue_from: int = <start_number>, ):
+def main(ssh_key: Path = SSH_PATH, source_project: str = PROJECT_ID, target_project_size: int = PROJECT_SIZE, continue_from: int = START_NUMBER, ):
 
     user_client = EncordUserClient.create_with_ssh_private_key(
         ssh_private_key_path=ssh_key
