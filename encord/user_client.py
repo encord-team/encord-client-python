@@ -31,7 +31,7 @@ from encord.client_metadata_schema import get_client_metadata_schema, set_client
 from encord.collection import Collection
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime, parse_datetime_optional
-from encord.configs import BearerConfig, SshConfig, UserConfig, get_env_ssh_key
+from encord.configs import ENCORD_DOMAIN, BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.filter_preset import FilterPreset
@@ -353,6 +353,7 @@ class EncordUserClient:
         password: Optional[str] = None,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
         ssh_private_key_path: Optional[Union[str, Path]] = None,
+        domain: str = ENCORD_DOMAIN,
         **kwargs,
     ) -> EncordUserClient:
         """Creates an instance of EncordUserClient authenticated with private SSH key.
@@ -366,6 +367,7 @@ class EncordUserClient:
             password: private key password
             requests_settings: Request settings. Useful default provided
             ssh_private_key_path: the path to the private key file
+            domain: The underlying Encord domain to connect too. Need only be changed for US or Private Clouds
         """
         if ssh_private_key_path is not None:
             if isinstance(ssh_private_key_path, str):
@@ -377,7 +379,7 @@ class EncordUserClient:
             ssh_private_key = get_env_ssh_key()
 
         config = SshConfig.from_ssh_private_key(
-            ssh_private_key, password, requests_settings=requests_settings, **kwargs
+            ssh_private_key, password, requests_settings=requests_settings, domain=domain, **kwargs
         )
         user_config = UserConfig(config)
         querier = Querier(user_config)
@@ -385,9 +387,15 @@ class EncordUserClient:
 
     @staticmethod
     def create_with_bearer_token(
-        token: str, *, requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS, **kwargs
+        token: str,
+        *,
+        requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        domain: str = ENCORD_DOMAIN,
+        **kwargs,
     ) -> EncordUserClient:
-        config = BearerConfig.from_bearer_token(token=token, requests_settings=requests_settings, **kwargs)
+        config = BearerConfig.from_bearer_token(
+            token=token, requests_settings=requests_settings, domain=domain, **kwargs
+        )
         user_config = UserConfig(config)
         querier = Querier(user_config)
         return EncordUserClient(user_config, querier)
