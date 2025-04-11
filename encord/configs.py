@@ -303,6 +303,7 @@ class SshConfig(Config):
         ssh_private_key: str,
         password: Optional[str] = "",
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        domain: str = ENCORD_DOMAIN,
         **kwargs,
     ) -> SshConfig:
         """Instantiate a SshConfig object by the content of a private SSH key.
@@ -311,6 +312,7 @@ class SshConfig(Config):
             ssh_private_key: The content of a private key file.
             password: The password for the private key file.
             requests_settings: The requests settings for all outgoing network requests.
+            domain: Base domain for the endpoints
 
         Returns:
             SshConfig: The SSH configuration.
@@ -325,7 +327,7 @@ class SshConfig(Config):
         if not isinstance(private_key, Ed25519PrivateKey):
             raise ValueError(f"Provided key [{ssh_private_key}] is not an Ed25519 private key")
 
-        return SshConfig(private_key, requests_settings=requests_settings, **kwargs)
+        return SshConfig(private_key, requests_settings=requests_settings, domain=domain, **kwargs)
 
 
 class BearerConfig(Config):
@@ -391,6 +393,7 @@ class BearerConfig(Config):
     def from_bearer_token(
         token: str,
         requests_settings: RequestsSettings = DEFAULT_REQUESTS_SETTINGS,
+        domain: str = ENCORD_DOMAIN,
         **kwargs,
     ) -> BearerConfig:
         """Instantiate a BearerConfig object using a bearer token.
@@ -398,7 +401,8 @@ class BearerConfig(Config):
         Args:
             token: The bearer token.
             requests_settings: The requests settings for all outgoing network requests.
+            domain: Base domain for the endpoints
         Returns:
             BearerConfig: The bearer token configuration.
         """
-        return BearerConfig(token=token, requests_settings=requests_settings, **kwargs)
+        return BearerConfig(token=token, requests_settings=requests_settings, domain=domain, **kwargs)
