@@ -109,6 +109,7 @@ class LabelRowV2:
         # ^ frames to object and classification hashes
 
         self._metadata: Optional[DICOMSeriesMetadata] = None
+        self._children: Optional[Any] = None
         self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
@@ -629,6 +630,10 @@ class LabelRowV2:
                 uids=[self.label_hash], payload=[self.to_encord_dict()], validate_before_saving=validate_before_saving
             ),
         )
+
+    @property
+    def children(self) -> Optional[List[Any]]:
+        return self._children
 
     @property
     def metadata(self) -> Optional[DICOMSeriesMetadata]:
@@ -1708,6 +1713,8 @@ class LabelRowV2:
 
         elif data_type == DataType.DICOM_STUDY:
             pass
+        elif data_type == DataType.GROUP:
+            pass
 
         elif data_type == DataType.MISSING_DATA_TYPE:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
@@ -2035,7 +2042,7 @@ class LabelRowV2:
             height = None
             width = None
 
-        elif data_type == DataType.IMG_GROUP:
+        elif data_type == DataType.IMG_GROUP or data_type == DataType.GROUP:
             data_link = None
             file_type = None
             height = None
@@ -2111,6 +2118,19 @@ class LabelRowV2:
                     frame,
                 )
                 self._add_objects_answers(object_answers)
+            elif data_type == DataType.GROUP:
+                children = data_unit["children"]
+                rows = []
+                for child_label in children:
+                    first_unit = child_label["data_units"][child_label["data_hash"]]
+                    child_label["data_link"] = first_unit["data_link"]
+                    child_label["number_of_frames"] = 0
+
+                    metadata = LabelRowMetadata.from_dict(child_label)
+                    row = LabelRowV2(metadata, self._project_client, self._ontology)
+                    rows.append(row)
+                self._children = rows
+
 
             elif (
                 data_type == DataType.VIDEO
@@ -2158,6 +2178,8 @@ class LabelRowV2:
 
         if data_type == DataType.DICOM:
             self._metadata = DICOMSeriesMetadata.from_dict(metadata)
+        elif data_type == DataType.GROUP:
+            self._metadata = metadata
         else:
             log.warning(
                 f"Unexpected metadata for the data type: {data_type}. Please update the Encord SDK to the latest version."
