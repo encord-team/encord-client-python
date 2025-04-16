@@ -17,7 +17,7 @@ import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, TextIO, Union
+from typing import Any, Collection, Dict, Iterable, List, Literal, Optional, Sequence, TextIO, Union
 from uuid import UUID
 
 import requests
@@ -36,6 +36,7 @@ from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, 
 from encord.orm.storage import (
     CustomerProvidedAudioMetadata,
     CustomerProvidedVideoMetadata,
+    DataGroupInput,
     DataUploadItems,
     FoldersSortBy,
     GetItemParams,
@@ -1227,6 +1228,28 @@ class StorageFolder:
 
         self.refetch_data()
 
+    def create_data_group(
+        self,
+        params: Union[DataGroupInput, List[UUID]],
+    ) -> UUID:
+        """Creates a data group storage item in this folder.
+
+        Args:
+            params (Union[DataGroupInput, List[UUID]]): Parameters for the data group. When a list of UUIDs is provided,
+                the group will be created with a grid layout. For custom layouts, use DataGroupGrid, DataGroupList or DataGroupCustom.
+
+        Returns:
+            UUID: The UUID of the data group storage item.
+        """
+        if isinstance(params, list):
+            params = orm_storage.DataGroupGrid(layout_contents=params)
+        return self._api_client.post(
+            f"storage/folders/{self.uuid}/create-group-item",
+            params=None,
+            payload=orm_storage.CreateDataGroupPayload(params=params),
+            result_type=UUID,
+        )
+
     def move_items_to_folder(
         self,
         target_folder: Union["StorageFolder", UUID],
@@ -1838,6 +1861,7 @@ class StorageItem:
         """
         if self.item_type not in {
             StorageItemType.IMAGE_GROUP,
+            StorageItemType.GROUP,
             StorageItemType.IMAGE_SEQUENCE,
             StorageItemType.DICOM_SERIES,
         }:

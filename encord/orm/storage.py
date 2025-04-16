@@ -19,6 +19,7 @@ except ImportError:
 class StorageItemType(CamelStrEnum):
     VIDEO = auto()
     IMAGE = auto()
+    GROUP = auto()
     IMAGE_GROUP = auto()
     IMAGE_SEQUENCE = auto()
     DICOM_FILE = auto()
@@ -145,6 +146,38 @@ class CreateStorageFolderPayload(BaseDTO):
     parent: Optional[UUID]
     client_metadata: Optional[str]
     cloud_synced_folder_params: Optional[CloudSyncedFolderParams] = None
+
+
+class LayoutPayload(BaseDTO):
+    layout: Union[Literal["default-grid"], Literal["default-list"], Dict]
+
+
+class DataGroupGrid(BaseDTO):
+    layout_type: Literal["default-grid"] = "default-grid"
+    layout_contents: List[UUID]
+    name: Optional[str] = None
+
+
+class DataGroupList(BaseDTO):
+    layout_type: Literal["default-list"] = "default-list"
+    layout_contents: List[UUID]
+    name: Optional[str] = None
+
+
+class DataGroupCustom(BaseDTO):
+    layout_type: Literal["custom"] = "custom"
+    name: Optional[str] = None
+    layout_contents: Dict[str, UUID]
+    layout: Dict
+    settings: Optional[Dict] = None
+
+
+DataGroupInput = Union[DataGroupGrid, DataGroupList, DataGroupCustom]
+
+
+class CreateDataGroupPayload(BaseDTO):
+    item_type: Literal["GROUP"] = "GROUP"
+    params: DataGroupInput
 
 
 class UploadSignedUrlsPayload(BaseDTO):
