@@ -9,9 +9,7 @@ from typing import cast
 
 import cv2
 import numpy as np
-import typer
 from tqdm import tqdm, trange
-from typing_extensions import Annotated
 
 from encord import EncordUserClient, Project
 from encord.objects import LabelRowV2, Object, Shape
@@ -78,33 +76,11 @@ def populate_ontology_of_target_project(
     return ontology_lookup
 
 
-def convert_labels(
-    keyfile: Annotated[
-        Path,
-        typer.Option(
-            help="Path to private ssh key associated with Encord",
-            prompt="Where is your key-file stored?",
-        ),
-    ],
-    source_project_hash: Annotated[
-        str,
-        typer.Option(
-            help="Hash of the project from which annotations and classifications will be copied",
-            prompt="What's the project hash of the SOURCE project?",
-        ),
-    ],
-    target_project_hash: Annotated[
-        str,
-        typer.Option(
-            help="Hash of the project where the bitmasks will be added",
-            prompt="What's the project hash of the TARGET project?",
-        ),
-    ],
-):
-    keyfile = keyfile.expanduser().resolve()
+def convert_labels(keyfile_path: str, source_project_hash: str, target_project_hash: str):
+    keyfile = Path(keyfile_path).expanduser().resolve()
 
     # create a connection
-    user_client = EncordUserClient.create_with_ssh_private_key(keyfile.expanduser().read_text())
+    user_client = EncordUserClient.create_with_ssh_private_key(keyfile.read_text())
 
     # Initialize projects
     target_project = user_client.get_project(target_project_hash)
@@ -175,6 +151,9 @@ def convert_labels(
 
     print("Done!")
 
-
+# Example usage:
 if __name__ == "__main__":
-    typer.run(convert_labels)
+    keyfile_path = "/Users/chris-encord/ssh-private-key.txt"  # Replace with your keyfile path
+    source_project_hash = "YOUR_SOURCE_PROJECT_HASH"  # Replace with your source project hash
+    target_project_hash = "YOUR_TARGET_PROJECT_HASH"  # Replace with your target project hash
+    convert_labels(keyfile_path, source_project_hash, target_project_hash)
