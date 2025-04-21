@@ -677,6 +677,7 @@ class StorageFolder:
         file_path: Union[Path, str],
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
+        text_metadata: Optional[orm_storage.CustomerProvidedTextMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """Upload a text file to a Folder in Encord storage.
@@ -685,6 +686,7 @@ class StorageFolder:
             file_path: File path of the text file. For example: '/home/user/data/report.txt'
             title: The item title. If unspecified, the file name is used as the title.
             client_metadata: Optional custom metadata to be associated with the audio. Should be a dictionary that is JSON-serializable.
+            text_metadata: Optional media metadata for a text file; if provided, Encord service skips scanning the text file
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
         Returns:
@@ -693,7 +695,15 @@ class StorageFolder:
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
+
+        #### text_metadata
+
+        text_metadata for text files; if provided, file scan is skipped.
+
+        - file_size: int - Size of the text file in bytes.
+        - mime_type: str - MIME type of the text file (for example: `application/json` or `text/plain`).
         """
+
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.PLAIN_TEXT, count=1, frames_subfolder_name=None
         )
@@ -721,6 +731,7 @@ class StorageFolder:
                         placeholder_item_uuid=upload_url_info[0].item_uuid,
                         title=title,
                         client_metadata=client_metadata or {},
+                        text_metadata=text_metadata,
                     )
                 ],
             ),
@@ -737,6 +748,7 @@ class StorageFolder:
         file_path: Union[Path, str],
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
+        pdf_metadata: Optional[orm_storage.CustomerProvidedPdfMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
         """Upload a PDF file to a Folder in Encord storage.
@@ -745,6 +757,7 @@ class StorageFolder:
             file_path: File path of the PDF file. For example: '/home/user/data/report.pdf'
             title: The item title. If unspecified, the file name is used as the title.
             client_metadata: Optional custom metadata to be associated with the audio. Should be a dictionary that is JSON-serializable.
+            pdf_metadata: Optional media metadata for a pdf file; if provided, Encord service skips scanning the pdf file
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
         Returns:
@@ -753,6 +766,13 @@ class StorageFolder:
         Raises:
             AuthorizationError: If the user is not authorized to access the folder.
             EncordException: If the document could not be uploaded. For example, due to being in an unsupported format.
+
+        #### pdf_metadata
+
+        pdf_metadata for pdf files; if provided, file scan is skipped.
+
+        - file_size: int - Size of the pdf file in bytes.
+        - num_pages: int - Number of pages in the pdf file.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.PDF, count=1, frames_subfolder_name=None
@@ -781,6 +801,7 @@ class StorageFolder:
                         placeholder_item_uuid=upload_url_info[0].item_uuid,
                         title=title,
                         client_metadata=client_metadata or {},
+                        pdf_metadata=pdf_metadata,
                     )
                 ],
             ),
