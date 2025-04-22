@@ -416,7 +416,7 @@ class DataUploadText(BaseDTO):
     external_file_type: Literal["PLAIN_TEXT"] = "PLAIN_TEXT"
     """Type of the external file."""
 
-    text_metadata: Optional[CustomerProvidedVideoMetadata] = None
+    text_metadata: Optional[CustomerProvidedTextMetadata] = None
     """Optional media metadata of the text file (if provided). See :class:`CustomerProvidedTextMetadata` for more details."""
 
     placeholder_item_uuid: Optional[UUID] = None
