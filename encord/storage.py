@@ -685,7 +685,7 @@ class StorageFolder:
         Args:
             file_path: File path of the text file. For example: '/home/user/data/report.txt'
             title: The item title. If unspecified, the file name is used as the title.
-            client_metadata: Optional custom metadata to be associated with the audio. Should be a dictionary that is JSON-serializable.
+            client_metadata: Optional custom metadata to be associated with the text. Should be a dictionary that is JSON-serializable.
             text_metadata: Optional media metadata for a text file; if provided, Encord service skips scanning the text file
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
@@ -756,7 +756,7 @@ class StorageFolder:
         Args:
             file_path: File path of the PDF file. For example: '/home/user/data/report.pdf'
             title: The item title. If unspecified, the file name is used as the title.
-            client_metadata: Optional custom metadata to be associated with the audio. Should be a dictionary that is JSON-serializable.
+            client_metadata: Optional custom metadata to be associated with the pdf file. Should be a dictionary that is JSON-serializable.
             pdf_metadata: Optional media metadata for a pdf file; if provided, Encord service skips scanning the pdf file
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
