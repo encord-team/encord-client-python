@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, List, NamedTuple, Optional, Union
 
 from encord.common.bitmask_operations import (
@@ -22,30 +21,12 @@ class FrameIndex:
     frame: int = 0
 
 
-class CocoInfoModel(BaseDTO):
-    year: Optional[int] = None
-    version: Optional[str] = None
-    description: Optional[str] = None
-    contributor: Optional[str] = None
-    url: Optional[str] = None
-    date_created: Optional[str] = None
-
-
-class CocoLicenseModel(BaseDTO):
-    id: int
-    name: str
-    url: str
-
-
 class CocoImageModel(BaseDTO):
     id: ImageID
     width: int
     height: int
     file_name: Optional[str] = None
-    license: Optional[int] = None
-    flickr_url: Optional[str] = None
     coco_url: Optional[str] = None
-    date_captured: Optional[datetime] = None
 
 
 class CocoCategoryModel(BaseDTO):
@@ -164,8 +145,6 @@ class CocoAnnotationModel(BaseDTO):
 
 
 class CocoRootModel(BaseDTO):
-    info: CocoInfoModel
     categories: List[CocoCategoryModel]
     images: List[CocoImageModel]
     annotations: List[CocoAnnotationModel]
-    licenses: Optional[List[CocoLicenseModel]] = None
