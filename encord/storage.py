@@ -685,7 +685,7 @@ class StorageFolder:
         Args:
             file_path: File path of the text file. For example: '/home/user/data/report.txt'
             title: The item title. If unspecified, the file name is used as the title.
-            client_metadata: Optional custom metadata to be associated with the text. Should be a dictionary that is JSON-serializable.
+            client_metadata: Optional custom metadata to be associated with the text file. Should be a dictionary that is JSON-serializable.
             text_metadata: Optional media metadata for a text file. The Encord platform uses the specified values instead of scanning the files.
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
