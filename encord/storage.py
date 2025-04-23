@@ -756,7 +756,7 @@ class StorageFolder:
         Args:
             file_path: File path of the PDF file. For example: '/home/user/data/report.pdf'
             title: The item title. If unspecified, the file name is used as the title.
-            client_metadata: Optional custom metadata to be associated with the pdf file. Should be a dictionary that is JSON-serializable.
+            client_metadata: Optional custom metadata to be associated with the PDF file. Should be a dictionary that is JSON-serializable.
             pdf_metadata: Optional media metadata for a PDF file. The Encord platform uses the specified values instead of scanning the files.
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
 
