@@ -197,7 +197,7 @@ class CustomerProvidedVideoMetadata(BaseDTO):
 
 
 class CustomerProvidedAudioMetadata(BaseDTO):
-    """Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files"""
+    """Media metadata for an audio file. The Encord platform uses the specified values instead of scanning the files."""
 
     duration: float
     """Audio duration in (float) seconds."""
@@ -213,6 +213,24 @@ class CustomerProvidedAudioMetadata(BaseDTO):
     """Codec (for example: mp3, pcm)."""
     num_channels: int
     """Number of channels"""
+
+
+class CustomerProvidedTextMetadata(BaseDTO):
+    """Media metadata for a text file. The Encord platform uses the specified values instead of scanning the files."""
+
+    file_size: int
+    """Size of the text file in bytes."""
+    mime_type: str
+    """MIME type of the text file (for example: `application/json` or `text/plain…`)."""
+
+
+class CustomerProvidedPdfMetadata(BaseDTO):
+    """Media metadata for a PDF file. The Encord platform uses the specified values instead of scanning the files."""
+
+    file_size: int
+    """Size of the PDF file in bytes."""
+    num_pages: int
+    """Number of pages in the PDF file."""
 
 
 class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
@@ -396,6 +414,9 @@ class DataUploadText(BaseDTO):
     external_file_type: Literal["PLAIN_TEXT"] = "PLAIN_TEXT"
     """Type of the external file."""
 
+    text_metadata: Optional[CustomerProvidedTextMetadata] = None
+    """Optional media metadata of the text file. See :class:`CustomerProvidedTextMetadata` for more details."""
+
     placeholder_item_uuid: Optional[UUID] = None
     """For system use only."""
 
@@ -407,6 +428,9 @@ class DataUploadPDF(BaseDTO):
     """Title of the file (derived from the URL if omitted)."""
     client_metadata: dict = Field(default_factory=dict)
     """Custom metadata to be associated with the file."""
+
+    pdf_metadata: Optional[CustomerProvidedPdfMetadata] = None
+    """Optional media metadata of the PDF file. See :class:`CustomerProvidedPdfMetadata` for more details."""
 
     external_file_type: Literal["PDF"] = "PDF"
     """Type of the external file."""
