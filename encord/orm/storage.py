@@ -216,8 +216,7 @@ class CustomerProvidedAudioMetadata(BaseDTO):
 
 
 class CustomerProvidedTextMetadata(BaseDTO):
-    """Media metadata for an text file. The Encord platform uses the specified values instead of scanning the files.
-    """
+    """Media metadata for an text file. The Encord platform uses the specified values instead of scanning the files."""
 
     file_size: int
     """Size of the text file in bytes."""
@@ -226,8 +225,7 @@ class CustomerProvidedTextMetadata(BaseDTO):
 
 
 class CustomerProvidedPdfMetadata(BaseDTO):
-    """Media metadata for a PDF file. The Encord platform uses the specified values instead of scanning the files.
-    """
+    """Media metadata for a PDF file. The Encord platform uses the specified values instead of scanning the files."""
 
     file_size: int
     """Size of the PDF file in bytes."""
