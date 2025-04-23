@@ -432,7 +432,7 @@ class DataUploadPDF(BaseDTO):
     """Custom metadata to be associated with the file."""
 
     pdf_metadata: Optional[CustomerProvidedPdfMetadata] = None
-    """Optional media metadata of the pdf file (if provided). See :class:`CustomerProvidedPdfMetadata` for more details."""
+    """Optional media metadata of the PDF file. See :class:`CustomerProvidedPdfMetadata` for more details."""
 
     external_file_type: Literal["PDF"] = "PDF"
     """Type of the external file."""
