@@ -769,7 +769,7 @@ class StorageFolder:
 
         #### pdf_metadata
 
-        pdf_metadata for pdf files; if provided, file scan is skipped.
+        pdf_metadata for PDF files. The Encord platform uses the specified values instead of scanning the files.
 
         - file_size: int - Size of the pdf file in bytes.
         - num_pages: int - Number of pages in the pdf file.
