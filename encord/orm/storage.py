@@ -197,7 +197,7 @@ class CustomerProvidedVideoMetadata(BaseDTO):
 
 
 class CustomerProvidedAudioMetadata(BaseDTO):
-    """Media metadata for an audio file; if provided, Encord service will use the values here instead of scanning the files."""
+    """Media metadata for an audio file. The Encord platform uses the specified values instead of scanning the files."""
 
     duration: float
     """Audio duration in (float) seconds."""
