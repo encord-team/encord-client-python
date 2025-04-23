@@ -698,7 +698,7 @@ class StorageFolder:
 
         #### text_metadata
 
-        text_metadata for text files; if provided, file scan is skipped.
+        text_metadata for text files. The Encord platform uses the specified values instead of scanning the files.
 
         - file_size: int - Size of the text file in bytes.
         - mime_type: str - MIME type of the text file (for example: `application/json` or `text/plain`).
