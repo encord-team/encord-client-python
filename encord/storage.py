@@ -771,7 +771,7 @@ class StorageFolder:
 
         pdf_metadata for PDF files. The Encord platform uses the specified values instead of scanning the files.
 
-        - file_size: int - Size of the pdf file in bytes.
+        - file_size: int - Size of the PDF file in bytes.
         - num_pages: int - Number of pages in the PDF file.
         """
         upload_url_info = self._get_upload_signed_urls(
