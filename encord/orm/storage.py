@@ -226,7 +226,7 @@ class CustomerProvidedTextMetadata(BaseDTO):
 
 
 class CustomerProvidedPdfMetadata(BaseDTO):
-    """Media metadata for a pdf file; if provided, Encord service will use the values here instead of scanning the files.
+    """Media metadata for a PDF file. The Encord platform uses the specified values instead of scanning the files.
     """
 
     file_size: int
