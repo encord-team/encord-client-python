@@ -222,7 +222,7 @@ class CustomerProvidedTextMetadata(BaseDTO):
     file_size: int
     """Size of the text file in bytes."""
     mime_type: str
-    """MIME type of the text file (e.g. `application/json` or `text/plain…`)."""
+    """MIME type of the text file (for example: `application/json` or `text/plain…`)."""
 
 
 class CustomerProvidedPdfMetadata(BaseDTO):
