@@ -230,7 +230,7 @@ class CustomerProvidedPdfMetadata(BaseDTO):
     """
 
     file_size: int
-    """Size of the pdf file in bytes."""
+    """Size of the PDF file in bytes."""
     num_pages: int
     """Number of pages in the PDF file."""
 
