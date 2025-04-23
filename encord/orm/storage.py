@@ -232,7 +232,7 @@ class CustomerProvidedPdfMetadata(BaseDTO):
     file_size: int
     """Size of the pdf file in bytes."""
     num_pages: int
-    """Number of pages"""
+    """Number of pages in the PDF file."""
 
 
 class CustomerProvidedDicomSeriesDicomFileMetadata(BaseDTO):
