@@ -417,7 +417,7 @@ class DataUploadText(BaseDTO):
     """Type of the external file."""
 
     text_metadata: Optional[CustomerProvidedTextMetadata] = None
-    """Optional media metadata of the text file (if provided). See :class:`CustomerProvidedTextMetadata` for more details."""
+    """Optional media metadata of the text file. See :class:`CustomerProvidedTextMetadata` for more details."""
 
     placeholder_item_uuid: Optional[UUID] = None
     """For system use only."""
