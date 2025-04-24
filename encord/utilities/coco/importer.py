@@ -56,6 +56,7 @@ def import_coco_labels(
     category_id_to_feature_hash: Dict[CategoryID, str],
     image_id_to_frame_index: Dict[ImageID, FrameIndex],
     branch_name: Optional[str] = None,
+    confidence_field_name: Optional[str] = None,
 ) -> None:
     label_rows = initialise_label_rows(project, image_id_to_frame_index, branch_name=branch_name)
     category_id_to_objects = build_category_id_to_encord_ontology_object_map(project, category_id_to_feature_hash)
@@ -92,6 +93,7 @@ def import_coco_labels(
                 f"The provided coco annotation dictionary have annotations with `image_id`s that do not match any image ids in the provided `images` list. Couldn't find image id {annotation.image_id}."
             )
 
+        confidence = annotation.get_extra(confidence_field_name) if confidence_field_name is not None else None
         coordinates = coco_annotation_to_encord_coordinates(
             coco_annotation=annotation,
             shape=ont_obj.shape,
@@ -99,7 +101,7 @@ def import_coco_labels(
             height=coco_image.height,
         )
         obj_instance = ont_obj.create_instance()
-        obj_instance.set_for_frames(coordinates=coordinates, frames=frame_idx.frame)
+        obj_instance.set_for_frames(coordinates=coordinates, frames=frame_idx.frame, confidence=confidence)
         label_row.add_object_instance(obj_instance)
 
     with project.create_bundle() as bundle:
