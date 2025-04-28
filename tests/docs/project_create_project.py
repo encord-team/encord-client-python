@@ -6,7 +6,7 @@ Code Block Name: Create Project
 from encord.user_client import EncordUserClient
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_TITLE = "My Project 01"
 DATASET_ID_01 = "ccb9438b-d9d3-4351-a243-61948f74d062"
 DATASET_ID_02 = "4fc8934a-8728-4a80-9b4d-2954afe1a0b5"

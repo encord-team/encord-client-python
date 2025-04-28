@@ -7,9 +7,9 @@ import json
 from encord.user_client import EncordUserClient
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "4b8756eb-eecb-415f-a212-4fb57c95b218"
-OUTPUT_FILE_PATH = "/Users/laverne-encord/all-tasks-output.json"  # Specify the path where you want to save the JSON
+OUTPUT_FILE_PATH = "/Users/chris-encord/all-tasks-output.json"  # Specify the path where you want to save the JSON
 
 # Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(

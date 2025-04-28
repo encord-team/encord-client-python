@@ -11,10 +11,10 @@ from encord.objects import ObjectInstance
 from encord.objects.attributes import Attribute, RadioAttribute
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 DATA_UNIT = "cherries-010.jpg"
-OUTPUT_FILE_PATH = "/Users/laverne-encord/radio_attribute_output.json"
+OUTPUT_FILE_PATH = "/Users/chris-encord/radio_attribute_output.json"
 BUNDLE_SIZE = 100
 
 # Create user client using SSH key

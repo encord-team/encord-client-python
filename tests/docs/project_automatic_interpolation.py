@@ -8,7 +8,7 @@ from encord.objects import LabelRowV2
 from encord.objects.coordinates import PointCoordinate, PolygonCoordinates
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "f7890e41-6de8-4e66-be06-9fbe182df457"
 DATA_UNIT_TITLE = "cherries-vid-001.mp4"
 DATA_UNIT_ID = "1041da61-d63c-4489-9001-4a56fe37f1f3"  # The data_hash for the data unit

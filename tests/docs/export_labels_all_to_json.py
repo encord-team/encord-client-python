@@ -8,7 +8,7 @@ import os
 
 from encord import EncordUserClient
 
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 BUNDLE_SIZE = 100  # Customize as needed
 
@@ -37,7 +37,7 @@ all_label_rows = [label_row.to_encord_dict() for label_row in label_rows]
 assert all_label_rows, "No label row data collected for export"
 
 # Save the collected label rows data to a JSON file
-output_file = "/Users/laverne-encord/export-label-rows.json"
+output_file = "/Users/chris-encord/export-label-rows.json"
 assert output_file.endswith(".json"), "Output file must be a .json file"
 
 with open(output_file, "w") as file:

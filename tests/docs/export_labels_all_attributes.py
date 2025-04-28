@@ -11,11 +11,11 @@ from encord.objects import ObjectInstance
 from encord.objects.attributes import Attribute, ChecklistAttribute, RadioAttribute, TextAttribute
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with SSH key
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 DATA_UNIT = "cherries-010.jpg"
-OUTPUT_FILE_PATH = "/Users/laverne-encord/all_attributes_output.json"
+OUTPUT_FILE_PATH = "/Users/chris-encord/all_attributes_output.json"
 BUNDLE_SIZE = 100
 
 # Create user client using SSH key

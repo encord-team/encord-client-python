@@ -10,10 +10,10 @@ from encord.objects import ObjectInstance
 from encord.objects.attributes import Attribute, TextAttribute
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 DATA_UNIT = "cherries-is"
-OUTPUT_FILE_PATH = "/Users/laverne-encord/text_attributes_output.json"
+OUTPUT_FILE_PATH = "/Users/chris-encord/text_attributes_output.json"
 BUNDLE_SIZE = 100
 
 # Create user client using SSH key

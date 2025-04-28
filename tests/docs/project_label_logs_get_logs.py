@@ -6,7 +6,7 @@ Code Block Name: View label logs
 from encord import EncordUserClient
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "f7890e41-6de8-4e66-be06-9fbe182df457"
 DATA_UNIT_ID = "1041da61-d63c-4489-9001-4a56fe37f1f3"  # The unique identifier (data_hash) for the data unit
 

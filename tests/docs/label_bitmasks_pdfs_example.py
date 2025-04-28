@@ -10,7 +10,7 @@ from encord.objects.coordinates import BitmaskCoordinates
 numpy_coordinates = np.ones((483, 322), dtype=bool)
 
 # SSH and Project details
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "dbb776e8-feaa-4401-97d3-52395bac6c02"
 
 # Create user client

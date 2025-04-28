@@ -9,7 +9,7 @@ from encord.objects.coordinates import TextCoordinates
 from encord.objects.frames import Range
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
 PROJECT_ID = "dbb776e8-feaa-4401-97d3-52395bac6c02"
 BUNDLE_SIZE = 100

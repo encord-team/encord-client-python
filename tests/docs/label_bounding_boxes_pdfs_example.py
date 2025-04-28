@@ -7,7 +7,7 @@ from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import BoundingBoxCoordinates
 
-SSH_PATH = "/Users/laverne-encord/staging-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/staging-sdk-ssh-key-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
 PROJECT_ID = "f8b81f75-d1d5-4cb8-895b-44db9957392e"
 BUNDLE_SIZE = 100

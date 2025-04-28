@@ -5,7 +5,7 @@ Code Block Name: Add Datasets to Project
 from encord import EncordUserClient, Project
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "f7890e41-6de8-4e66-be06-9fbe182df457"
 DATASET_ID_01 = "6ffd7c78-f585-434b-8897-1178b147aeaa"
 DATASET_ID_02 = "4100d33d-e109-4e53-9c84-ba4b6bdfea79"

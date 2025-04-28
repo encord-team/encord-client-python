@@ -7,7 +7,7 @@ from encord import EncordUserClient
 from encord.orm.project import CopyDatasetAction, CopyDatasetOptions, CopyLabelsOptions, ReviewApprovalState
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "4b8756eb-eecb-415f-a212-4fb57c95b218"
 NEW_PROJECT_TITLE = "My New Project 001"  # Specify the new Project's title
 NEW_PROJECT_DECSCRIPTION = "This new Project is for use with ACME Co."  # Specify the new Project's description

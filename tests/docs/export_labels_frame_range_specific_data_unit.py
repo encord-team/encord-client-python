@@ -10,10 +10,10 @@ from encord.objects import ObjectInstance
 from encord.objects.attributes import Attribute
 
 # User input
-SSH_PATH = "/Users/laverne-encord/prod-sdk-ssh-key-private-key.txt"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
 DATA_UNIT = "cherries-is"
-OUTPUT_FILE_PATH = "/Users/laverne-encord/frame_range_output.json"
+OUTPUT_FILE_PATH = "/Users/chris-encord/frame_range_output.json"
 START_FRAME_NUMBER = 0
 END_FRAME_NUMBER = 35
 BUNDLE_SIZE = 100
