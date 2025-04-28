@@ -834,8 +834,7 @@ class StorageFolder:
         return self._add_data_to_folder_start(integration_id, private_files, ignore_errors)
 
     def sync_private_data_with_cloud_synced_folder_start(self) -> UUID:
-        """
-        Start synchronization of a cloud-synced folder with its remote cloud storage bucket.
+        """Start synchronization of a cloud-synced folder with its remote cloud storage bucket.
 
         This method triggers a synchronization job that scans the cloud storage bucket linked
         to this folder and updates the Encord storage folder to match. The synchronization is
@@ -882,8 +881,7 @@ class StorageFolder:
         sync_job_uuid: UUID,
         timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
     ) -> orm_storage.SyncPrivateDataWithCloudSyncedFolderGetResultResponse:
-        """
-        Poll for the results of a cloud-synced folder synchronization job.
+        """Poll for the results of a cloud-synced folder synchronization job.
 
         This method polls for the status of a synchronization job started with
         `sync_private_data_with_cloud_synced_folder_start()`. It uses long polling to efficiently
