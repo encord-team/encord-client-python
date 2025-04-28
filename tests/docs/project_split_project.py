@@ -3,10 +3,11 @@ Code Block Name: Split Projects
 """
 
 # import dependencies
-from encord import EncordUserClient, Project
-from encord.objects import LabelRowV2
 from pathlib import Path
 from typing import List
+
+from encord import EncordUserClient, Project
+from encord.objects import LabelRowV2
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
@@ -24,9 +25,7 @@ def get_destination_projects(
         target_title = source_project.title + f" slice {idx + 1}"
         if found_projects := user_client.get_projects(title_eq=target_title):
             if len(found_projects) > 1:
-                print(
-                    f"A few projects with name {target_title} found. Can't proceed, as target name should be unique."
-                )
+                print(f"A few projects with name {target_title} found. Can't proceed, as target name should be unique.")
                 exit(1)
             if found_projects:
                 dest_project_id = found_projects[0]["project"]["project_hash"]
