@@ -9,7 +9,7 @@ from encord.common.bitmask_operations import (
     transpose_bytearray,
 )
 from encord.objects.coordinates import BitmaskCoordinates, BoundingBoxCoordinates, PointCoordinate, PolygonCoordinates
-from encord.orm.base_dto import BaseDTO, dto_validator
+from encord.orm.base_dto import BaseDTO, BaseDTOWithExtra, dto_validator
 
 ImageID = int
 CategoryID = int
@@ -108,7 +108,7 @@ class CocoRLE(BaseDTO):
         return BitmaskCoordinates(encoded_bitmask)
 
 
-class CocoAnnotationModel(BaseDTO):
+class CocoAnnotationModel(BaseDTOWithExtra):
     @dto_validator(mode="before")
     def polygon_validator(cls, _value):
         segm = _value.get("segmentation")

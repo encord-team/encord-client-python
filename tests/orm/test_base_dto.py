@@ -6,7 +6,7 @@ import pytest
 
 from encord.common.constants import DATETIME_LONG_STRING_FORMAT
 from encord.exceptions import EncordException
-from encord.orm.base_dto import BaseDTO, dto_validator
+from encord.orm.base_dto import BaseDTO, BaseDTOWithExtra, dto_validator
 from encord.orm.dataset import DatasetDataLongPolling, LongPollingStatus
 
 
@@ -20,6 +20,26 @@ class TestModelWithLists(BaseDTO):
     text_values: List[str]
     number_values: List[int]
     datetime_values: List[datetime]
+
+
+class TestModelWithExtra(BaseDTOWithExtra):
+    text_value: str
+
+
+def test_deserialize_model_with_extra():
+    time_value = datetime.now()
+    data_dict = {
+        "text_value": "abc",
+        "int_value": 22,
+        "float_value": 22.22,
+        "datetime_value": time_value.strftime(DATETIME_LONG_STRING_FORMAT),
+    }
+
+    model = TestModelWithExtra.from_dict(data_dict)
+
+    assert model.text_value == "abc"
+    assert model.get_extra("int_value") == 22
+    assert model.get_extra("float_value") == 22.22
 
 
 def test_basic_model_with_deserialization():

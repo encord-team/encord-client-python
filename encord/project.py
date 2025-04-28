@@ -927,14 +927,16 @@ class Project:
         category_id_to_feature_hash: Dict[CategoryID, str],
         image_id_to_frame_index: Dict[ImageID, FrameIndex],
         branch_name: Optional[str] = None,
+        confidence_field_name: Optional[str] = None,
     ) -> None:
-        """Import labels from a COCO format into your Encord project
+        """Import labels in COCO format to an Encord Project.
 
         Args:
-            labels_dict (Dict[str, Any]): Raw label dictionary conforming to Encord format
-            category_id_to_feature_hash (Dict[CategoryID, str]): Dictionary mapping category_id as used in the COCO data to the feature hash for the corresponding element in this Ontology
-            image_id_to_frame_index (Dict[ImageID, FrameIndex]): Dictionary mapping int to FrameIndex(data_hash, frame_offset) which is used to identify the corresponding frame in the Encord setting
+            labels_dict (Dict[str, Any]): A dictionary in COCO annotation format.
+            category_id_to_feature_hash (Dict[CategoryID, str]): A mapping of category IDs from the COCO data to their corresponding feature hashes in the Project's Ontology.
+            image_id_to_frame_index (Dict[ImageID, FrameIndex]): A mapping of image IDs to FrameIndex(data_hash, frame_offset), used to locate the corresponding frames in the Encord Project.
             branch_name (Optional[str]): Optionally specify a branch name. Defaults to the `main` branch.
+            confidence_field_name (Optional[str]): Optionally specify the name of the confidence field in the COCO annotations. Defaults to assigning `1.0` as confidence value to all annotations.
         """
         from encord.utilities.coco.datastructure import CocoRootModel
         from encord.utilities.coco.importer import import_coco_labels
@@ -946,6 +948,7 @@ class Project:
             category_id_to_feature_hash,
             image_id_to_frame_index,
             branch_name=branch_name,
+            confidence_field_name=confidence_field_name,
         )
 
     def export_coco_labels(

@@ -45,6 +45,16 @@ class BaseDTO(BaseDTOInterface, BaseModel):
         return json.loads(self.json(by_alias=by_alias, exclude_none=exclude_none))  # type: ignore[attr-defined]
 
 
+class BaseDTOWithExtra(BaseDTO):
+    class Config:
+        extra = "allow"
+        alias_generator = snake_to_camel
+        allow_population_by_field_name = True
+
+    def get_extra(self, field_name: str):
+        return self.__dict__.get(field_name)
+
+
 DataT = TypeVar("DataT")
 
 

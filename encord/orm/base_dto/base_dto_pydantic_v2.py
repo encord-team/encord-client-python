@@ -50,6 +50,18 @@ class BaseDTO(BaseDTOInterface, BaseModel):
         return self.model_dump(by_alias=by_alias, exclude_none=exclude_none, mode="json")  # type: ignore[attr-defined]
 
 
+class BaseDTOWithExtra(BaseDTO):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        alias_generator=snake_to_camel,
+        protected_namespaces=(),  # otherwise clash with model_ prefixes
+    )  # type: ignore[typeddict-unknown-key,typeddict-item]
+
+    def get_extra(self, field_name: str):
+        return self.model_extra.get(field_name) if self.model_extra else None
+
+
 DataT = TypeVar("DataT")
 
 

@@ -1,6 +1,8 @@
 import copy
+from typing import Any
 
 import numpy as np
+import pytest
 
 from encord.utilities.coco.datastructure import (
     CocoAnnotationModel,
@@ -45,6 +47,28 @@ def test_coco_annotation_model_with_missing_segmentation_field() -> None:
         assert np.allclose(containing_bbox, ann_model.bbox)
         # Assert the area of the generated polygon is the same as the area of the input bounding box
         assert np.isclose(polygon_area(ann_model.segmentation), ann_model.bbox.w * ann_model.bbox.h)
+
+
+@pytest.mark.parametrize(
+    ["field_name", "field_value"],
+    [
+        ("text_value", "abc"),
+        ("int_value", 42),
+        ("confidence", 0.5),
+        ("score", 0.9),
+        ("confidence_score", 0.01),
+    ],
+)
+def test_coco_annotation_model_with_extra_fields(field_name: str, field_value: Any) -> None:
+    for i, ann in enumerate(copy.deepcopy(DATA_TEST_DATASTRUCTURE_COCO)["annotations"]):
+        # Test 1: Missing extra field
+        ann_model = CocoAnnotationModel.from_dict(ann)
+        assert ann_model.get_extra(field_name) is None, f"Expected None for missing extra field in annotation {i}"
+
+        # Test 2: Existing extra field
+        ann[field_name] = field_value
+        ann_model = CocoAnnotationModel.from_dict(ann)
+        assert ann_model.get_extra(field_name) == field_value, f"Extra field value mismatch in annotation {i}"
 
 
 def test_coco_model_label_validation() -> None:
