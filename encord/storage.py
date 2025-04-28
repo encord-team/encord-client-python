@@ -833,6 +833,125 @@ class StorageFolder:
         """
         return self._add_data_to_folder_start(integration_id, private_files, ignore_errors)
 
+    def sync_private_data_with_cloud_synced_folder_start(self) -> UUID:
+        """
+        Start synchronization of a cloud-synced folder with its remote cloud storage bucket.
+
+        This method triggers a synchronization job that scans the cloud storage bucket linked
+        to this folder and updates the Encord storage folder to match. The synchronization is
+        performed asynchronously in the background, and this method returns immediately with
+        a job UUID that can be used to track the progress.
+
+        The synchronization process:
+        1. Scans the cloud bucket for files
+        2. Creates new storage items for files that exist in the bucket but not in the folder
+        3. Updates the tombstone status of items (marks as tombstone if deleted from bucket,
+            restores if re-added)
+        4. Updates items if they have the same path but different content (different checksum)
+
+        Returns:
+            UUID: The unique identifier for the sync job that can be used with
+                 `sync_private_data_with_cloud_synced_folder_get_result` to poll for results.
+
+        Raises:
+            InvalidArgumentsError: If the folder is not a cloud-synced folder, or if there are
+               permission issues with the cloud storage bucket.
+
+        Note:
+            This method can only be used with folders created with cloud_synced_folder_params.
+            The SDK process can be terminated after starting the job - the synchronization
+            will continue running on the server.
+        """
+
+        sync_job_uuid = self._api_client.post(
+            path=f"storage/folders/{self.uuid}/cloud-synced-folder-syncs",
+            params=None,
+            payload=None,
+            result_type=UUID,
+            allow_retries=False,
+        )
+
+        logger.info(f"sync_private_data_with_cloud_synced_folder job started with {sync_job_uuid=}.")
+        logger.info("SDK process can be terminated, this will not affect successful job execution.")
+        logger.info("You can follow the progress in the web app via notifications.")
+
+        return sync_job_uuid
+
+    def sync_private_data_with_cloud_synced_folder_get_result(
+        self,
+        sync_job_uuid: UUID,
+        timeout_seconds: int = 7 * 24 * 60 * 60,  # 7 days
+    ) -> orm_storage.SyncPrivateDataWithCloudSyncedFolderGetResultResponse:
+        """
+        Poll for the results of a cloud-synced folder synchronization job.
+
+        This method polls for the status of a synchronization job started with
+        `sync_private_data_with_cloud_synced_folder_start()`. It uses long polling to efficiently
+        wait for job completion without constantly making API requests. The method returns once
+        the job completes or the timeout is reached.
+
+        Args:
+            sync_job_uuid (UUID): The UUID of the synchronization job to poll for results.
+            timeout_seconds (int): Maximum time in seconds to wait for the job to complete.
+                Default is 7 days (604800 seconds).
+
+        Returns:
+            SyncPrivateDataWithCloudSyncedFolderGetResultResponse: An object containing the results of
+            the synchronization job.
+
+        Raises:
+            InvalidArgumentsError: If the synchronization job UUID does not exist or is not associated
+                with this folder.
+
+        Note:
+            This method will log progress information as it polls for results. For very large
+            buckets, the synchronization process can take a significant amount of time.
+        """
+
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                res = self._api_client.get(
+                    f"storage/folders/{self.uuid}/cloud-linked-folder-syncs/{sync_job_uuid}/long-polling",
+                    params=orm_storage.SyncPrivateDataWithCloudSyncedFolderGetResultParams(
+                        timeout_seconds=timeout_seconds,
+                    ),
+                    result_type=orm_storage.SyncPrivateDataWithCloudSyncedFolderGetResultResponse,
+                )
+
+                if res.status == orm_storage.SyncPrivateDataWithCloudSyncedFolderStatus.DONE:
+                    logger.info(f"sync_private_data_with_cloud_synced_folder job completed with {sync_job_uuid=}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if (polling_available_seconds == 0) or (
+                    res.status
+                    in [
+                        orm_storage.SyncPrivateDataWithCloudSyncedFolderStatus.DONE,
+                        orm_storage.SyncPrivateDataWithCloudSyncedFolderStatus.ERROR,
+                        orm_storage.SyncPrivateDataWithCloudSyncedFolderStatus.CANCELLED,
+                    ]
+                ):
+                    return res
+
+                logger.info(
+                    f"Sync job status:{res.status.value}, Items syncing progress: (pending:{res.upload_jobs_units_pending}, done:{res.upload_jobs_units_done}, error:{res.upload_jobs_units_error}), "
+                    f"Bucket listing pages syncing progress: (pending:{res.scan_pages_processing_pending}, done:{res.scan_pages_processing_done}, error:{res.scan_pages_processing_error}), "
+                    f"Created upload jobs statuses: (pending:{res.upload_jobs_pending}, done:{res.upload_jobs_done}, error:{res.upload_jobs_error})"
+                )
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
     def add_private_data_to_folder_get_result(
         self,
         upload_job_id: UUID,
@@ -934,7 +1053,14 @@ class StorageFolder:
         Returns:
             The created storage folder. See :class:`encord.storage.StorageFolder` for details.
         """
-        return StorageFolder._create_folder(self._api_client, name, description, client_metadata, self)
+        return StorageFolder._create_folder(
+            api_client=self._api_client,
+            name=name,
+            description=description,
+            client_metadata=client_metadata,
+            parent_folder=self,
+            cloud_synced_folder_params=None,
+        )
 
     def find_items(
         self,
@@ -1463,6 +1589,7 @@ class StorageFolder:
         description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         parent_folder: Optional[Union["StorageFolder", UUID]] = None,
+        cloud_synced_folder_params: Optional[orm_storage.CloudSyncedFolderParams] = None,
     ) -> "StorageFolder":
         if isinstance(parent_folder, StorageFolder):
             parent_folder = parent_folder.uuid
@@ -1472,6 +1599,7 @@ class StorageFolder:
             description=description,
             parent=parent_folder,
             client_metadata=json.dumps(client_metadata) if client_metadata is not None else None,
+            cloud_synced_folder_params=cloud_synced_folder_params,
         )
         folder_orm = api_client.post(
             "storage/folders",

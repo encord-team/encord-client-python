@@ -105,11 +105,46 @@ class StorageItemInaccessible(BaseDTO):
     uuid: UUID
 
 
+class CloudSyncedFolderParams(BaseDTO):
+    """
+    Parameters for creating a cloud-synced folder in Encord storage.
+
+    A cloud-synced folder maintains synchronization link between an Encord
+    storage folder and an external cloud storage location (bucket/folder). This allows you to
+    manage files in your preferred cloud provider while making them available for use in Encord.
+    """
+
+    integration_uuid: UUID
+    """
+    UUID of the cloud storage integration to use.
+
+    This UUID refers to a preconfigured integration in Encord that contains
+    authentication credentials and settings for a cloud storage provider.
+    The integration must be set up in the Encord platform before creating
+    a cloud-synced folder.
+    """
+
+    remote_url: str
+    """
+    URL or path to the cloud storage location to sync with.
+
+    The format depends on the cloud storage provider:
+    - Amazon S3: "s3://bucket-name/path/"
+    - Google Cloud Storage: "gs://bucket-name/path/"
+    - Azure Blob Storage: "https://account.blob.core.windows.net/container/path/"
+    - S3-compatible services: "https://endpoint/bucket-name/path/"
+
+    The folder will be synced recursively, and all supported file types
+    will be imported into Encord.
+    """
+
+
 class CreateStorageFolderPayload(BaseDTO):
     name: str
     description: Optional[str]
     parent: Optional[UUID]
     client_metadata: Optional[str]
+    cloud_synced_folder_params: Optional[CloudSyncedFolderParams] = None
 
 
 class UploadSignedUrlsPayload(BaseDTO):
@@ -704,3 +739,100 @@ class StorageItemsMigratePayload(BaseDTO):
 
 class AddDataToFolderJobCancelResponse(BaseDTO):
     units_cancelled_count: int
+
+
+class SyncPrivateDataWithCloudSyncedFolderGetResultParams(BaseDTO):
+    timeout_seconds: int
+
+
+class SyncPrivateDataWithCloudSyncedFolderStatus(CamelStrEnum):
+    """
+    Enumeration representing the possible states of a cloud-synced folder synchronization job.
+
+    This enum is used to track the life cycle of a synchronization operation between
+    an Encord storage folder and its linked cloud storage bucket.
+    """
+
+    PENDING = auto()
+    """
+    The synchronization job is currently in progress.
+
+    This status indicates that either:
+    - The job is queued and waiting to be processed
+    - The job is actively processing bucket content
+    - The job is creating or updating items in the Encord storage folder
+    """
+
+    DONE = auto()
+    """
+    The synchronization job has successfully completed.
+
+    This status indicates that all phases of the synchronization (bucket scanning,
+    item creation/updating/tombstoning) have been completed without critical errors.
+    Note that individual items may still have failed to process (check upload_jobs_units_error).
+    """
+
+    ERROR = auto()
+    """
+    The synchronization job encountered a critical error.
+
+    This status indicates that a severe error occurred during synchronization,
+    such as:
+    - Unable to access the cloud storage bucket
+    - Database transaction failures
+    - Other system-level errors
+
+    When in ERROR state, the sync operation is considered failed and should be restarted.
+    """
+
+    CANCELLED = auto()
+    """
+    The synchronization job was manually cancelled.
+
+    This status indicates that the job was explicitly terminated before completion.
+    """
+
+
+class SyncPrivateDataWithCloudSyncedFolderGetResultResponse(BaseDTO):
+    """
+    Response object representing the status and results of a cloud-synced folder synchronization job.
+
+    This class provides comprehensive details about each stage of the synchronization process,
+    including bucket scanning, upload job creation, and processing of individual files.
+    """
+
+    status: SyncPrivateDataWithCloudSyncedFolderStatus
+    """Overall status of the synchronization job"""
+
+    scan_pages_processing_pending: int
+    """Number of bucket listing pages waiting to be processed"""
+
+    scan_pages_processing_done: int
+    """Number of bucket listing pages successfully processed"""
+
+    scan_pages_processing_error: int
+    """Number of bucket listing pages that failed during processing"""
+
+    scan_pages_processing_cancelled: int
+    """Number of bucket listing pages that were cancelled during processing"""
+
+    upload_jobs_pending: int
+    """Number of upload jobs waiting to be processed"""
+
+    upload_jobs_done: int
+    """Number of upload jobs successfully completed"""
+
+    upload_jobs_error: int
+    """Number of upload jobs that failed during processing"""
+
+    upload_jobs_units_pending: int
+    """Number of individual files waiting to be processed"""
+
+    upload_jobs_units_done: int
+    """Number of individual files successfully synchronized"""
+
+    upload_jobs_units_error: int
+    """Number of individual files that failed to synchronize"""
+
+    upload_jobs_units_cancelled: int
+    """Number of individual files that were cancelled during synchronization"""
