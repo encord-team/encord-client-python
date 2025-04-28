@@ -98,7 +98,7 @@ from encord.orm.project import (
 )
 from encord.orm.project import Project as OrmProject
 from encord.orm.project_with_user_role import ProjectWithUserRole
-from encord.orm.storage import ListFoldersParams, ListItemsParams, StorageItemType
+from encord.orm.storage import CloudSyncedFolderParams, ListFoldersParams, ListItemsParams, StorageItemType
 from encord.project import Project
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
@@ -1194,6 +1194,7 @@ class EncordUserClient:
         description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         parent_folder: Optional[Union[StorageFolder, UUID]] = None,
+        cloud_synced_folder_params: Optional[CloudSyncedFolderParams] = None,
     ) -> StorageFolder:
         """Create a new storage folder.
 
@@ -1203,11 +1204,20 @@ class EncordUserClient:
             client_metadata: Optional arbitrary metadata to be associated with the folder. Should be a dictionary
                 that is JSON-serializable.
             parent_folder: The parent folder of the folder; or `None` if the folder is to be created at the root level.
+            cloud_synced_folder_params: Passing this will create cloud synced folder, leaving this a `None` will create
+                a normal folder for further data uploads.
 
         Returns:
             The created storage folder. See :class:`encord.storage.StorageFolder` for details.
         """
-        return StorageFolder._create_folder(self._api_client, name, description, client_metadata, parent_folder)
+        return StorageFolder._create_folder(
+            api_client=self._api_client,
+            name=name,
+            description=description,
+            client_metadata=client_metadata,
+            parent_folder=parent_folder,
+            cloud_synced_folder_params=cloud_synced_folder_params,
+        )
 
     def get_storage_folder(self, folder_uuid: Union[UUID, str]) -> StorageFolder:
         """Get a storage folder by its UUID.
