@@ -18,10 +18,6 @@ inputs:
   private-key-service-account:
     description: 'Private key for service account user for integration tests'
     required: true
-  poetry-version:
-    description: 'Poetry version to use'
-    default: 1.5.0
-    required: false
   integration-tests-location:
     description: 'project of the backend repo.'
     default: projects/sdk-integration-tests
@@ -44,31 +40,31 @@ runs:
   using: "composite"
 
   steps:
-      - name: Setup Poetry environment
-        uses: ./.github/actions/setup-root-poetry-environment
-        with:
-          environment-location: ${{ inputs.integration-tests-location }}
-          cache-key: sdk-${{ hashFiles('projects/sdk-integration-tests/poetry.lock') }}-1
-          python: ${{ inputs.python-version }}
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "0.6.16"
+        enable-cache: 'true'
 
-      - name: Setup FFMPEG
-        uses: FedericoCarboni/setup-ffmpeg@v2
+    - name: Setup FFMPEG
+      uses: FedericoCarboni/setup-ffmpeg@v2
 
-      - name: Run tests
-        run: |
-          cd ${{ inputs.integration-tests-location }}
-          export PRIVATE_KEY="${{ inputs.private-key }}"
-          export PRIVATE_KEY_SERVICE_ACCOUNT="${{ inputs.private-key-service-account }}"
-          export PRIVATE_KEY_NON_ORG='${{ inputs.private-key-non-org }}'
-          export CORD_ENV="${{ inputs.environment }}"
-          source $(poetry env info --path)/bin/activate
-          poetry add git+${{ inputs.sdk-repository-url }}
-          python -m pytest --timeout=600 -n 4 ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
-        shell: bash
+    - name: Run tests
+      run: |
+        cd ${{ inputs.integration-tests-location }}
+        export PRIVATE_KEY="${{ inputs.private-key }}"
+        export PRIVATE_KEY_SERVICE_ACCOUNT="${{ inputs.private-key-service-account }}"
+        export PRIVATE_KEY_NON_ORG='${{ inputs.private-key-non-org }}'
+        export CORD_ENV="${{ inputs.environment }}"
+        uv sync
+        uv add git+${{ inputs.sdk-repository-url }}
+        source .venv/bin/activate
+        pytest --timeout=600 -n 4 ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
+      shell: bash
 
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ${{ inputs.test-report-file }}
-          path: ${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
+    - name: Upload report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ${{ inputs.test-report-file }}
+        path: ${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
