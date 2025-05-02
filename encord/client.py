@@ -38,7 +38,6 @@ from encord.common.deprecated import deprecated
 from encord.configs import Config
 from encord.constants.enums import DataType
 from encord.constants.string_constants import (
-    FITTED_BOUNDING_BOX,
     INTERPOLATION,
 )
 from encord.http.querier import Querier
@@ -1092,33 +1091,6 @@ class EncordClientProject(EncordClient):
             {
                 "algorithm_name": INTERPOLATION,
                 "algorithm_parameters": interpolation_params,
-            }
-        )
-
-        return self._querier.basic_setter(LabelingAlgorithm, str(uuid.uuid4()), payload=algo)
-
-    def fitted_bounding_boxes(
-        self,
-        frames: dict,
-        video: dict,
-    ):
-        """This function is documented in :meth:`encord.project.Project.fitted_bounding_boxes`."""
-        if len(frames) == 0 or len(video) == 0:
-            raise encord.exceptions.EncordException(
-                message="To run fitting, you must pass frames and video to run bounding box fitting on.."
-            )
-
-        fitting_params = BoundingBoxFittingParams(
-            {
-                "labels": frames,
-                "video": video,
-            }
-        )
-
-        algo = LabelingAlgorithm(
-            {
-                "algorithm_name": FITTED_BOUNDING_BOX,
-                "algorithm_parameters": fitting_params,
             }
         )
 

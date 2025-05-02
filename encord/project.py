@@ -538,55 +538,6 @@ class Project:
         """
         return self._client.object_interpolation(key_frames, objects_to_interpolate)
 
-    def fitted_bounding_boxes(
-        self,
-        frames: dict,
-        video: dict,
-    ):
-        """Fit bounding boxes to the given frames of a video.
-
-        Args:
-            frames: Labels for frames to be fitted. Frames are consumed in the form::
-
-            ```python
-                {
-                    "[frame_number]": {
-                        "objects": [
-                            {
-                                "objectHash": "[object_hash]",
-                                "featureHash": "[feature_hash]",
-                                "polygon": {
-                                    "0": { "x": x1, "y": y1, },
-                                    "1": { "x": x2, "y": y2, },
-                                    # ...,
-                                }
-                            },
-                            # ...
-                        ]
-                    },
-                    # ...,
-                }
-            ```
-
-            video: Metadata of the video for which bounding box fitting needs to be run::
-
-            ```
-                {
-                    "width": w,
-                    "height": h,
-                }
-            ```
-
-        Returns:
-            dict: Full set of filled frames including fitted objects.
-
-        Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            UnknownError: If an error occurs while running interpolation.
-        """
-        return self._client.fitted_bounding_boxes(frames, video)
-
     def get_data(self, data_hash: str, get_signed_url: bool = False) -> Tuple[Optional[Video], Optional[List[Image]]]:
         """Retrieve information about a video or image group.
 
