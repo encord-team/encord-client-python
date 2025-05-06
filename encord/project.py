@@ -369,25 +369,6 @@ class Project:
             copy_labels=copy_labels,
         )
 
-    def submit_label_row_for_review(self, uid: str):
-        """Submit a label row for review.
-
-        **Note:** This method is not supported for workflow-based projects. See the documentation about the workflows.
-
-        Args:
-            uid: A label_hash (uid) string.
-
-        Returns:
-            bool: True if the submission was successful, False otherwise.
-
-        Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            UnknownError: If an error occurs while submitting for review.
-            OperationNotAllowed: If the write operation is not allowed by the API key.
-        """
-        return self._client.submit_label_row_for_review(uid)
-
     def add_datasets(self, dataset_hashes: List[str]) -> bool:
         """Add datasets to the project.
 
@@ -688,22 +669,6 @@ class Project:
             label_hashes=label_hashes,
             data_hashes=data_hashes,
         )
-
-    def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
-        """Set the label status for a label row to a desired value.
-
-        Args:
-            label_hash: Unique identifier of the label row whose status is to be updated.
-            label_status: The new status that needs to be set.
-
-        Returns:
-            True if the label status was successfully updated, False otherwise.
-
-        Raises:
-            AuthorisationError: If the label_hash provided is invalid or not a member of the project.
-            UnknownError: If an error occurs while updating the status.
-        """
-        return self._client.set_label_status(label_hash, label_status)
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def get_label_row(
