@@ -11,7 +11,6 @@ CLASSIFICATION_ANSWERS = "classification_answers"
 
 # Labeling algorithm names
 INTERPOLATION = "interpolation"
-FITTED_BOUNDING_BOX = "fitted_bounding_box"
 
 
 # Type of Cord API key
