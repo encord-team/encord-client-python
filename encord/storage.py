@@ -834,16 +834,16 @@ class StorageFolder:
         return self._add_data_to_folder_start(integration_id, private_files, ignore_errors)
 
     def sync_private_data_with_cloud_synced_folder_start(self) -> UUID:
-        """Start synchronization of a cloud-synced folder with its remote cloud storage bucket.
+        """Starts synchronization of a cloud-synced folder with its remote cloud storage bucket.
 
         This method triggers a synchronization job that scans the cloud storage bucket linked
-        to this folder and updates the Encord storage folder to match. The synchronization is
-        performed asynchronously in the background, and this method returns immediately with
-        a job UUID that can be used to track the progress.
+        to the cloud-synced folder. Synchronization between cloud storage and the cloud-synced folder is
+        performed asynchronously in the background. This method returns immediately with
+        a job UUID that can be used to track the synchronization progress.
 
         The synchronization process:
-        1. Scans the cloud bucket for files
-        2. Creates new storage items for files that exist in the bucket but not in the folder
+        1. Scans the cloud bucket for files.
+        2. Creates new storage items for files that exist in the bucket but not in the cloud-synced folder.
         3. Updates the tombstone status of items (marks as tombstone if deleted from bucket,
             restores if re-added)
         4. Updates items if they have the same path but different content (different checksum)
@@ -858,8 +858,8 @@ class StorageFolder:
 
         Note:
             This method can only be used with folders created with cloud_synced_folder_params.
-            The SDK process can be terminated after starting the job - the synchronization
-            will continue running on the server.
+            The SDK process can be terminated after starting the job. The synchronization
+            continues running on the server.
         """
 
         sync_job_uuid = self._api_client.post(
@@ -884,7 +884,7 @@ class StorageFolder:
         """Poll for the results of a cloud-synced folder synchronization job.
 
         This method polls for the status of a synchronization job started with
-        `sync_private_data_with_cloud_synced_folder_start()`. It uses long polling to efficiently
+        `sync_private_data_with_cloud_synced_folder_start()`. It uses long polling to 
         wait for job completion without constantly making API requests. The method returns once
         the job completes or the timeout is reached.
 
@@ -902,7 +902,7 @@ class StorageFolder:
                 with this folder.
 
         Note:
-            This method will log progress information as it polls for results. For very large
+            This method logs progress information as it polls for results. For very large
             buckets, the synchronization process can take a significant amount of time.
         """
 
