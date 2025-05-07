@@ -134,6 +134,7 @@ class StorageItemType(str, Enum):
     PDF = "pdf"
     PLAIN_TEXT = "plainText"
     VIDEO = "video"
+    SCENE = "scene"
 
 
 class ModelIterationTrainingData(BaseDTO):

@@ -26,6 +26,7 @@ class DataType(StringEnum):
     AUDIO = "audio"
     PLAIN_TEXT = "plain_text"
     PDF = "pdf"
+    SCENE = "scene"
 
     # will be displayed if the Encord platform has a new data type that is not present in this SDK version. Please upgrade your SDK version
     MISSING_DATA_TYPE = "_MISSING_DATA_TYPE_"

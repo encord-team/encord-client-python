@@ -27,6 +27,7 @@ class StorageItemType(CamelStrEnum):
     NIFTI = auto()
     PLAIN_TEXT = auto()
     PDF = auto()
+    SCENE = auto()
 
 
 class StorageUserRole(CamelStrEnum):
@@ -618,6 +619,7 @@ class StorageFolderSummary(BaseDTO):
     tombstones: int
     upload_jobs: int
     total_size: float
+    scenes: int
 
 
 class ItemShortInfo(BaseDTO):
