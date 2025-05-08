@@ -102,13 +102,6 @@ class DataUnitIssueAnchorWithDataHash(DataUnitIssueAnchor):
             data_hash=self.data_hash,
         )
 
-    # @classmethod
-    # def from_data_unit_issue_anchor(cls, anchor: DataUnitIssueAnchor, data_hash: UUID) -> DataUnitIssueAnchorWithDataHash:
-    #     return cls(
-    #         type=anchor.type,
-    #         data_hash=data_hash,
-    #     )
-
 
 class FrameIssueAnchorWithDataHash(FrameIssueAnchor):
     data_hash: UUID
@@ -120,14 +113,6 @@ class FrameIssueAnchorWithDataHash(FrameIssueAnchor):
             data_hash=self.data_hash,
             frame_index=self.frame_index,
         )
-
-    # @classmethod
-    # def from_frame_issue_anchor(cls, anchor: FrameIssueAnchor, data_hash: UUID) -> FrameIssueAnchorWithDataHash:
-    #     return cls(
-    #         type=anchor.type,
-    #         data_hash=data_hash,
-    #         frame_index=anchor.frame_index,
-    #     )
 
 
 class FrameCoordinateIssueAnchorWithDataHash(FrameCoordinateIssueAnchor):
@@ -143,68 +128,20 @@ class FrameCoordinateIssueAnchorWithDataHash(FrameCoordinateIssueAnchor):
             y=self.y,
         )
 
-    # @classmethod
-    # def from_frame_coordinate_issue_anchor(cls, anchor: FrameCoordinateIssueAnchor, data_hash: UUID) -> FrameCoordinateIssueAnchorWithDataHash:
-    #     return cls(
-    #         type=anchor.type,
-    #         data_hash=data_hash,
-    #         frame_index=anchor.frame_index,
-    #         x=anchor.x,
-    #         y=anchor.y,
-    #     )
-
 
 @final
 class _ProjectDataUnitIssueAnchor(DataUnitIssueAnchorWithDataHash):
     project_hash: UUID
-
-    # @classmethod
-    # def from_anchor_without_project_hash(
-    #     cls,
-    #     anchor: DataUnitIssueAnchorWithDataHash,
-    #     project_hash: UUID,
-    # ) -> _ProjectDataUnitIssueAnchor:
-    #     return cls(
-    #         type=anchor.type,
-    #         project_hash=project_hash,
-    #         data_hash=anchor.data_hash,
-    #     )
 
 
 @final
 class _ProjectFrameIssueAnchor(FrameIssueAnchorWithDataHash):
     project_hash: UUID
 
-    # @classmethod
-    # def from_anchor_without_project_hash(
-    #     cls,
-    #     anchor: FrameIssueAnchorWithDataHash,
-    #     project_hash: UUID,
-    # ) -> _ProjectFrameIssueAnchor:
-    #     return cls(
-    #         type=anchor.type,
-    #         project_hash=project_hash,
-    #         data_hash=anchor.data_hash,
-    #         frame_index=anchor.frame_index,
-    #     )
-
 
 @final
 class _ProjectFrameCoordinateIssueAnchor(FrameCoordinateIssueAnchorWithDataHash):
     project_hash: UUID
-
-    # @classmethod
-    # def from_anchor_without_project_hash(
-    #     cls, anchor: FrameCoordinateIssueAnchorWithDataHash, project_hash: UUID
-    # ) -> _ProjectFrameCoordinateIssueAnchor:
-    #     return cls(
-    #         project_hash=project_hash,
-    #         type=anchor.type,
-    #         data_hash=anchor.data_hash,
-    #         frame_index=anchor.frame_index,
-    #         x=anchor.x,
-    #         y=anchor.y,
-    #     )
 
 
 @final
