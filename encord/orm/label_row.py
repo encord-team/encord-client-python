@@ -185,10 +185,6 @@ class LabelRow(base_orm.BaseORM):
     }
 
 
-class Review:
-    pass
-
-
 class AnnotationTaskStatus(Enum):
     QUEUED = "QUEUED"
     ASSIGNED = "ASSIGNED"

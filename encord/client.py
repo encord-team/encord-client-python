@@ -86,9 +86,7 @@ from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRow,
     LabelRowMetadata,
-    LabelStatus,
     LabelValidationState,
-    Review,
     ShadowDataState,
 )
 from encord.orm.labeling_algorithm import (
@@ -859,13 +857,6 @@ class EncordClientProject(EncordClient):
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
 
-    def set_label_status(self, label_hash: str, label_status: LabelStatus) -> bool:
-        """This function is documented in :meth:`encord.project.Project.set_label_status`."""
-        payload = {
-            "label_status": label_status.value,
-        }
-        return self._querier.basic_setter(LabelStatus, label_hash, payload)
-
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """This function is documented in :meth:`encord.project.Project.add_users`."""
         payload = {"user_emails": user_emails, "user_role": user_role}
@@ -1018,10 +1009,6 @@ class EncordClientProject(EncordClient):
             uid=uids,
             payload={"multi_request": True, "get_signed_url": get_signed_url, "branch_name": branch_name},
         )
-
-    def submit_label_row_for_review(self, uid):
-        """This function is documented in :meth:`encord.project.Project.submit_label_row_for_review`."""
-        return self._querier.basic_put(Review, uid=uid, payload=None)
 
     def add_datasets(self, dataset_hashes: List[str]) -> bool:
         """This function is documented in :meth:`encord.project.Project.add_datasets`."""
