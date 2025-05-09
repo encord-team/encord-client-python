@@ -174,7 +174,7 @@ class AnnotationTask(WorkflowTask):
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
 
-    def add_issue(
+    def add_issues(
         self,
         issues: List[NewIssue],
     ) -> None:
