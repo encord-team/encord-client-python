@@ -74,6 +74,19 @@ class TaskIssueClient:
             issue_tags=issue_tags,
         )
 
+    def add_coordinate_issue(self, frame_index: int, x: float, y: float, comment: str, issue_tags: List[str]) -> None:
+        self._add_issue(
+            anchor=_CoordinateIssueAnchor(
+                project_hash=self.project_hash,
+                data_hash=self.data_hash,
+                frame_index=frame_index,
+                x=x,
+                y=y,
+            ),
+            comment=comment,
+            issue_tags=issue_tags,
+        )
+
     def _add_issue(self, anchor: _IssueAnchor, comment: str, issue_tags: List[str]) -> None:
         self.api_client.post(
             path=f"/comment-threads",
