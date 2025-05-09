@@ -107,34 +107,30 @@ class _IssueClient:
     api_client: ApiClient
 
     def add_file_issue(self, *, project_hash: UUID, data_hash: UUID, comment: str, issue_tags: List[str]):
-        self._add_issues(
+        self._add_issue(
             project_hash=project_hash,
             data_hash=data_hash,
-            issues=[
-                _NewIssue(
-                    anchor=DataUnitIssueAnchor(),
-                    comment=comment,
-                    issue_tags=issue_tags,
-                )
-            ],
+            issue=_NewIssue(
+                anchor=DataUnitIssueAnchor(),
+                comment=comment,
+                issue_tags=issue_tags,
+            ),
         )
 
     def add_frame_issue(
         self, *, project_hash: UUID, data_hash: UUID, frame_index: int, comment: str, issue_tags: List[str]
     ):
-        self._add_issues(
+        self._add_issue(
             project_hash=project_hash,
             data_hash=data_hash,
-            issues=[
-                _NewIssue(
-                    anchor=FrameIssueAnchor(frame_index=frame_index),
-                    comment=comment,
-                    issue_tags=issue_tags,
-                )
-            ],
+            issue=_NewIssue(
+                anchor=FrameIssueAnchor(frame_index=frame_index),
+                comment=comment,
+                issue_tags=issue_tags,
+            ),
         )
 
-    def _add_issues(self, project_hash: UUID, data_hash: UUID, issues: List[_NewIssue]) -> None:
+    def _add_issue(self, project_hash: UUID, data_hash: UUID, issue: _NewIssue) -> None:
         self.api_client.post(
             path=f"/comment-threads",
             params=None,
@@ -147,7 +143,6 @@ class _IssueClient:
                         comment=issue.comment,
                         issue_tags=issue.issue_tags,
                     )
-                    for issue in issues
                 ]
             ),
             result_type=None,
