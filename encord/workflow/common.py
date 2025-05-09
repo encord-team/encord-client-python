@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import auto
-from typing import Iterable, List, Literal, Optional, Sequence, Tuple, Type, TypeVar, Union, final
+from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
 from uuid import UUID
 
 from encord.http.bundle import Bundle, bundled_operation
 from encord.http.v2.api_client import ApiClient
-from encord.orm.analytics import CamelStrEnum
+from encord.issues.issue_client import TaskIssueClient
 from encord.orm.base_dto import BaseDTO, PrivateAttr
 
 
@@ -29,6 +28,7 @@ class WorkflowStageBase:
 class WorkflowTask(BaseDTO):
     _stage_uuid: Optional[UUID] = PrivateAttr(None)
     _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
+    _task_issue_client: Optional[TaskIssueClient] = PrivateAttr(None)
 
     uuid: UUID
     created_at: datetime
@@ -42,92 +42,6 @@ class WorkflowTask(BaseDTO):
 
 class WorkflowAction(BaseDTO):
     task_uuid: UUID
-
-
-class IssueAnchorType(CamelStrEnum):
-    DATA_UNIT = auto()
-    FRAME = auto()
-    FRAME_COORDINATE = auto()
-
-
-class DataUnitIssueAnchor(BaseDTO):
-    type: Literal[IssueAnchorType.DATA_UNIT] = IssueAnchorType.DATA_UNIT
-
-    def with_project_and_data_hash(self, *, project_hash: UUID, data_hash: UUID) -> _ProjectDataUnitIssueAnchor:
-        return _ProjectDataUnitIssueAnchor(
-            type=self.type,
-            project_hash=project_hash,
-            data_hash=data_hash,
-        )
-
-
-class FrameIssueAnchor(BaseDTO):
-    type: Literal[IssueAnchorType.FRAME] = IssueAnchorType.FRAME
-    frame_index: int
-
-    def with_project_and_data_hash(self, *, project_hash: UUID, data_hash: UUID) -> _ProjectDataUnitFrameIssueAnchor:
-        return _ProjectDataUnitFrameIssueAnchor(
-            type=self.type,
-            project_hash=project_hash,
-            data_hash=data_hash,
-            frame_index=self.frame_index,
-        )
-
-
-class FrameCoordinateIssueAnchor(BaseDTO):
-    type: Literal[IssueAnchorType.FRAME_COORDINATE] = IssueAnchorType.FRAME_COORDINATE
-    frame_index: int
-    x: float
-    y: float
-
-    def with_project_and_data_hash(
-        self, *, project_hash: UUID, data_hash: UUID
-    ) -> _ProjectDataUnitFrameCoordinateIssueAnchor:
-        return _ProjectDataUnitFrameCoordinateIssueAnchor(
-            type=self.type,
-            project_hash=project_hash,
-            data_hash=data_hash,
-            frame_index=self.frame_index,
-            x=self.x,
-            y=self.y,
-        )
-
-
-class NewIssue(BaseDTO):
-    anchor: Union[DataUnitIssueAnchor, FrameIssueAnchor, FrameCoordinateIssueAnchor]
-    comment: str
-    issue_tags: List[str]
-
-
-@final
-class _ProjectDataUnitIssueAnchor(DataUnitIssueAnchor):
-    project_hash: UUID
-    data_hash: UUID
-
-
-@final
-class _ProjectDataUnitFrameIssueAnchor(FrameIssueAnchor):
-    project_hash: UUID
-    data_hash: UUID
-
-
-@final
-class _ProjectDataUnitFrameCoordinateIssueAnchor(FrameCoordinateIssueAnchor):
-    project_hash: UUID
-    data_hash: UUID
-
-
-@final
-class _NewIssueInProjectDataUnit(BaseDTO):
-    anchor: Union[
-        _ProjectDataUnitIssueAnchor, _ProjectDataUnitFrameIssueAnchor, _ProjectDataUnitFrameCoordinateIssueAnchor
-    ]
-    comment: str
-    issue_tags: List[str]
-
-
-class _CreateIssuesPayload(BaseDTO):
-    issues: List[_NewIssueInProjectDataUnit]
 
 
 TaskT = TypeVar("TaskT", bound=WorkflowTask)
@@ -189,25 +103,6 @@ class WorkflowClient:
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/actions",
             params=None,
             payload=actions,
-            result_type=None,
-        )
-
-    def add_issues(self, issues: List[NewIssue], data_hash: UUID) -> None:
-        self.api_client.post(
-            path=f"/comment-threads",
-            params=None,
-            payload=_CreateIssuesPayload(
-                issues=[
-                    _NewIssueInProjectDataUnit(
-                        anchor=issue.anchor.with_project_and_data_hash(
-                            project_hash=self.project_hash, data_hash=data_hash
-                        ),
-                        comment=issue.comment,
-                        issue_tags=issue.issue_tags,
-                    )
-                    for issue in issues
-                ]
-            ),
             result_type=None,
         )
 
