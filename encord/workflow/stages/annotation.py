@@ -19,9 +19,7 @@ from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import (
-    DataUnitIssueAnchor,
-    FrameCoordinateIssueAnchor,
-    FrameIssueAnchor,
+    NewIssue,
     TasksQueryParams,
     WorkflowAction,
     WorkflowStageBase,
@@ -178,13 +176,9 @@ class AnnotationTask(WorkflowTask):
 
     def add_issue(
         self,
-        anchor: Union[DataUnitIssueAnchor, FrameIssueAnchor, FrameCoordinateIssueAnchor],
-        comment: str,
-        issue_tags: List[str],
+        issues: List[NewIssue],
     ) -> None:
         """TODO"""
         workflow_client, _ = self._get_client_data()
 
-        workflow_client.add_issue(
-            issue_anchor=anchor.with_data_hash(self.data_hash), comment=comment, issue_tags=issue_tags
-        )
+        workflow_client.add_issues(issues=issues, data_hash=self.data_hash)

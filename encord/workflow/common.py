@@ -88,6 +88,12 @@ class FrameCoordinateIssueAnchor(BaseDTO):
         )
 
 
+class NewIssue(BaseDTO):
+    anchor: Union[DataUnitIssueAnchor, FrameIssueAnchor, FrameCoordinateIssueAnchor]
+    comment: str
+    issue_tags: List[str]
+
+
 class _DataUnitIssueAnchor(DataUnitIssueAnchor):
     data_hash: UUID
 
@@ -125,6 +131,12 @@ class _DataUnitFrameCoordinateIssueAnchor(FrameCoordinateIssueAnchor):
         )
 
 
+class _NewIssueInDataUnit(BaseDTO):
+    anchor: Union[_DataUnitIssueAnchor, _DataUnitFrameIssueAnchor, _DataUnitFrameCoordinateIssueAnchor]
+    comment: str
+    issue_tags: List[str]
+
+
 @final
 class _ProjectDataUnitIssueAnchor(_DataUnitIssueAnchor):
     project_hash: UUID
@@ -141,7 +153,7 @@ class _ProjectDataUnitFrameCoordinateIssueAnchor(_DataUnitFrameCoordinateIssueAn
 
 
 @final
-class _NewIssue(BaseDTO):
+class _NewIssueInProjectDataUnit(BaseDTO):
     anchor: Union[
         _ProjectDataUnitIssueAnchor, _ProjectDataUnitFrameIssueAnchor, _ProjectDataUnitFrameCoordinateIssueAnchor
     ]
@@ -150,7 +162,7 @@ class _NewIssue(BaseDTO):
 
 
 class _CreateIssuesPayload(BaseDTO):
-    issues: List[_NewIssue]
+    issues: List[_NewIssueInProjectDataUnit]
 
 
 TaskT = TypeVar("TaskT", bound=WorkflowTask)
@@ -215,22 +227,18 @@ class WorkflowClient:
             result_type=None,
         )
 
-    def add_issue(
-        self,
-        issue_anchor: Union[_DataUnitIssueAnchor, _DataUnitFrameIssueAnchor, _DataUnitFrameCoordinateIssueAnchor],
-        comment: str,
-        issue_tags: List[str],
-    ) -> None:
+    def add_issues(self, issues: List[NewIssue], data_hash: UUID) -> None:
         self.api_client.post(
             path=f"/comment-threads",
             params=None,
             payload=_CreateIssuesPayload(
                 issues=[
-                    _NewIssue(
-                        anchor=issue_anchor.with_project_hash(self.project_hash),
-                        comment=comment,
-                        issue_tags=issue_tags,
+                    _NewIssueInProjectDataUnit(
+                        anchor=issue.anchor.with_data_hash(data_hash).with_project_hash(self.project_hash),
+                        comment=issue.comment,
+                        issue_tags=issue.issue_tags,
                     )
+                    for issue in issues
                 ]
             ),
             result_type=None,

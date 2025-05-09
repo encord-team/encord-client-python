@@ -20,17 +20,13 @@ from encord.http.bundle import Bundle
 from encord.orm.base_dto import BaseDTO, Field, PrivateAttr
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import (
-    DataUnitIssueAnchor,
-    FrameCoordinateIssueAnchor,
-    FrameIssueAnchor,
+    NewIssue,
     TasksQueryParams,
     WorkflowAction,
     WorkflowClient,
     WorkflowReviewAction,
     WorkflowStageBase,
     WorkflowTask,
-    _DataUnitFrameIssueAnchor,
-    _DataUnitIssueAnchor,
 )
 
 
@@ -268,21 +264,12 @@ class ReviewTask(WorkflowTask):
 
     def add_issue(
         self,
-        anchor: Union[DataUnitIssueAnchor, FrameIssueAnchor, FrameCoordinateIssueAnchor],
-        comment: str,
-        issue_tags: List[str],
+        issues: List[NewIssue],
     ) -> None:
-        """TODO Adds an issue to the task.
-
-        **Parameters**
-
-        - `issue` (str): The issue to add to the task.
-        """
+        """TODO"""
         workflow_client, _ = self._get_client_data()
 
-        workflow_client.add_issue(
-            issue_anchor=anchor.with_data_hash(self.data_hash), comment=comment, issue_tags=issue_tags
-        )
+        workflow_client.add_issues(issues=issues, data_hash=self.data_hash)
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         """Assigns the task to a user.
