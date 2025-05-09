@@ -21,16 +21,16 @@ from encord.orm.base_dto import BaseDTO, Field, PrivateAttr
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import (
     DataUnitIssueAnchor,
-    DataUnitIssueAnchorWithDataHash,
     FrameCoordinateIssueAnchor,
     FrameIssueAnchor,
-    FrameIssueAnchorWithDataHash,
     TasksQueryParams,
     WorkflowAction,
     WorkflowClient,
     WorkflowReviewAction,
     WorkflowStageBase,
     WorkflowTask,
+    _DataUnitFrameIssueAnchor,
+    _DataUnitIssueAnchor,
 )
 
 

@@ -50,40 +50,36 @@ class IssueAnchorType(CamelStrEnum):
     FRAME_COORDINATE = auto()
 
 
-class _IssueAnchor(BaseDTO):
-    type: IssueAnchorType
-
-
-class DataUnitIssueAnchor(_IssueAnchor):
+class DataUnitIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.DATA_UNIT] = IssueAnchorType.DATA_UNIT
 
-    def with_data_hash(self, data_hash: UUID) -> DataUnitIssueAnchorWithDataHash:
-        return DataUnitIssueAnchorWithDataHash(
+    def with_data_hash(self, data_hash: UUID) -> _DataUnitIssueAnchor:
+        return _DataUnitIssueAnchor(
             type=self.type,
             data_hash=data_hash,
         )
 
 
-class FrameIssueAnchor(_IssueAnchor):
+class FrameIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.FRAME] = IssueAnchorType.FRAME
     frame_index: int
 
-    def with_data_hash(self, data_hash: UUID) -> FrameIssueAnchorWithDataHash:
-        return FrameIssueAnchorWithDataHash(
+    def with_data_hash(self, data_hash: UUID) -> _DataUnitFrameIssueAnchor:
+        return _DataUnitFrameIssueAnchor(
             type=self.type,
             data_hash=data_hash,
             frame_index=self.frame_index,
         )
 
 
-class FrameCoordinateIssueAnchor(_IssueAnchor):
+class FrameCoordinateIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.FRAME_COORDINATE] = IssueAnchorType.FRAME_COORDINATE
     frame_index: int
     x: float
     y: float
 
-    def with_data_hash(self, data_hash: UUID) -> FrameCoordinateIssueAnchorWithDataHash:
-        return FrameCoordinateIssueAnchorWithDataHash(
+    def with_data_hash(self, data_hash: UUID) -> _DataUnitFrameCoordinateIssueAnchor:
+        return _DataUnitFrameCoordinateIssueAnchor(
             type=self.type,
             data_hash=data_hash,
             frame_index=self.frame_index,
@@ -92,7 +88,7 @@ class FrameCoordinateIssueAnchor(_IssueAnchor):
         )
 
 
-class DataUnitIssueAnchorWithDataHash(DataUnitIssueAnchor):
+class _DataUnitIssueAnchor(DataUnitIssueAnchor):
     data_hash: UUID
 
     def with_project_hash(self, project_hash: UUID) -> _ProjectDataUnitIssueAnchor:
@@ -103,11 +99,11 @@ class DataUnitIssueAnchorWithDataHash(DataUnitIssueAnchor):
         )
 
 
-class FrameIssueAnchorWithDataHash(FrameIssueAnchor):
+class _DataUnitFrameIssueAnchor(FrameIssueAnchor):
     data_hash: UUID
 
-    def with_project_hash(self, project_hash: UUID) -> _ProjectFrameIssueAnchor:
-        return _ProjectFrameIssueAnchor(
+    def with_project_hash(self, project_hash: UUID) -> _ProjectDataUnitFrameIssueAnchor:
+        return _ProjectDataUnitFrameIssueAnchor(
             type=self.type,
             project_hash=project_hash,
             data_hash=self.data_hash,
@@ -115,11 +111,11 @@ class FrameIssueAnchorWithDataHash(FrameIssueAnchor):
         )
 
 
-class FrameCoordinateIssueAnchorWithDataHash(FrameCoordinateIssueAnchor):
+class _DataUnitFrameCoordinateIssueAnchor(FrameCoordinateIssueAnchor):
     data_hash: UUID
 
-    def with_project_hash(self, project_hash: UUID) -> _ProjectFrameCoordinateIssueAnchor:
-        return _ProjectFrameCoordinateIssueAnchor(
+    def with_project_hash(self, project_hash: UUID) -> _ProjectDataUnitFrameCoordinateIssueAnchor:
+        return _ProjectDataUnitFrameCoordinateIssueAnchor(
             type=self.type,
             project_hash=project_hash,
             data_hash=self.data_hash,
@@ -130,25 +126,31 @@ class FrameCoordinateIssueAnchorWithDataHash(FrameCoordinateIssueAnchor):
 
 
 @final
-class _ProjectDataUnitIssueAnchor(DataUnitIssueAnchorWithDataHash):
+class _ProjectDataUnitIssueAnchor(_DataUnitIssueAnchor):
     project_hash: UUID
 
 
 @final
-class _ProjectFrameIssueAnchor(FrameIssueAnchorWithDataHash):
+class _ProjectDataUnitFrameIssueAnchor(_DataUnitFrameIssueAnchor):
     project_hash: UUID
 
 
 @final
-class _ProjectFrameCoordinateIssueAnchor(FrameCoordinateIssueAnchorWithDataHash):
+class _ProjectDataUnitFrameCoordinateIssueAnchor(_DataUnitFrameCoordinateIssueAnchor):
     project_hash: UUID
 
 
 @final
-class _NewProjectIssue(BaseDTO):
-    anchor: Union[_ProjectDataUnitIssueAnchor, _ProjectFrameIssueAnchor, _ProjectFrameCoordinateIssueAnchor]
+class _NewIssue(BaseDTO):
+    anchor: Union[
+        _ProjectDataUnitIssueAnchor, _ProjectDataUnitFrameIssueAnchor, _ProjectDataUnitFrameCoordinateIssueAnchor
+    ]
     comment: str
     issue_tags: List[str]
+
+
+class _CreateIssuesPayload(BaseDTO):
+    issues: List[_NewIssue]
 
 
 TaskT = TypeVar("TaskT", bound=WorkflowTask)
@@ -215,19 +217,21 @@ class WorkflowClient:
 
     def add_issue(
         self,
-        issue_anchor: Union[
-            DataUnitIssueAnchorWithDataHash, FrameIssueAnchorWithDataHash, FrameCoordinateIssueAnchorWithDataHash
-        ],
+        issue_anchor: Union[_DataUnitIssueAnchor, _DataUnitFrameIssueAnchor, _DataUnitFrameCoordinateIssueAnchor],
         comment: str,
         issue_tags: List[str],
     ) -> None:
         self.api_client.post(
             path=f"/comment-threads",
             params=None,
-            payload=_NewProjectIssue(
-                anchor=issue_anchor.with_project_hash(self.project_hash),
-                comment=comment,
-                issue_tags=issue_tags,
+            payload=_CreateIssuesPayload(
+                issues=[
+                    _NewIssue(
+                        anchor=issue_anchor.with_project_hash(self.project_hash),
+                        comment=comment,
+                        issue_tags=issue_tags,
+                    )
+                ]
             ),
             result_type=None,
         )
