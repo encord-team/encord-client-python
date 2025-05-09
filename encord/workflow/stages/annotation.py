@@ -17,8 +17,14 @@ from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
+from encord.issues.issue_client import TaskIssueClient
 from encord.orm.workflow import WorkflowStageType
-from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
+from encord.workflow.common import (
+    TasksQueryParams,
+    WorkflowAction,
+    WorkflowStageBase,
+    WorkflowTask,
+)
 
 
 class AnnotationTaskStatus(str, Enum):
@@ -81,6 +87,11 @@ class AnnotationStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=AnnotationTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
+            task._task_issue_client = TaskIssueClient(
+                api_client=self._workflow_client.api_client,
+                project_hash=self._workflow_client.project_hash,
+                data_hash=task.data_hash,
+            )
             yield task
 
 
@@ -167,3 +178,9 @@ class AnnotationTask(WorkflowTask):
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
+
+    @property
+    def issues(self) -> TaskIssueClient:
+        """Returns the issue client for the task."""
+        assert self._task_issue_client
+        return self._task_issue_client

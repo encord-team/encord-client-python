@@ -17,6 +17,7 @@ from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
+from encord.issues.issue_client import TaskIssueClient
 from encord.orm.base_dto import BaseDTO, Field, PrivateAttr
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import (
@@ -167,6 +168,11 @@ class ReviewStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
+            task._task_issue_client = TaskIssueClient(
+                api_client=self._workflow_client.api_client,
+                project_hash=self._workflow_client.project_hash,
+                data_hash=task.data_hash,
+            )
             yield task
 
 
@@ -304,3 +310,9 @@ class ReviewTask(WorkflowTask):
             r._stage_uuid = self._stage_uuid
             r._task_uuid = self.uuid
             yield r
+
+    @property
+    def issues(self) -> TaskIssueClient:
+        """Returns the issue client for the task."""
+        assert self._task_issue_client
+        return self._task_issue_client
