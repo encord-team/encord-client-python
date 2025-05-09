@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import auto
-from typing import List, Literal, Union, final
+from typing import List, Literal, Union
 from uuid import UUID
 
 from encord.http.v2.api_client import ApiClient
@@ -16,14 +16,12 @@ class _IssueAnchorType(CamelStrEnum):
     FRAME_COORDINATE = auto()
 
 
-@final
 class _FileIssueAnchor(BaseDTO):
     type: Literal[_IssueAnchorType.DATA_UNIT] = _IssueAnchorType.DATA_UNIT
     project_hash: UUID
     data_hash: UUID
 
 
-@final
 class _FrameIssueAnchor(BaseDTO):
     type: Literal[_IssueAnchorType.FRAME] = _IssueAnchorType.FRAME
     project_hash: UUID
@@ -31,7 +29,6 @@ class _FrameIssueAnchor(BaseDTO):
     frame_index: int
 
 
-@final
 class _CoordinateIssueAnchor(BaseDTO):
     type: Literal[_IssueAnchorType.FRAME_COORDINATE] = _IssueAnchorType.FRAME_COORDINATE
     project_hash: UUID
@@ -44,7 +41,6 @@ class _CoordinateIssueAnchor(BaseDTO):
 _IssueAnchor = Union[_FileIssueAnchor, _FrameIssueAnchor, _CoordinateIssueAnchor]
 
 
-@final
 class _NewIssue(BaseDTO):
     anchor: _IssueAnchor
     comment: str
