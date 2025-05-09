@@ -180,5 +180,4 @@ class AnnotationTask(WorkflowTask):
     ) -> None:
         """TODO"""
         workflow_client, _ = self._get_client_data()
-
         workflow_client.add_issues(issues=issues, data_hash=self.data_hash)
