@@ -45,14 +45,14 @@ _IssueAnchor = Union[_FileIssueAnchor, _FrameIssueAnchor, _CoordinateIssueAnchor
 
 
 @final
-class _NewIssueInProjectDataUnit(BaseDTO):
+class _NewIssue(BaseDTO):
     anchor: _IssueAnchor
     comment: str
     issue_tags: List[str]
 
 
 class _CreateIssuesPayload(BaseDTO):
-    issues: List[_NewIssueInProjectDataUnit]
+    issues: List[_NewIssue]
 
 
 @dataclass
@@ -84,7 +84,7 @@ class TaskIssueClient:
             params=None,
             payload=_CreateIssuesPayload(
                 issues=[
-                    _NewIssueInProjectDataUnit(
+                    _NewIssue(
                         anchor=anchor,
                         comment=comment,
                         issue_tags=issue_tags,
