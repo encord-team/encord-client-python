@@ -1,77 +1,53 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Union, final
+from enum import auto
+from typing import List, Literal, Union, final
 from uuid import UUID
 
 from encord.http.v2.api_client import ApiClient
-from encord.issues.issue_anchors import DataUnitIssueAnchor, FrameCoordinateIssueAnchor, FrameIssueAnchor
+from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
 
-class _NewIssue(BaseDTO):
-    anchor: Union[DataUnitIssueAnchor, FrameIssueAnchor, FrameCoordinateIssueAnchor]
-    comment: str
-    issue_tags: List[str]
+class _IssueAnchorType(CamelStrEnum):
+    DATA_UNIT = auto()
+    FRAME = auto()
+    FRAME_COORDINATE = auto()
 
 
 @final
-class _ProjectDataUnitIssueAnchor(DataUnitIssueAnchor):
+class _ProjectDataUnitIssueAnchor(BaseDTO):
+    type: Literal[_IssueAnchorType.DATA_UNIT] = _IssueAnchorType.DATA_UNIT
     project_hash: UUID
     data_hash: UUID
-
-    @classmethod
-    def from_anchor_without_project_and_data_hashes(
-        cls, anchor: DataUnitIssueAnchor, *, project_hash: UUID, data_hash: UUID
-    ) -> _ProjectDataUnitIssueAnchor:
-        return cls(
-            type=anchor.type,
-            project_hash=project_hash,
-            data_hash=data_hash,
-        )
 
 
 @final
-class _ProjectDataUnitFrameIssueAnchor(FrameIssueAnchor):
+class _ProjectDataUnitFrameIssueAnchor(BaseDTO):
+    type: Literal[_IssueAnchorType.FRAME] = _IssueAnchorType.FRAME
     project_hash: UUID
     data_hash: UUID
-
-    @classmethod
-    def from_anchor_without_project_and_data_hashes(
-        cls, anchor: FrameIssueAnchor, *, project_hash: UUID, data_hash: UUID
-    ) -> _ProjectDataUnitFrameIssueAnchor:
-        return cls(
-            type=anchor.type,
-            project_hash=project_hash,
-            data_hash=data_hash,
-            frame_index=anchor.frame_index,
-        )
 
 
 @final
-class _ProjectDataUnitFrameCoordinateIssueAnchor(FrameCoordinateIssueAnchor):
+class _ProjectDataUnitFrameCoordinateIssueAnchor(BaseDTO):
+    type: Literal[_IssueAnchorType.FRAME_COORDINATE] = _IssueAnchorType.FRAME_COORDINATE
+    frame_index: int
+    x: float
+    y: float
     project_hash: UUID
     data_hash: UUID
 
-    @classmethod
-    def from_anchor_without_project_and_data_hashes(
-        cls, anchor: FrameCoordinateIssueAnchor, *, project_hash: UUID, data_hash: UUID
-    ) -> _ProjectDataUnitFrameCoordinateIssueAnchor:
-        return cls(
-            type=anchor.type,
-            project_hash=project_hash,
-            data_hash=data_hash,
-            frame_index=anchor.frame_index,
-            x=anchor.x,
-            y=anchor.y,
-        )
+
+_IssueAnchor = Union[
+    _ProjectDataUnitIssueAnchor, _ProjectDataUnitFrameIssueAnchor, _ProjectDataUnitFrameCoordinateIssueAnchor
+]
 
 
 @final
 class _NewIssueInProjectDataUnit(BaseDTO):
-    anchor: Union[
-        _ProjectDataUnitIssueAnchor, _ProjectDataUnitFrameIssueAnchor, _ProjectDataUnitFrameCoordinateIssueAnchor
-    ]
+    anchor: _IssueAnchor
     comment: str
     issue_tags: List[str]
 
@@ -80,68 +56,41 @@ class _CreateIssuesPayload(BaseDTO):
     issues: List[_NewIssueInProjectDataUnit]
 
 
-def _get_anchor_with_project_and_data_hashes(
-    anchor: Union[DataUnitIssueAnchor, FrameIssueAnchor, FrameCoordinateIssueAnchor],
-    *,
-    project_hash: UUID,
-    data_hash: UUID,
-) -> Union[_ProjectDataUnitIssueAnchor, _ProjectDataUnitFrameIssueAnchor, _ProjectDataUnitFrameCoordinateIssueAnchor]:
-    if isinstance(anchor, DataUnitIssueAnchor):
-        return _ProjectDataUnitIssueAnchor.from_anchor_without_project_and_data_hashes(
-            anchor, project_hash=project_hash, data_hash=data_hash
-        )
-    elif isinstance(anchor, FrameIssueAnchor):
-        return _ProjectDataUnitFrameIssueAnchor.from_anchor_without_project_and_data_hashes(
-            anchor, project_hash=project_hash, data_hash=data_hash
-        )
-    elif isinstance(anchor, FrameCoordinateIssueAnchor):
-        return _ProjectDataUnitFrameCoordinateIssueAnchor.from_anchor_without_project_and_data_hashes(
-            anchor, project_hash=project_hash, data_hash=data_hash
-        )
-    else:
-        raise ValueError(f"Unknown anchor type: {type(anchor)}")
-
-
 @dataclass
 class _IssueClient:
     api_client: ApiClient
 
     def add_file_issue(self, *, project_hash: UUID, data_hash: UUID, comment: str, issue_tags: List[str]):
         self._add_issue(
-            project_hash=project_hash,
-            data_hash=data_hash,
-            issue=_NewIssue(
-                anchor=DataUnitIssueAnchor(),
-                comment=comment,
-                issue_tags=issue_tags,
+            anchor=_ProjectDataUnitIssueAnchor(
+                project_hash=project_hash,
+                data_hash=data_hash,
             ),
+            comment=comment,
+            issue_tags=issue_tags,
         )
 
     def add_frame_issue(
         self, *, project_hash: UUID, data_hash: UUID, frame_index: int, comment: str, issue_tags: List[str]
     ):
         self._add_issue(
-            project_hash=project_hash,
-            data_hash=data_hash,
-            issue=_NewIssue(
-                anchor=FrameIssueAnchor(frame_index=frame_index),
-                comment=comment,
-                issue_tags=issue_tags,
+            anchor=_ProjectDataUnitFrameIssueAnchor(
+                project_hash=project_hash, data_hash=data_hash, frame_index=frame_index
             ),
+            comment=comment,
+            issue_tags=issue_tags,
         )
 
-    def _add_issue(self, project_hash: UUID, data_hash: UUID, issue: _NewIssue) -> None:
+    def _add_issue(self, anchor: _IssueAnchor, comment: str, issue_tags: List[str]) -> None:
         self.api_client.post(
             path=f"/comment-threads",
             params=None,
             payload=_CreateIssuesPayload(
                 issues=[
                     _NewIssueInProjectDataUnit(
-                        anchor=_get_anchor_with_project_and_data_hashes(
-                            issue.anchor, project_hash=project_hash, data_hash=data_hash
-                        ),
-                        comment=issue.comment,
-                        issue_tags=issue.issue_tags,
+                        anchor=anchor,
+                        comment=comment,
+                        issue_tags=issue_tags,
                     )
                 ]
             ),
