@@ -262,7 +262,7 @@ class ReviewTask(WorkflowTask):
             bundle=bundle,
         )
 
-    def add_issue(
+    def add_issues(
         self,
         issues: List[NewIssue],
     ) -> None:

@@ -53,9 +53,10 @@ class IssueAnchorType(CamelStrEnum):
 class DataUnitIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.DATA_UNIT] = IssueAnchorType.DATA_UNIT
 
-    def with_data_hash(self, data_hash: UUID) -> _DataUnitIssueAnchor:
-        return _DataUnitIssueAnchor(
+    def with_project_and_data_hash(self, *, project_hash: UUID, data_hash: UUID) -> _ProjectDataUnitIssueAnchor:
+        return _ProjectDataUnitIssueAnchor(
             type=self.type,
+            project_hash=project_hash,
             data_hash=data_hash,
         )
 
@@ -64,9 +65,10 @@ class FrameIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.FRAME] = IssueAnchorType.FRAME
     frame_index: int
 
-    def with_data_hash(self, data_hash: UUID) -> _DataUnitFrameIssueAnchor:
-        return _DataUnitFrameIssueAnchor(
+    def with_project_and_data_hash(self, *, project_hash: UUID, data_hash: UUID) -> _ProjectDataUnitFrameIssueAnchor:
+        return _ProjectDataUnitFrameIssueAnchor(
             type=self.type,
+            project_hash=project_hash,
             data_hash=data_hash,
             frame_index=self.frame_index,
         )
@@ -78,9 +80,12 @@ class FrameCoordinateIssueAnchor(BaseDTO):
     x: float
     y: float
 
-    def with_data_hash(self, data_hash: UUID) -> _DataUnitFrameCoordinateIssueAnchor:
-        return _DataUnitFrameCoordinateIssueAnchor(
+    def with_project_and_data_hash(
+        self, *, project_hash: UUID, data_hash: UUID
+    ) -> _ProjectDataUnitFrameCoordinateIssueAnchor:
+        return _ProjectDataUnitFrameCoordinateIssueAnchor(
             type=self.type,
+            project_hash=project_hash,
             data_hash=data_hash,
             frame_index=self.frame_index,
             x=self.x,
@@ -94,62 +99,22 @@ class NewIssue(BaseDTO):
     issue_tags: List[str]
 
 
-class _DataUnitIssueAnchor(DataUnitIssueAnchor):
+@final
+class _ProjectDataUnitIssueAnchor(DataUnitIssueAnchor):
+    project_hash: UUID
     data_hash: UUID
-
-    def with_project_hash(self, project_hash: UUID) -> _ProjectDataUnitIssueAnchor:
-        return _ProjectDataUnitIssueAnchor(
-            type=self.type,
-            project_hash=project_hash,
-            data_hash=self.data_hash,
-        )
-
-
-class _DataUnitFrameIssueAnchor(FrameIssueAnchor):
-    data_hash: UUID
-
-    def with_project_hash(self, project_hash: UUID) -> _ProjectDataUnitFrameIssueAnchor:
-        return _ProjectDataUnitFrameIssueAnchor(
-            type=self.type,
-            project_hash=project_hash,
-            data_hash=self.data_hash,
-            frame_index=self.frame_index,
-        )
-
-
-class _DataUnitFrameCoordinateIssueAnchor(FrameCoordinateIssueAnchor):
-    data_hash: UUID
-
-    def with_project_hash(self, project_hash: UUID) -> _ProjectDataUnitFrameCoordinateIssueAnchor:
-        return _ProjectDataUnitFrameCoordinateIssueAnchor(
-            type=self.type,
-            project_hash=project_hash,
-            data_hash=self.data_hash,
-            frame_index=self.frame_index,
-            x=self.x,
-            y=self.y,
-        )
-
-
-class _NewIssueInDataUnit(BaseDTO):
-    anchor: Union[_DataUnitIssueAnchor, _DataUnitFrameIssueAnchor, _DataUnitFrameCoordinateIssueAnchor]
-    comment: str
-    issue_tags: List[str]
 
 
 @final
-class _ProjectDataUnitIssueAnchor(_DataUnitIssueAnchor):
+class _ProjectDataUnitFrameIssueAnchor(FrameIssueAnchor):
     project_hash: UUID
+    data_hash: UUID
 
 
 @final
-class _ProjectDataUnitFrameIssueAnchor(_DataUnitFrameIssueAnchor):
+class _ProjectDataUnitFrameCoordinateIssueAnchor(FrameCoordinateIssueAnchor):
     project_hash: UUID
-
-
-@final
-class _ProjectDataUnitFrameCoordinateIssueAnchor(_DataUnitFrameCoordinateIssueAnchor):
-    project_hash: UUID
+    data_hash: UUID
 
 
 @final
@@ -234,7 +199,9 @@ class WorkflowClient:
             payload=_CreateIssuesPayload(
                 issues=[
                     _NewIssueInProjectDataUnit(
-                        anchor=issue.anchor.with_data_hash(data_hash).with_project_hash(self.project_hash),
+                        anchor=issue.anchor.with_project_and_data_hash(
+                            project_hash=self.project_hash, data_hash=data_hash
+                        ),
                         comment=issue.comment,
                         issue_tags=issue.issue_tags,
                     )
