@@ -57,7 +57,7 @@ class TaskIssueClient:
     project_hash: UUID
     data_hash: UUID
 
-    def add_file_issue(self, comment: str, issue_tags: List[str]):
+    def add_file_issue(self, comment: str, issue_tags: List[str]) -> None:
         self._add_issue(
             anchor=_FileIssueAnchor(
                 project_hash=self.project_hash,
@@ -67,7 +67,7 @@ class TaskIssueClient:
             issue_tags=issue_tags,
         )
 
-    def add_frame_issue(self, frame_index: int, comment: str, issue_tags: List[str]):
+    def add_frame_issue(self, frame_index: int, comment: str, issue_tags: List[str]) -> None:
         self._add_issue(
             anchor=_FrameIssueAnchor(project_hash=self.project_hash, data_hash=self.data_hash, frame_index=frame_index),
             comment=comment,
