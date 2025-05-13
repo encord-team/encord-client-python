@@ -181,8 +181,8 @@ class ReviewStage(WorkflowStageBase):
             task._workflow_client = self._workflow_client
             task._task_issue_client = TaskIssueClient(
                 api_client=self._workflow_client.api_client,
-                project_hash=self._workflow_client.project_hash,
-                data_hash=task.data_hash,
+                project_uuid=self._workflow_client.project_hash,
+                data_uuid=task.data_hash,
             )
             yield task
 
