@@ -44,6 +44,8 @@ class _LabelReviewActionApprove(WorkflowReviewAction):
 
 class _LabelReviewActionReject(WorkflowReviewAction):
     action: Literal["REJECT"] = "REJECT"
+    comment: Optional[str] = None
+    comment_tags: Optional[List[str]] = None
 
 
 class _LabelReviewActionReopen(WorkflowReviewAction):
@@ -79,7 +81,13 @@ class LabelReview(BaseDTO):
             stage_uuid, task_uuid, _LabelReviewActionApprove(review_uuid=self.uuid), bundle=bundle
         )
 
-    def reject(self, *, bundle: Optional[Bundle] = None):
+    def reject(
+        self,
+        *,
+        comment: Optional[str] = None,
+        issue_tags: Optional[List[str]] = None,
+        bundle: Optional[Bundle] = None,
+    ):
         """Rejects the review.
 
         **Parameters**
@@ -88,7 +96,10 @@ class LabelReview(BaseDTO):
         """
         workflow_client, stage_uuid, task_uuid = self._get_client_data()
         workflow_client.label_review_action(
-            stage_uuid, task_uuid, _LabelReviewActionReject(review_uuid=self.uuid), bundle=bundle
+            stage_uuid,
+            task_uuid,
+            _LabelReviewActionReject(review_uuid=self.uuid, comment=comment, comment_tags=issue_tags),
+            bundle=bundle,
         )
 
     def reopen(self, *, bundle: Optional[Bundle] = None):
