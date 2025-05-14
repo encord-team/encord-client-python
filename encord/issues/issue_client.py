@@ -51,44 +51,12 @@ class _CreateIssuesPayload(BaseDTO):
     issues: List[_NewIssue]
 
 
-@dataclass
-class TaskIssueClient:
-    api_client: ApiClient
-    project_uuid: UUID
-    data_uuid: UUID
+class IssueClient:
+    def __init__(self, api_client: ApiClient):
+        self._api_client = api_client
 
-    def add_file_issue(self, comment: str, issue_tags: List[str]) -> None:
-        self._add_issue(
-            anchor=_FileIssueAnchor(
-                project_uuid=self.project_uuid,
-                data_uuid=self.data_uuid,
-            ),
-            comment=comment,
-            issue_tags=issue_tags,
-        )
-
-    def add_frame_issue(self, frame_index: int, comment: str, issue_tags: List[str]) -> None:
-        self._add_issue(
-            anchor=_FrameIssueAnchor(project_uuid=self.project_uuid, data_uuid=self.data_uuid, frame_index=frame_index),
-            comment=comment,
-            issue_tags=issue_tags,
-        )
-
-    def add_coordinate_issue(self, frame_index: int, x: float, y: float, comment: str, issue_tags: List[str]) -> None:
-        self._add_issue(
-            anchor=_CoordinateIssueAnchor(
-                project_uuid=self.project_uuid,
-                data_uuid=self.data_uuid,
-                frame_index=frame_index,
-                x=x,
-                y=y,
-            ),
-            comment=comment,
-            issue_tags=issue_tags,
-        )
-
-    def _add_issue(self, anchor: _IssueAnchor, comment: str, issue_tags: List[str]) -> None:
-        self.api_client.post(
+    def add_issue(self, anchor: _IssueAnchor, comment: str, issue_tags: List[str]) -> None:
+        self._api_client.post(
             path=f"/comment-threads",
             params=None,
             payload=_CreateIssuesPayload(
@@ -101,4 +69,43 @@ class TaskIssueClient:
                 ]
             ),
             result_type=None,
+        )
+
+
+class TaskIssueClient:
+    def __init__(self, api_client: ApiClient, project_uuid: UUID, data_uuid: UUID) -> None:
+        self._issue_client = IssueClient(api_client=api_client)
+        self._project_uuid = project_uuid
+        self._data_uuid = data_uuid
+
+    def add_file_issue(self, comment: str, issue_tags: List[str]) -> None:
+        self._issue_client.add_issue(
+            anchor=_FileIssueAnchor(
+                project_uuid=self._project_uuid,
+                data_uuid=self._data_uuid,
+            ),
+            comment=comment,
+            issue_tags=issue_tags,
+        )
+
+    def add_frame_issue(self, frame_index: int, comment: str, issue_tags: List[str]) -> None:
+        self._issue_client.add_issue(
+            anchor=_FrameIssueAnchor(
+                project_uuid=self._project_uuid, data_uuid=self._data_uuid, frame_index=frame_index
+            ),
+            comment=comment,
+            issue_tags=issue_tags,
+        )
+
+    def add_coordinate_issue(self, frame_index: int, x: float, y: float, comment: str, issue_tags: List[str]) -> None:
+        self._issue_client.add_issue(
+            anchor=_CoordinateIssueAnchor(
+                project_uuid=self._project_uuid,
+                data_uuid=self._data_uuid,
+                frame_index=frame_index,
+                x=x,
+                y=y,
+            ),
+            comment=comment,
+            issue_tags=issue_tags,
         )
