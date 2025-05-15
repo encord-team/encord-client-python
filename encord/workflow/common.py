@@ -7,7 +7,7 @@ from uuid import UUID
 
 from encord.http.bundle import Bundle, bundled_operation
 from encord.http.v2.api_client import ApiClient
-from encord.issues.issue_client import TaskIssueClient
+from encord.issues.issue_client import TaskIssues
 from encord.orm.base_dto import BaseDTO, PrivateAttr
 
 
@@ -28,7 +28,7 @@ class WorkflowStageBase:
 class WorkflowTask(BaseDTO):
     _stage_uuid: Optional[UUID] = PrivateAttr(None)
     _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
-    _task_issue_client: Optional[TaskIssueClient] = PrivateAttr(None)
+    _task_issue_client: Optional[TaskIssues] = PrivateAttr(None)
 
     uuid: UUID
     created_at: datetime

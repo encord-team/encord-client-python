@@ -72,7 +72,7 @@ class IssueClient:
         )
 
 
-class TaskIssueClient:
+class TaskIssues:
     def __init__(self, api_client: ApiClient, project_uuid: UUID, data_uuid: UUID) -> None:
         self._issue_client = IssueClient(api_client=api_client)
         self._project_uuid = project_uuid
