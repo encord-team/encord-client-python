@@ -48,7 +48,7 @@ class _CreateIssuesPayload(BaseDTO):
     issues: List[_NewIssue]
 
 
-class IssueClient:
+class _IssueClient:
     def __init__(self, api_client: ApiClient) -> None:
         self._api_client = api_client
 
@@ -71,7 +71,7 @@ class IssueClient:
 
 class TaskIssues:
     def __init__(self, api_client: ApiClient, project_uuid: UUID, data_uuid: UUID):
-        self._issue_client = IssueClient(api_client=api_client)
+        self._issue_client = _IssueClient(api_client=api_client)
         self._project_uuid = project_uuid
         self._data_uuid = data_uuid
 

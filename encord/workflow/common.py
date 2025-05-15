@@ -28,7 +28,7 @@ class WorkflowStageBase:
 class WorkflowTask(BaseDTO):
     _stage_uuid: Optional[UUID] = PrivateAttr(None)
     _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
-    _task_issue_client: Optional[TaskIssues] = PrivateAttr(None)
+    _task_issues: Optional[TaskIssues] = PrivateAttr(None)
 
     uuid: UUID
     created_at: datetime

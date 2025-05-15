@@ -179,7 +179,7 @@ class ReviewStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
-            task._task_issue_client = TaskIssues(
+            task._task_issues = TaskIssues(
                 api_client=self._workflow_client.api_client,
                 project_uuid=self._workflow_client.project_hash,
                 data_uuid=task.data_hash,
@@ -325,5 +325,5 @@ class ReviewTask(WorkflowTask):
     @property
     def issues(self) -> TaskIssues:
         """Returns the issue client for the task."""
-        assert self._task_issue_client
-        return self._task_issue_client
+        assert self._task_issues
+        return self._task_issues
