@@ -1060,3 +1060,11 @@ class Project:
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=uuid,
         )
+
+    def set_status(self, status: ProjectStatus):
+        """Set the status of the project.
+
+        Args:
+            status: The new status of the project.
+        """
+        self._client.set_status(status)
