@@ -18,20 +18,17 @@ class _IssueAnchorType(CamelStrEnum):
 
 class _FileIssueAnchor(BaseDTO):
     type: Literal[_IssueAnchorType.DATA_UNIT] = _IssueAnchorType.DATA_UNIT
-    project_uuid: UUID
     data_uuid: UUID
 
 
 class _FrameIssueAnchor(BaseDTO):
     type: Literal[_IssueAnchorType.FRAME] = _IssueAnchorType.FRAME
-    project_uuid: UUID
     data_uuid: UUID
     frame_index: int
 
 
 class _CoordinateIssueAnchor(BaseDTO):
     type: Literal[_IssueAnchorType.FRAME_COORDINATE] = _IssueAnchorType.FRAME_COORDINATE
-    project_uuid: UUID
     data_uuid: UUID
     frame_index: int
     x: float
@@ -52,12 +49,12 @@ class _CreateIssuesPayload(BaseDTO):
 
 
 class IssueClient:
-    def __init__(self, api_client: ApiClient):
+    def __init__(self, api_client: ApiClient) -> None:
         self._api_client = api_client
 
-    def add_issue(self, anchor: _IssueAnchor, comment: str, issue_tags: List[str]) -> None:
+    def add_issue(self, project_uuid: UUID, anchor: _IssueAnchor, comment: str, issue_tags: List[str]) -> None:
         self._api_client.post(
-            path=f"/comment-threads",
+            path=f"/projects/{project_uuid}/issues",
             params=None,
             payload=_CreateIssuesPayload(
                 issues=[
@@ -73,15 +70,15 @@ class IssueClient:
 
 
 class TaskIssues:
-    def __init__(self, api_client: ApiClient, project_uuid: UUID, data_uuid: UUID) -> None:
+    def __init__(self, api_client: ApiClient, project_uuid: UUID, data_uuid: UUID):
         self._issue_client = IssueClient(api_client=api_client)
         self._project_uuid = project_uuid
         self._data_uuid = data_uuid
 
     def add_file_issue(self, comment: str, issue_tags: List[str]) -> None:
         self._issue_client.add_issue(
+            project_uuid=self._project_uuid,
             anchor=_FileIssueAnchor(
-                project_uuid=self._project_uuid,
                 data_uuid=self._data_uuid,
             ),
             comment=comment,
@@ -90,17 +87,16 @@ class TaskIssues:
 
     def add_frame_issue(self, frame_index: int, comment: str, issue_tags: List[str]) -> None:
         self._issue_client.add_issue(
-            anchor=_FrameIssueAnchor(
-                project_uuid=self._project_uuid, data_uuid=self._data_uuid, frame_index=frame_index
-            ),
+            project_uuid=self._project_uuid,
+            anchor=_FrameIssueAnchor(data_uuid=self._data_uuid, frame_index=frame_index),
             comment=comment,
             issue_tags=issue_tags,
         )
 
     def add_coordinate_issue(self, frame_index: int, x: float, y: float, comment: str, issue_tags: List[str]) -> None:
         self._issue_client.add_issue(
+            project_uuid=self._project_uuid,
             anchor=_CoordinateIssueAnchor(
-                project_uuid=self._project_uuid,
                 data_uuid=self._data_uuid,
                 frame_index=frame_index,
                 x=x,
