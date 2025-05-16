@@ -757,7 +757,7 @@ class SyncPrivateDataWithCloudSyncedFolderStatus(CamelStrEnum):
     """
     The synchronization job is currently in progress.
 
-    This status indicates that either:
+    This status indicates that:
     - The job is queued and waiting to be processed
     - The job is actively processing bucket content
     - The job is creating or updating items in the Encord storage folder
@@ -765,19 +765,19 @@ class SyncPrivateDataWithCloudSyncedFolderStatus(CamelStrEnum):
 
     DONE = auto()
     """
-    The synchronization job has successfully completed.
+    The synchronization job successfully completed.
 
     This status indicates that all phases of the synchronization (bucket scanning,
-    item creation/updating/tombstoning) have been completed without critical errors.
-    Note that individual items may still have failed to process (check upload_jobs_units_error).
+    item creation/updating/tombstoning) have completed without critical errors.
+    NOTE: Individual items may still have failed to process (check upload_jobs_units_error).
     """
 
     ERROR = auto()
     """
     The synchronization job encountered a critical error.
 
-    This status indicates that a severe error occurred during synchronization,
-    such as:
+    This status indicates that a severe error occurred during synchronization.
+    For example:
     - Unable to access the cloud storage bucket
     - Database transaction failures
     - Other system-level errors
