@@ -11,6 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Iterable, List, Optional, Sequence, Tuple, Type, TypeVar, cast
@@ -52,7 +53,7 @@ class OntologyElement(ABC):
         self,
         feature_node_hash: str,
         type_: Optional[Type[OntologyNestedElementT]] = None,
-    ) -> OntologyNestedElementT:
+    ) -> OntologyNestedElementT | None:
         """Retrieves the first child node of this ontology element with the matching feature node hash.
         If multiple children have the same hash, the ontology is in an invalid state.
         Throws an exception if no matching child is found or if the type does not match.
@@ -65,9 +66,9 @@ class OntologyElement(ABC):
             The child node with the specified feature node hash and type.
         """
         found_item = _get_element_by_hash(feature_node_hash, self.children)
-        if found_item is None:
-            raise OntologyError("Item not found.")
-        check_type(found_item, type_)
+        if found_item is not None:
+            check_type(found_item, type_)
+
         return found_item
 
     def get_children_by_title(

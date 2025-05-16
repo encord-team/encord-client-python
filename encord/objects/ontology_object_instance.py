@@ -11,6 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -282,7 +283,7 @@ class ObjectInstance:
             )
         static_answer.set(answer, manual_annotation=manual_annotation)
 
-    def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
+    def set_answer_from_list(self, answers_list: List[Dict[str, Any]], parent_feature_hash: str | None = None) -> None:
         """This is a low level helper function and should usually not be used directly.
 
         Sets the answer for the classification from a dictionary.
@@ -319,7 +320,7 @@ class ObjectInstance:
         for feature_hash, answers_list in grouped_answers.items():
             attribute = _get_attribute_by_hash(feature_hash, self._ontology_object.attributes)
             assert attribute  # we already checked that attribute is not null above. So just silencing this for now
-            self._set_answer_from_grouped_list(attribute, answers_list)
+            self._set_answer_from_grouped_list(attribute, answers_list, parent_feature_hash)
 
     @staticmethod
     def _merge_answers_to_non_overlapping_ranges(ranges: List[Tuple[Range, Set[str]]]) -> List[Tuple[Range, Set[str]]]:
@@ -362,7 +363,7 @@ class ObjectInstance:
 
         return list(result_ranges.values())
 
-    def _set_answer_from_grouped_list(self, attribute: Attribute, answers_list: List[Dict[str, Any]]) -> None:
+    def _set_answer_from_grouped_list(self, attribute: Attribute, answers_list: List[Dict[str, Any]], parent_feature_hash: str | None = None) -> None:
         if isinstance(attribute, ChecklistAttribute):
             if not attribute.dynamic:
                 options = []
@@ -392,7 +393,7 @@ class ObjectInstance:
                     self._set_answer_unsafe(options, attribute, [frame_range])
         else:
             for answer in answers_list:
-                self._set_answer_from_dict(answer, attribute)
+                self._set_answer_from_dict(answer, attribute, parent_feature_hash)
 
     def delete_answer(
         self,
@@ -857,7 +858,7 @@ class ObjectInstance:
             static_answer = self._static_answer_map[attribute.feature_node_hash]
             static_answer.set(answer)
 
-    def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute) -> None:
+    def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute, parent_feature_hash: str | None = None) -> None:
         if attribute.dynamic:
             ranges = ranges_list_to_ranges(answer_dict["range"])
         else:
@@ -868,8 +869,12 @@ class ObjectInstance:
         elif isinstance(attribute, RadioAttribute):
             if len(answer_dict["answers"]) == 1:
                 feature_hash = answer_dict["answers"][0]["featureHash"]
+
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
-                self._set_answer_unsafe(option, attribute, ranges)
+                if option is None:
+                    logging.warning(f"MISSING_ANSWER: name='{answer_dict['answers'][0]['name']}', featureHash='{answer_dict['answers'][0]['featureHash']}', parentHash='{parent_feature_hash}'")
+                else:
+                    self._set_answer_unsafe(option, attribute, ranges)
         elif isinstance(attribute, ChecklistAttribute):
             options = []
             for answer in answer_dict["answers"]:

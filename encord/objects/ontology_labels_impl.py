@@ -2203,13 +2203,12 @@ class LabelRowV2:
             # To avoid parser errors, we're omitting attributes for the object that is not in label rows.
             if object_instance := self._objects_map.get(object_hash):
                 answer_list = answer["classifications"]
-                object_instance.set_answer_from_list(answer_list)
+                object_instance.set_answer_from_list(answer_list, object_instance.feature_hash)
 
     def _add_action_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_actions"].values():
             object_hash = answer["objectHash"]
             object_instance = self._objects_map[object_hash]
-
             answer_list = answer["actions"]
             object_instance.set_answer_from_list(answer_list)
 
