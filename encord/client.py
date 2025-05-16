@@ -102,7 +102,9 @@ from encord.orm.project import (
     ProjectCopy,
     ProjectCopyOptions,
     ProjectDataset,
+    ProjectStatus,
     ProjectUsers,
+    SetProjectStatusPayload,
     TaskPriorityParams,
 )
 from encord.orm.project import Project as OrmProject
@@ -1207,6 +1209,13 @@ class EncordClientProject(EncordClient):
             result_type=None,
         )
         logger.info("Sync initiated in Active, please check the app to see progress")
+
+    def set_status(self, status: ProjectStatus) -> None:
+        self._api_client.put(
+            f"projects/{self.project_hash}/status",
+            params=None,
+            payload=SetProjectStatusPayload(status=status),
+        )
 
 
 CordClientProject = EncordClientProject

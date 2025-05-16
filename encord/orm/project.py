@@ -174,6 +174,7 @@ class ProjectStatus(str, Enum):
     PAUSED = "paused"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+    ARCHIVED = "archived"
 
 
 class ProjectCopyOptions(str, Enum):
@@ -390,3 +391,7 @@ class ProjectFilterParams(BaseDTO):
     edited_before: Optional[Union[str, datetime.datetime]] = None
     edited_after: Optional[Union[str, datetime.datetime]] = None
     include_org_access: bool = False
+
+
+class SetProjectStatusPayload(BaseDTO):
+    status: ProjectStatus
