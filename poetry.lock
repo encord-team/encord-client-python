@@ -1807,4 +1807,4 @@ coco = ["numpy", "numpy", "opencv-python", "pycocotools", "shapely"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.9.0 || >3.9.0,<3.9.1 || >3.9.1"
-content-hash = "eb42627d55f4bc9844de5b3e1f97cc1fd13d3738bb32d2af77d2a47930d44296"
+content-hash = "6f0224d5f1e4df130f12e75283dc664ce5679293f0b2dd2af50abdf5d6421a15"
