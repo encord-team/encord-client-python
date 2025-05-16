@@ -17,6 +17,7 @@ from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
+from encord.issues.issue_client import TaskIssues
 from encord.orm.base_dto import BaseDTO, Field, PrivateAttr
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import (
@@ -43,6 +44,8 @@ class _LabelReviewActionApprove(WorkflowReviewAction):
 
 class _LabelReviewActionReject(WorkflowReviewAction):
     action: Literal["REJECT"] = "REJECT"
+    comment: Optional[str] = None
+    comment_tags: Optional[List[str]] = None
 
 
 class _LabelReviewActionReopen(WorkflowReviewAction):
@@ -78,7 +81,13 @@ class LabelReview(BaseDTO):
             stage_uuid, task_uuid, _LabelReviewActionApprove(review_uuid=self.uuid), bundle=bundle
         )
 
-    def reject(self, *, bundle: Optional[Bundle] = None):
+    def reject(
+        self,
+        *,
+        comment: Optional[str] = None,
+        issue_tags: Optional[List[str]] = None,
+        bundle: Optional[Bundle] = None,
+    ):
         """Rejects the review.
 
         **Parameters**
@@ -87,7 +96,10 @@ class LabelReview(BaseDTO):
         """
         workflow_client, stage_uuid, task_uuid = self._get_client_data()
         workflow_client.label_review_action(
-            stage_uuid, task_uuid, _LabelReviewActionReject(review_uuid=self.uuid), bundle=bundle
+            stage_uuid,
+            task_uuid,
+            _LabelReviewActionReject(review_uuid=self.uuid, comment=comment, comment_tags=issue_tags),
+            bundle=bundle,
         )
 
     def reopen(self, *, bundle: Optional[Bundle] = None):
@@ -167,6 +179,11 @@ class ReviewStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
+            task._task_issues = TaskIssues(
+                api_client=self._workflow_client.api_client,
+                project_uuid=self._workflow_client.project_hash,
+                data_uuid=task.data_hash,
+            )
             yield task
 
 
@@ -304,3 +321,9 @@ class ReviewTask(WorkflowTask):
             r._stage_uuid = self._stage_uuid
             r._task_uuid = self.uuid
             yield r
+
+    @property
+    def issues(self) -> TaskIssues:
+        """Returns the issue client for the task."""
+        assert self._task_issues
+        return self._task_issues
