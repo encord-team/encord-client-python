@@ -17,7 +17,7 @@ import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, TextIO, Union
+from typing import Any, Collection, Dict, Iterable, List, Literal, Optional, Sequence, TextIO, Union
 from uuid import UUID
 
 import requests
@@ -1226,6 +1226,23 @@ class StorageFolder:
         )
 
         self.refetch_data()
+
+    def create_data_group(
+        self,
+        storage_item_uuids: Union[List[UUID], dict[str, UUID]],
+        name: Optional[str] = None,
+        layout: Optional[Union[Literal["grid"], Literal["list"], dict]] = "grid",
+    ) -> None:
+        return self._api_client.post(
+            f"storage/folders/{self.uuid}/create-group-item",
+            params=None,
+            payload=orm_storage.CreateDataGroupPayload(
+                layout_contents=storage_item_uuids,
+                name=name,
+                layout=orm_storage.LayoutPayload(layout=layout),
+            ),
+            result_type=UUID,
+        )
 
     def move_items_to_folder(
         self,
