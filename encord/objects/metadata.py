@@ -9,10 +9,19 @@ category: "64e481b57b6027003f20aaa0"
 ---
 """
 
-from typing import Optional
+from typing import Optional, List
 
 from encord.orm.base_dto import BaseDTO
 
+
+class DataGroupChildMetadata(BaseDTO):
+    data_hash: str
+    label_hash: str
+    name: str
+    layout_key: str
+
+class DataGroupMetadata(BaseDTO):
+    children: List[DataGroupChildMetadata]
 
 class DICOMSeriesMetadata(BaseDTO):
     """Metadata for a DICOM series.

@@ -51,6 +51,7 @@ GEOMETRIC_TYPES = {
     DataType.VIDEO,
     DataType.IMAGE,
     DataType.IMG_GROUP,
+    DataType.GROUP,
     DataType.DICOM,
     DataType.DICOM_STUDY,
     DataType.NIFTI,

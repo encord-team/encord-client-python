@@ -149,13 +149,13 @@ class CreateStorageFolderPayload(BaseDTO):
 
 
 class LayoutPayload(BaseDTO):
-    layout: Union[Literal["grid"], Literal["list"], dict]
+    layout: Union[Literal["grid"], Literal["list"], Dict]
 
 
 class CreateDataGroupPayload(BaseDTO):
     item_type: Literal["GROUP"] = "GROUP"
     layout: LayoutPayload
-    layout_contents: Union[List[UUID], dict[str, UUID]]
+    layout_contents: Union[List[UUID], Dict[str, UUID]]
     name: Optional[str]
 
 

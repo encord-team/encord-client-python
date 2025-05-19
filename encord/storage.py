@@ -1229,10 +1229,10 @@ class StorageFolder:
 
     def create_data_group(
         self,
-        storage_item_uuids: Union[List[UUID], dict[str, UUID]],
+        storage_item_uuids: Union[List[UUID], Dict[str, UUID]],
         name: Optional[str] = None,
-        layout: Optional[Union[Literal["grid"], Literal["list"], dict]] = "grid",
-    ) -> None:
+        layout: Optional[Union[Literal["grid"], Literal["list"], Dict]] = "grid",
+    ) -> UUID:
         return self._api_client.post(
             f"storage/folders/{self.uuid}/create-group-item",
             params=None,
@@ -1857,6 +1857,7 @@ class StorageItem:
         """
         if self.item_type not in {
             StorageItemType.IMAGE_GROUP,
+            StorageItemType.GROUP,
             StorageItemType.IMAGE_SEQUENCE,
             StorageItemType.DICOM_SERIES,
         }:

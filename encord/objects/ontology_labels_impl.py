@@ -62,7 +62,7 @@ from encord.objects.coordinates import (
 )
 from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.html_node import HtmlRange
-from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata
+from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata, DataGroupMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
@@ -108,7 +108,7 @@ class LabelRowV2:
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
 
-        self._metadata: Optional[DICOMSeriesMetadata] = None
+        self._metadata: Optional[Union[DICOMSeriesMetadata, DataGroupMetadata]] = None
         self._children: Optional[Any] = None
         self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
 
@@ -636,7 +636,7 @@ class LabelRowV2:
         return self._children
 
     @property
-    def metadata(self) -> Optional[DICOMSeriesMetadata]:
+    def metadata(self) -> Optional[DICOMSeriesMetadata | DataGroupMetadata]:
         """Get metadata for the given data type.
 
         Returns:
@@ -1714,7 +1714,7 @@ class LabelRowV2:
         elif data_type == DataType.DICOM_STUDY:
             pass
         elif data_type == DataType.GROUP:
-            pass
+            data_sequence = 0
 
         elif data_type == DataType.MISSING_DATA_TYPE:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
@@ -1737,6 +1737,8 @@ class LabelRowV2:
             ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
             ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
         elif self.data_type == DataType.PLAIN_TEXT:
+            pass
+        elif self.data_type == DataType.GROUP:
             pass
         elif self.data_type == DataType.PDF:
             ret["height"] = 0
@@ -1792,6 +1794,8 @@ class LabelRowV2:
             return {}
 
         elif data_type == DataType.DICOM_STUDY:
+            pass
+        elif data_type == DataType.GROUP:
             pass
 
         elif data_type == DataType.MISSING_DATA_TYPE:
@@ -2119,18 +2123,11 @@ class LabelRowV2:
                 )
                 self._add_objects_answers(object_answers)
             elif data_type == DataType.GROUP:
-                children = data_unit["children"]
-                rows = []
-                for child_label in children:
-                    first_unit = child_label["data_units"][child_label["data_hash"]]
-                    child_label["data_link"] = first_unit["data_link"]
-                    child_label["number_of_frames"] = 0
-
-                    metadata = LabelRowMetadata.from_dict(child_label)
-                    row = LabelRowV2(metadata, self._project_client, self._ontology)
-                    rows.append(row)
-                self._children = rows
-
+                self._add_classification_instances_from_classifications(
+                    data_unit["labels"].get("classifications", []),
+                    classification_answers,
+                    frame,
+                )
 
             elif (
                 data_type == DataType.VIDEO
@@ -2157,7 +2154,8 @@ class LabelRowV2:
                 is_html = data_unit["data_type"] == "text/html"
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
-
+            elif data_type == DataType.GROUP:
+                pass
             else:
                 exhaustive_guard(data_type)
 
@@ -2179,7 +2177,7 @@ class LabelRowV2:
         if data_type == DataType.DICOM:
             self._metadata = DICOMSeriesMetadata.from_dict(metadata)
         elif data_type == DataType.GROUP:
-            self._metadata = metadata
+            self._metadata = DataGroupMetadata.from_dict(metadata)
         else:
             log.warning(
                 f"Unexpected metadata for the data type: {data_type}. Please update the Encord SDK to the latest version."
