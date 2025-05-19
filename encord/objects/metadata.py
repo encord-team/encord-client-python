@@ -16,12 +16,14 @@ from encord.orm.base_dto import BaseDTO
 
 class DataGroupChildMetadata(BaseDTO):
     data_hash: str
-    label_hash: str
+    label_hash: str | None
     name: str
     layout_key: str
 
+
 class DataGroupMetadata(BaseDTO):
     children: List[DataGroupChildMetadata]
+
 
 class DICOMSeriesMetadata(BaseDTO):
     """Metadata for a DICOM series.

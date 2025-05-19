@@ -2126,7 +2126,7 @@ class LabelRowV2:
                 self._add_classification_instances_from_classifications(
                     data_unit["labels"].get("classifications", []),
                     classification_answers,
-                    frame,
+                    0,
                 )
 
             elif (
