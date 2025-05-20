@@ -9,7 +9,7 @@ category: "64e481b57b6027003f20aaa0"
 ---
 """
 
-from typing import Optional, List
+from typing import List, Optional
 
 from encord.orm.base_dto import BaseDTO
 

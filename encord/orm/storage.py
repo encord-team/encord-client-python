@@ -152,6 +152,7 @@ class LayoutPayload(BaseDTO):
     layout: Union[Literal["grid"], Literal["list"], Dict]
 
 
+# TODO: type more thoroughly
 class CreateDataGroupPayload(BaseDTO):
     item_type: Literal["GROUP"] = "GROUP"
     layout: LayoutPayload

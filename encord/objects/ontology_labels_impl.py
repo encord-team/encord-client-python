@@ -62,7 +62,7 @@ from encord.objects.coordinates import (
 )
 from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.html_node import HtmlRange
-from encord.objects.metadata import DICOMSeriesMetadata, DICOMSliceMetadata, DataGroupMetadata
+from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
@@ -109,7 +109,6 @@ class LabelRowV2:
         # ^ frames to object and classification hashes
 
         self._metadata: Optional[Union[DICOMSeriesMetadata, DataGroupMetadata]] = None
-        self._children: Optional[Any] = None
         self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
@@ -632,11 +631,7 @@ class LabelRowV2:
         )
 
     @property
-    def children(self) -> Optional[List[Any]]:
-        return self._children
-
-    @property
-    def metadata(self) -> Optional[DICOMSeriesMetadata | DataGroupMetadata]:
+    def metadata(self) -> Optional[Union[DICOMSeriesMetadata, DataGroupMetadata]]:
         """Get metadata for the given data type.
 
         Returns:
@@ -1715,9 +1710,6 @@ class LabelRowV2:
             pass
         elif data_type == DataType.GROUP:
             data_sequence = 0
-            ret["height"] = 0
-            ret["width"] = 0
-            ret["data_link"] = ""
 
         elif data_type == DataType.MISSING_DATA_TYPE:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
@@ -1742,7 +1734,9 @@ class LabelRowV2:
         elif self.data_type == DataType.PLAIN_TEXT:
             pass
         elif self.data_type == DataType.GROUP:
-            pass
+            ret["width"] = 0
+            ret["height"] = 0
+            ret["data_link"] = ""
         elif self.data_type == DataType.PDF:
             ret["height"] = 0
             ret["width"] = 0
@@ -1780,16 +1774,17 @@ class LabelRowV2:
         ret: Dict[str, Any] = {}
         data_type = self._label_row_read_only_data.data_type
 
-        if data_type == DataType.IMAGE or data_type == DataType.IMG_GROUP:
+        if data_type == DataType.IMAGE or data_type == DataType.IMG_GROUP or data_type == DataType.GROUP:
+            # single frame
             frame = frame_level_data.frame_number
             ret.update(self._to_encord_label(frame))
 
         elif (
+            # multi-frame
             data_type == DataType.VIDEO
             or data_type == DataType.DICOM
             or data_type == DataType.NIFTI
             or data_type == DataType.PDF
-            or data_type == DataType.GROUP
         ):
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
@@ -2022,6 +2017,13 @@ class LabelRowV2:
             height = data_dict.get("height")
             width = data_dict.get("width")
 
+        elif data_type == DataType.GROUP:
+            data_dict = list(label_row_dict["data_units"].values())[0]
+            file_type = data_dict.get("data_type")
+            data_link = None
+            width = None
+            height = None
+
         elif data_type == DataType.DICOM or data_type == DataType.NIFTI:
             dicom_dict = list(label_row_dict["data_units"].values())[0]
             data_link = None
@@ -2048,7 +2050,7 @@ class LabelRowV2:
             height = None
             width = None
 
-        elif data_type == DataType.IMG_GROUP or data_type == DataType.GROUP:
+        elif data_type == DataType.IMG_GROUP:
             data_link = None
             file_type = None
             height = None
@@ -2124,17 +2126,12 @@ class LabelRowV2:
                     frame,
                 )
                 self._add_objects_answers(object_answers)
-            elif data_type == DataType.GROUP:
-                self._add_classification_instances_from_classifications(
-                    data_unit["labels"].get("classifications", []),
-                    classification_answers,
-                    0,
-                )
 
             elif (
                 data_type == DataType.VIDEO
                 or data_type == DataType.DICOM
                 or data_type == DataType.NIFTI
+                or data_type == DataType.GROUP
                 or data_type == DataType.PDF
             ):
                 for frame, frame_data in data_unit["labels"].items():
@@ -2157,7 +2154,7 @@ class LabelRowV2:
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
             elif data_type == DataType.GROUP:
-                pass
+                self._add_classification_instances_from_classifications_without_frames(classification_answers)
             else:
                 exhaustive_guard(data_type)
 
