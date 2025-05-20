@@ -1715,6 +1715,9 @@ class LabelRowV2:
             pass
         elif data_type == DataType.GROUP:
             data_sequence = 0
+            ret["height"] = 0
+            ret["width"] = 0
+            ret["data_link"] = ""
 
         elif data_type == DataType.MISSING_DATA_TYPE:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
@@ -1725,7 +1728,7 @@ class LabelRowV2:
         ret["data_hash"] = frame_level_data.image_hash
         ret["data_title"] = frame_level_data.image_title
 
-        if data_type != DataType.DICOM:
+        if data_type != DataType.DICOM and data_type != DataType.GROUP:
             ret["data_link"] = frame_level_data.data_link
 
         ret["data_type"] = frame_level_data.file_type
@@ -1786,6 +1789,7 @@ class LabelRowV2:
             or data_type == DataType.DICOM
             or data_type == DataType.NIFTI
             or data_type == DataType.PDF
+            or data_type == DataType.GROUP
         ):
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
@@ -1794,8 +1798,6 @@ class LabelRowV2:
             return {}
 
         elif data_type == DataType.DICOM_STUDY:
-            pass
-        elif data_type == DataType.GROUP:
             pass
 
         elif data_type == DataType.MISSING_DATA_TYPE:
