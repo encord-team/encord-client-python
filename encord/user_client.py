@@ -264,14 +264,10 @@ class EncordUserClient:
     ) -> CreateDatasetResponse:
         """
         Args:
-            dataset_title:
-                Title of dataset.
-            dataset_type:
-                StorageLocation type where data will be stored.
-            dataset_description:
-                Optional description of the dataset.
-            create_backing_folder:
-                Specifies whether the Folder is mirrored to the Dataset. Mirrored Datasets have data synced between the Folder and Dataset. Mirrored Datasets are great for simple Projects, but we recommend non-Mirrored Datasets for more complex Projects or for data at scale. The default is False.
+            dataset_title: Title of dataset.
+            dataset_type: StorageLocation type where data will be stored.
+            dataset_description: Optional description of the dataset.
+            create_backing_folder: Specifies whether the Folder is mirrored to the Dataset. Mirrored Datasets have data synced between the Folder and Dataset. Mirrored Datasets are great for simple Projects, but we recommend non-Mirrored Datasets for more complex Projects or for data at scale. The default is TRUE.
         Returns:
             CreateDatasetResponse
         """
