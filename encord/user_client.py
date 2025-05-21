@@ -264,14 +264,10 @@ class EncordUserClient:
     ) -> CreateDatasetResponse:
         """
         Args:
-            dataset_title:
-                Title of dataset.
-            dataset_type:
-                StorageLocation type where data will be stored.
-            dataset_description:
-                Optional description of the dataset.
-            create_backing_folder:
-                Specifies whether the Folder is mirrored to the Dataset. Mirrored Datasets have data synced between the Folder and Dataset. Mirrored Datasets are great for simple Projects, but we recommend non-Mirrored Datasets for more complex Projects or for data at scale. The default is False.
+            dataset_title: Title of dataset.
+            dataset_type: StorageLocation type where data will be stored.
+            dataset_description: Optional description of the dataset.
+            create_backing_folder: Specifies whether the Folder is mirrored to the Dataset. Mirrored Datasets have data synced between the Folder and Dataset. Mirrored Datasets are great for simple Projects, but we recommend non-Mirrored Datasets for more complex Projects or for data at scale. The default is True.
         Returns:
             CreateDatasetResponse
         """
@@ -1204,8 +1200,7 @@ class EncordUserClient:
             client_metadata: Optional arbitrary metadata to be associated with the folder. Should be a dictionary
                 that is JSON-serializable.
             parent_folder: The parent folder of the folder; or `None` if the folder is to be created at the root level.
-            cloud_synced_folder_params: Passing this will create cloud synced folder, leaving this a `None` will create
-                a normal folder for further data uploads.
+            cloud_synced_folder_params: Passing this parameter creates a cloud-synced folder. Specifying `None` creates a normal folder for data uploads.
 
         Returns:
             The created storage folder. See :class:`encord.storage.StorageFolder` for details.
