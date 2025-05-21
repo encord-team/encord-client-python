@@ -21,6 +21,7 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.common.range_manager import RangeManager
+from encord.common.time_parser import parse_datetime_optional
 from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
@@ -2071,8 +2072,8 @@ class LabelRowV2:
                 "workflow_graph_node", self._label_row_read_only_data.workflow_graph_node
             ),
             is_shadow_data=self.is_shadow_data,
-            created_at=label_row_dict["created_at"],
-            last_edited_at=label_row_dict["last_edited_at"],
+            created_at=parse_datetime_optional(label_row_dict["created_at"]),
+            last_edited_at=parse_datetime_optional(label_row_dict["last_edited_at"]),
             frame_level_data=frame_level_data,
             image_hash_to_frame=image_hash_to_frame,
             frame_to_image_hash=frame_to_image_hash,
