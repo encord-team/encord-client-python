@@ -1200,8 +1200,7 @@ class EncordUserClient:
             client_metadata: Optional arbitrary metadata to be associated with the folder. Should be a dictionary
                 that is JSON-serializable.
             parent_folder: The parent folder of the folder; or `None` if the folder is to be created at the root level.
-            cloud_synced_folder_params: Passing this parameter creates a cloud-synced folder. Specifying `None` creates
-  a normal folder for data uploads.
+            cloud_synced_folder_params: Passing this parameter creates a cloud-synced folder. Specifying `None` creates a normal folder for data uploads.
 
         Returns:
             The created storage folder. See :class:`encord.storage.StorageFolder` for details.
