@@ -568,7 +568,7 @@ class StorageFolder:
             client_metadata (Optional[Dict[str, Any]]):
                 Custom metadata to associate with the NIfTI file. Must be JSON-serializable.
 
-            cloud_upload_settings (Optional[CloudUploadSettings]):
+            cloud_upload_settings (CloudUploadSettings):
                 Configuration for how the file is uploaded to the cloud. Use this to override default behavior.
 
         Returns:
