@@ -627,7 +627,7 @@ class StorageFolder:
         """Uploads an audio file to an Encord Storage Folder.
 
         Args:
-            file_path (str):
+            file_path (Union[Path, str]):
                 Path to the local audio file (e.g., '/home/user/data/audio.mp3').
 
             title (Optional[str]):
