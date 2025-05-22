@@ -637,7 +637,7 @@ class StorageFolder:
             client_metadata (Optional[Dict]):
                 Custom metadata to associate with the audio. Must be JSON-serializable.
 
-            audio_metadata (Optional[Dict]):
+            audio_metadata (Optional[CustomerProvidedAudioMetadata]):
                 Optional media metadata describing the audio file. If provided, the Encord skips scanning the file to extract media metadata.
 
             cloud_upload_settings (Optional[CloudUploadSettings]):
