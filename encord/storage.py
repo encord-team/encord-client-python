@@ -640,7 +640,7 @@ class StorageFolder:
             audio_metadata (Optional[CustomerProvidedAudioMetadata]):
                 Optional media metadata describing the audio file. If provided, the Encord skips scanning the file to extract media metadata.
 
-            cloud_upload_settings (Optional[CloudUploadSettings]):
+            cloud_upload_settings (CloudUploadSettings):
                 Configuration for cloud upload behavior. Override default settings using this parameter.
 
         Returns:
