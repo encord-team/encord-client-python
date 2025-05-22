@@ -554,6 +554,31 @@ class StorageFolder:
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
+        """
+        Uploads a NIfTI file to a folder in Encord storage.
+
+        Args:
+            file_path (str):
+                Path to the local NIfTI file (e.g., '/home/user/data/brain_scan.nii.gz').
+
+            title (Optional[str]):
+                Title of the NIfTI item in Encord. If not provided, the filename is used.
+                Must include the '.nii' or '.nii.gz' extension.
+
+            client_metadata (Optional[Dict]):
+                Custom metadata to associate with the NIfTI file. Must be JSON-serializable.
+
+            cloud_upload_settings (Optional[CloudUploadSettings]):
+                Configuration for how the file is uploaded to the cloud. Use this to override default behavior.
+
+        Returns:
+            str: UUID of the uploaded NIfTI item.
+
+        Raises:
+            AuthorizationError: If the user lacks permission to access the target folder.
+            EncordException: If the file cannot be uploaded (for example due to format or metadata issues).
+        """
+
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.NIFTI, count=1, frames_subfolder_name=None
         )
@@ -599,27 +624,31 @@ class StorageFolder:
         audio_metadata: Optional[CustomerProvidedAudioMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
-        """Upload audio to a Folder in Encord storage.
+        """Uploads an audio file to a folder in Encord storage.
 
         Args:
-            file_path: File path to audio. For example: '/home/user/data/audio.mp3'
-            title:
-                The audio title. If unspecified, the file name is the title. This title should include an extension.
-                For example "encord_audio.mp3".
-            client_metadata:
-                Optional custom metadata to be associated with the audio. Should be a dictionary
-                that is JSON-serializable.
-            audio_metadata:
-                Optional media metadata for an audio file; if provided, Encord service skips scanning the audio file
-            cloud_upload_settings:
-                Settings for uploading data into the cloud. Change this object to overwrite the default values.
+            file_path (str):
+                Path to the local audio file (e.g., '/home/user/data/audio.mp3').
+
+            title (Optional[str]):
+                Title of the audio file in Encord. If not provided, the filename is used.
+                The title must include a valid audio file extension (e.g., "encord_audio.mp3").
+
+            client_metadata (Optional[Dict]):
+                Custom metadata to associate with the audio. Must be JSON-serializable.
+
+            audio_metadata (Optional[Dict]):
+                Optional media metadata describing the audio file. If provided, the Encord skips scanning the file to extract media metadata.
+
+            cloud_upload_settings (Optional[CloudUploadSettings]):
+                Configuration for cloud upload behavior. Override default settings using this parameter.
 
         Returns:
-            UUID of the newly created audio item.
+            str: UUID of the uploaded audio item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
+            AuthorizationError: If the user is not authorized to access the destination folder.
+            EncordException: If the upload fails (for example due to an unsupported audio format).
 
         #### audio_metadata
 
