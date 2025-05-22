@@ -565,7 +565,7 @@ class StorageFolder:
                 Title of the NIfTI item in Encord. If not provided, the filename is used.
                 Must include the '.nii' or '.nii.gz' extension.
 
-            client_metadata (Optional[Dict]):
+            client_metadata (Optional[Dict[str, Any]]):
                 Custom metadata to associate with the NIfTI file. Must be JSON-serializable.
 
             cloud_upload_settings (Optional[CloudUploadSettings]):
