@@ -634,7 +634,7 @@ class StorageFolder:
                 Title of the audio file in Encord. If not provided, the filename is used.
                 The title must include a valid audio file extension (e.g., "encord_audio.mp3").
 
-            client_metadata (Optional[Dict]):
+            client_metadata (Optional[Dict[str, Any]]):
                 Custom metadata to associate with the audio. Must be JSON-serializable.
 
             audio_metadata (Optional[CustomerProvidedAudioMetadata]):
