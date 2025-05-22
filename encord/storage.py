@@ -644,7 +644,7 @@ class StorageFolder:
                 Configuration for cloud upload behavior. Override default settings using this parameter.
 
         Returns:
-            str: UUID of the uploaded audio item.
+            UUID: UUID of the uploaded audio item.
 
         Raises:
             AuthorizationError: If the user is not authorized to access the destination folder.
