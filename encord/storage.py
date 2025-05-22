@@ -558,7 +558,7 @@ class StorageFolder:
         Uploads a NIfTI file to an Encord Storage Folder.
 
         Args:
-            file_path (str):
+            file_path (Union[Path, str]):
                 Path to the local NIfTI file (e.g., '/home/user/data/brain_scan.nii.gz').
 
             title (Optional[str]):
