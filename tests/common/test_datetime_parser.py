@@ -29,14 +29,24 @@ def test_parse_datetime_timezone_naive_iso_string() -> None:
     assert parsed_datetime == expected_datetime.replace(tzinfo=timezone.utc)
 
 
-@pytest.mark.parametrize("timezone_name", ["", "UTC", "GMT"])
-def test_parse_datetime_encord_string(timezone_name: str) -> None:
+def test_parse_datetime_short_string() -> None:
     expected_datetime = datetime.now()
 
-    datetime_as_encord_string = expected_datetime.strftime(DATETIME_LONG_STRING_FORMAT) + f"{timezone_name}"
-    parsed_datetime = parse_datetime(datetime_as_encord_string)
+    datetime_as_short_string = expected_datetime.strftime("%Y-%m-%dT%H:%M:%S")
+    parsed_datetime = parse_datetime(datetime_as_short_string)
 
-    # Encord string format doesn't include milliseconds, so dropping them
+    # Encord short string format doesn't include milliseconds, so dropping them
+    assert parsed_datetime == expected_datetime.replace(microsecond=0, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize("timezone_name", ["", "UTC", "GMT"])
+def test_parse_datetime_long_string(timezone_name: str) -> None:
+    expected_datetime = datetime.now()
+
+    datetime_as_long_string = expected_datetime.strftime(DATETIME_LONG_STRING_FORMAT) + f"{timezone_name}"
+    parsed_datetime = parse_datetime(datetime_as_long_string)
+
+    # Encord long string format doesn't include milliseconds, so dropping them
     assert parsed_datetime == expected_datetime.replace(microsecond=0, tzinfo=timezone.utc)
 
 
@@ -60,5 +70,5 @@ def test_format_datetime_to_long_string(timezone_offset: int) -> None:
     expected_datetime_str = format_datetime_to_long_string(expected_datetime)
     parsed_datetime = parse_datetime(expected_datetime_str)
 
-    # Encord string format doesn't include milliseconds, so dropping them
+    # Encord long string format doesn't include milliseconds, so dropping them
     assert parsed_datetime == expected_datetime.replace(microsecond=0)

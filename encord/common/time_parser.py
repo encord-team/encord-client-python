@@ -5,7 +5,7 @@ from typing import Optional, Union
 
 from dateutil import parser
 
-from encord.common.constants import DATETIME_LONG_STRING_FORMAT
+from encord.common.constants import DATETIME_LONG_STRING_FORMAT, DATETIME_STRING_FORMAT
 
 
 # Cache: major performance win for large classification ranges
@@ -28,7 +28,11 @@ def parse_datetime(time_string: str) -> datetime:
         A timezone-aware datetime object (UTC if no timezone was specified).
     """
     parsed_datetime: Optional[datetime] = None
-    if time_string.endswith("UTC") or time_string.endswith("GMT"):
+    with contextlib.suppress(Exception):
+        # Parse datetimes with DATETIME_STRING_FORMAT (2023-02-09 14:12:03)
+        # Note: As datetime.strptime() without %z returns a naive datetime object we enforce UTC timezone here.
+        parsed_datetime = datetime.strptime(time_string, DATETIME_STRING_FORMAT).replace(tzinfo=timezone.utc)
+    if parsed_datetime is None and (time_string.endswith("UTC") or time_string.endswith("GMT")):
         # Parse datetimes with DATETIME_LONG_STRING_FORMAT (Thu, 01 May 2025 13:53:59 GMT)
         # Note: As datetime.strptime() without %z returns a naive datetime object we enforce UTC timezone here.
         with contextlib.suppress(Exception):
