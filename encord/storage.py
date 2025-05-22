@@ -555,7 +555,7 @@ class StorageFolder:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         """
-        Uploads a NIfTI file to a folder in Encord storage.
+        Uploads a NIfTI file to an Encord Storage Folder.
 
         Args:
             file_path (str):
