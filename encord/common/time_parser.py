@@ -71,3 +71,12 @@ def format_datetime_to_long_string(_datetime: datetime) -> str:
     if _datetime.tzinfo is None:
         _datetime = _datetime.replace(tzinfo=timezone.utc)
     return _datetime.astimezone(timezone.utc).strftime(DATETIME_LONG_STRING_FORMAT)
+
+
+def format_datetime_to_long_string_optional(_datetime: Optional[datetime]) -> Optional[str]:
+    if _datetime is None:
+        return None
+    elif isinstance(_datetime, datetime):
+        return format_datetime_to_long_string(_datetime)
+    else:
+        raise ValueError(f"format_datetime_to_long_string_optional {type(_datetime)=} not supported")
