@@ -21,7 +21,7 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.common.range_manager import RangeManager
-from encord.common.time_parser import parse_datetime_optional
+from encord.common.time_parser import format_datetime_to_long_string, parse_datetime_optional
 from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
@@ -510,7 +510,6 @@ class LabelRowV2:
                 initialization is delayed and performed along with other objects in the same bundle.
             include_signed_url: If `True`, the :attr:`.data_link` property will contain a signed URL.
                 See documentation for :attr:`.data_link` for more details.
-            branch_name: Name of branch
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -1052,8 +1051,8 @@ class LabelRowV2:
 
         ret["label_hash"] = read_only_data.label_hash
         ret["branch_name"] = read_only_data.branch_name
-        ret["created_at"] = read_only_data.created_at
-        ret["last_edited_at"] = read_only_data.last_edited_at
+        ret["created_at"] = format_datetime_to_long_string(read_only_data.created_at)
+        ret["last_edited_at"] = format_datetime_to_long_string(read_only_data.last_edited_at)
         ret["data_hash"] = read_only_data.data_hash
         ret["dataset_hash"] = read_only_data.dataset_hash
         ret["dataset_title"] = read_only_data.dataset_title

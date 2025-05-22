@@ -60,3 +60,10 @@ def parse_datetime_optional(_datetime: Optional[Union[str, datetime]]) -> Option
         return parse_datetime(_datetime)
     else:
         raise ValueError(f"parse_datetime_optional {type(_datetime)=} not supported")
+
+
+def format_datetime_to_long_string(_datetime: datetime) -> str:
+    """Format a datetime object to a string in the DATETIME_LONG_STRING_FORMAT format."""
+    if _datetime.tzinfo is None:
+        _datetime = _datetime.replace(tzinfo=timezone.utc)
+    return _datetime.astimezone(timezone.utc).strftime(DATETIME_LONG_STRING_FORMAT)

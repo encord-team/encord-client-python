@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from encord.common.constants import DATETIME_LONG_STRING_FORMAT
-from encord.common.time_parser import parse_datetime
+from encord.common.time_parser import format_datetime_to_long_string, parse_datetime
 
 
 @pytest.mark.parametrize(
@@ -36,7 +36,7 @@ def test_parse_datetime_encord_string(timezone_name: str) -> None:
     datetime_as_encord_string = expected_datetime.strftime(DATETIME_LONG_STRING_FORMAT) + f"{timezone_name}"
     parsed_datetime = parse_datetime(datetime_as_encord_string)
 
-    # Short string format doesn't include milliseconds, so dropping them
+    # Encord string format doesn't include milliseconds, so dropping them
     assert parsed_datetime == expected_datetime.replace(microsecond=0, tzinfo=timezone.utc)
 
 
@@ -47,3 +47,18 @@ def test_parse_datetime_custom_string() -> None:
     parsed_datetime = parse_datetime(expected_datetime_str)
 
     assert parsed_datetime == expected_datetime
+
+
+@pytest.mark.parametrize(
+    "timezone_offset",
+    [-12, -7, -3, 0, 2, 5, 11],
+)
+def test_format_datetime_to_long_string(timezone_offset: int) -> None:
+    tz = timezone(timedelta(hours=timezone_offset))
+    expected_datetime = datetime.now(tz=tz)
+
+    expected_datetime_str = format_datetime_to_long_string(expected_datetime)
+    parsed_datetime = parse_datetime(expected_datetime_str)
+
+    # Encord string format doesn't include milliseconds, so dropping them
+    assert parsed_datetime == expected_datetime.replace(microsecond=0)
