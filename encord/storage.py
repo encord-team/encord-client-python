@@ -572,7 +572,7 @@ class StorageFolder:
                 Configuration for how the file is uploaded to the cloud. Use this to override default behavior.
 
         Returns:
-            str: UUID of the uploaded NIfTI item.
+            UUID: UUID of the uploaded NIfTI item.
 
         Raises:
             AuthorizationError: If the user lacks permission to access the target folder.
