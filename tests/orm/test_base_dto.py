@@ -4,7 +4,7 @@ from typing import List
 
 import pytest
 
-from encord.common.constants import DATETIME_LONG_STRING_FORMAT
+from encord.common.time_parser import format_datetime_to_long_string
 from encord.exceptions import EncordException
 from encord.orm.base_dto import BaseDTO, BaseDTOWithExtra, dto_validator
 from encord.orm.dataset import DatasetDataLongPolling, LongPollingStatus
@@ -27,12 +27,12 @@ class TestModelWithExtra(BaseDTOWithExtra):
 
 
 def test_deserialize_model_with_extra():
-    time_value = datetime.now()
+    datetime_value = datetime.now()
     data_dict = {
         "text_value": "abc",
         "int_value": 22,
         "float_value": 22.22,
-        "datetime_value": time_value.strftime(DATETIME_LONG_STRING_FORMAT),
+        "datetime_value": format_datetime_to_long_string(datetime_value),
     }
 
     model = TestModelWithExtra.from_dict(data_dict)
@@ -40,32 +40,33 @@ def test_deserialize_model_with_extra():
     assert model.text_value == "abc"
     assert model.get_extra("int_value") == 22
     assert model.get_extra("float_value") == 22.22
+    assert isinstance(model.get_extra("datetime_value"), str)
 
 
 def test_basic_model_with_deserialization():
-    time_value = datetime.now()
+    datetime_value = datetime.now()
     data_dict = {
         "text_value": "abc",
         "number_value": 22,
-        "datetime_value": time_value.strftime(DATETIME_LONG_STRING_FORMAT),
+        "datetime_value": format_datetime_to_long_string(datetime_value),
     }
 
     model = TestModel.from_dict(data_dict)
 
     assert model.text_value == "abc"
     assert model.number_value == 22
-    assert model.datetime_value == time_value.replace(microsecond=0)
+    assert model.datetime_value == datetime_value.replace(microsecond=0, tzinfo=timezone.utc)
 
 
-def test_basic_model_with_encord_time_deserialization():
-    time_value = datetime.now()
-    data_dict = {"text_value": "abc", "number_value": 22, "datetime_value": str(time_value)}
+def test_basic_model_with_naive_iso_datetime_deserialization():
+    datetime_value = datetime.now()
+    data_dict = {"text_value": "abc", "number_value": 22, "datetime_value": str(datetime_value)}
 
     model = TestModel.from_dict(data_dict)
 
     assert model.text_value == "abc"
     assert model.number_value == 22
-    assert model.datetime_value == time_value
+    assert model.datetime_value == datetime_value.replace(tzinfo=timezone.utc)
 
 
 def test_basic_model_with_value_containers_deserialization():
@@ -74,7 +75,7 @@ def test_basic_model_with_value_containers_deserialization():
         "number_values": [22, 33],
         "datetime_values": [
             str(datetime(year=2024, month=2, day=1, tzinfo=timezone.utc)),
-            str(datetime(year=2024, month=2, day=1, tzinfo=timezone.utc)),
+            str(datetime(year=2024, month=2, day=2, tzinfo=timezone.utc)),
         ],
     }
     model = TestModelWithLists.from_dict(data_dict)
@@ -82,7 +83,7 @@ def test_basic_model_with_value_containers_deserialization():
     assert model.number_values == [22, 33]
     assert model.datetime_values == [
         datetime(year=2024, month=2, day=1, tzinfo=timezone.utc),
-        datetime(year=2024, month=2, day=1, tzinfo=timezone.utc),
+        datetime(year=2024, month=2, day=2, tzinfo=timezone.utc),
     ]
 
 
@@ -124,15 +125,16 @@ class TestModelWithValidator(TestModel):
 
 
 def test_dto_validator():
-    time_value = datetime.now()
+    datetime_value = datetime.now()
     data_dict = {
         "text_value": "abc",
         "number_value": 22,
-        "datetime_value": time_value.strftime(DATETIME_LONG_STRING_FORMAT),
+        "datetime_value": format_datetime_to_long_string(datetime_value),
     }
     valid_case = TestModelWithValidator.from_dict(data_dict)
     assert valid_case.number_value == 22
     assert valid_case.text_value == f"{data_dict['text_value']}-postfix"
+    assert valid_case.datetime_value == datetime_value.replace(microsecond=0, tzinfo=timezone.utc)
 
     invalid_data = data_dict
     invalid_data["number_value"] = -10
