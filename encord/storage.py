@@ -624,7 +624,7 @@ class StorageFolder:
         audio_metadata: Optional[CustomerProvidedAudioMetadata] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:  # TODO this should return an item?
-        """Uploads an audio file to a folder in Encord storage.
+        """Uploads an audio file to an Encord Storage Folder.
 
         Args:
             file_path (str):
