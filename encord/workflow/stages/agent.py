@@ -44,6 +44,7 @@ class AgentTask(WorkflowTask):
     - `data_title` (str): Name of the data unit.
     - `label_branch_name` (str): Name of the label branch.
     - `assignee` (Optional[str]): User assigned to the task.
+    - `last_actioned_by` (Optional[str]): User who last acted on the task.
 
     **Allowed actions**
 
