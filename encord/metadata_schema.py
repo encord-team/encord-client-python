@@ -57,7 +57,7 @@ class _ClientMetadataSchemaTypeEmbedding(BaseModel):
     size: int = Field(gt=0, le=4096)
 
     # For user-defined text/image similarity search
-    api: _ClientMetadataSchemaTypeEmbeddingApi | None = None
+    api: Optional[_ClientMetadataSchemaTypeEmbeddingApi] = None
 
 
 class _ClientMetadataSchemaTypeText(BaseModel):
