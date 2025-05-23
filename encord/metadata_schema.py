@@ -46,7 +46,7 @@ class _ClientMetadataSchemaTypeEmbeddingApi(BaseModel):
     # FIXME: remove unsupported field layouts once finalised.
     url: Optional[str] = None
     path: Optional[str] = None
-    auth_integration_secret: Optional[UUID] = None
+    service_integration: Optional[UUID] = None
     client_only: Optional[bool] = None
     embed_b64_image: Optional[bool] = None
     embed_text: Optional[bool] = None
