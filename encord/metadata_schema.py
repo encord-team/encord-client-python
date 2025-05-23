@@ -1,6 +1,7 @@
 import json
 from enum import Enum
-from typing import Dict, Literal, Sequence, Union
+from typing import Dict, Literal, Optional, Sequence, Union
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
@@ -41,9 +42,22 @@ class _ClientMetadataSchemaTypeEnum(BaseModel):
     values: Sequence[str] = Field([], min_length=1, max_length=256)
 
 
+class _ClientMetadataSchemaTypeEmbeddingApi(BaseModel):
+    # FIXME: remove unsupported field layouts once finalised.
+    url: Optional[str] = None
+    path: Optional[str] = None
+    service_integration: Optional[UUID] = None
+    client_only: Optional[bool] = None
+    embed_b64_image: Optional[bool] = None
+    embed_text: Optional[bool] = None
+
+
 class _ClientMetadataSchemaTypeEmbedding(BaseModel):
     ty: Literal["embedding"] = "embedding"
     size: int = Field(gt=0, le=4096)
+
+    # For user-defined text/image similarity search
+    api: Optional[_ClientMetadataSchemaTypeEmbeddingApi] = None
 
 
 class _ClientMetadataSchemaTypeText(BaseModel):
@@ -229,7 +243,11 @@ class MetadataSchema:
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
         _assert_valid_metadata_key(k)
-        self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeEmbedding(size=size))
+        embedding_api = None
+        # FIXME: optionally define once path is finalised.
+        self._schema[k] = _ClientMetadataSchemaOption(
+            root=_ClientMetadataSchemaTypeEmbedding(size=size, api=embedding_api)
+        )
         self._dirty = True
 
     def add_enum(self, k: str, *, values: Sequence[str]) -> None:
