@@ -47,8 +47,9 @@ def ontology_from_dict(ontology_structure_dict: Dict):
 
 
 def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], exclude_regex_paths: List[str] = None):
-    """Basically a deep diff but with an normal assert after. `DeepDiff` to be able to exclude
-    regex paths, and `assert` to see an easily comparable diff with tools such as Pycharm.
+    """
+    Deep comparison that uses DeepDiff for regex path exclusions and `assert` to get an easily comparable,
+    human-readable diff in tools like PyCharm.
     """
     if exclude_regex_paths is None:
         exclude_regex_paths = []
@@ -59,7 +60,7 @@ def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], e
         exclude_regex_paths=exclude_regex_paths,
     ):
         print(DeepDiff(expected, actual, ignore_order=True, exclude_regex_paths=exclude_regex_paths))
-        assert expected == actual
+        assert actual == expected
 
 
 def test_serialise_image_group_with_classifications():
@@ -82,7 +83,7 @@ def test_serialise_image_group_with_classifications():
     deep_diff_enhanced(
         image_group_labels,
         actual,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     # TODO: I'm only not comparing dates because of timezone differences. This should be done properly.
     #  Probably I can just save timezone information to ensure that going back will not crash the timezone.
@@ -103,7 +104,7 @@ def test_serialise_video():
     deep_diff_enhanced(
         actual,
         data_1.labels,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
 
 
@@ -122,7 +123,7 @@ def test_serialise_image_with_object_answers():
     deep_diff_enhanced(
         actual,
         native_image_data.labels,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
 
 
@@ -221,9 +222,7 @@ def test_serialise_dicom_with_dynamic_classifications():
     deep_diff_enhanced(
         actual,
         dicom_labels,
-        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
-        # Ideally this will be fixed "properly"
-        exclude_regex_paths=[r"\['trackHash'\]", r"\['data_links'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]", r"\['data_links'\]"],
     )
     # NOTE: likely we do not care about the trackHash. If we end up caring about it, we'll have to ensure that we can
     #  set it from parsing the data and keep it around when setting new answers for example.
@@ -243,9 +242,7 @@ def test_dynamic_classifications():
     deep_diff_enhanced(
         actual,
         video_with_dynamic_classifications.labels,
-        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
-        # Ideally this will be fixed "properly"
-        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]"],
     )
 
 
@@ -266,9 +263,7 @@ def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_b
     deep_diff_enhanced(
         actual,
         video_with_dynamic_classifications.labels,
-        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
-        # Ideally this will be fixed "properly"
-        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]"],
     )
 
 
@@ -296,19 +291,6 @@ def test_uninitialised_label_row():
     assert label_row.is_labelling_initialised is True
 
 
-def _remove_reviews(labels: Dict[str, Any]) -> Dict[str, Any]:
-    if "reviews" in labels:
-        del labels["reviews"]
-    for key, value in labels.items():
-        if isinstance(value, dict):
-            labels[key] = _remove_reviews(value)
-        elif isinstance(value, list):
-            for index, item in enumerate(value):
-                if isinstance(item, dict):
-                    value[index] = _remove_reviews(item)
-    return labels
-
-
 def test_label_row_with_reviews():
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
@@ -326,13 +308,10 @@ def test_label_row_with_reviews():
 
     actual = label_row.to_encord_dict()
 
-    expected_no_reviews = _remove_reviews(image_group_with_reviews.labels)
     deep_diff_enhanced(
-        expected_no_reviews,
         actual,
-        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
-        # Ideally this will be fixed "properly"
-        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        image_group_with_reviews.labels,
+        exclude_regex_paths=[r"\['trackHash'\]", r"\['reviews'\]"],
     )
 
 
