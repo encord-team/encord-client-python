@@ -3,10 +3,7 @@ name: Update Documentation on SDK Changes
 on:
   push:
     branches:
-      - main  # Trigger on push to the 'main' branch
-  pull_request:
-    branches:
-      - main  # Trigger on PRs to 'main'
+      - master  # Trigger on push to the 'master' branch
 
 jobs:
   update_docs:
