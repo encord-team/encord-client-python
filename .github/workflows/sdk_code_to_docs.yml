@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: encord-team/encord-client-python  # Replace with the name of your source repo (repo1)
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # token: ${{ secrets.GITHUB_TOKEN }}
           ref: master
 
       - name: Checkout destination repository (repo2)
