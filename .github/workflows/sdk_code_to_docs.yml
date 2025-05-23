@@ -15,7 +15,7 @@ jobs:
         with:
           repository: encord-team/encord-client-python  # Replace with the name of your source repo (repo1)
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main  # Ensures the latest changes from the 'main' branch are pulled
+          ref: master
 
       - name: Checkout destination repository (repo2)
         uses: actions/checkout@v2
