@@ -235,7 +235,6 @@ class MetadataSchema:
 
         - k : str: The key under which the embedding will be stored in the schema.
         - size : int: The size of the embedding.
-        - url : str: The url for the schema endpoint for image/text search if supported.
 
         **Raises:**
 
