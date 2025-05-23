@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master  # Trigger on push to the 'master' branch
+  pull_request:
+    branches:
+      - master
 
 jobs:
   update_docs:
