@@ -85,7 +85,7 @@ def test_serialise_image_group_with_classifications():
     label_row.from_labels_dict(empty_image_group_labels)
 
     actual = label_row.to_encord_dict()
-    assert empty_image_group_labels == actual
+    assert actual == empty_image_group_labels
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(image_group_ontology))
     label_row.from_labels_dict(image_group_labels)
