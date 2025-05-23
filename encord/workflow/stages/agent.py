@@ -42,13 +42,13 @@ class AgentTask(WorkflowTask):
 
     ...
     """
+
     status: AgentTaskStatus
     data_hash: UUID
     data_title: str
     label_branch_name: str
     assignee: Optional[str]
     last_actioned_by: Optional[str]
-
 
     def proceed(
         self,

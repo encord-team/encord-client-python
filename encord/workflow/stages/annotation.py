@@ -128,14 +128,12 @@ class AnnotationTask(WorkflowTask):
     - `assign`: Assigns a task to a user.
     - `release`: Releases a task from the current user.
     """
-    
+
     status: AnnotationTaskStatus
     data_hash: UUID
     data_title: str
     label_branch_name: str
     assignee: Optional[str]
-
-    
 
     def submit(
         self,
