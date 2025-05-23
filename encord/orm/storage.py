@@ -149,15 +149,31 @@ class CreateStorageFolderPayload(BaseDTO):
 
 
 class LayoutPayload(BaseDTO):
-    layout: Union[Literal["grid"], Literal["list"], Dict]
+    layout: Union[Literal["default-grid"], Literal["default-list"], Dict]
 
 
-# TODO: type more thoroughly
+class DataGroupGrid(BaseDTO):
+    layout_type: Literal["default-grid"] = "default-grid"
+    layout_contents: List[UUID]
+    name: Optional[str]
+
+
+class DataGroupList(BaseDTO):
+    layout_type: Literal["default-list"] = "default-list"
+    layout_contents: List[UUID]
+    name: Optional[str]
+
+
+class DataGroupCustom(BaseDTO):
+    layout_type: Literal["custom"] = "custom"
+    layout_contents: Dict[str, UUID]
+    layout: Dict
+    name: Optional[str]
+
+
 class CreateDataGroupPayload(BaseDTO):
     item_type: Literal["GROUP"] = "GROUP"
-    layout: LayoutPayload
-    layout_contents: Union[List[UUID], Dict[str, UUID]]
-    name: Optional[str]
+    params: Union[DataGroupGrid, DataGroupList, DataGroupCustom]
 
 
 class UploadSignedUrlsPayload(BaseDTO):

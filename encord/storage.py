@@ -1231,16 +1231,31 @@ class StorageFolder:
         self,
         storage_item_uuids: Union[List[UUID], Dict[str, UUID]],
         name: Optional[str] = None,
-        layout: Optional[Union[Literal["grid"], Literal["list"], Dict]] = "grid",
+        layout_kind: Union[Literal["default-grid"], Literal["default-list"], Literal["custom"]] = "default-grid",
+        layout: Optional[Dict] = None,
     ) -> UUID:
+        if layout_kind == "default-grid":
+            if isinstance(storage_item_uuids, dict):
+                raise ValueError("When layout_kind='default-grid', storage_item_uuids must be a list")
+            params = orm_storage.DataGroupGrid(
+                layout_contents=storage_item_uuids,
+                name=name,
+            )
+        elif layout_kind == "default-list":
+            if isinstance(storage_item_uuids, dict):
+                raise ValueError("When layout_kind='default-grid', storage_item_uuids must be a list")
+            params = orm_storage.DataGroupList(layout_contents=storage_item_uuids, name=name)
+        elif layout_kind == "custom":
+            if isinstance(storage_item_uuids, list):
+                raise ValueError("When layout_kind='custom', storage_item_uuids must be a dict")
+            if layout is None:
+                raise ValueError("When layout_kind='custom', layout must be specified")
+
+            params = orm_storage.DataGroupCustom(layout_contents=storage_item_uuids, layout=layout, name=name)
         return self._api_client.post(
             f"storage/folders/{self.uuid}/create-group-item",
             params=None,
-            payload=orm_storage.CreateDataGroupPayload(
-                layout_contents=storage_item_uuids,
-                name=name,
-                layout=orm_storage.LayoutPayload(layout=layout),
-            ),
+            payload=orm_storage.CreateDataGroupPayload(params=params),
             result_type=UUID,
         )
 

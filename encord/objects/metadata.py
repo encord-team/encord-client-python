@@ -16,7 +16,7 @@ from encord.orm.base_dto import BaseDTO
 
 class DataGroupChildMetadata(BaseDTO):
     data_hash: str
-    label_hash: str | None
+    label_hash: Optional[str]
     name: str
     layout_key: str
 
