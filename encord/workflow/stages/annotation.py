@@ -112,14 +112,7 @@ class _ActionRelease(WorkflowAction):
 
 
 class AnnotationTask(WorkflowTask):
-    status: AnnotationTaskStatus
-    data_hash: UUID
-    data_title: str
-    label_branch_name: str
-    assignee: Optional[str]
-
-    """
-    Represents a task in a non-Consensus Annotate stage.
+    """Represents a task in a non-Consensus Annotate stage.
 
     **Attributes**
 
@@ -135,6 +128,14 @@ class AnnotationTask(WorkflowTask):
     - `assign`: Assigns a task to a user.
     - `release`: Releases a task from the current user.
     """
+    
+    status: AnnotationTaskStatus
+    data_hash: UUID
+    data_title: str
+    label_branch_name: str
+    assignee: Optional[str]
+
+    
 
     def submit(
         self,

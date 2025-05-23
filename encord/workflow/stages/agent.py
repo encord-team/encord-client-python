@@ -27,15 +27,7 @@ class _ActionPathway(WorkflowAction):
 
 
 class AgentTask(WorkflowTask):
-    status: AgentTaskStatus
-    data_hash: UUID
-    data_title: str
-    label_branch_name: str
-    assignee: Optional[str]
-    last_actioned_by: Optional[str]
-
-    """
-    Represents a task in an Agent stage.
+    """Represents a task in an Agent stage.
 
     **Attributes**
 
@@ -50,6 +42,13 @@ class AgentTask(WorkflowTask):
 
     ...
     """
+    status: AgentTaskStatus
+    data_hash: UUID
+    data_title: str
+    label_branch_name: str
+    assignee: Optional[str]
+    last_actioned_by: Optional[str]
+
 
     def proceed(
         self,
