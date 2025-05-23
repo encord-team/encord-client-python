@@ -6,7 +6,6 @@ from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, Typ
 from urllib.parse import urljoin
 
 import requests
-from numpy.core.multiarray import result_type
 from pydantic import BaseModel
 from requests import PreparedRequest, Response
 
