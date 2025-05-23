@@ -32,6 +32,7 @@ class AgentTask(WorkflowTask):
     data_title: str
     label_branch_name: str
     assignee: Optional[str]
+    last_actioned_by: Optional[str]
 
     """
     Represents a task in an Agent stage.
