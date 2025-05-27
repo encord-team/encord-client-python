@@ -11,6 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Type, cast
 from uuid import uuid4
@@ -41,7 +42,7 @@ class OntologyStructure:
         self,
         feature_node_hash: str,
         type_: Optional[Type[OntologyElementT]] = None,
-    ) -> OntologyElementT:
+    ) -> Any | None:
         """Returns the first child node of this ontology tree node with the matching feature node hash. If there is
         more than one child with the same feature node hash in the ontology tree node, then the ontology would be in
         an invalid state. Throws if nothing is found or if the type is not matched.
@@ -53,6 +54,7 @@ class OntologyStructure:
         Raises:
             OntologyError: If the item with the specified feature_node_hash is not found or if the type does not match.
         """
+        title = ""
         for object_ in self.objects:
             if object_.feature_node_hash == feature_node_hash:
                 return checked_cast(object_, type_)
@@ -60,6 +62,9 @@ class OntologyStructure:
             found_item = _get_element_by_hash(feature_node_hash, object_.attributes)
             if found_item is not None:
                 return checked_cast(found_item, type_)
+            else:
+                title = object_.title
+
 
         for classification in self.classifications:
             if classification.feature_node_hash == feature_node_hash:
@@ -67,8 +72,12 @@ class OntologyStructure:
             found_item = _get_element_by_hash(feature_node_hash, classification.attributes)
             if found_item is not None:
                 return checked_cast(found_item, type_)
+            else:
+                title = classification.title
 
-        raise OntologyError(f"Item not found: can't find an item with a hash {feature_node_hash} in the ontology.")
+        logging.warning(
+            f"MISSING_ITEM: name='{title}', featureHash='{feature_node_hash}''")
+        # raise OntologyError(f"Item not found: can't find an item with a hash {feature_node_hash} in the ontology.")
 
     def get_child_by_title(
         self,

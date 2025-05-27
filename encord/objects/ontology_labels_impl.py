@@ -2191,7 +2191,8 @@ class LabelRowV2:
             object_hash = frame_object_label["objectHash"]
             if object_hash not in self._objects_map:
                 object_instance = self._create_new_object_instance(frame_object_label, frame)
-                self.add_object_instance(object_instance)
+                if object_instance is not None:
+                    self.add_object_instance(object_instance)
             else:
                 self._add_coordinates_to_object_instance(frame_object_label, frame)
 
@@ -2212,12 +2213,14 @@ class LabelRowV2:
             answer_list = answer["actions"]
             object_instance.set_answer_from_list(answer_list)
 
-    def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
+    def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance | None:
         ontology = self._ontology.structure
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
 
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
+        if label_class is None:
+            return None
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
         coordinates = self._get_coordinates(frame_object_label)
@@ -2424,6 +2427,8 @@ class LabelRowV2:
         classification_hash = frame_classification_label["classificationHash"]
 
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
+        if label_class is None:
+            return None
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)

@@ -15,15 +15,14 @@ class StringHandler(logging.Handler):
 from encord import EncordUserClient
 
 # EMEA
-# ENCORD_KEY_PATH = "/Users/encord/source/keys/encord_key.ed25519"
-# DOMAIN = "https://api.encord.com"
+ENCORD_KEY_PATH = "/Users/encord/source/keys/encord_key.ed25519"
+DOMAIN = "https://api.encord.com"
 
 # US
-ENCORD_KEY_PATH = "/Users/encord/source/keys/encord_key_us.ed25519"
-DOMAIN = "https://api.us.encord.com"
+# ENCORD_KEY_PATH = "/Users/encord/source/keys/encord_key_us.ed25519"
+# DOMAIN = "https://api.us.encord.com"
 
-# PROJECT_HASH = 'badcf80c-f287-4f58-a4ed-09059a97d71a'
-PROJECT_HASH = 'e8599ba8-a8df-45c6-89c9-a15ddcec45ca'
+PROJECT_HASH = '3cc77552-e305-4544-a446-20427b5045ef'
 
 client = EncordUserClient.create_with_ssh_private_key(
     ssh_private_key_path=ENCORD_KEY_PATH,

@@ -74,6 +74,8 @@ class ClassificationInstance:
         range_only: bool = False,
     ):
         self._ontology_classification = ontology_classification
+        if self._ontology_classification is None:
+            return
         self._parent: Optional[LabelRowV2] = None
         self._classification_hash = classification_hash or short_uuid_str()
 
