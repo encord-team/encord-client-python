@@ -27,6 +27,12 @@ def test_metadata_schema() -> None:
     assert meta.get_key_type("embed512") == "embedding"
     assert meta.get_embedding_size("embed512") == 512
 
+    # NOTE: this part ensures that the SDK is aware of the `api` filed which is
+    # currently only settable in the DB
+    assert meta._schema["embed512"].root.api == None
+    meta._schema["embed512"].root.api = "foo"
+    assert meta._schema["embed512"].root.api == "foo"
+
     with pytest.raises(MetadataSchemaError):
         meta.add_scalar("yolo", data_type="embedding")  # type: ignore[arg-type]
 
