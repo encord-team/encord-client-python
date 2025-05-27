@@ -55,7 +55,7 @@ def test_basic_model_with_deserialization():
 
     assert model.text_value == "abc"
     assert model.number_value == 22
-    assert model.datetime_value == datetime_value.replace(microsecond=0, tzinfo=timezone.utc)
+    assert model.datetime_value == datetime_value.replace(microsecond=0).astimezone(tz=timezone.utc)
 
 
 def test_basic_model_with_naive_iso_datetime_deserialization():
@@ -134,7 +134,7 @@ def test_dto_validator():
     valid_case = TestModelWithValidator.from_dict(data_dict)
     assert valid_case.number_value == 22
     assert valid_case.text_value == f"{data_dict['text_value']}-postfix"
-    assert valid_case.datetime_value == datetime_value.replace(microsecond=0, tzinfo=timezone.utc)
+    assert valid_case.datetime_value == datetime_value.replace(microsecond=0).astimezone(tz=timezone.utc)
 
     invalid_data = data_dict
     invalid_data["number_value"] = -10
