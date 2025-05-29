@@ -141,14 +141,14 @@ def upload_to_signed_url_list(
                 uid=file_names_batch,
             )
         ]
+        assert len(file_names_batch) == len(signed_urls_batch)
 
-        for file_name, signed_url in zip(file_names_batch, signed_urls_batch, strict=True):
+        for file_name, signed_url in zip(file_names_batch, signed_urls_batch):
             assert signed_url["title"] == file_name, "Ordering issue"
             signed_urls.append(signed_url)
 
-    assert len(list(file_paths)) == len(signed_urls)
-
     failures: List[UploadToSignedUrlFailure] = []
+    assert len(list(file_paths)) == len(signed_urls)
 
     with ThreadPoolExecutor(max_workers=UPLOAD_TO_SIGNED_URL_LIST_MAX_WORKERS) as executor:
         list(
@@ -163,7 +163,7 @@ def upload_to_signed_url_list(
                         max_retries=cloud_upload_settings.max_retries or config.requests_settings.max_retries,
                         backoff_factor=cloud_upload_settings.backoff_factor or config.requests_settings.backoff_factor,
                     ),
-                    zip(file_paths, signed_urls, strict=True),
+                    zip(file_paths, signed_urls),
                 ),
                 total=len(list(file_paths)),
             )
