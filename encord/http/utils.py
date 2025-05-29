@@ -15,7 +15,7 @@ import os.path
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, Type, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from tqdm import tqdm
 
@@ -118,7 +118,7 @@ def upload_to_signed_url_list(
     querier: Querier,
     orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]],
     cloud_upload_settings: CloudUploadSettings,
-) -> list[dict]:
+) -> List[Dict]:
     """Upload files and return the upload returns in the same order as the file paths supplied."""
     for file_path in file_paths:
         if not os.path.exists(file_path):
