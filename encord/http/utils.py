@@ -12,9 +12,10 @@ category: "64e481b57b6027003f20aaa0"
 import logging
 import mimetypes
 import os.path
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional, Type, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from tqdm import tqdm
 
@@ -25,17 +26,14 @@ from encord.orm.dataset import (
     Audio,
     DicomSeries,
     Images,
-    SignedAudioURL,
-    SignedDicomsURL,
-    SignedDicomURL,
     SignedImagesURL,
-    SignedImageURL,
-    SignedVideoURL,
     Video,
 )
 
 PROGRESS_BAR_FILE_FACTOR = 100
 CACHE_DURATION_IN_SECONDS = 24 * 60 * 60  # 1 day
+UPLOAD_TO_SIGNED_URL_LIST_MAX_WORKERS = 4
+UPLOAD_TO_SIGNED_URL_LIST_SIGNED_URLS_BATCH_SIZE = 200
 
 logger = logging.getLogger(__name__)
 
@@ -72,72 +70,131 @@ def _get_content_type(
         raise ValueError(f"Unsupported type `{orm_class}`")
 
 
+def get_batches(iterable: List, n: int) -> List[List]:
+    # could be replaced with itertools.batched in python3.12
+    return [iterable[ndx : min(ndx + n, len(iterable))] for ndx in range(0, len(iterable), n)]
+
+
+@dataclass
+class UploadToSignedUrlFailure:
+    exception: Exception
+    file_path: Union[str, Path]
+    title: str
+    signed_url: str
+
+
+def upload_to_signed_url_list_for_single_file(
+    failures: List[UploadToSignedUrlFailure],
+    file_path: Union[str, Path],
+    title: str,
+    signed_url: str,
+    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]],
+    max_retries: int,
+    backoff_factor: float,
+) -> None:
+    try:
+        _upload_single_file(
+            file_path,
+            title,
+            signed_url,
+            _get_content_type(orm_class, file_path),
+            max_retries=max_retries,
+            backoff_factor=backoff_factor,
+        )
+    except CloudUploadError as e:
+        failures.append(
+            UploadToSignedUrlFailure(
+                exception=e,
+                file_path=file_path,
+                title=title,
+                signed_url=signed_url,
+            )
+        )
+
+
 def upload_to_signed_url_list(
     file_paths: Iterable[Union[str, Path]],
     config: BaseConfig,
     querier: Querier,
     orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]],
     cloud_upload_settings: CloudUploadSettings,
-) -> List[Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]]:
+) -> List[Dict]:
     """Upload files and return the upload returns in the same order as the file paths supplied."""
-    failed_uploads = []
-    successful_uploads = []
-
     for file_path in file_paths:
         if not os.path.exists(file_path):
             raise EncordException(message=f"{file_path} does not point to a file.")
 
-    for file_path in tqdm(file_paths):
-        file_path = str(file_path)
-        content_type = _get_content_type(orm_class, file_path)
-        file_name = os.path.basename(file_path)
-        signed_url = _get_signed_url(file_name, orm_class, querier)
-        assert signed_url.get("title", "") == file_name, "Ordering issue"
+    signed_urls = []
 
-        try:
-            if cloud_upload_settings.max_retries is not None:
-                max_retries = cloud_upload_settings.max_retries
-            else:
-                max_retries = config.requests_settings.max_retries
+    for file_path_batch in get_batches(list(file_paths), n=UPLOAD_TO_SIGNED_URL_LIST_SIGNED_URLS_BATCH_SIZE):
+        file_names_batch = [os.path.basename(str(x)) for x in file_path_batch]
 
-            if cloud_upload_settings.backoff_factor is not None:
-                backoff_factor = cloud_upload_settings.backoff_factor
-            else:
-                backoff_factor = config.requests_settings.backoff_factor
-
-            _upload_single_file(
-                file_path, signed_url, content_type, max_retries=max_retries, backoff_factor=backoff_factor
+        signed_urls_batch = [
+            {
+                "data_hash": x["data_hash"],
+                "file_link": x["file_link"],
+                "signed_url": x["signed_url"],
+                "title": x["title"],
+            }
+            for x in querier.basic_getter(
+                SignedImagesURL,  # this actually supports all file types
+                uid=file_names_batch,
             )
-            successful_uploads.append(signed_url)
-        except CloudUploadError as e:
-            if cloud_upload_settings.allow_failures:
-                failed_uploads.append(file_path)
-            else:
-                raise e
+        ]
+        assert len(file_names_batch) == len(signed_urls_batch)
 
-    if failed_uploads:
-        logger.warning("The upload was incomplete for the following items: %s", failed_uploads)
+        for file_name, signed_url in zip(file_names_batch, signed_urls_batch):
+            assert signed_url["title"] == file_name, "Ordering issue"
+            signed_urls.append(signed_url)
 
-    return successful_uploads
+    failures: List[UploadToSignedUrlFailure] = []
+    assert len(list(file_paths)) == len(signed_urls)
 
+    with ThreadPoolExecutor(max_workers=UPLOAD_TO_SIGNED_URL_LIST_MAX_WORKERS) as executor:
+        list(
+            tqdm(
+                executor.map(
+                    lambda args: upload_to_signed_url_list_for_single_file(
+                        failures,
+                        args[0],
+                        args[1]["title"],
+                        args[1]["signed_url"],
+                        orm_class,
+                        max_retries=cloud_upload_settings.max_retries or config.requests_settings.max_retries,
+                        backoff_factor=cloud_upload_settings.backoff_factor or config.requests_settings.backoff_factor,
+                    ),
+                    zip(file_paths, signed_urls),
+                ),
+                total=len(list(file_paths)),
+            )
+        )
 
-def _get_signed_url(
-    file_name: str, orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], querier: Querier
-) -> Union[SignedVideoURL, SignedImageURL, SignedDicomURL, SignedAudioURL]:
-    if orm_class == Video:
-        return querier.basic_getter(SignedVideoURL, uid=file_name)
-    elif orm_class == Images:
-        return querier.basic_getter(SignedImagesURL, uid=[file_name])[0]
-    elif orm_class == Audio:
-        return querier.basic_getter(SignedAudioURL, uid=file_name)
-    elif orm_class == DicomSeries:
-        return querier.basic_getter(SignedDicomsURL, uid=[file_name])[0]
-    raise ValueError(f"Unsupported type `{orm_class}`")
+    if failures:
+        # TODO consider dropping support for allow_failures in the future
+        # TODO allow_failures would only ignore networking issues
+        # TODO we do check for files presence in this function (at the beginning)
+        if cloud_upload_settings.allow_failures:
+            logger.warning("The upload was incomplete for the following items: %s", [x.file_path for x in failures])
+        else:
+            raise failures[0].exception
+
+    signed_urls_failed = [x.signed_url for x in failures]
+
+    return [
+        {
+            "data_hash": x["data_hash"],
+            "file_link": x["file_link"],
+            "title": x["title"],
+        }
+        for x in signed_urls
+        if x["signed_url"] not in signed_urls_failed
+    ]
 
 
 def _upload_single_file(
     file_path: Union[str, Path],
-    signed_url: dict,
+    title: str,
+    signed_url: str,
     content_type: Optional[str],
     *,
     max_retries: int,
@@ -147,11 +204,9 @@ def _upload_single_file(
     with create_new_session(
         max_retries=max_retries, backoff_factor=backoff_factor, connect_retries=max_retries
     ) as session:
-        url = signed_url["signed_url"]
-
         with open(file_path, "rb") as f:
             res_upload = session.put(
-                url, data=f, headers={"Content-Type": content_type, "Cache-Control": f"max-age={cache_max_age}"}
+                signed_url, data=f, headers={"Content-Type": content_type, "Cache-Control": f"max-age={cache_max_age}"}
             )
 
             if res_upload.status_code != 200:
@@ -159,8 +214,8 @@ def _upload_single_file(
                 headers = res_upload.headers
                 res_text = res_upload.text
                 error_string = str(
-                    f"Error uploading file '{signed_url.get('title', '')}' to signed url: "
-                    f"'{signed_url.get('signed_url')}'.\n"
+                    f"Error uploading file '{title}' to signed url: "
+                    f"'{signed_url}'.\n"
                     f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
                 )
 

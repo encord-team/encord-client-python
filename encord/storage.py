@@ -1407,10 +1407,8 @@ class StorageFolder:
 
         _upload_single_file(
             str(file_path),
-            {
-                "signed_url": signed_url,
-                "title": title,
-            },
+            title,
+            signed_url,
             content_type,
             max_retries=max_retries,
             backoff_factor=backoff_factor,
