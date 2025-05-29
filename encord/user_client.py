@@ -840,9 +840,9 @@ class EncordUserClient:
         for image_path, successful_upload in zip(images_paths, successful_uploads):
             trimmed_image_path_str = str(image_path.relative_to(used_base_path))
             image_title_to_image[trimmed_image_path_str] = {
-                "data_hash": successful_upload.data_hash,
-                "file_link": successful_upload.file_link,
-                "title": successful_upload.title,
+                "data_hash": successful_upload["data_hash"],
+                "file_link": successful_upload["file_link"],
+                "title": successful_upload["title"],
             }
 
         return dataset_hash, image_title_to_image
