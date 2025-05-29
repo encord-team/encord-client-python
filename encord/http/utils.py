@@ -129,10 +129,18 @@ def upload_to_signed_url_list(
     for file_path_batch in get_batches(list(file_paths), n=UPLOAD_TO_SIGNED_URL_LIST_SIGNED_URLS_BATCH_SIZE):
         file_names_batch = [os.path.basename(str(x)) for x in file_path_batch]
 
-        signed_urls_batch = querier.basic_getter(
-            SignedImagesURL,  # this actually supports all file types
-            uid=file_names_batch,
-        )
+        signed_urls_batch = [
+            {
+                "data_hash": x["data_hash"],
+                "file_link": x["file_link"],
+                "signed_url": x["signed_url"],
+                "title": x["title"],
+            }
+            for x in querier.basic_getter(
+                SignedImagesURL,  # this actually supports all file types
+                uid=file_names_batch,
+            )
+        ]
 
         for file_name, signed_url in zip(file_names_batch, signed_urls_batch, strict=True):
             assert signed_url["title"] == file_name, "Ordering issue"
