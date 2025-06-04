@@ -1,9 +1,11 @@
 """All tests regarding converting from and to Encord dict to the label row."""
 
+import json
 from dataclasses import asdict
 from typing import Any, Dict, List, Union
 from unittest.mock import Mock
 
+import pytest
 from deepdiff import DeepDiff
 
 from encord.objects import OntologyStructure
@@ -47,8 +49,9 @@ def ontology_from_dict(ontology_structure_dict: Dict):
 
 
 def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], exclude_regex_paths: List[str] = None):
-    """Basically a deep diff but with an normal assert after. `DeepDiff` to be able to exclude
-    regex paths, and `assert` to see an easily comparable diff with tools such as Pycharm.
+    """
+    Deep comparison that uses DeepDiff for regex path exclusions and `assert` to get an easily comparable,
+    human-readable diff in tools like PyCharm.
     """
     if exclude_regex_paths is None:
         exclude_regex_paths = []
@@ -59,7 +62,16 @@ def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], e
         exclude_regex_paths=exclude_regex_paths,
     ):
         print(DeepDiff(expected, actual, ignore_order=True, exclude_regex_paths=exclude_regex_paths))
-        assert expected == actual
+        assert actual == expected
+
+
+def assert_json_serializable(data: dict):
+    """Test helper to assert that a dictionary is JSON serializable."""
+    try:
+        json_string = json.dumps(data)
+        assert json.loads(json_string) == data, "JSON round-trip changed the data"
+    except Exception as e:
+        pytest.fail(f"Dictionary is not JSON serializable: {e}")
 
 
 def test_serialise_image_group_with_classifications():
@@ -73,19 +85,18 @@ def test_serialise_image_group_with_classifications():
     label_row.from_labels_dict(empty_image_group_labels)
 
     actual = label_row.to_encord_dict()
-    assert empty_image_group_labels == actual
+    assert actual == empty_image_group_labels
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(image_group_ontology))
     label_row.from_labels_dict(image_group_labels)
 
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
-        image_group_labels,
         actual,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        image_group_labels,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
-    # TODO: I'm only not comparing dates because of timezone differences. This should be done properly.
-    #  Probably I can just save timezone information to ensure that going back will not crash the timezone.
+    assert_json_serializable(actual)
 
 
 def test_serialise_video():
@@ -103,8 +114,9 @@ def test_serialise_video():
     deep_diff_enhanced(
         actual,
         data_1.labels,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_serialise_image_with_object_answers():
@@ -118,12 +130,12 @@ def test_serialise_image_with_object_answers():
     label_row.from_labels_dict(native_image_data.labels)
 
     actual = label_row.to_encord_dict()
-
     deep_diff_enhanced(
         actual,
         native_image_data.labels,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_serialise_audio() -> None:
@@ -137,10 +149,11 @@ def test_serialise_audio() -> None:
 
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
-        AUDIO_LABELS,
         actual,
+        AUDIO_LABELS,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_serialise_audio_objects() -> None:
@@ -154,10 +167,11 @@ def test_serialise_audio_objects() -> None:
 
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
-        AUDIO_OBJECTS,
         actual,
+        AUDIO_OBJECTS,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_serialise_html_text():
@@ -171,10 +185,11 @@ def test_serialise_html_text():
 
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
-        HTML_TEXT_LABELS,
         actual,
+        HTML_TEXT_LABELS,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_serialise_plain_text():
@@ -188,10 +203,11 @@ def test_serialise_plain_text():
 
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
-        PLAIN_TEXT_LABELS,
         actual,
+        PLAIN_TEXT_LABELS,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_serialise_dicom_with_dynamic_classifications():
@@ -217,16 +233,14 @@ def test_serialise_dicom_with_dynamic_classifications():
     assert label_row.width == 256
 
     actual = label_row.to_encord_dict()
-
     deep_diff_enhanced(
         actual,
         dicom_labels,
-        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
-        # Ideally this will be fixed "properly"
-        exclude_regex_paths=[r"\['trackHash'\]", r"\['data_links'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]", r"\['data_links'\]"],
     )
     # NOTE: likely we do not care about the trackHash. If we end up caring about it, we'll have to ensure that we can
     #  set it from parsing the data and keep it around when setting new answers for example.
+    assert_json_serializable(actual)
 
 
 def test_dynamic_classifications():
@@ -239,14 +253,12 @@ def test_dynamic_classifications():
     label_row.from_labels_dict(video_with_dynamic_classifications.labels)
 
     actual = label_row.to_encord_dict()
-
     deep_diff_enhanced(
         actual,
         video_with_dynamic_classifications.labels,
-        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
-        # Ideally this will be fixed "properly"
-        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_by_ui():
@@ -258,18 +270,15 @@ def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_b
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(ontology_with_many_dynamic_classifications))
-
     label_row.from_labels_dict(video_with_dynamic_classifications_ui_constructed.labels)
 
     actual = label_row.to_encord_dict()
-
     deep_diff_enhanced(
         actual,
         video_with_dynamic_classifications.labels,
-        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
-        # Ideally this will be fixed "properly"
-        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        exclude_regex_paths=[r"\['trackHash'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_uninitialised_label_row():
@@ -296,19 +305,6 @@ def test_uninitialised_label_row():
     assert label_row.is_labelling_initialised is True
 
 
-def _remove_reviews(labels: Dict[str, Any]) -> Dict[str, Any]:
-    if "reviews" in labels:
-        del labels["reviews"]
-    for key, value in labels.items():
-        if isinstance(value, dict):
-            labels[key] = _remove_reviews(value)
-        elif isinstance(value, list):
-            for index, item in enumerate(value):
-                if isinstance(item, dict):
-                    value[index] = _remove_reviews(item)
-    return labels
-
-
 def test_label_row_with_reviews():
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
@@ -325,15 +321,12 @@ def test_label_row_with_reviews():
     assert isinstance(first_frame.reviews, list)
 
     actual = label_row.to_encord_dict()
-
-    expected_no_reviews = _remove_reviews(image_group_with_reviews.labels)
     deep_diff_enhanced(
-        expected_no_reviews,
         actual,
-        # Adding the exclude of createdAt and lastEditedAt to unblock pipeline blocks due to UTC vs GMT string dates.
-        # Ideally this will be fixed "properly"
-        exclude_regex_paths=[r"\['trackHash'\]", r"\['createdAt'\]", r"\['lastEditedAt'\]"],
+        image_group_with_reviews.labels,
+        exclude_regex_paths=[r"\['trackHash'\]", r"\['reviews'\]"],
     )
+    assert_json_serializable(actual)
 
 
 def test_classifications_with_no_answers_equivalent_to_no_classification():

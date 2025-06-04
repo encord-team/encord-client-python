@@ -1,6 +1,6 @@
 """Unit tests for the dataset class"""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Set
 
 from encord.common.time_parser import parse_datetime
@@ -89,7 +89,7 @@ def test_dataset_setters_and_getters():
 
     uid = "123456"
     data_row_title = "Datarow title"
-    created_at = datetime(2022, 1, 12, 15, 25, 54)
+    created_at = datetime(2022, 1, 12, 15, 25, 54, tzinfo=timezone.utc)
     data_type = DataType.VIDEO
 
     data_row = dataset.data_rows[0]
