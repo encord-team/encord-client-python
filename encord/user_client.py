@@ -594,10 +594,12 @@ class EncordUserClient:
 
         directory_path = Path(cvat_directory_path)
         images_directory_path = directory_path.joinpath("images")
+
         if images_directory_path not in list(directory_path.iterdir()):
             raise ValueError("The expected directory 'images' was not found.")
 
         annotations_file_path = directory_path.joinpath("annotations.xml")
+
         if not annotations_file_path.is_file():
             raise ValueError(f"The file `{annotations_file_path}` does not exist.")
 
@@ -612,7 +614,30 @@ class EncordUserClient:
         )
 
         log.info("Starting image upload.")
-        dataset_hash, image_title_to_image = self.__upload_cvat_images(images_paths, used_base_path, dataset_name)
+
+        successful_uploads = upload_to_signed_url_list(
+            file_paths=images_paths,
+            config=self._config,
+            api_client=self._api_client,
+            upload_item_type=StorageItemType.IMAGE,
+            cloud_upload_settings=CloudUploadSettings(),
+        )
+
+        if len(images_paths) != len(successful_uploads):
+            raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
+
+        image_title_to_image = {
+            str(image_path.relative_to(used_base_path)): {
+                "data_hash": successful_upload["data_hash"],
+                "file_link": successful_upload["file_link"],
+                "title": successful_upload["title"],
+            }
+            for image_path, successful_upload in zip(
+                images_paths,
+                successful_uploads,
+            )
+        }
+
         log.info("Image upload completed.")
 
         # This is a bit hacky, but allows more flexibility for CVAT project imports
@@ -622,6 +647,11 @@ class EncordUserClient:
             }
 
         log.info("Starting project import. This may take a few minutes.")
+
+        dataset_hash = self.create_dataset(
+            dataset_name,
+            StorageLocation.CORD_STORAGE,
+        ).dataset_hash
 
         cvat_import_uuid = self._api_client.post(
             "projects/cvat-import",
@@ -807,45 +837,6 @@ class EncordUserClient:
     def __get_recursive_image_paths(images_directory_path: Path) -> List[Path]:
         """Recursively get all the images in all the sub folders."""
         return [file for file in images_directory_path.glob("**/*") if file.is_file()]
-
-    def __upload_cvat_images(
-        self, images_paths: List[Path], used_base_path: Path, dataset_name: str
-    ) -> Tuple[str, Dict[str, Dict[str, str]]]:
-        """This function does not create any image groups yet.
-
-        Returns:
-            * The created dataset_hash
-            * A map from an image title to the image hash which is stored in the DB.
-        """
-        dataset_info = self.create_dataset(dataset_name, StorageLocation.CORD_STORAGE)
-
-        dataset_hash = dataset_info.dataset_hash
-
-        dataset = self.get_dataset(
-            dataset_hash,
-        )
-        querier = dataset._client._querier
-
-        successful_uploads = upload_to_signed_url_list(
-            file_paths=images_paths,
-            config=self._config,
-            querier=querier,
-            orm_class=Images,
-            cloud_upload_settings=CloudUploadSettings(),
-        )
-        if len(images_paths) != len(successful_uploads):
-            raise RuntimeError("Could not upload all the images successfully. Aborting CVAT upload.")
-
-        image_title_to_image = {}
-        for image_path, successful_upload in zip(images_paths, successful_uploads):
-            trimmed_image_path_str = str(image_path.relative_to(used_base_path))
-            image_title_to_image[trimmed_image_path_str] = {
-                "data_hash": successful_upload["data_hash"],
-                "file_link": successful_upload["file_link"],
-                "title": successful_upload["title"],
-            }
-
-        return dataset_hash, image_title_to_image
 
     def get_cloud_integrations(
         self,

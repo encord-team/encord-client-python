@@ -22,6 +22,9 @@ from tqdm import tqdm
 from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError, EncordException
 from encord.http.querier import Querier, create_new_session
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
+from encord.orm.base_dto import BaseDTO
 from encord.orm.dataset import (
     Audio,
     DicomSeries,
@@ -29,6 +32,7 @@ from encord.orm.dataset import (
     SignedImagesURL,
     Video,
 )
+from encord.orm.storage import StorageItemType, UploadSignedUrl
 
 PROGRESS_BAR_FILE_FACTOR = 100
 CACHE_DURATION_IN_SECONDS = 24 * 60 * 60  # 1 day
@@ -58,16 +62,17 @@ class CloudUploadSettings:
 
 
 def _get_content_type(
-    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]], file_path: Union[str, Path]
+    upload_item_type: StorageItemType,
+    file_path: Union[str, Path],
 ) -> Optional[str]:
-    if orm_class == Images:
+    if upload_item_type == StorageItemType.IMAGE:
         return mimetypes.guess_type(str(file_path))[0]
-    elif orm_class == Video or orm_class == Audio:
+    if upload_item_type == StorageItemType.VIDEO or upload_item_type == StorageItemType.AUDIO:
         return "application/octet-stream"
-    elif orm_class == DicomSeries:
+    elif upload_item_type == StorageItemType.DICOM_FILE:
         return "application/dicom"
     else:
-        raise ValueError(f"Unsupported type `{orm_class}`")
+        raise ValueError(f"Unsupported {upload_item_type=}")
 
 
 def get_batches(iterable: List, n: int) -> List[List]:
@@ -88,7 +93,7 @@ def upload_to_signed_url_list_for_single_file(
     file_path: Union[str, Path],
     title: str,
     signed_url: str,
-    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]],
+    upload_item_type: StorageItemType,
     max_retries: int,
     backoff_factor: float,
 ) -> None:
@@ -97,7 +102,7 @@ def upload_to_signed_url_list_for_single_file(
             file_path,
             title,
             signed_url,
-            _get_content_type(orm_class, file_path),
+            _get_content_type(upload_item_type, file_path),
             max_retries=max_retries,
             backoff_factor=backoff_factor,
         )
@@ -112,11 +117,16 @@ def upload_to_signed_url_list_for_single_file(
         )
 
 
+class UploadPresignedUrlsGetParams(BaseDTO):
+    count: int
+    upload_item_type: StorageItemType
+
+
 def upload_to_signed_url_list(
     file_paths: Iterable[Union[str, Path]],
     config: BaseConfig,
-    querier: Querier,
-    orm_class: Union[Type[Images], Type[Video], Type[DicomSeries], Type[Audio]],
+    api_client: ApiClient,
+    upload_item_type: StorageItemType,
     cloud_upload_settings: CloudUploadSettings,
 ) -> List[Dict]:
     """Upload files and return the upload returns in the same order as the file paths supplied."""
@@ -131,20 +141,23 @@ def upload_to_signed_url_list(
 
         signed_urls_batch = [
             {
-                "data_hash": x["data_hash"],
-                "file_link": x["file_link"],
-                "signed_url": x["signed_url"],
-                "title": x["title"],
+                "data_hash": str(x.item_uuid),
+                "file_link": x.object_key,
+                "signed_url": x.signed_url,
             }
-            for x in querier.basic_getter(
-                SignedImagesURL,  # this actually supports all file types
-                uid=file_names_batch,
-            )
+            for x in api_client.get(
+                f"presigned-urls",
+                params=UploadPresignedUrlsGetParams(
+                    count=len(file_names_batch),
+                    upload_item_type=upload_item_type,
+                ),
+                result_type=Page[UploadSignedUrl],
+            ).results
         ]
         assert len(file_names_batch) == len(signed_urls_batch)
 
         for file_name, signed_url in zip(file_names_batch, signed_urls_batch):
-            assert signed_url["title"] == file_name, "Ordering issue"
+            signed_url["title"] = file_name
             signed_urls.append(signed_url)
 
     failures: List[UploadToSignedUrlFailure] = []
@@ -159,7 +172,7 @@ def upload_to_signed_url_list(
                         args[0],
                         args[1]["title"],
                         args[1]["signed_url"],
-                        orm_class,
+                        upload_item_type,
                         max_retries=cloud_upload_settings.max_retries or config.requests_settings.max_retries,
                         backoff_factor=cloud_upload_settings.backoff_factor or config.requests_settings.backoff_factor,
                     ),
