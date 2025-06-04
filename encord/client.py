@@ -118,6 +118,7 @@ from encord.orm.storage import (
     DataUploadImageGroupImage,
     DataUploadItems,
     DataUploadVideo,
+    StorageItemType,
 )
 from encord.orm.workflow import (
     LabelWorkflowGraphNode,
@@ -333,8 +334,8 @@ class EncordClientDataset(EncordClient):
         signed_url = upload_to_signed_url_list(
             file_paths=[file_path],
             config=self._config,
-            querier=self._querier,
-            orm_class=Video,
+            api_client=self._api_client,
+            upload_item_type=StorageItemType.VIDEO,
             cloud_upload_settings=cloud_upload_settings,
         )[0]
 
@@ -396,8 +397,8 @@ class EncordClientDataset(EncordClient):
         signed_urls = upload_to_signed_url_list(
             file_paths=file_paths,
             config=self._config,
-            querier=self._querier,
-            orm_class=Images,
+            api_client=self._api_client,
+            upload_item_type=StorageItemType.IMAGE,
             cloud_upload_settings=cloud_upload_settings,
         )
 
@@ -470,8 +471,8 @@ class EncordClientDataset(EncordClient):
         signed_urls = upload_to_signed_url_list(
             file_paths=file_paths,
             config=self._config,
-            querier=self._querier,
-            orm_class=DicomSeries,
+            api_client=self._api_client,
+            upload_item_type=StorageItemType.DICOM_FILE,
             cloud_upload_settings=cloud_upload_settings,
         )
 
@@ -536,8 +537,8 @@ class EncordClientDataset(EncordClient):
         signed_urls = upload_to_signed_url_list(
             file_paths=[file_path],
             config=self._config,
-            querier=self._querier,
-            orm_class=Images,
+            api_client=self._api_client,
+            upload_item_type=StorageItemType.IMAGE,
             cloud_upload_settings=cloud_upload_settings,
         )
 
