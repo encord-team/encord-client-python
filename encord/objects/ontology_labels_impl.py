@@ -476,6 +476,13 @@ class LabelRowV2:
 
     @property
     def assigned_user_email(self) -> str | None:
+        """Email of the user assigned to annotation or review task for a workflow-based project.
+        In case of completed task, it is None.
+
+        Returns:
+            str | None: The email of the user assigned to the data.
+
+        """
         return self._label_row_read_only_data.assigned_user_email
 
     def initialise_labels(
