@@ -155,25 +155,29 @@ class LayoutPayload(BaseDTO):
 class DataGroupGrid(BaseDTO):
     layout_type: Literal["default-grid"] = "default-grid"
     layout_contents: List[UUID]
-    name: Optional[str]
+    name: Optional[str] = None
 
 
 class DataGroupList(BaseDTO):
     layout_type: Literal["default-list"] = "default-list"
     layout_contents: List[UUID]
-    name: Optional[str]
+    name: Optional[str] = None
 
 
 class DataGroupCustom(BaseDTO):
     layout_type: Literal["custom"] = "custom"
+    name: Optional[str] = None
     layout_contents: Dict[str, UUID]
     layout: Dict
-    name: Optional[str]
+    settings: Optional[Dict] = None
+
+
+DataGroupInput = Union[DataGroupGrid, DataGroupList, DataGroupCustom]
 
 
 class CreateDataGroupPayload(BaseDTO):
     item_type: Literal["GROUP"] = "GROUP"
-    params: Union[DataGroupGrid, DataGroupList, DataGroupCustom]
+    params: DataGroupInput
 
 
 class UploadSignedUrlsPayload(BaseDTO):

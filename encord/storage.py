@@ -36,6 +36,7 @@ from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, 
 from encord.orm.storage import (
     CustomerProvidedAudioMetadata,
     CustomerProvidedVideoMetadata,
+    DataGroupInput,
     DataUploadItems,
     FoldersSortBy,
     GetItemParams,
@@ -1229,29 +1230,10 @@ class StorageFolder:
 
     def create_data_group(
         self,
-        storage_item_uuids: Union[List[UUID], Dict[str, UUID]],
-        name: Optional[str] = None,
-        layout_kind: Union[Literal["default-grid"], Literal["default-list"], Literal["custom"]] = "default-grid",
-        layout: Optional[Dict] = None,
+        params: Union[DataGroupInput, List[UUID]],
     ) -> UUID:
-        if layout_kind == "default-grid":
-            if isinstance(storage_item_uuids, dict):
-                raise ValueError("When layout_kind='default-grid', storage_item_uuids must be a list")
-            params = orm_storage.DataGroupGrid(
-                layout_contents=storage_item_uuids,
-                name=name,
-            )
-        elif layout_kind == "default-list":
-            if isinstance(storage_item_uuids, dict):
-                raise ValueError("When layout_kind='default-grid', storage_item_uuids must be a list")
-            params = orm_storage.DataGroupList(layout_contents=storage_item_uuids, name=name)
-        elif layout_kind == "custom":
-            if isinstance(storage_item_uuids, list):
-                raise ValueError("When layout_kind='custom', storage_item_uuids must be a dict")
-            if layout is None:
-                raise ValueError("When layout_kind='custom', layout must be specified")
-
-            params = orm_storage.DataGroupCustom(layout_contents=storage_item_uuids, layout=layout, name=name)
+        if isinstance(params, list):
+            params = orm_storage.DataGroupGrid(layout_contents=params)
         return self._api_client.post(
             f"storage/folders/{self.uuid}/create-group-item",
             params=None,
