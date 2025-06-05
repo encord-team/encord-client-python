@@ -287,6 +287,7 @@ class LabelRowMetadata(Formatter):
     is_valid: bool = True
 
     backing_item_uuid: Optional[UUID] = None
+    assigned_user_email: Optional[str] = None
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> LabelRowMetadata:
@@ -335,6 +336,7 @@ class LabelRowMetadata(Formatter):
             backing_item_uuid=UUID(json_dict["backing_item_uuid"])
             if json_dict.get("backing_item_uuid") is not None
             else None,
+            assigned_user_email=json_dict.get("assigned_user_email", None),
         )
 
     @classmethod
@@ -424,6 +426,7 @@ class LabelRowMetadataDTO(BaseDTO):
     is_valid: bool = True
 
     backing_item_uuid: Optional[UUID] = None
+    assigned_user_email: Optional[str] = None
 
 
 def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRowMetadataDTO) -> LabelRowMetadata:
@@ -458,4 +461,5 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         is_valid=label_row_metadata_dto.is_valid,
         branch_name=label_row_metadata_dto.branch_name,
         backing_item_uuid=label_row_metadata_dto.backing_item_uuid,
+        assigned_user_email=label_row_metadata_dto.assigned_user_email,
     )

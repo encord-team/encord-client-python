@@ -474,6 +474,17 @@ class LabelRowV2:
     def __is_tms2_project(self) -> bool:
         return self.workflow_graph_node is not None
 
+    @property
+    def assigned_user_email(self) -> str | None:
+        """Email of the user assigned to annotation or review task for a workflow-based project.
+        In case of completed task, it is None.
+
+        Returns:
+            str | None: The email of the user assigned to the data.
+
+        """
+        return self._label_row_read_only_data.assigned_user_email
+
     def initialise_labels(
         self,
         include_object_feature_hashes: Optional[Set[str]] = None,
@@ -1550,6 +1561,7 @@ class LabelRowV2:
             image_hash_to_frame: Mapping from image hash to frame number.
             frame_to_image_hash: Mapping from frame number to image hash.
             is_valid: Boolean indicating if the data is valid.
+            assigned_user_email: Optional email of the user assigned to the data.
         """
 
         label_hash: Optional[str]
@@ -1585,6 +1597,7 @@ class LabelRowV2:
         image_hash_to_frame: Dict[str, int] = field(default_factory=dict)
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
         is_valid: bool = field(default=True)
+        assigned_user_email: Optional[str] = None
 
     def _to_object_answers(self) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}
@@ -1986,6 +1999,7 @@ class LabelRowV2:
             file_type=label_row_metadata.file_type,
             is_valid=label_row_metadata.is_valid,
             backing_item_uuid=label_row_metadata.backing_item_uuid,
+            assigned_user_email=label_row_metadata.assigned_user_email,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -2093,6 +2107,9 @@ class LabelRowV2:
             file_type=file_type,
             is_valid=bool(label_row_dict.get("is_valid", True)),
             backing_item_uuid=self.backing_item_uuid,
+            assigned_user_email=label_row_dict.get(
+                "assigned_user_email", self._label_row_read_only_data.assigned_user_email
+            ),
         )
 
     def _parse_labels_from_dict(self, label_row_dict: dict):
