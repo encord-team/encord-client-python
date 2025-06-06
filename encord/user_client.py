@@ -165,7 +165,6 @@ class EncordUserClient:
         Args:
             dataset_hash: The Dataset ID
             dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
-        
         Returns:
             Returns all Dataset information (title, dataset_hash, dataset_type, and more) and all data rows (including all data row information for each data unit).  
         """
