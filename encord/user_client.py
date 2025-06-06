@@ -167,8 +167,7 @@ class EncordUserClient:
             dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
         
         Returns:
-            Returns all Dataset information (title, dataset_hash, dataset_type, and more) and all data rows (including all data row information for each data unit).
-             
+            Returns all Dataset information (title, dataset_hash, dataset_type, and more) and all data rows (including all data row information for each data unit).  
         """
         if isinstance(dataset_hash, UUID):
             dataset_hash = str(dataset_hash)
