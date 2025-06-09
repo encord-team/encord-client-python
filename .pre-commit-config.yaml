@@ -19,6 +19,6 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        entry: poetry run mypy
+        entry: uv run mypy
         language: system
         files: ^encord/.*py$

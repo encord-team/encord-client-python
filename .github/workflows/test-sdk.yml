@@ -7,6 +7,11 @@ on:
   workflow_dispatch:
 
 env:
+  PYTHON_VERSION_3_8: 3.8.20
+  PYTHON_VERSION_3_9: 3.9.23
+  PYTHON_VERSION_3_10: 3.10.18
+  PYTHON_VERSION_3_11: 3.11.13
+  PYTHON_VERSION_3_12: 3.12.11
   UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python3_8_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_9_P1: unit-test-report-python3_9_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_10_P1: unit-test-report-python3_10_p1.xml
@@ -42,7 +47,7 @@ jobs:
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.8.16
+          python-version: ${{ env.PYTHON_VERSION_3_8 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
 
   unit-tests-python-3-9:
@@ -55,7 +60,7 @@ jobs:
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.9.12
+          python-version: ${{ env.PYTHON_VERSION_3_9 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P1 }}
 
   unit-tests-python-3-10:
@@ -68,7 +73,7 @@ jobs:
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.10.4
+          python-version: ${{ env.PYTHON_VERSION_3_10 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P1 }}
 
   unit-tests-python-3-11:
@@ -81,7 +86,7 @@ jobs:
       - name: Run unit tests for Python 3.11
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.11.2
+          python-version: ${{ env.PYTHON_VERSION_3_11 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11_P1 }}
 
   unit-tests-python-3-12:
@@ -94,7 +99,7 @@ jobs:
       - name: Run unit tests for Python 3.12
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.12.3
+          python-version: ${{ env.PYTHON_VERSION_3_12 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_12_P1 }}
 
   unit-tests-python-3-8-pydantic-2:
@@ -107,7 +112,7 @@ jobs:
       - name: Run unit tests for Python 3.8
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.8.16
+          python-version: ${{ env.PYTHON_VERSION_3_8 }}
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
 
@@ -121,7 +126,7 @@ jobs:
       - name: Run unit tests for Python 3.9
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.9.12
+          python-version: ${{ env.PYTHON_VERSION_3_9 }}
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P2 }}
 
@@ -135,7 +140,7 @@ jobs:
       - name: Run unit tests for Python 3.10
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.10.4
+          python-version: ${{ env.PYTHON_VERSION_3_10 }}
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P2 }}
 
@@ -149,7 +154,7 @@ jobs:
       - name: Run unit tests for Python 3.11
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.11.2
+          python-version: ${{ env.PYTHON_VERSION_3_11 }}
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11_P2 }}
 
@@ -163,7 +168,7 @@ jobs:
       - name: Run unit tests for Python 3.12
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.12.3
+          python-version: ${{ env.PYTHON_VERSION_3_12 }}
           pydantic-version: 2.6.1
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_12_P2 }}
 
@@ -184,7 +189,7 @@ jobs:
       - name: Run integration tests for Python 3.11
         uses: ./.github/actions/run-integration-tests
         with:
-          python-version: 3.11.2
+          python-version: ${{ env.PYTHON_VERSION_3_11 }}
           integration-tests-location: ./encord-backend/projects/sdk-integration-tests
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}

@@ -1,0 +1,30 @@
+name: "Setup build environment"
+description: "Sets up Python, UV and dependencies"
+
+inputs:
+  python-version:
+    description: "Python version to use"
+    default: 3.8.16
+    required: false
+  uv-version:
+    description: "UV version to use"
+    default: 0.7.12
+    required: false
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Set up python
+      uses: useblacksmith/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: ${{ inputs.uv-version }}
+        enable-cache: true
+        cache-dependency-glob: |
+          **/pyproject.toml
+          **/uv.lock
