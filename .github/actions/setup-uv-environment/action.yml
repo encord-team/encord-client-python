@@ -31,8 +31,9 @@ runs:
           **/uv.lock
 
     - name: Create virtual environment and install dependencies on cache miss
-      if: steps.setup-uv.outputs.cache-hit != 'true'
+      #if: steps.setup-uv.outputs.cache-hit != 'true'
       run: |
-        uv pip install -e ".[dev]"
-        uv sync --frozen
+        uv venv --python ${{ inputs.python-version }}
+        echo "VIRTUAL_ENV=.venv" >> $GITHUB_ENV
+        uv sync --all-extras --dev
       shell: bash
