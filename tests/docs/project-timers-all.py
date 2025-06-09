@@ -26,12 +26,4 @@ end_date = datetime(2025, 6, 8)
 
 # Returns all data
 time_entries = list(project.list_time_spent(start=start_date, end=end_date))
-
-# Filters for user
-
-user_time = defaultdict(int)
-for entry in time_entries:
-    user_time[entry.user_email] += entry.time_spent_seconds
-
-for user, seconds in sorted(user_time.items(), key=lambda x: x[1], reverse=True):
-    print(f"User: {user:<30} | {seconds:>5} sec | {seconds / 60:>5.1f} min")
+print(time_entries)

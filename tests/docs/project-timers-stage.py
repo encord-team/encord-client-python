@@ -2,27 +2,35 @@
 Code Block Name: View Project details
 """
 
-# Import dependencies
+from datetime import datetime, timedelta
 from encord import EncordUserClient
+from collections import defaultdict
 
-# User input
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "f7890e41-6de8-4e66-be06-9fbe182df457"
 
-# Create user client using SSH key
+# --- Configuration ---
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH key
+PROJECT_ID = "60548e3f-4877-4bde-be08-95b5965572f6" # Replace with the project unique ID
+
+# --- Connect to Encord ---
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     ssh_private_key_path=SSH_PATH,
     # For US platform users use "https://api.us.encord.com"
     domain="https://api.encord.com",
 )
 
-# Open the project you want to work on by specifying the Project ID
 project = user_client.get_project(PROJECT_ID)
 
-# Prints relevant Project information
-print(f"Project Title: {project.title}")
-print(f"Description: {project.description}")
-print(f"Created at: {project.created_at}")
-print(f"Ontology ID: {project.ontology_hash}")
-print(f"Datasets: {project.list_datasets()}")
-print(f"Workflow: {project.workflow.stages}")
+# --- Get Time Entries ---
+start_date = datetime(2025, 1, 1)
+end_date = datetime(2025, 6, 8)
+
+# Returns all data
+time_entries = list(project.list_time_spent(start=start_date, end=end_date))
+
+# Filters for total time by stage
+stage_time = defaultdict(int)
+for entry in time_entries:
+    stage_time[entry.workflow_stage.title] += entry.time_spent_seconds
+
+for stage, seconds in sorted(stage_time.items(), key=lambda x: x[1], reverse=True):
+    print(f"Stage: {stage:<25} | {seconds:>5} sec | {seconds / 60:>5.1f} min")
