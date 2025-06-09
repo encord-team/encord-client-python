@@ -2,14 +2,14 @@
 Code Block Name: View Project details
 """
 
-from datetime import datetime, timedelta
-from encord import EncordUserClient
 from collections import defaultdict
+from datetime import datetime, timedelta
 
+from encord import EncordUserClient
 
 # --- Configuration ---
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH key
-PROJECT_ID = "60548e3f-4877-4bde-be08-95b5965572f6" # Replace with the project unique ID
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file path to your SSH key
+PROJECT_ID = "60548e3f-4877-4bde-be08-95b5965572f6"  # Replace with the project unique ID
 
 # --- Connect to Encord ---
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
