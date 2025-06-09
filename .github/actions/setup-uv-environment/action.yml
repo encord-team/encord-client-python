@@ -33,11 +33,11 @@ runs:
     - name: Create virtual environment and install dependencies on cache miss
       if: steps.setup-uv.outputs.cache-hit != 'true'
       run: |
+        uv venv --python ${{ inputs.python-version }}
         uv sync --all-extras --dev
       shell: bash
 
     - name: Active virtual environment
       run: |
-        uv venv --python ${{ inputs.python-version }}
         echo "VIRTUAL_ENV=.venv" >> $GITHUB_ENV
       shell: bash
