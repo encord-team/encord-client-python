@@ -21,6 +21,7 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.common.range_manager import RangeManager
+from encord.common.time_parser import format_datetime_to_long_string_optional, parse_datetime_optional
 from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
@@ -520,7 +521,6 @@ class LabelRowV2:
                 initialization is delayed and performed along with other objects in the same bundle.
             include_signed_url: If `True`, the :attr:`.data_link` property will contain a signed URL.
                 See documentation for :attr:`.data_link` for more details.
-            branch_name: Name of branch
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
@@ -1062,8 +1062,8 @@ class LabelRowV2:
 
         ret["label_hash"] = read_only_data.label_hash
         ret["branch_name"] = read_only_data.branch_name
-        ret["created_at"] = read_only_data.created_at
-        ret["last_edited_at"] = read_only_data.last_edited_at
+        ret["created_at"] = format_datetime_to_long_string_optional(read_only_data.created_at)
+        ret["last_edited_at"] = format_datetime_to_long_string_optional(read_only_data.last_edited_at)
         ret["data_hash"] = read_only_data.data_hash
         ret["dataset_hash"] = read_only_data.dataset_hash
         ret["dataset_title"] = read_only_data.dataset_title
@@ -1614,9 +1614,9 @@ class LabelRowV2:
                 annotation = obj.get_annotation(0)
                 object_answer_dict = ret[obj.object_hash]
                 object_answer_dict["createdBy"] = annotation.created_by
-                object_answer_dict["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                object_answer_dict["createdAt"] = format_datetime_to_long_string_optional(annotation.created_at)
                 object_answer_dict["lastEditedBy"] = annotation.last_edited_by
-                object_answer_dict["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+                object_answer_dict["lastEditedAt"] = format_datetime_to_long_string_optional(annotation.last_edited_at)
                 object_answer_dict["manualAnnotation"] = annotation.manual_annotation
                 object_answer_dict["featureHash"] = obj.feature_hash
                 object_answer_dict["name"] = obj.ontology_item.name
@@ -1666,12 +1666,12 @@ class LabelRowV2:
                 # For non-geometric data, classifications apply to whole file
                 ret[classification.classification_hash]["range"] = []
                 ret[classification.classification_hash]["createdBy"] = annotation.created_by
-                ret[classification.classification_hash]["createdAt"] = annotation.created_at.strftime(
-                    DATETIME_LONG_STRING_FORMAT
+                ret[classification.classification_hash]["createdAt"] = format_datetime_to_long_string_optional(
+                    annotation.created_at
                 )
                 ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
-                ret[classification.classification_hash]["lastEditedAt"] = annotation.last_edited_at.strftime(
-                    DATETIME_LONG_STRING_FORMAT
+                ret[classification.classification_hash]["lastEditedAt"] = format_datetime_to_long_string_optional(
+                    annotation.last_edited_at
                 )
                 ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
 
@@ -1842,7 +1842,7 @@ class LabelRowV2:
         ret["color"] = ontology_object.color
         ret["shape"] = ontology_object.shape.value
         ret["value"] = _lower_snake_case(ontology_object.name)
-        ret["createdAt"] = object_instance_annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        ret["createdAt"] = format_datetime_to_long_string_optional(object_instance_annotation.created_at)
         ret["createdBy"] = object_instance_annotation.created_by
         ret["confidence"] = object_instance_annotation.confidence
         ret["objectHash"] = object_.object_hash
@@ -1850,7 +1850,7 @@ class LabelRowV2:
         ret["manualAnnotation"] = object_instance_annotation.manual_annotation
 
         if object_instance_annotation.last_edited_at is not None:
-            ret["lastEditedAt"] = object_instance_annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+            ret["lastEditedAt"] = format_datetime_to_long_string_optional(object_instance_annotation.last_edited_at)
         if object_instance_annotation.last_edited_by is not None:
             ret["lastEditedBy"] = object_instance_annotation.last_edited_by
         if object_instance_annotation.is_deleted is not None:
@@ -1910,7 +1910,7 @@ class LabelRowV2:
 
         ret["name"] = ontology_attribute.name
         ret["value"] = _lower_snake_case(ontology_attribute.name)
-        ret["createdAt"] = annotation.created_at.strftime(DATETIME_LONG_STRING_FORMAT)
+        ret["createdAt"] = format_datetime_to_long_string_optional(annotation.created_at)
         ret["createdBy"] = annotation.created_by
         ret["confidence"] = annotation.confidence
         ret["featureHash"] = ontology_classification.feature_node_hash
@@ -1918,7 +1918,7 @@ class LabelRowV2:
         ret["manualAnnotation"] = annotation.manual_annotation
 
         if annotation.last_edited_at is not None:
-            ret["lastEditedAt"] = annotation.last_edited_at.strftime(DATETIME_LONG_STRING_FORMAT)
+            ret["lastEditedAt"] = format_datetime_to_long_string_optional(annotation.last_edited_at)
         if annotation.last_edited_by is not None:
             ret["lastEditedBy"] = annotation.last_edited_by
 
@@ -2085,8 +2085,8 @@ class LabelRowV2:
                 "workflow_graph_node", self._label_row_read_only_data.workflow_graph_node
             ),
             is_shadow_data=self.is_shadow_data,
-            created_at=label_row_dict["created_at"],
-            last_edited_at=label_row_dict["last_edited_at"],
+            created_at=parse_datetime_optional(label_row_dict["created_at"]),
+            last_edited_at=parse_datetime_optional(label_row_dict["last_edited_at"]),
             frame_level_data=frame_level_data,
             image_hash_to_frame=image_hash_to_frame,
             frame_to_image_hash=frame_to_image_hash,
