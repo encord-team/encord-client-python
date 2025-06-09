@@ -21,6 +21,7 @@ runs:
         python-version: ${{ inputs.python-version }}
 
     - name: Install uv
+      id: setup-uv
       uses: astral-sh/setup-uv@v6
       with:
         version: ${{ inputs.uv-version }}
@@ -28,3 +29,9 @@ runs:
         cache-dependency-glob: |
           **/pyproject.toml
           **/uv.lock
+
+    - name: Create virtual environment and install dependencies on cache miss
+      if: steps.setup-uv.outputs.cache-hit != 'true'
+      run: |
+        uv sync --frozen
+      shell: bash
