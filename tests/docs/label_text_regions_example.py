@@ -11,7 +11,7 @@ from encord.objects.frames import Range
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
-PROJECT_ID = "dbb776e8-feaa-4401-97d3-52395bac6c02"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key

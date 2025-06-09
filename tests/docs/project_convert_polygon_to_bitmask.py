@@ -155,6 +155,6 @@ def convert_labels(keyfile_path: str, source_project_hash: str, target_project_h
 # Example usage:
 if __name__ == "__main__":
     keyfile_path = "/Users/chris-encord/ssh-private-key.txt"  # Replace with your keyfile path
-    source_project_hash = "YOUR_SOURCE_PROJECT_HASH"  # Replace with your source project hash
-    target_project_hash = "YOUR_TARGET_PROJECT_HASH"  # Replace with your target project hash
+    source_project_hash = "00000000-0000-0000-0000-000000000000"  # Replace with your source project hash
+    target_project_hash = "00000000-0000-0000-0000-000000000000"  # Replace with your target project hash
     convert_labels(keyfile_path, source_project_hash, target_project_hash)

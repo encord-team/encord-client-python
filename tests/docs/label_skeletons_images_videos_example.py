@@ -13,7 +13,7 @@ from encord.objects.skeleton_template import SkeletonTemplate
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
-PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key

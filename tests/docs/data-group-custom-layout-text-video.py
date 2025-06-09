@@ -11,9 +11,9 @@ from encord.user_client import EncordUserClient
 
 # --- Configuration ---
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file path to your SSH key
-FOLDER_ID = "82c73d29-8db0-4690-899e-b7e5e623b8e0"  # Replace with the Folder ID
-PROJECT_ID = "520911af-1245-4793-b798-55e0f407d1e9"  # Replace with the Project ID
-DATASET_ID = "c3bcf3a2-3928-4975-a8f5-210e645f8135"  # Replace with the Dataset ID
+FOLDER_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the Folder ID
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the Project ID
+DATASET_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the Dataset ID
 
 
 # --- Connect to Encord ---
