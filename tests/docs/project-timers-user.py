@@ -3,7 +3,7 @@ Code Block Name: View Project details
 """
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from encord import EncordUserClient
 
