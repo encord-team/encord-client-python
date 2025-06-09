@@ -6,7 +6,7 @@ on:
       - master
 
 env:
-  PYTHON_VERSION_3_8: 3.8.20
+  PYTHON_VERSION_3_8: 3.8.18
   PYTHON_VERSION_3_11: 3.11.13
   UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python-3_8_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python-3_8_p2.xml

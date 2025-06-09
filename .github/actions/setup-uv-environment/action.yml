@@ -4,7 +4,7 @@ description: "Sets up Python, UV and dependencies"
 inputs:
   python-version:
     description: "Python version to use"
-    default: 3.8.16
+    default: 3.8.18
     required: false
   uv-version:
     description: "UV version to use"
