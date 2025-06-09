@@ -22,7 +22,6 @@ dependencies = [
     "tqdm>=4.32.1,<5.0.0",
     "pydantic>=1.10.14",
     "orjson>=2",
-    "hatchling>=1.27.0",
 ]
 
 [project.urls]
