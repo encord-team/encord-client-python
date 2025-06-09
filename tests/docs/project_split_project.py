@@ -11,7 +11,7 @@ from encord.objects import LabelRowV2
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "f8b81f75-d1d5-4cb8-895b-44db9957392e"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 PROJECT_SIZE = 50  # Specify the size Project first project
 START_NUMBER = 100  # Specify the start number of the second project
 

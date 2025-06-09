@@ -9,7 +9,7 @@ import os
 from encord import EncordUserClient
 
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 BUNDLE_SIZE = 100  # Customize as needed
 
 # Create user client using SSH key

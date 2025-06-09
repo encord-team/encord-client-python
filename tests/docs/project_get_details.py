@@ -7,7 +7,7 @@ from encord import EncordUserClient
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "f7890e41-6de8-4e66-be06-9fbe182df457"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 
 # Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(

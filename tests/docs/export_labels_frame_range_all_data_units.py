@@ -13,7 +13,7 @@ from encord.objects.ontology_element import OntologyElement
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 OUTPUT_FILE_PATH = "/Users/chris-encord/frame_range_output.json"
 START_FRAME_NUMBER = 0
 END_FRAME_NUMBER = 2

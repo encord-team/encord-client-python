@@ -7,8 +7,8 @@ from encord import EncordUserClient
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "f7890e41-6de8-4e66-be06-9fbe182df457"
-DATA_UNIT_ID = "1041da61-d63c-4489-9001-4a56fe37f1f3"  # The unique identifier (data_hash) for the data unit
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
+DATA_UNIT_ID = "00000000-0000-0000-0000-000000000000"  # The unique identifier (data_hash) for the data unit
 
 
 # Create user client using SSH key

@@ -11,7 +11,7 @@ numpy_coordinates = np.ones((483, 322), dtype=bool)
 
 # SSH and Project details
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "dbb776e8-feaa-4401-97d3-52395bac6c02"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 
 # Create user client
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(

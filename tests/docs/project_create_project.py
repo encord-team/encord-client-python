@@ -8,10 +8,10 @@ from encord.user_client import EncordUserClient
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_TITLE = "My Project 01"
-DATASET_ID_01 = "ccb9438b-d9d3-4351-a243-61948f74d062"
-DATASET_ID_02 = "4fc8934a-8728-4a80-9b4d-2954afe1a0b5"
-DATASET_ID_03 = "26a8c7e2-9259-4853-bf0c-1b7610d4e057"
-WORKFLOW_TEMPLATE_ID = "79f68604-7998-4cd3-9c68-d170b690dbb9"
+DATASET_ID_01 = "00000000-0000-0000-0000-000000000000"
+DATASET_ID_02 = "00000000-0000-0000-0000-000000000000"
+DATASET_ID_03 = "00000000-0000-0000-0000-000000000000"
+WORKFLOW_TEMPLATE_ID = "00000000-0000-0000-0000-000000000000"
 
 # Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(

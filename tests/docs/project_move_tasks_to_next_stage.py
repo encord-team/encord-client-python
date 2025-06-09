@@ -8,7 +8,7 @@ from encord.workflow import AnnotationStage
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "4b8756eb-eecb-415f-a212-4fb57c95b218"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 WORKFLOW_STAGE_NAME = "Annotate 1"
 WORKFLOW_STAGE_TYPE = AnnotationStage
 BUNDLE_SIZE = 100  # You can adjust this value as needed, but keep it <= 1000

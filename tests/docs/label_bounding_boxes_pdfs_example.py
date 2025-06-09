@@ -9,14 +9,14 @@ from encord.objects.coordinates import BoundingBoxCoordinates
 
 SSH_PATH = "/Users/chris-encord/staging-sdk-ssh-key-private-key.txt"
 # SSH_PATH = get_ssh_key() # replace it with ssh key
-PROJECT_ID = "f8b81f75-d1d5-4cb8-895b-44db9957392e"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 BUNDLE_SIZE = 100
 
 # Create user client
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     ssh_private_key_path=SSH_PATH,
     # For US platform users use "https://api.us.encord.com"
-    domain="https://staging.api.encord.com",
+    domain="https://api.encord.com",
 )
 
 # Get project

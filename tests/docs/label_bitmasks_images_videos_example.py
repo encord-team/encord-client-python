@@ -17,7 +17,7 @@ assert numpy_coordinates.shape == (1080, 1920), "Mask dimensions must match 1080
 
 # Paths and identifiers
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "8d73bec0-ac61-4d28-b45a-7bffdf4c6b8e"
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 BUNDLE_SIZE = 100
 
 # Create user client using SSH key
