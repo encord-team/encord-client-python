@@ -1,5 +1,5 @@
 """
-Code Block Name: View Total Time Spent on Project
+Code Block Name: Timers - Project
 """
 
 from collections import defaultdict

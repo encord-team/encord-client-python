@@ -1,5 +1,5 @@
 """
-Code Block Name: View Project details
+Code Block Name: Timers - All Data
 """
 
 from datetime import datetime
