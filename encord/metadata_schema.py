@@ -43,13 +43,11 @@ class _ClientMetadataSchemaTypeEnum(BaseModel):
 
 
 class _ClientMetadataSchemaTypeEmbeddingApi(BaseModel):
-    # FIXME: remove unsupported field layouts once finalised.
-    url: Optional[str] = None
-    path: Optional[str] = None
     service_integration: Optional[UUID] = None
-    client_only: Optional[bool] = None
-    embed_b64_image: Optional[bool] = None
-    embed_text: Optional[bool] = None
+    service_integration_path: Optional[str] = None
+    client_only: bool = True
+    embed_b64_image: bool = True
+    embed_text: bool = True
 
 
 class _ClientMetadataSchemaTypeEmbedding(BaseModel):
@@ -228,13 +226,23 @@ class MetadataSchema:
             )
             self._dirty = False
 
-    def add_embedding(self, k: str, *, size: int) -> None:
+    def add_embedding(
+        self,
+        k: str,
+        *,
+        size: int,
+        service_integration: Optional[UUID] = None,
+        service_integration_path: Optional[str] = None,
+    ) -> None:
         """Adds a new embedding to the metadata schema.
 
         **Parameters:**
 
         - k : str: The key under which the embedding will be stored in the schema.
         - size : int: The size of the embedding.
+        - service_integration : UUID: Service integration to authenticate as when making requests.
+        - service_integration_path : str: The path from the service integration's domain to the
+            endpoint that returns new embeddings.
 
         **Raises:**
 
@@ -243,7 +251,17 @@ class MetadataSchema:
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
         _assert_valid_metadata_key(k)
+
         embedding_api = None
+        if service_integration and service_integration_path:
+            embedding_api = _ClientMetadataSchemaTypeEmbeddingApi(
+                service_integration=service_integration, service_integration_path=service_integration_path
+            )
+        elif service_integration or service_integration_path:
+            raise MetadataSchemaError(
+                "service_integration and service_integration_path must either both be given, or neither."
+            )
+
         # FIXME: optionally define once path is finalised.
         self._schema[k] = _ClientMetadataSchemaOption(
             root=_ClientMetadataSchemaTypeEmbedding(size=size, api=embedding_api)
@@ -555,7 +573,12 @@ class MetadataSchema:
             ty_hint_str: str
             padding: str = " " * (max_length - len(k))
             if isinstance(v, _ClientMetadataSchemaTypeEmbedding):
-                ty_hint_str = f"embedding(size={v.size})"
+                api_str = (
+                    f'(service_integration="{v.api.service_integration}", service_integration_path="{v.api.service_integration_path}")'
+                    if v.api
+                    else "None"
+                )
+                ty_hint_str = f"embedding(size={v.size}, api={api_str})"
             elif isinstance(v, _ClientMetadataSchemaTypeEnum):
                 ty_hint_str = f"enum(values={sorted(v.values)})"
             elif isinstance(v, _ClientMetadataSchemaTypeVariant):

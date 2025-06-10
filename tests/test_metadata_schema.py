@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import MagicMock
 
 import pytest
@@ -26,12 +27,19 @@ def test_metadata_schema() -> None:
     assert meta.keys() == ["embed512"]
     assert meta.get_key_type("embed512") == "embedding"
     assert meta.get_embedding_size("embed512") == 512
-
-    # NOTE: this part ensures that the SDK is aware of the `api` filed which is
-    # currently only settable in the DB
     assert meta._schema["embed512"].root.api == None
-    meta._schema["embed512"].root.api = "foo"
-    assert meta._schema["embed512"].root.api == "foo"
+
+    service_integration = uuid.uuid4()
+    meta.add_embedding(
+        "embed64", size=64, service_integration=service_integration, service_integration_path="/embeddings"
+    )
+    assert meta._schema["embed64"].root.api.service_integration_path == "/embeddings"
+    assert meta._schema["embed64"].root.api.service_integration == service_integration
+
+    with pytest.raises(MetadataSchemaError) as exc:
+        meta.add_embedding("embed8", size=64, service_integration=service_integration, service_integration_path=None)
+
+    assert str(exc.value) == "service_integration and service_integration_path must either both be given, or neither."
 
     with pytest.raises(MetadataSchemaError):
         meta.add_scalar("yolo", data_type="embedding")  # type: ignore[arg-type]
@@ -102,7 +110,7 @@ def test_metadata_schema() -> None:
 
     assert (
         f"{meta}".strip()
-        == """
+        == f"""
 Metadata Schema:
 ----------------
  - 'A':        scalar(hint=number)
@@ -117,7 +125,8 @@ Metadata Schema:
  - 'c':        scalar(hint=varchar)
  - 'd':        scalar(hint=text)
  - 'e':        scalar(hint=varchar)
- - 'embed512': embedding(size=512)
+ - 'embed512': embedding(size=512, api=None)
+ - 'embed64':  embedding(size=64, api=(service_integration="{service_integration}", service_integration_path="/embeddings"))
  - 'en':       enum(values=['h', 'h2'])
  - 'f':        scalar(hint=text)
     """.strip()
