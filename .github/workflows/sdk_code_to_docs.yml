@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master  # Trigger on push to the 'master' branch
+  pull_request:
+    branches:
+      - master
 
 jobs:
   update_docs:
@@ -15,13 +18,13 @@ jobs:
         with:
           repository: encord-team/encord-client-python  # Replace with the name of your source repo (repo1)
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main  # Ensures the latest changes from the 'main' branch are pulled
+          ref: master
 
       - name: Checkout destination repository (repo2)
         uses: actions/checkout@v2
         with:
           repository: encord-team/encord-docs-mint  # Replace with the name of your destination repo (repo2)
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ACCESS_TOKEN }}
           ref: main  # Same branch as source repo
 
       - name: Set up Python
@@ -29,9 +32,9 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install dependencies (if any)
-        run: |
-          pip install -r requirements.txt  # If you have dependencies for the script
+#      - name: Install dependencies (if any)
+#        run: |
+#          pip install -r requirements.txt  # If you have dependencies for the script
 
       - name: Run the Python script to update docs
         run: |
