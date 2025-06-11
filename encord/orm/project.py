@@ -398,7 +398,7 @@ class SetProjectStatusPayload(BaseDTO):
 
 
 class GetProjectUsersPayload(BaseDTO):
-    page_token: str | None = None
+    page_token: Optional[str] = None
 
 
 class ProjectUserResponse(BaseDTO):
