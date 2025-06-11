@@ -395,3 +395,18 @@ class ProjectFilterParams(BaseDTO):
 
 class SetProjectStatusPayload(BaseDTO):
     status: ProjectStatus
+
+
+class GetProjectUsersPayload(BaseDTO):
+    page_token: str | None = None
+
+
+class ProjectUserResponse(BaseDTO):
+    """
+    This one should be merged with ProjectUser class
+    But at the moment server doesn't return "project_hash" field (which is correct I suppose), that ProjectUser expects
+    TODO: deprecate project_hash field from ProjectUsers and merge this two together
+    """
+
+    user_email: str
+    user_role: ProjectUserRole
