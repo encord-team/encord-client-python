@@ -292,6 +292,14 @@ class Project:
         """
         return self._client.add_users(user_emails, user_role)
 
+    def list_users(self) -> Iterable[ProjectUser]:
+        """List all users that have access to the project.
+
+        Returns:
+            Iterable[ProjectUser]: An iterable of ProjectUser objects.
+        """
+        yield from self._client.list_users(UUID(self.project_hash))
+
     def list_groups(self) -> Iterable[ProjectGroup]:
         """List all groups that have access to a particular project.
 

@@ -99,10 +99,12 @@ from encord.orm.project import (
     CopyDatasetOptions,
     CopyLabelsOptions,
     CopyProjectPayload,
+    GetProjectUsersPayload,
     ProjectCopy,
     ProjectCopyOptions,
     ProjectDataset,
     ProjectStatus,
+    ProjectUserResponse,
     ProjectUsers,
     SetProjectStatusPayload,
     TaskPriorityParams,
@@ -866,6 +868,12 @@ class EncordClientProject(EncordClient):
         users = self._querier.basic_setter(ProjectUsers, self._querier.resource_id, payload=payload)
 
         return [ProjectUser.from_dict(user) for user in users]
+
+    def list_users(self, project_hash: uuid.UUID) -> Iterable[ProjectUser]:
+        for user in self._api_client.get_paged_iterator(
+            f"projects/{project_hash}/users", params=GetProjectUsersPayload(), result_type=ProjectUserResponse
+        ):
+            yield ProjectUser(user_email=user.user_email, user_role=user.user_role, project_hash=str(project_hash))
 
     def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
         return self._api_client.get(f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])
