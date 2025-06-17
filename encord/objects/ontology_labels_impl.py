@@ -2148,7 +2148,6 @@ class LabelRowV2:
                 data_type == DataType.VIDEO
                 or data_type == DataType.DICOM
                 or data_type == DataType.NIFTI
-                or data_type == DataType.GROUP
                 or data_type == DataType.PDF
             ):
                 for frame, frame_data in data_unit["labels"].items():
@@ -2160,6 +2159,14 @@ class LabelRowV2:
                     self._add_frame_metadata(frame_num, frame_data.get("metadata"))
                 self._add_objects_answers(object_answers)
 
+            elif data_type == DataType.GROUP:
+                for frame, frame_data in data_unit["labels"].items():
+                    frame_num = int(frame)
+                    self._add_classification_instances_from_classifications(
+                        frame_data["classifications"], classification_answers, frame_num
+                    )
+                    self._add_frame_metadata(frame_num, frame_data.get("metadata"))
+
             elif data_type == DataType.DICOM_STUDY:
                 pass  # TODO: _add_object_answers a NO-OP here as well?
 
@@ -2169,8 +2176,6 @@ class LabelRowV2:
             elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
                 is_html = data_unit["data_type"] == "text/html"
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
-                self._add_classification_instances_from_classifications_without_frames(classification_answers)
-            elif data_type == DataType.GROUP:
                 self._add_classification_instances_from_classifications_without_frames(classification_answers)
             else:
                 exhaustive_guard(data_type)
