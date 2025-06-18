@@ -11,7 +11,9 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+from encord.orm.base_dto import BaseDTO
 import base64
+import jwt
 import logging
 import time
 import uuid
@@ -100,6 +102,7 @@ from encord.orm.project import Project as OrmProject
 from encord.orm.project_with_user_role import ProjectWithUserRole
 from encord.orm.storage import CloudSyncedFolderParams, ListFoldersParams, ListItemsParams, StorageItemType
 from encord.project import Project
+from encord.service_integration import ServiceIntegration
 from encord.storage import FoldersSortBy, StorageFolder, StorageItem
 from encord.utilities.client_utilities import (
     CvatImporterError,
@@ -1411,6 +1414,35 @@ class EncordUserClient:
     def set_client_metadata_schema_from_dict(self, json_dict: Dict[str, ClientMetadataSchemaTypes]):
         set_client_metadata_schema_from_dict(self._api_client, json_dict)
 
+    def verify_token(self, token: str, organisation_id: int) -> None:
+        """
+        Verify that a token was signed by this service integration.
+
+        **Parameters:**
+        - token : str: Token taken from the `X-Encord-Signature` HTTP header.
+
+        **Raises:**
+        TokenVerificationError: If the token is not valid for this service integration.
+        """
+        class _OpenIDConfiguration(BaseDTO):
+            jwks_uri: str
+            issuer: str
+
+        openid_config = self._api_client.get(
+                path=f"/organisation/{organisation_id}/service-integrations/.well-known/openid-configuration",
+                result_type=_OpenIDConfiguration,
+                params=None,
+            )
+
+        # Fetch the signing key from JWKS using the provided token
+        jwks_client = jwt.PyJWKClient(openid_config.jwks_uri)
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+
+        # Decode and validate the token using the fetched signing key
+        token = jwt.decode(token, signing_key.key, algorithms=["EdDSA"], audience="http://0.0.0.0:8001")
+
+        print(token)
+
     def metadata_schema(self) -> MetadataSchema:
         return MetadataSchema(self._api_client)
 
@@ -1599,6 +1631,9 @@ class EncordUserClient:
         if isinstance(preset_uuid, str):
             preset_uuid = UUID(preset_uuid)
         FilterPreset._delete_preset(self._api_client, preset_uuid)
+
+    def get_service_integration(self, uuid: UUID) -> ServiceIntegration:
+        return ServiceIntegration(api_client=self._api_client, uuid=uuid)
 
 
 class ListingFilter(Enum):
