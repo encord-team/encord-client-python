@@ -41,10 +41,8 @@ jobs:
         #        run: uv pip install pip
         #        shell: bash
 
-      - name: Install pre-commit tools globally
-        run: |
-          uv tool install mypy
-          uv tool install ruff
+      - name: Install dev dependencies pre-commit hooks require
+        run: uv sync --only-dev
 
       - name: Run linting, type checking and testing
         uses: pre-commit/action@v3.0.1
