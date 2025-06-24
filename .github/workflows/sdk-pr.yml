@@ -34,7 +34,7 @@ jobs:
         run: echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
         shell: bash
       - name: Ensure pip is installed in venv
-        run: uv pip install pip
+        run: uv pip install pre-commit pip
         shell: bash
       - name: Run linting, type checking and testing
         run: pre-commit run --all-files --hook-stage=push
