@@ -26,7 +26,6 @@ runs:
       with:
         version: ${{ inputs.uv-version }}
         enable-cache: "false"
-#        enable-cache: true
 #        cache-dependency-glob: |
 #          **/pyproject.toml
 #          **/uv.lock
