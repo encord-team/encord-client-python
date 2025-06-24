@@ -56,7 +56,7 @@ dev = [
 
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "pip"]
 build-backend = "hatchling.build"
 
 [tool.mypy]
