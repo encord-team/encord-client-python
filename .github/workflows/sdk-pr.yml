@@ -30,16 +30,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+
       - name: Setup uv environment
         uses: ./.github/actions/setup-uv-environment
         with:
           python-version: ${{ env.PYTHON_VERSION_3_8 }}
-        #      - name: Add venv to PATH
-        #        run: echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
-        #        shell: bash
-        #      - name: Ensure pip is installed in venv
-        #        run: uv pip install pip
-        #        shell: bash
+
+#       - name: Run unit tests for Python 3.8 (Pydantic 1.x)
+#         uses: ./.github/actions/run-unit-tests
+#         with:
+#           python-version: 3.8.16
+#           pydantic-version: 1.10.14
+#           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
+
+#       - name: Publish unit test report Python 3.8 (Pydantic 1.x)
+#         uses: EnricoMi/publish-unit-test-result-action@v2
+#         if: always()
 
       - name: Install dev dependencies pre-commit hooks require
         run: uv sync --only-dev
@@ -51,6 +57,7 @@ jobs:
 
 #       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
 #         uses: EnricoMi/publish-unit-test-result-action@v2
+#         if: always()
 #         with:
 #           files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
 #           check_name: Unit test report ((Pydantic 2.x)
@@ -149,8 +156,10 @@ jobs:
 #          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
 #          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
 #
-#      - name: Publish integration test report Python 3.11
-#        uses: EnricoMi/publish-unit-test-result-action@v2
-#        with:
-#          files: ./encord-backend/projects/sdk-integration-tests/${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-#          check_name: SDK integration test report
+#       - name: Publish integration test report Python 3.11
+#         uses: EnricoMi/publish-unit-test-result-action@v2
+#         if: always()
+#         with:
+#           files: ./encord-backend/projects/sdk-integration-tests/${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+#           check_name: SDK integration test report
+

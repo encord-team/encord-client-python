@@ -243,31 +243,36 @@ jobs:
             path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
 
         - name: Publish unit test report Python 3.8
-          uses: EnricoMi/publish-unit-test-result-action@v1
+          uses: EnricoMi/publish-unit-test-result-action@v2
+          if: always()
           with:
             files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}/*.xml
             check_name: Unit test report
 
         - name: Publish unit test report Python 3.9
-          uses: EnricoMi/publish-unit-test-result-action@v1
+          uses: EnricoMi/publish-unit-test-result-action@v2
+          if: always()
           with:
             files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}/*.xml
             check_name: Unit test report
 
         - name: Publish unit test report Python 3.10
-          uses: EnricoMi/publish-unit-test-result-action@v1
+          uses: EnricoMi/publish-unit-test-result-action@v2
+          if: always()
           with:
             files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}/*.xml
             check_name: Unit test report
 
         - name: Publish unit test report Python 3.11
-          uses: EnricoMi/publish-unit-test-result-action@v1
+          uses: EnricoMi/publish-unit-test-result-action@v2
+          if: always()
           with:
             files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}/*.xml
             check_name: Unit test report
 
         - name: Publish integration test report Python 3.11
-          uses: EnricoMi/publish-unit-test-result-action@v1
+          uses: EnricoMi/publish-unit-test-result-action@v2
+          if: always()
           with:
             files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
             check_name: SDK integration test report
