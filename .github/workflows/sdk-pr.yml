@@ -36,9 +36,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION_3_8 }}
 
       - name: Run linting, type checking and testing
-        uses: pre-commit/action@v3.0.1
-        with:
-          extra_args: "--all-files --hook-stage=push"
+        run: uv run pre-commit run --all-files --hook-stage=push
 
 #       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
 #         uses: EnricoMi/publish-unit-test-result-action@v2
