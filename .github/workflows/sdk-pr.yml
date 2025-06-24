@@ -37,9 +37,8 @@ jobs:
         run: uv pip install pip
         shell: bash
       - name: Run linting, type checking and testing
-        uses: pre-commit/action@v3.0.1
-        with:
-          extra_args: "--all-files --hook-stage=push"
+        run: pre-commit run --all-files --hook-stage=push
+        shell: bash
 
   unit-tests-python-3-8:
     name: Run unit tests (Python 3.8, Pydantic 1.x)
