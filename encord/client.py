@@ -99,10 +99,12 @@ from encord.orm.project import (
     CopyDatasetOptions,
     CopyLabelsOptions,
     CopyProjectPayload,
+    GetProjectUsersPayload,
     ProjectCopy,
     ProjectCopyOptions,
     ProjectDataset,
     ProjectStatus,
+    ProjectUserResponse,
     ProjectUsers,
     SetProjectStatusPayload,
     TaskPriorityParams,
@@ -821,6 +823,7 @@ class EncordClientProject(EncordClient):
         include_workflow_graph_node: bool = True,
         include_client_metadata: bool = False,
         include_images_data: bool = False,
+        include_children: bool = False,
         label_hashes: Optional[Union[List[str], List[UUID]]] = None,
         data_hashes: Optional[Union[List[str], List[UUID]]] = None,
         data_title_eq: Optional[str] = None,
@@ -854,6 +857,7 @@ class EncordClientProject(EncordClient):
             "workflow_graph_node_title_like": workflow_graph_node_title_like,
             "include_client_metadata": include_client_metadata,
             "include_images_data": include_images_data,
+            "include_children": include_children,
             "include_workflow_graph_node": include_workflow_graph_node,
             "include_all_label_branches": include_all_label_branches,
             "branch_name": branch_name,
@@ -866,6 +870,12 @@ class EncordClientProject(EncordClient):
         users = self._querier.basic_setter(ProjectUsers, self._querier.resource_id, payload=payload)
 
         return [ProjectUser.from_dict(user) for user in users]
+
+    def list_users(self, project_hash: uuid.UUID) -> Iterable[ProjectUser]:
+        for user in self._api_client.get_paged_iterator(
+            f"projects/{project_hash}/users", params=GetProjectUsersPayload(), result_type=ProjectUserResponse
+        ):
+            yield ProjectUser(user_email=user.user_email, user_role=user.user_role, project_hash=str(project_hash))
 
     def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
         return self._api_client.get(f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])

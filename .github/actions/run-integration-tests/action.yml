@@ -44,6 +44,8 @@ runs:
       uses: ./.github/actions/setup-uv-environment
       with:
         python-version: ${{ inputs.python-version }}
+        version: "0.7.11"
+        enable-cache: 'true'
 
     - name: Setup FFMPEG
       uses: FedericoCarboni/setup-ffmpeg@v2

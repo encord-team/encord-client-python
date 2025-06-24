@@ -26,6 +26,7 @@ class DataType(StringEnum):
     AUDIO = "audio"
     PLAIN_TEXT = "plain_text"
     PDF = "pdf"
+    GROUP = "group"
 
     # will be displayed if the Encord platform has a new data type that is not present in this SDK version. Please upgrade your SDK version
     MISSING_DATA_TYPE = "_MISSING_DATA_TYPE_"
@@ -50,6 +51,7 @@ GEOMETRIC_TYPES = {
     DataType.VIDEO,
     DataType.IMAGE,
     DataType.IMG_GROUP,
+    DataType.GROUP,
     DataType.DICOM,
     DataType.DICOM_STUDY,
     DataType.NIFTI,

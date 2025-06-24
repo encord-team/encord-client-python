@@ -224,6 +224,7 @@ class Project:
         include_workflow_graph_node: bool = True,
         include_client_metadata: bool = False,
         include_images_data: bool = False,
+        include_children: bool = False,
         include_all_label_branches: bool = False,
         branch_name: Optional[str] = None,
     ) -> List[LabelRowV2]:
@@ -243,6 +244,7 @@ class Project:
             include_workflow_graph_node: Include workflow graph node metadata in all the results. True by default.
             include_client_metadata: Optionally include client metadata into the result of this query.
             include_images_data: Optionally include image group metadata into the result of this query.
+            include_children: Optionally include data group children rows into the result of this query.
             include_all_label_branches: Optionally include all label branches. They will be included as separate label row objects.
             branch_name: Optionally specify a branch name. A branch name cannot be specified if include_all_label_branches is set to True
 
@@ -257,6 +259,7 @@ class Project:
             data_hashes=data_hashes,
             label_hashes=label_hashes,
             include_uninitialised_labels=True,
+            include_children=include_children,
             data_title_eq=data_title_eq,
             data_title_like=data_title_like,
             workflow_graph_node_title_eq=workflow_graph_node_title_eq,
@@ -291,6 +294,14 @@ class Project:
             UnknownError: If an error occurs while adding the users to the project.
         """
         return self._client.add_users(user_emails, user_role)
+
+    def list_users(self) -> Iterable[ProjectUser]:
+        """List all users that have access to the project.
+
+        Returns:
+            Iterable[ProjectUser]: An iterable of ProjectUser objects.
+        """
+        yield from self._client.list_users(UUID(self.project_hash))
 
     def list_groups(self) -> Iterable[ProjectGroup]:
         """List all groups that have access to a particular project.
