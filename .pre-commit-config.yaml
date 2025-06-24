@@ -1,20 +1,27 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: 2c9f875913ee60ca25ce70243dc24d5b6415598c # 4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-yaml
+        args:
+          - --allow-multiple-documents
       - id: check-json
       - id: check-toml
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.6
+    rev: v0.12.0
     hooks:
       - id: ruff
         args:
         - --fix
         - --exit-non-zero-on-fix
       - id: ruff-format
+        types_or: [ python, pyi ]
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.7.14
+    hooks:
+      - id: uv-lock
   - repo: local
     hooks:
       - id: mypy
