@@ -34,22 +34,6 @@ jobs:
         uses: ./.github/actions/setup-uv-environment
         with:
           python-version: ${{ env.PYTHON_VERSION_3_8 }}
-        #      - name: Add venv to PATH
-        #        run: echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
-        #        shell: bash
-        #      - name: Ensure pip is installed in venv
-        #        run: uv pip install pip
-        #        shell: bash
-
-      - name: Verify environment
-        run: |
-          echo "--- Verifying executables in .venv/bin ---"
-          ls -l $GITHUB_WORKSPACE/.venv/bin
-          echo "--- Checking which mypy is on the PATH ---"
-          which mypy
-          echo "--- Checking mypy version ---"
-          mypy --version
-        shell: bash
 
       - name: Run linting, type checking and testing
         uses: pre-commit/action@v3.0.1
