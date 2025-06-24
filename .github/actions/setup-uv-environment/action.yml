@@ -25,16 +25,24 @@ runs:
       uses: astral-sh/setup-uv@v6
       with:
         version: ${{ inputs.uv-version }}
-        enable-cache: true
-        cache-dependency-glob: |
-          **/pyproject.toml
-          **/uv.lock
+        enable-cache: "false"
+#        enable-cache: true
+#        cache-dependency-glob: |
+#          **/pyproject.toml
+#          **/uv.lock
+
+    - id: cached-uv
+      uses: useblacksmith/cache@v5
+      with:
+        path: .venv
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ inputs.python-version }}-uv-${{ hashFiles('uv.lock', 'pyproject.toml') }}
+
 
     - name: Create virtual environment and install dependencies on cache miss
       if: steps.setup-uv.outputs.cache-hit != 'true'
       run: |
         echo “Cache miss, creating virtual environment and installing dependencies”
-        uv venv --python ${{ inputs.python-version }}
+#        uv venv --python ${{ inputs.python-version }}
         uv sync --frozen
       shell: bash
 
