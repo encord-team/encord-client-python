@@ -47,7 +47,7 @@ runs:
       if: steps.cached-uv.outputs.cache-hit != 'true'
       run: |
         uv venv --python ${{ inputs.python-version }}
-        if [[ "${{ inputs.with-dev-dependancies }}" == "true" ]]; then
+        if [[ "${{ inputs.with-dev-dependencies }}" == "true" ]]; then
           uv sync --frozen --extra dev
         else
           uv sync --frozen
