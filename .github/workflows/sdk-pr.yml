@@ -9,7 +9,7 @@ env:
   PYTHON_VERSION_3_8: 3.8.18
   PYTHON_VERSION_3_11: 3.11.13
   PYDANTIC_VERSION_1: 1.10.22
-  PYDANTIC_VERSION_2: 2.11.7
+  PYDANTIC_VERSION_2: 2.10.6 # Latest Pydantic v2x that supports Python 3.8
   UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python-3_8_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python-3_8_p2.xml
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
