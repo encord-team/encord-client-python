@@ -255,7 +255,7 @@ class CocoExporter:
             "coco_url": data_unit["data_link"],
             "id": image_id,
             "image_title": data_unit["data_title"],
-            "file_name": f'images/{data_unit["data_hash"]}.{data_unit["data_title"].split(".")[-1]}',
+            "file_name": f"images/{data_unit['data_hash']}.{data_unit['data_title'].split('.')[-1]}",
             "height": data_unit["height"],
             "width": data_unit["width"],
         }

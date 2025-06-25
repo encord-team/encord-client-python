@@ -73,9 +73,9 @@ for label_row in label_rows:
         assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
 
         ontology_item = object_instance.ontology_item
-        assert (
-            ontology_item and ontology_item.attributes
-        ), f"No ontology item or attributes found for object {object_instance.object_hash}"
+        assert ontology_item and ontology_item.attributes, (
+            f"No ontology item or attributes found for object {object_instance.object_hash}"
+        )
 
         for annotation in annotations:
             for attribute in ontology_item.attributes:

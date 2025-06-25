@@ -8,6 +8,8 @@ on:
 env:
   PYTHON_VERSION_3_8: 3.8.18
   PYTHON_VERSION_3_11: 3.11.13
+  PYDANTIC_VERSION_1: 1.10.22
+  PYDANTIC_VERSION_2: 2.11.7
   UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python-3_8_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python-3_8_p2.xml
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -54,8 +56,8 @@ jobs:
       - name: Run unit tests for Python 3.8 (Pydantic 1.x)
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.8.16
-          pydantic-version: 1.10.14
+          python-version: ${{ env.PYTHON_VERSION_3_8 }}
+          pydantic-version: ${{ env.PYDANTIC_VERSION_1 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
 
       - name: Publish unit test report Python 3.8 (Pydantic 1.x)
@@ -75,8 +77,8 @@ jobs:
       - name: Run unit tests for Python 3.8 (Pydantic 2.x)
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.8.16
-          pydantic-version: 2.6.1
+          python-version: ${{ env.PYTHON_VERSION_3_8 }}
+          pydantic-version: ${{ env.PYDANTIC_VERSION_2 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
 
       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
@@ -104,7 +106,7 @@ jobs:
       - name: Run integration tests for Python 3.11
         uses: ./.github/actions/run-integration-tests
         with:
-          python-version: 3.11.13
+          python-version: ${{ env.PYTHON_VERSION_3_11 }}
           integration-tests-location: ./encord-backend/projects/sdk-integration-tests
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}

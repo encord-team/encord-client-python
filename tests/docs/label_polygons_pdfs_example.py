@@ -208,9 +208,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                             raise AssertionError(f"[ASSERT] Unknown English checklist option: {option}")
 
                     if checklist_answers:
-                        assert (
-                            english_checklist_attribute is not None
-                        ), "[ASSERT] english_checklist_attribute not defined"
+                        assert english_checklist_attribute is not None, (
+                            "[ASSERT] english_checklist_attribute not defined"
+                        )
                         polygon_object_instance.set_answer(
                             attribute=english_checklist_attribute,
                             answer=checklist_answers,
@@ -218,9 +218,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                         )
 
                     if text_correction:
-                        assert (
-                            english_correction_text_attribute is not None
-                        ), "[ASSERT] english_correction_text_attribute not defined"
+                        assert english_correction_text_attribute is not None, (
+                            "[ASSERT] english_correction_text_attribute not defined"
+                        )
                         polygon_object_instance.set_answer(
                             attribute=english_correction_text_attribute, answer=text_correction
                         )
@@ -241,9 +241,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                             raise AssertionError(f"[ASSERT] Unknown Chinese checklist option: {option}")
 
                     if checklist_answers:
-                        assert (
-                            chinese_checklist_attribute is not None
-                        ), "[ASSERT] chinese_checklist_attribute not defined"
+                        assert chinese_checklist_attribute is not None, (
+                            "[ASSERT] chinese_checklist_attribute not defined"
+                        )
                         polygon_object_instance.set_answer(
                             attribute=chinese_checklist_attribute,
                             answer=checklist_answers,
@@ -251,9 +251,9 @@ for data_unit, frame_coordinates in pdf_labels.items():
                         )
 
                     if text_correction:
-                        assert (
-                            chinese_correction_text_attribute is not None
-                        ), "[ASSERT] chinese_correction_text_attribute not defined"
+                        assert chinese_correction_text_attribute is not None, (
+                            "[ASSERT] chinese_correction_text_attribute not defined"
+                        )
                         polygon_object_instance.set_answer(
                             attribute=chinese_correction_text_attribute, answer=text_correction
                         )
