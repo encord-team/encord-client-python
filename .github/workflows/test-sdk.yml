@@ -64,85 +64,61 @@ jobs:
           check_name: Unit test report
 
 
-      #  integration-tests-python-3-11:
-      #    name: Run integration tests for Python 3.11
-      #    runs-on: ubuntu-24.04
-      #    steps:
-      #      - name: Checkout repo
-      #        uses: actions/checkout@v4
-      #
-      #      - name: Checkout backend repo
-      #        uses: actions/checkout@v4
-      #        with:
-      #          repository: ${{ env.BACKEND_REPO }}
-      #          token: ${{ env.BACKEND_ACCESS_TOKEN }}
-      #          path: encord-backend
+  integration-tests-python-3-11:
+    name: Run integration tests for Python 3.11
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      #      - name: Run integration tests for Python 3.11
-      #        uses: ./.github/actions/run-integration-tests
-      #        with:
-      #          python-version: ${{ env.INTEGRATION_TEST_PYTHON_VERSION_3_11 }}
-      #          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
-      #          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-      #          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-      #          private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-      #          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
-      #          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
+      - name: Checkout backend repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          path: encord-backend
 
-        #  publish-test-reports:
-        #      name: Publish test reports
-        #      runs-on: ubuntu-24.04
-        #      needs: [unit-tests, integration-tests-python-3-11]
-        #      if: success() || failure()
-        #
-        #      steps:
-        #        - name: Download all unit test reports
-        #          uses: actions/download-artifact@v4
-        #          with:
-        #            # This will download all artifacts uploaded by the 'unit-tests' job.
-        #            # Each artifact will be downloaded into a subdirectory named after the artifact.
-        #            # For example, 'unit-test-report-python3_8_p1.xml' will be in './unit-test-report-python3_8_p1.xml/unit-test-report-python3_8_p1.xml'
-        #            # We use a pattern to download all artifacts whose names start with 'unit-test-report-python'
-        #            pattern: unit-test-report-python*
-        #            path: unit-test-reports # Download all into a common directory
+      - name: Run integration tests for Python 3.11
+        uses: ./.github/actions/run-integration-tests
+        with:
+          python-version: ${{ env.INTEGRATION_TEST_PYTHON_VERSION_3_11 }}
+          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+          private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
+          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
+          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
 
-        #        - name: Download integration test report Python 3.11
-        #          uses: actions/download-artifact@v4
-        #          with:
-        #            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-        #            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+      - name: Download integration test report Python 3.11
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
 
-        #        - name: Publish unit test reports
-        #          uses: EnricoMi/publish-unit-test-result-action@v2
-        #          if: always()
-        #          with:
-        #            files: unit-test-reports/**/*.xml
-        #            check_name: Unit test report
+      - name: Publish integration test report Python 3.11
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
+          check_name: SDK integration test report
 
-        #        - name: Publish integration test report Python 3.11
-        #          uses: EnricoMi/publish-unit-test-result-action@v2
-        #          if: always()
-        #          with:
-        #            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
-        #            check_name: SDK integration test report
+  send-slack-notification:
+    name: Send notification
+    runs-on: ubuntu-24.04
+    needs: [ integration-tests-python-3-11 ]
+    if: always()
+    env:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        #  send-slack-notification:
-        #    name: Send notification
-        #    runs-on: ubuntu-24.04
-        #    needs: [ publish-test-reports ]
-        #    if: always()
-        #    env:
-        #      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        #    steps:
-        #      - name: Checkout code
-        #        uses: actions/checkout@v4
-        #
-        #      - name: Get workflow status
-        #        uses: technote-space/workflow-conclusion-action@v2
-        #
-        #      - name: Send Slack notification
-        #        uses: ./.github/actions/send-slack-notification
-        #        with:
-        #          success-parameter: ${{ env.WORKFLOW_CONCLUSION }}
-        #          failure-channel: ${{ secrets.SLACK_FAILURE_CHANNEL_ID }}
-        #          failure-message: This pipeline has failed!
+      - name: Get workflow status
+        uses: technote-space/workflow-conclusion-action@v2
+
+      - name: Send Slack notification
+        uses: ./.github/actions/send-slack-notification
+        with:
+          success-parameter: ${{ env.WORKFLOW_CONCLUSION }}
+          failure-channel: ${{ secrets.SLACK_FAILURE_CHANNEL_ID }}
+          failure-message: This pipeline has failed!
