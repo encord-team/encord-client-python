@@ -12,6 +12,8 @@ env:
   PYTHON_VERSION_3_10: 3.10.18
   PYTHON_VERSION_3_11: 3.11.13
   PYTHON_VERSION_3_12: 3.12.11
+  PYDANTIC_VERSION_1: 1.10.22
+  PYDANTIC_VERSION_2: 2.10.6 # Latest Pydantic v2x that supports Python 3.8
   UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python3_8_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_9_P1: unit-test-report-python3_9_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_10_P1: unit-test-report-python3_10_p1.xml
@@ -37,140 +39,76 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests-python-3-8:
-    name: Run unit tests for Python 3.8
+  unit-tests:
+    name: ${{ matrix.test_name }})
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Python 3.8 with Pydantic 1.x (default)
+          - test_name: "Run unit tests for Python 3.8 with Pydantic 1.x"
+            python_version: ${{ env.PYTHON_VERSION_3_8 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_1 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
+          # Python 3.9 with Pydantic 1.x (default)
+          - test_name: "Run unit tests for Python 3.9 with Pydantic 1.x"
+            python_version: ${{ env.PYTHON_VERSION_3_9 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_1 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P1 }}
+          # Python 3.10 with Pydantic 1.x (default)
+          - test_name: "Run unit tests for Python 3.10 with Pydantic 1.x"
+            python_version: ${{ env.PYTHON_VERSION_3_10 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_1 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P1 }}
+          # Python 3.11 with Pydantic 1.x (default)
+          - test_name: "Run unit tests for Python 3.11 with Pydantic 1.x"
+            python_version: ${{ env.PYTHON_VERSION_3_11 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_1 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11_P1 }}
+          # Python 3.12 with Pydantic 1.x (default)
+          - test_name: "Run unit tests for Python 3.12 with Pydantic 1.x"
+            python_version: ${{ env.PYTHON_VERSION_3_12 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_1 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_12_P1 }}
+
+          # Python 3.8 with Pydantic 2.x
+          - test_name: "Run unit tests for Python 3.8 with Pydantic 2.x"
+            python_version: ${{ env.PYTHON_VERSION_3_8 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_2 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
+          # Python 3.9 with Pydantic 2.x
+          - test_name: "Run unit tests for Python 3.9 with Pydantic 2.x"
+            python_version: ${{ env.PYTHON_VERSION_3_9 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_2 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P2 }}
+          # Python 3.10 with Pydantic 2.x
+          - test_name: "Run unit tests for Python 3.10 with Pydantic 2.x"
+            python_version: ${{ env.PYTHON_VERSION_3_10 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_2 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P2 }}
+          # Python 3.11 with Pydantic 2.x
+          - test_name: "Run unit tests for Python 3.11 with Pydantic 2.x"
+            python_version: ${{ env.PYTHON_VERSION_3_11 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_2 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11_P2 }}
+          # Python 3.12 with Pydantic 2.x
+          - test_name: "Run unit tests for Python 3.12 with Pydantic 2.x"
+            python_version: ${{ env.PYTHON_VERSION_3_12 }}
+            pydantic-version: ${{ env.PYDANTIC_VERSION_2 }}
+            test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_12_P2 }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Run unit tests for Python 3.8
+      - name: Run unit tests
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: ${{ env.PYTHON_VERSION_3_8 }}
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
+          python-version: ${{ matrix.python_version }}
+          pydantic-version: ${{ matrix.pydantic_version }}
+          test-report-file: ${{ matrix.test_report_file }}
 
-  unit-tests-python-3-9:
-    name: Run unit tests for Python 3.9
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.9
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_9 }}
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P1 }}
-
-  unit-tests-python-3-10:
-    name: Run unit tests for Python 3.10
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.10
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_10 }}
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P1 }}
-
-  unit-tests-python-3-11:
-    name: Run unit tests for Python 3.11
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.11
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_11 }}
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11_P1 }}
-
-  unit-tests-python-3-12:
-    name: Run unit tests for Python 3.12
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.12
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_12 }}
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_12_P1 }}
-
-  unit-tests-python-3-8-pydantic-2:
-    name: Run unit tests for Python 3.8 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.8
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_8 }}
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
-
-  unit-tests-python-3-9-pydantic-2:
-    name: Run unit tests for Python 3.9 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.9
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_9 }}
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P2 }}
-
-  unit-tests-python-3-10-pydantic-2:
-    name: Run unit tests for Python 3.10 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.10
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_10 }}
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P2 }}
-
-  unit-tests-python-3-11-pydantic-2:
-    name: Run unit tests for Python 3.11 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.11
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_11 }}
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11_P2 }}
-
-  unit-tests-python-3-12-pydantic-2:
-    name: Run unit tests for Python 3.12 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.12
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: ${{ env.PYTHON_VERSION_3_12 }}
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_12_P2 }}
 
   integration-tests-python-3-11:
     name: Run integration tests for Python 3.11
@@ -202,39 +140,19 @@ jobs:
   publish-test-reports:
       name: Publish test reports
       runs-on: ubuntu-24.04
-      needs: [
-        unit-tests-python-3-8,
-        unit-tests-python-3-9,
-        unit-tests-python-3-10,
-        unit-tests-python-3-11,
-        integration-tests-python-3-11,
-        ]
+      needs: [unit-tests, integration-tests-python-3-11]
       if: success() || failure()
 
       steps:
-        - name: Download unit test report Python 3.8
+        - name: Download all unit test reports
           uses: actions/download-artifact@v4
           with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
-
-        - name: Download unit test report Python 3.9
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
-
-        - name: Download unit test report Python 3.10
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
-
-        - name: Download unit test report Python 3.11
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
+            # This will download all artifacts uploaded by the 'unit-tests' job.
+            # Each artifact will be downloaded into a subdirectory named after the artifact.
+            # For example, 'unit-test-report-python3_8_p1.xml' will be in './unit-test-report-python3_8_p1.xml/unit-test-report-python3_8_p1.xml'
+            # We use a pattern to download all artifacts whose names start with 'unit-test-report-python'
+            name: unit-test-report-python*
+            path: unit-test-reports # Download all into a common directory
 
         - name: Download integration test report Python 3.11
           uses: actions/download-artifact@v4
@@ -242,32 +160,11 @@ jobs:
             name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
             path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
 
-        - name: Publish unit test report Python 3.8
+        - name: Publish unit test reports
           uses: EnricoMi/publish-unit-test-result-action@v2
           if: always()
           with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}/*.xml
-            check_name: Unit test report
-
-        - name: Publish unit test report Python 3.9
-          uses: EnricoMi/publish-unit-test-result-action@v2
-          if: always()
-          with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}/*.xml
-            check_name: Unit test report
-
-        - name: Publish unit test report Python 3.10
-          uses: EnricoMi/publish-unit-test-result-action@v2
-          if: always()
-          with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}/*.xml
-            check_name: Unit test report
-
-        - name: Publish unit test report Python 3.11
-          uses: EnricoMi/publish-unit-test-result-action@v2
-          if: always()
-          with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}/*.xml
+            files: unit-test-reports/**/*.xml
             check_name: Unit test report
 
         - name: Publish integration test report Python 3.11

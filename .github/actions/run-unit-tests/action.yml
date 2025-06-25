@@ -22,10 +22,7 @@ runs:
         uses: ./.github/actions/setup-uv-environment
         with:
           python-version: ${{ inputs.python-version }}
-
-      - name: Install dev dependencies pre-commit hooks require
-        run: uv sync --frozen --extra dev
-        shell: bash
+          with-dev-dependencies: true
 
       - name: Override pydantic version
         if: ${{ inputs.pydantic-version }}

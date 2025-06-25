@@ -32,14 +32,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-
       - name: Setup uv environment
         uses: ./.github/actions/setup-uv-environment
         with:
           python-version: ${{ env.PYTHON_VERSION_3_8 }}
-
-      - name: Install dev dependencies pre-commit hooks require
-        run: uv sync --frozen --extra dev
+          with-dev-dependencies: true
 
       - name: Run linting, type checking and testing
         uses: pre-commit/action@v3.0.1

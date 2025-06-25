@@ -10,6 +10,11 @@ inputs:
     description: "UV version to use"
     default: 0.7.12
     required: false
+  with-dev-dependencies:
+    description: "Should UVi install dev dependencies"
+    type: boolean
+    default: false
+    required: false
 
 runs:
   using: "composite"
@@ -42,7 +47,10 @@ runs:
       if: steps.cached-uv.outputs.cache-hit != 'true'
       run: |
         uv venv --python ${{ inputs.python-version }}
-        uv sync --frozen
+        if [[ "${{ inputs.with-dev-dependancies }}" == "true" ]]; then
+          uv sync --frozen --extra dev
+        else
+          uv sync --frozen
       shell: bash
 
     - name: Active virtual environment
