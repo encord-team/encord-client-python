@@ -48,7 +48,7 @@ jobs:
         with:
           python-version: ${{ matrix.python.version }}
           pydantic-version: ${{ matrix.pydantic.version }}
-          test-report-file: unit-test-report-python${{ replace(matrix.python.major_minor, '.', '_') }}_${{ matrix.pydantic.suffix }}.xml
+          test-report-file: unit-test-report-python${{ matrix.python.major_minor }}_${{ matrix.pydantic.suffix }}.xml
 
 
   integration-tests-python-3-11:
