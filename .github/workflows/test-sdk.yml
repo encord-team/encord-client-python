@@ -54,13 +54,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml
-          path: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml
+          path: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}
 
       - name: Publish unit test report
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml/*.xml
+          files: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}/*.xml
           check_name: Unit test report
 
 
