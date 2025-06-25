@@ -43,7 +43,6 @@ runs:
 
 
     - name: Create virtual environment and install dependencies on cache miss
-      #      if: steps.setup-uv.outputs.cache-hit != 'true'
       if: steps.cached-uv.outputs.cache-hit != 'true'
       run: |
         uv venv --python ${{ inputs.python-version }}
@@ -51,6 +50,7 @@ runs:
           uv sync --frozen --extra dev
         else
           uv sync --frozen
+        fi
       shell: bash
 
     - name: Active virtual environment
