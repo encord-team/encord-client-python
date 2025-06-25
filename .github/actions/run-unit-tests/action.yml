@@ -23,6 +23,10 @@ runs:
         with:
           python-version: ${{ inputs.python-version }}
 
+      - name: Install dev dependencies pre-commit hooks require
+        run: uv sync --frozen --extra dev
+        shell: bash
+
       - name: Override pydantic version
         if: ${{ inputs.pydantic-version }}
         run: uv pip install pydantic==${{ inputs.pydantic-version }}
