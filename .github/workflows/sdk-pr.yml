@@ -36,17 +36,6 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION_3_8 }}
 
-#       - name: Run unit tests for Python 3.8 (Pydantic 1.x)
-#         uses: ./.github/actions/run-unit-tests
-#         with:
-#           python-version: 3.8.16
-#           pydantic-version: 1.10.14
-#           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
-
-#       - name: Publish unit test report Python 3.8 (Pydantic 1.x)
-#         uses: EnricoMi/publish-unit-test-result-action@v2
-#         if: always()
-
       - name: Install dev dependencies pre-commit hooks require
         run: uv sync --frozen --extra dev
 
@@ -55,111 +44,77 @@ jobs:
         with:
           extra_args: "--all-files --hook-stage=push"
 
-#       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
-#         uses: EnricoMi/publish-unit-test-result-action@v2
-#         if: always()
-#         with:
-#           files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
-#           check_name: Unit test report ((Pydantic 2.x)
+  unit-tests-python-3-8:
+    name: Run unit tests (Python 3.8, Pydantic 1.x)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-#   integration-tests-python-3-11:
-#     name: Run integration tests for Python 3.11
-#     runs-on: ubuntu-24.04
-#     steps:
-#       - name: Checkout repo
-#         uses: actions/checkout@v4
+      - name: Run unit tests for Python 3.8 (Pydantic 1.x)
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.8.16
+          pydantic-version: 1.10.14
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
 
-#       - name: Checkout backend repo
-#         uses: actions/checkout@v4
-#         with:
-#           repository: ${{ env.BACKEND_REPO }}
-#           token: ${{ env.BACKEND_ACCESS_TOKEN }}
-#           path: encord-backend
+      - name: Publish unit test report Python 3.8 (Pydantic 1.x)
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
+          check_name: Unit test report (Pydantic 1.x)
 
-#       - name: Run integration tests for Python 3.11
-#         uses: ./.github/actions/run-integration-tests
-#         with:
-#           python-version: 3.11.13
-#           integration-tests-location: ./encord-backend/projects/sdk-integration-tests
-#           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-#           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-#           private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-#           private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
-#           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
+  unit-tests-python-3-8-pydantic-2:
+    name: Run unit tests (Python 3.8, Pydantic 2.x)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-#       - name: Publish integration test report Python 3.11
-#         uses: EnricoMi/publish-unit-test-result-action@v2
+      - name: Run unit tests for Python 3.8 (Pydantic 2.x)
+        uses: ./.github/actions/run-unit-tests
+        with:
+          python-version: 3.8.16
+          pydantic-version: 2.6.1
+          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
 
-#
-#  unit-tests-python-3-8:
-#    name: Run unit tests (Python 3.8, Pydantic 1.x)
-#    runs-on: ubuntu-24.04
-#    steps:
-#      - name: Checkout repo
-#        uses: actions/checkout@v4
-#
-#      - name: Run unit tests for Python 3.8 (Pydantic 1.x)
-#        uses: ./.github/actions/run-unit-tests
-#        with:
-#          python-version: ${{ env.PYTHON_VERSION_3_8 }}
-#          pydantic-version: 1.10.14
-#          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
-#
-#      - name: Publish unit test report Python 3.8 (Pydantic 1.x)
-#        uses: EnricoMi/publish-unit-test-result-action@v2
-#        with:
-#          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
-#          check_name: Unit test report (Pydantic 1.x)
-#
-#  unit-tests-python-3-8-pydantic-2:
-#    name: Run unit tests (Python 3.8, Pydantic 2.x)
-#    runs-on: ubuntu-24.04
-#    steps:
-#      - name: Checkout repo
-#        uses: actions/checkout@v4
-#
-#      - name: Run unit tests for Python 3.8 (Pydantic 2.x)
-#        uses: ./.github/actions/run-unit-tests
-#        with:
-#          python-version: ${{ env.PYTHON_VERSION_3_8 }}
-#          pydantic-version: 2.6.1
-#          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
-#
-#      - name: Publish unit test report Python 3.8 (Pydantic 2.x)
-#        uses: EnricoMi/publish-unit-test-result-action@v2
-#        with:
-#          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
-#          check_name: Unit test report ((Pydantic 2.x)
-#
-#  integration-tests-python-3-11:
-#    name: Run integration tests for Python 3.11
-#    runs-on: ubuntu-24.04
-#    steps:
-#      - name: Checkout repo
-#        uses: actions/checkout@v4
-#
-#      - name: Checkout backend repo
-#        uses: actions/checkout@v4
-#        with:
-#          repository: ${{ env.BACKEND_REPO }}
-#          token: ${{ env.BACKEND_ACCESS_TOKEN }}
-#          path: encord-backend
-#
-#      - name: Run integration tests for Python 3.11
-#        uses: ./.github/actions/run-integration-tests
-#        with:
-#          python-version: ${{ env.PYTHON_VERSION_3_11 }}
-#          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
-#          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-#          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-#          private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-#          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
-#          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
-#
-#       - name: Publish integration test report Python 3.11
-#         uses: EnricoMi/publish-unit-test-result-action@v2
-#         if: always()
-#         with:
-#           files: ./encord-backend/projects/sdk-integration-tests/${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-#           check_name: SDK integration test report
+      - name: Publish unit test report Python 3.8 (Pydantic 2.x)
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
+          check_name: Unit test report ((Pydantic 2.x)
 
+
+  integration-tests-python-3-11:
+    name: Run integration tests for Python 3.11
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Checkout backend repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          path: encord-backend
+
+      - name: Run integration tests for Python 3.11
+        uses: ./.github/actions/run-integration-tests
+        with:
+          python-version: 3.11.13
+          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
+          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+          private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
+          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
+          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
+
+      - name: Publish integration test report Python 3.11
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: ./encord-backend/projects/sdk-integration-tests/${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+          check_name: SDK integration test report
