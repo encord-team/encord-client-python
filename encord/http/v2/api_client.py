@@ -111,6 +111,7 @@ class ApiClient:
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
         result_type: Optional[Type[T]],
+        allow_none: bool = False,
         allow_retries: bool = True,
     ) -> T:
         return self._request_with_payload(
@@ -119,6 +120,7 @@ class ApiClient:
             params=params,
             payload=payload,
             result_type=result_type,
+            allow_none=allow_none,
             allow_retries=allow_retries,
         )
 
