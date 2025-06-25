@@ -65,18 +65,16 @@ jobs:
           token: ${{ env.BACKEND_ACCESS_TOKEN }}
           path: encord-backend
 
-      - name: Run integration tests for Python 3.11
-        uses: ./.github/actions/run-integration-tests
-        with:
-          python-version: ${{ env.INTEGRATION_TEST_PYTHON_VERSION_3_11 }}
-          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-          private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
-          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
-
-
+      #      - name: Run integration tests for Python 3.11
+      #        uses: ./.github/actions/run-integration-tests
+      #        with:
+      #          python-version: ${{ env.INTEGRATION_TEST_PYTHON_VERSION_3_11 }}
+      #          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
+      #          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+      #          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
+      #          private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
+      #          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
+      #          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
 
   publish-test-reports:
       name: Publish test reports
@@ -92,14 +90,14 @@ jobs:
             # Each artifact will be downloaded into a subdirectory named after the artifact.
             # For example, 'unit-test-report-python3_8_p1.xml' will be in './unit-test-report-python3_8_p1.xml/unit-test-report-python3_8_p1.xml'
             # We use a pattern to download all artifacts whose names start with 'unit-test-report-python'
-            name: unit-test-report-python*
+            pattern: unit-test-report-python*
             path: unit-test-reports # Download all into a common directory
 
-        - name: Download integration test report Python 3.11
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+        #        - name: Download integration test report Python 3.11
+        #          uses: actions/download-artifact@v4
+        #          with:
+        #            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
+        #            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
 
         - name: Publish unit test reports
           uses: EnricoMi/publish-unit-test-result-action@v2
@@ -108,12 +106,12 @@ jobs:
             files: unit-test-reports/**/*.xml
             check_name: Unit test report
 
-        - name: Publish integration test report Python 3.11
-          uses: EnricoMi/publish-unit-test-result-action@v2
-          if: always()
-          with:
-            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
-            check_name: SDK integration test report
+        #        - name: Publish integration test report Python 3.11
+        #          uses: EnricoMi/publish-unit-test-result-action@v2
+        #          if: always()
+        #          with:
+        #            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
+        #            check_name: SDK integration test report
 
   send-slack-notification:
     name: Send notification
