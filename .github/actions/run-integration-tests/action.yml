@@ -4,7 +4,7 @@ description: 'Run the integration tests for a given Python version. These tests 
 inputs:
   python-version:
     description: 'Python version to use'
-    default: 3.11
+    default: 3.11.13
     required: false
   test-report-file:
     description: 'File name to save the test report in'
@@ -40,11 +40,11 @@ runs:
   using: "composite"
 
   steps:
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
+    - name: Setup uv environment
+      uses: ./.github/actions/setup-uv-environment
       with:
-        version: "0.7.11"
-        enable-cache: 'true'
+        python-version: ${{ inputs.python-version }}
+        with-dev-dependencies: true
 
     - name: Setup FFMPEG
       uses: FedericoCarboni/setup-ffmpeg@v2

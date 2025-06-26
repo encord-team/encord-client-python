@@ -64,9 +64,9 @@ assert pedicel_healthy_option is not None, "Option 'Healthy' not found under 'Pe
 pedicel_growth_alignment_option = pedicel_checklist_attribute.get_child_by_title(
     type_=Option, title="Good Growth and Alignment"
 )
-assert (
-    pedicel_growth_alignment_option is not None
-), "Option 'Good Growth and Alignment' not found under 'Pedicel Qualities?'"
+assert pedicel_growth_alignment_option is not None, (
+    "Option 'Good Growth and Alignment' not found under 'Pedicel Qualities?'"
+)
 
 # Get checklist attributes and options for Peduncle
 peduncle_checklist_attribute = ontology_structure.get_child_by_title(
@@ -83,9 +83,9 @@ assert peduncle_healthy_option is not None, "Option 'Healthy' not found under 'P
 peduncle_growth_alignment_option = peduncle_checklist_attribute.get_child_by_title(
     type_=Option, title="Good Growth and Alignment"
 )
-assert (
-    peduncle_growth_alignment_option is not None
-), "Option 'Good Growth and Alignment' not found under 'Peduncle Qualities?'"
+assert peduncle_growth_alignment_option is not None, (
+    "Option 'Good Growth and Alignment' not found under 'Peduncle Qualities?'"
+)
 
 # Get text attribute for specifying other floral axis types
 other_floral_axis_option_text_attribute = ontology_structure.get_child_by_title(

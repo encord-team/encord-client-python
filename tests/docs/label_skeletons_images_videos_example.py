@@ -921,9 +921,9 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                         if option:
                             checklist_answers.append(option)
                         else:
-                            assert (
-                                strawberry_type == "Other strawberry type"
-                            ), f"Invalid quality '{quality}' for strawberry type '{strawberry_type}'"
+                            assert strawberry_type == "Other strawberry type", (
+                                f"Invalid quality '{quality}' for strawberry type '{strawberry_type}'"
+                            )
 
                     if checklist_attribute and checklist_answers:
                         skeleton_object_instance.set_answer(

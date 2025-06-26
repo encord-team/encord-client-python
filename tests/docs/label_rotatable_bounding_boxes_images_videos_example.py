@@ -409,9 +409,9 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                     if option:
                         checklist_answers.append(option)
                     else:
-                        assert (
-                            persimmon_type == "Other persimmon type"
-                        ), f"Invalid quality '{quality}' for persimmon type '{persimmon_type}'"
+                        assert persimmon_type == "Other persimmon type", (
+                            f"Invalid quality '{quality}' for persimmon type '{persimmon_type}'"
+                        )
 
                 if checklist_attribute and checklist_answers:
                     rbbox_object_instance.set_answer(

@@ -6,8 +6,10 @@ on:
       - master
 
 env:
-  PYTHON: 3.8
-  POETRY: 1.8.3
+  PYTHON_VERSION_3_8: 3.8.18
+  PYTHON_VERSION_3_11: 3.11.13
+  PYDANTIC_VERSION_1: 1.10.22
+  PYDANTIC_VERSION_2: 2.10.6 # Latest Pydantic v2x that supports Python 3.8
   UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python-3_8_p1.xml
   UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python-3_8_p2.xml
   BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -27,11 +29,15 @@ jobs:
     name: Linting and type checking
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup root poetry environment
-        uses: ./.github/actions/setup-root-poetry-environment
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup uv environment
+        uses: ./.github/actions/setup-uv-environment
         with:
-          cache-key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          python-version: ${{ env.PYTHON_VERSION_3_8 }}
+          with-dev-dependencies: true
+
       - name: Run linting, type checking and testing
         uses: pre-commit/action@v3.0.1
         with:
@@ -47,8 +53,8 @@ jobs:
       - name: Run unit tests for Python 3.8 (Pydantic 1.x)
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.8.16
-          pydantic-version: 1.10.14
+          python-version: ${{ env.PYTHON_VERSION_3_8 }}
+          pydantic-version: ${{ env.PYDANTIC_VERSION_1 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
 
       - name: Publish unit test report Python 3.8 (Pydantic 1.x)
@@ -68,8 +74,8 @@ jobs:
       - name: Run unit tests for Python 3.8 (Pydantic 2.x)
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.8.16
-          pydantic-version: 2.6.1
+          python-version: ${{ env.PYTHON_VERSION_3_8 }}
+          pydantic-version: ${{ env.PYDANTIC_VERSION_2 }}
           test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
 
       - name: Publish unit test report Python 3.8 (Pydantic 2.x)
@@ -78,6 +84,7 @@ jobs:
         with:
           files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
           check_name: Unit test report ((Pydantic 2.x)
+
 
   integration-tests-python-3-11:
     name: Run integration tests for Python 3.11
@@ -96,7 +103,7 @@ jobs:
       - name: Run integration tests for Python 3.11
         uses: ./.github/actions/run-integration-tests
         with:
-          python-version: 3.11.13
+          python-version: ${{ env.PYTHON_VERSION_3_11 }}
           integration-tests-location: ./encord-backend/projects/sdk-integration-tests
           test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
           private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}

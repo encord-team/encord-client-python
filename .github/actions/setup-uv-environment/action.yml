@@ -1,0 +1,59 @@
+name: "Setup build environment"
+description: "Sets up Python, UV and dependencies"
+
+inputs:
+  python-version:
+    description: "Python version to use"
+    default: 3.8.18
+    required: false
+  uv-version:
+    description: "UV version to use"
+    default: 0.7.12
+    required: false
+  with-dev-dependencies:
+    description: "Should UV install dev dependencies"
+    type: boolean
+    default: false
+    required: false
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Set up python
+      uses: useblacksmith/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install uv
+      id: setup-uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: ${{ inputs.uv-version }}
+        enable-cache: "false"
+
+    - name: Restore uv cache
+      id: cached-uv
+      uses: useblacksmith/cache@v5
+      # UV_CACHE_DIR env variable is set by astral-sh/setup-uv@v6
+      with:
+        path: |
+          ${{ env.UV_CACHE_DIR }}
+          .venv
+        key: uv-${{ runner.os }}-${{ runner.arch }}-${{ inputs.python-version }}-${{ hashFiles('**/uv.lock', '**/pyproject.toml') }}
+
+    - name: Create virtual environment and install dependencies on cache miss
+      if: steps.cached-uv.outputs.cache-hit != 'true'
+      run: |
+        uv venv --python ${{ inputs.python-version }}
+        if [[ "${{ inputs.with-dev-dependencies }}" == "true" ]]; then
+          uv sync --frozen --extra dev
+        else
+          uv sync --frozen
+        fi
+      shell: bash
+
+    - name: Active virtual environment
+      run: |
+        echo "VIRTUAL_ENV=.venv" >> $GITHUB_ENV
+      shell: bash

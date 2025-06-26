@@ -109,9 +109,9 @@ for label_row in label_rows:
         annotations = object_instance.get_annotations()
         assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
 
-        assert (
-            object_instance.ontology_item and object_instance.ontology_item.attributes
-        ), f"No attributes found for object {object_instance.object_hash}"
+        assert object_instance.ontology_item and object_instance.ontology_item.attributes, (
+            f"No attributes found for object {object_instance.object_hash}"
+        )
 
         for annotation in annotations:
             for attribute in object_instance.ontology_item.attributes:

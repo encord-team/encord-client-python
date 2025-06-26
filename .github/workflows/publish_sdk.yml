@@ -5,8 +5,7 @@ on:
     types: [ published ]
 
 env:
-  PYTHON: 3.8
-  POETRY: 1.8.3
+  PYTHON_VERSION: 3.8.18
   PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
 concurrency:
@@ -21,28 +20,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Setup uv environment
+        uses: ./.github/actions/setup-uv-environment
         with:
-          python-version: ${{ env.PYTHON }}
-
-      - name: Setup Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY }}
-          virtualenvs-in-project: true
-
-      - name: Install dependencies
-        run: |
-          poetry install --no-interaction
+          python-version: ${{ env.PYTHON_VERSION }}
+          with-dev-dependencies: false
 
       - name: Build SDK
-        run: poetry build
+        run: uv build --sdist --wheel
 
       - name: Publish SDK
         run: |
-          poetry config pypi-token.pypi ${{ env.PYPI_TOKEN }}
-          poetry publish
+          uv pip install twine
+          uv publish --token ${{ env.PYPI_TOKEN }}
+        shell: bash
 
   send-slack-notification:
     name: Send notification
