@@ -59,4 +59,4 @@ class TimeSpent(BaseDTO):
     dataset_uuid: UUID
     dataset_title: str
     workflow_task_uuid: Optional[UUID] = None
-    workflow_stage: BaseWorkflowNode
+    workflow_stage: Optional[BaseWorkflowNode] = None
