@@ -74,5 +74,5 @@ runs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: ./encord-backend/projects/sdk-integration-tests/${{ inputs.test-report-file }}
+        files: ${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
         check_name: SDK integration test report
