@@ -38,4 +38,4 @@ runs:
         if: always()
         with:
           files: ${{ inputs.test-report-file }}
-          check_name: Unit test report (Python ${{ inputs.python-version }}, Pydantic ${{ inputs.python-version }})
+          check_name: Unit test report (Python ${{ inputs.python-version }}, Pydantic ${{ inputs.pydantic-version }})
