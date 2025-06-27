@@ -53,31 +53,61 @@ groups = [
     {
         "name": "group-001",
         "uuids": {
-            "instructions": UUID("00000000-0000-0000-0000-000000000000"), # Replace with File ID. This data unit appears at the top of the Label Editor.
-            "top-left": UUID("11111111-1111-1111-1111-111111111111"), # Replace with File ID. This data unit appears under the "instructions" data unit at the top left of the Label Editor.
-            "top-right": UUID("22222222-2222-2222-2222-222222222222"), # Replace with File ID. This data unit appears under the "instructions" data unit at the top right of the Label Editor.
-            "bottom-left": UUID("33333333-3333-3333-3333-333333333333"), # Replace with File ID. This data unit appears under the top left data unit in the Label Editor.
-            "bottom-right": UUID("44444444-4444-4444-4444-444444444444"), # Replace with File ID. This data unit appears under the top right data unit in the Label Editor.
+            "instructions": UUID(
+                "00000000-0000-0000-0000-000000000000"
+            ),  # Replace with File ID. This data unit appears at the top of the Label Editor.
+            "top-left": UUID(
+                "11111111-1111-1111-1111-111111111111"
+            ),  # Replace with File ID. This data unit appears under the "instructions" data unit at the top left of the Label Editor.
+            "top-right": UUID(
+                "22222222-2222-2222-2222-222222222222"
+            ),  # Replace with File ID. This data unit appears under the "instructions" data unit at the top right of the Label Editor.
+            "bottom-left": UUID(
+                "33333333-3333-3333-3333-333333333333"
+            ),  # Replace with File ID. This data unit appears under the top left data unit in the Label Editor.
+            "bottom-right": UUID(
+                "44444444-4444-4444-4444-444444444444"
+            ),  # Replace with File ID. This data unit appears under the top right data unit in the Label Editor.
         },
     },
     {
         "name": "group-002",
         "uuids": {
-            "instructions": UUID("55555555-5555-5555-5555-555555555555"), # Replace with File ID. This data unit appears at the top of the Label Editor.
-            "top-left": UUID("66666666-6666-6666-6666-666666666666"), # Replace with File ID. This data unit appears under the "instructions" data unit at the top left of the Label Editor.
-            "top-right": UUID("77777777-7777-7777-7777-777777777777"), # Replace with File ID. This data unit appears under the "instructions" data unit at the top right of the Label Editor.
-            "bottom-left": UUID("88888888-8888-8888-8888-888888888888"), # Replace with File ID. This data unit appears under the top left data unit in the Label Editor.
-            "bottom-right": UUID("99999999-9999-9999-9999-999999999999"), # Replace with File ID. This data unit appears under the top right data unit in the Label Editor.
+            "instructions": UUID(
+                "55555555-5555-5555-5555-555555555555"
+            ),  # Replace with File ID. This data unit appears at the top of the Label Editor.
+            "top-left": UUID(
+                "66666666-6666-6666-6666-666666666666"
+            ),  # Replace with File ID. This data unit appears under the "instructions" data unit at the top left of the Label Editor.
+            "top-right": UUID(
+                "77777777-7777-7777-7777-777777777777"
+            ),  # Replace with File ID. This data unit appears under the "instructions" data unit at the top right of the Label Editor.
+            "bottom-left": UUID(
+                "88888888-8888-8888-8888-888888888888"
+            ),  # Replace with File ID. This data unit appears under the top left data unit in the Label Editor.
+            "bottom-right": UUID(
+                "99999999-9999-9999-9999-999999999999"
+            ),  # Replace with File ID. This data unit appears under the top right data unit in the Label Editor.
         },
     },
     {
         "name": "group-003",
         "uuids": {
-            "instructions": UUID("12312312-3123-1231-2312-312312312312"), # Replace with File ID. This data unit appears at the top of the Label Editor.
-            "top-left": UUID("23232323-2323-2323-2323-232323232323"), # Replace with File ID. This data unit appears under the "instructions" data unit at the top left of the Label Editor.
-            "top-right": UUID("31313131-3131-3131-3131-313131313131"), # Replace with File ID. This data unit appears under the "instructions" data unit at the top right of the Label Editor.
-            "bottom-left": UUID("45645645-6456-4564-5645-645645645645"), # Replace with File ID. This data unit appears under the top left data unit in the Label Editor.
-            "bottom-right": UUID("56565656-6565-5656-6565-656565656565 "), # Replace with File ID. This data unit appears under the top right data unit in the Label Editor.
+            "instructions": UUID(
+                "12312312-3123-1231-2312-312312312312"
+            ),  # Replace with File ID. This data unit appears at the top of the Label Editor.
+            "top-left": UUID(
+                "23232323-2323-2323-2323-232323232323"
+            ),  # Replace with File ID. This data unit appears under the "instructions" data unit at the top left of the Label Editor.
+            "top-right": UUID(
+                "31313131-3131-3131-3131-313131313131"
+            ),  # Replace with File ID. This data unit appears under the "instructions" data unit at the top right of the Label Editor.
+            "bottom-left": UUID(
+                "45645645-6456-4564-5645-645645645645"
+            ),  # Replace with File ID. This data unit appears under the top left data unit in the Label Editor.
+            "bottom-right": UUID(
+                "56565656-6565-5656-6565-656565656565 "
+            ),  # Replace with File ID. This data unit appears under the top right data unit in the Label Editor.
         },
     },
     # More groups...
