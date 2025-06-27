@@ -4,12 +4,10 @@ description: 'Run the unit tests for a given Python version'
 inputs:
   python-version:
     description: 'Python version to use'
-    default: 3.8.18
-    required: false
+    required: true
   pydantic-version:
     description: 'Pydantic version to use'
-    default: ''
-    required: false
+    required: true
   test-report-file:
     description: 'File name to save the test report in'
     required: true
@@ -35,9 +33,9 @@ runs:
           uv run python -m pytest tests --verbose --junitxml=${{ inputs.test-report-file }}
         shell: bash
 
-      - name: Upload report
-        uses: actions/upload-artifact@v4
+      - name: Publish unit test report
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          name: ${{ inputs.test-report-file }}
-          path: ${{ inputs.test-report-file }}
+          files: ${{ inputs.test-report-file }}
+          check_name: Unit test report
