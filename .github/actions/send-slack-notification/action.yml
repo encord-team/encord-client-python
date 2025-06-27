@@ -20,7 +20,7 @@ inputs:
   failure-message:
     description: "Message body on failure"
     required: false
-    default: ''
+    default: 'This pipeline has failed!'
 
 runs:
   using: "composite"

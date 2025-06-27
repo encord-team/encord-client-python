@@ -7,15 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  INTEGRATION_TEST_PYTHON_VERSION_3_11: 3.11.13
-  INTEGRATION_TEST_REPORT_PYTHON_3_11: integration-test-report-python3_11.xml
-  INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
-  INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT: ${{ secrets.SDK_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-  INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
-
-  BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
   BACKEND_REPO: cord-team/cord-backend
-
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
@@ -34,6 +26,7 @@ jobs:
           - { version: '3.10.18', major_minor: '3.10', major_minor_test_report: '3_10' }
           - { version: '3.11.13', major_minor: '3.11', major_minor_test_report: '3_11' }
           - { version: '3.12.11', major_minor: '3.12', major_minor_test_report: '3_12' }
+          - { version: '3.13.5', major_minor: '3.13', major_minor_test_report: '3_13' }
 
         pydantic:
           - { version: '1.10.22', suffix: 'p1' }
@@ -49,22 +42,9 @@ jobs:
           pydantic-version: ${{ matrix.pydantic.version }}
           test-report-file: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml
 
-      - name: Download unit test report
-        uses: actions/download-artifact@v4
-        with:
-          name: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml
-          path: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}
 
-      - name: Publish unit test report
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          files: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}/*.xml
-          check_name: Unit test report
-
-
-  integration-tests-python-3-11:
-    name: Run integration tests for Python 3.11
+  integration-tests:
+    name: Run integration tests
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
@@ -74,39 +54,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BACKEND_REPO }}
-          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          token: ${{ secrets.ACCESS_TOKEN }}
           path: encord-backend
 
-      - name: Run integration tests for Python 3.11
+      - name: Run integration tests
         uses: ./.github/actions/run-integration-tests
         with:
-          python-version: ${{ env.INTEGRATION_TEST_PYTHON_VERSION_3_11 }}
-          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-          private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
+          private-key: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+          private-key-service-account: ${{ secrets.SDK_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
+          private-key-non-org: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
-
-      - name: Download integration test report Python 3.11
-        uses: actions/download-artifact@v4
-        if: always()
-        with:
-          name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-          path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-
-      - name: Publish integration test report Python 3.11
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
-          check_name: SDK integration test report
 
 
   send-slack-notification:
     name: Send notification
     runs-on: ubuntu-24.04
-    needs: [ unit-tests, integration-tests-python-3-11 ]
+    needs: [ unit-tests, integration-tests ]
     if: always()
     env:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -122,4 +85,3 @@ jobs:
         with:
           success-parameter: ${{ env.WORKFLOW_CONCLUSION }}
           failure-channel: ${{ secrets.SLACK_FAILURE_CHANNEL_ID }}
-          failure-message: This pipeline has failed!
