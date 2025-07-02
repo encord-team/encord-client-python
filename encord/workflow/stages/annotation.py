@@ -182,7 +182,10 @@ class AnnotationTask(WorkflowTask):
 
     def get_label_row_v2(self) -> LabelRowV2:
         _, _, project_client = self._get_client_data()
-        return project_client.list_label_rows_v2(data_hashes=[self.data_hash])[0]
+        label_rows = project_client.list_label_rows_v2(data_hashes=[self.data_hash])
+        if not label_rows:
+            raise ValueError(f"Label row not found for data_hash: {self.data_hash}")
+        return label_rows[0]
 
     @property
     def issues(self) -> TaskIssues:
