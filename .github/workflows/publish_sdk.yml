@@ -26,6 +26,9 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           with-dev-dependencies: false
 
+      - name: uv Version Bump
+        run: uv version ${{ github.ref_name }}
+
       - name: Build SDK
         run: uv build --sdist --wheel
 
