@@ -429,17 +429,17 @@ class DataRow(dict, Formatter):
         else:
             raise EncordException("Could not fetch data. The DataRow is in an invalid state.")
 
-    def get_storage_item(self):
+    def get_storage_item(self) -> "StorageItem":
         from encord.storage import StorageItem
 
-        """Returns the storage item associated with the label row.
+        """Returns the storage item associated with the data row.
         This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
         if self.backing_item_uuid is None:
-            raise Exception("Storage item is not found for the folder")
+            raise EncordException("Storage item is not found for the data row")
 
         if self["_api_client"] is None:
-            raise Exception("API client is not available")
+            raise EncordException("API client is not available")
 
         return StorageItem._get_item(
             api_client=self["_api_client"],
