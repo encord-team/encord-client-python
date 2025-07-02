@@ -61,7 +61,9 @@ class FinalStage(WorkflowStageBase):
             data_title_contains=data_title,
         )
 
-        yield from self._workflow_client.get_tasks(self.uuid, params, type_=FinalStageTask)
+        for task in self._workflow_client.get_tasks(self.uuid, params, type_=FinalStageTask):
+            task._project_client = self._project_client
+            yield task
 
 
 class FinalStageTask(WorkflowTask):

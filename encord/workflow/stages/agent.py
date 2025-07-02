@@ -60,7 +60,7 @@ class AgentTask(WorkflowTask):
         if not pathway_name and not pathway_uuid:
             raise ValueError("Either `pathway_name` or `pathway_uuid` parameter must be provided.")
 
-        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client, stage_uuid, _ = self._get_client_data()
         workflow_client.action(
             stage_uuid,
             _ActionPathway(
@@ -130,4 +130,5 @@ class AgentStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=AgentTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
+            task._project_client = self._project_client
             yield task

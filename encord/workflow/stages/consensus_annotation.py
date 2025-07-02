@@ -73,6 +73,7 @@ class ConsensusAnnotationStage(WorkflowStageBase):
             for subtask in task.subtasks:
                 subtask._stage_uuid = self.uuid
                 subtask._workflow_client = self._workflow_client
+                subtask._project_client = self._project_client
             yield task
 
 

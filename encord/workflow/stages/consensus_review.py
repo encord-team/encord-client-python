@@ -86,6 +86,7 @@ class ConsensusReviewStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ConsensusReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
+            task._project_client = self._project_client
             task._task_issues = TaskIssues(
                 api_client=self._workflow_client.api_client,
                 project_uuid=self._workflow_client.project_hash,
@@ -166,7 +167,7 @@ class ConsensusReviewTask(WorkflowTask):
 
         None
         """
-        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client, stage_uuid, _ = self._get_client_data()
         workflow_client.action(
             stage_uuid,
             _ActionApprove(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
@@ -192,7 +193,7 @@ class ConsensusReviewTask(WorkflowTask):
 
         None
         """
-        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client, stage_uuid, _ = self._get_client_data()
         workflow_client.action(
             stage_uuid,
             _ActionReject(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
@@ -211,7 +212,7 @@ class ConsensusReviewTask(WorkflowTask):
 
         None
         """
-        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client, stage_uuid, _ = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
@@ -225,7 +226,7 @@ class ConsensusReviewTask(WorkflowTask):
 
         None
         """
-        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client, stage_uuid, _ = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
 
     @property
