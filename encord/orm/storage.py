@@ -758,7 +758,28 @@ class JobStatus(CamelStrEnum):
 
 class ReencodeVideoItemsResponse(BaseDTO):
     status: JobStatus
-    result: Optional[Union[list, dict]]
+    result: Optional[List]
+
+
+class ReencodeVideoItemsGetResultLongPollingParams(BaseDTO):
+    timeout_seconds: int
+
+
+class ReencodeVideoItemsGetResultLongPollingStatus(CamelStrEnum):
+    DONE = auto()
+    ERROR = auto()
+    PENDING = auto()
+
+
+class ReencodeVideoItemsGetResultLongPollingResultItem(BaseDTO):
+    item_uuid: UUID
+    url: str
+    signed_url: str
+
+
+class ReencodeVideoItemsGetResultLongPollingResponse(BaseDTO):
+    status: ReencodeVideoItemsGetResultLongPollingStatus
+    storage_items: Optional[List[ReencodeVideoItemsGetResultLongPollingResultItem]]
 
 
 class StorageItemsMigratePayload(BaseDTO):

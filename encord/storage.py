@@ -41,10 +41,15 @@ from encord.orm.storage import (
     FoldersSortBy,
     GetItemParams,
     GetItemsBulkPayload,
+    JobStatus,
     ListItemsParams,
     PatchFolderPayload,
     PatchItemPayload,
     PathElement,
+    ReencodeVideoItemsGetResultLongPollingParams,
+    ReencodeVideoItemsGetResultLongPollingResponse,
+    ReencodeVideoItemsGetResultLongPollingResultItem,
+    ReencodeVideoItemsGetResultLongPollingStatus,
     ReencodeVideoItemsRequest,
     ReencodeVideoItemsResponse,
     StorageFolderSummary,
@@ -59,6 +64,10 @@ from encord.orm.storage import (
 logger = logging.getLogger(__name__)
 
 STORAGE_BUNDLE_CREATE_LIMIT = 1000
+
+REENCODE_LONG_POLLING_RESPONSE_RETRY_N = 3
+REENCODE_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS = 10
+REENCODE_LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 
 
 class StorageFolder:
@@ -346,9 +355,96 @@ class StorageFolder:
         Returns:
             ReencodeVideoItemsResponse: Response object containing the status of the re-encoding process.
         """
-        return self._api_client.get(
-            f"/storage/items/reencode/{process_hash}", params=None, result_type=ReencodeVideoItemsResponse
+
+        res = self._api_client.get(
+            f"/storage/items/reencode/{process_hash}/long-polling",
+            params=ReencodeVideoItemsGetResultLongPollingParams(timeout_seconds=0),
+            result_type=ReencodeVideoItemsGetResultLongPollingResponse,
         )
+
+        if res.status == ReencodeVideoItemsGetResultLongPollingStatus.DONE:
+            return ReencodeVideoItemsResponse(
+                status=JobStatus.DONE,
+                result=[
+                    {
+                        "bucket_path": x.url,
+                        "item_uuid": x.item_uuid,
+                        "signed_url": x.signed_url,
+                        "data_hash": None,
+                    }
+                    for x in res.storage_items
+                ],
+            )
+        elif res.status == ReencodeVideoItemsGetResultLongPollingStatus.ERROR:
+            return ReencodeVideoItemsResponse(
+                status=JobStatus.ERROR,
+                result=None,
+            )
+        elif res.status == ReencodeVideoItemsGetResultLongPollingStatus.PENDING:
+            return ReencodeVideoItemsResponse(
+                status=JobStatus.SUBMITTED,
+                result=None,
+            )
+        else:
+            raise ValueError(f"{res.status=} not supported")
+
+    def re_encode_videos_get_result(
+        self,
+        reencode_job_uuid: UUID,
+        *,
+        timeout_seconds: int = 1 * 24 * 60 * 60,  # 1 day
+    ) -> list[ReencodeVideoItemsGetResultLongPollingResultItem]:
+        failed_requests_count = 0
+        polling_start_timestamp = time.perf_counter()
+
+        while True:
+            try:
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                logger.info(f"re_encode_videos_get_result started polling call {polling_elapsed_seconds=}")
+                tmp_res = self._api_client.get(
+                    f"/storage/items/reencode/{reencode_job_uuid}/long-polling",
+                    params=ReencodeVideoItemsGetResultLongPollingParams(
+                        timeout_seconds=min(
+                            polling_available_seconds,
+                            REENCODE_LONG_POLLING_MAX_REQUEST_TIME_SECONDS,
+                        ),
+                    ),
+                    result_type=ReencodeVideoItemsGetResultLongPollingResponse,
+                )
+
+                if tmp_res.status == ReencodeVideoItemsGetResultLongPollingStatus.DONE:
+                    logger.info(f"reencode job completed with {reencode_job_uuid=}.")
+
+                polling_elapsed_seconds = ceil(time.perf_counter() - polling_start_timestamp)
+                polling_available_seconds = max(0, timeout_seconds - polling_elapsed_seconds)
+
+                if polling_available_seconds == 0 or tmp_res.status in [
+                    ReencodeVideoItemsGetResultLongPollingStatus.DONE,
+                    ReencodeVideoItemsGetResultLongPollingStatus.ERROR,
+                ]:
+                    res = tmp_res
+                    break
+
+                failed_requests_count = 0
+            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+                failed_requests_count += 1
+
+                if failed_requests_count >= REENCODE_LONG_POLLING_RESPONSE_RETRY_N:
+                    raise
+
+                time.sleep(REENCODE_LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+
+        if res.status == ReencodeVideoItemsGetResultLongPollingStatus.DONE:
+            if res.storage_items is None:
+                raise ValueError(f"{type(res.urls)=}, res.storage_items should not be None with DONE status")
+
+            return res.storage_items
+        elif res.status == ReencodeVideoItemsGetResultLongPollingStatus.ERROR:
+            raise ValueError(f"reencode job failed, {reencode_job_uuid=}, please contact support")
+        else:
+            raise ValueError(f"{res.status=}, only DONE and ERROR status is expected after successful long polling")
 
     def create_dicom_series(
         self,
