@@ -17,6 +17,8 @@ from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
+
+# from encord.orm.storage import StorageItem
 from encord.utilities.common import _get_dict_without_none_keys
 
 
@@ -215,6 +217,7 @@ class DataRow(dict, Formatter):
                 "duration": duration,
                 "client_metadata": client_metadata,
                 "_querier": None,
+                "_api_client": None,
                 "images_data": parsed_images,
                 "signed_url": signed_url,
                 "is_optimised_image_group": is_optimised_image_group,
@@ -425,6 +428,24 @@ class DataRow(dict, Formatter):
 
         else:
             raise EncordException("Could not fetch data. The DataRow is in an invalid state.")
+
+    def get_storage_item(self):
+        from encord.storage import StorageItem
+
+        """Returns the storage item associated with the label row.
+        This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
+        """
+        if self.backing_item_uuid is None:
+            raise Exception("Storage item is not found for the folder")
+
+        if self["_api_client"] is None:
+            raise Exception("API client is not available")
+
+        return StorageItem._get_item(
+            api_client=self["_api_client"],
+            item_uuid=self.backing_item_uuid,
+            get_signed_url=False,
+        )
 
     def save(self) -> None:
         """Sync local state to the server, if updates are made. This is a blocking function.

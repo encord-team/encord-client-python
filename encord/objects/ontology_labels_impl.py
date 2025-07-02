@@ -75,6 +75,7 @@ from encord.orm.label_row import (
     LabelStatus,
     WorkflowGraphNode,
 )
+from encord.storage import StorageItem
 from encord.utilities.type_utilities import exhaustive_guard
 
 log = logging.getLogger(__name__)
@@ -485,6 +486,18 @@ class LabelRowV2:
 
         """
         return self._label_row_read_only_data.assigned_user_email
+
+    def get_storage_item(self) -> StorageItem:
+        """Returns the storage item associated with the label row.
+        This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
+        """
+        if self._label_row_read_only_data.backing_item_uuid is None:
+            raise LabelRowError("Storage item is not found for the label row")
+        return StorageItem._get_item(
+            api_client=self._project_client._api_client,
+            item_uuid=self._label_row_read_only_data.backing_item_uuid,
+            get_signed_url=False,
+        )
 
     def initialise_labels(
         self,

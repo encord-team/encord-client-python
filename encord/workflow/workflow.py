@@ -34,17 +34,29 @@ WorkflowStage = Annotated[
 ]
 
 
-def _construct_stage(workflow_client: WorkflowClient, node: Union[WorkflowAgentNode, WorkflowNode]) -> WorkflowStage:
+def _construct_stage(
+    workflow_client: WorkflowClient, node: Union[WorkflowAgentNode, WorkflowNode], project_client
+) -> WorkflowStage:
     if node.stage_type == WorkflowStageType.ANNOTATION:
-        return AnnotationStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
+        return AnnotationStage(
+            uuid=node.uuid, title=node.title, _workflow_client=workflow_client, _project_client=project_client
+        )
     elif node.stage_type == WorkflowStageType.REVIEW:
-        return ReviewStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
+        return ReviewStage(
+            uuid=node.uuid, title=node.title, _workflow_client=workflow_client, _project_client=project_client
+        )
     elif node.stage_type == WorkflowStageType.CONSENSUS_ANNOTATION:
-        return ConsensusAnnotationStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
+        return ConsensusAnnotationStage(
+            uuid=node.uuid, title=node.title, _workflow_client=workflow_client, _project_client=project_client
+        )
     elif node.stage_type == WorkflowStageType.CONSENSUS_REVIEW:
-        return ConsensusReviewStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
+        return ConsensusReviewStage(
+            uuid=node.uuid, title=node.title, _workflow_client=workflow_client, _project_client=project_client
+        )
     elif node.stage_type == WorkflowStageType.DONE:
-        return FinalStage(uuid=node.uuid, title=node.title, _workflow_client=workflow_client)
+        return FinalStage(
+            uuid=node.uuid, title=node.title, _workflow_client=workflow_client, _project_client=project_client
+        )
     elif node.stage_type == WorkflowStageType.AGENT:
         assert isinstance(node, WorkflowAgentNode)
         return AgentStage(
@@ -55,6 +67,7 @@ def _construct_stage(workflow_client: WorkflowClient, node: Union[WorkflowAgentN
                 for pathway in node.pathways
             ],
             _workflow_client=workflow_client,
+            _project_client=project_client,
         )
     else:
         raise AssertionError(f"Unknown stage type: {node.stage_type}")
@@ -85,10 +98,11 @@ class Workflow:
     Workflow class in Projects.
     """
 
-    def __init__(self, api_client: ApiClient, project_hash: UUID, workflow_orm: WorkflowDTO):
+    def __init__(self, api_client: ApiClient, project_hash: UUID, workflow_orm: WorkflowDTO, project_client):
+        self._project_client = project_client
         workflow_client = WorkflowClient(api_client, project_hash)
 
-        self.stages = [_construct_stage(workflow_client, stage) for stage in workflow_orm.stages]
+        self.stages = [_construct_stage(workflow_client, stage, self._project_client) for stage in workflow_orm.stages]
 
     def get_stage(
         self,

@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
+from typing import TYPE_CHECKING, Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
 from uuid import UUID
 
 from encord.http.bundle import Bundle, bundled_operation
 from encord.http.v2.api_client import ApiClient
 from encord.issues.issue_client import TaskIssues
 from encord.orm.base_dto import BaseDTO, PrivateAttr
+
+if TYPE_CHECKING:
+    from encord.project import Project
 
 
 class TasksQueryParams(BaseDTO):
@@ -18,6 +21,7 @@ class TasksQueryParams(BaseDTO):
 @dataclass(frozen=True)
 class WorkflowStageBase:
     _workflow_client: WorkflowClient = field(compare=False, hash=False)
+    _project_client: "Project" = field(compare=False, hash=False)
     uuid: UUID
     title: str
 
@@ -29,15 +33,17 @@ class WorkflowTask(BaseDTO):
     _stage_uuid: Optional[UUID] = PrivateAttr(None)
     _workflow_client: Optional[WorkflowClient] = PrivateAttr(None)
     _task_issues: Optional[TaskIssues] = PrivateAttr(None)
+    _project_client: Optional["Project"] = PrivateAttr(None)
 
     uuid: UUID
     created_at: datetime
     updated_at: datetime
 
-    def _get_client_data(self) -> Tuple[WorkflowClient, UUID]:
+    def _get_client_data(self) -> Tuple[WorkflowClient, UUID, "Project"]:
         assert self._stage_uuid
         assert self._workflow_client
-        return self._workflow_client, self._stage_uuid
+        assert self._project_client
+        return self._workflow_client, self._stage_uuid, self._project_client
 
 
 class WorkflowAction(BaseDTO):
