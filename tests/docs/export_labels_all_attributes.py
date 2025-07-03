@@ -5,9 +5,10 @@ Code Block Name: All attributes
 # Import dependencies
 import json
 from collections.abc import Iterable
+from typing import Any, Optional, TypedDict, Union
 
 from encord import EncordUserClient
-from encord.objects import ObjectInstance
+from encord.objects import ObjectInstance, Option
 from encord.objects.attributes import Attribute, ChecklistAttribute, RadioAttribute, TextAttribute
 
 # User input
@@ -41,9 +42,23 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
 results = []
 
 
+class AnswerData(TypedDict):
+    title: str
+    hash: str
+    nested_attributes: list["AttrData"]
+
+
+class AttrData(TypedDict):
+    frame: int
+    attribute_name: str
+    attribute_hash: str
+    attribute_type: Optional[str]
+    answers: list[Union[AnswerData, dict[str, Any]]]
+
+
 # Function to collect and print attributes
-def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectInstance, frame_number: int):
-    attr_data = {
+def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectInstance, frame_number: int) -> AttrData:
+    attr_data: AttrData = {
         "frame": frame_number + 1,
         "attribute_name": attribute.title,
         "attribute_hash": attribute.feature_node_hash,
@@ -58,15 +73,19 @@ def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectIn
 
     elif isinstance(attribute, RadioAttribute):
         attr_data["attribute_type"] = "RadioAttribute"
-        answer = object_instance.get_answer(attribute)
-        if answer:
-            answer_data = {"title": answer.title, "hash": answer.feature_node_hash, "nested_attributes": []}
+        radio_answer = object_instance.get_answer(attribute)
+        assert isinstance(radio_answer, Option)  # RadioAttribute answer is always an Option object
+        if radio_answer:
+            answer_data: AnswerData = {
+                "title": radio_answer.title,
+                "hash": radio_answer.feature_node_hash,
+                "nested_attributes": [],
+            }
 
-            if hasattr(answer, "attributes") and answer.attributes:
-                for nested_attribute in answer.attributes:
-                    nested_result = extract_and_print_attributes(nested_attribute, object_instance, frame_number)
-                    if nested_result:
-                        answer_data["nested_attributes"].append(nested_result)
+            for nested_attribute in radio_answer.attributes:
+                nested_result = extract_and_print_attributes(nested_attribute, object_instance, frame_number)
+                if nested_result:
+                    answer_data["nested_attributes"].append(nested_result)
 
             attr_data["answers"].append(answer_data)
         else:
@@ -74,12 +93,16 @@ def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectIn
 
     elif isinstance(attribute, ChecklistAttribute):
         attr_data["attribute_type"] = "ChecklistAttribute"
-        answers = object_instance.get_answer(attribute)
-        if answers:
-            if not isinstance(answers, Iterable):
-                answers = [answers]
-            for answer in answers:
-                attr_data["answers"].append({"title": answer.title, "hash": answer.feature_node_hash})
+
+        checklist_answers = object_instance.get_answer(attribute)
+        # Answers of checklist attribute is always a list of Option objects
+        assert isinstance(checklist_answers, Iterable)
+        if checklist_answers:
+            for checklist_answer in checklist_answers:
+                assert isinstance(checklist_answer, Option)  # Enforcing type here
+                attr_data["answers"].append(
+                    {"title": checklist_answer.title, "hash": checklist_answer.feature_node_hash}
+                )
         else:
             attr_data["answers"].append({"note": "No attribute answer"})
 
@@ -103,7 +126,7 @@ def extract_and_print_attributes(attribute: Attribute, object_instance: ObjectIn
 # Process all label rows
 for label_row in label_rows:
     object_instances = label_row.get_object_instances()
-    assert object_instances, f"No object instances found in label row {label_row.uid}"
+    assert object_instances, f"No object instances found in label row {label_row.label_hash}"
 
     for object_instance in object_instances:
         annotations = object_instance.get_annotations()
