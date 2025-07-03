@@ -4,6 +4,7 @@ Code Block Name: Classifications
 
 # Import dependencies
 from pathlib import Path
+from typing import Any
 
 from encord import EncordUserClient
 from encord.objects import Classification, Option
@@ -24,7 +25,7 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 project = user_client.get_project(PROJECT_ID)
 
 # Define specific configurations for each data unit
-data_unit_configs = [
+data_unit_configs: Any = [
     {
         "title": "anne-of-green-gables.pdf",
         "classifications": [

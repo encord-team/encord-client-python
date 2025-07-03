@@ -151,10 +151,10 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
             print(f"[SKIP] No label row found for: {data_unit}")
             continue
 
-        label_row = label_rows[0]
+        label_row_to_initialise = label_rows[0]
         try:
-            label_row.initialise_labels(bundle=bundle)
-            label_row_map[data_unit] = label_row
+            label_row_to_initialise.initialise_labels(bundle=bundle)
+            label_row_map[data_unit] = label_row_to_initialise
             print(f"[INIT] Initialized label row for: {data_unit}")
         except Exception as e:
             raise AssertionError(f"[ASSERT] Failed to initialize label row for {data_unit}: {e}")
@@ -168,14 +168,14 @@ for data_unit, frame_coordinates in pdf_labels.items():
     object_instances_by_label_ref = {}
 
     for frame_number, items in frame_coordinates.items():
-        if not isinstance(items, list):
-            items = [items]
-
-        for item in items:
+        items_list = items if isinstance(items, list) else [items]
+        for item in items_list:
             label_ref = item["label_ref"]
             coord = item["coordinates"]
             correction_type = item["correction_type"]
             checklist_options_str = item.get("checklist_options", "")
+            assert isinstance(checklist_options_str, str), "[ASSERT] checklist_options must be a string"
+
             text_correction = item.get("text_correction", "")
 
             # Basic checks
