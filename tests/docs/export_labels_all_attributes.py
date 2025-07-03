@@ -18,6 +18,7 @@ DATA_UNIT = "cherries-010.jpg"
 OUTPUT_FILE_PATH = "/Users/chris-encord/all_attributes_output.json"
 BUNDLE_SIZE = 100
 
+
 # Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     ssh_private_key_path=SSH_PATH,
