@@ -613,7 +613,12 @@ class EncordClientDataset(EncordClient):
                 "duplicates_behavior": duplicates_behavior.value,
             },
         )
-        return DataRow.from_dict_list(data_row_dicts)
+
+        data_rows = DataRow.from_dict_list(data_row_dicts)
+        for row in data_rows:
+            row["_querier"] = self._querier
+
+        return data_rows
 
     def delete_data(self, data_hashes: Union[List[str], str]):
         """This function is documented in :meth:`encord.dataset.Dataset.delete_data`."""
