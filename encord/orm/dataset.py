@@ -17,8 +17,6 @@ from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
-
-# from encord.orm.storage import StorageItem
 from encord.utilities.common import _get_dict_without_none_keys
 
 
