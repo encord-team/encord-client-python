@@ -179,7 +179,6 @@ class ReviewStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=ReviewTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
-            task._project_client = self._project_client
             task._task_issues = TaskIssues(
                 api_client=self._workflow_client.api_client,
                 project_uuid=self._workflow_client.project_hash,
@@ -250,7 +249,7 @@ class ReviewTask(WorkflowTask):
         - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
         """
-        workflow_client, stage_uuid, _ = self._get_client_data()
+        workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
             stage_uuid,
             _ActionApprove(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
@@ -272,7 +271,7 @@ class ReviewTask(WorkflowTask):
         - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
         """
-        workflow_client, stage_uuid, _ = self._get_client_data()
+        workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
             stage_uuid,
             _ActionReject(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
@@ -287,7 +286,7 @@ class ReviewTask(WorkflowTask):
         - `assignee` (str): The user to assign the task to.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
         """
-        workflow_client, stage_uuid, _ = self._get_client_data()
+        workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
@@ -297,7 +296,7 @@ class ReviewTask(WorkflowTask):
 
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
         """
-        workflow_client, stage_uuid, _ = self._get_client_data()
+        workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
 
     def get_label_reviews(
@@ -316,7 +315,7 @@ class ReviewTask(WorkflowTask):
         - `label_type`: Type of the label. Can be either Object or Classification.
         - `label_id`: Unique identifier of the label.
         """
-        workflow_client, stage_uuid, _ = self._get_client_data()
+        workflow_client, stage_uuid = self._get_client_data()
         for r in workflow_client.get_label_reviews(stage_uuid, self.uuid, type_=LabelReview):
             r._workflow_client = self._workflow_client
             r._stage_uuid = self._stage_uuid

@@ -18,7 +18,6 @@ from uuid import UUID
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
 from encord.issues.issue_client import TaskIssues
-from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import (
     TasksQueryParams,
@@ -88,7 +87,6 @@ class AnnotationStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=AnnotationTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
-            task._project_client = self._project_client
             task._task_issues = TaskIssues(
                 api_client=self._workflow_client.api_client,
                 project_uuid=self._workflow_client.project_hash,
@@ -152,7 +150,7 @@ class AnnotationTask(WorkflowTask):
         - `retain_assignee` (bool): Retains the current assignee of the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the submission.
         """
-        workflow_client, stage_uuid, _ = self._get_client_data()
+        workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
             stage_uuid,
             _ActionSubmit(task_uuid=self.uuid, assignee=assignee, retain_assignee=retain_assignee),
@@ -167,7 +165,7 @@ class AnnotationTask(WorkflowTask):
         - `assignee` (str): The email of the user to assign the task to.
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the assignment.
         """
-        workflow_client, stage_uuid, _ = self._get_client_data()
+        workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
@@ -177,15 +175,8 @@ class AnnotationTask(WorkflowTask):
 
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the release.
         """
-        workflow_client, stage_uuid, _ = self._get_client_data()
+        workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
-
-    def get_label_row_v2(self) -> LabelRowV2:
-        _, _, project_client = self._get_client_data()
-        label_rows = project_client.list_label_rows_v2(data_hashes=[self.data_hash])
-        if not label_rows:
-            raise ValueError(f"Label row not found for data_hash: {self.data_hash}")
-        return label_rows[0]
 
     @property
     def issues(self) -> TaskIssues:
