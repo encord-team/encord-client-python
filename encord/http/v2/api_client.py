@@ -292,8 +292,13 @@ class ApiClient:
     def _handle_error(response: Response, context: RequestContext):
         try:
             description = response.json()
-            handle_error_response(response.status_code, context=context, message=description.get("message"))
+            handle_error_response(
+                response.status_code,
+                response_headers=response.headers,
+                context=context,
+                message=description.get("message"),
+            )
         except EncordException as e:
             raise e
         except Exception:
-            handle_error_response(response.status_code, context=context)
+            handle_error_response(response.status_code, response_headers=response.headers, context=context)
