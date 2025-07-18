@@ -215,7 +215,6 @@ class DataRow(dict, Formatter):
                 "duration": duration,
                 "client_metadata": client_metadata,
                 "_querier": None,
-                "_api_client": None,
                 "images_data": parsed_images,
                 "signed_url": signed_url,
                 "is_optimised_image_group": is_optimised_image_group,

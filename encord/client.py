@@ -257,7 +257,6 @@ class EncordClientDataset(EncordClient):
 
         for row in data_rows:
             row["_querier"] = self._querier
-            row["_api_client"] = self._api_client
 
         return data_rows
 
