@@ -81,6 +81,23 @@ class RequestException(EncordException):
     pass
 
 
+class RateLimitExceededError(EncordException):
+    """Exception raised when requests exceed the Encord API rate limit."""
+
+    def __init__(
+        self,
+        *,
+        message: str = "Rate limit exceeded.",
+        context: Optional[ExceptionContext] = None,
+        retry_after: Optional[int] = None,
+    ) -> None:
+        if retry_after:
+            message += f" Retry after {retry_after} second{'s' if retry_after > 1 else ''}."
+
+        super().__init__(message, context)
+        self.retry_after = retry_after
+
+
 class UnknownException(EncordException):
     """Unknown error."""
 
