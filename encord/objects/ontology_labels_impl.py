@@ -494,6 +494,8 @@ class LabelRowV2:
         """Returns the storage item associated with the label row.
         This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
+        if not self._storage_item:
+            raise LabelRowError("Storage item is not found for the label row. Please call get_storage_item first.")
         return self._storage_item
 
     def get_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
