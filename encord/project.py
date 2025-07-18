@@ -77,9 +77,7 @@ class Project:
         self._api_client = api_client
 
         if project_instance.workflow:
-            self._workflow = Workflow(
-                api_client, project_instance.project_hash, project_instance.workflow, project_client=self
-            )
+            self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
 
     @property
     def project_hash(self) -> str:

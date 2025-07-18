@@ -34,6 +34,7 @@ from encord.objects.attributes import Attribute
 from encord.objects.bundled_operations import (
     BundledCreateRowsPayload,
     BundledGetRowsPayload,
+    BundledGetStorageItemPayload,
     BundledSaveRowsPayload,
     BundledSetPriorityPayload,
     BundledWorkflowCompletePayload,
@@ -69,13 +70,14 @@ from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
+from encord.orm import storage as orm_storage
 from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRowMetadata,
     LabelStatus,
     WorkflowGraphNode,
 )
-from encord.storage import StorageItem
+from encord.storage import STORAGE_BUNDLE_CREATE_LIMIT, StorageItem, StorageItemInaccessible
 from encord.utilities.type_utilities import exhaustive_guard
 
 log = logging.getLogger(__name__)
@@ -487,17 +489,38 @@ class LabelRowV2:
         """
         return self._label_row_read_only_data.assigned_user_email
 
-    def get_storage_item(self) -> StorageItem:
+    @property
+    def storage_item(self) -> Optional[StorageItem]:
+        """Returns the storage item associated with the label row.
+        This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
+        """
+        return self._storage_item
+
+    def get_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
         """Returns the storage item associated with the label row.
         This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
         if self._label_row_read_only_data.backing_item_uuid is None:
             raise LabelRowError("Storage item is not found for the label row")
-        return StorageItem._get_item(
-            api_client=self._project_client._api_client,
-            item_uuid=self._label_row_read_only_data.backing_item_uuid,
-            get_signed_url=False,
+
+        bundled_operation(
+            bundle,
+            operation=self._project_client._api_client.get_bound_operation(StorageItem._get_items_bulk),
+            payload=BundledGetStorageItemPayload(
+                item_uuids=[str(self._label_row_read_only_data.backing_item_uuid)],
+                get_signed_url=get_signed_url,
+            ),
+            result_mapper=BundleResultMapper[orm_storage.StorageItem](
+                result_mapping_predicate=lambda r: str(r.uuid),
+                result_handler=BundleResultHandler(
+                    predicate=str(self._label_row_read_only_data.backing_item_uuid), handler=self._set_orm_item
+                ),
+            ),
+            limit=STORAGE_BUNDLE_CREATE_LIMIT,
         )
+
+    def _set_orm_item(self, orm_storage_item: orm_storage.StorageItem) -> None:
+        self._storage_item = StorageItem(self._project_client._api_client, orm_storage_item)
 
     def initialise_labels(
         self,
