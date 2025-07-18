@@ -38,9 +38,9 @@ king_option = cherry_type_radio_attribute.get_child_by_title(type_=Option, title
 rainier_option = cherry_type_radio_attribute.get_child_by_title(type_=Option, title="Rainier")
 other_cherry_option = cherry_type_radio_attribute.get_child_by_title(type_=Option, title="Other cherry type")
 
-assert all(
-    [bing_option, king_option, rainier_option, other_cherry_option]
-), "One or more cherry type options are missing."
+assert all([bing_option, king_option, rainier_option, other_cherry_option]), (
+    "One or more cherry type options are missing."
+)
 
 # Bing Qualities
 bing_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Bing Qualities?")
@@ -69,9 +69,9 @@ assert rainier_checklist_attribute is not None, "Checklist attribute 'Rainier Qu
 rainier_plump_option = rainier_checklist_attribute.get_child_by_title(type_=Option, title="Plump")
 rainier_juicy_option = rainier_checklist_attribute.get_child_by_title(type_=Option, title="Juicy")
 rainier_large_option = rainier_checklist_attribute.get_child_by_title(type_=Option, title="Large")
-assert all(
-    [rainier_plump_option, rainier_juicy_option, rainier_large_option]
-), "One or more Rainier quality options are missing."
+assert all([rainier_plump_option, rainier_juicy_option, rainier_large_option]), (
+    "One or more Rainier quality options are missing."
+)
 
 # Other Cherry Types
 other_cherry_option_text_attribute = ontology_structure.get_child_by_title(

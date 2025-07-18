@@ -4,16 +4,10 @@ description: 'Run the unit tests for a given Python version'
 inputs:
   python-version:
     description: 'Python version to use'
-    default: 3.8.16
-    required: false
+    required: true
   pydantic-version:
     description: 'Pydantic version to use'
-    default: ''
-    required: false
-  poetry-version:
-    description: 'Poetry version to use'
-    default: 1.8.3
-    required: false
+    required: true
   test-report-file:
     description: 'File name to save the test report in'
     required: true
@@ -22,41 +16,26 @@ runs:
   using: "composite"
 
   steps:
-      - name: Set up python
-        uses: actions/setup-python@v5
+      - name: Setup uv environment
+        uses: ./.github/actions/setup-uv-environment
         with:
           python-version: ${{ inputs.python-version }}
-
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ inputs.poetry-version }}
-          virtualenvs-in-project: true
-
-      - name: Check cache
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: unit-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}-${{ inputs.pydantic-version }}-1
-
-      - name: Install dependencies
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction
-        shell: bash
+          with-dev-dependencies: true
 
       - name: Override pydantic version
         if: ${{ inputs.pydantic-version }}
-        run: poetry run python -m pip install pydantic==${{ inputs.pydantic-version }}
+        run: uv pip install pydantic==${{ inputs.pydantic-version }}
         shell: bash
 
       - name: Run tests
         run: |
-          poetry run python -m pytest tests --verbose --junitxml=${{ inputs.test-report-file }}
+          source .venv/bin/activate
+          uv run python -m pytest tests --verbose --junitxml=${{ inputs.test-report-file }}
         shell: bash
 
-      - name: Upload report
-        uses: actions/upload-artifact@v4
+      - name: Publish unit test report
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          name: ${{ inputs.test-report-file }}
-          path: ${{ inputs.test-report-file }}
+          files: ${{ inputs.test-report-file }}
+          check_name: Unit test report (Python ${{ inputs.python-version }}, Pydantic ${{ inputs.pydantic-version }})

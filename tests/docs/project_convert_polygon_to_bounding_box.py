@@ -27,7 +27,7 @@ def try_execute(func, kwargs=None):
                 return func()
         except Exception as e:
             logging.warning(
-                f"Handling {e} when executing {func} with args {kwargs}.\n" f" Trying again, attempt number {n + 1}."
+                f"Handling {e} when executing {func} with args {kwargs}.\n Trying again, attempt number {n + 1}."
             )
             time.sleep(0.5 * MAX_NUM_EXECUTION_ATTEMPTS)  # Linear backoff
     raise Exception("Reached maximum number of execution attempts.")

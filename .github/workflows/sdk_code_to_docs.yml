@@ -5,29 +5,32 @@ on:
     branches:
       - master  # Trigger on push to the 'master' branch
 
+env:
+  PYTHON_VERSION: 3.13
+
 jobs:
   update_docs:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source repository (repo1)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: encord-team/encord-client-python  # Replace with the name of your source repo (repo1)
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main  # Ensures the latest changes from the 'main' branch are pulled
 
       - name: Checkout destination repository (repo2)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: encord-team/encord-docs-mint  # Replace with the name of your destination repo (repo2)
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main  # Same branch as source repo
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: useblacksmith/setup-python@v6
         with:
-          python-version: '3.x'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies (if any)
         run: |

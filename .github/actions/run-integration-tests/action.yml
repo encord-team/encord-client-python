@@ -4,11 +4,12 @@ description: 'Run the integration tests for a given Python version. These tests 
 inputs:
   python-version:
     description: 'Python version to use'
-    default: 3.11
+    default: 3.13
     required: false
   test-report-file:
     description: 'File name to save the test report in'
-    required: true
+    required: false
+    default: integration-test-report-python3_13.xml
   private-key:
     description: 'Private key for integration tests'
     required: true
@@ -20,7 +21,7 @@ inputs:
     required: true
   integration-tests-location:
     description: 'project of the backend repo.'
-    default: projects/sdk-integration-tests
+    default: ./encord-backend/projects/sdk-integration-tests
     required: false
   test-dir:
     description: 'Test directory of the integration tests project.'
@@ -40,11 +41,11 @@ runs:
   using: "composite"
 
   steps:
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
+    - name: Setup uv environment
+      uses: ./.github/actions/setup-uv-environment
       with:
-        version: "0.6.16"
-        enable-cache: 'true'
+        python-version: ${{ inputs.python-version }}
+        with-dev-dependencies: true
 
     - name: Setup FFMPEG
       uses: FedericoCarboni/setup-ffmpeg@v2
@@ -68,3 +69,10 @@ runs:
       with:
         name: ${{ inputs.test-report-file }}
         path: ${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
+
+    - name: Publish integration test report Python ${{ inputs.python-version }}
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: ${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
+        check_name: SDK integration test report

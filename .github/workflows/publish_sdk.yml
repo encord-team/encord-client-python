@@ -5,8 +5,7 @@ on:
     types: [ published ]
 
 env:
-  PYTHON: 3.8
-  POETRY: 1.8.3
+  PYTHON_VERSION: 3.8
   PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
 concurrency:
@@ -21,28 +20,23 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Setup uv environment
+        uses: ./.github/actions/setup-uv-environment
         with:
-          python-version: ${{ env.PYTHON }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          with-dev-dependencies: false
 
-      - name: Setup Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY }}
-          virtualenvs-in-project: true
-
-      - name: Install dependencies
-        run: |
-          poetry install --no-interaction
+      - name: uv Version Bump
+        run: uv version ${{ github.ref_name }}
 
       - name: Build SDK
-        run: poetry build
+        run: uv build --sdist --wheel
 
       - name: Publish SDK
         run: |
-          poetry config pypi-token.pypi ${{ env.PYPI_TOKEN }}
-          poetry publish
+          uv pip install twine
+          uv publish --token ${{ env.PYPI_TOKEN }}
+        shell: bash
 
   send-slack-notification:
     name: Send notification
@@ -65,4 +59,3 @@ jobs:
           success-channel: ${{ secrets.SLACK_DEPLOYMENT_PROD_CHANNEL_ID }}
           failure-channel: ${{ secrets.SLACK_FAILURE_CHANNEL_ID }}
           success-message: Deployed to https://pypi.org/project/encord/
-          failure-message: This pipeline has failed!

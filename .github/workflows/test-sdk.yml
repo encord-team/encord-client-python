@@ -7,168 +7,44 @@ on:
   workflow_dispatch:
 
 env:
-  UNIT_TEST_REPORT_PYTHON_3_8_P1: unit-test-report-python3_8_p1.xml
-  UNIT_TEST_REPORT_PYTHON_3_9_P1: unit-test-report-python3_9_p1.xml
-  UNIT_TEST_REPORT_PYTHON_3_10_P1: unit-test-report-python3_10_p1.xml
-  UNIT_TEST_REPORT_PYTHON_3_11_P1: unit-test-report-python3_11_p1.xml
-  UNIT_TEST_REPORT_PYTHON_3_12_P1: unit-test-report-python3_12_p1.xml
-  UNIT_TEST_REPORT_PYTHON_3_8_P2: unit-test-report-python3_8_p2.xml
-  UNIT_TEST_REPORT_PYTHON_3_9_P2: unit-test-report-python3_9_p2.xml
-  UNIT_TEST_REPORT_PYTHON_3_10_P2: unit-test-report-python3_10_p2.xml
-  UNIT_TEST_REPORT_PYTHON_3_11_P2: unit-test-report-python3_11_p2.xml
-  UNIT_TEST_REPORT_PYTHON_3_12_P2: unit-test-report-python3_12_p2.xml
-
-  INTEGRATION_TEST_REPORT_PYTHON_3_11: integration-test-report-python3_11.xml
-  INTEGRATION_TESTS_PRIVATE_KEY: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
-  INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT: ${{ secrets.SDK_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-  INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
-
-  BACKEND_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
   BACKEND_REPO: cord-team/cord-backend
-
 
 concurrency:
   group: cord-client-${{ github.ref }}-test
   cancel-in-progress: true
 
 jobs:
-  unit-tests-python-3-8:
-    name: Run unit tests for Python 3.8
+  unit-tests:
+    name: Unit Tests (Python ${{ matrix.python.major_minor }}, Pydantic ${{ matrix.pydantic.version }})
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - { version: '3.8.18',  major_minor: '3.8', major_minor_test_report: '3_8' }
+          - { version: '3.9.23',  major_minor: '3.9', major_minor_test_report: '3_9' }
+          - { version: '3.10.18', major_minor: '3.10', major_minor_test_report: '3_10' }
+          - { version: '3.11.13', major_minor: '3.11', major_minor_test_report: '3_11' }
+          - { version: '3.12.11', major_minor: '3.12', major_minor_test_report: '3_12' }
+          - { version: '3.13.5', major_minor: '3.13', major_minor_test_report: '3_13' }
+
+        pydantic:
+          - { version: '1.10.22', suffix: 'p1' }
+          - { version: '2.10.6', suffix: 'p2' } # Latest Pydantic v2x that supports Python 3.8
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Run unit tests for Python 3.8
+      - name: Run unit tests
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: 3.8.16
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P1 }}
+          python-version: ${{ matrix.python.version }}
+          pydantic-version: ${{ matrix.pydantic.version }}
+          test-report-file: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml
 
-  unit-tests-python-3-9:
-    name: Run unit tests for Python 3.9
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
 
-      - name: Run unit tests for Python 3.9
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.9.12
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P1 }}
-
-  unit-tests-python-3-10:
-    name: Run unit tests for Python 3.10
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.10
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.10.4
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P1 }}
-
-  unit-tests-python-3-11:
-    name: Run unit tests for Python 3.11
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.11
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.11.2
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11_P1 }}
-
-  unit-tests-python-3-12:
-    name: Run unit tests for Python 3.12
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.12
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.12.3
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_12_P1 }}
-
-  unit-tests-python-3-8-pydantic-2:
-    name: Run unit tests for Python 3.8 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.8
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.8.16
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8_P2 }}
-
-  unit-tests-python-3-9-pydantic-2:
-    name: Run unit tests for Python 3.9 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.9
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.9.12
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9_P2 }}
-
-  unit-tests-python-3-10-pydantic-2:
-    name: Run unit tests for Python 3.10 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.10
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.10.4
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10_P2 }}
-
-  unit-tests-python-3-11-pydantic-2:
-    name: Run unit tests for Python 3.11 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.11
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.11.2
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11_P2 }}
-
-  unit-tests-python-3-12-pydantic-2:
-    name: Run unit tests for Python 3.12 with Pydantic 2.x
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Run unit tests for Python 3.12
-        uses: ./.github/actions/run-unit-tests
-        with:
-          python-version: 3.12.3
-          pydantic-version: 2.6.1
-          test-report-file: ${{ env.UNIT_TEST_REPORT_PYTHON_3_12_P2 }}
-
-  integration-tests-python-3-11:
-    name: Run integration tests for Python 3.11
+  integration-tests:
+    name: Run integration tests
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
@@ -178,99 +54,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BACKEND_REPO }}
-          token: ${{ env.BACKEND_ACCESS_TOKEN }}
+          token: ${{ secrets.ACCESS_TOKEN }}
           path: encord-backend
 
-      - name: Run integration tests for Python 3.11
+      - name: Run integration tests
         uses: ./.github/actions/run-integration-tests
         with:
-          python-version: 3.11.2
-          integration-tests-location: ./encord-backend/projects/sdk-integration-tests
-          test-report-file: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-          private-key: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY }}
-          private-key-service-account: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-          private-key-non-org: ${{ env.INTEGRATION_TESTS_PRIVATE_KEY_NON_ORG }}
+          private-key: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
+          private-key-service-account: ${{ secrets.SDK_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
+          private-key-non-org: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
 
-
-
-  publish-test-reports:
-      name: Publish test reports
-      runs-on: ubuntu-24.04
-      needs: [
-        unit-tests-python-3-8,
-        unit-tests-python-3-9,
-        unit-tests-python-3-10,
-        unit-tests-python-3-11,
-        integration-tests-python-3-11,
-        ]
-      if: success() || failure()
-
-      steps:
-        - name: Download unit test report Python 3.8
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}
-
-        - name: Download unit test report Python 3.9
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}
-
-        - name: Download unit test report Python 3.10
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}
-
-        - name: Download unit test report Python 3.11
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
-            path: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}
-
-        - name: Download integration test report Python 3.11
-          uses: actions/download-artifact@v4
-          with:
-            name: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-            path: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}
-
-        - name: Publish unit test report Python 3.8
-          uses: EnricoMi/publish-unit-test-result-action@v1
-          with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_8 }}/*.xml
-            check_name: Unit test report
-
-        - name: Publish unit test report Python 3.9
-          uses: EnricoMi/publish-unit-test-result-action@v1
-          with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_9 }}/*.xml
-            check_name: Unit test report
-
-        - name: Publish unit test report Python 3.10
-          uses: EnricoMi/publish-unit-test-result-action@v1
-          with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_10 }}/*.xml
-            check_name: Unit test report
-
-        - name: Publish unit test report Python 3.11
-          uses: EnricoMi/publish-unit-test-result-action@v1
-          with:
-            files: ${{ env.UNIT_TEST_REPORT_PYTHON_3_11 }}/*.xml
-            check_name: Unit test report
-
-        - name: Publish integration test report Python 3.11
-          uses: EnricoMi/publish-unit-test-result-action@v1
-          with:
-            files: ${{ env.INTEGRATION_TEST_REPORT_PYTHON_3_11 }}/*.xml
-            check_name: SDK integration test report
 
   send-slack-notification:
     name: Send notification
     runs-on: ubuntu-24.04
-    needs: [ publish-test-reports ]
+    needs: [ unit-tests, integration-tests ]
     if: always()
     env:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -286,4 +85,3 @@ jobs:
         with:
           success-parameter: ${{ env.WORKFLOW_CONCLUSION }}
           failure-channel: ${{ secrets.SLACK_FAILURE_CHANNEL_ID }}
-          failure-message: This pipeline has failed!

@@ -72,9 +72,9 @@ for label_row in label_rows:
         annotations = object_instance.get_annotations()
         assert annotations, f"No annotations found for object instance {object_instance.object_hash}"
 
-        assert (
-            object_instance.ontology_item and object_instance.ontology_item.attributes
-        ), f"No attributes found for object {object_instance.object_hash}"
+        assert object_instance.ontology_item and object_instance.ontology_item.attributes, (
+            f"No attributes found for object {object_instance.object_hash}"
+        )
 
         for annotation in annotations:
             if START_FRAME_NUMBER <= annotation.frame <= END_FRAME_NUMBER:
@@ -115,9 +115,9 @@ for label_row in label_rows:
 
     for classification_instance in classification_instances:
         annotations = classification_instance.get_annotations()
-        assert (
-            annotations
-        ), f"No annotations found for classification instance {classification_instance.classification_hash}"
+        assert annotations, (
+            f"No annotations found for classification instance {classification_instance.classification_hash}"
+        )
 
         for annotation in annotations:
             if START_FRAME_NUMBER <= annotation.frame <= END_FRAME_NUMBER:

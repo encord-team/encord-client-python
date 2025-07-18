@@ -907,9 +907,9 @@ for data_unit, frame_coordinates in video_frame_labels.items():
                         if option:
                             checklist_answers.append(option)
                         else:
-                            assert (
-                                blueberry_type == "Other blueberry type"
-                            ), f"Invalid quality '{quality}' for type '{blueberry_type}'"
+                            assert blueberry_type == "Other blueberry type", (
+                                f"Invalid quality '{quality}' for type '{blueberry_type}'"
+                            )
 
                     if checklist_attribute and checklist_answers:
                         polygon_object_instance.set_answer(

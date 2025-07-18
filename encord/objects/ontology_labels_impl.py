@@ -490,7 +490,15 @@ class LabelRowV2:
         return self._label_row_read_only_data.assigned_user_email
 
     @property
-    def storage_item(self) -> Optional[StorageItem]:
+    def last_actioned_by_user_email(self) -> str | None:
+        """Email of the user who last actioned the data.
+
+        Returns:
+            str | None: The email of the user who last actioned the data.
+        """
+        return self._label_row_read_only_data.last_actioned_by_user_email
+
+    def get_item(self) -> Optional[StorageItem]:
         """Returns the storage item associated with the label row.
         This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
@@ -498,7 +506,7 @@ class LabelRowV2:
             raise LabelRowError("Storage item is not found for the label row. Please call get_storage_item first.")
         return self._storage_item
 
-    def get_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
+    def fetch_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
         """Returns the storage item associated with the label row.
         This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
@@ -1600,6 +1608,7 @@ class LabelRowV2:
             frame_to_image_hash: Mapping from frame number to image hash.
             is_valid: Boolean indicating if the data is valid.
             assigned_user_email: Optional email of the user assigned to the data.
+            last_actioned_by_user_email: Optional email of the user who last actioned the data.
         """
 
         label_hash: Optional[str]
@@ -1636,6 +1645,7 @@ class LabelRowV2:
         frame_to_image_hash: Dict[int, str] = field(default_factory=dict)
         is_valid: bool = field(default=True)
         assigned_user_email: Optional[str] = None
+        last_actioned_by_user_email: Optional[str] = None
 
     def _to_object_answers(self) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}
@@ -2046,6 +2056,7 @@ class LabelRowV2:
             is_valid=label_row_metadata.is_valid,
             backing_item_uuid=label_row_metadata.backing_item_uuid,
             assigned_user_email=label_row_metadata.assigned_user_email,
+            last_actioned_by_user_email=label_row_metadata.last_actioned_by_user_email,
         )
 
     def _parse_label_row_dict(self, label_row_dict: dict) -> LabelRowReadOnlyData:
@@ -2162,6 +2173,9 @@ class LabelRowV2:
             backing_item_uuid=self.backing_item_uuid,
             assigned_user_email=label_row_dict.get(
                 "assigned_user_email", self._label_row_read_only_data.assigned_user_email
+            ),
+            last_actioned_by_user_email=label_row_dict.get(
+                "last_actioned_by_user_email", self._label_row_read_only_data.last_actioned_by_user_email
             ),
         )
 
