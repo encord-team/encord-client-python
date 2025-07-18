@@ -2019,6 +2019,17 @@ class StorageItem:
         return [StorageItem(api_client, orm_item) for orm_item in orm_items.results]
 
     @staticmethod
+    def _get_items_bulk(
+        api_client: ApiClient, item_uuids: List[UUID], get_signed_url: bool
+    ) -> List[orm_storage.StorageItem]:
+        return api_client.post(
+            "storage/items/get-bulk",
+            params=None,
+            payload=GetItemsBulkPayload(item_uuids=item_uuids, sign_urls=get_signed_url),
+            result_type=Page[orm_storage.StorageItem],
+        ).results
+
+    @staticmethod
     def _patch_multiple_items(
         api_client: ApiClient,
         item_patches: Dict[str, PatchItemPayload],

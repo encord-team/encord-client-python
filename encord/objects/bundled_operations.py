@@ -82,3 +82,14 @@ class BundledWorkflowReopenPayload:
     def add(self, other: BundledWorkflowReopenPayload) -> BundledWorkflowReopenPayload:
         self.label_hashes.extend(other.label_hashes)
         return self
+
+
+@dataclass
+class BundledGetStorageItemPayload:
+    item_uuids: List[str]
+    get_signed_url: bool
+
+    def add(self, other: BundledGetStorageItemPayload) -> BundledGetStorageItemPayload:
+        self.item_uuids.extend(other.item_uuids)
+        self.get_signed_url = self.get_signed_url or other.get_signed_url
+        return self
