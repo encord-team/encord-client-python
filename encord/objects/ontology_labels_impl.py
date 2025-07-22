@@ -123,6 +123,8 @@ class LabelRowV2:
         # ^ conveniently a dict is ordered in Python. Use this to our advantage to keep the labels in order
         # at least at the final objects_index/classifications_index level.
 
+        self._storage_item: Optional[StorageItem] = None
+
     @property
     def label_hash(self) -> Optional[str]:
         """Returns the hash of the label row.
@@ -506,10 +508,18 @@ class LabelRowV2:
             raise LabelRowError("Storage item is not found for the label row. Please call fetch_storage_item first.")
         return self._storage_item
 
-    def fetch_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
-        """Returns the storage item associated with the label row.
-        This property can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
+    def initilize_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
+        """Initialise the storage item associated with the label row.
+
+        This function will download the storage item details from the Encord server.
+        if you want to get the signed url, you can set the get_signed_url to True.
+
+        Args:
+            get_signed_url: If `True`,is set true, you can get the signed url from LabelRowV2.get_storage_item().get_signed_url()
+            bundle: If not provided, initialization is performed independently. If provided,
+                initialization is delayed and performed along with other objects in the same bundle.
         """
+
         if self._label_row_read_only_data.backing_item_uuid is None:
             raise LabelRowError("Storage item is not found for the label row")
 
