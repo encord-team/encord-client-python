@@ -505,10 +505,12 @@ class LabelRowV2:
         This function can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
         if not self._storage_item:
-            raise LabelRowError("Storage item is not found for the label row. Please call fetch_storage_item first.")
+            raise LabelRowError(
+                "Storage item is not found for the label row. Please call initialise_storage_item() first."
+            )
         return self._storage_item
 
-    def initilize_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
+    def initialise_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
         """Initialise the storage item associated with the label row.
 
         This function will download the storage item details from the Encord server.
