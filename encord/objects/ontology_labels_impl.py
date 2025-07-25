@@ -521,8 +521,8 @@ class LabelRowV2:
 
         Args:
             get_signed_url: If `True`,is set true, you can get the signed url from LabelRowV2.get_storage_item().get_signed_url()
-            bundle: If not provided, initialization is performed independently. If provided,
-                initialization is delayed and performed along with other objects in the same bundle.
+            bundle: If not provided, initialisation is performed independently. If provided,
+                initialisation is delayed and performed along with other objects in the same bundle.
         """
 
         if self._label_row_read_only_data.backing_item_uuid is None:
