@@ -504,6 +504,9 @@ class LabelRowV2:
         """Returns the storage item associated with the label row.
         This function can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
+        if self._label_row_read_only_data.backing_item_uuid is None:
+            raise LabelRowError("Storage item is not found for the label row")
+
         if not self._storage_item:
             self._storage_item = StorageItem._get_item(
                 self._project_client._api_client,
