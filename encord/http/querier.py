@@ -222,6 +222,7 @@ def create_new_session(
         allowed_methods=["POST", "PUT", "GET"],  # type: ignore  # post is there since we use it for idempotent ops too.
         status_forcelist=[413, 429, 500, 502, 503],
         backoff_factor=backoff_factor,
+        raise_on_status=False,
     )
 
     with Session() as session:
