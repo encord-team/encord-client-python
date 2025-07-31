@@ -249,6 +249,8 @@ class LabelRowMetadata(Formatter):
     """Only present if the label row is initiated or branch_name is set specifically"""
 
     data_hash: str
+    group_hash: Optional[str]
+    """Only present if the label row is for a child element of a group"""
     dataset_hash: str
     dataset_title: str
     data_title: str
@@ -309,6 +311,7 @@ class LabelRowMetadata(Formatter):
             created_at=created_at,
             last_edited_at=last_edited_at,
             data_hash=json_dict["data_hash"],
+            group_hash=json_dict.get("group_hash", None),
             dataset_hash=json_dict["dataset_hash"],
             dataset_title=json_dict["dataset_title"],
             data_title=json_dict["data_title"],

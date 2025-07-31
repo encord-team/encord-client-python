@@ -153,6 +153,17 @@ class LabelRowV2:
         return self._label_row_read_only_data.data_hash
 
     @property
+    def group_hash(self) -> Optional[str]:
+        """Returns the group hash of the data row.
+
+        Only present if this label row is a child of a group
+
+        Returns:
+            str: The data group hash.
+        """
+        return self._label_row_read_only_data.group_hash
+
+    @property
     def dataset_hash(self) -> str:
         """Returns the hash of the dataset.
 
@@ -1633,6 +1644,7 @@ class LabelRowV2:
         created_at: Optional[datetime]
         last_edited_at: Optional[datetime]
         data_hash: str
+        group_hash: Optional[str]
         data_type: DataType
         backing_item_uuid: Optional[UUID]
         label_status: LabelStatus
@@ -2044,6 +2056,7 @@ class LabelRowV2:
             label_hash=label_row_metadata.label_hash,
             branch_name=label_row_metadata.branch_name,
             data_hash=label_row_metadata.data_hash,
+            group_hash=label_row_metadata.group_hash,
             data_title=label_row_metadata.data_title,
             dataset_hash=label_row_metadata.dataset_hash,
             dataset_title=label_row_metadata.dataset_title,
@@ -2160,6 +2173,7 @@ class LabelRowV2:
             dataset_title=label_row_dict["dataset_title"],
             data_title=label_row_dict["data_title"],
             data_hash=label_row_dict["data_hash"],
+            group_hash=label_row_dict.get("group_hash", self._label_row_read_only_data.group_hash),
             data_type=data_type,
             label_status=LabelStatus(label_row_dict["label_status"]),
             annotation_task_status=label_row_dict.get("annotation_task_status"),
