@@ -392,6 +392,7 @@ class LabelRowMetadataDTO(BaseDTO):
     """Only present if the label row is initiated or branch_name is set specifically"""
 
     data_hash: str = Field(alias="data_uuid")
+    group_hash: Optional[str] = Field(alias="group_uuid")
     dataset_hash: str = Field(alias="dataset_uuid")
     dataset_title: str
     data_title: str
@@ -441,6 +442,7 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         created_at=label_row_metadata_dto.created_at,
         last_edited_at=label_row_metadata_dto.last_edited_at,
         data_hash=label_row_metadata_dto.data_hash,
+        group_hash=label_row_metadata_dto.group_hash,
         dataset_hash=label_row_metadata_dto.dataset_hash,
         dataset_title=label_row_metadata_dto.dataset_title,
         data_title=label_row_metadata_dto.data_title,

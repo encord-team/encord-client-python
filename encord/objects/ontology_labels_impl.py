@@ -159,7 +159,7 @@ class LabelRowV2:
         Only present if this label row is a child of a group
 
         Returns:
-            str: The data group hash.
+            Optional[str]: The data group hash.
         """
         return self._label_row_read_only_data.group_hash
 
