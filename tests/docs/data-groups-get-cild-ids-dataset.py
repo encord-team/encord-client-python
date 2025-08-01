@@ -2,12 +2,13 @@
 Code Block Name: Data Groups - Get Child Ids from Dataset
 """
 
-from encord import EncordUserClient
 from uuid import UUID
 
-SSH_PATH="/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH private key
-DATA_GROUP_ID="00000000-0000-0000-0000-000000000000" # Replace with the file ID for the Data Group
-DATASET_ID="00000000-0000-0000-0000-000000000000" # Replace with the ID for the Dataset
+from encord import EncordUserClient
+
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file path to your SSH private key
+DATA_GROUP_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the file ID for the Data Group
+DATASET_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the ID for the Dataset
 
 # Initialize the SDK client
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
