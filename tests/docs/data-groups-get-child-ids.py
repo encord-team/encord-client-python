@@ -4,8 +4,8 @@ Code Block Name: Data Groups - Get Child Ids from Storage Folder
 
 from encord import EncordUserClient
 
-SSH_PATH="/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH private key
-DATA_GROUP_ID="00000000-0000-0000-0000-000000000000" # Replace with the file ID for the Data Group
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file path to your SSH private key
+DATA_GROUP_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the file ID for the Data Group
 
 # Initialize the SDK client
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
