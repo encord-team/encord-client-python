@@ -249,7 +249,6 @@ class LabelRowMetadata(Formatter):
     """Only present if the label row is initiated or branch_name is set specifically"""
 
     data_hash: str
-    group_hash: Optional[str]
     """Only present if the label row is for a child element of a group"""
     dataset_hash: str
     dataset_title: str
@@ -278,6 +277,8 @@ class LabelRowMetadata(Formatter):
     audio_codec: Optional[str]
     audio_bit_depth: Optional[int]
     audio_num_channels: Optional[int]
+
+    group_hash: Optional[str] = None
 
     task_uuid: Optional[UUID] = None
     priority: Optional[float] = None
@@ -392,7 +393,7 @@ class LabelRowMetadataDTO(BaseDTO):
     """Only present if the label row is initiated or branch_name is set specifically"""
 
     data_hash: str = Field(alias="data_uuid")
-    group_hash: Optional[str] = Field(alias="group_uuid")
+    group_hash: Optional[str] = Field(default=None, alias="group_uuid")
     dataset_hash: str = Field(alias="dataset_uuid")
     dataset_title: str
     data_title: str
