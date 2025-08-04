@@ -1,5 +1,6 @@
 import inspect
 import json
+import time
 import uuid
 from http import HTTPStatus
 from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
@@ -85,13 +86,18 @@ class ApiClient:
             #  Pydantic is magic and relies on under-specified parts of the type system
             #  MyPy doesn't like this (insists on 'type erasure'), but it works because
             #  in reality the type is not erased and the generic parameters are available
+            print("Getting page...")
+
+            start = time.perf_counter()
+            params.page_size = 1000
+
             page = self.get(
                 path,
                 params=params,
                 result_type=Page[result_type],  # type: ignore[valid-type]
                 allow_none=allow_none,
             )
-
+            print(f"    page received: {time.perf_counter() - start:.3f}s")
             yield from page.results
 
             if page.next_page_token is not None:

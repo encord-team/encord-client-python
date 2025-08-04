@@ -86,6 +86,7 @@ from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRow,
     LabelRowMetadata,
+    LabelRowMetadataPage,
     LabelValidationState,
     ShadowDataState,
 )
@@ -861,8 +862,65 @@ class EncordClientProject(EncordClient):
             "include_workflow_graph_node": include_workflow_graph_node,
             "include_all_label_branches": include_all_label_branches,
             "branch_name": branch_name,
+            "limit": 1000,
         }
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
+
+    def get_label_row_page(
+        self,
+        edited_before: Optional[Union[str, datetime]] = None,
+        edited_after: Optional[Union[str, datetime]] = None,
+        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+        shadow_data_state: Optional[ShadowDataState] = None,
+        *,
+        include_uninitialised_labels: bool = False,
+        include_workflow_graph_node: bool = True,
+        include_client_metadata: bool = False,
+        include_images_data: bool = False,
+        include_children: bool = False,
+        label_hashes: Optional[Union[List[str], List[UUID]]] = None,
+        data_hashes: Optional[Union[List[str], List[UUID]]] = None,
+        data_title_eq: Optional[str] = None,
+        data_title_like: Optional[str] = None,
+        workflow_graph_node_title_eq: Optional[str] = None,
+        workflow_graph_node_title_like: Optional[str] = None,
+        include_all_label_branches: bool = False,
+        branch_name: Optional[str] = None,
+        page_token: Optional[str] = None,
+        limit: Optional[int] = 1000,
+    ) -> LabelRowMetadataPage:
+        """This function is documented in :meth:`encord.project.Project.list_label_rows`."""
+        data_hashes = [str(data_hash) for data_hash in data_hashes] if data_hashes is not None else None
+        label_hashes = [str(label_hash) for label_hash in label_hashes] if label_hashes is not None else None
+
+        label_statuses_values = (
+            [label_status.value for label_status in label_statuses] if label_statuses is not None else None
+        )
+        edited_before = optional_datetime_to_iso_str("edited_before", edited_before)
+        edited_after = optional_datetime_to_iso_str("edited_after", edited_after)
+
+        payload = {
+            "edited_before": edited_before,
+            "edited_after": edited_after,
+            "label_statuses": label_statuses_values,
+            "shadow_data_state": shadow_data_state.value if shadow_data_state else None,
+            "include_uninitialised_labels": include_uninitialised_labels,
+            "data_hashes": data_hashes,
+            "label_hashes": label_hashes,
+            "data_title_eq": data_title_eq,
+            "data_title_like": data_title_like,
+            "workflow_graph_node_title_eq": workflow_graph_node_title_eq,
+            "workflow_graph_node_title_like": workflow_graph_node_title_like,
+            "include_client_metadata": include_client_metadata,
+            "include_images_data": include_images_data,
+            "include_children": include_children,
+            "include_workflow_graph_node": include_workflow_graph_node,
+            "include_all_label_branches": include_all_label_branches,
+            "branch_name": branch_name,
+            "limit": limit,
+            "page_token": page_token,
+        }
+        return self._querier.basic_getter(LabelRowMetadataPage, payload=payload, retryable=True)
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """This function is documented in :meth:`encord.project.Project.add_users`."""

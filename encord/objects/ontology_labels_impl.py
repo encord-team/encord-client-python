@@ -72,6 +72,7 @@ from encord.ontology import Ontology
 from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRowMetadata,
+    LabelRowMetadataDTO,
     LabelStatus,
     WorkflowGraphNode,
 )
@@ -93,7 +94,7 @@ class LabelRowV2:
 
     def __init__(
         self,
-        label_row_metadata: LabelRowMetadata,
+        label_row_metadata: Union[LabelRowMetadata, LabelRowMetadataDTO],
         project_client: EncordClientProject,
         ontology: Ontology,
     ) -> None:
@@ -1971,7 +1972,9 @@ class LabelRowV2:
         for frame in frames:
             self._frame_to_hashes[frame].remove(item_hash)
 
-    def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowV2.LabelRowReadOnlyData:
+    def _parse_label_row_metadata(
+        self, label_row_metadata: Union[LabelRowMetadata, LabelRowMetadataDTO]
+    ) -> LabelRowV2.LabelRowReadOnlyData:
         data_type = DataType.from_upper_case_string(label_row_metadata.data_type)
 
         return LabelRowV2.LabelRowReadOnlyData(

@@ -10,6 +10,7 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import datetime
+import time
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
@@ -227,7 +228,7 @@ class Project:
         include_children: bool = False,
         include_all_label_branches: bool = False,
         branch_name: Optional[str] = None,
-    ) -> List[LabelRowV2]:
+    ) -> Iterable[LabelRowV2]:
         """List label rows with various filtering options.
 
         Args:
@@ -251,29 +252,48 @@ class Project:
         Returns:
             A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows.
         """
-        label_row_metadatas = self._client.list_label_rows(
-            edited_before,
-            edited_after,
-            label_statuses,
-            shadow_data_state,
-            data_hashes=data_hashes,
-            label_hashes=label_hashes,
-            include_uninitialised_labels=True,
-            include_children=include_children,
-            data_title_eq=data_title_eq,
-            data_title_like=data_title_like,
-            workflow_graph_node_title_eq=workflow_graph_node_title_eq,
-            workflow_graph_node_title_like=workflow_graph_node_title_like,
-            include_workflow_graph_node=include_workflow_graph_node,
-            include_client_metadata=include_client_metadata,
-            include_images_data=include_images_data,
-            include_all_label_branches=include_all_label_branches,
-            branch_name=branch_name,
-        )
-        label_rows = [
-            LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
-        ]
-        return label_rows
+        total_count = 0
+        page_token = None
+        while True:
+            time_start = time.perf_counter()
+            label_row_metadatas_page = self._client.get_label_row_page(
+                edited_before,
+                edited_after,
+                label_statuses,
+                shadow_data_state,
+                data_hashes=data_hashes,
+                label_hashes=label_hashes,
+                include_uninitialised_labels=True,
+                include_children=include_children,
+                data_title_eq=data_title_eq,
+                data_title_like=data_title_like,
+                workflow_graph_node_title_eq=workflow_graph_node_title_eq,
+                workflow_graph_node_title_like=workflow_graph_node_title_like,
+                include_workflow_graph_node=include_workflow_graph_node,
+                include_client_metadata=include_client_metadata,
+                include_images_data=include_images_data,
+                include_all_label_branches=include_all_label_branches,
+                branch_name=branch_name,
+                page_token=page_token,
+            )
+
+            page_items_count = len(label_row_metadatas_page.results)
+            total_count += page_items_count
+            print(
+                f"Got page of {page_items_count} in {time.perf_counter() - time_start:.2f} s . Overall got: {total_count}"
+            )
+
+            yield from map(lambda lm: LabelRowV2(lm, self._client, self._ontology), label_row_metadatas_page.results)
+
+            if next_page_token := label_row_metadatas_page.next_page_token:
+                page_token = next_page_token
+            else:
+                break
+
+        # label_rows = [
+        #     LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
+        # ]
+        # return label_rows
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """Add users to the project.
