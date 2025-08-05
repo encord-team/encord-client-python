@@ -249,6 +249,7 @@ class LabelRowMetadata(Formatter):
     """Only present if the label row is initiated or branch_name is set specifically"""
 
     data_hash: str
+    """Only present if the label row is for a child element of a group"""
     dataset_hash: str
     dataset_title: str
     data_title: str
@@ -276,6 +277,8 @@ class LabelRowMetadata(Formatter):
     audio_codec: Optional[str]
     audio_bit_depth: Optional[int]
     audio_num_channels: Optional[int]
+
+    group_hash: Optional[str] = None
 
     task_uuid: Optional[UUID] = None
     priority: Optional[float] = None
@@ -309,6 +312,7 @@ class LabelRowMetadata(Formatter):
             created_at=created_at,
             last_edited_at=last_edited_at,
             data_hash=json_dict["data_hash"],
+            group_hash=json_dict.get("group_hash", None),
             dataset_hash=json_dict["dataset_hash"],
             dataset_title=json_dict["dataset_title"],
             data_title=json_dict["data_title"],
@@ -389,6 +393,7 @@ class LabelRowMetadataDTO(BaseDTO):
     """Only present if the label row is initiated or branch_name is set specifically"""
 
     data_hash: str = Field(alias="data_uuid")
+    group_hash: Optional[str] = Field(default=None, alias="group_uuid")
     dataset_hash: str = Field(alias="dataset_uuid")
     dataset_title: str
     data_title: str
@@ -438,6 +443,7 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         created_at=label_row_metadata_dto.created_at,
         last_edited_at=label_row_metadata_dto.last_edited_at,
         data_hash=label_row_metadata_dto.data_hash,
+        group_hash=label_row_metadata_dto.group_hash,
         dataset_hash=label_row_metadata_dto.dataset_hash,
         dataset_title=label_row_metadata_dto.dataset_title,
         data_title=label_row_metadata_dto.data_title,
