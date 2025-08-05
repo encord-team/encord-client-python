@@ -156,7 +156,7 @@ class LabelRowV2:
     def group_hash(self) -> Optional[str]:
         """Returns the group hash of the data row.
 
-        Only present if this label row is a child of a group
+        Only present if this label row is a child of a data group
 
         Returns:
             Optional[str]: The data group hash.
