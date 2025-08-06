@@ -2480,17 +2480,17 @@ class LabelRowV2:
         )
 
     def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
-        if frame_object_label.get("boundingBox"):
+        if "boundingBox" in frame_object_label:
             return BoundingBoxCoordinates.from_dict(frame_object_label)
-        if frame_object_label.get("rotatableBoundingBox"):
+        if "rotatableBoundingBox" in frame_object_label:
             return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
-        elif frame_object_label.get("polygon") or "polygons" in frame_object_label:
+        elif "polygon" in frame_object_label or "polygons" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
-        elif frame_object_label.get("point"):
+        elif "point" in frame_object_label:
             return PointCoordinate.from_dict(frame_object_label)
-        elif frame_object_label.get("polyline"):
+        elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
-        elif frame_object_label.get("skeleton"):
+        elif "skeleton" in frame_object_label:
 
             def _with_visibility_enum(point: dict):
                 if point.get(Visibility.INVISIBLE.value):
@@ -2507,9 +2507,9 @@ class LabelRowV2:
                 "values": values,
             }
             return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
-        elif frame_object_label.get("bitmask"):
+        elif "bitmask" in frame_object_label:
             return BitmaskCoordinates.from_dict(frame_object_label)
-        elif frame_object_label.get("cuboid"):
+        elif "cuboid" in frame_object_label:
             return CuboidCoordinates.from_dict(frame_object_label)
         else:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
