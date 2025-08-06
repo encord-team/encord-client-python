@@ -59,7 +59,6 @@ from encord.objects.coordinates import (
     PolygonCoordsToDict,
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
-    SegmentationCoordinatesByFile,
     SkeletonCoordinates,
     TextCoordinates,
     Visibility,
@@ -1981,8 +1980,6 @@ class LabelRowV2:
             encord_object["skeleton"] = coordinates.to_dict()
         elif isinstance(coordinates, CuboidCoordinates):
             encord_object["cuboid"] = coordinates.to_dict()
-        elif isinstance(coordinates, SegmentationCoordinatesByFile):
-            encord_object["segmentations_by_file"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
@@ -2514,8 +2511,6 @@ class LabelRowV2:
             return BitmaskCoordinates.from_dict(frame_object_label)
         elif frame_object_label.get("cuboid"):
             return CuboidCoordinates.from_dict(frame_object_label)
-        elif frame_object_label.get("segmentationsByFile"):
-            return SegmentationCoordinatesByFile.from_dict(frame_object_label)
         else:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
 

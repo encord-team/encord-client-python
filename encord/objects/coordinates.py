@@ -159,24 +159,6 @@ class CuboidCoordinates:
 
 
 @dataclass(frozen=True)
-class SegmentationCoordinatesByFile:
-    """Represents a segmentation mask on several point cloud files.
-
-    Attributes:
-        rle_string_by_file (Dict[str, str]): A dictionary mapping file paths to the RLE-encoded segmentation strings.
-    """
-
-    rle_string_by_file: Dict[str, str]
-
-    @staticmethod
-    def from_dict(d: dict) -> "SegmentationCoordinatesByFile":
-        return SegmentationCoordinatesByFile(rle_string_by_file=d["segmentationsByFile"])
-
-    def to_dict(self) -> dict:
-        return self.rle_string_by_file
-
-
-@dataclass(frozen=True)
 class PointCoordinate:
     """Represents a point coordinate, where all coordinates are a percentage relative to the total image size.
 
@@ -490,7 +472,6 @@ Coordinates = Union[
     SkeletonCoordinates,
     BitmaskCoordinates,
     CuboidCoordinates,
-    SegmentationCoordinatesByFile,
 ]
 
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
@@ -502,7 +483,6 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.SKELETON: [SkeletonCoordinates],
     Shape.BITMASK: [BitmaskCoordinates],
     Shape.CUBOID: [CuboidCoordinates],
-    Shape.SEGMENTATION: [SegmentationCoordinatesByFile],
     Shape.AUDIO: [AudioCoordinates],
     Shape.TEXT: [TextCoordinates, HtmlCoordinates],
 }
