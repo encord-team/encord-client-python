@@ -37,6 +37,8 @@ class Shape(StringEnum):
     BITMASK = "bitmask"
     AUDIO = "audio"
     TEXT = "text"
+    CUBOID = "cuboid"
+    SEGMENTATION = "segmentation"
 
 
 class DeidentifyRedactTextMode(Enum):

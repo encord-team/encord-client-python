@@ -52,12 +52,14 @@ from encord.objects.coordinates import (
     BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
+    CuboidCoordinates,
     HtmlCoordinates,
     PointCoordinate,
     PolygonCoordinates,
     PolygonCoordsToDict,
     PolylineCoordinates,
     RotatableBoundingBoxCoordinates,
+    SegmentationCoordinatesByFile,
     SkeletonCoordinates,
     TextCoordinates,
     Visibility,
@@ -1791,6 +1793,7 @@ class LabelRowV2:
             or data_type == DataType.IMAGE
             or data_type == DataType.NIFTI
             or data_type == DataType.PDF
+            or data_type == DataType.SCENE
         ):
             data_sequence = frame_level_data.frame_number
 
@@ -1828,6 +1831,11 @@ class LabelRowV2:
             ret["width"] = 0
             ret["height"] = 0
             ret["data_link"] = ""
+        elif self.data_type == DataType.SCENE:
+            ret["width"] = 0
+            ret["height"] = 0
+            ret["data_link"] = ""
+            ret["data_fps"] = 0
         elif self.data_type == DataType.PDF:
             ret["height"] = 0
             ret["width"] = 0
@@ -1876,6 +1884,7 @@ class LabelRowV2:
             or data_type == DataType.DICOM
             or data_type == DataType.NIFTI
             or data_type == DataType.PDF
+            or data_type == DataType.SCENE
         ):
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
@@ -1970,6 +1979,10 @@ class LabelRowV2:
             encord_object["bitmask"] = coordinates.to_dict()
         elif isinstance(coordinates, SkeletonCoordinates):
             encord_object["skeleton"] = coordinates.to_dict()
+        elif isinstance(coordinates, CuboidCoordinates):
+            encord_object["cuboid"] = coordinates.to_dict()
+        elif isinstance(coordinates, SegmentationCoordinatesByFile):
+            encord_object["segmentations_by_file"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
@@ -2111,7 +2124,7 @@ class LabelRowV2:
             height = data_dict.get("height")
             width = data_dict.get("width")
 
-        elif data_type == DataType.GROUP:
+        elif data_type == DataType.GROUP or data_type == DataType.SCENE:
             data_dict = list(label_row_dict["data_units"].values())[0]
             file_type = data_dict.get("data_type")
             data_link = None
@@ -2233,6 +2246,7 @@ class LabelRowV2:
                 or data_type == DataType.DICOM
                 or data_type == DataType.NIFTI
                 or data_type == DataType.PDF
+                or data_type == DataType.SCENE
             ):
                 for frame, frame_data in data_unit["labels"].items():
                     frame_num = int(frame)
@@ -2469,17 +2483,17 @@ class LabelRowV2:
         )
 
     def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
-        if "boundingBox" in frame_object_label:
+        if frame_object_label.get("boundingBox"):
             return BoundingBoxCoordinates.from_dict(frame_object_label)
-        if "rotatableBoundingBox" in frame_object_label:
+        if frame_object_label.get("rotatableBoundingBox"):
             return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
-        elif "polygon" in frame_object_label or "polygons" in frame_object_label:
+        elif frame_object_label.get("polygon") or "polygons" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
-        elif "point" in frame_object_label:
+        elif frame_object_label.get("point"):
             return PointCoordinate.from_dict(frame_object_label)
-        elif "polyline" in frame_object_label:
+        elif frame_object_label.get("polyline"):
             return PolylineCoordinates.from_dict(frame_object_label)
-        elif "skeleton" in frame_object_label:
+        elif frame_object_label.get("skeleton"):
 
             def _with_visibility_enum(point: dict):
                 if point.get(Visibility.INVISIBLE.value):
@@ -2496,8 +2510,12 @@ class LabelRowV2:
                 "values": values,
             }
             return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
-        elif "bitmask" in frame_object_label:
+        elif frame_object_label.get("bitmask"):
             return BitmaskCoordinates.from_dict(frame_object_label)
+        elif frame_object_label.get("cuboid"):
+            return CuboidCoordinates.from_dict(frame_object_label)
+        elif frame_object_label.get("segmentationsByFile"):
+            return SegmentationCoordinatesByFile.from_dict(frame_object_label)
         else:
             raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
 

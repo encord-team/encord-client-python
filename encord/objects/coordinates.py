@@ -128,6 +128,55 @@ class RotatableBoundingBoxCoordinates:
 
 
 @dataclass(frozen=True)
+class CuboidCoordinates:
+    """Represents a cuboid.
+
+    Attributes:
+        position (tuple[float, float, float]): The (x, y, z) coordinates of the center of the cuboid in the 3D space.
+        orientation (tuple[float, float, float]): The (alpha, beta, gamma) Euler angles of the cuboid, in radians.
+        size (tuple[float, float, float]): The size of the cuboid along its (x, y, z) axes.
+    """
+
+    position: tuple[float, float, float]
+    orientation: tuple[float, float, float]
+    size: tuple[float, float, float]
+
+    @staticmethod
+    def from_dict(d: dict) -> CuboidCoordinates:
+        cuboid_dict = d["cuboid"]
+        return CuboidCoordinates(
+            position=cuboid_dict["position"],
+            orientation=cuboid_dict["orientation"],
+            size=cuboid_dict["size"],
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "position": self.position,
+            "orientation": self.orientation,
+            "size": self.size,
+        }
+
+
+@dataclass(frozen=True)
+class SegmentationCoordinatesByFile:
+    """Represents a segmentation mask on several point cloud files.
+
+    Attributes:
+        rle_string_by_file (Dict[str, str]): A dictionary mapping file paths to the RLE-encoded segmentation strings.
+    """
+
+    rle_string_by_file: Dict[str, str]
+
+    @staticmethod
+    def from_dict(d: dict) -> "SegmentationCoordinatesByFile":
+        return SegmentationCoordinatesByFile(rle_string_by_file=d["segmentationsByFile"])
+
+    def to_dict(self) -> dict:
+        return self.rle_string_by_file
+
+
+@dataclass(frozen=True)
 class PointCoordinate:
     """Represents a point coordinate, where all coordinates are a percentage relative to the total image size.
 
@@ -440,6 +489,8 @@ Coordinates = Union[
     PolylineCoordinates,
     SkeletonCoordinates,
     BitmaskCoordinates,
+    CuboidCoordinates,
+    SegmentationCoordinatesByFile,
 ]
 
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
@@ -450,6 +501,8 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.POLYLINE: [PolylineCoordinates],
     Shape.SKELETON: [SkeletonCoordinates],
     Shape.BITMASK: [BitmaskCoordinates],
+    Shape.CUBOID: [CuboidCoordinates],
+    Shape.SEGMENTATION: [SegmentationCoordinatesByFile],
     Shape.AUDIO: [AudioCoordinates],
     Shape.TEXT: [TextCoordinates, HtmlCoordinates],
 }
