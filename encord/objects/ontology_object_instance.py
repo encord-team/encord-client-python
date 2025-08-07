@@ -371,7 +371,12 @@ class ObjectInstance:
                     for answer in answer_dict["answers"]:
                         feature_hash = answer["featureHash"]
                         option = attribute.get_child_by_hash(feature_hash, type_=Option)
-                        options.append(option)
+                        if option is None:
+                            logging.warning(
+                                f"MISSING_ANSWER: name='{answer_dict['answers'][0]['name']}', featureHash='{answer_dict['answers'][0]['featureHash']}', parentHash='{parent_feature_hash}'")
+                        else:
+                            options.append(option)
+
 
                 self._set_answer_unsafe(options, attribute, None)
             else:
