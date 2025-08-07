@@ -89,3 +89,10 @@ def test_polyline_coordinates():
     p3 = PolylineCoordinates.from_dict({"polyline": p3_dict})
     assert p3.values == [PointCoordinate3D(x=0, y=0, z=0), PointCoordinate3D(x=1, y=1, z=1)]
     assert p3.to_dict() == p3_dict
+
+    # mixed 2D and 3D points
+    with pytest.raises(LabelRowError):
+        PolylineCoordinates.from_dict({"polyline": [{"x": 0, "y": 0}, {"x": 1, "y": 1, "z": 1}]})
+    # point with missing coordinate
+    with pytest.raises(LabelRowError):
+        PolylineCoordinates.from_dict({"polyline": [{"x": 0}, {"x": 1, "y": 1}]})

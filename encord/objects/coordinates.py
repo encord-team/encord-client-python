@@ -211,13 +211,13 @@ class PointCoordinate3D:
 
     @staticmethod
     def from_dict(d: dict) -> PointCoordinate3D:
-        """Create a PointCoordinate instance from a dictionary.
+        """Create a PointCoordinate3D instance from a dictionary.
 
         Args:
             d (dict): A dictionary containing point coordinate information.
 
         Returns:
-            PointCoordinate: An instance of PointCoordinate.
+            PointCoordinate3D: An instance of PointCoordinate3D.
         """
         first_item = d["point"]["0"]
         return PointCoordinate3D(x=first_item["x"], y=first_item["y"], z=first_item["z"])
@@ -370,7 +370,6 @@ class PolylineCoordinates:
             PolylineCoordinates: An instance of PolylineCoordinates.
         """
         polyline = d["polyline"]
-        values: Union[List[PointCoordinate], List[PointCoordinate3D]] = []
 
         if isinstance(polyline, dict):
             sorted_dict_value_tuples = sorted((int(key), value) for key, value in polyline.items())
@@ -380,8 +379,9 @@ class PolylineCoordinates:
         else:
             raise LabelRowError(f"Invalid format for polyline coordinates: {polyline}")
 
-        all_2d = all("x" in value and "y" in value for value in sorted_dict_values)
-        all_3d = all("x" in value and "y" in value and "z" in value for value in sorted_dict_values)
+        all_2d = all("x" in pnt and "y" in pnt and "z" not in pnt for pnt in sorted_dict_values)
+        all_3d = all("x" in pnt and "y" in pnt and "z" in pnt for pnt in sorted_dict_values)
+        values: Union[List[PointCoordinate], List[PointCoordinate3D]] = []
         if all_3d:
             values = [PointCoordinate3D(x=value["x"], y=value["y"], z=value["z"]) for value in sorted_dict_values]
         elif all_2d:
