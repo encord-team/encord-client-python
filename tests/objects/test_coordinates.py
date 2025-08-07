@@ -5,7 +5,13 @@ import pytest
 
 from encord.exceptions import LabelRowError
 from encord.objects import Shape
-from encord.objects.coordinates import ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS, PointCoordinate, PolygonCoordinates
+from encord.objects.coordinates import (
+    ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    PointCoordinate,
+    PointCoordinate3D,
+    PolygonCoordinates,
+    PolylineCoordinates,
+)
 
 
 def test_acceptable_coordinates_for_ontology_items() -> None:
@@ -68,3 +74,18 @@ def test_polygon_coordinates_from_polygons_list():
         [[PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1), PointCoordinate(x=2, y=2)]],
         [[PointCoordinate(x=3, y=3), PointCoordinate(x=4, y=4), PointCoordinate(x=5, y=5)]],
     ]
+
+
+def test_polyline_coordinates():
+    p1 = PolylineCoordinates.from_dict({"polyline": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]})
+    assert p1.values == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+
+    p2_dict = {"0": {"x": 0, "y": 0}, "1": {"x": 1, "y": 1}}
+    p2 = PolylineCoordinates.from_dict({"polyline": p2_dict})
+    assert p2.values == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+    assert p2.to_dict() == p2_dict
+
+    p3_dict = {"0": {"x": 0, "y": 0, "z": 0}, "1": {"x": 1, "y": 1, "z": 1}}
+    p3 = PolylineCoordinates.from_dict({"polyline": p3_dict})
+    assert p3.values == [PointCoordinate3D(x=0, y=0, z=0), PointCoordinate3D(x=1, y=1, z=1)]
+    assert p3.to_dict() == p3_dict
