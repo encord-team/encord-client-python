@@ -29,6 +29,12 @@ jobs:
       - name: uv Version Bump
         run: uv version ${{ github.ref_name }}
 
+      - name: Commit version bump
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Bump version to ${{ github.ref_name }}"
+          push_options: --force
+
       - name: Build SDK
         run: uv build --sdist --wheel
 
