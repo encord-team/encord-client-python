@@ -195,6 +195,42 @@ class PointCoordinate:
         return {"0": {"x": self.x, "y": self.y}}
 
 
+@dataclass(frozen=True)
+class PointCoordinate3D:
+    """Represents a 3D point coordinate, where all coordinates are a percentage relative to the total image size.
+
+    Attributes:
+        x (float): The x-coordinate of the point.
+        y (float): The y-coordinate of the point.
+        z (float): The z-coordinate of the point.
+    """
+
+    x: float
+    y: float
+    z: float
+
+    @staticmethod
+    def from_dict(d: dict) -> PointCoordinate3D:
+        """Create a PointCoordinate3D instance from a dictionary.
+
+        Args:
+            d (dict): A dictionary containing point coordinate information.
+
+        Returns:
+            PointCoordinate3D: An instance of PointCoordinate3D.
+        """
+        first_item = d["point"]["0"]
+        return PointCoordinate3D(x=first_item["x"], y=first_item["y"], z=first_item["z"])
+
+    def to_dict(self) -> dict:
+        """Convert the PointCoordinate instance to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the point coordinate.
+        """
+        return {"0": {"x": self.x, "y": self.y, "z": self.z}}
+
+
 class PolygonCoordsToDict(str, Enum):
     single_polygon = "single_polygon"
     multiple_polygons = "multiple_polygons"
@@ -318,10 +354,10 @@ class PolylineCoordinates:
     """Represents polyline coordinates as a list of point coordinates.
 
     Attributes:
-        values (List[PointCoordinate]): A list of PointCoordinate objects defining the polyline.
+        values (Union[List[PointCoordinate], List[PointCoordinate3D]]): A list of (3D) PointCoordinate objects defining the polyline.
     """
 
-    values: List[PointCoordinate]
+    values: Union[List[PointCoordinate], List[PointCoordinate3D]]
 
     @staticmethod
     def from_dict(d: dict) -> PolylineCoordinates:
@@ -334,7 +370,6 @@ class PolylineCoordinates:
             PolylineCoordinates: An instance of PolylineCoordinates.
         """
         polyline = d["polyline"]
-        values: List[PointCoordinate] = []
 
         if isinstance(polyline, dict):
             sorted_dict_value_tuples = sorted((int(key), value) for key, value in polyline.items())
@@ -344,12 +379,15 @@ class PolylineCoordinates:
         else:
             raise LabelRowError(f"Invalid format for polyline coordinates: {polyline}")
 
-        for value in sorted_dict_values:
-            point_coordinate = PointCoordinate(
-                x=value["x"],
-                y=value["y"],
-            )
-            values.append(point_coordinate)
+        all_2d = all("x" in pnt and "y" in pnt and "z" not in pnt for pnt in sorted_dict_values)
+        all_3d = all("x" in pnt and "y" in pnt and "z" in pnt for pnt in sorted_dict_values)
+        values: Union[List[PointCoordinate], List[PointCoordinate3D]] = []
+        if all_3d:
+            values = [PointCoordinate3D(x=value["x"], y=value["y"], z=value["z"]) for value in sorted_dict_values]
+        elif all_2d:
+            values = [PointCoordinate(x=value["x"], y=value["y"]) for value in sorted_dict_values]
+        else:
+            raise LabelRowError(f"Invalid point format in polyline coordinates: {sorted_dict_values}")
 
         return PolylineCoordinates(values=values)
 
@@ -359,7 +397,13 @@ class PolylineCoordinates:
         Returns:
             dict: A dictionary representation of the polyline coordinates.
         """
-        return {str(idx): {"x": value.x, "y": value.y} for idx, value in enumerate(self.values)}
+        ret: Dict[str, Dict[str, float]] = {}
+        for idx, value in enumerate(self.values):
+            if isinstance(value, PointCoordinate3D):
+                ret[str(idx)] = {"x": value.x, "y": value.y, "z": value.z}
+            elif isinstance(value, PointCoordinate):
+                ret[str(idx)] = {"x": value.x, "y": value.y}
+        return ret
 
 
 class Visibility(CamelStrEnum):
@@ -467,6 +511,7 @@ Coordinates = Union[
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
     PointCoordinate,
+    PointCoordinate3D,
     PolygonCoordinates,
     PolylineCoordinates,
     SkeletonCoordinates,
@@ -477,7 +522,7 @@ Coordinates = Union[
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
     Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
     Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
-    Shape.POINT: [PointCoordinate],
+    Shape.POINT: [PointCoordinate, PointCoordinate3D],
     Shape.POLYGON: [PolygonCoordinates],
     Shape.POLYLINE: [PolylineCoordinates],
     Shape.SKELETON: [SkeletonCoordinates],

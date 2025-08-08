@@ -55,6 +55,7 @@ from encord.objects.coordinates import (
     CuboidCoordinates,
     HtmlCoordinates,
     PointCoordinate,
+    PointCoordinate3D,
     PolygonCoordinates,
     PolygonCoordsToDict,
     PolylineCoordinates,
@@ -1966,7 +1967,7 @@ class LabelRowV2:
             encord_object["polygons"] = coordinates.to_dict(PolygonCoordsToDict.multiple_polygons)
         elif isinstance(coordinates, PolylineCoordinates):
             encord_object["polyline"] = coordinates.to_dict()
-        elif isinstance(coordinates, PointCoordinate):
+        elif isinstance(coordinates, (PointCoordinate, PointCoordinate3D)):
             encord_object["point"] = coordinates.to_dict()
         elif isinstance(coordinates, BitmaskCoordinates):
             frame_view = self.get_frame_view(frame)
@@ -2487,7 +2488,13 @@ class LabelRowV2:
         elif "polygon" in frame_object_label or "polygons" in frame_object_label:
             return PolygonCoordinates.from_dict(frame_object_label)
         elif "point" in frame_object_label:
-            return PointCoordinate.from_dict(frame_object_label)
+            coords = frame_object_label["point"]["0"]
+            if "x" in coords and "y" in coords and "z" in coords:
+                return PointCoordinate3D.from_dict(frame_object_label)
+            elif "x" in coords and "y" in coords:
+                return PointCoordinate.from_dict(frame_object_label)
+            else:
+                raise ValueError(f"Invalid point coordinates in {frame_object_label}")
         elif "polyline" in frame_object_label:
             return PolylineCoordinates.from_dict(frame_object_label)
         elif "skeleton" in frame_object_label:
