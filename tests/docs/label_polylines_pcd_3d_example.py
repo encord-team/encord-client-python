@@ -30,381 +30,381 @@ assert project is not None, "Project not found — check PROJECT_ID"
 ontology_structure = project.ontology_structure
 assert ontology_structure is not None, "Ontology structure is missing in the project"
 
-# Get polyline object for branches
-polyline_ontology_object: Object = ontology_structure.get_child_by_title(title="Branches", type_=Object)
-assert polyline_ontology_object is not None, "Polyline object 'Branches' not found in ontology"
+# Get polyline object for Object of Interest
+polyline_ontology_object: Object = ontology_structure.get_child_by_title(title="Object of Interest", type_=Object)
+assert polyline_ontology_object is not None, "Polyline object 'Object of Interest' not found in ontology"
 
-# Get radio attribute for branch type
-branch_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
-assert branch_type_radio_attribute is not None, "Radio attribute 'Type?' not found in ontology"
+# Get radio attribute for Object of Interest type
+ooi_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
+assert ooi_type_radio_attribute is not None, "Radio attribute 'Type?' not found in ontology"
 
 # Get radio options
-fruiting_spur_option = branch_type_radio_attribute.get_child_by_title(type_=Option, title="Fruiting spur")
-assert fruiting_spur_option is not None, "Option 'Fruiting spur' not found under radio attribute 'Type?'"
+curb_option = ooi_type_radio_attribute.get_child_by_title(type_=Option, title="Curb")
+assert curb_option is not None, "Option 'Curb' not found under radio attribute 'Type?'"
 
-sucker_option = branch_type_radio_attribute.get_child_by_title(type_=Option, title="Sucker")
-assert sucker_option is not None, "Option 'Sucker' not found under radio attribute 'Type?'"
+lane_divider_option = ooi_type_radio_attribute.get_child_by_title(type_=Option, title="Lane divider")
+assert lane_divider_option is not None, "Option 'Lane divider' not found under radio attribute 'Type?'"
 
-side_shoot_option = branch_type_radio_attribute.get_child_by_title(type_=Option, title="Side shoot")
-assert side_shoot_option is not None, "Option 'Side shoot' not found under radio attribute 'Type?'"
+zebra_crossing_option = ooi_type_radio_attribute.get_child_by_title(type_=Option, title="Zebra crossing")
+assert zebra_crossing_option is not None, "Option 'Zebra crossing' not found under radio attribute 'Type?'"
 
-other_branch_option = branch_type_radio_attribute.get_child_by_title(type_=Option, title="Other branch type")
-assert other_branch_option is not None, "Option 'Other branch type' not found under radio attribute 'Type?'"
+other_ooi_option = ooi_type_radio_attribute.get_child_by_title(type_=Option, title="Other")
+assert other_ooi_option is not None, "Option 'Other' not found under radio attribute 'Type?'"
 
-# Fruiting spur Qualities
-fruiting_spur_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Fruiting spur Qualities?"
+# Curb Qualities
+curb_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Qualities?"
 )
-assert fruiting_spur_checklist_attribute is not None, "Checklist attribute 'Fruiting spur Qualities?' not found"
+assert curb_checklist_attribute is not None, "Checklist attribute 'Qualities?' not found"
 
-fruiting_spur_short_length_option = fruiting_spur_checklist_attribute.get_child_by_title(
-    type_=Option, title="Short length"
+curb_good_quality_option = curb_checklist_attribute.get_child_by_title(
+    type_=Option, title="Good quality"
 )
-assert fruiting_spur_short_length_option is not None, "Option 'Short length' not found under 'Fruiting spur Qualities?'"
+assert curb_good_quality_option is not None, "Option 'Good quality' not found under 'Qualities?'"
 
-fruiting_spur_high_bud_density_option = fruiting_spur_checklist_attribute.get_child_by_title(
-    type_=Option, title="High bud density"
+curb_well_lit_option = curb_checklist_attribute.get_child_by_title(
+    type_=Option, title="Well lit"
 )
-assert fruiting_spur_high_bud_density_option is not None, (
-    "Option 'High bud density' not found under 'Fruiting spur Qualities?'"
-)
-
-fruiting_spur_healthy_option = fruiting_spur_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
-assert fruiting_spur_healthy_option is not None, "Option 'Healthy' not found under 'Fruiting spur Qualities?'"
-
-# Sucker Qualities
-sucker_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Sucker Qualities?")
-assert sucker_checklist_attribute is not None, "Checklist attribute 'Sucker Qualities?' not found"
-
-sucker_short_length_option = sucker_checklist_attribute.get_child_by_title(type_=Option, title="Short length")
-assert sucker_short_length_option is not None, "Option 'Short length' not found under 'Sucker Qualities?'"
-
-sucker_high_bud_density_option = sucker_checklist_attribute.get_child_by_title(type_=Option, title="High bud density")
-assert sucker_high_bud_density_option is not None, "Option 'High bud density' not found under 'Sucker Qualities?'"
-
-sucker_healthy_option = sucker_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
-assert sucker_healthy_option is not None, "Option 'Healthy' not found under 'Sucker Qualities?'"
-
-# Side shoot Qualities
-side_shoot_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Side shoot Qualities?"
-)
-assert side_shoot_checklist_attribute is not None, "Checklist attribute 'Side shoot Qualities?' not found"
-
-side_shoot_short_length_option = side_shoot_checklist_attribute.get_child_by_title(type_=Option, title="Short length")
-assert side_shoot_short_length_option is not None, "Option 'Short length' not found under 'Side shoot Qualities?'"
-
-side_shoot_high_bud_density_option = side_shoot_checklist_attribute.get_child_by_title(
-    type_=Option, title="High bud density"
-)
-assert side_shoot_high_bud_density_option is not None, (
-    "Option 'High bud density' not found under 'Side shoot Qualities?'"
+assert curb_well_lit_option is not None, (
+    "Option 'Well lit' not found under 'Qualities?'"
 )
 
-side_shoot_healthy_option = side_shoot_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
-assert side_shoot_healthy_option is not None, "Option 'Healthy' not found under 'Side shoot Qualities?'"
+curb_fully_visible_option = curb_checklist_attribute.get_child_by_title(type_=Option, title="Fully visible")
+assert curb_fully_visible_option is not None, "Option 'Fully visible' not found under 'Curb Qualities?'"
 
-# Other branch type text attribute
-other_branch_option_text_attribute = ontology_structure.get_child_by_title(
-    type_=TextAttribute, title="Specify branch type"
+# Lane divider Qualities
+lane_divider_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Lane divider Qualities?")
+assert lane_divider_checklist_attribute is not None, "Checklist attribute 'Lane divider Qualities?' not found"
+
+lane_divider_good_quality_option = lane_divider_checklist_attribute.get_child_by_title(type_=Option, title="Good quality")
+assert lane_divider_good_quality_option is not None, "Option 'Good quality' not found under 'Lane divider Qualities?'"
+
+lane_divider_well_lit_option = lane_divider_checklist_attribute.get_child_by_title(type_=Option, title="Well lit")
+assert lane_divider_well_lit_option is not None, "Option 'Well lit' not found under 'Lane divider Qualities?'"
+
+lane_divider_fully_visible_option = lane_divider_checklist_attribute.get_child_by_title(type_=Option, title="Fully visible")
+assert lane_divider_fully_visible_option is not None, "Option 'Fully visible' not found under 'Lane divider Qualities?'"
+
+# Zebra crossing Qualities
+zebra_crossing_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Zebra crossing Qualities?"
 )
-assert other_branch_option_text_attribute is not None, "Text attribute 'Specify branch type' not found"
+assert zebra_crossing_checklist_attribute is not None, "Checklist attribute 'Zebra crossing Qualities?' not found"
+
+zebra_crossing_good_quality_option = zebra_crossing_checklist_attribute.get_child_by_title(type_=Option, title="Good quality")
+assert zebra_crossing_good_quality_option is not None, "Option 'Good quality' not found under 'Zebra crossing Qualities?'"
+
+zebra_crossing_well_lit_option = zebra_crossing_checklist_attribute.get_child_by_title(
+    type_=Option, title="Well lit"
+)
+assert zebra_crossing_well_lit_option is not None, (
+    "Option 'Well lit' not found under 'Zebra crossing Qualities?'"
+)
+
+zebra_crossing_fully_visible_option = zebra_crossing_checklist_attribute.get_child_by_title(type_=Option, title="Fully visible")
+assert zebra_crossing_fully_visible_option is not None, "Option 'Fully visible' not found under 'Zebra crossing Qualities?'"
+
+# Other text attribute
+other_ooi_option_text_attribute = ontology_structure.get_child_by_title(
+    type_=TextAttribute, title="Specify type"
+)
+assert other_ooi_option_text_attribute is not None, "Text attribute 'Specify type' not found"
 
 
-# Dictionary of labels per data unit and per frame with branch type specified, including quality options
-video_image_frame_labels = {
-    "cherries-001.jpg": {
+# Dictionary of labels per data unit and per frame with type specified, including quality options
+pcd_labels = {
+    "scene-1094": {
         0: {
-            "label_ref": "branch_001",
+            "label_ref": "ooi_001",
             "coordinates": PolylineCoordinates(
                 [
-                    PointCoordinate3D(0.013, 0.023),
-                    PointCoordinate3D(0.033, 0.033),
-                    PointCoordinate3D(0.053, 0.023),
-                    PointCoordinate3D(0.043, 0.013),
+                    PointCoordinate3D(2.013, 2.02, 2.015),
+                    PointCoordinate3D(3.033, 3.033, 3.033),
+                    PointCoordinate3D(4.053, 4.023, 4.017),
+                    PointCoordinate3D(0.043, 0.013, 0.043),
                 ]
             ),
-            "branch_type": "Fruiting spur",
-            "fruiting_spur_quality_options": "Short length, High bud density",
+            "ooi_type": "Curb",
+            "curb_quality_options": "Good quality, Well lit",
         }
     },
-    "cherries-010.jpg": {
+    "scene-0916": {
         0: [
             {
-                "label_ref": "branch_002",
+                "label_ref": "ooi_002",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.03, 0.023),
-                        PointCoordinate3D(0.033, 0.033),
-                        PointCoordinate3D(0.053, 0.033),
-                        PointCoordinate3D(0.043, 0.013),
+                        PointCoordinate3D(3.000, 2.300, 0.000),
+                        PointCoordinate3D(3.300, 3.300, 0.000),
+                        PointCoordinate3D(5.300, 3.300, 0.000),
+                        PointCoordinate3D(4.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Sucker",
-                "sucker_quality_options": "Short length, High bud density, Healthy",
+                "ooi_type": "Lane divider",
+                "lane_divider_quality_options": "Good quality, Well lit, Fully visible",
             },
             {
-                "label_ref": "branch_003",
+                "label_ref": "ooi_003",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.043, 0.053),
-                        PointCoordinate3D(0.063, 0.063),
-                        PointCoordinate3D(0.083, 0.053),
-                        PointCoordinate3D(0.073, 0.043),
+                        PointCoordinate3D(4.300, 5.300, 0.000),
+                        PointCoordinate3D(6.300, 6.300, 0.000),
+                        PointCoordinate3D(8.300, 5.300, 0.000),
+                        PointCoordinate3D(7.300, 4.300, 0.000),
                     ]
                 ),
-                "branch_type": "Side shoot",
-                "side_shoot_quality_options": "Short length",
+                "ooi_type": "Zebra crossing",
+                "zebra_crossing_quality_options": "Good quality",
             },
             {
-                "label_ref": "branch_004",
+                "label_ref": "ooi_004",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.073, 0.023),
-                        PointCoordinate3D(0.093, 0.033),
-                        PointCoordinate3D(0.113, 0.023),
-                        PointCoordinate3D(0.103, 0.013),
+                        PointCoordinate3D(7.300, 2.300, 0.000),
+                        PointCoordinate3D(9.300, 3.300, 0.000),
+                        PointCoordinate3D(11.300, 2.300, 0.000),
+                        PointCoordinate3D(10.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Other branch type",
-                "Specify branch type": "Cane",
+                "ooi_type": "Other",
+                "Type": "Cane",
             },
         ],
     },
-    "cherries-ig": {
+    "scene-0796": {
         0: {
-            "label_ref": "branch_005",
+            "label_ref": "ooi_005",
             "coordinates": PolylineCoordinates(
                 [
-                    PointCoordinate3D(0.013, 0.023),
-                    PointCoordinate3D(0.033, 0.033),
-                    PointCoordinate3D(0.053, 0.023),
-                    PointCoordinate3D(0.043, 0.013),
+                    PointCoordinate3D(1.300, 2.300, 0.000),
+                    PointCoordinate3D(3.300, 3.300, 0.000),
+                    PointCoordinate3D(5.300, 2.300, 0.000),
+                    PointCoordinate3D(4.300, 1.300, 0.000),
                 ]
             ),
-            "branch_type": "Fruiting spur",
-            "fruiting_spur_quality_options": "Short length, High bud density",
+            "ooi_type": "Curb",
+            "curb_quality_options": "Good quality, Well lit",
         },
         2: [
             {
-                "label_ref": "branch_006",
+                "label_ref": "ooi_006",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.013, 0.023),
-                        PointCoordinate3D(0.033, 0.033),
-                        PointCoordinate3D(0.053, 0.023),
-                        PointCoordinate3D(0.043, 0.013),
+                        PointCoordinate3D(1.300, 2.300, 0.000),
+                        PointCoordinate3D(3.300, 3.300, 0.000),
+                        PointCoordinate3D(5.300, 2.300, 0.000),
+                        PointCoordinate3D(4.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Sucker",
-                "sucker_quality_options": "Healthy",
+                "ooi_type": "Lane divider",
+                "lane_divider_quality_options": "Fully visible",
             },
             {
-                "label_ref": "branch_007",
+                "label_ref": "ooi_007",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.043, 0.053),
-                        PointCoordinate3D(0.063, 0.063),
-                        PointCoordinate3D(0.083, 0.053),
-                        PointCoordinate3D(0.073, 0.043),
+                        PointCoordinate3D(4.300, 5.300, 0.000),
+                        PointCoordinate3D(6.300, 6.300, 0.000),
+                        PointCoordinate3D(8.300, 5.300, 0.000),
+                        PointCoordinate3D(7.300, 4.300, 0.000),
                     ]
                 ),
-                "branch_type": "Side shoot",
-                "side_shoot_quality_options": "Short length",
+                "ooi_type": "Zebra crossing",
+                "zebra_crossing_quality_options": "Good quality",
             },
             {
-                "label_ref": "branch_008",
+                "label_ref": "ooi_008",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.073, 0.023),
-                        PointCoordinate3D(0.093, 0.033),
-                        PointCoordinate3D(0.113, 0.023),
-                        PointCoordinate3D(0.103, 0.013),
+                        PointCoordinate3D(7.300, 2.300, 0.000),
+                        PointCoordinate3D(9.300, 3.300, 0.000),
+                        PointCoordinate3D(11.300, 2.300, 0.000),
+                        PointCoordinate3D(10.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Other branch type",
-                "Specify branch type": "Cane",
+                "ooi_type": "Other",
+                "Type": "Cane",
             },
         ],
     },
-    "cherries-is": {
+    "scene-1100": {
         0: {
-            "label_ref": "branch_009",
+            "label_ref": "ooi_009",
             "coordinates": PolylineCoordinates(
                 [
-                    PointCoordinate3D(0.013, 0.023),
-                    PointCoordinate3D(0.033, 0.033),
-                    PointCoordinate3D(0.053, 0.023),
-                    PointCoordinate3D(0.043, 0.013),
+                    PointCoordinate3D(1.300, 2.300, 0.000),
+                    PointCoordinate3D(3.300, 3.300, 0.000),
+                    PointCoordinate3D(5.300, 2.300, 0.000),
+                    PointCoordinate3D(4.300, 1.300, 0.000),
                 ]
             ),
-            "branch_type": "Fruiting spur",
-            "fruiting_spur_quality_options": "Short length",
+            "ooi_type": "Curb",
+            "curb_quality_options": "Good quality",
         },
         3: [
             {
-                "label_ref": "branch_010",
+                "label_ref": "ooi_010",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.013, 0.023),
-                        PointCoordinate3D(0.033, 0.033),
-                        PointCoordinate3D(0.053, 0.023),
-                        PointCoordinate3D(0.043, 0.013),
+                        PointCoordinate3D(1.300, 2.300, 0.000),
+                        PointCoordinate3D(3.300, 3.300, 0.000),
+                        PointCoordinate3D(5.300, 2.300, 0.000),
+                        PointCoordinate3D(4.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Sucker",
-                "sucker_quality_options": "Short length, High bud density, Healthy",
+                "ooi_type": "Lane divider",
+                "lane_divider_quality_options": "Good quality, Well lit, Fully visible",
             },
             {
-                "label_ref": "branch_011",
+                "label_ref": "ooi_011",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.043, 0.053),
-                        PointCoordinate3D(0.063, 0.063),
-                        PointCoordinate3D(0.083, 0.053),
-                        PointCoordinate3D(0.073, 0.043),
+                        PointCoordinate3D(4.300, 5.300, 0.000),
+                        PointCoordinate3D(6.300, 6.300, 0.000),
+                        PointCoordinate3D(8.300, 5.300, 0.000),
+                        PointCoordinate3D(7.300, 4.300, 0.000),
                     ]
                 ),
-                "branch_type": "Side shoot",
-                "side_shoot_quality_options": "Short length",
+                "ooi_type": "Zebra crossing",
+                "zebra_crossing_quality_options": "Good quality",
             },
             {
-                "label_ref": "branch_012",
+                "label_ref": "ooi_012",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.073, 0.023),
-                        PointCoordinate3D(0.093, 0.033),
-                        PointCoordinate3D(0.113, 0.023),
-                        PointCoordinate3D(0.103, 0.013),
+                        PointCoordinate3D(7.300, 2.300, 0.000),
+                        PointCoordinate3D(9.300, 3.300, 0.000),
+                        PointCoordinate3D(11.300, 2.300, 0.000),
+                        PointCoordinate3D(10.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Other branch type",
-                "Specify branch type": "Cane",
+                "ooi_type": "Other",
+                "Type": "Cane",
             },
         ],
     },
-    "cherries-vid-001.mp4": {
+    "scene-0655": {
         103: [
             {
-                "label_ref": "branch_013",
+                "label_ref": "ooi_013",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.013, 0.023),
-                        PointCoordinate3D(0.033, 0.033),
-                        PointCoordinate3D(0.053, 0.023),
-                        PointCoordinate3D(0.043, 0.013),
+                        PointCoordinate3D(1.300, 2.300, 0.000),
+                        PointCoordinate3D(3.300, 3.300, 0.000),
+                        PointCoordinate3D(5.300, 2.300, 0.000),
+                        PointCoordinate3D(4.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Side shoot",
-                "side_shoot_quality_options": "Short length",
+                "ooi_type": "Zebra crossing",
+                "zebra_crossing_quality_options": "Good quality",
             },
             {
-                "label_ref": "branch_014",
+                "label_ref": "ooi_014",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.043, 0.053),
-                        PointCoordinate3D(0.063, 0.063),
-                        PointCoordinate3D(0.083, 0.053),
-                        PointCoordinate3D(0.073, 0.043),
+                        PointCoordinate3D(4.300, 5.300, 0.000),
+                        PointCoordinate3D(6.300, 6.300, 0.000),
+                        PointCoordinate3D(8.300, 5.300, 0.000),
+                        PointCoordinate3D(7.300, 4.300, 0.000),
                     ]
                 ),
-                "branch_type": "Fruiting spur",
-                "fruiting_spur_quality_options": "Short length, High bud density, Healthy",
+                "ooi_type": "Curb",
+                "curb_quality_options": "Good quality, Well lit, Fully visible",
             },
             {
-                "label_ref": "branch_015",
+                "label_ref": "ooi_015",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.073, 0.023),
-                        PointCoordinate3D(0.093, 0.033),
-                        PointCoordinate3D(0.113, 0.023),
-                        PointCoordinate3D(0.103, 0.013),
+                        PointCoordinate3D(7.300, 2.300, 0.000),
+                        PointCoordinate3D(9.300, 3.300, 0.000),
+                        PointCoordinate3D(11.300, 2.300, 0.000),
+                        PointCoordinate3D(10.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Other branch type",
-                "Specify branch type": "Cane",
+                "ooi_type": "Other",
+                "Type": "Cane",
             },
         ],
         104: [
             {
-                "label_ref": "branch_016",
+                "label_ref": "ooi_016",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.013, 0.023),
-                        PointCoordinate3D(0.033, 0.033),
-                        PointCoordinate3D(0.053, 0.023),
-                        PointCoordinate3D(0.043, 0.013),
+                        PointCoordinate3D(1.300, 2.300, 0.000),
+                        PointCoordinate3D(3.300, 3.300, 0.000),
+                        PointCoordinate3D(5.300, 2.300, 0.000),
+                        PointCoordinate3D(4.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Side shoot",
-                "side_shoot_quality_options": "Short length",
+                "ooi_type": "Zebra crossing",
+                "zebra_crossing_quality_options": "Good quality",
             },
             {
-                "label_ref": "branch_014",
+                "label_ref": "ooi_014",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.0413, 0.0523),
-                        PointCoordinate3D(0.0613, 0.0623),
-                        PointCoordinate3D(0.0813, 0.0523),
-                        PointCoordinate3D(0.0713, 0.0423),
+                        PointCoordinate3D(4.130, 5.230, 0.000),
+                        PointCoordinate3D(6.130, 6.230, 0.000),
+                        PointCoordinate3D(8.130, 5.230, 0.000),
+                        PointCoordinate3D(7.130, 4.230, 0.000),
                     ]
                 ),
-                "branch_type": "Fruiting spur",
-                "fruiting_spur_quality_options": "Short length, High bud density, Healthy",
+                "ooi_type": "Curb",
+                "curb_quality_options": "Good quality, Well lit, Fully visible",
             },
             {
-                "label_ref": "branch_017",
+                "label_ref": "ooi_017",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.073, 0.023),
-                        PointCoordinate3D(0.093, 0.033),
-                        PointCoordinate3D(0.113, 0.023),
-                        PointCoordinate3D(0.103, 0.013),
+                        PointCoordinate3D(7.300, 2.300, 0.000),
+                        PointCoordinate3D(9.300, 3.300, 0.000),
+                        PointCoordinate3D(11.300, 2.300, 0.000),
+                        PointCoordinate3D(10.300, 1.300, 0.000),
                     ]
                 ),
-                "branch_type": "Other branch type",
-                "Specify branch type": "Cane",
+                "ooi_type": "Other",
+                "Type": "Cane",
             },
         ],
         105: [
             {
-                "label_ref": "branch_016",
+                "label_ref": "ooi_016",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.0113, 0.0223),
-                        PointCoordinate3D(0.0313, 0.0323),
-                        PointCoordinate3D(0.0513, 0.0223),
-                        PointCoordinate3D(0.0413, 0.0123),
+                        PointCoordinate3D(1.130, 2.230, 0.000),
+                        PointCoordinate3D(3.130, 3.230, 0.000),
+                        PointCoordinate3D(5.130, 2.230, 0.000),
+                        PointCoordinate3D(4.130, 1.230, 0.000),
                     ]
                 ),
-                "branch_type": "Side shoot",
-                "side_shoot_quality_options": "Short length",
+                "ooi_type": "Zebra crossing",
+                "zebra_crossing_quality_options": "Good quality",
             },
             {
-                "label_ref": "branch_014",
+                "label_ref": "ooi_014",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.0433, 0.0553),
-                        PointCoordinate3D(0.0633, 0.0653),
-                        PointCoordinate3D(0.0833, 0.0553),
-                        PointCoordinate3D(0.0733, 0.0453),
+                        PointCoordinate3D(4.330, 5.530, 0.000),
+                        PointCoordinate3D(6.330, 6.530, 0.000),
+                        PointCoordinate3D(8.330, 5.530, 0.000),
+                        PointCoordinate3D(7.330, 4.530, 0.000),
                     ]
                 ),
-                "branch_type": "Fruiting spur",
-                "fruiting_spur_quality_options": "Short length, High bud density, Healthy",
+                "ooi_type": "Curb",
+                "curb_quality_options": "Good quality, Well lit, Fully visible",
             },
             {
-                "label_ref": "branch_017",
+                "label_ref": "ooi_017",
                 "coordinates": PolylineCoordinates(
                     [
-                        PointCoordinate3D(0.0713, 0.0223),
-                        PointCoordinate3D(0.0913, 0.0323),
-                        PointCoordinate3D(0.1113, 0.0223),
-                        PointCoordinate3D(0.1013, 0.0123),
+                        PointCoordinate3D(7.130, 2.230, 0.000),
+                        PointCoordinate3D(9.130, 3.230, 0.000),
+                        PointCoordinate3D(11.130, 2.230, 0.000),
+                        PointCoordinate3D(10.130, 1.230, 0.000),
                     ]
                 ),
-                "branch_type": "Other branch type",
-                "Specify branch type": "Cane",
+                "ooi_type": "Other",
+                "Type": "Cane",
             },
         ],
     },
@@ -415,7 +415,7 @@ label_row_map = {}
 
 # Step 1: Initialize all label rows using a bundle
 with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
-    for data_unit in video_image_frame_labels.keys():
+    for data_unit in pcd_labels.keys():
         label_rows = project.list_label_rows_v2(data_title_eq=data_unit)
         assert isinstance(label_rows, list), f"Expected list of label rows for '{data_unit}', got {type(label_rows)}"
 
@@ -432,7 +432,7 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
 # Step 2: Process all frame coordinates and prepare label rows for saving
 label_rows_to_save = []
 
-for data_unit, frame_coordinates in video_image_frame_labels.items():
+for data_unit, frame_coordinates in pcd_labels.items():
     label_row = label_row_map.get(data_unit)
     assert label_row is not None, f"Label row not initialized for {data_unit}"
 
@@ -446,14 +446,14 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
         for item in items:
             label_ref = item["label_ref"]
             coord = item["coordinates"]
-            branch_type = item["branch_type"]
+            ooi_type = item["ooi_type"]
 
-            assert branch_type in {
-                "Fruiting spur",
-                "Sucker",
-                "Side shoot",
-                "Other branch type",
-            }, f"Unexpected branch type '{branch_type}' in {data_unit}"
+            assert ooi_type in {
+                "Curb",
+                "Lane divider",
+                "Zebra crossing",
+                "Other",
+            }, f"Unexpected type '{ooi_type}' in {data_unit}"
 
             if label_ref not in object_instances_by_label_ref:
                 polyline_object_instance: ObjectInstance = polyline_ontology_object.create_instance()
@@ -461,33 +461,33 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                 checklist_attribute = None
                 quality_options = []
 
-                # Assign radio and checklist attributes based on branch type
-                if branch_type == "Fruiting spur":
-                    assert fruiting_spur_option is not None, "Missing 'fruiting_spur_option'"
+                # Assign radio and checklist attributes based on the type
+                if ooi_type == "Curb":
+                    assert curb_option is not None, "Missing 'curb_option'"
                     polyline_object_instance.set_answer(
-                        attribute=branch_type_radio_attribute, answer=fruiting_spur_option
+                        attribute=ooi_type_radio_attribute, answer=curb_option
                     )
-                    checklist_attribute = fruiting_spur_checklist_attribute
-                    quality_options = item.get("fruiting_spur_quality_options", "").split(", ")
-                elif branch_type == "Sucker":
-                    assert sucker_option is not None, "Missing 'sucker_option'"
-                    polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=sucker_option)
-                    checklist_attribute = sucker_checklist_attribute
-                    quality_options = item.get("sucker_quality_options", "").split(", ")
-                elif branch_type == "Side shoot":
-                    assert side_shoot_option is not None, "Missing 'side_shoot_option'"
-                    polyline_object_instance.set_answer(attribute=branch_type_radio_attribute, answer=side_shoot_option)
-                    checklist_attribute = side_shoot_checklist_attribute
-                    quality_options = item.get("side_shoot_quality_options", "").split(", ")
-                elif branch_type == "Other branch type":
-                    assert other_branch_option is not None, "Missing 'other_branch_option'"
+                    checklist_attribute = curb_checklist_attribute
+                    quality_options =  [q.strip() for q in item.get("curb_quality_options", "").split(",") if q.strip()] 
+                elif ooi_type == "Lane divider":
+                    assert lane_divider_option is not None, "Missing 'lane_divider_option'"
+                    polyline_object_instance.set_answer(attribute=ooi_type_radio_attribute, answer=lane_divider_option)
+                    checklist_attribute = lane_divider_checklist_attribute
+                    quality_options =  [q.strip() for q in item.get("lane_divider_quality_options", "").split(",") if q.strip()] 
+                elif ooi_type == "Zebra crossing":
+                    assert zebra_crossing_option is not None, "Missing 'zebra_crossing_option'"
+                    polyline_object_instance.set_answer(attribute=ooi_type_radio_attribute, answer=zebra_crossing_option)
+                    checklist_attribute = zebra_crossing_checklist_attribute
+                    quality_options =  [q.strip() for q in item.get("zebra_crossing_quality_options", "").split(",") if q.strip()] 
+                elif ooi_type == "Other":
+                    assert other_ooi_option is not None, "Missing 'other_ooi_option'"
                     polyline_object_instance.set_answer(
-                        attribute=branch_type_radio_attribute, answer=other_branch_option
+                        attribute=ooi_type_radio_attribute, answer=other_ooi_option
                     )
-                    text_answer = item.get("Specify branch type", "")
-                    assert isinstance(text_answer, str), "'Specify branch type' must be a string"
+                    text_answer = item.get("Type", "")
+                    assert isinstance(text_answer, str), "'Type' must be a string"
                     polyline_object_instance.set_answer(
-                        attribute=other_branch_option_text_attribute, answer=text_answer
+                        attribute=other_ooi_option_text_attribute, answer=text_answer
                     )
                     quality_options = []
 
@@ -495,42 +495,42 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                 checklist_answers = []
                 for quality in quality_options:
                     option = None
-                    if quality == "Short length":
+                    if quality == "Good quality":
                         option = (
-                            fruiting_spur_short_length_option
-                            if branch_type == "Fruiting spur"
-                            else sucker_short_length_option
-                            if branch_type == "Sucker"
-                            else side_shoot_short_length_option
-                            if branch_type == "Side shoot"
+                            curb_good_quality_option
+                            if ooi_type == "Curb"
+                            else lane_divider_good_quality_option
+                            if ooi_type == "Lane divider"
+                            else zebra_crossing_good_quality_option
+                            if ooi_type == "Zebra crossing"
                             else None
                         )
-                    elif quality == "High bud density":
+                    elif quality == "Well lit":
                         option = (
-                            fruiting_spur_high_bud_density_option
-                            if branch_type == "Fruiting spur"
-                            else sucker_high_bud_density_option
-                            if branch_type == "Sucker"
-                            else side_shoot_high_bud_density_option
-                            if branch_type == "Side shoot"
+                            curb_well_lit_option
+                            if ooi_type == "Curb"
+                            else lane_divider_well_lit_option
+                            if ooi_type == "Lane divider"
+                            else zebra_crossing_well_lit_option
+                            if ooi_type == "Zebra crossing"
                             else None
                         )
-                    elif quality == "Healthy":
+                    elif quality == "Fully visible":
                         option = (
-                            fruiting_spur_healthy_option
-                            if branch_type == "Fruiting spur"
-                            else sucker_healthy_option
-                            if branch_type == "Sucker"
-                            else side_shoot_healthy_option
-                            if branch_type == "Side shoot"
+                            curb_fully_visible_option
+                            if ooi_type == "Curb"
+                            else lane_divider_fully_visible_option
+                            if ooi_type == "Lane divider"
+                            else zebra_crossing_fully_visible_option
+                            if ooi_type == "Zebra crossing"
                             else None
                         )
 
                     if option:
                         checklist_answers.append(option)
                     else:
-                        assert branch_type == "Other branch type", (
-                            f"Invalid quality '{quality}' for branch type '{branch_type}'"
+                        assert ooi_type == "Other", (
+                            f"Invalid quality '{quality}' for type '{ooi_type}'"
                         )
 
                 if checklist_attribute and checklist_answers:
@@ -561,4 +561,4 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
         label_row.save(bundle=bundle)
         print(f"Saved label row for {label_row.data_title}")
 
-print("Labels with branch type radio buttons, checklist attributes, and text labels added for all data units.")
+print("Labels with radio buttons, checklist attributes, and text labels added for all data units.")
