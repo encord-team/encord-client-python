@@ -4,6 +4,7 @@ Code Block Name: Bitmasks Images/Videos
 
 # Import dependencies
 import os
+from typing import Any
 
 import numpy as np
 
@@ -74,7 +75,7 @@ other_apple_option_text_attribute = ontology_structure.get_child_by_title(
 )
 assert other_apple_option_text_attribute is not None, "TextAttribute 'Specify apple type' not found"
 
-video_frame_labels = {
+video_frame_labels: dict[str, Any] = {
     "cherries-001.jpg": {
         0: {
             "label_ref": "apple_001",
@@ -243,10 +244,11 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
 label_rows_to_save = []
 
 for data_unit, frame_coordinates in video_frame_labels.items():
-    label_row = label_row_map.get(data_unit)
-    if not label_row:
+    if data_unit not in label_row_map:
         print(f"⚠️ Skipping: No initialized label row found for {data_unit}")
         continue
+
+    label_row = label_row_map[data_unit]
 
     object_instances_by_label_ref = {}
 
