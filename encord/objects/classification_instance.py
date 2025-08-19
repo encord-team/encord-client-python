@@ -347,7 +347,7 @@ class ClassificationInstance:
 
     def set_answer(
         self,
-        answer: Union[str, Option, Sequence[Option]],
+        answer: Union[str, float, Option, Sequence[Option]],
         attribute: Optional[Attribute] = None,
         overwrite: bool = False,
     ) -> None:

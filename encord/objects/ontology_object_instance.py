@@ -182,10 +182,10 @@ class ObjectInstance:
     def get_answer(
         self,
         attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_answer: Union[str, float, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
         is_dynamic: Optional[bool] = None,
-    ) -> Union[str, Option, Iterable[Option], AnswersForFrames, None]:
+    ) -> Union[str, float, Option, Iterable[Option], AnswersForFrames, None]:
         """Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
 
         For the ChecklistAttribute, it returns None if and only if
@@ -230,7 +230,7 @@ class ObjectInstance:
 
     def set_answer(
         self,
-        answer: Union[str, Option, Sequence[Option]],
+        answer: Union[str, float, Option, Sequence[Option]],
         attribute: Optional[Attribute] = None,
         frames: Optional[Frames] = None,
         overwrite: bool = False,
@@ -1051,7 +1051,7 @@ class DynamicAnswerManager:
     def get_answer(
         self,
         attribute: Attribute,
-        filter_answer: Union[str, Option, Iterable[Option], None] = None,
+        filter_answer: Union[str, float, Option, Iterable[Option], None] = None,
         filter_frames: Optional[Frames] = None,
     ) -> AnswersForFrames:
         """Get answers for a given attribute, filtered by the specified criteria.
