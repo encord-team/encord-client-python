@@ -38,7 +38,7 @@ from encord.objects.answers import (
     _get_static_answer_map,
     get_default_answer_from_attribute,
 )
-from encord.objects.attributes import Attribute, _get_attribute_by_hash
+from encord.objects.attributes import Attribute, NumericAttribute, _get_attribute_by_hash
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
@@ -847,7 +847,7 @@ class ObjectInstance:
 
     def _set_answer_unsafe(
         self,
-        answer: Union[str, Option, Iterable[Option]],
+        answer: Union[str, float, Option, Iterable[Option]],
         attribute: Attribute,
         ranges: Optional[Ranges],
     ) -> None:
@@ -877,6 +877,9 @@ class ObjectInstance:
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 options.append(option)
             self._set_answer_unsafe(options, attribute, ranges)
+        elif isinstance(attribute, NumericAttribute):
+            value: float = answer_dict["answers"]
+            self._set_answer_unsafe(value, attribute, ranges)
         else:
             raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
