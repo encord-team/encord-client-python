@@ -1016,7 +1016,7 @@ class DynamicAnswerManager:
                     del self._answers_to_frames[to_remove_answer]
 
     def set_answer(
-        self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
+        self, answer: Union[str, float, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
     ) -> None:
         """Set the answer for a given attribute and frames.
 
@@ -1031,7 +1031,9 @@ class DynamicAnswerManager:
             return
         self._set_answer(answer, attribute, frames)
 
-    def _set_answer(self, answer: Union[str, Option, Iterable[Option]], attribute: Attribute, frames: Frames) -> None:
+    def _set_answer(
+        self, answer: Union[str, float, Option, Iterable[Option]], attribute: Attribute, frames: Frames
+    ) -> None:
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:
             self._object_instance.check_within_range(frame)
