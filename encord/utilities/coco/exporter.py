@@ -1012,6 +1012,8 @@ class CocoExporter:
                 ret.update(self.get_radio_answer(attribute, answers))
             elif attribute.get_property_type() == PropertyType.CHECKLIST:
                 ret.update(self.get_checklist_answer(attribute, answers))
+            elif attribute.get_property_type() == PropertyType.NUMERIC:
+                ret.update(self.get_numeric_answer(attribute, answers))
 
         self.add_unselected_attributes(object_feature_hash, ret, match_dynamic_attributes=False)
 
@@ -1043,6 +1045,8 @@ class CocoExporter:
                     answers_dict.update(self.get_radio_answer(attribute, answers))
                 elif attribute.get_property_type() == PropertyType.CHECKLIST:
                     answers_dict.update(self.get_checklist_answer(attribute, answers))
+                elif attribute.get_property_type() == PropertyType.NUMERIC:
+                    answers_dict.update(self.get_numeric_answer(attribute, answers))
 
                 for sub_range in action["range"]:
                     for i in range(sub_range[0], sub_range[1] + 1):
@@ -1119,6 +1123,9 @@ class CocoExporter:
         return ret
 
     def get_text_answer(self, attribute: Attribute, answers: str) -> Dict[str, Any]:
+        return {attribute.name: answers}
+
+    def get_numeric_answer(self, attribute: Attribute, answers: float) -> Dict[str, Any]:
         return {attribute.name: answers}
 
     def get_category_id(self, object_: Dict[str, Any]) -> int:
