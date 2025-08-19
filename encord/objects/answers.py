@@ -19,6 +19,7 @@ from encord.common.deprecated import deprecated
 from encord.objects.attributes import (
     Attribute,
     ChecklistAttribute,
+    NumericAttribute,
     RadioAttribute,
     TextAttribute,
 )
@@ -432,6 +433,51 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
         return f"{self.__class__.__name__}({flat_values})"
 
 
+class NumericAnswer(Answer[float, NumericAttribute]):
+    def __init__(self, ontology_attribute: NumericAttribute):
+        super().__init__(ontology_attribute)
+        self._value: Optional[float] = None
+
+    def set(self, value: float, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
+        if not isinstance(value, float):
+            raise ValueError("NumericAnswer can only be set to a float.")
+
+        self._value = value
+        self._answered = True
+        self.is_manual_annotation = manual_annotation
+
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+        return {
+            "name": self.ontology_attribute.name,
+            "value": _lower_snake_case(self.ontology_attribute.name),
+            "answers": self._value,
+            "featureHash": self.ontology_attribute.feature_node_hash,
+            "manualAnnotation": self.is_manual_annotation,
+        }
+
+    def from_dict(self, d: Dict[str, Any]) -> None:
+        if d["featureHash"] != self.ontology_attribute.feature_node_hash:
+            raise ValueError("Cannot set the value of a NumericAnswer based on a different ontology attribute.")
+
+        self.set(d["answers"])
+        self.is_manual_annotation = d["manualAnnotation"]
+
+    def __hash__(self):
+        return hash((self._ontology_attribute.feature_node_hash, self._value, type(self).__name__))
+
+    def __eq__(self, other):
+        if not isinstance(other, NumericAnswer):
+            return False
+
+        return (
+            self._ontology_attribute.feature_node_hash == other._ontology_attribute.feature_node_hash
+            and self._value == other._value
+        )
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self._value})"
+
+
 def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
     if isinstance(attribute, TextAttribute):
         return TextAnswer(attribute)
@@ -439,6 +485,8 @@ def get_default_answer_from_attribute(attribute: Attribute) -> Answer:
         return RadioAnswer(attribute)
     elif isinstance(attribute, ChecklistAttribute):
         return ChecklistAnswer(attribute)
+    elif isinstance(attribute, NumericAttribute):
+        return NumericAnswer(attribute)
     else:
         raise RuntimeError(f"Got an attribute with an unexpected property type: {attribute}")
 
