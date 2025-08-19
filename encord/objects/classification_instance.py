@@ -36,6 +36,7 @@ from encord.objects.answers import Answer, ValueType, _get_static_answer_map
 from encord.objects.attributes import (
     Attribute,
     ChecklistAttribute,
+    NumericAttribute,
     RadioAttribute,
     TextAttribute,
     _get_attribute_by_hash,
@@ -420,6 +421,9 @@ class ClassificationInstance:
                     option = _get_option_by_hash(feature_hash, attribute.options)
                     options.append(option)
                 self._set_answer_unsafe(options, attribute)
+            elif isinstance(attribute, NumericAttribute):
+                value: float = answer_dict["answers"]
+                self._set_answer_unsafe(value, attribute)
             else:
                 raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
