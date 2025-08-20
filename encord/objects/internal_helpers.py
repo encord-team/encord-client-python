@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Sequence, Union
 
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer
-from encord.objects.attributes import Attribute, RadioAttribute, TextAttribute, NumericAttribute
+from encord.objects.attributes import Attribute, NumericAttribute, RadioAttribute, TextAttribute
 from encord.objects.options import Option
 
 
@@ -53,6 +53,7 @@ def _search_for_text_attributes(attributes: List[Attribute]) -> List[TextAttribu
         for option in attribute.options:
             text_attributes.extend(_search_for_text_attributes(option.attributes))
     return text_attributes
+
 
 def _search_for_numeric_attributes(attributes: List[Attribute]) -> List[NumericAttribute]:
     text_attributes: List[NumericAttribute] = []
