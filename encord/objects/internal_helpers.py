@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Sequence, Union
 
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer
-from encord.objects.attributes import Attribute, RadioAttribute, TextAttribute
+from encord.objects.attributes import Attribute, RadioAttribute, TextAttribute, NumericAttribute
 from encord.objects.options import Option
 
 
@@ -54,9 +54,19 @@ def _search_for_text_attributes(attributes: List[Attribute]) -> List[TextAttribu
             text_attributes.extend(_search_for_text_attributes(option.attributes))
     return text_attributes
 
+def _search_for_numeric_attributes(attributes: List[Attribute]) -> List[NumericAttribute]:
+    text_attributes: List[NumericAttribute] = []
+    for attribute in attributes:
+        if isinstance(attribute, NumericAttribute):
+            text_attributes.append(attribute)
+
+        for option in attribute.options:
+            text_attributes.extend(_search_for_numeric_attributes(option.attributes))
+    return text_attributes
+
 
 def _infer_attribute_from_answer(
-    attributes: List[Attribute], answer: Union[str, Option, Sequence[Option]]
+    attributes: List[Attribute], answer: Union[str, float, Option, Sequence[Option]]
 ) -> Attribute:
     if isinstance(answer, Option):
         parent_opt = _search_for_parent(answer, attributes)  # type: ignore
@@ -81,6 +91,20 @@ def _infer_attribute_from_answer(
                 f"Please provide the attribute explicitly. The found text attributes are {text_attributes}"
             )
         return text_attributes[0]
+
+    elif isinstance(answer, float):
+        numeric_attributes = _search_for_text_attributes(attributes)
+        if len(numeric_attributes) == 0:
+            raise LabelRowError(
+                "Cannot find any numeric attribute in the ontology of the given instance. Setting "
+                "a numeric answer is not supported."
+            )
+        if len(numeric_attributes) > 1:
+            raise LabelRowError(
+                "Multiple numeric attributes are present in the ontology of the given instance. "
+                f"Please provide the attribute explicitly. The found text attributes are {numeric_attributes}"
+            )
+        return numeric_attributes[0]
 
     elif isinstance(answer, Sequence):
         if len(answer) == 0:
