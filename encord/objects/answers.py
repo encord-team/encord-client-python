@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar
+from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar, Union
 
 from encord.common.deprecated import deprecated
 from encord.objects.attributes import (
@@ -433,14 +433,17 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
         return f"{self.__class__.__name__}({flat_values})"
 
 
-class NumericAnswer(Answer[float, NumericAttribute]):
+NumericAnswerValue = Union[float, int]
+
+
+class NumericAnswer(Answer[NumericAnswerValue, NumericAttribute]):
     def __init__(self, ontology_attribute: NumericAttribute):
         super().__init__(ontology_attribute)
-        self._value: Optional[float] = None
+        self._value: Optional[NumericAnswerValue] = None
 
-    def set(self, value: float, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
-        if not isinstance(value, float):
-            raise ValueError("NumericAnswer can only be set to a float.")
+    def set(self, value: NumericAnswerValue, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
+        if not isinstance(value, float) and not isinstance(value, int):
+            raise ValueError("NumericAnswer can only be set to a float or an int.")
 
         self._value = value
         self._answered = True

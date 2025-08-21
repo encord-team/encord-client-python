@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Sequence, Union
 
 from encord.exceptions import LabelRowError
-from encord.objects.answers import Answer
+from encord.objects.answers import Answer, NumericAnswerValue
 from encord.objects.attributes import Attribute, NumericAttribute, RadioAttribute, TextAttribute
 from encord.objects.options import Option
 
@@ -67,7 +67,7 @@ def _search_for_numeric_attributes(attributes: List[Attribute]) -> List[NumericA
 
 
 def _infer_attribute_from_answer(
-    attributes: List[Attribute], answer: Union[str, float, Option, Sequence[Option]]
+    attributes: List[Attribute], answer: Union[str, NumericAnswerValue, Option, Sequence[Option]]
 ) -> Attribute:
     if isinstance(answer, Option):
         parent_opt = _search_for_parent(answer, attributes)  # type: ignore
@@ -93,8 +93,8 @@ def _infer_attribute_from_answer(
             )
         return text_attributes[0]
 
-    elif isinstance(answer, float):
-        numeric_attributes = _search_for_text_attributes(attributes)
+    elif isinstance(answer, float) or isinstance(answer, int):
+        numeric_attributes = _search_for_numeric_attributes(attributes)
         if len(numeric_attributes) == 0:
             raise LabelRowError(
                 "Cannot find any numeric attribute in the ontology of the given instance. Setting "

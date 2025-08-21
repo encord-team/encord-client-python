@@ -33,11 +33,7 @@ from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
 from encord.objects import ChecklistAttribute, RadioAttribute, Shape, TextAttribute
-from encord.objects.answers import (
-    Answer,
-    _get_static_answer_map,
-    get_default_answer_from_attribute,
-)
+from encord.objects.answers import Answer, NumericAnswerValue, _get_static_answer_map, get_default_answer_from_attribute
 from encord.objects.attributes import Attribute, NumericAttribute, _get_attribute_by_hash
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
@@ -182,10 +178,10 @@ class ObjectInstance:
     def get_answer(
         self,
         attribute: Attribute,
-        filter_answer: Union[str, float, Option, Iterable[Option], None] = None,
+        filter_answer: Union[str, NumericAnswerValue, Option, Iterable[Option], None] = None,
         filter_frame: Optional[int] = None,
         is_dynamic: Optional[bool] = None,
-    ) -> Union[str, float, Option, Iterable[Option], AnswersForFrames, None]:
+    ) -> Union[str, NumericAnswerValue, Option, Iterable[Option], AnswersForFrames, None]:
         """Get the answer set for a given ontology Attribute. Returns `None` if the attribute is not yet answered.
 
         For the ChecklistAttribute, it returns None if and only if
@@ -230,7 +226,7 @@ class ObjectInstance:
 
     def set_answer(
         self,
-        answer: Union[str, float, Option, Sequence[Option]],
+        answer: Union[str, NumericAnswerValue, Option, Sequence[Option]],
         attribute: Optional[Attribute] = None,
         frames: Optional[Frames] = None,
         overwrite: bool = False,
@@ -244,10 +240,11 @@ class ObjectInstance:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
                 inferred.  For answers to :class:`encord.objects.common.RadioAttribute` or
-                :class:`encord.objects.common.ChecklistAttribute`, this can be inferred automatically. For
-                :class:`encord.objects.common.TextAttribute`, this will only be inferred there is only one possible
-                TextAttribute to set for the entire object instance. Otherwise, a
-                :class:`encord.exceptionsLabelRowError` will be thrown.
+                :class:`encord.objects.common.ChecklistAttribute`, this can be inferred automatically.
+                For :class:`encord.objects.common.TextAttribute` or :class:`encord.objects.common.NumericAttribute`,
+                this will only be inferred if there is only one possible
+                TextAttribute or NumericAttribute to set for the entire object instance.
+                Otherwise, a :class:`encord.exceptionsLabelRowError` will be thrown.
             frames: Only relevant for dynamic attributes. The frames to set the answer for. If `None`, the
                 answer is set for all frames that this object currently has set coordinates for (also overwriting
                 current answers). This will not automatically propagate the answer to new frames that are added in the
@@ -1016,7 +1013,10 @@ class DynamicAnswerManager:
                     del self._answers_to_frames[to_remove_answer]
 
     def set_answer(
-        self, answer: Union[str, float, Option, Iterable[Option]], attribute: Attribute, frames: Optional[Frames] = None
+        self,
+        answer: Union[str, NumericAnswerValue, Option, Iterable[Option]],
+        attribute: Attribute,
+        frames: Optional[Frames] = None,
     ) -> None:
         """Set the answer for a given attribute and frames.
 
@@ -1032,7 +1032,7 @@ class DynamicAnswerManager:
         self._set_answer(answer, attribute, frames)
 
     def _set_answer(
-        self, answer: Union[str, float, Option, Iterable[Option]], attribute: Attribute, frames: Frames
+        self, answer: Union[str, NumericAnswerValue, Option, Iterable[Option]], attribute: Attribute, frames: Frames
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:
@@ -1051,7 +1051,7 @@ class DynamicAnswerManager:
     def get_answer(
         self,
         attribute: Attribute,
-        filter_answer: Union[str, float, Option, Iterable[Option], None] = None,
+        filter_answer: Union[str, NumericAnswerValue, Option, Iterable[Option], None] = None,
         filter_frames: Optional[Frames] = None,
     ) -> AnswersForFrames:
         """Get answers for a given attribute, filtered by the specified criteria.

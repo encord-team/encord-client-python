@@ -32,7 +32,7 @@ from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType, is_geometric
 from encord.exceptions import LabelRowError
-from encord.objects.answers import Answer, ValueType, _get_static_answer_map
+from encord.objects.answers import Answer, NumericAnswerValue, ValueType, _get_static_answer_map
 from encord.objects.attributes import (
     Attribute,
     ChecklistAttribute,
@@ -347,7 +347,7 @@ class ClassificationInstance:
 
     def set_answer(
         self,
-        answer: Union[str, float, Option, Sequence[Option]],
+        answer: Union[str, NumericAnswerValue, Option, Sequence[Option]],
         attribute: Optional[Attribute] = None,
         overwrite: bool = False,
     ) -> None:
@@ -422,14 +422,12 @@ class ClassificationInstance:
                     options.append(option)
                 self._set_answer_unsafe(options, attribute)
             elif isinstance(attribute, NumericAttribute):
-                raw_value = answer_dict["answers"]
-                try:
-                    # This accepts a number or the string representation of a number
-                    float_value = float(raw_value)
-                except:
-                    raise LabelRowError(f"The answer for a numeric attribute should be a number. Found {raw_value}")
+                value = answer_dict["answers"]
 
-                self._set_answer_unsafe(float_value, attribute)
+                if not isinstance(value, float) and isinstance(value, int):
+                    raise LabelRowError(f"The answer for a numeric attribute must be a float or an int. Found {value}.")
+
+                self._set_answer_unsafe(value, attribute)
             else:
                 raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 

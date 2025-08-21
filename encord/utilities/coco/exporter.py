@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from shapely.geometry import MultiPolygon, Polygon
 
 from encord.exceptions import EncordException
+from encord.objects.answers import NumericAnswerValue
 from encord.objects.attributes import Attribute
 from encord.objects.common import PropertyType, Shape
 from encord.objects.ontology_object import Object
@@ -1125,7 +1126,7 @@ class CocoExporter:
     def get_text_answer(self, attribute: Attribute, answers: str) -> Dict[str, Any]:
         return {attribute.name: answers}
 
-    def get_numeric_answer(self, attribute: Attribute, answers: float) -> Dict[str, Any]:
+    def get_numeric_answer(self, attribute: Attribute, answers: NumericAnswerValue) -> Dict[str, Any]:
         return {attribute.name: answers}
 
     def get_category_id(self, object_: Dict[str, Any]) -> int:
