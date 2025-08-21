@@ -844,7 +844,7 @@ class ObjectInstance:
 
     def _set_answer_unsafe(
         self,
-        answer: Union[str, float, Option, Iterable[Option]],
+        answer: Union[str, NumericAnswerValue, Option, Iterable[Option]],
         attribute: Attribute,
         ranges: Optional[Ranges],
     ) -> None:
@@ -876,6 +876,10 @@ class ObjectInstance:
             self._set_answer_unsafe(options, attribute, ranges)
         elif isinstance(attribute, NumericAttribute):
             value: float = answer_dict["answers"]
+
+            if not isinstance(value, float) and not isinstance(value, int):
+                raise LabelRowError(f"The answer for a numeric attribute must be a float or an int. Found {value}.")
+
             self._set_answer_unsafe(value, attribute, ranges)
         else:
             raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")

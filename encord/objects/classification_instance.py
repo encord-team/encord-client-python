@@ -424,7 +424,7 @@ class ClassificationInstance:
             elif isinstance(attribute, NumericAttribute):
                 value = answer_dict["answers"]
 
-                if not isinstance(value, float) and isinstance(value, int):
+                if not isinstance(value, float) and not isinstance(value, int):
                     raise LabelRowError(f"The answer for a numeric attribute must be a float or an int. Found {value}.")
 
                 self._set_answer_unsafe(value, attribute)
