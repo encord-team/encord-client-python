@@ -254,6 +254,7 @@ class NumericAttribute(Attribute["FlatOption"]):
         return PropertyType.NUMERIC
 
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+        # Numeric attribute does not have a notion of "options"
         return None
 
 

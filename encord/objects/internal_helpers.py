@@ -56,14 +56,14 @@ def _search_for_text_attributes(attributes: List[Attribute]) -> List[TextAttribu
 
 
 def _search_for_numeric_attributes(attributes: List[Attribute]) -> List[NumericAttribute]:
-    text_attributes: List[NumericAttribute] = []
+    numeric_attributes: List[NumericAttribute] = []
     for attribute in attributes:
         if isinstance(attribute, NumericAttribute):
-            text_attributes.append(attribute)
+            numeric_attributes.append(attribute)
 
         for option in attribute.options:
-            text_attributes.extend(_search_for_numeric_attributes(option.attributes))
-    return text_attributes
+            numeric_attributes.extend(_search_for_numeric_attributes(option.attributes))
+    return numeric_attributes
 
 
 def _infer_attribute_from_answer(

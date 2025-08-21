@@ -422,8 +422,14 @@ class ClassificationInstance:
                     options.append(option)
                 self._set_answer_unsafe(options, attribute)
             elif isinstance(attribute, NumericAttribute):
-                value: float = answer_dict["answers"]
-                self._set_answer_unsafe(value, attribute)
+                raw_value = answer_dict["answers"]
+                try:
+                    # This accepts a number or the string representation of a number
+                    float_value = float(raw_value)
+                except:
+                    raise LabelRowError(f"The answer for a numeric attribute should be a number. Found {raw_value}")
+
+                self._set_answer_unsafe(float_value, attribute)
             else:
                 raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
