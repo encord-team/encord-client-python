@@ -29,43 +29,43 @@ assert project is not None, "Project not found — check PROJECT_ID"
 ontology_structure = project.ontology_structure
 assert ontology_structure is not None, "Ontology structure is missing in the project"
 
-# Get keypoint object for floral axis
-keypoint_ontology_object: Object = ontology_structure.get_child_by_title(title="Floral axis", type_=Object)
-assert keypoint_ontology_object is not None, "Keypoint object 'Floral axis' not found in ontology"
+# Get keypoint object for Point of Interest
+keypoint_ontology_object: Object = ontology_structure.get_child_by_title(title="Point of Interest", type_=Object)
+assert keypoint_ontology_object is not None, "Keypoint object 'Point of Interest' not found in ontology"
 
-# Get radio attribute for floral axis type
-floral_axis_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
-assert floral_axis_type_radio_attribute is not None, "Radio attribute 'Type?' not found"
+# Get radio attribute for Point of Interest type
+poi_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
+assert poi_type_radio_attribute is not None, "Radio attribute 'Type?' not found"
 
 # Get radio options
-pedicel_option = floral_axis_type_radio_attribute.get_child_by_title(type_=Option, title="Pedicel")
-assert pedicel_option is not None, "Option 'Pedicel' not found under radio attribute 'Type?'"
+sign_option = poi_type_radio_attribute.get_child_by_title(type_=Option, title="Sign")
+assert sign_option is not None, "Option 'Sign' not found under radio attribute 'Type?'"
 
-peduncle_option = floral_axis_type_radio_attribute.get_child_by_title(type_=Option, title="Peduncle")
+peduncle_option = poi_type_radio_attribute.get_child_by_title(type_=Option, title="Peduncle")
 assert peduncle_option is not None, "Option 'Peduncle' not found under radio attribute 'Type?'"
 
-other_floral_axis_option = floral_axis_type_radio_attribute.get_child_by_title(
-    type_=Option, title="Other floral axis type"
+other_poi_option = poi_type_radio_attribute.get_child_by_title(
+    type_=Option, title="Other Point of Interest type"
 )
-assert other_floral_axis_option is not None, "Option 'Other floral axis type' not found under radio attribute 'Type?'"
+assert other_poi_option is not None, "Option 'Other Point of Interest type' not found under radio attribute 'Type?'"
 
-# Get checklist attributes and options for Pedicel
-pedicel_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Pedicel Qualities?"
+# Get checklist attributes and options for Sign
+sign_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Sign Qualities?"
 )
-assert pedicel_checklist_attribute is not None, "Checklist attribute 'Pedicel Qualities?' not found"
+assert sign_checklist_attribute is not None, "Checklist attribute 'Sign Qualities?' not found"
 
-pedicel_robust_option = pedicel_checklist_attribute.get_child_by_title(type_=Option, title="Robust")
-assert pedicel_robust_option is not None, "Option 'Robust' not found under 'Pedicel Qualities?'"
+sign_robust_option = sign_checklist_attribute.get_child_by_title(type_=Option, title="Robust")
+assert sign_robust_option is not None, "Option 'Robust' not found under 'Sign Qualities?'"
 
-pedicel_healthy_option = pedicel_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
-assert pedicel_healthy_option is not None, "Option 'Healthy' not found under 'Pedicel Qualities?'"
+sign_healthy_option = sign_checklist_attribute.get_child_by_title(type_=Option, title="Healthy")
+assert sign_healthy_option is not None, "Option 'Healthy' not found under 'Sign Qualities?'"
 
-pedicel_growth_alignment_option = pedicel_checklist_attribute.get_child_by_title(
+sign_growth_alignment_option = sign_checklist_attribute.get_child_by_title(
     type_=Option, title="Good Growth and Alignment"
 )
-assert pedicel_growth_alignment_option is not None, (
-    "Option 'Good Growth and Alignment' not found under 'Pedicel Qualities?'"
+assert sign_growth_alignment_option is not None, (
+    "Option 'Good Growth and Alignment' not found under 'Sign Qualities?'"
 )
 
 # Get checklist attributes and options for Peduncle
@@ -87,159 +87,159 @@ assert peduncle_growth_alignment_option is not None, (
     "Option 'Good Growth and Alignment' not found under 'Peduncle Qualities?'"
 )
 
-# Get text attribute for specifying other floral axis types
-other_floral_axis_option_text_attribute = ontology_structure.get_child_by_title(
-    type_=TextAttribute, title="Specify floral axis type"
+# Get text attribute for specifying other Point of Interest types
+other_poi_option_text_attribute = ontology_structure.get_child_by_title(
+    type_=TextAttribute, title="Specify Point of Interest type"
 )
-assert other_floral_axis_option_text_attribute is not None, "Text attribute 'Specify floral axis type' not found"
+assert other_poi_option_text_attribute is not None, "Text attribute 'Specify Point of Interest type' not found"
 
-# Dictionary of labels per data unit and per frame with floral axis type specified, including quality options
+# Dictionary of labels per data unit and per frame with Point of Interest type specified, including quality options
 video_image_frame_labels = {
     "blueberries-001.jpg": {
         0: {
-            "label_ref": "floral_axis_001",
+            "label_ref": "poi_001",
             "coordinates": PointCoordinate3D(x=0.01, y=0.02),
-            "floral_axis_type": "Pedicel",
-            "pedicel_quality_options": "Robust, Healthy",
+            "poi_type": "Sign",
+            "sign_quality_options": "Robust, Healthy",
         }
     },
     "persimmons-010.jpg": {
         0: [
             {
-                "label_ref": "floral_axis_002",
+                "label_ref": "poi_002",
                 "coordinates": PointCoordinate3D(x=0.03, y=0.03),
-                "floral_axis_type": "Peduncle",
+                "poi_type": "Peduncle",
                 "peduncle_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
-                "label_ref": "floral_axis_003",
+                "label_ref": "poi_003",
                 "coordinates": PointCoordinate3D(x=0.05, y=0.04),
-                "floral_axis_type": "Peduncle",
+                "poi_type": "Peduncle",
                 "peduncle_quality_options": "Robust",
             },
             {
-                "label_ref": "floral_axis_004",
+                "label_ref": "poi_004",
                 "coordinates": PointCoordinate3D(x=0.09, y=0.03),
-                "floral_axis_type": "Other floral axis type",
-                "Specify floral axis type": "Calyx",
+                "poi_type": "Other Point of Interest type",
+                "Specify Point of Interest type": "Calyx",
             },
         ],
     },
     "blueberries-ig": {
         0: {
-            "label_ref": "floral_axis_005",
+            "label_ref": "poi_005",
             "coordinates": PointCoordinate3D(x=0.05, y=0.02),
-            "floral_axis_type": "Pedicel",
-            "pedicel_quality_options": "Robust, Healthy",
+            "poi_type": "Sign",
+            "sign_quality_options": "Robust, Healthy",
         },
         2: [
             {
-                "label_ref": "floral_axis_006",
+                "label_ref": "poi_006",
                 "coordinates": PointCoordinate3D(x=0.03, y=0.03),
-                "floral_axis_type": "Pedicel",
-                "pedicel_quality_options": "Good Growth and Alignment",
+                "poi_type": "Sign",
+                "sign_quality_options": "Good Growth and Alignment",
             },
             {
-                "label_ref": "floral_axis_007",
+                "label_ref": "poi_007",
                 "coordinates": PointCoordinate3D(x=0.04, y=0.05),
-                "floral_axis_type": "Pedicel",
-                "pedicel_quality_options": "Robust",
+                "poi_type": "Sign",
+                "sign_quality_options": "Robust",
             },
             {
-                "label_ref": "floral_axis_008",
+                "label_ref": "poi_008",
                 "coordinates": PointCoordinate3D(x=0.11, y=0.02),
-                "floral_axis_type": "Other floral axis type",
-                "Specify floral axis type": "Calyx",
+                "poi_type": "Other Point of Interest type",
+                "Specify Point of Interest type": "Calyx",
             },
         ],
     },
     "persimmons-is": {
         0: {
-            "label_ref": "floral_axis_009",
+            "label_ref": "poi_009",
             "coordinates": PointCoordinate3D(x=0.01, y=0.02),
-            "floral_axis_type": "Peduncle",
+            "poi_type": "Peduncle",
             "peduncle_quality_options": "Robust",
         },
         3: [
             {
-                "label_ref": "floral_axis_010",
+                "label_ref": "poi_010",
                 "coordinates": PointCoordinate3D(x=0.03, y=0.03),
-                "floral_axis_type": "Peduncle",
+                "poi_type": "Peduncle",
                 "peduncle_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
-                "label_ref": "floral_axis_011",
+                "label_ref": "poi_011",
                 "coordinates": PointCoordinate3D(x=0.08, y=0.05),
-                "floral_axis_type": "Peduncle",
+                "poi_type": "Peduncle",
                 "peduncle_quality_options": "Robust",
             },
             {
-                "label_ref": "floral_axis_012",
+                "label_ref": "poi_012",
                 "coordinates": PointCoordinate3D(x=0.11, y=0.02),
-                "floral_axis_type": "Other floral axis type",
-                "Specify floral axis type": "Calyx",
+                "poi_type": "Other Point of Interest type",
+                "Specify Point of Interest type": "Calyx",
             },
         ],
     },
     "blueberries-vid-001.mp4": {
         103: [
             {
-                "label_ref": "floral_axis_013",
+                "label_ref": "poi_013",
                 "coordinates": PointCoordinate3D(x=0.02, y=0.01),
-                "floral_axis_type": "Pedicel",
-                "pedicel_quality_options": "Robust",
+                "poi_type": "Sign",
+                "sign_quality_options": "Robust",
             },
             {
-                "label_ref": "floral_axis_014",
+                "label_ref": "poi_014",
                 "coordinates": PointCoordinate3D(x=0.06, y=0.06),
-                "floral_axis_type": "Pedicel",
-                "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
+                "poi_type": "Sign",
+                "sign_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
-                "label_ref": "floral_axis_015",
+                "label_ref": "poi_015",
                 "coordinates": PointCoordinate3D(x=0.10, y=0.01),
-                "floral_axis_type": "Other floral axis type",
-                "Specify floral axis type": "Calyx",
+                "poi_type": "Other Point of Interest type",
+                "Specify Point of Interest type": "Calyx",
             },
         ],
         104: [
             {
-                "label_ref": "floral_axis_016",
+                "label_ref": "poi_016",
                 "coordinates": PointCoordinate3D(x=0.04, y=0.01),
-                "floral_axis_type": "Pedicel",
-                "pedicel_quality_options": "Robust",
+                "poi_type": "Sign",
+                "sign_quality_options": "Robust",
             },
             {
-                "label_ref": "floral_axis_014",
+                "label_ref": "poi_014",
                 "coordinates": PointCoordinate3D(x=0.08, y=0.05),
-                "floral_axis_type": "Pedicel",
-                "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
+                "poi_type": "Sign",
+                "sign_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
-                "label_ref": "floral_axis_017",
+                "label_ref": "poi_017",
                 "coordinates": PointCoordinate3D(x=0.11, y=0.02),
-                "floral_axis_type": "Other floral axis type",
-                "Specify floral axis type": "Calyx",
+                "poi_type": "Other Point of Interest type",
+                "Specify Point of Interest type": "Calyx",
             },
         ],
         105: [
             {
-                "label_ref": "floral_axis_016",
+                "label_ref": "poi_016",
                 "coordinates": PointCoordinate3D(x=0.05, y=0.02),
-                "floral_axis_type": "Pedicel",
-                "pedicel_quality_options": "Robust",
+                "poi_type": "Sign",
+                "sign_quality_options": "Robust",
             },
             {
-                "label_ref": "floral_axis_014",
+                "label_ref": "poi_014",
                 "coordinates": PointCoordinate3D(x=0.07, y=0.04),
-                "floral_axis_type": "Pedicel",
-                "pedicel_quality_options": "Robust, Healthy, Good Growth and Alignment",
+                "poi_type": "Sign",
+                "sign_quality_options": "Robust, Healthy, Good Growth and Alignment",
             },
             {
-                "label_ref": "floral_axis_017",
+                "label_ref": "poi_017",
                 "coordinates": PointCoordinate3D(x=0.09, y=0.03),
-                "floral_axis_type": "Other floral axis type",
-                "Specify floral axis type": "Calyx",
+                "poi_type": "Other Point of Interest type",
+                "Specify Point of Interest type": "Calyx",
             },
         ],
     },
@@ -285,13 +285,13 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
         for item in items:
             label_ref = item["label_ref"]
             coord = item["coordinates"]
-            floral_axis_type = item["floral_axis_type"]
+            poi_type = item["poi_type"]
 
-            assert floral_axis_type in {
-                "Pedicel",
+            assert poi_type in {
+                "Sign",
                 "Peduncle",
-                "Other floral axis type",
-            }, f"Unexpected floral axis type '{floral_axis_type}' in data unit '{data_unit}'"
+                "Other Point of Interest type",
+            }, f"Unexpected Point of Interest type '{poi_type}' in data unit '{data_unit}'"
 
             # Check if label_ref already exists for reusability
             if label_ref not in object_instances_by_label_ref:
@@ -301,49 +301,49 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                 object_instances_by_label_ref[label_ref] = keypoint_object_instance
                 checklist_attribute = None
 
-                # Set floral axis type attribute
-                if floral_axis_type == "Pedicel":
-                    assert pedicel_option is not None, "Missing 'pedicel_option'"
+                # Set Point of Interest type attribute
+                if poi_type == "Sign":
+                    assert sign_option is not None, "Missing 'sign_option'"
                     keypoint_object_instance.set_answer(
-                        attribute=floral_axis_type_radio_attribute, answer=pedicel_option
+                        attribute=poi_type_radio_attribute, answer=sign_option
                     )
-                    checklist_attribute = pedicel_checklist_attribute
-                elif floral_axis_type == "Peduncle":
+                    checklist_attribute = sign_checklist_attribute
+                elif poi_type == "Peduncle":
                     assert peduncle_option is not None, "Missing 'peduncle_option'"
                     keypoint_object_instance.set_answer(
-                        attribute=floral_axis_type_radio_attribute, answer=peduncle_option
+                        attribute=poi_type_radio_attribute, answer=peduncle_option
                     )
                     checklist_attribute = peduncle_checklist_attribute
-                elif floral_axis_type == "Other floral axis type":
-                    assert other_floral_axis_option is not None, "Missing 'other_floral_axis_option'"
+                elif poi_type == "Other Point of Interest type":
+                    assert other_poi_option is not None, "Missing 'other_poi_option'"
                     keypoint_object_instance.set_answer(
-                        attribute=floral_axis_type_radio_attribute, answer=other_floral_axis_option
+                        attribute=poi_type_radio_attribute, answer=other_poi_option
                     )
-                    text_answer = item.get("Specify floral axis type", "")
-                    assert isinstance(text_answer, str), "'Specify floral axis type' must be a string"
+                    text_answer = item.get("Specify Point of Interest type", "")
+                    assert isinstance(text_answer, str), "'Specify Point of Interest type' must be a string"
                     keypoint_object_instance.set_answer(
-                        attribute=other_floral_axis_option_text_attribute,
+                        attribute=other_poi_option_text_attribute,
                         answer=text_answer,
                     )
 
                 # Set checklist attributes
                 checklist_answers = []
-                quality_key = f"{floral_axis_type.lower()}_quality_options"
+                quality_key = f"{poi_type.lower()}_quality_options"
                 quality_options = item.get(quality_key, "").split(", ")
 
                 for quality in quality_options:
                     if quality == "Robust":
                         checklist_answers.append(
-                            pedicel_robust_option if floral_axis_type == "Pedicel" else peduncle_robust_option
+                            sign_robust_option if poi_type == "Sign" else peduncle_robust_option
                         )
                     elif quality == "Healthy":
                         checklist_answers.append(
-                            pedicel_healthy_option if floral_axis_type == "Pedicel" else peduncle_healthy_option
+                            sign_healthy_option if poi_type == "Sign" else peduncle_healthy_option
                         )
                     elif quality == "Good Growth and Alignment":
                         checklist_answers.append(
-                            pedicel_growth_alignment_option
-                            if floral_axis_type == "Pedicel"
+                            sign_growth_alignment_option
+                            if poi_type == "Sign"
                             else peduncle_growth_alignment_option
                         )
 
@@ -373,4 +373,4 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
         label_row.save(bundle=bundle)
         print(f"Saved label row for {label_row.data_title}")
 
-print("Labels with floral axis type radio buttons, checklist attributes, and text labels added for all data units.")
+print("Labels with Point of Interest type radio buttons, checklist attributes, and text labels added for all data units.")
