@@ -8,10 +8,10 @@ import os
 
 from encord import EncordUserClient
 
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # Replace with file path to your SSH private key
-PROJECT_ID = "00000000-0000-0000-0000-000000000000" # Replace with Project unique ID
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with file path to your SSH private key
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with Project unique ID
 BUNDLE_SIZE = 100  # Customize as needed
-OUTPUT_JSON = "/Users/chris-encord/export-label-rows.json" # Replace with file path to save JSON output file
+OUTPUT_JSON = "/Users/chris-encord/export-label-rows.json"  # Replace with file path to save JSON output file
 
 # Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(

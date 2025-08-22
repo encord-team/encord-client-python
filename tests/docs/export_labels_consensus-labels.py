@@ -7,10 +7,10 @@ import json
 from encord import EncordUserClient
 
 # User input
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-PROJECT_ID = "00000000-0000-0000-0000-000000000000"
-OUTPUT_FILE_PATH = "/Users/chris-encord/frame_range_output.json"
-BUNDLE_SIZE = 100
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with file path to your SSH private key
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with Project unique ID
+OUTPUT_FILE_PATH = "/Users/chris-encord/frame_range_output.json"  # Replace with file path to save JSON output file
+BUNDLE_SIZE = 100  # Customize as needed
 
 # Create user client using SSH key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
