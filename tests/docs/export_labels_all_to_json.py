@@ -45,4 +45,3 @@ with open(output_file, "w") as file:
     json.dump(all_label_rows, file, indent=4)
 
 print(f"Label rows have been saved to {output_file}.")
-
