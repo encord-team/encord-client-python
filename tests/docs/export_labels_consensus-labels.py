@@ -24,7 +24,7 @@ project = user_client.get_project(PROJECT_ID)
 
 # Downloads a local copy of all the labels
 # Without the include_all_label_branches flag only the MAIN branch labels export
-label_rows = project.list_label_rows_v2(include_all_label_branches=True)
+label_rows = project.list_label_rows_v2(include_children=True, include_all_label_branches=True)
 
 output_data = []  # This will hold the output data to be saved as JSON
 
