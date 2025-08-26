@@ -96,7 +96,7 @@ class BitmaskCoordinates:
         return BitmaskCoordinates.EncodedBitmask(top=0, left=0, height=shape[0], width=shape[1], rle_string=rle_string)
 
     def to_dict(self) -> Dict[str, Any]:
-        """This method is used to serialise the object to Encord bitmask dictionary format.
+        """This method is used to serialize the object to Encord bitmask dictionary format.
         In most cases external users don't need it. Please consider using .to_numpy_array method, or just pass this
         BitmaskCoordinates objects to a constructor of any class that supports numpy array protocol,
         such as NumPy array, Pillow image, etc.

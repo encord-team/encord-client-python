@@ -135,7 +135,7 @@ class Project:
     def user_role(self) -> Optional[ProjectUserRole]:
         """Get the current user's role in the project.
 
-        This may return `None` if the user is an organisational admin and has accessed the project e.g. using
+        This may return `None` if the user is an organizational admin and has accessed the project e.g. using
         `include_org_access=True` of :meth:`encord.user_client.UserClient.list_projects`.
         """
         return self._project_instance.user_role
