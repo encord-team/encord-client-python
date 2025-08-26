@@ -329,7 +329,7 @@ class LabelRowV2:
     @property
     def data_link(self) -> Optional[str]:
         """Returns the data link to the underlying object in either cloud storage or Encord storage. This will be `None`
-        for DICOM series or image groups created without performance optimisations, as there is no single underlying
+        for DICOM series or image groups created without performance optimizations, as there is no single underlying
         file for these data types.
 
         This property will contain a signed URL if :meth:`.initialise_labels` was called with `include_signed_url=True`.
@@ -343,7 +343,7 @@ class LabelRowV2:
     def width(self) -> Optional[int]:
         """Returns the width of the image data type.
 
-        This is `None` for image groups without performance optimisation, as there is no single underlying width
+        This is `None` for image groups without performance optimization, as there is no single underlying width
         for this data type.
 
         Returns:
@@ -355,7 +355,7 @@ class LabelRowV2:
     def height(self) -> Optional[int]:
         """Returns the height of the image data type.
 
-        This is `None` for image groups without performance optimisation, as there is no single underlying height
+        This is `None` for image groups without performance optimization, as there is no single underlying height
         for this data type.
 
         Returns:
@@ -601,7 +601,7 @@ class LabelRowV2:
         """
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
-                "You are trying to re-initialise a label row that has already been initialised. This would overwrite "
+                "You are trying to re-initialise a label row that has already been initialized. This would overwrite "
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
@@ -1179,11 +1179,11 @@ class LabelRowV2:
         """Move a label row to the final workflow node, marking it as 'Complete'.
 
         This method can be called only for labels for which :meth:`.initialise_labels()` was called at least once, and
-        consequentially the "label_hash" field is not `None`. Labels need not be initialised every time the
+        consequentially the "label_hash" field is not `None`. Labels need not be initialized every time the
         workflow_complete() method is called.
 
         This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
-        feature, and will raise an error for projects that don't use Workflows.
+        feature, and raises an error for projects that do not use Workflows.
 
         Args:
             bundle: Optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
@@ -1193,7 +1193,7 @@ class LabelRowV2:
         """
         if self.label_hash is None:
             raise LabelRowError(
-                "For this operation you will need to initialise labelling first. Call the .initialise_labels() "
+                "For this operation you need to initialize labelling first. Call the .initialise_labels() "
                 "to do so first."
             )
 
