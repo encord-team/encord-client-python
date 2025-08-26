@@ -28,6 +28,7 @@ class StorageItemType(CamelStrEnum):
     NIFTI = auto()
     PLAIN_TEXT = auto()
     PDF = auto()
+    SCENE = auto()
 
 
 class StorageUserRole(CamelStrEnum):
