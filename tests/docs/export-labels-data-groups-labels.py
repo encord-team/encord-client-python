@@ -1,5 +1,5 @@
 """
-Code Block Name: Export labels to JSON
+Code Block Name: All labels Data Groups
 """
 
 # Import dependencies
