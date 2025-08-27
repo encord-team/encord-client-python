@@ -160,7 +160,7 @@ class EncordUserClient:
 
             * Dataset admin
 
-            * Organisation admin of the project
+            * Organization admin of the project
 
         Args:
             dataset_hash: The Dataset ID
@@ -190,7 +190,7 @@ class EncordUserClient:
 
             * Project team manager
 
-            * Organisation admin of the project
+            * Organization admin of the project
 
         Args:
             project_hash: The Project ID
