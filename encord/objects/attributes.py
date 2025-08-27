@@ -91,6 +91,10 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
             return TextAttribute(
                 **common_attribute_fields,
             )
+        elif property_type == NumericAttribute.get_property_type():
+            return NumericAttribute(
+                **common_attribute_fields,
+            )
 
         raise TypeError(
             f"Attribute is ill-formed: '{d}'. Expected to see either "
@@ -238,6 +242,19 @@ class TextAttribute(Attribute["FlatOption"]):
         return PropertyType.TEXT
 
     def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+        return None
+
+
+class NumericAttribute(Attribute["FlatOption"]):
+    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, dynamic: bool):
+        super().__init__(uid, feature_node_hash, name, required, dynamic)
+
+    @staticmethod
+    def get_property_type() -> PropertyType:
+        return PropertyType.NUMERIC
+
+    def _encode_options(self) -> Optional[List[Dict[str, Any]]]:
+        # Numeric attribute does not have a notion of "options"
         return None
 
 

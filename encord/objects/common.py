@@ -25,6 +25,7 @@ class PropertyType(StringEnum):
     RADIO = "radio"
     TEXT = "text"
     CHECKLIST = "checklist"
+    NUMERIC = "numeric"
 
 
 class Shape(StringEnum):
