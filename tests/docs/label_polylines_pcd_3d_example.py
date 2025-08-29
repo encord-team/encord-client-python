@@ -6,13 +6,12 @@ Code Block Name: Polylines PCD
 from pathlib import Path
 
 from encord import EncordUserClient, Project
-from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
+from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute, NumberAttribute
 from encord.objects.coordinates import PointCoordinate3D, PolylineCoordinates
 
 # User input
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-# SSH_PATH = get_ssh_key() # replace it with ssh key
-PROJECT_ID = "00000000-0000-0000-0000-000000000000"
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH private key
+PROJECT_ID = "00000000-0000-0000-0000-000000000000" # Replace with the unique ID for the Project
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key
@@ -109,7 +108,6 @@ other_ooi_option_text_attribute = ontology_structure.get_child_by_title(
     type_=TextAttribute, title="Specify type"
 )
 assert other_ooi_option_text_attribute is not None, "Text attribute 'Specify type' not found"
-
 
 # Dictionary of labels per data unit and per frame with type specified, including quality options
 pcd_labels = {

@@ -7,9 +7,9 @@ from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import CuboidCoordinates
 
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-# SSH_PATH = get_ssh_key() # replace it with ssh key
-PROJECT_ID = "00000000-0000-0000-0000-000000000000"
+# User input
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH private key
+PROJECT_ID = "00000000-0000-0000-0000-000000000000" # Replace with the unique ID for the Project
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key
