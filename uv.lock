@@ -363,7 +363,7 @@ wheels = [
 
 [[package]]
 name = "encord"
-version = "0.1.173"
+version = "0.1.174"
 source = { editable = "." }
 dependencies = [
     { name = "cryptography" },
