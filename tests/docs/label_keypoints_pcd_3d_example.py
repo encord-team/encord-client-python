@@ -95,7 +95,7 @@ assert other_poi_option_text_attribute is not None, "Text attribute 'Specify Poi
 
 # Dictionary of labels per data unit and per frame with Point of Interest type specified, including quality options
 video_image_frame_labels = {
-    "blueberries-001.jpg": {
+    "scene-1094": {
         0: {
             "label_ref": "poi_001",
             "coordinates": PointCoordinate3D(x=0.01, y=0.02),
@@ -103,7 +103,7 @@ video_image_frame_labels = {
             "sign_quality_options": "Robust, Healthy",
         }
     },
-    "persimmons-010.jpg": {
+    "scene-0916": {
         0: [
             {
                 "label_ref": "poi_002",
@@ -125,7 +125,7 @@ video_image_frame_labels = {
             },
         ],
     },
-    "blueberries-ig": {
+    "scene-0796": {
         0: {
             "label_ref": "poi_005",
             "coordinates": PointCoordinate3D(x=0.05, y=0.02),
@@ -153,7 +153,7 @@ video_image_frame_labels = {
             },
         ],
     },
-    "persimmons-is": {
+    "scene-1100": {
         0: {
             "label_ref": "poi_009",
             "coordinates": PointCoordinate3D(x=0.01, y=0.02),
@@ -181,7 +181,7 @@ video_image_frame_labels = {
             },
         ],
     },
-    "blueberries-vid-001.mp4": {
+    "scene-0655": {
         103: [
             {
                 "label_ref": "poi_013",

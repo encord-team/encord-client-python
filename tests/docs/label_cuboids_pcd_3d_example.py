@@ -25,9 +25,9 @@ project: Project = user_client.get_project(PROJECT_ID)
 # Create radio button attribute for Person type
 ontology_structure = project.ontology_structure
 
-# Find a bounding box annotation object in the project ontology
+# Find a cuboid annotation object in the project ontology
 cuboid_ontology_object: Object = ontology_structure.get_child_by_title(title="Person", type_=Object)
-assert cuboid_ontology_object is not None, "Bounding box object 'Person' not found in ontology."
+assert cuboid_ontology_object is not None, "Cuboid object 'Person' not found in ontology."
 
 person_type_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Type?")
 assert person_type_radio_attribute is not None, "Radio attribute 'Type?' not found in ontology."
