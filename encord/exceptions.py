@@ -98,6 +98,18 @@ class RateLimitExceededError(EncordException):
         self.retry_after = retry_after
 
 
+class PayloadTooLargeError(EncordException):
+    """Exception raised when request payload exceeds the maximum allowed size."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        context: Optional[ExceptionContext] = None,
+    ) -> None:
+        super().__init__(message, context)
+
+
 class UnknownException(EncordException):
     """Unknown error."""
 
