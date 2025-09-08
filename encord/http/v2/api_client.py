@@ -296,7 +296,7 @@ class ApiClient:
                 response.status_code,
                 response_headers=response.headers,
                 context=context,
-                message=description.get("message"),
+                message=description.get("message") or description.get("detail"),
             )
         except EncordException as e:
             raise e

@@ -5,6 +5,7 @@ from encord.exceptions import (
     AuthorisationError,
     InvalidArgumentsError,
     MethodNotAllowedError,
+    PayloadTooLargeError,
     RateLimitExceededError,
     ResourceNotFoundError,
     UnknownException,
@@ -15,6 +16,7 @@ HTTP_UNAUTHORIZED = 401
 HTTP_FORBIDDEN = 403
 HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
+HTTP_PAYLOAD_TOO_LARGE = 413
 HTTP_TOO_MANY_REQUESTS = 429
 HTTP_GENERAL_ERROR = 500
 
@@ -39,6 +41,11 @@ def handle_error_response(status_code: int, response_headers: Mapping[str, str],
 
     if status_code == HTTP_BAD_REQUEST:
         raise InvalidArgumentsError(message or "Provided payload is invalid and can't be processed.", context=context)
+
+    if status_code == HTTP_PAYLOAD_TOO_LARGE:
+        raise PayloadTooLargeError(
+            message or "Request payload is too large and exceeds the maximum allowed size.", context=context
+        )
 
     if status_code == HTTP_TOO_MANY_REQUESTS:
         retry_after_header = response_headers.get("Retry-After", "")
