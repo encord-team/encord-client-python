@@ -264,6 +264,16 @@ class ApiClient:
                         ", expected content",
                         context=context,
                     )
+            if update_trace_id_provider := self._config.requests_settings.update_trace_id_provider:
+                if x_cloud_trace_context := res.headers.get(HEADER_CLOUD_TRACE_CONTEXT, None):
+                    x_cloud_trace_context = x_cloud_trace_context.split(";")[0]
+                    span_id = (x_cloud_trace_context.split("/") + [None, None])[1]
+                    if span_id is not None:
+                        try:
+                            span_id_int = int(span_id)
+                            update_trace_id_provider(span_id_int)
+                        except:
+                            pass
             try:
                 res_json = res.json()
             except Exception as e:

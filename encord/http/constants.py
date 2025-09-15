@@ -46,5 +46,7 @@ class RequestsSettings:
     trace_id_provider: Optional[Callable[[], str]] = None
     """Function that supplies trace id for every request issued by the library. Random if not provided."""
 
+    update_trace_id_provider: Optional[Callable[[int], None]] = None
+
 
 DEFAULT_REQUESTS_SETTINGS = RequestsSettings()

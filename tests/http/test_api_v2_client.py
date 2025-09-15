@@ -2,12 +2,14 @@ import json
 from datetime import datetime
 from typing import Type, Union
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
 
 import pytest
 from pydantic import BaseModel
 from requests import Session
 
 from encord.configs import SshConfig
+from encord.http.common import HEADER_CLOUD_TRACE_CONTEXT
 from encord.http.v2.api_client import ApiClient
 from encord.orm.base_dto import BaseDTO, RootModelDTO
 from tests.fixtures import PRIVATE_KEY
@@ -106,6 +108,44 @@ def test_payload_url_serialisation(
         send.call_args_list[0].args[0].url
         == "https://api.encord.com/v2/public?text=test&number=0.01&time=2024-02-01T01%3A02%3A03%2B01%3A00"
     )
+
+
+@patch.object(Session, "send")
+def test_span_id_increment_appropriately(
+    send: MagicMock,
+    api_client: ApiClient,
+) -> None:
+    span_id = 1
+
+    def update_span_id(x: int) -> None:
+        nonlocal span_id
+        span_id = x + 1
+
+    trace_id = uuid4().hex
+    trace_id_provider = lambda: f"{trace_id}/{span_id};o=1"
+    api_client._config.requests_settings.trace_id_provider = trace_id_provider
+    api_client._config.requests_settings.update_trace_id_provider = update_span_id
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = None
+    mock_response.content = "null"
+    mock_response.headers = {HEADER_CLOUD_TRACE_CONTEXT: f"{trace_id}/5;o=1"}
+
+    send.return_value = mock_response
+
+    api_client.post("/", params=None, payload=None, result_type=None)
+    send.assert_called_once()
+    call_args = send.call_args.args
+    req = call_args[0]
+    assert req.headers.get(HEADER_CLOUD_TRACE_CONTEXT) == f"{trace_id}/1;o=1"
+
+    assert span_id == 6
+
+    api_client.post("/", params=None, payload=None, result_type=None)
+    assert send.call_count == 2
+    req_2 = send.call_args.args[0]
+    assert req_2.headers.get(HEADER_CLOUD_TRACE_CONTEXT) == f"{trace_id}/6;o=1"
 
 
 @pytest.mark.parametrize("payload_type", [TestPayload, TestPayloadV2, TestPayloadV3, None])
