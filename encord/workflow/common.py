@@ -45,7 +45,7 @@ class WorkflowAction(BaseDTO):
 
 
 class WorkflowMoveTasksRequest(BaseDTO):
-    task_uuids: list[UUID]
+    task_uuids: List[UUID]
     destination_stage_uuid: UUID
 
 
