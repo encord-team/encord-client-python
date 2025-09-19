@@ -11,6 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar
@@ -189,14 +190,21 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
 
     def set(self, value: NestableOption, manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION) -> None:
         if not isinstance(value, NestableOption):
-            raise ValueError("RadioAnswer can only be set to a NestableOption.")
+            logging.warning(f"No value for RadioAnswer")
+            return None
+            # raise ValueError("RadioAnswer can only be set to a NestableOption.")
 
         passed = any(value.feature_node_hash == child.feature_node_hash for child in self._ontology_attribute.options)
         if not passed:
-            raise ValueError(
+            logging.warning(
                 f"The supplied NestableOption `{value}` is not a child of the RadioAttribute that "
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
+            return None
+            # raise ValueError(
+            #     f"The supplied NestableOption `{value}` is not a child of the RadioAttribute that "
+            #     f"is associated with this class: `{self._ontology_attribute}`"
+            # )
         self._answered = True
         self._value = value
         self.is_manual_annotation = manual_annotation

@@ -862,6 +862,8 @@ class ObjectInstance:
         else:
             static_answer = self._static_answer_map[attribute.feature_node_hash]
             static_answer.set(answer)
+            if static_answer.is_answered() is False:
+                logging.warning("not answered!")
 
     def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute, parent_feature_hash: str | None = None) -> None:
         if attribute.dynamic:
