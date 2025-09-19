@@ -46,7 +46,7 @@ class WorkflowAction(BaseDTO):
 
 class WorkflowMoveTasksRequest(BaseDTO):
     task_uuids: list[UUID]
-    target_stage_uuid: UUID
+    destination_stage_uuid: UUID
 
 
 TaskT = TypeVar("TaskT", bound=WorkflowTask)
@@ -153,7 +153,7 @@ class WorkflowClient:
         self.api_client.post(
             path=f"/projects/{self.project_hash}/workflow/stages/{origin_stage_uuid}/move-tasks",
             params=None,
-            payload=WorkflowMoveTasksRequest(task_uuids=task_uuids, target_stage_uuid=destination_stage_uuid),
+            payload=WorkflowMoveTasksRequest(task_uuids=task_uuids, destination_stage_uuid=destination_stage_uuid),
             result_type=None,
         )
 

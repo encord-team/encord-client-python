@@ -15,6 +15,7 @@ from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_uuid_list
+from encord.http.bundle import Bundle
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowStageBase, WorkflowTask
 
@@ -76,3 +77,12 @@ class FinalStageTask(WorkflowTask):
     - `data_hash` (UUID): Unique ID for the data unit.
     - `data_title` (str): Name of the data unit.
     """
+
+    def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client.move(
+            origin_stage_uuid=stage_uuid,
+            destination_stage_uuid=destination_stage_uuid,
+            task_uuids=[self.uuid],
+            bundle=bundle,
+        )

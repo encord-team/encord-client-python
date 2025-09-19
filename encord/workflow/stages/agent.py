@@ -71,6 +71,15 @@ class AgentTask(WorkflowTask):
             bundle=bundle,
         )
 
+    def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client.move(
+            origin_stage_uuid=stage_uuid,
+            destination_stage_uuid=destination_stage_uuid,
+            task_uuids=[self.uuid],
+            bundle=bundle,
+        )
+
 
 class _AgentTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
