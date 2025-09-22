@@ -33,16 +33,18 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
 
     name: str
     required: bool
+    archived: bool
     dynamic: bool
     """
     The `dynamic` member is part of every attribute. However it can only be true for top level (not nested) attributes
     that are part of an :class:`encord.objects.ontology_object.Object`.
     """
 
-    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, dynamic: bool):
+    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, archived: bool, dynamic: bool):
         super().__init__(uid=uid, feature_node_hash=feature_node_hash)
         self.name = name
         self.required = required
+        self.archived = archived
         self.dynamic = dynamic
 
     @property
@@ -108,6 +110,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
         ret["type"] = self.get_property_type().value
         ret["featureNodeHash"] = self.feature_node_hash
         ret["required"] = self.required
+        ret["archived"] = self.archived
         ret["dynamic"] = self.dynamic
 
         return ret
@@ -120,6 +123,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
             "name": attribute_dict["name"],
             "required": attribute_dict["required"],
             "dynamic": attribute_dict.get("dynamic", False),
+            "archived": attribute_dict.get("archived", False),
         }
 
     def __eq__(self, other: object):
@@ -137,10 +141,18 @@ class RadioAttribute(Attribute["NestableOption"]):
         feature_node_hash: str,
         name: str,
         required: bool,
+        archived: bool,
         dynamic: bool,
         options: Optional[List[NestableOption]] = None,
     ):
-        super().__init__(uid, feature_node_hash, name, required, dynamic)
+        super().__init__(
+            uid=uid,
+            feature_node_hash=feature_node_hash,
+            name=name,
+            required=required,
+            archived=archived,
+            dynamic=dynamic,
+        )
         self._options = options if options is not None else []
 
     @property
@@ -190,10 +202,18 @@ class ChecklistAttribute(Attribute["FlatOption"]):
         feature_node_hash: str,
         name: str,
         required: bool,
+        archived: bool,
         dynamic: bool,
         options: Optional[List[FlatOption]] = None,
     ):
-        super().__init__(uid, feature_node_hash, name, required, dynamic)
+        super().__init__(
+            uid=uid,
+            feature_node_hash=feature_node_hash,
+            name=name,
+            required=required,
+            archived=archived,
+            dynamic=dynamic,
+        )
         self._options = options if options is not None else []
 
     @staticmethod
@@ -234,8 +254,15 @@ class ChecklistAttribute(Attribute["FlatOption"]):
 
 
 class TextAttribute(Attribute["FlatOption"]):
-    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, dynamic: bool):
-        super().__init__(uid, feature_node_hash, name, required, dynamic)
+    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, archived: bool, dynamic: bool):
+        super().__init__(
+            uid=uid,
+            feature_node_hash=feature_node_hash,
+            name=name,
+            required=required,
+            archived=archived,
+            dynamic=dynamic,
+        )
 
     @staticmethod
     def get_property_type() -> PropertyType:
@@ -246,8 +273,15 @@ class TextAttribute(Attribute["FlatOption"]):
 
 
 class NumericAttribute(Attribute["FlatOption"]):
-    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, dynamic: bool):
-        super().__init__(uid, feature_node_hash, name, required, dynamic)
+    def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, archived: bool, dynamic: bool):
+        super().__init__(
+            uid=uid,
+            feature_node_hash=feature_node_hash,
+            name=name,
+            required=required,
+            archived=archived,
+            dynamic=dynamic,
+        )
 
     @staticmethod
     def get_property_type() -> PropertyType:
