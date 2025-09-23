@@ -90,12 +90,14 @@ class BundledMoveTasksPayload:
 
     def add(self, other: BundledMoveTasksPayload) -> BundledMoveTasksPayload:
         if self.origin_stage_uuid != other.origin_stage_uuid:
-            raise BundledWorkflowMoveTasksError(
+            raise BundledMoveWorkflowTasksPayloadError(
                 "It's only possilbe to bundle move tasks for one origin stage at a time"
             )
 
         if self.destination_stage_uuid != other.destination_stage_uuid:
-            raise BundledWorkflowMoveTasksError("It's only possilbe to bundle move tasks for one destination at a time")
+            raise BundledMoveWorkflowTasksPayloadError(
+                "It's only possilbe to bundle move tasks for one destination at a time"
+            )
 
         self.task_uuids.extend(other.task_uuids)
         return self
