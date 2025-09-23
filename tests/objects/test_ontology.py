@@ -23,6 +23,7 @@ OBJECT_1 = encord.objects.Object(
     color="#D33115",
     shape=encord.objects.Shape.BOUNDING_BOX,
     feature_node_hash="a55abbeb",
+    archived=False,
 )
 
 FLAT_OPTION_1 = encord.objects.FlatOption(
@@ -30,6 +31,7 @@ FLAT_OPTION_1 = encord.objects.FlatOption(
     feature_node_hash="2bc17c88",
     label="Is it a cute nose?",
     value="is_it_a_cute_nose?",
+    archived=False,
 )
 
 FLAT_OPTION_2 = encord.objects.FlatOption(
@@ -37,6 +39,7 @@ FLAT_OPTION_2 = encord.objects.FlatOption(
     feature_node_hash="86eaa4f2",
     label="Is it a wet nose? ",
     value="is_it_a_wet_nose?_",
+    archived=False,
 )
 
 CHECKLIST_ATTRIBUTE = encord.objects.ChecklistAttribute(
@@ -46,6 +49,7 @@ CHECKLIST_ATTRIBUTE = encord.objects.ChecklistAttribute(
     required=True,
     dynamic=False,
     options=[FLAT_OPTION_1, FLAT_OPTION_2],
+    archived=False,
 )
 
 
@@ -56,6 +60,7 @@ OBJECT_2 = encord.objects.Object(
     shape=encord.objects.Shape.POLYGON,
     feature_node_hash="86648f32",
     attributes=[CHECKLIST_ATTRIBUTE],
+    archived=False,
 )
 
 # intentionally using a different import for backwards compatibility check
@@ -65,6 +70,7 @@ RADIO_ATTRIBUTE_1 = encord.objects.RadioAttribute(
     name="Leaf",
     required=False,
     dynamic=False,
+    archived=False,
 )
 
 NESTABLE_OPTION_3 = encord.objects.NestableOption(
@@ -73,6 +79,7 @@ NESTABLE_OPTION_3 = encord.objects.NestableOption(
     label="Nested Option",
     value="nested_option",
     nested_options=[RADIO_ATTRIBUTE_1],
+    archived=False,
 )
 
 RADIO_ATTRIBUTE_2 = encord.objects.RadioAttribute(
@@ -82,6 +89,7 @@ RADIO_ATTRIBUTE_2 = encord.objects.RadioAttribute(
     required=False,
     dynamic=False,
     options=[NESTABLE_OPTION_3],
+    archived=False,
 )
 OBJECT_3 = encord.objects.Object(
     uid=3,
@@ -90,6 +98,7 @@ OBJECT_3 = encord.objects.Object(
     shape=encord.objects.Shape.POLYLINE,
     feature_node_hash="6eeba59b",
     attributes=[RADIO_ATTRIBUTE_2],
+    archived=False,
 )
 
 NESTABLE_OPTION_1 = encord.objects.NestableOption(
@@ -97,6 +106,7 @@ NESTABLE_OPTION_1 = encord.objects.NestableOption(
     feature_node_hash="a3aeb48d",
     label="Yes",
     value="yes",
+    archived=False,
 )
 
 NESTABLE_OPTION_2 = encord.objects.NestableOption(
@@ -104,6 +114,7 @@ NESTABLE_OPTION_2 = encord.objects.NestableOption(
     feature_node_hash="d0a4b373",
     label="No",
     value="no",
+    archived=False,
 )
 
 RADIO_ATTRIBUTE_3 = encord.objects.RadioAttribute(
@@ -113,12 +124,14 @@ RADIO_ATTRIBUTE_3 = encord.objects.RadioAttribute(
     required=True,
     dynamic=False,
     options=[NESTABLE_OPTION_1, NESTABLE_OPTION_2],
+    archived=False,
 )
 # intentionally using a different import for backwards compatibility check
 CLASSIFICATION_1 = encord.objects.Classification(
     uid=1,
     feature_node_hash="a39d81c0",
     attributes=[RADIO_ATTRIBUTE_3],
+    archived=False,
 )
 SKELETON_TEMPLATE_COORDINATES = [
     SkeletonTemplateCoordinate(x=0, y=0, name="point_0"),
