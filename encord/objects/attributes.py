@@ -309,7 +309,12 @@ def _add_attribute(
 ) -> AttributeType:
     local_uid, feature_node_hash = _build_identifiers(attributes, local_uid, feature_node_hash)
     attr = cls(
-        name=name, uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, required=required, dynamic=dynamic
+        name=name,
+        uid=parent_uid + [local_uid],
+        feature_node_hash=feature_node_hash,
+        required=required,
+        archived=False,
+        dynamic=dynamic,
     )
 
     attributes.append(attr)
