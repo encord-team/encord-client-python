@@ -96,7 +96,7 @@ class BundledMoveTasksPayload:
 
         if self.destination_stage_uuid != other.destination_stage_uuid:
             raise BundledMoveWorkflowTasksPayloadError(
-                "It's only possilbe to bundle move tasks for one destination at a time"
+                "It's only possilbe to bundle move tasks for one destination stage at a time"
             )
 
         self.task_uuids.extend(other.task_uuids)
