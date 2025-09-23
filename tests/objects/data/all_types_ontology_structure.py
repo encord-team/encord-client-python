@@ -13,13 +13,31 @@ from encord.objects.ontology_labels_impl import Classification
 all_types_structure = OntologyStructure(
     objects=[
         Object(
-            uid=1, name="Box", color="#D33115", shape=Shape.BOUNDING_BOX, feature_node_hash="MjI2NzEy", archived=False, attributes=[]
+            uid=1,
+            name="Box",
+            color="#D33115",
+            shape=Shape.BOUNDING_BOX,
+            feature_node_hash="MjI2NzEy",
+            archived=False,
+            attributes=[],
         ),
         Object(
-            uid=2, name="Polygon", color="#E27300", shape=Shape.POLYGON, feature_node_hash="ODkxMzAx", archived=False, attributes=[]
+            uid=2,
+            name="Polygon",
+            color="#E27300",
+            shape=Shape.POLYGON,
+            feature_node_hash="ODkxMzAx",
+            archived=False,
+            attributes=[],
         ),
         Object(
-            uid=3, name="Polyline", color="#16406C", shape=Shape.POLYLINE, feature_node_hash="OTcxMzIy", archived=False, attributes=[]
+            uid=3,
+            name="Polyline",
+            color="#16406C",
+            shape=Shape.POLYLINE,
+            feature_node_hash="OTcxMzIy",
+            archived=False,
+            attributes=[],
         ),
         Object(
             uid=4,
@@ -30,7 +48,12 @@ all_types_structure = OntologyStructure(
             archived=False,
             attributes=[
                 TextAttribute(
-                    uid=[5, 1], feature_node_hash="OTkxMjU1", name="First name", required=False, archived=False, dynamic=True
+                    uid=[5, 1],
+                    feature_node_hash="OTkxMjU1",
+                    name="First name",
+                    required=False,
+                    archived=False,
+                    dynamic=True,
                 ),
                 ChecklistAttribute(
                     uid=[5, 2],
@@ -40,8 +63,12 @@ all_types_structure = OntologyStructure(
                     archived=False,
                     dynamic=True,
                     options=[
-                        FlatOption(uid=[5, 2, 1], feature_node_hash="MTE5MjQ3", label="Angry", value="angry", archived=False),
-                        FlatOption(uid=[5, 2, 2], feature_node_hash="Nzg3MDE3", label="Sad", value="sad", archived=False),
+                        FlatOption(
+                            uid=[5, 2, 1], feature_node_hash="MTE5MjQ3", label="Angry", value="angry", archived=False
+                        ),
+                        FlatOption(
+                            uid=[5, 2, 2], feature_node_hash="Nzg3MDE3", label="Sad", value="sad", archived=False
+                        ),
                     ],
                 ),
                 RadioAttribute(
@@ -117,7 +144,12 @@ all_types_structure = OntologyStructure(
             archived=False,
             attributes=[
                 TextAttribute(
-                    uid=[5, 1], feature_node_hash="OTkxMjU1", name="First name", required=False, archived=False, dynamic=False
+                    uid=[5, 1],
+                    feature_node_hash="OTkxMjU1",
+                    name="First name",
+                    required=False,
+                    archived=False,
+                    dynamic=False,
                 ),
                 ChecklistAttribute(
                     uid=[5, 2],
@@ -127,8 +159,12 @@ all_types_structure = OntologyStructure(
                     archived=False,
                     dynamic=False,
                     options=[
-                        FlatOption(uid=[5, 2, 1], feature_node_hash="MTE5MjQ3", label="Angry", value="angry", archived=False),
-                        FlatOption(uid=[5, 2, 2], feature_node_hash="Nzg3MDE3", label="Sad", value="sad", archived=False),
+                        FlatOption(
+                            uid=[5, 2, 1], feature_node_hash="MTE5MjQ3", label="Angry", value="angry", archived=False
+                        ),
+                        FlatOption(
+                            uid=[5, 2, 2], feature_node_hash="Nzg3MDE3", label="Sad", value="sad", archived=False
+                        ),
                     ],
                 ),
             ],
@@ -142,7 +178,12 @@ all_types_structure = OntologyStructure(
             archived=False,
             attributes=[
                 TextAttribute(
-                    uid=[5, 1], feature_node_hash="OTk555U1", name="First name", required=False, archived=False, dynamic=False
+                    uid=[5, 1],
+                    feature_node_hash="OTk555U1",
+                    name="First name",
+                    required=False,
+                    archived=False,
+                    dynamic=False,
                 ),
                 ChecklistAttribute(
                     uid=[5, 2],
@@ -152,8 +193,12 @@ all_types_structure = OntologyStructure(
                     archived=False,
                     dynamic=False,
                     options=[
-                        FlatOption(uid=[5, 2, 1], feature_node_hash="MT5555Q3", label="Angry", value="angry", archived=False),
-                        FlatOption(uid=[5, 2, 2], feature_node_hash="Nzg5555E3", label="Sad", value="sad", archived=False),
+                        FlatOption(
+                            uid=[5, 2, 1], feature_node_hash="MT5555Q3", label="Angry", value="angry", archived=False
+                        ),
+                        FlatOption(
+                            uid=[5, 2, 2], feature_node_hash="Nzg5555E3", label="Sad", value="sad", archived=False
+                        ),
                     ],
                 ),
                 RadioAttribute(
@@ -197,10 +242,18 @@ all_types_structure = OntologyStructure(
                                     dynamic=False,
                                     options=[
                                         FlatOption(
-                                            uid=[5, 2, 1], feature_node_hash="MT66665Q3", label="Angry", value="angry", archived=False
+                                            uid=[5, 2, 1],
+                                            feature_node_hash="MT66665Q3",
+                                            label="Angry",
+                                            value="angry",
+                                            archived=False,
                                         ),
                                         FlatOption(
-                                            uid=[5, 2, 2], feature_node_hash="Nzg66665E3", label="Sad", value="sad", archived=False
+                                            uid=[5, 2, 2],
+                                            feature_node_hash="Nzg66665E3",
+                                            label="Sad",
+                                            value="sad",
+                                            archived=False,
                                         ),
                                     ],
                                 )

@@ -131,7 +131,6 @@ CLASSIFICATION_1 = encord.objects.Classification(
     uid=1,
     feature_node_hash="a39d81c0",
     attributes=[RADIO_ATTRIBUTE_3],
-    archived=False,
 )
 SKELETON_TEMPLATE_COORDINATES = [
     SkeletonTemplateCoordinate(x=0, y=0, name="point_0"),
