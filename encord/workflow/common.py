@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
 from uuid import UUID
 
+from encord.exceptions import BundledMoveWorkflowTasksPayloadError
 from encord.http.bundle import Bundle, bundled_operation
 from encord.http.v2.api_client import ApiClient
 from encord.issues.issue_client import TaskIssues
@@ -88,12 +89,14 @@ class BundledMoveTasksPayload:
     task_uuids: List[UUID]
 
     def add(self, other: BundledMoveTasksPayload) -> BundledMoveTasksPayload:
-        assert self.origin_stage_uuid == other.origin_stage_uuid, (
-            "It's only possilbe to bundle move tasks for one origin stage at a time"
-        )
-        assert self.destination_stage_uuid == other.destination_stage_uuid, (
-            "It's only possilbe to bundle move tasks for one destination at a time"
-        )
+        if self.origin_stage_uuid != other.origin_stage_uuid:
+            raise BundledWorkflowMoveTasksError(
+                "It's only possilbe to bundle move tasks for one origin stage at a time"
+            )
+
+        if self.destination_stage_uuid != other.destination_stage_uuid:
+            raise BundledWorkflowMoveTasksError("It's only possilbe to bundle move tasks for one destination at a time")
+
         self.task_uuids.extend(other.task_uuids)
         return self
 
