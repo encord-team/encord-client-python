@@ -40,7 +40,10 @@ class AgentTask(WorkflowTask):
 
     **Allowed actions**
 
-    ...
+    - `proceed(pathway_name | pathway_uuid, bundle=None)`: 
+      Advance the task along a specific pathway from the current stage.
+    - `move(destination_stage_uuid, bundle=None)`:
+      Move the task directly to another stage in the workflow.
     """
 
     status: AgentTaskStatus
@@ -57,6 +60,20 @@ class AgentTask(WorkflowTask):
         *,
         bundle: Optional[Bundle] = None,
     ) -> None:
+        """
+        Advance the task along a pathway from the current stage.
+
+        Exactly one of `pathway_name` or `pathway_uuid` must be provided to
+        specify the pathway to take.
+
+        Args:
+            pathway_name (Optional[str]): Name of the pathway to follow.
+            pathway_uuid (Optional[Union[UUID, str]]): Unique identifier of the pathway to follow.
+            bundle (Optional[Bundle]): Optional bundle to associate with the action.
+
+        Raises:
+            ValueError: If neither `pathway_name` nor `pathway_uuid` is provided.
+        """
         if not pathway_name and not pathway_uuid:
             raise ValueError("Either `pathway_name` or `pathway_uuid` parameter must be provided.")
 
@@ -72,6 +89,13 @@ class AgentTask(WorkflowTask):
         )
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        """
+        Move the task from its current stage to another stage.
+
+        Args:
+            destination_stage_uuid (UUID): Unique identifier of the stage to move the task to.
+            bundle (Optional[Bundle]): Optional bundle to associate with the move action.
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(
             origin_stage_uuid=stage_uuid,
@@ -79,7 +103,6 @@ class AgentTask(WorkflowTask):
             task_uuids=[self.uuid],
             bundle=bundle,
         )
-
 
 class _AgentTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
