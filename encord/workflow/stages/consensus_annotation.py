@@ -105,7 +105,7 @@ class ConsensusAnnotationTask(WorkflowTask):
 
         - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the move.
-        
+
         **Returns**
 
         None
