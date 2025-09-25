@@ -91,7 +91,7 @@ class AgentTask(WorkflowTask):
         **Parameters**
             destination_stage_uuid (UUID): Unique identifier of the stage to move the task to.
             bundle (Optional[Bundle]): Optional bundle to associate with the move action.
-        
+
         **Returns**
 
         None
