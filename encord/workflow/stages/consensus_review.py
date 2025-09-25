@@ -237,7 +237,7 @@ class ConsensusReviewTask(WorkflowTask):
         )
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
-        """Move the review task from its current stage to another stage.
+        """Moves the review task from its current stage to another stage.
 
         **Parameters**
 

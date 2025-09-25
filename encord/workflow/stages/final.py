@@ -86,7 +86,7 @@ class FinalStageTask(WorkflowTask):
     data_title: str
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
-        """Move the final stage task from its current stage to another stage.
+        """Moves the final stage task from its current stage to another stage.
 
         **Parameters**
 
