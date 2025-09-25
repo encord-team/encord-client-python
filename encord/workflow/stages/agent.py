@@ -40,10 +40,8 @@ class AgentTask(WorkflowTask):
 
     **Allowed actions**
 
-    - `proceed(pathway_name | pathway_uuid, bundle=None)`: 
-      Advance the task along a specific pathway from the current stage.
-    - `move(destination_stage_uuid, bundle=None)`:
-      Move the task directly to another stage in the workflow.
+    - `proceed`: Advance the task along a specific pathway from the current stage.
+    - `move`: Move the task directly to another stage in the workflow.
     """
 
     status: AgentTaskStatus
