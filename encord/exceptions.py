@@ -271,3 +271,9 @@ class WrongProjectTypeError(CordException):
     """An error thrown when project type does not match the operation
     E.g. when TMS2 specific operations are attempted on non-TMS2 project
     """
+
+
+class BundledMoveWorkflowTasksPayloadError(EncordException):
+    """An error thrown when an invalid item is added to the bundle to move workflow tasks"""
+
+    pass

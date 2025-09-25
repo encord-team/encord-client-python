@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Iterable, List, Optional, Sequence, Tuple, Type, TypeVar
 from uuid import UUID
 
+from encord.exceptions import BundledMoveWorkflowTasksPayloadError
 from encord.http.bundle import Bundle, bundled_operation
 from encord.http.v2.api_client import ApiClient
 from encord.issues.issue_client import TaskIssues
@@ -44,6 +45,11 @@ class WorkflowAction(BaseDTO):
     task_uuid: UUID
 
 
+class WorkflowMoveTasksRequest(BaseDTO):
+    task_uuids: List[UUID]
+    destination_stage_uuid: UUID
+
+
 TaskT = TypeVar("TaskT", bound=WorkflowTask)
 ReviewT = TypeVar("ReviewT", bound=BaseDTO)
 
@@ -77,6 +83,27 @@ class BundledReviewActionPayload:
 
 
 @dataclass
+class BundledMoveTasksPayload:
+    origin_stage_uuid: UUID
+    destination_stage_uuid: UUID
+    task_uuids: List[UUID]
+
+    def add(self, other: BundledMoveTasksPayload) -> BundledMoveTasksPayload:
+        if self.origin_stage_uuid != other.origin_stage_uuid:
+            raise BundledMoveWorkflowTasksPayloadError(
+                "It's only possilbe to bundle move tasks for one origin stage at a time"
+            )
+
+        if self.destination_stage_uuid != other.destination_stage_uuid:
+            raise BundledMoveWorkflowTasksPayloadError(
+                "It's only possilbe to bundle move tasks for one destination stage at a time"
+            )
+
+        self.task_uuids.extend(other.task_uuids)
+        return self
+
+
+@dataclass
 class WorkflowClient:
     api_client: ApiClient
     project_hash: UUID
@@ -103,6 +130,36 @@ class WorkflowClient:
             path=f"/projects/{self.project_hash}/workflow/stages/{stage_uuid}/actions",
             params=None,
             payload=actions,
+            result_type=None,
+        )
+
+    def move(
+        self,
+        *,
+        origin_stage_uuid: UUID,
+        destination_stage_uuid: UUID,
+        task_uuids: List[UUID],
+        bundle: Optional[Bundle] = None,
+    ) -> None:
+        if not bundle:
+            self._move(origin_stage_uuid, destination_stage_uuid, task_uuids)
+        else:
+            bundled_operation(
+                bundle=bundle,
+                operation=self._move,
+                payload=BundledMoveTasksPayload(
+                    origin_stage_uuid=origin_stage_uuid,
+                    destination_stage_uuid=destination_stage_uuid,
+                    task_uuids=task_uuids,
+                ),
+                limit=500,
+            )
+
+    def _move(self, origin_stage_uuid: UUID, destination_stage_uuid: UUID, task_uuids: List[UUID]) -> None:
+        self.api_client.post(
+            path=f"/projects/{self.project_hash}/workflow/stages/{origin_stage_uuid}/move-tasks",
+            params=None,
+            payload=WorkflowMoveTasksRequest(task_uuids=task_uuids, destination_stage_uuid=destination_stage_uuid),
             result_type=None,
         )
 
