@@ -104,6 +104,7 @@ class AgentTask(WorkflowTask):
             bundle=bundle,
         )
 
+
 class _AgentTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
     data_hashes: Optional[List[UUID]] = None
