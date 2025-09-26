@@ -276,15 +276,48 @@ class PolygonCoordinates:
     def from_dict(d: dict) -> "PolygonCoordinates":
         """Create a PolygonCoordinates instance from a dictionary.
 
-        Supports both legacy format (single polygon with one contour) and new complex format.
+        Supports both legacy format (single polygon with one contour) and the new complex format (multiple polygons and contours).
 
         Args:
-            d (dict): A dictionary containing polygon coordinates information.
-                Legacy format: {"polygon": {str(idx): {"x": x, "y": y}} or {"polygon": [{"x": x, "y": y}]}
-                New format: {"polygons": [[[{"x": x, "y": y}]]]}
+        d (dict): Dictionary containing polygon coordinates information.
 
         Returns:
-            PolygonCoordinates: An instance of PolygonCoordinates.
+        PolygonCoordinates: A PolygonCoordinates instance.
+
+        Examples:
+        Legacy format (mapping of index -> point):
+        ```json
+        {
+          "polygon": {
+            "0": {"x": 12.3, "y": 45.6},
+            "1": {"x": 78.9, "y": 12.3}
+          }
+        }
+        ```
+
+        Legacy format (list of points):
+        ```json
+        {
+          "polygon": [
+            {"x": 12.3, "y": 45.6},
+            {"x": 78.9, "y": 12.3}
+          ]
+        }
+        ```
+
+        New format (polygons -> contours -> points):
+        ```json
+        {
+          "polygons": [
+            [
+              [
+                {"x": 12.3, "y": 45.6},
+                {"x": 78.9, "y": 12.3}
+              ]
+            ]
+          ]
+        }
+        ```
         """
         polygon_dict = d.get("polygon")
         values: List[PointCoordinate] = []
