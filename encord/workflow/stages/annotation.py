@@ -127,6 +127,7 @@ class AnnotationTask(WorkflowTask):
     - `submit`: Submits a task for review.
     - `assign`: Assigns a task to a user.
     - `release`: Releases a task from the current user.
+    - `move`: Moves the task to another stage in the workflow.
     """
 
     status: AnnotationTaskStatus
@@ -166,7 +167,11 @@ class AnnotationTask(WorkflowTask):
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the assignment.
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionAssign(task_uuid=self.uuid, assignee=assignee),
+            bundle=bundle,
+        )
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
         """Releases the task from the current user.
@@ -176,9 +181,24 @@ class AnnotationTask(WorkflowTask):
         - `bundle` (Optional[Bundle]): Optional bundle to be included with the release.
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionRelease(task_uuid=self.uuid),
+            bundle=bundle,
+        )
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        """Moves the task from its current stage to another stage.
+
+        **Parameters**
+
+        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
+        - `bundle` (Optional[Bundle]): Optional bundle to be included with the move.
+
+        **Returns**
+
+        None
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(
             origin_stage_uuid=stage_uuid,

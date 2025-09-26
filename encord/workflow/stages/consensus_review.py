@@ -122,14 +122,7 @@ class ConsensusReviewOption(BaseDTO):
 
 
 class ConsensusReviewTask(WorkflowTask):
-    status: ConsensusReviewTaskStatus
-    data_hash: UUID
-    data_title: str
-    assignee: Optional[str]
-    options: List[ConsensusReviewOption]
-
-    """
-    Represents tasks in the Review stage of a Consensus Project.
+    """Represents tasks in the Review stage of a Consensus Project.
 
     **Attributes**
 
@@ -145,7 +138,14 @@ class ConsensusReviewTask(WorkflowTask):
     - `reject`: Rejects a task.
     - `assign`: Assigns a task to a user.
     - `release`: Releases a task from the current user.
+    - `move`: Moves the review task to another stage in the workflow.
     """
+
+    status: ConsensusReviewTaskStatus
+    data_hash: UUID
+    data_title: str
+    assignee: Optional[str]
+    options: List[ConsensusReviewOption]
 
     def approve(
         self,
@@ -212,7 +212,11 @@ class ConsensusReviewTask(WorkflowTask):
         None
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionAssign(task_uuid=self.uuid, assignee=assignee),
+            bundle=bundle,
+        )
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
         """Release the current task from the current user.
@@ -226,9 +230,24 @@ class ConsensusReviewTask(WorkflowTask):
         None
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionRelease(task_uuid=self.uuid),
+            bundle=bundle,
+        )
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        """Moves the review task from its current stage to another stage.
+
+        **Parameters**
+
+        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
+        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the move.
+
+        **Returns**
+
+        None
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(
             origin_stage_uuid=stage_uuid,

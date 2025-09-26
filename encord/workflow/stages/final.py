@@ -69,19 +69,34 @@ class FinalStage(WorkflowStageBase):
 
 
 class FinalStageTask(WorkflowTask):
-    data_hash: UUID
-    data_title: str
-
-    """
-    Represents tasks in a FinalStage, which can only be queried. No actions can be taken on the task.
+    """Represents tasks in a FinalStage, which are read-only and cannot be acted upon
+    except for being moved programmatically.
 
     **Attributes**
 
     - `data_hash` (UUID): Unique ID for the data unit.
     - `data_title` (str): Name of the data unit.
+
+    **Allowed actions**
+
+    - `move`: Moves the task to another stage in the workflow.
     """
 
+    data_hash: UUID
+    data_title: str
+
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        """Moves the final stage task from its current stage to another stage.
+
+        **Parameters**
+
+        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
+        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the move.
+
+        **Returns**
+
+        None
+        """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(
             origin_stage_uuid=stage_uuid,
