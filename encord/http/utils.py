@@ -70,6 +70,7 @@ class CloudUploadSettings:
     failures are acceptable.
     """
 
+
 def _get_content_type(
     upload_item_type: StorageItemType,
     file_path: Union[str, Path],
