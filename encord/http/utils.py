@@ -44,20 +44,30 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CloudUploadSettings:
-    """The settings for uploading data into the GCP cloud storage. These apply for each individual upload. These settings
-    will overwrite the :meth:`encord.http.constants.RequestsSettings` which is set during
+    """Settings for uploading data into GCP cloud storage.
+
+    These apply for each individual upload and will overwrite
+    the :meth:`encord.http.constants.RequestsSettings` defined during
     :class:`encord.EncordUserClient` creation.
     """
 
     max_retries: Optional[int] = None
-    """Number of allowed retries when uploading"""
+    """Maximum number of allowed retries when uploading a file."""
+
     backoff_factor: Optional[float] = None
-    """With each retry, there will be a sleep of backoff_factor * (2 ** (retry_number - 1) )"""
-    allow_failures: bool = False
+    """Factor used to calculate exponential backoff between retries.
+
+    The delay before each retry is computed as:
+    ``backoff_factor * (2 ** (retry_number - 1))``.
     """
-    If failures are allowed, the upload will continue even if some items were not successfully uploaded even
-    after retries. For example, upon creation of a large image group, you might want to create the image group
-    even if a few images were not successfully uploaded. The unsuccessfully uploaded images will then be logged.
+
+    allow_failures: bool = False
+    """Whether to allow partial failures during upload.
+
+    If set to True, the upload will proceed even if some items fail
+    after all retries. Failed uploads will be logged, and the process
+    will continue. This is useful for large batch uploads where a few
+    failures are acceptable.
     """
 
 
@@ -76,16 +86,36 @@ def _get_content_type(
 
 
 def get_batches(iterable: List, n: int) -> List[List]:
-    # could be replaced with itertools.batched in python3.12
+    """Split an iterable into fixed-size batches.
+
+    Args:
+        iterable (List): The input list to be split.
+        n (int): The maximum size of each batch.
+
+    Returns:
+        List[List]: A list of lists where each sublist represents a batch.
+
+    Note:
+        This can be replaced with :func:`itertools.batched` in Python 3.12+.
+    """
     return [iterable[ndx : min(ndx + n, len(iterable))] for ndx in range(0, len(iterable), n)]
 
 
 @dataclass
 class UploadToSignedUrlFailure:
+    """Details of a failed upload attempt to a signed URL."""
+
     exception: Exception
+    """The exception instance raised during the failed upload."""
+
     file_path: Union[str, Path]
+    """Path to the file that failed to upload."""
+
     title: str
+    """Title or identifier associated with the file."""
+
     signed_url: str
+    """The signed URL that the file upload was attempted against."""
 
 
 def upload_to_signed_url_list_for_single_file(
@@ -97,6 +127,17 @@ def upload_to_signed_url_list_for_single_file(
     max_retries: int,
     backoff_factor: float,
 ) -> None:
+    """Attempt to upload a single file to a signed URL, appending failures if any occur.
+
+    Args:
+        failures (List[UploadToSignedUrlFailure]): A list to append failures to.
+        file_path (Union[str, Path]): Path of the file to upload.
+        title (str): Title or identifier for the file.
+        signed_url (str): The signed URL to upload the file to.
+        upload_item_type (StorageItemType): The type of the file being uploaded.
+        max_retries (int): Maximum number of retries in case of failure.
+        backoff_factor (float): Backoff factor for retry delays.
+    """
     try:
         _upload_single_file(
             file_path,
@@ -118,8 +159,13 @@ def upload_to_signed_url_list_for_single_file(
 
 
 class UploadPresignedUrlsGetParams(BaseDTO):
+    """Parameters for requesting presigned URLs for file uploads."""
+
     count: int
+    """Number of presigned URLs to request, typically matching the batch size of files."""
+
     upload_item_type: StorageItemType
+    """The type of item being uploaded (e.g., IMAGE, VIDEO, AUDIO, DICOM)."""
 
 
 def upload_to_signed_url_list(
@@ -129,7 +175,25 @@ def upload_to_signed_url_list(
     upload_item_type: StorageItemType,
     cloud_upload_settings: CloudUploadSettings,
 ) -> List[Dict]:
-    """Upload files and return the upload returns in the same order as the file paths supplied."""
+    """Upload multiple files to signed URLs and return upload results.
+
+    Args:
+        file_paths (Iterable[Union[str, Path]]): Paths of files to upload.
+        config (BaseConfig): Configuration object with request settings.
+        api_client (ApiClient): API client used to fetch presigned URLs.
+        upload_item_type (StorageItemType): Type of items being uploaded.
+        cloud_upload_settings (CloudUploadSettings): Upload configuration.
+
+    Returns:
+        List[Dict]: A list of dictionaries containing upload metadata:
+            - ``data_hash`` (str): Unique identifier for the file.
+            - ``file_link`` (str): Link to the uploaded file in storage.
+            - ``title`` (str): File name or title.
+
+    Raises:
+        EncordException: If any file path does not exist.
+        CloudUploadError: If uploads fail and ``allow_failures`` is False.
+    """
     for file_path in file_paths:
         if not os.path.exists(file_path):
             raise EncordException(message=f"{file_path} does not point to a file.")
@@ -183,9 +247,6 @@ def upload_to_signed_url_list(
         )
 
     if failures:
-        # TODO consider dropping support for allow_failures in the future
-        # TODO allow_failures would only ignore networking issues
-        # TODO we do check for files presence in this function (at the beginning)
         if cloud_upload_settings.allow_failures:
             logger.warning("The upload was incomplete for the following items: %s", [x.file_path for x in failures])
         else:
