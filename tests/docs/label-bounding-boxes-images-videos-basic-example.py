@@ -1,5 +1,5 @@
 """
-Code Block Name: Bitmasks Images/Videos - Basic
+Code Block Name: Bounding Boxes Images/Videos - Basic
 """
 
 from encord import EncordUserClient, Project
