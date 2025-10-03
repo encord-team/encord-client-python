@@ -1,5 +1,5 @@
 """
-Code Block Name: Donut
+Code Block Name: Donut - Advanced
 """
 
 # Import dependencies
@@ -9,8 +9,7 @@ from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import PointCoordinate, PolygonCoordinates
 
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
-# SSH_PATH = get_ssh_key() # replace it with ssh key
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # SSH_PATH = get_ssh_key() # replace it with ssh key
 PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 BUNDLE_SIZE = 100
 
