@@ -1,11 +1,47 @@
+import datetime
+
 from encord.constants.enums import DataType
+from encord.orm.label_row import LabelRowMetadata, LabelStatus, AnnotationTaskStatus
+from encord.orm.label_space import SpaceInfo
+
+DATA_GROUP_DATA_HASH = "28f0e9d2-51e0-459d-8ffa-2e214da653a9"
+
+DATA_GROUP_METADATA = LabelRowMetadata(
+    label_hash="",
+    branch_name="main",
+    created_at=datetime.datetime.now(),
+    last_edited_at=datetime.datetime.now(),
+    data_hash=DATA_GROUP_DATA_HASH,
+    data_title="",
+    data_type=DataType.GROUP,
+    data_link="",
+    dataset_hash="",
+    dataset_title="",
+    label_status=LabelStatus.NOT_LABELLED,
+    annotation_task_status=AnnotationTaskStatus.QUEUED,
+    workflow_graph_node=None,
+    is_shadow_data=False,
+    duration=100,
+    frames_per_second=25,
+    number_of_frames=100 * 25,
+    height=None,
+    width=None,
+    audio_codec=None,
+    audio_bit_depth=None,
+    audio_num_channels=None,
+    audio_sample_rate=None,
+    spaces={
+        "child-1-uuid": SpaceInfo(space_type="data-group-child", data_type=DataType.VIDEO),
+        "child-2-uuid": SpaceInfo(space_type="data-group-child", data_type=DataType.VIDEO)
+    }
+)
 
 INPUT_DATA_GROUP_LABELS = {
     "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
     "branch_name": "main",
     "created_at": "Thu, 09 Feb 2023 14:12:03 UTC",
     "last_edited_at": "Thu, 09 Feb 2023 14:12:03 UTC",
-    "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",
+    "data_hash": DATA_GROUP_DATA_HASH,
     "dataset_hash": "b0d93919-a5e8-4418-8dd5-2c51e3977de8",
     "dataset_title": "Dataset with 2 frame video",
     "data_title": "two-frame-video.mp4",
@@ -34,8 +70,8 @@ INPUT_DATA_GROUP_LABELS = {
         }
     },
     "data_units": {
-        "cd57cf5c-2541-4a46-a836-444540ee987a": {
-            "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",
+        DATA_GROUP_DATA_HASH: {
+            "data_hash": DATA_GROUP_DATA_HASH,
             "data_sequence": 0,
             "data_title": "",
             "data_type": DataType.GROUP,
@@ -126,7 +162,7 @@ OUTPUT_DATA_GROUP_LABELS = {
     "branch_name": "main",
     "created_at": "Thu, 09 Feb 2023 14:12:03 UTC",
     "last_edited_at": "Thu, 09 Feb 2023 14:12:03 UTC",
-    "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",
+    "data_hash": DATA_GROUP_DATA_HASH,
     "dataset_hash": "b0d93919-a5e8-4418-8dd5-2c51e3977de8",
     "dataset_title": "Dataset with 2 frame video",
     "data_title": "two-frame-video.mp4",
@@ -143,8 +179,8 @@ OUTPUT_DATA_GROUP_LABELS = {
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
     "data_units": {
-        "cd57cf5c-2541-4a46-a836-444540ee987a": {
-            "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",
+        DATA_GROUP_DATA_HASH: {
+            "data_hash": DATA_GROUP_DATA_HASH,
             "labels": {
                 "child-1-uuid#0": {
                     "objects": [
