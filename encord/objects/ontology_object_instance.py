@@ -25,10 +25,10 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypedDict,
     Union,
 )
 
-from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
@@ -63,6 +63,18 @@ from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
+    from encord.objects.spaces.base_space import Space
+
+
+class SetFramesKwargs(TypedDict, total=False):
+    created_at: Optional[datetime]
+    created_by: Optional[str]
+    last_edited_at: Optional[datetime]
+    last_edited_by: Optional[str]
+    confidence: Optional[float]
+    manual_annotation: Optional[bool]
+    reviews: Optional[List[Dict]]
+    is_deleted: Optional[bool]
 
 
 class ObjectInstance:
@@ -80,6 +92,7 @@ class ObjectInstance:
 
         # Only used for non-frame entities
         self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
+        self._space: Optional[Space] = None
 
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
 
@@ -90,6 +103,17 @@ class ObjectInstance:
             The LabelRowV2 instance if assigned, otherwise None.
         """
         return self._parent
+
+    def is_assigned_to_space(self) -> Optional[Space]:
+        """Checks if the object instance is assigned to a space.
+
+        Returns:
+            The Space instance if assigned, otherwise None.
+        """
+        return self._space
+
+    def _set_space(self, space: Optional[Space]) -> None:
+        self._space = space
 
     @property
     def object_hash(self) -> str:
@@ -512,8 +536,10 @@ class ObjectInstance:
             )
             existing_frame_data.coordinates = coordinates
 
-            if self._parent:
-                self._parent.add_to_single_frame_to_hashes_map(self, frame)
+            if self._parent is not None:
+                self._parent.add_to_single_frame_to_hashes_map(self, frame=frame)
+            elif self._space is not None:
+                self._space._on_set_for_frames(frame=frame, object_hash=self._object_hash)
 
     def _get_non_geometric_annotation(self) -> Optional[Annotation]:
         # Non-geometric annotations (e.g. Audio and Text) only have one frame.
@@ -522,7 +548,7 @@ class ObjectInstance:
         else:
             return self.get_annotation(0)
 
-    def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
+    def get_annotation(self, frame: int = 0) -> Annotation:
         """Get the annotation for the object instance on the specified frame.
 
         Args:
@@ -540,19 +566,21 @@ class ObjectInstance:
                 'This annotation data for this object instance is stored on only one "frame". '
                 "Use `get_annotation(0)` to get the frame data of the first frame."
             )
-        if isinstance(frame, str):
-            # TODO: this check should be consistent for both string and integer frames,
-            #       but currently it is not possible due to the parsing logic
-            if not self._parent:
-                raise LabelRowError("Cannot get annotation for an object instance that is not assigned to a label row.")
 
-            frame_num = self._parent.get_frame_number(frame)
-            if frame_num is None:
-                raise LabelRowError(f"Image hash {frame} is not present in the label row.")
-        else:
-            frame_num = frame
+        # This should never currently happen? Seems to be used for image groups?
+        # if isinstance(frame, str):
+        #     # TODO: this check should be consistent for both string and integer frames,
+        #     #       but currently it is not possible due to the parsing logic
+        #     if not self._parent:
+        #         raise LabelRowError("Cannot get annotation for an object instance that is not assigned to a label row.")
+        #
+        #     frame_num = self._parent.get_frame_number(frame)
+        #     if frame_num is None:
+        #         raise LabelRowError(f"Image hash {frame} is not present in the label row.")
+        # else:
+        #     frame_num = frame
 
-        return self.Annotation(self, frame_num)
+        return self.Annotation(self, frame)
 
     def copy(self) -> ObjectInstance:
         """Create an exact copy of this ObjectInstance.
@@ -578,10 +606,10 @@ class ObjectInstance:
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def get_annotation_frames(self) -> set[int]:
-        """Get all annotations for the object instance on all frames it has been placed on.
+        """Get a list of frames that the object instance exists on.
 
         Returns:
-            List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
+            List[int]: A list of frame numbers that the object instance exists on.
         """
         return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
 
@@ -753,7 +781,6 @@ class ObjectInstance:
     @dataclass
     class FrameInfo:
         """Contains metadata information about a frame."""
-
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
         """None defaults to the user of the SDK once uploaded to the server."""

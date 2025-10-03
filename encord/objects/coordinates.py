@@ -554,6 +554,16 @@ Coordinates = Union[
     CuboidCoordinates,
 ]
 
+TwoDimensionalCoordinates = Union[
+    BoundingBoxCoordinates,
+    RotatableBoundingBoxCoordinates,
+    PointCoordinate,
+    PolygonCoordinates,
+    PolylineCoordinates,
+    SkeletonCoordinates,
+    BitmaskCoordinates,
+]
+
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
     Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
     Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],

@@ -53,6 +53,7 @@ from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2
+    from encord.objects.space import Space
 
 
 # For Audio and Text files, classifications can only be applied to Range(start=0, end=0)
@@ -87,6 +88,11 @@ class ClassificationInstance:
 
         # Only used for frame entities
         self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
+
+        self._space: Optional[Space] = None
+
+    def _set_space(self, space: Optional[Space]) -> None:
+        self._space = space
 
     @property
     def classification_hash(self) -> str:
@@ -340,6 +346,14 @@ class ClassificationInstance:
         A list of `ClassificationInstance.Annotation` in order of available frames.
         """
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
+
+    def get_annotation_frames(self) -> set[int]:
+        """Get a list of frames that the classification instance exists on.
+
+        Returns:
+            List[int]: A list of frame numbers that the classification instance exists on.
+        """
+        return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_data.keys())}
 
     def is_valid(self) -> None:
         if not len(self._frames_to_data) > 0:

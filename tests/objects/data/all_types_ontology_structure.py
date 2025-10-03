@@ -216,6 +216,14 @@ all_types_structure = OntologyStructure(
             feature_node_hash="textFeatureNodeHash",
             attributes=[],
         ),
+        Object(
+            uid=10,
+            name="segmentation object",
+            color="#4904a5",
+            shape=Shape.SEGMENTATION,
+            feature_node_hash="segmentationFeatureNodeHash",
+            attributes=[],
+        ),
     ],
     classifications=[
         Classification(
