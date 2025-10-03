@@ -270,7 +270,7 @@ class ClassificationInstance:
                 assert self._parent is not None
                 if self._parent is not DataType.AUDIO:
                     self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-                    self._parent._add_to_frame_to_hashes_map(self, frames_list)
+                    self._parent._add_to_annotation_path_to_hashes_map(self, frames_list)
                 else:
                     self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
 
@@ -283,7 +283,7 @@ class ClassificationInstance:
         if self.is_assigned_to_label_row():
             assert self._parent is not None
             self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-            self._parent._add_to_frame_to_hashes_map(self, frames_list)
+            self._parent._add_to_annotation_path_to_hashes_map(self, frames_list)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """Args:

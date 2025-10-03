@@ -40,6 +40,7 @@ from tests.objects.data.ontology_with_many_dynamic_classifications import (
     ontology as ontology_with_many_dynamic_classifications,
 )
 from tests.objects.data.plain_text import PLAIN_TEXT_LABELS
+from tests.objects.data.data_group import INPUT_DATA_GROUP_LABELS, OUTPUT_DATA_GROUP_LABELS
 
 
 def ontology_from_dict(ontology_structure_dict: Dict):
@@ -205,6 +206,38 @@ def test_serialise_plain_text():
     deep_diff_enhanced(
         actual,
         PLAIN_TEXT_LABELS,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
+    )
+    assert_json_serializable(actual)
+
+
+def test_serialise_data_group():
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["data_type"] = "group"
+    label_row_metadata_dict["spaces"] = {
+        "child-1-uuid": {
+            "space_type": "data-group-child",
+            "data_type": "video",
+        },
+        "child-2-uuid": {
+            "space_type": "data-group-child",
+            "data_type": "video",
+        }
+    }
+    label_row_metadata_dict["duration"] = 0.08
+    label_row_metadata_dict["frames_per_second"] = 25
+
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(INPUT_DATA_GROUP_LABELS)
+
+    actual = label_row.to_encord_dict()
+    print(json.dumps(actual, indent=2))
+    deep_diff_enhanced(
+        actual,
+        OUTPUT_DATA_GROUP_LABELS,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)

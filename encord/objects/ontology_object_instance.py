@@ -80,6 +80,7 @@ class ObjectInstance:
 
         # Only used for non-frame entities
         self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
+        self._space: Optional[str] = None
 
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
 
@@ -90,6 +91,9 @@ class ObjectInstance:
             The LabelRowV2 instance if assigned, otherwise None.
         """
         return self._parent
+
+    def _set_space(self, space: str):
+        self._space = space
 
     @property
     def object_hash(self) -> str:
@@ -430,6 +434,7 @@ class ObjectInstance:
         self,
         coordinates: Coordinates,
         frames: Frames = 0,
+        space: str | None = None,
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
@@ -450,6 +455,7 @@ class ObjectInstance:
             coordinates: The coordinates of the object in the frame.
                 This will throw an error if the type of the coordinates does not match the type of the attribute in the object instance.
             frames: The frames to add the object instance to. Defaults to the first frame for convenience.
+            space: The label space on which to add the object instance to. Defaults to the None.
             overwrite: If `True`, overwrite existing data for the given frames.
                 This will not reset all the non-specified values.
                 If `False` and data already exists for the given frames, raises an error.
@@ -513,7 +519,8 @@ class ObjectInstance:
             existing_frame_data.coordinates = coordinates
 
             if self._parent:
-                self._parent.add_to_single_frame_to_hashes_map(self, frame)
+                annotation_path = frame if self._space is None else f"{self._space}#{frame}"
+                self._parent.add_to_single_frame_to_hashes_map(self, frame=frame, space=self._space)
 
     def _get_non_geometric_annotation(self) -> Optional[Annotation]:
         # Non-geometric annotations (e.g. Audio and Text) only have one frame.
@@ -522,7 +529,7 @@ class ObjectInstance:
         else:
             return self.get_annotation(0)
 
-    def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
+    def get_annotation(self, frame: int = 0, space: str | None = None) -> Annotation:
         """Get the annotation for the object instance on the specified frame.
 
         Args:
@@ -540,19 +547,21 @@ class ObjectInstance:
                 'This annotation data for this object instance is stored on only one "frame". '
                 "Use `get_annotation(0)` to get the frame data of the first frame."
             )
-        if isinstance(frame, str):
-            # TODO: this check should be consistent for both string and integer frames,
-            #       but currently it is not possible due to the parsing logic
-            if not self._parent:
-                raise LabelRowError("Cannot get annotation for an object instance that is not assigned to a label row.")
 
-            frame_num = self._parent.get_frame_number(frame)
-            if frame_num is None:
-                raise LabelRowError(f"Image hash {frame} is not present in the label row.")
-        else:
-            frame_num = frame
+        # This should never currently happen? Seems to be used for image groups?
+        # if isinstance(frame, str):
+        #     # TODO: this check should be consistent for both string and integer frames,
+        #     #       but currently it is not possible due to the parsing logic
+        #     if not self._parent:
+        #         raise LabelRowError("Cannot get annotation for an object instance that is not assigned to a label row.")
+        #
+        #     frame_num = self._parent.get_frame_number(frame)
+        #     if frame_num is None:
+        #         raise LabelRowError(f"Image hash {frame} is not present in the label row.")
+        # else:
+        #     frame_num = frame
 
-        return self.Annotation(self, frame_num)
+        return self.Annotation(self, frame, space=space)
 
     def copy(self) -> ObjectInstance:
         """Create an exact copy of this ObjectInstance.
@@ -575,7 +584,7 @@ class ObjectInstance:
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
-        return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
+        return [self.get_annotation(frame_num, self._space) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def get_annotation_frames(self) -> set[int]:
         """Get all annotations for the object instance on all frames it has been placed on.
@@ -613,7 +622,8 @@ class ObjectInstance:
         if len(self._frames_to_instance_data) == 0:
             raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
 
-        self.are_dynamic_answers_valid()
+        # TODO: Make this work
+        # self.are_dynamic_answers_valid()
 
     def are_dynamic_answers_valid(self) -> None:
         """Validate if there are any dynamic answers on frames that have no coordinates.
@@ -637,13 +647,23 @@ class ObjectInstance:
         Allows setting or getting data for the ObjectInstance on the given frame number.
         """
 
-        def __init__(self, object_instance: ObjectInstance, frame: int):
+        def __init__(self, object_instance: ObjectInstance, frame: int, space: str | None = None):
             self._object_instance = object_instance
             self._frame = frame
+            self._space = space
+            self._annotation_path = str(frame) if space is None else f"{space}#{frame}"
 
         @property
         def frame(self) -> int:
             return self._frame
+
+        @property
+        def space(self) -> str | None:
+            return self._space
+
+        @property
+        def path(self) -> str:
+            return str(self._frame) if self._space is None else f"{self._space}#{self._frame}"
 
         @property
         def coordinates(self) -> Coordinates:
