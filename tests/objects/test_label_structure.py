@@ -36,6 +36,7 @@ from tests.objects.data import empty_video
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
+from tests.objects.data.data_group import DATA_GROUP_METADATA, INPUT_DATA_GROUP_LABELS, EMPTY_DATA_GROUP_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
 from tests.objects.data.html_text_labels import EMPTY_HTML_TEXT_LABELS
 from tests.objects.data.plain_text import EMPTY_PLAIN_TEXT_LABELS
@@ -703,10 +704,8 @@ def test_add_and_get_classification_instances_to_audio_label_row(ontology):
 
 
 def test_add_object_instances_to_data_group_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(empty_image_group_labels)
-
-    object_instance = ObjectInstance(box_ontology_item)
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(EMPTY_DATA_GROUP_LABELS)
 
     coordinates = BoundingBoxCoordinates(
         height=0.1,
@@ -715,9 +714,40 @@ def test_add_object_instances_to_data_group_label_row(ontology):
         top_left_y=0.4,
     )
 
-    object_instance.set_for_frames(coordinates=coordinates, frames=1)
-    label_row.add_object_instance(object_instance)
-    assert label_row.get_object_instances()[0].object_hash == object_instance.object_hash
+    # Add object to child-1
+    object_instance_1 = ObjectInstance(box_ontology_item)
+    object_instance_1.set_for_frames(coordinates=coordinates, frames=5)
+    label_row.add_object_instance(object_instance_1, space="child-uuid-1")
+    assert label_row.get_object_instances(filter_spaces=["child-uuid-1"])[0].object_hash == object_instance_1.object_hash
+
+    # Add object (with same object hash) to child-2
+    # TODO: Should we allow adding the same object instance to label row multiple times, but on different spaces?
+    object_instance_2 = ObjectInstance(box_ontology_item, object_hash=object_instance_1.object_hash)
+    object_instance_2.set_for_frames(coordinates=coordinates, frames=6)
+    label_row.add_object_instance(object_instance_2, space="child-uuid-2")
+    assert label_row.get_object_instances(filter_spaces=["child-uuid-2"])[0].object_hash == object_instance_2.object_hash
+
+
+def test_remove_object_instances_from_data_group_label_row(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(EMPTY_DATA_GROUP_LABELS)
+
+    coordinates = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
+
+    # Add object to child-1
+    object_instance_1 = ObjectInstance(box_ontology_item)
+    object_instance_1.set_for_frames(coordinates=coordinates, frames=5)
+    label_row.add_object_instance(object_instance_1, space="child-uuid-1")
+    assert label_row.get_object_instances(filter_spaces=["child-uuid-1"])[0].object_hash == object_instance_1.object_hash
+
+    # Remove the object
+    label_row.remove_object(object_instance_1)
+    assert len(label_row.get_object_instances()) == 0
 
 def test_object_instance_answer_for_static_attributes():
     object_instance = ObjectInstance(deeply_nested_polygon_item)

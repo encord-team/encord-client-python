@@ -95,6 +95,8 @@ class ObjectInstance:
     def _set_space(self, space: str):
         self._space = space
 
+    def _object_key(self):
+        return self._object_hash if self._space is None else f"{self._space}#{self._object_hash}"
     @property
     def object_hash(self) -> str:
         """A unique identifier for the object instance.
@@ -483,6 +485,7 @@ class ObjectInstance:
                 )
 
         frames_list = frames_class_to_frames_list(frames)
+        print(f"SETTNG FOR FRAMES {frames_list}")
 
         for frame in frames_list:
             existing_frame_data = self._frames_to_instance_data.get(frame)
@@ -499,7 +502,7 @@ class ObjectInstance:
                     self.check_within_range(non_geometric_range.end)
             else:
                 self.check_within_range(frame)
-
+            print(f"EXISTING FRAME DATA: {existing_frame_data}")
             if existing_frame_data is None:
                 existing_frame_data = ObjectInstance.FrameData(
                     coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
@@ -519,7 +522,6 @@ class ObjectInstance:
             existing_frame_data.coordinates = coordinates
 
             if self._parent:
-                annotation_path = frame if self._space is None else f"{self._space}#{frame}"
                 self._parent.add_to_single_frame_to_hashes_map(self, frame=frame, space=self._space)
 
     def _get_non_geometric_annotation(self) -> Optional[Annotation]:

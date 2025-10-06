@@ -262,3 +262,36 @@ OUTPUT_DATA_GROUP_LABELS = {
         }
     },
 }
+
+EMPTY_DATA_GROUP_LABELS = {
+    "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
+    "branch_name": "main",
+    "created_at": "Thu, 09 Feb 2023 14:12:03 UTC",
+    "last_edited_at": "Thu, 09 Feb 2023 14:12:03 UTC",
+    "data_hash": DATA_GROUP_DATA_HASH,
+    "dataset_hash": "b0d93919-a5e8-4418-8dd5-2c51e3977de8",
+    "dataset_title": "Dataset with 2 frame video",
+    "data_title": "two-frame-video.mp4",
+    "data_type": "group",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
+    "object_answers": {},
+    "classification_answers": {},
+    "object_actions": {},
+    "label_status": "LABEL_IN_PROGRESS",
+    "spaces": {
+        "child-1-uuid": {
+            "space_type": "data-group-child",
+            "data_type": "video",
+        }
+    },
+    "data_units": {
+        DATA_GROUP_DATA_HASH: {
+            "data_hash": DATA_GROUP_DATA_HASH,
+            "data_sequence": 0,
+            "data_title": "",
+            "data_type": DataType.GROUP,
+            "labels": {},
+        }
+    },
+}
