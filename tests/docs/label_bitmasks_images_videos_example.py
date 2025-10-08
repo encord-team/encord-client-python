@@ -1,5 +1,5 @@
 """
-Code Block Name: Bitmasks Images/Videos
+Code Block Name: Bitmasks Images/Videos Advanced
 """
 
 # Import dependencies
