@@ -27,6 +27,7 @@ class BundledGetRowsPayload:
     include_object_feature_hashes: Optional[Set[str]]
     include_classification_feature_hashes: Optional[Set[str]]
     include_reviews: bool
+    include_archived: bool
 
     def add(self, other: BundledGetRowsPayload) -> BundledGetRowsPayload:
         self.uids.extend(other.uids)

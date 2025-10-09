@@ -568,6 +568,7 @@ class LabelRowV2:
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
+        include_archived: bool = False,
         overwrite: bool = False,
         bundle: Optional[Bundle] = None,
         *,
@@ -629,6 +630,7 @@ class LabelRowV2:
                     include_object_feature_hashes=include_object_feature_hashes,
                     include_classification_feature_hashes=include_classification_feature_hashes,
                     include_reviews=include_reviews,
+                    include_archived=include_archived,
                 ),
                 result_mapper=BundleResultMapper[OrmLabelRow](
                     result_mapping_predicate=lambda r: r["label_hash"],
