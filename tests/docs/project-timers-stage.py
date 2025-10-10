@@ -28,9 +28,12 @@ end_date = datetime(2025, 6, 8)
 time_entries = list(project.list_time_spent(start=start_date, end=end_date))
 
 # Filters for total time by stage
-stage_time = defaultdict(int)
+stage_time: dict[str, int] = defaultdict(int)
 for entry in time_entries:
-    stage_time[entry.workflow_stage.title] += entry.time_spent_seconds
+    if entry.workflow_stage is None:
+        stage_time["Time outside of the queue"] += entry.time_spent_seconds
+    else:
+        stage_time[entry.workflow_stage.title] += entry.time_spent_seconds
 
 for stage, seconds in sorted(stage_time.items(), key=lambda x: x[1], reverse=True):
     print(f"Stage: {stage:<25} | {seconds:>5} sec | {seconds / 60:>5.1f} min")
