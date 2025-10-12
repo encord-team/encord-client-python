@@ -355,20 +355,20 @@ def test_skeleton_template_coordinates():
     ontology = ontology_from_dict(skeleton_coordinates.ontology)
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology=ontology)
     assert ontology.structure.skeleton_templates
-    skeleton_template = ontology.structure.skeleton_templates["Triangle"]
+    skeleton_template = ontology.structure.skeleton_templates["Square"]
     assert isinstance(skeleton_template, SkeletonTemplate)
     assert skeleton_template.skeleton_edges
-    assert len(skeleton_template.skeleton_edges) == 3
+    assert len(skeleton_template.skeleton_edges) == 4
 
-    assert skeleton_template.to_dict() == skeleton_coordinates.ontology["skeleton_templates"][0]["template"]
+    assert skeleton_template.to_dict() == skeleton_coordinates.ontology["skeleton_templates"][1]["template"]
     label_row.from_labels_dict(skeleton_coordinates.labels)
 
     obj_instances = label_row.get_object_instances()
-    assert len(obj_instances) == 1
+    assert len(obj_instances) == 2
 
-    obj_instance = obj_instances[0]
+    obj_instance = obj_instances[1]
     annotation = obj_instance.get_annotations()[0]
-    assert annotation.coordinates == skeleton_coordinates.expected_coordinates
+    assert annotation.coordinates == skeleton_coordinates.expected_coordinates_square
 
     label_dict = label_row.to_encord_dict()
     skeleton_dict = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]

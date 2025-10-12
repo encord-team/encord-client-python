@@ -2504,6 +2504,8 @@ class LabelRowV2:
                     point["visibility"] = Visibility.INVISIBLE
                 elif point.get(Visibility.OCCLUDED.value):
                     point["visibility"] = Visibility.OCCLUDED
+                elif point.get(Visibility.SELF_OCCLUDED.value):
+                    point["visibility"] = Visibility.SELF_OCCLUDED
                 elif point.get(Visibility.VISIBLE.value):
                     point["visibility"] = Visibility.VISIBLE
                 return point

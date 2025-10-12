@@ -446,12 +446,17 @@ class Visibility(CamelStrEnum):
         VISIBLE: The item is visible within the frame.
         INVISIBLE: The item is outside the frame and thus invisible.
         OCCLUDED: The item is within the frame but occluded by something else.
+        SELF_OCCLUDED: The item is occluded by itself.
     """
 
     VISIBLE = auto()
     INVISIBLE = auto()
     OCCLUDED = auto()
+    SELF_OCCLUDED = auto()
 
+    @property
+    def label(self) -> str:
+        return self.value.lower().replace('_', '-')
 
 class SkeletonCoordinate(BaseDTO):
     """Represents a coordinate for a skeleton structure in an image.

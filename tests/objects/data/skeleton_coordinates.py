@@ -2,7 +2,8 @@ from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates, 
 
 ontology = {
     "objects": [
-        {"id": "1", "name": "Triangle", "color": "#D33115", "shape": "skeleton", "featureNodeHash": "lwsBaDE4"}
+        {"id": "1", "name": "Triangle", "color": "#D33115", "shape": "skeleton", "featureNodeHash": "lwsBaDE4"},
+        {"id": "2", "name": "Square", "color": "#D33115", "shape": "skeleton", "featureNodeHash": "lwsBaDE5"}
     ],
     "classifications": [
         {
@@ -64,7 +65,56 @@ ontology = {
                 },
                 "feature_node_hash": "lwsBaDE4",
             }
-        }
+        },
+        {
+            "template": {
+                "name": "Square",
+                "shape": "skeleton",
+                "width": 0.23513107100307273,
+                "height": 0.25,
+                "skeleton": {
+                    "0": {
+                        "x": 0.5148689289969273,
+                        "y": 0.5,
+                        "name": "point_0",
+                        "color": "#000000",
+                        "value": "point_0",
+                        "featureHash": "A9sGmBca",
+                    },
+                    "1": {
+                        "x": 0.75,
+                        "y": 0.5,
+                        "name": "point_1",
+                        "color": "#000000",
+                        "value": "point_1",
+                        "featureHash": "UWKgC/Db",
+                    },
+                    "2": {
+                        "x": 0.675,
+                        "y": 0.25,
+                        "name": "point_2",
+                        "color": "#000000",
+                        "value": "point_2",
+                        "featureHash": "mBt9AAhc",
+                    },
+                    "3": {
+                        "x": 0.675,
+                        "y": 0.25,
+                        "name": "point_3",
+                        "color": "#000000",
+                        "value": "point_3",
+                        "featureHash": "mBt9AAhd",
+                    },
+                },
+                "skeletonEdges": {
+                    "0": {"1": {"color": "#000000"}},
+                    "1": {"2": {"color": "#000000"}},
+                    "2": {"3": {"color": "#000000"}},
+                    "3": {"0": {"color": "#000000"}},
+                },
+                "feature_node_hash": "lwsBaDE5",
+            }
+        },
     ],
 }
 
@@ -100,8 +150,8 @@ labels = {
                         "createdAt": "Mon, 11 Mar 2024 11:21:36 GMT",
                         "skeleton": {
                             "0": {
-                                "x": 0.3838,
-                                "y": 0.6729,
+                                "x": 0.3,
+                                "y": 0.3,
                                 "name": "point_0",
                                 "color": "#000000",
                                 "value": "point_0",
@@ -109,8 +159,8 @@ labels = {
                                 "visibility": "visible",
                             },
                             "1": {
-                                "x": 0.4649,
-                                "y": 0.8816,
+                                "x": 0.7,
+                                "y": 0.3,
                                 "name": "point_1",
                                 "color": "#000000",
                                 "value": "point_1",
@@ -118,13 +168,63 @@ labels = {
                                 "visibility": "occluded",
                             },
                             "2": {
-                                "x": 0.2356,
-                                "y": 0.9396,
+                                "x": 0.7,
+                                "y": 0.7,
                                 "name": "point_2",
                                 "color": "#000000",
                                 "value": "point_2",
                                 "featureHash": "OqR+F4dN",
                                 "visibility": "invisible",
+                            },
+                        },
+                        "manualAnnotation": True,
+                    },
+                    {
+                        "featureHash": "lwsBaDE5",
+                        "objectHash": "o7XU+3ux",
+                        "name": "Square",
+                        "value": "square",
+                        "color": "#D33115",
+                        "shape": "skeleton",
+                        "confidence": 1,
+                        "createdBy": "jim@encord.com",
+                        "createdAt": "Mon, 11 Mar 2024 11:21:36 GMT",
+                        "skeleton": {
+                            "0": {
+                                "x": 0.3,
+                                "y": 0.3,
+                                "name": "point_0",
+                                "color": "#000000",
+                                "value": "point_0",
+                                "featureHash": "A9sGmBca",
+                                "visibility": "visible",
+                            },
+                            "1": {
+                                "x": 0.7,
+                                "y": 0.3,
+                                "name": "point_1",
+                                "color": "#000000",
+                                "value": "point_1",
+                                "featureHash": "UWKgC/Db",
+                                "visibility": "occluded",
+                            },
+                            "2": {
+                                "x": 0.7,
+                                "y": 0.7,
+                                "name": "point_2",
+                                "color": "#000000",
+                                "value": "point_2",
+                                "featureHash": "mBt9AAhc",
+                                "visibility": "invisible",
+                            },
+                            "3": {
+                                "x": 0.3,
+                                "y": 0.7,
+                                "name": "point_3",
+                                "color": "#000000",
+                                "value": "point_3",
+                                "featureHash": "mBt9AAhd",
+                                "visibility": "selfOccluded",
                             },
                         },
                         "manualAnnotation": True,
@@ -174,4 +274,46 @@ expected_coordinates = SkeletonCoordinates(
         ),
     ],
     name="Triangle",
+)
+
+expected_coordinates_square = SkeletonCoordinates(
+    values=[
+        SkeletonCoordinate(
+            x=0.3,
+            y=0.3,
+            name="point_0",
+            color="#000000",
+            feature_hash="A9sGmBca",
+            value="point_0",
+            visibility=Visibility.VISIBLE,
+        ),
+        SkeletonCoordinate(
+            x=0.7,
+            y=0.3,
+            name="point_1",
+            color="#000000",
+            feature_hash="UWKgC/Db",
+            value="point_1",
+            visibility=Visibility.OCCLUDED,
+        ),
+        SkeletonCoordinate(
+            x=0.7,
+            y=0.7,
+            name="point_2",
+            color="#000000",
+            feature_hash="mBt9AAhc",
+            value="point_2",
+            visibility=Visibility.INVISIBLE,
+        ),
+        SkeletonCoordinate(
+            x=0.3,
+            y=0.7,
+            name="point_3",
+            color="#000000",
+            feature_hash="mBt9AAhd",
+            value="point_3",
+            visibility=Visibility.SELF_OCCLUDED,
+        ),
+    ],
+    name="Square",
 )
