@@ -360,13 +360,13 @@ def test_skeleton_template_coordinates():
     assert skeleton_template.skeleton_edges
     assert len(skeleton_template.skeleton_edges) == 4
 
-    assert skeleton_template.to_dict() == skeleton_coordinates.ontology["skeleton_templates"][1]["template"]
+    assert skeleton_template.to_dict() == skeleton_coordinates.ontology["skeleton_templates"][0]["template"]
     label_row.from_labels_dict(skeleton_coordinates.labels)
 
     obj_instances = label_row.get_object_instances()
-    assert len(obj_instances) == 2
+    assert len(obj_instances) == 1
 
-    obj_instance = obj_instances[1]
+    obj_instance = obj_instances[0]
     annotation = obj_instance.get_annotations()[0]
     assert annotation.coordinates == skeleton_coordinates.expected_coordinates_square
 

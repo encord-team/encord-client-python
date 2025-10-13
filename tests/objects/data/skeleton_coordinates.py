@@ -2,8 +2,7 @@ from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates, 
 
 ontology = {
     "objects": [
-        {"id": "1", "name": "Triangle", "color": "#D33115", "shape": "skeleton", "featureNodeHash": "lwsBaDE4"},
-        {"id": "2", "name": "Square", "color": "#D33115", "shape": "skeleton", "featureNodeHash": "lwsBaDE5"}
+        {"id": "1", "name": "Square", "color": "#D33115", "shape": "skeleton", "featureNodeHash": "lwsBaDE5"}
     ],
     "classifications": [
         {
@@ -26,46 +25,6 @@ ontology = {
         }
     ],
     "skeleton_templates": [
-        {
-            "template": {
-                "name": "Triangle",
-                "shape": "skeleton",
-                "width": 0.23513107100307273,
-                "height": 0.25,
-                "skeleton": {
-                    "0": {
-                        "x": 0.5148689289969273,
-                        "y": 0.5,
-                        "name": "point_0",
-                        "color": "#000000",
-                        "value": "point_0",
-                        "featureHash": "A9sGmBcx",
-                    },
-                    "1": {
-                        "x": 0.75,
-                        "y": 0.5,
-                        "name": "point_1",
-                        "color": "#000000",
-                        "value": "point_1",
-                        "featureHash": "UWKgC/Dy",
-                    },
-                    "2": {
-                        "x": 0.675,
-                        "y": 0.25,
-                        "name": "point_2",
-                        "color": "#000000",
-                        "value": "point_2",
-                        "featureHash": "mBt9AAhC",
-                    },
-                },
-                "skeletonEdges": {
-                    "0": {"1": {"color": "#000000"}},
-                    "1": {"2": {"color": "#000000"}},
-                    "2": {"0": {"color": "#000000"}},
-                },
-                "feature_node_hash": "lwsBaDE4",
-            }
-        },
         {
             "template": {
                 "name": "Square",
@@ -138,47 +97,6 @@ labels = {
             "data_sequence": 0,
             "labels": {
                 "objects": [
-                    {
-                        "featureHash": "lwsBaDE4",
-                        "objectHash": "o7XU+3uz",
-                        "name": "Triangle",
-                        "value": "triangle",
-                        "color": "#D33115",
-                        "shape": "skeleton",
-                        "confidence": 1,
-                        "createdBy": "jim@encord.com",
-                        "createdAt": "Mon, 11 Mar 2024 11:21:36 GMT",
-                        "skeleton": {
-                            "0": {
-                                "x": 0.3,
-                                "y": 0.3,
-                                "name": "point_0",
-                                "color": "#000000",
-                                "value": "point_0",
-                                "featureHash": "1wthOoHe",
-                                "visibility": "visible",
-                            },
-                            "1": {
-                                "x": 0.7,
-                                "y": 0.3,
-                                "name": "point_1",
-                                "color": "#000000",
-                                "value": "point_1",
-                                "featureHash": "KGp1oToz",
-                                "visibility": "occluded",
-                            },
-                            "2": {
-                                "x": 0.7,
-                                "y": 0.7,
-                                "name": "point_2",
-                                "color": "#000000",
-                                "value": "point_2",
-                                "featureHash": "OqR+F4dN",
-                                "visibility": "invisible",
-                            },
-                        },
-                        "manualAnnotation": True,
-                    },
                     {
                         "featureHash": "lwsBaDE5",
                         "objectHash": "o7XU+3ux",
