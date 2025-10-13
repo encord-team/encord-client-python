@@ -1,9 +1,7 @@
 from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates, Visibility
 
 ontology = {
-    "objects": [
-        {"id": "1", "name": "Square", "color": "#D33115", "shape": "skeleton", "featureNodeHash": "lwsBaDE5"}
-    ],
+    "objects": [{"id": "1", "name": "Square", "color": "#D33115", "shape": "skeleton", "featureNodeHash": "lwsBaDE5"}],
     "classifications": [
         {
             "id": "1",
