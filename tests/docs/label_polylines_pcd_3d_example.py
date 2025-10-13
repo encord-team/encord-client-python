@@ -6,12 +6,20 @@ Code Block Name: Polylines PCD
 from pathlib import Path
 
 from encord import EncordUserClient, Project
-from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute, NumberAttribute
+from encord.objects import (
+    ChecklistAttribute,
+    NumberAttribute,
+    Object,
+    ObjectInstance,
+    Option,
+    RadioAttribute,
+    TextAttribute,
+)
 from encord.objects.coordinates import PointCoordinate3D, PolylineCoordinates
 
 # User input
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH private key
-PROJECT_ID = "00000000-0000-0000-0000-000000000000" # Replace with the unique ID for the Project
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file path to your SSH private key
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the unique ID for the Project
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key
@@ -51,37 +59,35 @@ other_ooi_option = ooi_type_radio_attribute.get_child_by_title(type_=Option, tit
 assert other_ooi_option is not None, "Option 'Other' not found under radio attribute 'Type?'"
 
 # Curb Qualities
-curb_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Qualities?"
-)
+curb_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Qualities?")
 assert curb_checklist_attribute is not None, "Checklist attribute 'Qualities?' not found"
 
-curb_good_quality_option = curb_checklist_attribute.get_child_by_title(
-    type_=Option, title="Good quality"
-)
+curb_good_quality_option = curb_checklist_attribute.get_child_by_title(type_=Option, title="Good quality")
 assert curb_good_quality_option is not None, "Option 'Good quality' not found under 'Qualities?'"
 
-curb_well_lit_option = curb_checklist_attribute.get_child_by_title(
-    type_=Option, title="Well lit"
-)
-assert curb_well_lit_option is not None, (
-    "Option 'Well lit' not found under 'Qualities?'"
-)
+curb_well_lit_option = curb_checklist_attribute.get_child_by_title(type_=Option, title="Well lit")
+assert curb_well_lit_option is not None, "Option 'Well lit' not found under 'Qualities?'"
 
 curb_fully_visible_option = curb_checklist_attribute.get_child_by_title(type_=Option, title="Fully visible")
 assert curb_fully_visible_option is not None, "Option 'Fully visible' not found under 'Curb Qualities?'"
 
 # Lane divider Qualities
-lane_divider_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Lane divider Qualities?")
+lane_divider_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Lane divider Qualities?"
+)
 assert lane_divider_checklist_attribute is not None, "Checklist attribute 'Lane divider Qualities?' not found"
 
-lane_divider_good_quality_option = lane_divider_checklist_attribute.get_child_by_title(type_=Option, title="Good quality")
+lane_divider_good_quality_option = lane_divider_checklist_attribute.get_child_by_title(
+    type_=Option, title="Good quality"
+)
 assert lane_divider_good_quality_option is not None, "Option 'Good quality' not found under 'Lane divider Qualities?'"
 
 lane_divider_well_lit_option = lane_divider_checklist_attribute.get_child_by_title(type_=Option, title="Well lit")
 assert lane_divider_well_lit_option is not None, "Option 'Well lit' not found under 'Lane divider Qualities?'"
 
-lane_divider_fully_visible_option = lane_divider_checklist_attribute.get_child_by_title(type_=Option, title="Fully visible")
+lane_divider_fully_visible_option = lane_divider_checklist_attribute.get_child_by_title(
+    type_=Option, title="Fully visible"
+)
 assert lane_divider_fully_visible_option is not None, "Option 'Fully visible' not found under 'Lane divider Qualities?'"
 
 # Zebra crossing Qualities
@@ -90,23 +96,25 @@ zebra_crossing_checklist_attribute = ontology_structure.get_child_by_title(
 )
 assert zebra_crossing_checklist_attribute is not None, "Checklist attribute 'Zebra crossing Qualities?' not found"
 
-zebra_crossing_good_quality_option = zebra_crossing_checklist_attribute.get_child_by_title(type_=Option, title="Good quality")
-assert zebra_crossing_good_quality_option is not None, "Option 'Good quality' not found under 'Zebra crossing Qualities?'"
-
-zebra_crossing_well_lit_option = zebra_crossing_checklist_attribute.get_child_by_title(
-    type_=Option, title="Well lit"
+zebra_crossing_good_quality_option = zebra_crossing_checklist_attribute.get_child_by_title(
+    type_=Option, title="Good quality"
 )
-assert zebra_crossing_well_lit_option is not None, (
-    "Option 'Well lit' not found under 'Zebra crossing Qualities?'"
+assert zebra_crossing_good_quality_option is not None, (
+    "Option 'Good quality' not found under 'Zebra crossing Qualities?'"
 )
 
-zebra_crossing_fully_visible_option = zebra_crossing_checklist_attribute.get_child_by_title(type_=Option, title="Fully visible")
-assert zebra_crossing_fully_visible_option is not None, "Option 'Fully visible' not found under 'Zebra crossing Qualities?'"
+zebra_crossing_well_lit_option = zebra_crossing_checklist_attribute.get_child_by_title(type_=Option, title="Well lit")
+assert zebra_crossing_well_lit_option is not None, "Option 'Well lit' not found under 'Zebra crossing Qualities?'"
+
+zebra_crossing_fully_visible_option = zebra_crossing_checklist_attribute.get_child_by_title(
+    type_=Option, title="Fully visible"
+)
+assert zebra_crossing_fully_visible_option is not None, (
+    "Option 'Fully visible' not found under 'Zebra crossing Qualities?'"
+)
 
 # Other text attribute
-other_ooi_option_text_attribute = ontology_structure.get_child_by_title(
-    type_=TextAttribute, title="Specify type"
-)
+other_ooi_option_text_attribute = ontology_structure.get_child_by_title(type_=TextAttribute, title="Specify type")
 assert other_ooi_option_text_attribute is not None, "Text attribute 'Specify type' not found"
 
 # Dictionary of labels per data unit and per frame with type specified, including quality options
@@ -462,31 +470,31 @@ for data_unit, frame_coordinates in pcd_labels.items():
                 # Assign radio and checklist attributes based on the type
                 if ooi_type == "Curb":
                     assert curb_option is not None, "Missing 'curb_option'"
-                    polyline_object_instance.set_answer(
-                        attribute=ooi_type_radio_attribute, answer=curb_option
-                    )
+                    polyline_object_instance.set_answer(attribute=ooi_type_radio_attribute, answer=curb_option)
                     checklist_attribute = curb_checklist_attribute
-                    quality_options =  [q.strip() for q in item.get("curb_quality_options", "").split(",") if q.strip()] 
+                    quality_options = [q.strip() for q in item.get("curb_quality_options", "").split(",") if q.strip()]
                 elif ooi_type == "Lane divider":
                     assert lane_divider_option is not None, "Missing 'lane_divider_option'"
                     polyline_object_instance.set_answer(attribute=ooi_type_radio_attribute, answer=lane_divider_option)
                     checklist_attribute = lane_divider_checklist_attribute
-                    quality_options =  [q.strip() for q in item.get("lane_divider_quality_options", "").split(",") if q.strip()] 
+                    quality_options = [
+                        q.strip() for q in item.get("lane_divider_quality_options", "").split(",") if q.strip()
+                    ]
                 elif ooi_type == "Zebra crossing":
                     assert zebra_crossing_option is not None, "Missing 'zebra_crossing_option'"
-                    polyline_object_instance.set_answer(attribute=ooi_type_radio_attribute, answer=zebra_crossing_option)
+                    polyline_object_instance.set_answer(
+                        attribute=ooi_type_radio_attribute, answer=zebra_crossing_option
+                    )
                     checklist_attribute = zebra_crossing_checklist_attribute
-                    quality_options =  [q.strip() for q in item.get("zebra_crossing_quality_options", "").split(",") if q.strip()] 
+                    quality_options = [
+                        q.strip() for q in item.get("zebra_crossing_quality_options", "").split(",") if q.strip()
+                    ]
                 elif ooi_type == "Other":
                     assert other_ooi_option is not None, "Missing 'other_ooi_option'"
-                    polyline_object_instance.set_answer(
-                        attribute=ooi_type_radio_attribute, answer=other_ooi_option
-                    )
+                    polyline_object_instance.set_answer(attribute=ooi_type_radio_attribute, answer=other_ooi_option)
                     text_answer = item.get("Type", "")
                     assert isinstance(text_answer, str), "'Type' must be a string"
-                    polyline_object_instance.set_answer(
-                        attribute=other_ooi_option_text_attribute, answer=text_answer
-                    )
+                    polyline_object_instance.set_answer(attribute=other_ooi_option_text_attribute, answer=text_answer)
                     quality_options = []
 
                 # Process checklist options
@@ -527,9 +535,7 @@ for data_unit, frame_coordinates in pcd_labels.items():
                     if option:
                         checklist_answers.append(option)
                     else:
-                        assert ooi_type == "Other", (
-                            f"Invalid quality '{quality}' for type '{ooi_type}'"
-                        )
+                        assert ooi_type == "Other", f"Invalid quality '{quality}' for type '{ooi_type}'"
 
                 if checklist_attribute and checklist_answers:
                     polyline_object_instance.set_answer(

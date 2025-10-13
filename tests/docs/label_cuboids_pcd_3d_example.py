@@ -8,8 +8,8 @@ from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, R
 from encord.objects.coordinates import CuboidCoordinates
 
 # User input
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH private key
-PROJECT_ID = "00000000-0000-0000-0000-000000000000" # Replace with the unique ID for the Project
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file path to your SSH private key
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the unique ID for the Project
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key
@@ -49,21 +49,25 @@ assert adult_checklist_attribute is not None, "Checklist attribute 'Adult Qualit
 adult_moving_option = adult_checklist_attribute.get_child_by_title(type_=Option, title="Moving")
 adult_well_lit_option = adult_checklist_attribute.get_child_by_title(type_=Option, title="Well lit")
 adult_fully_visible_option = adult_checklist_attribute.get_child_by_title(type_=Option, title="Fully visible")
-assert all([adult_moving_option, adult_well_lit_option, adult_fully_visible_option]), "One or more Adult quality options are missing."
+assert all([adult_moving_option, adult_well_lit_option, adult_fully_visible_option]), (
+    "One or more Adult quality options are missing."
+)
 
 # Adolescent Qualities
-adolescent_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Adolescent Qualities?")
+adolescent_checklist_attribute = ontology_structure.get_child_by_title(
+    type_=ChecklistAttribute, title="Adolescent Qualities?"
+)
 assert adolescent_checklist_attribute is not None, "Checklist attribute 'Adolescent Qualities?' not found."
 
 adolescent_moving_option = adolescent_checklist_attribute.get_child_by_title(type_=Option, title="Moving")
 adolescent_well_lit_option = adolescent_checklist_attribute.get_child_by_title(type_=Option, title="Well lit")
 adolescent_fully_visible_option = adolescent_checklist_attribute.get_child_by_title(type_=Option, title="Fully visible")
-assert all([adolescent_moving_option, adolescent_well_lit_option, adolescent_fully_visible_option]), "One or more Adolescent quality options are missing."
+assert all([adolescent_moving_option, adolescent_well_lit_option, adolescent_fully_visible_option]), (
+    "One or more Adolescent quality options are missing."
+)
 
 # Child Qualities
-child_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Child Qualities?"
-)
+child_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Child Qualities?")
 assert child_checklist_attribute is not None, "Checklist attribute 'Child Qualities?' not found."
 
 child_moving_option = child_checklist_attribute.get_child_by_title(type_=Option, title="Moving")
@@ -93,19 +97,25 @@ pcd_labels = {
         0: [
             {
                 "label_ref": "person_002",
-                "coordinates": CuboidCoordinates(position=(0.4, 0.4, 0.4), orientation=(0.0, 0.0, 0.4), size=(0.1, 0.1, 0.1)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.4, 0.4, 0.4), orientation=(0.0, 0.0, 0.4), size=(0.1, 0.1, 0.1)
+                ),
                 "person_type": "Adolescent",
                 "adolescent_quality_options": "Moving, Well lit, Fully visible",
             },
             {
                 "label_ref": "person_003",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.5, 0.5, 0.5)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.5, 0.5, 0.5)
+                ),
                 "person_type": "Child",
                 "child_quality_options": "Moving",
             },
             {
                 "label_ref": "person_004",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.7, 0.7, 0.7)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.7, 0.7, 0.7)
+                ),
                 "person_type": "Other Person type",
                 "Specify Person type": "Morello",
             },
@@ -114,26 +124,34 @@ pcd_labels = {
     "scene-0796": {
         0: {
             "label_ref": "person_005",
-            "coordinates": CuboidCoordinates(position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.12, 0.12, 0.12)),
+            "coordinates": CuboidCoordinates(
+                position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.12, 0.12, 0.12)
+            ),
             "person_type": "Adult",
             "adult_quality_options": "Moving, Well lit",
         },
         2: [
             {
                 "label_ref": "person_006",
-                "coordinates": CuboidCoordinates(position=(0.1, 0.1, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.5, 0.5, 0.5)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.1, 0.1, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.5, 0.5, 0.5)
+                ),
                 "person_type": "Adolescent",
                 "adolescent_quality_options": "Fully visible",
             },
             {
                 "label_ref": "person_007",
-                "coordinates": CuboidCoordinates(position=(0.1, 0.1, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.0132, 0.0132, 0.0132)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.1, 0.1, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.0132, 0.0132, 0.0132)
+                ),
                 "person_type": "Child",
                 "child_quality_options": "Moving",
             },
             {
                 "label_ref": "person_008",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
+                ),
                 "person_type": "Other Person type",
                 "Specify Person type": "Person with a baby stroller",
             },
@@ -142,26 +160,34 @@ pcd_labels = {
     "scene-1100": {
         0: {
             "label_ref": "person_009",
-            "coordinates": CuboidCoordinates(position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.012, 0.012, 0.012)),
+            "coordinates": CuboidCoordinates(
+                position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.012, 0.012, 0.012)
+            ),
             "person_type": "Adult",
             "adult_quality_options": "Moving",
         },
         3: [
             {
                 "label_ref": "person_010",
-                "coordinates": CuboidCoordinates(position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.5, 0.5, 0.5)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.5, 0.5, 0.5)
+                ),
                 "person_type": "Adolescent",
                 "adolescent_quality_options": "Moving, Well lit, Fully visible",
             },
             {
                 "label_ref": "person_011",
-                "coordinates": CuboidCoordinates(position=(0.3, 0.3, 0.0), orientation=(0.0, 0.0, 0.3), size=(0.13, 0.13, 0.13)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.3, 0.3, 0.0), orientation=(0.0, 0.0, 0.3), size=(0.13, 0.13, 0.13)
+                ),
                 "person_type": "Child",
                 "child_quality_options": "Moving",
             },
             {
                 "label_ref": "person_012",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.9, 0.9, 0.9)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.9, 0.9, 0.9)
+                ),
                 "person_type": "Other Person type",
                 "Specify Person type": "Lambert",
             },
@@ -171,19 +197,25 @@ pcd_labels = {
         23: [
             {
                 "label_ref": "person_013",
-                "coordinates": CuboidCoordinates(position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.11, 0.11, 0.11)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.11, 0.11, 0.11)
+                ),
                 "person_type": "Child",
                 "child_quality_options": "Moving",
             },
             {
                 "label_ref": "person_014",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)
+                ),
                 "person_type": "Adult",
                 "adult_quality_options": "Moving, Well lit, Fully visible",
             },
             {
                 "label_ref": "person_015",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
+                ),
                 "person_type": "Other Person type",
                 "Specify Person type": "Sweetheart",
             },
@@ -191,19 +223,25 @@ pcd_labels = {
         24: [
             {
                 "label_ref": "person_016",
-                "coordinates": CuboidCoordinates(position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.3, 0.3, 0.3)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.3, 0.3, 0.3)
+                ),
                 "person_type": "Child",
                 "child_quality_options": "Moving",
             },
             {
                 "label_ref": "person_014",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)
+                ),
                 "person_type": "Adult",
                 "adult_quality_options": "Moving, Well lit, Fully visible",
             },
             {
                 "label_ref": "person_017",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
+                ),
                 "person_type": "Other Person type",
                 "Specify Person type": "Sweetheart",
             },
@@ -211,19 +249,25 @@ pcd_labels = {
         25: [
             {
                 "label_ref": "person_016",
-                "coordinates": CuboidCoordinates(position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.1, 0.1, 0.1)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.1, 0.1, 0.1)
+                ),
                 "person_type": "Child",
                 "child_quality_options": "Moving",
             },
             {
                 "label_ref": "person_014",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)
+                ),
                 "person_type": "Adult",
                 "adult_quality_options": "Moving, Well lit, Fully visible",
             },
             {
                 "label_ref": "person_017",
-                "coordinates": CuboidCoordinates(position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)),
+                "coordinates": CuboidCoordinates(
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
+                ),
                 "person_type": "Other Person type",
                 "Specify Person type": "Sweetheart",
             },

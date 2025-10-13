@@ -10,8 +10,8 @@ from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, R
 from encord.objects.coordinates import PointCoordinate3D
 
 # User input
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt" # Replace with the file path to your SSH private key
-PROJECT_ID = "00000000-0000-0000-0000-000000000000" # Replace with the unique ID for the Project
+SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file path to your SSH private key
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the unique ID for the Project
 BUNDLE_SIZE = 100
 
 # Create user client using ssh key
@@ -44,15 +44,11 @@ assert sign_option is not None, "Option 'Sign' not found under radio attribute '
 peduncle_option = poi_type_radio_attribute.get_child_by_title(type_=Option, title="Peduncle")
 assert peduncle_option is not None, "Option 'Peduncle' not found under radio attribute 'Type?'"
 
-other_poi_option = poi_type_radio_attribute.get_child_by_title(
-    type_=Option, title="Other Point of Interest type"
-)
+other_poi_option = poi_type_radio_attribute.get_child_by_title(type_=Option, title="Other Point of Interest type")
 assert other_poi_option is not None, "Option 'Other Point of Interest type' not found under radio attribute 'Type?'"
 
 # Get checklist attributes and options for Sign
-sign_checklist_attribute = ontology_structure.get_child_by_title(
-    type_=ChecklistAttribute, title="Sign Qualities?"
-)
+sign_checklist_attribute = ontology_structure.get_child_by_title(type_=ChecklistAttribute, title="Sign Qualities?")
 assert sign_checklist_attribute is not None, "Checklist attribute 'Sign Qualities?' not found"
 
 sign_robust_option = sign_checklist_attribute.get_child_by_title(type_=Option, title="Robust")
@@ -64,9 +60,7 @@ assert sign_healthy_option is not None, "Option 'Healthy' not found under 'Sign 
 sign_growth_alignment_option = sign_checklist_attribute.get_child_by_title(
     type_=Option, title="Good Growth and Alignment"
 )
-assert sign_growth_alignment_option is not None, (
-    "Option 'Good Growth and Alignment' not found under 'Sign Qualities?'"
-)
+assert sign_growth_alignment_option is not None, "Option 'Good Growth and Alignment' not found under 'Sign Qualities?'"
 
 # Get checklist attributes and options for Peduncle
 peduncle_checklist_attribute = ontology_structure.get_child_by_title(
@@ -304,21 +298,15 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
                 # Set Point of Interest type attribute
                 if poi_type == "Sign":
                     assert sign_option is not None, "Missing 'sign_option'"
-                    keypoint_object_instance.set_answer(
-                        attribute=poi_type_radio_attribute, answer=sign_option
-                    )
+                    keypoint_object_instance.set_answer(attribute=poi_type_radio_attribute, answer=sign_option)
                     checklist_attribute = sign_checklist_attribute
                 elif poi_type == "Peduncle":
                     assert peduncle_option is not None, "Missing 'peduncle_option'"
-                    keypoint_object_instance.set_answer(
-                        attribute=poi_type_radio_attribute, answer=peduncle_option
-                    )
+                    keypoint_object_instance.set_answer(attribute=poi_type_radio_attribute, answer=peduncle_option)
                     checklist_attribute = peduncle_checklist_attribute
                 elif poi_type == "Other Point of Interest type":
                     assert other_poi_option is not None, "Missing 'other_poi_option'"
-                    keypoint_object_instance.set_answer(
-                        attribute=poi_type_radio_attribute, answer=other_poi_option
-                    )
+                    keypoint_object_instance.set_answer(attribute=poi_type_radio_attribute, answer=other_poi_option)
                     text_answer = item.get("Specify Point of Interest type", "")
                     assert isinstance(text_answer, str), "'Specify Point of Interest type' must be a string"
                     keypoint_object_instance.set_answer(
@@ -333,18 +321,12 @@ for data_unit, frame_coordinates in video_image_frame_labels.items():
 
                 for quality in quality_options:
                     if quality == "Robust":
-                        checklist_answers.append(
-                            sign_robust_option if poi_type == "Sign" else peduncle_robust_option
-                        )
+                        checklist_answers.append(sign_robust_option if poi_type == "Sign" else peduncle_robust_option)
                     elif quality == "Healthy":
-                        checklist_answers.append(
-                            sign_healthy_option if poi_type == "Sign" else peduncle_healthy_option
-                        )
+                        checklist_answers.append(sign_healthy_option if poi_type == "Sign" else peduncle_healthy_option)
                     elif quality == "Good Growth and Alignment":
                         checklist_answers.append(
-                            sign_growth_alignment_option
-                            if poi_type == "Sign"
-                            else peduncle_growth_alignment_option
+                            sign_growth_alignment_option if poi_type == "Sign" else peduncle_growth_alignment_option
                         )
 
                 if checklist_attribute and checklist_answers:
@@ -373,4 +355,6 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
         label_row.save(bundle=bundle)
         print(f"Saved label row for {label_row.data_title}")
 
-print("Labels with Point of Interest type radio buttons, checklist attributes, and text labels added for all data units.")
+print(
+    "Labels with Point of Interest type radio buttons, checklist attributes, and text labels added for all data units."
+)
