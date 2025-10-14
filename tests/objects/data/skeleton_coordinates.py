@@ -159,40 +159,8 @@ labels = {
     "label_status": "LABELLED",
 }
 
-expected_coordinates = SkeletonCoordinates(
-    values=[
-        SkeletonCoordinate(
-            x=0.3838,
-            y=0.6729,
-            name="point_0",
-            color="#000000",
-            feature_hash="1wthOoHe",
-            value="point_0",
-            visibility=Visibility.VISIBLE,
-        ),
-        SkeletonCoordinate(
-            x=0.4649,
-            y=0.8816,
-            name="point_1",
-            color="#000000",
-            feature_hash="KGp1oToz",
-            value="point_1",
-            visibility=Visibility.OCCLUDED,
-        ),
-        SkeletonCoordinate(
-            x=0.2356,
-            y=0.9396,
-            name="point_2",
-            color="#000000",
-            feature_hash="OqR+F4dN",
-            value="point_2",
-            visibility=Visibility.INVISIBLE,
-        ),
-    ],
-    name="Triangle",
-)
 
-expected_coordinates_square = SkeletonCoordinates(
+expected_coordinates = SkeletonCoordinates(
     values=[
         SkeletonCoordinate(
             x=0.3,

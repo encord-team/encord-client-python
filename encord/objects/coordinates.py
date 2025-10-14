@@ -454,10 +454,6 @@ class Visibility(CamelStrEnum):
     OCCLUDED = auto()
     SELF_OCCLUDED = auto()
 
-    @property
-    def label(self) -> str:
-        return self.value.lower().replace("_", "-")
-
 
 class SkeletonCoordinate(BaseDTO):
     """Represents a coordinate for a skeleton structure in an image.

@@ -368,7 +368,7 @@ def test_skeleton_template_coordinates():
 
     obj_instance = obj_instances[0]
     annotation = obj_instance.get_annotations()[0]
-    assert annotation.coordinates == skeleton_coordinates.expected_coordinates_square
+    assert annotation.coordinates == skeleton_coordinates.expected_coordinates
 
     label_dict = label_row.to_encord_dict()
     skeleton_dict = list(label_dict["data_units"].values())[0]["labels"]["objects"][0]
