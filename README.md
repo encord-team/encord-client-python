@@ -30,7 +30,7 @@ First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/s
 python3 -m pip install encord
 ```
 
-Then, create a service account and generate a public-private key pair, and upload the public key to [Encord website](https://www.encord.com/).
+Then, create a service account, generate a public-private key pair, and upload the public key to the [Encord website](https://www.encord.com/).
 Detailed guide can be found in the [dedicated manual](https://docs.encord.com/platform-documentation/GettingStarted/getting-started-service-accounts).
 
 Passing the private key to the factory, you can initialise the Encord client directly.
