@@ -22,7 +22,7 @@
 
 ## 💡 Getting Started
 
-For full documentation, please visit [Encord Python SDK](https://docs.encord.com/reference/installation-sdk).
+For full documentation, please visit [Encord Python SDK](https://docs.encord.com/sdk-documentation/getting-started-sdk/installation-sdk).
 
 First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/stable/installing) package manager:
 
@@ -30,8 +30,8 @@ First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/s
 python3 -m pip install encord
 ```
 
-Then, generate an public-private key pair, and upload the public key to [Encord website](https://www.encord.com/).
-Detailed guide can be found in the [dedicated manual](https://docs.encord.com/docs/annotate-public-keys).
+Then, create a service account, generate a public-private key pair, and upload the public key to the [Encord website](https://www.encord.com/).
+Detailed guide can be found in the [dedicated manual](https://docs.encord.com/platform-documentation/GettingStarted/getting-started-service-accounts).
 
 Passing the private key to the factory, you can initialise the Encord client directly.
 
@@ -45,7 +45,7 @@ user_client = EncordUserClient.create_with_ssh_private_key(
   )
 ```
 
-For detailed examples and API reference please refer to [Encord SDK documentation](https://python.docs.encord.com/)
+For detailed example code and SDK reference material refer to [Encord SDK documentation](https://docs.encord.com/sdk-documentation/getting-started-sdk/sdk-intro)
 
 ## 🐛 Troubleshooting
 
