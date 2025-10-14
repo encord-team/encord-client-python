@@ -5,6 +5,7 @@ Code Block Name: Cuboids
 # Import dependencies
 from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
+from encord.objects.attributes import NumericAttribute
 from encord.objects.coordinates import CuboidCoordinates
 
 # User input
@@ -117,7 +118,7 @@ pcd_labels = {
                     position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.7, 0.7, 0.7)
                 ),
                 "person_type": "Other Person type",
-                "Specify Person type": "Morello",
+                "Specify Person type": "Person with a baby stroller",
             },
         ],
     },
@@ -189,7 +190,7 @@ pcd_labels = {
                     position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.9, 0.9, 0.9)
                 ),
                 "person_type": "Other Person type",
-                "Specify Person type": "Lambert",
+                "Specify Person type": "Person with a baby stroller",
             },
         ],
     },
@@ -217,7 +218,7 @@ pcd_labels = {
                     position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
                 ),
                 "person_type": "Other Person type",
-                "Specify Person type": "Sweetheart",
+                "Specify Person type": "Person with a baby stroller",
             },
         ],
         24: [
@@ -243,7 +244,7 @@ pcd_labels = {
                     position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
                 ),
                 "person_type": "Other Person type",
-                "Specify Person type": "Sweetheart",
+                "Specify Person type": "Person with a baby stroller",
             },
         ],
         25: [
@@ -269,7 +270,7 @@ pcd_labels = {
                     position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
                 ),
                 "person_type": "Other Person type",
-                "Specify Person type": "Sweetheart",
+                "Specify Person type": "Person with a baby stroller",
             },
         ],
     },
