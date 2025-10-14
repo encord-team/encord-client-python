@@ -950,6 +950,8 @@ class CocoExporter:
             return KeyPointVisibility.NOT_LABELED
         elif point.get("occluded") is True:
             return KeyPointVisibility.NOT_VISIBLE
+        elif point.get("selfOccluded") is True:
+            return KeyPointVisibility.NOT_VISIBLE
         else:
             return KeyPointVisibility.VISIBLE
 
