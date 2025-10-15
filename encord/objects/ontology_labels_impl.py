@@ -593,6 +593,7 @@ class LabelRowV2:
                 WARNING: Use this filter only for reading labels. Saving a filtered subset will
                 delete all other classification instances stored in the Encord platform.
             include_reviews: Whether to request read-only information about the reviews of the label row.
+            include_archived: Whether to include labels whose ontology features are archived
             overwrite: If `True`, overwrite current labels with those stored in the Encord server.
                 If `False` and the label row is already initialized, this function will raise an error.
             bundle: If not provided, initialization is performed independently. If provided,
