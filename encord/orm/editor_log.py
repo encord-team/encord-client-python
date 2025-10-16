@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Any, Literal, Annotated
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import EmailStr, Field, RootModel
@@ -30,99 +30,8 @@ class EditorLogsActionCategory(StrEnum):
     AGENT = "agent"
     EDITOR = "editor"
 
-# class EditorLogMetadataPublic(BaseDTO):
-#     actor_user_id: str
-#     actor_organisation_id: int
-#     actor_user_email: str
-#     project_id: UUID
-#     project_organisation_id: int
-#     project_user_role: str
-#     project_organisation_user_role: str
-#     data_unit_title: str
-#     data_unit_data_type: str
-#     data_unit_dataset_id: UUID
-#     data_unit_dataset_title: str
-#     ontology_id: UUID
-#     label_id: str
-#     workflow_stage_type: WorkflowNodeType | Literal[""]
-#     workflow_stage_title: str
-#
-#
-# class EditorLogCommonPublic(BaseDTO):
-#     action: str
-#     action_category: EditorLogsActionCategory
-#     data_unit_id: UUID
-#     workflow_stage_id: UUID
-#     branch_name: str
-#     workflow_task_id: UUID
-#     timestamp: datetime
-#     session_id: UUID
-#     event_information: dict[str, Any]
-#
-#
-# class LabelAttributesPublic(BaseDTO):
-#     label_name: str
-#     feature_id: str
-#     label_ranges: list[tuple[int, int]]
-#
-#
-# class ObjectAttributesPublic(LabelAttributesPublic, BaseDTO):
-#     object_shape: str
-#     object_current_frame: int | None = None
-#     object_hash: str
-#     object_id: int | None = None
-#
-#
-# class ClassificationAttributesPublic(LabelAttributesPublic, BaseDTO):
-#     classification_hash: str
-#
-#
-# class EditorLogGeneralPublic(EditorLogCommonPublic, EditorLogMetadataPublic):
-#     pass
-#
-#
-# class EditorLogGeneralActionPublic(EditorLogGeneralPublic):
-#     action_category: Literal[
-#         EditorLogsActionCategory.EDITOR,
-#         EditorLogsActionCategory.TASK,
-#         EditorLogsActionCategory.AGENT,
-#     ]
-#
-#
-# class EditorLogClassificationPublic(EditorLogGeneralPublic, ClassificationAttributesPublic):
-#     action_category: Literal[EditorLogsActionCategory.CLASSIFICATION]
-#
-#
-# class EditorLogObjectPublic(EditorLogGeneralPublic, ObjectAttributesPublic):
-#     action_category: Literal[EditorLogsActionCategory.OBJECT]
-#
-#
-# # Add ID via subclassingExpand commentComment on line R164Code has comments. Press enter to view.
-# class EditorLogClassificationReadPublic(EditorLogClassificationPublic):
-#     id: UUID
-#
-#
-# class EditorLogObjectReadPublic(EditorLogObjectPublic):
-#     id: UUID
-#
-#
-# class EditorLogGeneralActionReadPublic(EditorLogGeneralActionPublic):
-#     id: UUID
-#
-#
-# EditorLogReadPublic = Annotated[
-#     EditorLogClassificationReadPublic | EditorLogObjectReadPublic | EditorLogGeneralActionReadPublic,
-#     Field(discriminator="action_category"),
-# ]
-#
-#
-# class EditorLogRootModelPublic(RootModel):
-#     root: EditorLogReadPublic
-
-#
-class EditorLog(BaseDTO):
+class EditorLogCommon(BaseDTO):
     id: UUID
-    # common fields
     action: str
     action_category: EditorLogsActionCategory
     data_unit_id: UUID
@@ -148,22 +57,42 @@ class EditorLog(BaseDTO):
     workflow_stage_title: str
     event_information: dict[str, Any]
 
-    # Label fields
-    label_name: str | None = None
-    feature_id: str | None = None
-    label_ranges: list[tuple[int, int]] | None = None
+class LabelAttributes(BaseDTO):
+    label_name: str
+    feature_id: str
+    label_ranges: list[tuple[int, int]]
 
-    # Classification field
-    classification_hash: str | None = None
 
-    # Object fields
-    object_shape: str | None = None
+class ObjectAttributes(LabelAttributes, BaseDTO):
+    object_shape: str
     object_current_frame: int | None = None
-    object_hash: str | None = None
+    object_hash: str
     object_id: int | None = None
 
 
-class EditorLogsResponsePublic(BaseDTO):
+class ClassificationAttributes(LabelAttributes, BaseDTO):
+    classification_hash: str
+
+
+class EditorLogGeneralAction(EditorLogCommon):
+    action_category: Literal[
+        EditorLogsActionCategory.EDITOR,
+        EditorLogsActionCategory.TASK,
+        EditorLogsActionCategory.AGENT,
+    ]
+
+
+class EditorLogClassification(EditorLogCommon, ClassificationAttributes):
+    action_category: Literal[EditorLogsActionCategory.CLASSIFICATION]
+
+
+class EditorLogObject(EditorLogCommon, ObjectAttributes):
+    action_category: Literal[EditorLogsActionCategory.OBJECT]
+
+
+EditorLog = EditorLogGeneralAction | EditorLogObject | EditorLogClassification
+
+class EditorLogsResponse(BaseDTO):
     logs: list[EditorLog]
     next_page_token: str | None = None
 
