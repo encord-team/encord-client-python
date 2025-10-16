@@ -35,7 +35,7 @@ from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
 from encord.orm.filter_preset import ActiveFilterPresetDefinition
-from encord.orm.editor_log import EditorLogParams, EditorLogsResponsePublic, EditorLog
+from encord.orm.editor_log import EditorLogParams, EditorLogsResponse, EditorLog
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
@@ -609,7 +609,7 @@ class Project:
         editor_logs_response = self._api_client.get(
             f"projects/{self.project_hash}/editor-logs",
             params=params,
-            result_type=EditorLogsResponsePublic
+            result_type=EditorLogsResponse
         )
 
         return Page(
