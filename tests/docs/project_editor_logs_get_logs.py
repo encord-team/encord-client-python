@@ -39,9 +39,7 @@ if logs_response and logs_response.results:
 # Get the next page of logs if available
 if logs_response.next_page_token:
     next_page_logs_response = project.get_editor_logs(
-        start_time=start_time,
-        end_time=end_time,
-        page_token=logs_response.next_page_token
+        start_time=start_time, end_time=end_time, page_token=logs_response.next_page_token
     )
     if next_page_logs_response and next_page_logs_response.results:
         for log in next_page_logs_response.results:
@@ -56,7 +54,7 @@ filtered_logs_response = project.get_editor_logs(
     action=ACTION,
     actor_user_email=ACTOR_USER_EMAIL,
     workflow_stage_id=UUID(WORKFLOW_STAGE_ID),
-    data_unit_id=UUID(DATA_UNIT_ID)
+    data_unit_id=UUID(DATA_UNIT_ID),
 )
 
 if filtered_logs_response and filtered_logs_response.results:

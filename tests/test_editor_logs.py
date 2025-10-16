@@ -58,13 +58,10 @@ def test_project_get_editor_logs_basic():
         label_id="label123",
         workflow_stage_type=WorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"}
+        event_information={"key": "value"},
     )
 
-    mock_response = EditorLogsResponse(
-        logs=[mock_editor_log],
-        next_page_token=None
-    )
+    mock_response = EditorLogsResponse(logs=[mock_editor_log], next_page_token=None)
 
     # Create a mock API client
     mock_api_client = MagicMock()
@@ -80,11 +77,7 @@ def test_project_get_editor_logs_basic():
     start_time = datetime.now() - timedelta(days=7)
     end_time = datetime.now()
 
-    result = test_project.get_editor_logs(
-        start_time=start_time,
-        end_time=end_time,
-        limit=100
-    )
+    result = test_project.get_editor_logs(start_time=start_time, end_time=end_time, limit=100)
 
     # Verify the API client was called correctly
     mock_api_client.get.assert_called_once()
@@ -105,10 +98,7 @@ def test_project_get_editor_logs_basic():
 def test_project_get_editor_logs_with_filters():
     """Test Project.get_editor_logs with filtering parameters."""
     # Mock the API response
-    mock_response = EditorLogsResponse(
-        logs=[],
-        next_page_token="next_token_123"
-    )
+    mock_response = EditorLogsResponse(logs=[], next_page_token="next_token_123")
 
     # Create a mock API client
     mock_api_client = MagicMock()
@@ -134,7 +124,7 @@ def test_project_get_editor_logs_with_filters():
         action="label_updated",
         actor_user_email="admin@example.com",
         workflow_stage_id=workflow_id,
-        data_unit_id=data_unit_id
+        data_unit_id=data_unit_id,
     )
 
     # Verify the API client was called correctly
@@ -195,7 +185,7 @@ def test_project_get_editor_logs_multiple_types():
         label_id="label123",
         workflow_stage_type=WorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"}
+        event_information={"key": "value"},
     )
 
     # Test EditorLogObject
@@ -231,7 +221,7 @@ def test_project_get_editor_logs_multiple_types():
         object_shape="polygon",
         object_current_frame=5,
         object_hash="object_hash_123",
-        object_id=1
+        object_id=1,
     )
 
     # Test EditorLogClassification
@@ -264,7 +254,7 @@ def test_project_get_editor_logs_multiple_types():
         label_name="Test Classification",
         feature_id="feature123",
         label_ranges=[(0, 10)],
-        classification_hash="classification_hash_123"
+        classification_hash="classification_hash_123",
     )
 
     # All should be valid EditorLog types
@@ -273,10 +263,7 @@ def test_project_get_editor_logs_multiple_types():
     assert isinstance(classification_log, EditorLog)
 
     # Mock the API response
-    mock_response = EditorLogsResponse(
-        logs=[general_log, object_log, classification_log],
-        next_page_token=None
-    )
+    mock_response = EditorLogsResponse(logs=[general_log, object_log, classification_log], next_page_token=None)
 
     # Create a mock API client
     mock_api_client = MagicMock()
@@ -290,9 +277,7 @@ def test_project_get_editor_logs_multiple_types():
 
     # Call the method
     result = test_project.get_editor_logs(
-        start_time=datetime.now() - timedelta(days=7),
-        end_time=datetime.now(),
-        limit=100
+        start_time=datetime.now() - timedelta(days=7), end_time=datetime.now(), limit=100
     )
     assert len(result.results) == 3
     assert (all(isinstance(log, EditorLog) for log in result.results)) == True
