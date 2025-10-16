@@ -89,16 +89,16 @@ def test_project_get_editor_logs_basic():
     mock_api_client.get.assert_called_once()
     call_args = mock_api_client.get.call_args
 
-    assertEqual(call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
-    assertIsInstance(call_args[1]["params"], EditorLogParams)
-    assertEqual(call_args[1]["result_type"], EditorLogsResponse)
+    assert  (call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
+    assert isinstance(call_args[1]["params"], EditorLogParams)
+    assert  (call_args[1]["result_type"], EditorLogsResponse)
 
     # Verify the result
-    assertIsInstance(result, Page)
-    assertEqual(len(result.results), 1)
-    assertEqual(result.results[0].id, log_id)
-    assertEqual(result.results[0].action, "label_created")
-    assertIsNone(result.next_page_token)
+    assert isinstance(result, Page)
+    assert  (len(result.results), 1)
+    assert  (result.results[0].id, log_id)
+    assert  (result.results[0].action, "label_created")
+    assert result.next_page_token is None
 
 def test_project_get_editor_logs_with_filters():
     """Test Project.get_editor_logs with filtering parameters."""
@@ -139,22 +139,22 @@ def test_project_get_editor_logs_with_filters():
     mock_api_client.get.assert_called_once()
     call_args = mock_api_client.get.call_args
 
-    assertEqual(call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
+    assert call_args[0][0] == f"projects/{test_project.project_hash}/editor-logs"
     params = call_args[1]["params"]
-    assertIsInstance(params, EditorLogParams)
-    assertEqual(params.start_time, start_time)
-    assertEqual(params.end_time, end_time)
-    assertEqual(params.limit, 50)
-    assertEqual(params.page_token, "test_token")
-    assertEqual(params.action, "label_updated")
-    assertEqual(params.actor_user_email, "admin@example.com")
-    assertEqual(params.workflow_stage_id, workflow_id)
-    assertEqual(params.data_unit_id, data_unit_id)
+    assert isinstance(params, EditorLogParams)
+    assert params.start_time == start_time
+    assert params.end_time == end_time
+    assert params.limit == 50
+    assert params.page_token == "test_token"
+    assert params.action == "label_updated"
+    assert params.actor_user_email == "admin@example.com"
+    assert params.workflow_stage_id == workflow_id
+    assert params.data_unit_id == data_unit_id
 
     # Verify the result
-    assertIsInstance(result, Page)
-    assertEqual(len(result.results), 0)
-    assertEqual(result.next_page_token, "next_token_123")
+    assert isinstance(result, Page)
+    assert len(result.results) == 0
+    assert result.next_page_token == "next_token_123"
 
 
 def test_project_get_editor_logs_multiple_types():
@@ -266,9 +266,9 @@ def test_project_get_editor_logs_multiple_types():
     )
 
     # All should be valid EditorLog types
-    assertIsInstance(general_log, EditorLog)
-    assertIsInstance(object_log, EditorLog)
-    assertIsInstance(classification_log, EditorLog)
+    assert isinstance(general_log, EditorLog)
+    assert isinstance(object_log, EditorLog)
+    assert isinstance(classification_log, EditorLog)
 
     # Mock the API response
     mock_response = EditorLogsResponse(
@@ -292,5 +292,5 @@ def test_project_get_editor_logs_multiple_types():
         end_time=datetime.now(),
         limit=100
     )
-    assertEqual(len(result.results), 3)
-    assertTrue(all(isinstance(log, EditorLog) for log in result.results))
+    assert len(result.results) == 3
+    assert (all(isinstance(log, EditorLog) for log in result.results)) == True
